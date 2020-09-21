@@ -1,5 +1,5 @@
-# fairOS-dfs
-The decentralised file system (dfs) is a file system built for the internetOS (FairOS).
+# FairOS-dfs
+The decentralised file system (dfs) is a file system built for the FairOS.
 This works as a thin layer over Swarm (https://ethswarm.org/).
 
 dfs can be used as follows
