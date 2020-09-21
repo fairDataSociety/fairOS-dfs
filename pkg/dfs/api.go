@@ -113,7 +113,7 @@ func (d *DfsAPI) IsUserLoggedIn(userName string) bool {
 	return d.users.IsUserNameLoggedIn(userName)
 }
 
-func (d *DfsAPI) ListAllUsers() []string {
+func (d *DfsAPI) ListAllUsers() ([]string, error) {
 	return d.users.ListAllUsers(d.dataDir)
 }
 

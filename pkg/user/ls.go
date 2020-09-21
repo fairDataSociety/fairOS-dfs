@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 )
 
-func (u *Users) ListAllUsers(dataDir string) []string {
+func (u *Users) ListAllUsers(dataDir string) ([]string, error) {
 	var users []string
 	destDir := filepath.Join(dataDir, userDirectoryName)
 	err := filepath.Walk(destDir,
@@ -38,7 +38,7 @@ func (u *Users) ListAllUsers(dataDir string) []string {
 			return nil
 		})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return users
+	return users, nil
 }
