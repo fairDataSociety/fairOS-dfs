@@ -1,0 +1,57 @@
+name: Go
+
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go: [1.14]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+    - name: Setup Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.go }}
+    - name: Setup env
+      run: |
+        echo "::set-env name=GOPATH::$(go env GOPATH)"
+        echo "::add-path::$(go env GOPATH)/bin"
+      shell: bash
+    - name: Set git to use LF
+      # make sure that line endings are not converted on windows
+      # as gofmt linter will report that they need to be changed
+      run: git config --global core.autocrlf false
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: Cache Go modules
+      uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.OS }}-build-${{ env.cache-name }}-
+          ${{ runner.OS }}-build-
+          ${{ runner.OS }}-
+    - name: Lint
+      run: make lint
+    - name: Vet
+      run: make vet
+    - name: Build
+      run: make build
+    - name: Test with Race Detector
+      if: matrix.os != 'windows-latest'
+      run: make test-race
+    - name: Test
+      if: matrix.os != 'windows-latest'
+      run: make test
