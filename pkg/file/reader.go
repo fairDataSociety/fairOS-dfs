@@ -22,8 +22,8 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/golang/snappy"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
+	"github.com/golang/snappy"
 	"github.com/klauspost/pgzip"
 )
 

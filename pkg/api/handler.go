@@ -22,8 +22,8 @@ import (
 )
 
 type Handler struct {
-	dfsAPI      *dfs.DfsAPI
-	logger      logging.Logger
+	dfsAPI *dfs.DfsAPI
+	logger logging.Logger
 }
 
 func NewHandler(dataDir, beeHost, beePort string, logger logging.Logger) (*Handler, error) {
@@ -32,7 +32,7 @@ func NewHandler(dataDir, beeHost, beePort string, logger logging.Logger) (*Handl
 		return nil, dfs.ErrBeeClient
 	}
 	return &Handler{
-		dfsAPI:      api,
-		logger:      logger,
+		dfsAPI: api,
+		logger: logger,
 	}, nil
 }

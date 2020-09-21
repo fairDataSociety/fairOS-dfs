@@ -28,8 +28,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/snappy"
 	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
+	"github.com/golang/snappy"
 	"github.com/klauspost/pgzip"
 )
 
