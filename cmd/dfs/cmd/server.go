@@ -62,6 +62,13 @@ can consume it.`,
 			return
 		}
 
+		logger.Info("configuration values")
+		logger.Info("dataDir    : ", dataDir)
+		logger.Info("beeHost    : ", beeHost)
+		logger.Info("beePort    : ", beePort)
+		logger.Info("verbosity  : ", verbosity)
+		logger.Info("httpPort   : ", httpPort)
+		logger.Info("corsOrigins: ", corsOrigins)
 		hdlr, err := api.NewHandler(dataDir, beeHost, beePort, logger)
 		if err != nil {
 			logger.Error(err.Error())
@@ -166,8 +173,14 @@ func startHttpService(logger logging.Logger) {
 	fileRouter.HandleFunc("/delete", handler.FileDeleteHandler).Methods("DELETE")
 	fileRouter.HandleFunc("/stat", handler.FileStatHandler).Methods("GET")
 
+	var origins []string
+	for _, c := range corsOrigins {
+		c = strings.TrimSpace(c)
+		origins = append(origins, c)
+	}
+
 	c := cors.New(cors.Options{
-		AllowedOrigins:   corsOrigins,
+		AllowedOrigins:   origins,
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"Origin", "Accept", "Authorization", "Content-Type", "X-Requested-With", "Access-Control-Request-Headers", "Access-Control-Request-Method"},
 		AllowedMethods:   []string{"GET", "POST", "DELETE"},
