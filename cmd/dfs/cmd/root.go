@@ -30,7 +30,6 @@ var (
 	cfgFile   string
 	beeHost   string
 	beePort   string
-	httpPort  string
 	verbosity string
 	dataDir   string
 )
@@ -72,28 +71,27 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.fairOS/dfs.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 	home, err := homedir.Dir()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
+	// Here you will define your flags and configuration settings.
+	// Cobra supports persistent flags, which, if defined here,
+	// will be global for your application.
+	defaultConfig := filepath.Join(home, ".fairOS/dfs.yml")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", defaultConfig, "config file")
+
+	// Cobra also supports local flags, which will only run
+	// when this action is called directly.
+	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
 	defaultDataDir := filepath.Join(home, ".fairOS/dfs")
-	rootCmd.PersistentFlags().StringVar(&dataDir, "dataDir", defaultDataDir, "store data in this dir (default ~/.fairOS/dfs)")
+	rootCmd.PersistentFlags().StringVar(&dataDir, "dataDir", defaultDataDir, "store data in this dir")
 	rootCmd.PersistentFlags().StringVar(&beeHost, "beeHost", "127.0.0.1", "bee host (default 127.0.0.1)")
-	rootCmd.PersistentFlags().StringVar(&beePort, "beePort", "8080", "bee port (default 8080)")
-	rootCmd.PersistentFlags().StringVar(&httpPort, "httpPort", "9090", "http port (default 9090)")
-	rootCmd.PersistentFlags().StringVar(&verbosity, "verbosity", "5", "verbosity level (default 4)")
+	rootCmd.PersistentFlags().StringVar(&beePort, "beePort", "8080", "bee port")
+	rootCmd.PersistentFlags().StringVar(&verbosity, "verbosity", "5", "verbosity level")
 }
 
 // initConfig reads in config file and ENV variables if set.

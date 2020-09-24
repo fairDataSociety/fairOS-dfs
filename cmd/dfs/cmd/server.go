@@ -30,7 +30,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var handler *api.Handler
+var (
+	httpPort    string
+	corsOrigins []string
+	handler     *api.Handler
+)
 
 // startCmd represents the start command
 var serverCmd = &cobra.Command{
@@ -57,6 +61,7 @@ can consume it.`,
 			fmt.Println("unknown verbosity level ", v)
 			return
 		}
+
 		hdlr, err := api.NewHandler(dataDir, beeHost, beePort, logger)
 		if err != nil {
 			logger.Error(err.Error())
@@ -68,12 +73,12 @@ can consume it.`,
 }
 
 func init() {
+	serverCmd.Flags().StringVar(&httpPort, "httpPort", "9090", "http port")
+	serverCmd.Flags().StringSliceVar(&corsOrigins, "cors-origins", []string{}, "allow CORS headers for the given origins")
 	rootCmd.AddCommand(serverCmd)
 }
 
 func startHttpService(logger logging.Logger) {
-	fs := http.FileServer(http.Dir("build/static"))
-	http.Handle("/static/", fs)
 	router := mux.NewRouter()
 
 	// Web page handlers
@@ -146,12 +151,8 @@ func startHttpService(logger logging.Logger) {
 	fileRouter.HandleFunc("/delete", handler.FileDeleteHandler).Methods("DELETE")
 	fileRouter.HandleFunc("/stat", handler.FileStatHandler).Methods("GET")
 
-	// Web page handlers
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./build/")))
-	http.Handle("/", router)
-
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:8000", "http://localhost:9090", "http://fairdrive.org"},
+		AllowedOrigins:   corsOrigins,
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"Origin", "Accept", "Authorization", "Content-Type", "X-Requested-With", "Access-Control-Request-Headers", "Access-Control-Request-Method"},
 		AllowedMethods:   []string{"GET", "POST", "DELETE"},
