@@ -83,13 +83,28 @@ func startHttpService(logger logging.Logger) {
 
 	// Web page handlers
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "FairOS-dfs")
+		_, err := fmt.Fprintln(w, "FairOS-dfs")
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
+	})
+	router.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+		_, err := fmt.Fprintln(w, showVersion())
+		if err != nil {
+			logger.Errorf("error in API /version: ", err)
+			return
+		}
 	})
 
 	apiVersion := "v0"
 	baseRouter := router.PathPrefix("/" + apiVersion).Subrouter()
 	baseRouter.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "User-agent: *\nDisallow: /")
+		_, err := fmt.Fprintln(w, "User-agent: *\nDisallow: /")
+		if err != nil {
+			logger.Errorf("error in API /robots.txt: ", err)
+			return
+		}
 	})
 
 	// User account related handlers which does not login need middleware
