@@ -18,6 +18,7 @@ package pod
 
 import (
 	"bytes"
+	"fmt"
 	gopath "path"
 	"time"
 
@@ -91,10 +92,16 @@ func (p *Pod) MakeDir(podName string, dirName string) error {
 		}
 		topic = firstTopic
 	} else {
-		dirInode = podInfo.GetCurrentDirInode()
-		if directory.IsDirINodePresent(podName, dirs[0], dirInode) {
+		// see if the dir is present in dirMap
+		inode, err := p.GetInodeFromName(dirName, podInfo.GetCurrentDirInode(), directory, podInfo)
+		if err != nil {
 			return err
 		}
+		if inode != nil {
+			return fmt.Errorf("directory already present")
+		}
+
+		dirInode = podInfo.GetCurrentDirInode()
 		_, topic, err = directory.CreateDirINode(podName, dirs[0], dirInode)
 		if err != nil {
 			return err
