@@ -1,11 +1,20 @@
 # FairOS-dfs
-The decentralised file system (dfs) is a file system built for the FairOS.
-This works as a thin layer over Swarm (https://ethswarm.org/).
+The Decentralised File System (dfs) is a file system built for the FairOS.
+It is a stateless thin layer which uses the building blocks provided by Swarm to 
+provide high level functionalities like
+- Exposing a logical file system
+- Creation of logical drives
+- User and Permission management
+- Charging and Payments
+- Mutable, Indexed data structures over immmutable file system
 
-dfs can be used as follows
-1) As a standalone, decentralised, personal data drive over the internet.
-2) In conjunction with FairOS-compute layer to work as a data provider for
-   large scale parallel data processing engine over the internet. 
+dfs has the fllowing usecases
+1) Personal data store
+2) Application data store (for both Web 3.0 DApps and web 2.0 Apps)
+3) Data sharing with single user and on an organizational level
+
+
+![FairOS-dfs](https://github.com/fairDataSociety/fairOS-dfs/blob/master/docs/images/FairOS-dfs.png)
 
 ### User
 The first step in dfs is to create a user. Every user is associated with a 12 
