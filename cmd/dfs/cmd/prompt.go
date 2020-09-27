@@ -263,9 +263,11 @@ func executor(in string) {
 		case "ls":
 			users, err := dfsAPI.ListAllUsers()
 			if err != nil {
-				for _, usr := range users {
-					fmt.Println(usr)
-				}
+				fmt.Println("user ls: ", err)
+				return
+			}
+			for _, usr := range users {
+				fmt.Println(usr)
 			}
 			currentPrompt = getCurrentPrompt()
 		case "name":
