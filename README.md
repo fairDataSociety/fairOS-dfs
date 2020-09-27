@@ -1,4 +1,7 @@
 # FairOS-dfs
+
+![FairOS-dfs](https://github.com/fairDataSociety/fairOS-dfs/blob/master/docs/images/FairOS-dfs.png)
+
 The Decentralised File System (dfs) is a file system built for the FairOS.
 It is a stateless thin layer which uses the building blocks provided by Swarm to 
 provide high level functionalities like
@@ -13,9 +16,6 @@ dfs has the fllowing usecases
 2) Application data store (for both Web 3.0 DApps and web 2.0 Apps)
 3) Data sharing with single user and on an organizational level
 
-
-![FairOS-dfs](https://github.com/fairDataSociety/fairOS-dfs/blob/master/docs/images/FairOS-dfs.png)
-
 ### User
 The first step in dfs is to create a user. Every user is associated with a 12 
 word mnemonic based hd wallet. This wallet is passwod protected and stored in 
@@ -24,10 +24,17 @@ using this mnemonic. A user can use this mnemonic and import their account in an
 device and instantly see all their pods.
 
 ### What is a pod?
-A pod is a personal drive created by a user in fairOS-dfs. It is used to store files and related metadata in a decentralised fashion. A pod is always under the control of the user who created it. A user can create store any number of files or directories in a pod. 
+A pod is a personal drive created by a user in fairOS-dfs. It is used to store files and related metadata in a decentralised fashion. A pod is always under the control of the user who created it. A user can create and store any number of files or directories in a pod. 
 The user can share files in his pod with any other user just like in other centralised drives like dropbox. Not only users, a pod can be used by decentralised applications (DApp's) to store data related to that user.
 
-The basic storage unit in dfs is a pod. A user can create multiple pods and use it to organise their data. for ex: Personal-Pod, Applications-Pod etc.
+Pod cretion is cheap. A user can create multiple pods and use it to organise his data. for ex: Personal-Pod, Applications-Pod etc.
+
+### How to build and run dfs?
+- git clone https://github.com/fairdatasociety/fairOS-dfs.git
+- cd fairOS-dfs
+- make binary
+- ./dist/dfs prompt (starts dfs in REPL mode)
+- ./dist/dfs server (starts dfs in server mode serving API in port 9090 by default)
 
 ### Demo 1: FairOS-dfs Introduction
 [![](https://j.gifs.com/lx3x0l.gif)](https://www.youtube.com/watch?v=V4g06BBkXwI)
@@ -36,13 +43,6 @@ The basic storage unit in dfs is a pod. A user can create multiple pods and use 
 ### Demo 3: FairOS-dfs Adding a new Device
 [![](https://j.gifs.com/D1g1rY.gif)](https://www.youtube.com/watch?v=M5oNJ7QWiL8)
 
-
-### How to build and run dfs?
-- git clone https://github.com/fairdatasociety/fairOS-dfs.git
-- cd fairOS-dfs
-- make binary
-- ./dist/dfs prompt (starts dfs in REPL mode)
-- ./dist/dfs server (starts dfs in server mode serving API in port 9090 by default)
 
 ### HTTP APIs
 ##### user related APIs
