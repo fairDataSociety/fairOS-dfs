@@ -29,8 +29,13 @@ The user can share files in his pod with any other user just like in other centr
 
 The basic storage unit in dfs is a pod. A user can create multiple pods and use it to organise their data. for ex: Personal-Pod, Applications-Pod etc.
 
+### Demo 1: FairOS-dfs Introduction
+[![](https://j.gifs.com/lx3x0l.gif)](https://www.youtube.com/watch?v=V4g06BBkXwI)
+### Demo 2: FairOS-dfs File Sharing
+[![](https://j.gifs.com/vl3l5g.gif)](https://www.youtube.com/watch?v=a-Qfd37V8ng&t=2s)
+### Demo 3: FairOS-dfs Adding a new Device
+[![](https://j.gifs.com/D1g1rY.gif)](https://www.youtube.com/watch?v=M5oNJ7QWiL8)
 
-[![Introduction Demo](https://gifs.com/gif/fairos-dfs-intorduction-lx3x0l)](https://www.youtube.com/watch?v=V4g06BBkXwI)
 
 ### How to build and run dfs?
 - git clone https://github.com/fairdatasociety/fairOS-dfs.git
