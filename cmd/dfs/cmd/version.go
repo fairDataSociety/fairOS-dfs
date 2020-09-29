@@ -45,5 +45,5 @@ func showVersion() string {
 	if commitHash != "" {
 		return version + "-" + commitHash
 	}
-	return version + "-dev"
+	return version 
 }
