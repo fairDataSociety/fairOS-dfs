@@ -83,7 +83,7 @@ func TestPod_LoginPod(t *testing.T) {
 		}
 
 		dirPath := utils.PathSeperator + podName1 + utils.PathSeperator + firstDir
-		dirInode := info.getDirectory().GetDirFromDirectoryMap(dirPath)
+		dirInode := info.GetDirectory().GetDirFromDirectoryMap(dirPath)
 		if dirInode == nil {
 			t.Fatalf("directory not created")
 		}

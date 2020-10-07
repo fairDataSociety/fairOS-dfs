@@ -41,7 +41,7 @@ func (p *Pod) MakeDir(podName string, dirName string) error {
 		return err
 	}
 
-	directory := podInfo.getDirectory()
+	directory := podInfo.GetDirectory()
 
 	var firstTopic []byte
 	var topic []byte

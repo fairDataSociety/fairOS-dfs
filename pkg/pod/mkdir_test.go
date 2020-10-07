@@ -61,7 +61,7 @@ func TestPod_MakeDir(t *testing.T) {
 		}
 
 		dirPath := utils.PathSeperator + podName1 + utils.PathSeperator + firstDir
-		dirInode := info.getDirectory().GetDirFromDirectoryMap(dirPath)
+		dirInode := info.GetDirectory().GetDirFromDirectoryMap(dirPath)
 		if dirInode == nil {
 			t.Fatalf("directory not created")
 		}
@@ -104,7 +104,7 @@ func TestPod_MakeDir(t *testing.T) {
 		}
 
 		dirPath := utils.PathSeperator + podName2 + utils.PathSeperator + firstDir + utils.PathSeperator + secondDir
-		dirInode := info.getDirectory().GetDirFromDirectoryMap(dirPath)
+		dirInode := info.GetDirectory().GetDirFromDirectoryMap(dirPath)
 		if dirInode == nil {
 			t.Fatalf("directory not created")
 		}
@@ -142,7 +142,7 @@ func TestPod_MakeDir(t *testing.T) {
 		}
 
 		dirPath := utils.PathSeperator + podName3 + utils.PathSeperator + firstDir + utils.PathSeperator + secondDir
-		dirInode := info.getDirectory().GetDirFromDirectoryMap(dirPath)
+		dirInode := info.GetDirectory().GetDirFromDirectoryMap(dirPath)
 		if dirInode == nil {
 			t.Fatalf("directory not created")
 		}
@@ -176,7 +176,7 @@ func TestPod_MakeDir(t *testing.T) {
 
 		// check /test/dir3
 		dirPath := utils.PathSeperator + podName4 + utils.PathSeperator + "dir3"
-		dirInode := info.getDirectory().GetDirFromDirectoryMap(dirPath)
+		dirInode := info.GetDirectory().GetDirFromDirectoryMap(dirPath)
 		if dirInode == nil {
 			t.Fatalf("directory not created")
 		}
@@ -192,7 +192,7 @@ func TestPod_MakeDir(t *testing.T) {
 
 		// check /test/dir3/dir4
 		dirPath = utils.PathSeperator + podName4 + utils.PathSeperator + thirdDir
-		dirInode = info.getDirectory().GetDirFromDirectoryMap(dirPath)
+		dirInode = info.GetDirectory().GetDirFromDirectoryMap(dirPath)
 		if dirInode == nil {
 			t.Fatalf("directory not created")
 		}
@@ -225,7 +225,7 @@ func TestPod_MakeDir(t *testing.T) {
 		}
 
 		dirPath := utils.PathSeperator + podName5 + fourthDir
-		dirInode := info.getDirectory().GetDirFromDirectoryMap(dirPath)
+		dirInode := info.GetDirectory().GetDirFromDirectoryMap(dirPath)
 		if dirInode == nil {
 			t.Fatalf("directory not created")
 		}
