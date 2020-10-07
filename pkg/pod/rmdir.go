@@ -35,7 +35,7 @@ func (p *Pod) RemoveDir(podName string, dirName string) error {
 		return err
 	}
 
-	directory := info.getDirectory()
+	directory := info.GetDirectory()
 
 	dirInode, err := p.GetInodeFromName(dirName, info.GetCurrentDirInode(), directory, info)
 	if err != nil {

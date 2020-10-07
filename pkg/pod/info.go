@@ -38,7 +38,7 @@ type Info struct {
 	curDirMu        sync.RWMutex
 }
 
-func (i *Info) getDirectory() *di.Directory {
+func (i *Info) GetDirectory() *di.Directory {
 	return i.dir
 }
 

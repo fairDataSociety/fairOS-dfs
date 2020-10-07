@@ -118,7 +118,7 @@ func startHttpService(logger logging.Logger) {
 	baseRouter.Use(handler.LogMiddleware)
 	baseRouter.HandleFunc("/user/signup", handler.UserSignupHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/login", handler.UserLoginHandler).Methods("POST")
-	baseRouter.HandleFunc("/import", handler.ImportUserHandler).Methods("POST")
+	baseRouter.HandleFunc("/user/import", handler.ImportUserHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/present", handler.UserPresentHandler).Methods("GET")
 	baseRouter.HandleFunc("/user/isloggedin", handler.IsUserLoggedInHandler).Methods("GET")
 
@@ -160,6 +160,7 @@ func startHttpService(logger logging.Logger) {
 	dirRouter.HandleFunc("/rmdir", handler.DirectoryRmdirHandler).Methods("DELETE")
 	dirRouter.HandleFunc("/ls", handler.DirectoryLsHandler).Methods("GET")
 	dirRouter.HandleFunc("/stat", handler.DirectoryStatHandler).Methods("GET")
+	dirRouter.HandleFunc("/present", handler.DirectoryPresentHandler).Methods("GET")
 
 	// file related handlers
 	fileRouter := baseRouter.PathPrefix("/file/").Subrouter()

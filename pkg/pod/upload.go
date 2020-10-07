@@ -36,7 +36,7 @@ func (p *Pod) UploadFile(podName, fileName string, fileSize int64, fd io.Reader,
 	if err != nil {
 		return "", err
 	}
-	dir := podInfo.getDirectory()
+	dir := podInfo.GetDirectory()
 
 	bs, err := humanize.ParseBytes(blockSize)
 	if err != nil {
@@ -67,7 +67,7 @@ func (p *Pod) UploadFile(podName, fileName string, fileSize int64, fd io.Reader,
 	}
 
 	if path != podInfo.GetCurrentPodPathAndName() {
-		err = p.UpdateTillThePod(podName, podInfo.getDirectory(), topic, path, true)
+		err = p.UpdateTillThePod(podName, podInfo.GetDirectory(), topic, path, true)
 		if err != nil {
 			return "", err
 		}

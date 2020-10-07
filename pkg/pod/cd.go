@@ -47,7 +47,7 @@ func (p *Pod) ChangeDir(podName string, dirName string) (*Info, error) {
 		return podInfo, nil
 	}
 
-	directory := podInfo.getDirectory()
+	directory := podInfo.GetDirectory()
 	fd := podInfo.getFeed()
 	accountInfo := podInfo.getAccountInfo()
 

@@ -53,7 +53,7 @@ func (p *Pod) ReceiveFileAndStore(podName, podDir, fileName, metaHexRef string) 
 	}
 
 	path := p.getFilePath(podDir, podInfo)
-	dir := podInfo.getDirectory()
+	dir := podInfo.GetDirectory()
 
 	_, dirInode, err := dir.GetDirNode(path, podInfo.getFeed(), podInfo.getAccountInfo())
 	if err != nil {
@@ -80,7 +80,7 @@ func (p *Pod) ReceiveFileAndStore(podName, podDir, fileName, metaHexRef string) 
 
 	// if the directory path is not root.. then update all the parents too
 	if path != podInfo.GetCurrentPodPathAndName() {
-		err = p.UpdateTillThePod(podName, podInfo.getDirectory(), topic, path, true)
+		err = p.UpdateTillThePod(podName, podInfo.GetDirectory(), topic, path, true)
 		if err != nil {
 			return err
 		}

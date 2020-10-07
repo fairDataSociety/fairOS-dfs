@@ -38,7 +38,7 @@ func (p *Pod) RemoveFile(podName string, podFile string) error {
 	if err != nil {
 		return err
 	}
-	dir := podInfo.getDirectory()
+	dir := podInfo.GetDirectory()
 
 	var path string
 	if podInfo.IsCurrentDirRoot() {
@@ -88,7 +88,7 @@ func (p *Pod) RemoveFile(podName string, podFile string) error {
 	}
 
 	if path != podInfo.GetCurrentPodPathAndName() {
-		err = p.UpdateTillThePod(podName, podInfo.getDirectory(), topic, gopath.Dir(path), true)
+		err = p.UpdateTillThePod(podName, podInfo.GetDirectory(), topic, gopath.Dir(path), true)
 		if err != nil {
 			return err
 		}

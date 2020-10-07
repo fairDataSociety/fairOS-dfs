@@ -25,7 +25,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 )
 
-type uploadFileResponse struct {
+type UploadFileResponse struct {
 	References []Reference
 }
 
@@ -37,13 +37,13 @@ type Reference struct {
 
 const (
 	defaultMaxMemory  = 32 << 20 // 32 MB
-	compressionHeader = "fairOS-dfs-Compression"
+	CompressionHeader = "fairOS-dfs-Compression"
 )
 
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	podDir := r.FormValue("pod_dir")
 	blockSize := r.FormValue("block_size")
-	compression := r.Header.Get(compressionHeader)
+	compression := r.Header.Get(CompressionHeader)
 	if podDir == "" {
 		h.logger.Errorf("file upload: \"pod_dir\" argument missing")
 		jsonhttp.BadRequest(w, "file upload: \"pod_dir\" argument missing")
@@ -122,7 +122,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", " application/json")
-	jsonhttp.OK(w, &uploadFileResponse{
+	jsonhttp.OK(w, &UploadFileResponse{
 		References: references,
 	})
 }

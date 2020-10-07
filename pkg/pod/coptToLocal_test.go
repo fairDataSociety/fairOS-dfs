@@ -82,7 +82,7 @@ func TestPod_CopyToLocal(t *testing.T) {
 			t.Fatalf("error creating directory %s", firstDir)
 		}
 		dirPath := utils.PathSeperator + podName1 + utils.PathSeperator + firstDir
-		dirInode := info.getDirectory().GetDirFromDirectoryMap(dirPath)
+		dirInode := info.GetDirectory().GetDirFromDirectoryMap(dirPath)
 		if dirInode == nil {
 			t.Fatalf("directory not created")
 		}

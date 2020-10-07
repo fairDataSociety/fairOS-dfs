@@ -17,9 +17,10 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -27,12 +28,12 @@ import (
 	"time"
 
 	prompt "github.com/c-bata/go-prompt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -41,40 +42,64 @@ const (
 	PodSeperator     = ">>"
 	PromptSeperator  = "> "
 	DefaultSessionId = "12345678"
+	APIVersion       = "/v0"
 )
 
 var (
-	currentUser    string
-	currentPodInfo *pod.Info
-	currentPrompt  string
-	dfsAPI         *dfs.DfsAPI
-	logger         logging.Logger
+	currentUser      string
+	currentPod       string
+	currentPrompt    string
+	currentDirectory string
+	fdfsAPI          *FdfsClient
 )
 
-// promptCmd represents the prompt command
-var promptCmd = &cobra.Command{
-	Use:   "prompt",
-	Short: "a REPL to interact with FairOS's dfs",
-	Long: `A command prompt where you can interact with the distributed
-file system of the FairOS.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("dataDir   : ", dataDir)
-		fmt.Println("beeHost   : ", beeHost)
-		fmt.Println("beePort   : ", beePort)
-		fmt.Println("verbosity : ", verbosity)
-		logger = logging.New(ioutil.Discard, 0)
-		api, err := dfs.NewDfsAPI(dataDir, beeHost, beePort, logger)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		dfsAPI = api
-		initPrompt()
-	},
-}
+const (
+	API_USER_SIGNUP       = APIVersion + "/user/signup"
+	API_USER_LOGIN        = APIVersion + "/user/login"
+	API_USER_IMPORT       = APIVersion + "/user/import"
+	API_USER_PRESENT      = APIVersion + "/user/present"
+	API_USER_ISLOGGEDIN   = APIVersion + "/user/isloggedin"
+	API_USER_LOGOUT       = APIVersion + "/user/logout"
+	API_USER_AVATAR       = APIVersion + "/user/avatar"
+	API_USER_NAME         = APIVersion + "/user/name"
+	API_USER_CONTACT      = APIVersion + "/user/contact"
+	API_USER_EXPORT       = APIVersion + "/user/export"
+	API_USER_DELETE       = APIVersion + "/user/delete"
+	API_USER_STAT         = APIVersion + "/user/stat"
+	API_USER_SHARE_INBOX  = APIVersion + "/user/share/inbox"
+	API_USER_SHARE_OUTBOX = APIVersion + "/user/share/inbox"
+	API_POD_NEW           = APIVersion + "/pod/new"
+	API_POD_OPEN          = APIVersion + "/pod/open"
+	API_POD_CLOSE         = APIVersion + "/pod/close"
+	API_POD_SYNC          = APIVersion + "/pod/sync"
+	API_POD_DELETE        = APIVersion + "/pod/delete"
+	API_POD_LS            = APIVersion + "/pod/ls"
+	API_POD_STAT          = APIVersion + "/pod/stat"
+	API_DIR_ISPRESENT     = APIVersion + "/dir/present"
+	API_DIR_MKDIR         = APIVersion + "/dir/mkdir"
+	API_DIR_RMDIR         = APIVersion + "/dir/rmdir"
+	API_DIR_LS            = APIVersion + "/dir/ls"
+	API_DIR_STAT          = APIVersion + "/dir/stat"
+	API_FILE_DOWNLOAD     = APIVersion + "/file/download"
+	API_FILE_UPLOAD       = APIVersion + "/file/upload"
+	API_FILE_SHARE        = APIVersion + "/file/share"
+	API_FILE_RECEIVE      = APIVersion + "/file/receive"
+	API_FILE_RECEIVEINFO  = APIVersion + "/file/receiveinfo"
+	API_FILE_DELETE       = APIVersion + "/file/delete"
+	API_FILE_STAT         = APIVersion + "/file/stat"
+)
 
-func init() {
-	rootCmd.AddCommand(promptCmd)
+func NewPrompt() {
+	var err error
+	fdfsAPI, err = NewFdfsClient(fdfsHost, fdfsPort)
+	if err != nil {
+		fmt.Println("could not create fdfs client")
+		os.Exit(1)
+	}
+	if !fdfsAPI.CheckConnection() {
+		fmt.Println("could not connect to fdfs server")
+		os.Exit(2)
+	}
 }
 
 func initPrompt() {
@@ -158,42 +183,55 @@ func executor(in string) {
 				return
 			}
 			userName := blocks[2]
-			ref, mnemonic, err := dfsAPI.CreateUser(userName, "", "", nil, DefaultSessionId)
+			args := make(map[string]string)
+			args["user"] = userName
+			args["password"] = getPassword()
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_SIGNUP, args)
 			if err != nil {
 				fmt.Println("create user: ", err)
 				return
 			}
-			fmt.Println("user created with address ", ref)
+			var resp api.UserSignupResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("create user: ", err)
+				return
+			}
+			fmt.Println("user created with address ", resp.Address)
 			fmt.Println("Please store the following 12 words safely")
 			fmt.Println("if you loose this, you cannot recover the data in-case of an emergency.")
 			fmt.Println("you can also use this mnemonic to access the datain case this device is lost")
 			fmt.Println("=============== Mnemonic ==========================")
-			fmt.Println(mnemonic)
+			fmt.Println(resp.Mnemonic)
 			fmt.Println("=============== Mnemonic ==========================")
 			currentUser = userName
-			currentPodInfo = nil
-			currentPrompt = getCurrentPrompt()
-		case "export":
-			name, address, err := dfsAPI.ExportUser(DefaultSessionId)
-			if err != nil {
-				fmt.Println("export user: ", err)
-				return
-			}
-			fmt.Println("user name:", name)
-			fmt.Println("address  :", address)
+			currentPod = ""
+			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
 		case "import":
 			if len(blocks) == 4 {
 				userName := blocks[2]
 				address := blocks[3]
-				err := dfsAPI.ImportUserUsingAddress(userName, "", address, nil, DefaultSessionId)
+				args := make(map[string]string)
+				args["user"] = userName
+				args["address"] = address
+				args["password"] = getPassword()
+				data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_IMPORT, args)
 				if err != nil {
 					fmt.Println("import user: ", err)
 					return
 				}
-				fmt.Println("user imported")
+				var resp api.UserSignupResponse
+				err = json.Unmarshal(data, &resp)
+				if err != nil {
+					fmt.Println("import user: ", err)
+					return
+				}
+				fmt.Println("imported user name: ", userName)
+				fmt.Println("imported user address: ", resp.Address)
 				currentUser = userName
-				currentPodInfo = nil
+				currentPod = ""
+				currentDirectory = ""
 				currentPrompt = getCurrentPrompt()
 				return
 			}
@@ -207,22 +245,26 @@ func executor(in string) {
 				mnemonic = mnemonic + " " + blocks[i]
 			}
 			mnemonic = strings.TrimPrefix(mnemonic, " ")
-			_, err := dfsAPI.ImportUserUsingMnemonic(userName, "", mnemonic, nil, DefaultSessionId)
+			args := make(map[string]string)
+			args["user"] = userName
+			args["password"] = getPassword()
+			args["mnemonic"] = mnemonic
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_IMPORT, args)
 			if err != nil {
 				fmt.Println("import user: ", err)
 				return
 			}
-			currentUser = userName
-			currentPodInfo = nil
-			currentPrompt = getCurrentPrompt()
-		case "del":
-			err := dfsAPI.DeleteUser("", DefaultSessionId, nil)
+			var resp api.UserSignupResponse
+			err = json.Unmarshal(data, &resp)
 			if err != nil {
-				fmt.Println("delete user: ", err)
+				fmt.Println("import user: ", err)
 				return
 			}
-			currentUser = ""
-			currentPodInfo = nil
+			fmt.Println("imported user name: ", userName)
+			fmt.Println("imported user address: ", resp.Address)
+			currentUser = userName
+			currentPod = ""
+			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
 		case "login":
 			if len(blocks) < 3 {
@@ -230,22 +272,18 @@ func executor(in string) {
 				return
 			}
 			userName := blocks[2]
-			err := dfsAPI.LoginUser(userName, "", nil, DefaultSessionId)
+			args := make(map[string]string)
+			args["user"] = userName
+			args["password"] = getPassword()
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_LOGIN, args)
 			if err != nil {
 				fmt.Println("login user: ", err)
 				return
 			}
+			fmt.Println(string(data))
 			currentUser = userName
-			currentPodInfo = nil
-			currentPrompt = getCurrentPrompt()
-		case "logout":
-			err := dfsAPI.LogoutUser(DefaultSessionId, nil)
-			if err != nil {
-				fmt.Println("logout user: ", err)
-				return
-			}
-			currentUser = ""
-			currentPodInfo = nil
+			currentPod = ""
+			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
 		case "present":
 			if len(blocks) < 3 {
@@ -253,47 +291,129 @@ func executor(in string) {
 				return
 			}
 			userName := blocks[2]
-			yes := dfsAPI.IsUserNameAvailable(userName)
-			if yes {
-				fmt.Println("true")
+			args := make(map[string]string)
+			args["user"] = userName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_PRESENT, args)
+			if err != nil {
+				fmt.Println("user present: ", err)
+				return
+			}
+			var resp api.UserPresentResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("import user: ", err)
+				return
+			}
+			if resp.Present {
+				fmt.Println("User is present")
 			} else {
-				fmt.Println("false")
+				fmt.Println("User is not present")
 			}
 			currentPrompt = getCurrentPrompt()
 		case "ls":
-			users, err := dfsAPI.ListAllUsers()
-			if err != nil {
-				fmt.Println("user ls: ", err)
+			//users, err := dfsAPI.ListAllUsers()
+			//if err != nil {
+			//	fmt.Println("user ls: ", err)
+			//	return
+			//}
+			//for _, usr := range users {
+			//	fmt.Println(usr)
+			//}
+			currentPrompt = getCurrentPrompt()
+		case "del":
+			if currentUser == "" {
+				fmt.Println("please login as  user to do the operation")
 				return
 			}
-			for _, usr := range users {
-				fmt.Println(usr)
+			args := make(map[string]string)
+			args["password"] = getPassword()
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, API_USER_DELETE, args)
+			if err != nil {
+				fmt.Println("delete user: ", err)
+				return
 			}
+			fmt.Println(string(data))
+			currentUser = ""
+			currentPod = ""
+			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
+		case "logout":
+			if currentUser == "" {
+				fmt.Println("please login as  user to do the operation")
+				return
+			}
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_LOGOUT, nil)
+			if err != nil {
+				fmt.Println("logout user: ", err)
+				return
+			}
+			fmt.Println(string(data))
+			currentUser = ""
+			currentPod = ""
+			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
+		case "export":
+			if currentUser == "" {
+				fmt.Println("please login as  user to do the operation")
+				return
+			}
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_EXPORT, nil)
+			if err != nil {
+				fmt.Println("export user: ", err)
+				return
+			}
+			var resp api.UserExportResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("export user: ", err)
+				return
+			}
+			fmt.Println("user name:", resp.Name)
+			fmt.Println("address  :", resp.Address)
 			currentPrompt = getCurrentPrompt()
 		case "name":
+			if currentUser == "" {
+				fmt.Println("please login as  user to do the operation")
+				return
+			}
 			if len(blocks) == 6 {
 				firstName := blocks[2]
 				middleName := blocks[3]
 				lastName := blocks[4]
 				surNmae := blocks[5]
-				err := dfsAPI.SaveName(firstName, lastName, middleName, surNmae, DefaultSessionId)
+				args := make(map[string]string)
+				args["first_name"] = firstName
+				args["last_name"] = lastName
+				args["middle_name"] = middleName
+				args["surname"] = surNmae
+				_, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_NAME, args)
 				if err != nil {
 					fmt.Println("name: ", err)
 					return
 				}
 			} else if len(blocks) == 2 {
-				name, err := dfsAPI.GetName(DefaultSessionId)
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_USER_NAME, nil)
 				if err != nil {
 					fmt.Println("name: ", err)
 					return
 				}
-				fmt.Println("first_name : ", name.FirstName)
-				fmt.Println("middle_name: ", name.MiddleName)
-				fmt.Println("last_name  : ", name.LastName)
-				fmt.Println("surname    : ", name.SurName)
+				var resp user.Name
+				err = json.Unmarshal(data, &resp)
+				if err != nil {
+					fmt.Println("namer: ", err)
+					return
+				}
+				fmt.Println("first_name : ", resp.FirstName)
+				fmt.Println("middle_name: ", resp.MiddleName)
+				fmt.Println("last_name  : ", resp.LastName)
+				fmt.Println("surname    : ", resp.SurName)
 			}
 			currentPrompt = getCurrentPrompt()
 		case "contact":
+			if currentUser == "" {
+				fmt.Println("please login as  user to do the operation")
+				return
+			}
 			if len(blocks) == 8 {
 				phone := blocks[2]
 				mobile := blocks[3]
@@ -301,53 +421,77 @@ func executor(in string) {
 				address_line2 := blocks[5]
 				state := blocks[6]
 				zip := blocks[7]
-				addr := &user.Address{
-					AddressLine1: address_line1,
-					AddressLine2: address_line2,
-					State:        state,
-					ZipCode:      zip,
-				}
-				err := dfsAPI.SaveContact(phone, mobile, addr, DefaultSessionId)
+				args := make(map[string]string)
+				args["phone"] = phone
+				args["mobile"] = mobile
+				args["address_line_1"] = address_line1
+				args["address_line_2"] = address_line2
+				args["state_province_region"] = state
+				args["zipcode"] = zip
+				_, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_CONTACT, args)
 				if err != nil {
 					fmt.Println("contact: ", err)
 					return
 				}
 			} else if len(blocks) == 2 {
-				contacts, err := dfsAPI.GetContact(DefaultSessionId)
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_USER_CONTACT, nil)
 				if err != nil {
 					fmt.Println("contact: ", err)
 					return
 				}
-				fmt.Println("phone        : ", contacts.Phone)
-				fmt.Println("mobile       : ", contacts.Mobile)
-				fmt.Println("address_line1: ", contacts.Addr.AddressLine1)
-				fmt.Println("address_line2: ", contacts.Addr.AddressLine2)
-				fmt.Println("state        : ", contacts.Addr.State)
-				fmt.Println("zipcode      : ", contacts.Addr.ZipCode)
+				var resp user.Contacts
+				err = json.Unmarshal(data, &resp)
+				if err != nil {
+					fmt.Println("contact: ", err)
+					return
+				}
+				fmt.Println("phone        : ", resp.Phone)
+				fmt.Println("mobile       : ", resp.Mobile)
+				fmt.Println("address_line1: ", resp.Addr.AddressLine1)
+				fmt.Println("address_line2: ", resp.Addr.AddressLine2)
+				fmt.Println("state        : ", resp.Addr.State)
+				fmt.Println("zipcode      : ", resp.Addr.ZipCode)
 			}
 			currentPrompt = getCurrentPrompt()
 		case "share":
+			if currentUser == "" {
+				fmt.Println("please login as  user to do the operation")
+				return
+			}
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"inbox/outbox\" argument ")
 				return
 			}
 			switch blocks[2] {
 			case "inbox":
-				inbox, err := dfsAPI.GetUserSharingInbox(DefaultSessionId)
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_USER_SHARE_INBOX, nil)
 				if err != nil {
 					fmt.Println("sharing inbox: ", err)
 					return
 				}
-				for _, entry := range inbox.Entries {
+				var resp user.Inbox
+				err = json.Unmarshal(data, &resp)
+				if err != nil {
+					fmt.Println("sharing inbox: ", err)
+					return
+				}
+				for _, entry := range resp.Entries {
 					fmt.Println(entry)
 				}
+				currentPrompt = getCurrentPrompt()
 			case "outbox":
-				outbox, err := dfsAPI.GetUserSharingOutbox(DefaultSessionId)
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_USER_SHARE_OUTBOX, nil)
 				if err != nil {
 					fmt.Println("sharing outbox: ", err)
 					return
 				}
-				for _, entry := range outbox.Entries {
+				var resp user.Inbox
+				err = json.Unmarshal(data, &resp)
+				if err != nil {
+					fmt.Println("sharing outbox: ", err)
+					return
+				}
+				for _, entry := range resp.Entries {
 					fmt.Println(entry)
 				}
 			}
@@ -372,82 +516,108 @@ func executor(in string) {
 				return
 			}
 			podName := blocks[2]
-			podInfo, err := dfsAPI.CreatePod(podName, "", DefaultSessionId)
+			args := make(map[string]string)
+			args["pod"] = podName
+			args["password"] = getPassword()
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_NEW, args)
 			if err != nil {
 				fmt.Println("could not create pod: ", err)
 				return
 			}
-			currentPodInfo = podInfo
+			fmt.Println(string(data))
+			currentPod = podName
+			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
 		case "del":
-			lastPrompt := currentPrompt
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"name\" argument ")
 				return
 			}
 			podName := blocks[2]
-			err := dfsAPI.DeletePod(podName, DefaultSessionId)
+			args := make(map[string]string)
+			args["pod"] = podName
+			args["password"] = getPassword()
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_DELETE, args)
 			if err != nil {
 				fmt.Println("could not delete pod: ", err)
 				return
 			}
-			fmt.Println("successfully deleted pod: ", podName)
-			if podName == currentPodInfo.GetCurrentPodNameOnly() {
-				currentPrompt = DefaultPrompt
-			} else {
-				currentPrompt = lastPrompt
-			}
+			fmt.Println(string(data))
+			currentPod = ""
+			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"name\" argument ")
 				return
 			}
 			podName := blocks[2]
-			podInfo, err := dfsAPI.OpenPod(podName, "", DefaultSessionId)
+			args := make(map[string]string)
+			args["pod"] = podName
+			args["password"] = getPassword()
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_OPEN, args)
 			if err != nil {
-				fmt.Println("Open failed: ", err)
+				fmt.Println("pod open failed: ", err)
 				return
 			}
-			currentPodInfo = podInfo
+			fmt.Println(string(data))
+			currentPod = podName
+			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
 		case "close":
 			if !isPodOpened() {
 				return
 			}
-			err := dfsAPI.ClosePod(DefaultSessionId)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_CLOSE, nil)
 			if err != nil {
 				fmt.Println("error logging out: ", err)
 				return
 			}
-			currentPrompt = DefaultPrompt + " " + UserSeperator
-			currentPodInfo = nil
+			fmt.Println(string(data))
+			currentPod = ""
+			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
 		case "stat":
 			if !isPodOpened() {
 				return
 			}
-			podStat, err := dfsAPI.PodStat(currentPodInfo.GetCurrentPodNameOnly(), DefaultSessionId)
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			podName := blocks[2]
+			args := make(map[string]string)
+			args["pod"] = podName
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_POD_STAT, args)
 			if err != nil {
 				fmt.Println("error getting stat: ", err)
 				return
 			}
-			crTime, err := strconv.ParseInt(podStat.CreationTime, 10, 64)
+			var resp api.PodStatResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("pod stat: ", err)
+				return
+			}
+
+			crTime, err := strconv.ParseInt(resp.CreationTime, 10, 64)
 			if err != nil {
 				fmt.Println("error getting stat: ", err)
 				return
 			}
-			accTime, err := strconv.ParseInt(podStat.AccessTime, 10, 64)
+			accTime, err := strconv.ParseInt(resp.AccessTime, 10, 64)
 			if err != nil {
 				fmt.Println("error getting stat: ", err)
 				return
 			}
-			modTime, err := strconv.ParseInt(podStat.ModificationTime, 10, 64)
+			modTime, err := strconv.ParseInt(resp.ModificationTime, 10, 64)
 			if err != nil {
 				fmt.Println("error getting stat: ", err)
 				return
 			}
-			fmt.Println("Version          : ", podStat.Version)
-			fmt.Println("pod Name         : ", podStat.PodName)
-			fmt.Println("Path             : ", podStat.PodPath)
+			fmt.Println("Version          : ", resp.Version)
+			fmt.Println("pod Name         : ", resp.PodName)
+			fmt.Println("Path             : ", resp.PodPath)
 			fmt.Println("Creation Time    :", time.Unix(crTime, 0).String())
 			fmt.Println("Access Time      :", time.Unix(accTime, 0).String())
 			fmt.Println("Modification Time:", time.Unix(modTime, 0).String())
@@ -456,20 +626,26 @@ func executor(in string) {
 			if !isPodOpened() {
 				return
 			}
-			err := dfsAPI.SyncPod(DefaultSessionId)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_SYNC, nil)
 			if err != nil {
 				fmt.Println("could not sync pod: ", err)
 				return
 			}
-			fmt.Println("pod synced.")
+			fmt.Println(string(data))
 			currentPrompt = getCurrentPrompt()
 		case "ls":
-			pods, err := dfsAPI.ListPods(DefaultSessionId)
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_POD_LS, nil)
 			if err != nil {
 				fmt.Println("error while listing pods: %w", err)
 				return
 			}
-			for _, pod := range pods {
+			var resp api.PodListResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("pod stat: ", err)
+				return
+			}
+			for _, pod := range resp.Pods {
 				fmt.Println("<Pod>: ", pod)
 			}
 			currentPrompt = getCurrentPrompt()
@@ -485,44 +661,88 @@ func executor(in string) {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
-		podInfo, err := dfsAPI.ChangeDirectory(blocks[1], DefaultSessionId)
+		dirTocd := blocks[1]
+		args := make(map[string]string)
+		args["dir"] = dirTocd
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_DIR_ISPRESENT, nil)
 		if err != nil {
 			fmt.Println("cd failed: ", err)
 			return
 		}
-		currentPodInfo = podInfo
+		var resp api.DirPresentResponse
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			fmt.Println("dir cd: ", err)
+			return
+		}
+		if resp.Present {
+			if currentDirectory == utils.PathSeperator {
+				currentDirectory = currentDirectory + dirTocd
+			} else {
+				currentDirectory = currentDirectory + utils.PathSeperator + dirTocd
+			}
+		} else {
+			fmt.Println("User is not present: ", resp.Error)
+		}
 		currentPrompt = getCurrentPrompt()
 	case "ls":
 		if !isPodOpened() {
 			return
 		}
-		entries, err := dfsAPI.ListDir("", DefaultSessionId)
+		args := make(map[string]string)
+		args["dir"] = currentDirectory
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_DIR_LS, args)
 		if err != nil {
 			fmt.Println("ls failed: ", err)
 			return
 		}
-		for _, entry := range entries {
+		var resp api.ListFileResponse
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			fmt.Println("dir ls: ", err)
+			return
+		}
+		for _, entry := range resp.Entries {
 			if entry.ContentType == "inode/directory" {
 				fmt.Println("<Dir>: ", entry.Name)
 			} else {
 				fmt.Println("<File>: ", entry.Name)
 			}
-
 		}
 		currentPrompt = getCurrentPrompt()
-	case "download":
+	case "mkdir":
 		if !isPodOpened() {
 			return
 		}
-		if len(blocks) < 3 {
+		if len(blocks) < 2 {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
-		err := dfsAPI.CopyToLocal(blocks[1], blocks[2], DefaultSessionId)
+		args := make(map[string]string)
+		args["dir"] = blocks[1]
+		data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_DIR_MKDIR, args)
 		if err != nil {
-			fmt.Println("download failed: ", err)
+			fmt.Println("mkdir failed: ", err)
 			return
 		}
+		fmt.Println(string(data))
+		currentPrompt = getCurrentPrompt()
+	case "rmdir":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 2 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		args := make(map[string]string)
+		args["dir"] = blocks[1]
+		data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_DIR_RMDIR, args)
+		if err != nil {
+			fmt.Println("rmdir failed: ", err)
+			return
+		}
+		fmt.Println(string(data))
 		currentPrompt = getCurrentPrompt()
 	case "upload":
 		if !isPodOpened() {
@@ -546,55 +766,71 @@ func executor(in string) {
 		podDir := blocks[2]
 		blockSize := blocks[3]
 		compression := blocks[4]
-		ref, err := dfsAPI.UploadFile(fileName, DefaultSessionId, fi.Size(), fd, podDir, blockSize, compression)
+		data, err := fdfsAPI.uploadMultipartFile(API_FILE_UPLOAD, fileName, fi.Size(), fd, podDir, blockSize, compression)
 		if err != nil {
 			fmt.Println("upload failed: ", err)
 			return
 		}
-		fmt.Println("reference : ", ref)
+		var resp api.UploadFileResponse
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			fmt.Println("file upload: ", err)
+			return
+		}
+		fmt.Println("reference : ", resp.References)
 		currentPrompt = getCurrentPrompt()
-	case "mkdir":
+	case "download":
 		if !isPodOpened() {
 			return
 		}
-		if len(blocks) < 2 {
+		if len(blocks) < 3 {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
-		err := dfsAPI.Mkdir(blocks[1], DefaultSessionId)
+		localDir := blocks[1]
+		dirStat, err := os.Stat(localDir)
 		if err != nil {
-			fmt.Println("mkdir failed: ", err)
+			fmt.Println("local path is not a present: ", err)
 			return
 		}
-		currentPrompt = getCurrentPrompt()
-	case "rmdir":
-		if !isPodOpened() {
+
+		if !dirStat.IsDir() {
+			fmt.Println("local path is not a directory")
 			return
 		}
-		if len(blocks) < 2 {
-			fmt.Println("invalid command. Missing one or more arguments")
-			return
-		}
-		err := dfsAPI.RmDir(blocks[1], DefaultSessionId)
+
+		// Create the file
+		loalFile := filepath.Join(localDir + utils.PathSeperator + filepath.Base(blocks[2]))
+		out, err := os.Create(loalFile)
 		if err != nil {
-			fmt.Println("rmdir failed: ", err)
+			fmt.Println("download failed: ", err)
 			return
 		}
+		defer out.Close()
+
+		args := make(map[string]string)
+		args["file"] = blocks[2]
+		n, err := fdfsAPI.downloadMultipartFile(http.MethodPost, API_FILE_DOWNLOAD, args, out)
+		if err != nil {
+			fmt.Println("download failed: ", err)
+			return
+		}
+		fmt.Println("Downloaded ", n, " bytes")
 		currentPrompt = getCurrentPrompt()
 	case "cat":
-		if !isPodOpened() {
-			return
-		}
-		if len(blocks) < 2 {
-			fmt.Println("invalid command. Missing one or more arguments")
-			return
-		}
-		err := dfsAPI.Cat(blocks[1], DefaultSessionId)
-		if err != nil {
-			fmt.Println("cat failed: ", err)
-			return
-		}
-		currentPrompt = getCurrentPrompt()
+		//if !isPodOpened() {
+		//	return
+		//}
+		//if len(blocks) < 2 {
+		//	fmt.Println("invalid command. Missing one or more arguments")
+		//	return
+		//}
+		//err := dfsAPI.Cat(blocks[1], DefaultSessionId)
+		//if err != nil {
+		//	fmt.Println("cat failed: ", err)
+		//	return
+		//}
+		//currentPrompt = getCurrentPrompt()
 	case "stat":
 		if !isPodOpened() {
 			return
@@ -603,45 +839,54 @@ func executor(in string) {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
-		ds, err := dfsAPI.DirectoryStat(blocks[1], DefaultSessionId, true)
+		args := make(map[string]string)
+		args["file"] = blocks[2]
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_DIR_STAT, args)
 		if err != nil {
 			if err.Error() == "directory not found" {
-				fs, err := dfsAPI.FileStat(blocks[1], DefaultSessionId)
+				args["dir"] = blocks[2]
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_STAT, args)
 				if err != nil {
 					fmt.Println("stat failed: ", err)
 					return
 				}
-				crTime, err := strconv.ParseInt(fs.CreationTime, 10, 64)
+				var resp file.FileStats
+				err = json.Unmarshal(data, &resp)
+				if err != nil {
+					fmt.Println("file stat: ", err)
+					return
+				}
+				crTime, err := strconv.ParseInt(resp.CreationTime, 10, 64)
 				if err != nil {
 					fmt.Println("stat failed: ", err)
 					return
 				}
-				accTime, err := strconv.ParseInt(fs.AccessTime, 10, 64)
+				accTime, err := strconv.ParseInt(resp.AccessTime, 10, 64)
 				if err != nil {
 					fmt.Println("stat failed: ", err)
 					return
 				}
-				modTime, err := strconv.ParseInt(fs.ModificationTime, 10, 64)
+				modTime, err := strconv.ParseInt(resp.ModificationTime, 10, 64)
 				if err != nil {
 					fmt.Println("stat failed: ", err)
 					return
 				}
-				compression := fs.Compression
+				compression := resp.Compression
 				if compression == "" {
 					compression = "None"
 				}
-				fmt.Println("Account 	   	: ", fs.Account)
-				fmt.Println("PodName 	   	: ", fs.PodName)
-				fmt.Println("File Path	   	: ", fs.FilePath)
-				fmt.Println("File Name	   	: ", fs.FileName)
-				fmt.Println("File Size	   	: ", fs.FileSize)
-				fmt.Println("Block Size	   	: ", fs.BlockSize)
+				fmt.Println("Account 	   	: ", resp.Account)
+				fmt.Println("PodName 	   	: ", resp.PodName)
+				fmt.Println("File Path	   	: ", resp.FilePath)
+				fmt.Println("File Name	   	: ", resp.FileName)
+				fmt.Println("File Size	   	: ", resp.FileSize)
+				fmt.Println("Block Size	   	: ", resp.BlockSize)
 				fmt.Println("Compression   		: ", compression)
-				fmt.Println("Content Type  		: ", fs.ContentType)
+				fmt.Println("Content Type  		: ", resp.ContentType)
 				fmt.Println("Cr. Time	   	: ", time.Unix(crTime, 0).String())
 				fmt.Println("Mo. Time	   	: ", time.Unix(accTime, 0).String())
 				fmt.Println("Ac. Time	   	: ", time.Unix(modTime, 0).String())
-				for _, b := range fs.Blocks {
+				for _, b := range resp.Blocks {
 					blkStr := fmt.Sprintf("%s, 0x%s, %s bytes, %s bytes", b.Name, b.Reference, b.Size, b.CompressedSize)
 					fmt.Println(blkStr)
 				}
@@ -650,44 +895,44 @@ func executor(in string) {
 				return
 			}
 		} else {
-			crTime, err := strconv.ParseInt(ds.CreationTime, 10, 64)
+			var resp dir.DirStats
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("file stat: ", err)
+				return
+			}
+			crTime, err := strconv.ParseInt(resp.CreationTime, 10, 64)
 			if err != nil {
 				fmt.Println("stat failed: ", err)
 				return
 			}
-			accTime, err := strconv.ParseInt(ds.AccessTime, 10, 64)
+			accTime, err := strconv.ParseInt(resp.AccessTime, 10, 64)
 			if err != nil {
 				fmt.Println("stat failed: ", err)
 				return
 			}
-			modTime, err := strconv.ParseInt(ds.ModificationTime, 10, 64)
+			modTime, err := strconv.ParseInt(resp.ModificationTime, 10, 64)
 			if err != nil {
 				fmt.Println("stat failed: ", err)
 				return
 			}
-			fmt.Println("Account 	   	: ", ds.Account)
-			fmt.Println("PodAddress    		: ", ds.PodAddress)
-			fmt.Println("PodName 	   	: ", ds.PodName)
-			fmt.Println("Dir Path	   	: ", ds.DirPath)
-			fmt.Println("Dir Name	   	: ", ds.DirName)
+			fmt.Println("Account 	   	: ", resp.Account)
+			fmt.Println("PodAddress    		: ", resp.PodAddress)
+			fmt.Println("PodName 	   	: ", resp.PodName)
+			fmt.Println("Dir Path	   	: ", resp.DirPath)
+			fmt.Println("Dir Name	   	: ", resp.DirName)
 			fmt.Println("Cr. Time	   	: ", time.Unix(crTime, 0).String())
 			fmt.Println("Mo. Time	   	: ", time.Unix(accTime, 0).String())
 			fmt.Println("Ac. Time	   	: ", time.Unix(modTime, 0).String())
-			fmt.Println("No of Dir.	   	: ", ds.NoOfDirectories)
-			fmt.Println("No of Files   		: ", ds.NoOfFiles)
+			fmt.Println("No of Dir.	   	: ", resp.NoOfDirectories)
+			fmt.Println("No of Files   		: ", resp.NoOfFiles)
 		}
 		currentPrompt = getCurrentPrompt()
 	case "pwd":
 		if !isPodOpened() {
 			return
 		}
-		if currentPodInfo.IsCurrentDirRoot() {
-			fmt.Println("/")
-		} else {
-			podDir := currentPodInfo.GetCurrentPodPathAndName()
-			curDir := strings.TrimPrefix(currentPodInfo.GetCurrentDirPathAndName(), podDir)
-			fmt.Println(curDir)
-		}
+		fmt.Println(currentDirectory)
 		currentPrompt = getCurrentPrompt()
 	case "rm":
 		if !isPodOpened() {
@@ -697,11 +942,14 @@ func executor(in string) {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
-		err := dfsAPI.DeleteFile(blocks[1], DefaultSessionId)
+		args := make(map[string]string)
+		args["file"] = blocks[2]
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_DELETE, args)
 		if err != nil {
 			fmt.Println("rm failed: ", err)
 			return
 		}
+		fmt.Println(string(data))
 		currentPrompt = getCurrentPrompt()
 	case "share":
 		if len(blocks) < 2 {
@@ -709,12 +957,20 @@ func executor(in string) {
 			return
 		}
 		podFile := blocks[1]
-		sharingRef, err := dfsAPI.ShareFile(podFile, currentUser, DefaultSessionId)
+		args := make(map[string]string)
+		args["file"] = podFile
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_SHARE, args)
 		if err != nil {
 			fmt.Println("share: ", err)
 			return
 		}
-		fmt.Println("Sharing Reference: ", sharingRef)
+		var resp api.SharingReference
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			fmt.Println("file share: ", err)
+			return
+		}
+		fmt.Println("Sharing Reference: ", resp.Reference)
 		currentPrompt = getCurrentPrompt()
 	case "receive":
 		if len(blocks) < 3 {
@@ -723,19 +979,22 @@ func executor(in string) {
 		}
 		sharingRefString := blocks[1]
 		podDir := blocks[2]
-
-		sharingRef, err := utils.ParseSharingReference(sharingRefString)
+		args := make(map[string]string)
+		args["ref"] = sharingRefString
+		args["dir"] = podDir
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_RECEIVE, args)
 		if err != nil {
 			fmt.Println("receive: ", err)
 			return
 		}
-		filePath, metaRef, err := dfsAPI.ReceiveFile(DefaultSessionId, sharingRef, podDir)
+		var resp api.ReceiveFileResponse
+		err = json.Unmarshal(data, &resp)
 		if err != nil {
-			fmt.Println("receive: ", err)
+			fmt.Println("file receive: ", err)
 			return
 		}
-		fmt.Println("file path  : ", filePath)
-		fmt.Println("reference  : ", metaRef)
+		fmt.Println("file path  : ", resp.FileName)
+		fmt.Println("reference  : ", resp.Reference)
 		currentPrompt = getCurrentPrompt()
 	case "receiveinfo":
 		if len(blocks) < 2 {
@@ -743,31 +1002,34 @@ func executor(in string) {
 			return
 		}
 		sharingRefString := blocks[1]
-		sharingRef, err := utils.ParseSharingReference(sharingRefString)
+		args := make(map[string]string)
+		args["ref"] = sharingRefString
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_RECEIVEINFO, args)
 		if err != nil {
 			fmt.Println("receive info: ", err)
 			return
 		}
-		ri, err := dfsAPI.ReceiveInfo(DefaultSessionId, sharingRef)
+		var resp user.ReceiveFileInfo
+		err = json.Unmarshal(data, &resp)
 		if err != nil {
-			fmt.Println("receive info: ", err)
+			fmt.Println("file receiveinfo: ", err)
 			return
 		}
-		shTime, err := strconv.ParseInt(ri.SharedTime, 10, 64)
+		shTime, err := strconv.ParseInt(resp.SharedTime, 10, 64)
 		if err != nil {
 			fmt.Println(" info: ", err)
 			return
 		}
-		fmt.Println("FileName       : ", ri.FileName)
-		fmt.Println("Size           : ", ri.Size)
-		fmt.Println("BlockSize      : ", ri.BlockSize)
-		fmt.Println("NumberOfBlocks : ", ri.NumberOfBlocks)
-		fmt.Println("ContentType    : ", ri.ContentType)
-		fmt.Println("Compression    : ", ri.Compression)
-		fmt.Println("PodName        : ", ri.PodName)
-		fmt.Println("FileMetaHash   : ", ri.FileMetaHash)
-		fmt.Println("Sender         : ", ri.Sender)
-		fmt.Println("Receiver       : ", ri.Receiver)
+		fmt.Println("FileName       : ", resp.FileName)
+		fmt.Println("Size           : ", resp.Size)
+		fmt.Println("BlockSize      : ", resp.BlockSize)
+		fmt.Println("NumberOfBlocks : ", resp.NumberOfBlocks)
+		fmt.Println("ContentType    : ", resp.ContentType)
+		fmt.Println("Compression    : ", resp.Compression)
+		fmt.Println("PodName        : ", resp.PodName)
+		fmt.Println("FileMetaHash   : ", resp.FileMetaHash)
+		fmt.Println("Sender         : ", resp.Sender)
+		fmt.Println("Receiver       : ", resp.Receiver)
 		fmt.Println("SharedTime     : ", shTime)
 		currentPrompt = getCurrentPrompt()
 	case "mv":
@@ -831,7 +1093,7 @@ func getCurrentPrompt() string {
 	if podPrompt != "" {
 		currPrompt = currPrompt + " " + podPrompt + " " + PodSeperator
 	}
-	dirPrompt := getCurrentDirPrompt()
+	dirPrompt := currentDirectory
 	if dirPrompt != "" {
 		currPrompt = currPrompt + " " + dirPrompt + " " + PromptSeperator
 	}
@@ -839,7 +1101,7 @@ func getCurrentPrompt() string {
 }
 
 func isPodOpened() bool {
-	if currentPodInfo == nil {
+	if currentPod == "" {
 		fmt.Println("open the pod to do the operation")
 		return false
 	}
@@ -855,22 +1117,22 @@ func getUserPrompt() string {
 }
 
 func getPodPrompt() string {
-	if currentPodInfo != nil {
-		return currentPodInfo.GetCurrentPodNameOnly()
+	if currentPod != "" {
+		return currentPod
 	} else {
 		return ""
 	}
 }
 
-func getCurrentDirPrompt() string {
-	currentDir := ""
-	if currentPodInfo != nil {
-		if currentPodInfo.IsCurrentDirRoot() {
-			return utils.PathSeperator
-		}
-		podPathAndName := currentPodInfo.GetCurrentPodPathAndName()
-		pathExceptPod := strings.TrimPrefix(currentPodInfo.GetCurrentDirPathOnly(), podPathAndName)
-		currentDir = pathExceptPod + utils.PathSeperator + currentPodInfo.GetCurrentDirNameOnly()
+func getPassword() (password string) {
+	fmt.Println("Please enter your password: ")
+	bytePassword, err := terminal.ReadPassword(0)
+	if err != nil {
+		log.Fatalf("error reading password")
+		return
 	}
-	return currentDir
+	fmt.Println("")
+	passwd := string(bytePassword)
+	password = strings.TrimSpace(passwd)
+	return password
 }
