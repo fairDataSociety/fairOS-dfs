@@ -243,7 +243,7 @@ func (d *DfsAPI) DeletePod(podName, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// delete the pod
+	// delete the pod and close if it is opened
 	err := ui.GetPod().DeletePod(podName)
 	if err != nil {
 		return err
@@ -251,12 +251,6 @@ func (d *DfsAPI) DeletePod(podName, sessionId string) error {
 
 	// close the pod and delete it from login user session, if the delete is for a opened pod
 	if ui.GetPodName() != "" && podName == ui.GetPodName() {
-		// close the pod
-		err = ui.GetPod().ClosePod(ui.GetPodName())
-		if err != nil {
-			return err
-		}
-
 		// remove from the login session
 		ui.RemovePodName()
 	}

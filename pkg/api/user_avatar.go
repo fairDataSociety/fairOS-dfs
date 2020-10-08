@@ -111,7 +111,7 @@ func (h *Handler) SaveUserAvatarHandler(w http.ResponseWriter, r *http.Request) 
 		jsonhttp.BadRequest(w, "user avatar: "+err.Error())
 		return
 	}
-	jsonhttp.OK(w, nil)
+	jsonhttp.OK(w, "avatar uploaded for user")
 }
 
 func (h *Handler) GetUserAvatarHandler(w http.ResponseWriter, r *http.Request) {
