@@ -537,7 +537,7 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["pod"] = podName
 			args["password"] = getPassword()
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_DELETE, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, API_POD_DELETE, args)
 			if err != nil {
 				fmt.Println("could not delete pod: ", err)
 				return
@@ -662,9 +662,33 @@ func executor(in string) {
 			return
 		}
 		dirTocd := blocks[1]
+
+		// if cd'ing to previous dir, just do it
+		if dirTocd == ".." && currentDirectory != utils.PathSeperator {
+			currentDirectory = filepath.Dir(currentDirectory)
+			currentPrompt = getCurrentPrompt()
+			return
+		}
+
+		// if cd'ing to root dir, just do it
+		if dirTocd == utils.PathSeperator {
+			currentDirectory = utils.PathSeperator
+			currentPrompt = getCurrentPrompt()
+			return
+		}
+
+		// if cd'ing forward, we have to check if that dir is present
+		if dirTocd != utils.PathSeperator {
+			if currentDirectory == utils.PathSeperator {
+				dirTocd = currentDirectory + dirTocd
+			} else {
+				dirTocd = currentDirectory + utils.PathSeperator + dirTocd
+			}
+		}
+
 		args := make(map[string]string)
 		args["dir"] = dirTocd
-		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_DIR_ISPRESENT, nil)
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_DIR_ISPRESENT, args)
 		if err != nil {
 			fmt.Println("cd failed: ", err)
 			return
@@ -676,13 +700,9 @@ func executor(in string) {
 			return
 		}
 		if resp.Present {
-			if currentDirectory == utils.PathSeperator {
-				currentDirectory = currentDirectory + dirTocd
-			} else {
-				currentDirectory = currentDirectory + utils.PathSeperator + dirTocd
-			}
+			currentDirectory = dirTocd
 		} else {
-			fmt.Println("User is not present: ", resp.Error)
+			fmt.Println("dir is not present: ", resp.Error)
 		}
 		currentPrompt = getCurrentPrompt()
 	case "ls":
@@ -718,8 +738,20 @@ func executor(in string) {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
+		dirToMk := blocks[1]
+		if dirToMk == "" {
+			fmt.Println("invalid dir")
+			return
+		}
+
+		if !strings.HasPrefix(dirToMk, utils.PathSeperator) {
+			// then this path is not from root
+			dirToMk = currentDirectory + utils.PathSeperator + dirToMk
+		}
+
 		args := make(map[string]string)
-		args["dir"] = blocks[1]
+		args["dir"] = dirToMk
+
 		data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_DIR_MKDIR, args)
 		if err != nil {
 			fmt.Println("mkdir failed: ", err)
@@ -735,9 +767,23 @@ func executor(in string) {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
+		dirToRm := blocks[1]
+		if dirToRm == "" {
+			fmt.Println("invalid dir")
+			return
+		}
+		if !strings.HasPrefix(dirToRm, utils.PathSeperator) {
+			// then this path is not from root
+			if currentDirectory == utils.PathSeperator {
+				dirToRm = currentDirectory + dirToRm
+			} else {
+				dirToRm = currentDirectory + utils.PathSeperator + dirToRm
+			}
+		}
+
 		args := make(map[string]string)
-		args["dir"] = blocks[1]
-		data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_DIR_RMDIR, args)
+		args["dir"] = dirToRm
+		data, err := fdfsAPI.callFdfsApi(http.MethodDelete, API_DIR_RMDIR, args)
 		if err != nil {
 			fmt.Println("rmdir failed: ", err)
 			return
@@ -764,6 +810,9 @@ func executor(in string) {
 			return
 		}
 		podDir := blocks[2]
+		if podDir == "." {
+			podDir = currentDirectory
+		}
 		blockSize := blocks[3]
 		compression := blocks[4]
 		data, err := fdfsAPI.uploadMultipartFile(API_FILE_UPLOAD, fileName, fi.Size(), fd, podDir, blockSize, compression)
@@ -839,12 +888,24 @@ func executor(in string) {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
+		statElement := blocks[1]
+		if statElement == "" {
+			return
+		}
+		if !strings.HasPrefix(statElement, utils.PathSeperator) {
+			if currentDirectory == utils.PathSeperator {
+				statElement = currentDirectory + statElement
+			} else {
+				statElement = currentDirectory + utils.PathSeperator + statElement
+			}
+		}
 		args := make(map[string]string)
-		args["file"] = blocks[2]
+		args["dir"] = statElement
 		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_DIR_STAT, args)
 		if err != nil {
-			if err.Error() == "directory not found" {
-				args["dir"] = blocks[2]
+			if err.Error() == "received invalid status: 500 Internal Server Error"{
+				args := make(map[string]string)
+				args["file"] = statElement
 				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_STAT, args)
 				if err != nil {
 					fmt.Println("stat failed: ", err)
@@ -942,9 +1003,21 @@ func executor(in string) {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
+		rmFile := blocks[1]
+		if rmFile == "" {
+			return
+		}
+		if !strings.HasPrefix(rmFile, utils.PathSeperator) {
+			if currentDirectory == utils.PathSeperator {
+				rmFile = currentDirectory + rmFile
+			} else {
+				rmFile = currentDirectory + utils.PathSeperator + rmFile
+			}
+		}
+
 		args := make(map[string]string)
-		args["file"] = blocks[2]
-		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_DELETE, args)
+		args["file"] = rmFile
+		data, err := fdfsAPI.callFdfsApi(http.MethodDelete, API_FILE_DELETE, args)
 		if err != nil {
 			fmt.Println("rm failed: ", err)
 			return
@@ -957,6 +1030,18 @@ func executor(in string) {
 			return
 		}
 		podFile := blocks[1]
+
+		if podFile == "" {
+			return
+		}
+		if !strings.HasPrefix(podFile, utils.PathSeperator) {
+			if currentDirectory == utils.PathSeperator {
+				podFile = currentDirectory + podFile
+			} else {
+				podFile = currentDirectory + utils.PathSeperator + podFile
+			}
+		}
+
 		args := make(map[string]string)
 		args["file"] = podFile
 		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_SHARE, args)
