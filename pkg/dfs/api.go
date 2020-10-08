@@ -37,12 +37,12 @@ type DfsAPI struct {
 	logger  logging.Logger
 }
 
-func NewDfsAPI(dataDir, host, port string, logger logging.Logger) (*DfsAPI, error) {
+func NewDfsAPI(dataDir, host, port, cookieDomain string, logger logging.Logger) (*DfsAPI, error) {
 	c := bee.NewBeeClient(host, port, logger)
 	if !c.CheckConnection() {
 		return nil, ErrBeeClient
 	}
-	users := user.NewUsers(dataDir, c, logger)
+	users := user.NewUsers(dataDir, c, cookieDomain, logger)
 	return &DfsAPI{
 		dataDir: dataDir,
 		client:  c,

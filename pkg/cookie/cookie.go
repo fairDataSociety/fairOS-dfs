@@ -46,7 +46,7 @@ func GetUniqueSessionId() string {
 	return base64.URLEncoding.EncodeToString(b)
 }
 
-func SetSession(sessionId string, response http.ResponseWriter) error {
+func SetSession(sessionId string, response http.ResponseWriter, cookieDomain string) error {
 	logoutTime := time.Now().Add(cookieLogoutTime)
 	logoutTimeStr := logoutTime.Format(time.RFC3339)
 	value := map[string]string{
@@ -59,15 +59,30 @@ func SetSession(sessionId string, response http.ResponseWriter) error {
 	}
 
 	expire := time.Now().Add(cookieExpirationTime)
-	cookie := &http.Cookie{
-		Name:     CookieName,
-		Value:    encoded,
-		Path:     "/",
-		Expires:  expire,
-		HttpOnly: true,
-		//Secure: true,
-		MaxAge: 0, // to make sure that the browser does not persist it in disk
+	var cookie *http.Cookie
+	if cookieDomain == "" {
+		cookie = &http.Cookie{
+			Name:     CookieName,
+			Value:    encoded,
+			Path:     "/",
+			Expires:  expire,
+			HttpOnly: true,
+			//Secure: true,
+			MaxAge: 0, // to make sure that the browser does not persist it in disk
+		}
+	} else {
+		cookie = &http.Cookie{
+			Name:     CookieName,
+			Value:    encoded,
+			Path:     "/",
+			Expires:  expire,
+			HttpOnly: true,
+			Domain:   cookieDomain,
+			//Secure: true,
+			MaxAge: 0, // to make sure that the browser does not persist it in disk
+		}
 	}
+
 	http.SetCookie(response, cookie)
 	return nil
 }

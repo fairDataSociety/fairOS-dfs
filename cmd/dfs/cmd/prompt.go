@@ -58,12 +58,13 @@ var promptCmd = &cobra.Command{
 	Long: `A command prompt where you can interact with the distributed
 file system of the FairOS.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("dataDir   : ", dataDir)
-		fmt.Println("beeHost   : ", beeHost)
-		fmt.Println("beePort   : ", beePort)
-		fmt.Println("verbosity : ", verbosity)
+		fmt.Println("dataDir      : ", dataDir)
+		fmt.Println("beeHost      : ", beeHost)
+		fmt.Println("beePort      : ", beePort)
+		fmt.Println("cookieDomain :", cookieDomain)
+		fmt.Println("verbosity    : ", verbosity)
 		logger = logging.New(ioutil.Discard, 0)
-		api, err := dfs.NewDfsAPI(dataDir, beeHost, beePort, logger)
+		api, err := dfs.NewDfsAPI(dataDir, beeHost, beePort, cookieDomain, logger)
 		if err != nil {
 			fmt.Println(err.Error())
 			return

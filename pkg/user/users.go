@@ -40,20 +40,22 @@ type Info struct {
 }
 
 type Users struct {
-	dataDir string
-	client  blockstore.Client
-	userMap map[string]*Info
-	userMu  *sync.RWMutex
-	logger  logging.Logger
+	dataDir      string
+	client       blockstore.Client
+	userMap      map[string]*Info
+	userMu       *sync.RWMutex
+	cookieDomain string
+	logger       logging.Logger
 }
 
-func NewUsers(dataDir string, client blockstore.Client, logger logging.Logger) *Users {
+func NewUsers(dataDir string, client blockstore.Client, cookieDomain string, logger logging.Logger) *Users {
 	return &Users{
-		dataDir: dataDir,
-		client:  client,
-		userMap: make(map[string]*Info),
-		userMu:  &sync.RWMutex{},
-		logger:  logger,
+		dataDir:      dataDir,
+		client:       client,
+		userMap:      make(map[string]*Info),
+		userMu:       &sync.RWMutex{},
+		cookieDomain: cookieDomain,
+		logger:       logger,
 	}
 }
 

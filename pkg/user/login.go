@@ -83,7 +83,7 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 
 func (u *Users) Login(ui *Info, response http.ResponseWriter) error {
 	if response != nil {
-		err := cookie.SetSession(ui.GetSessionId(), response)
+		err := cookie.SetSession(ui.GetSessionId(), response, u.cookieDomain)
 		if err != nil {
 			return err
 		}
