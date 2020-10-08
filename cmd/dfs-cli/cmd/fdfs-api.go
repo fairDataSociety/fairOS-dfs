@@ -143,20 +143,19 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	return data, nil
 }
 
-func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, podDir, blockSize, compression string) ([]byte, error) {
+func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, arguments map[string]string, formFileArgument string, compression string) ([]byte, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
+
 	// Add parameters
-	err := writer.WriteField("pod_dir", podDir)
-	if err != nil {
-		return nil, err
-	}
-	err = writer.WriteField("block_size", blockSize)
-	if err != nil {
-		return nil, err
+	for k, v := range arguments {
+		err := writer.WriteField(k, v)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	part, err := writer.CreateFormFile("files", fileName)
+	part, err := writer.CreateFormFile(formFileArgument, fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +191,7 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 	}
 
 	if response.StatusCode != http.StatusOK {
-		errStr := fmt.Sprintf("received invalid status: %s", response.Status)
+		errStr := fmt.Sprintf("received invalid status: %v", response.StatusCode)
 		return nil, errors.New(errStr)
 	}
 

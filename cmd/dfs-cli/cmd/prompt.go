@@ -19,6 +19,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -27,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	prompt "github.com/c-bata/go-prompt"
+	"github.com/c-bata/go-prompt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -37,12 +38,11 @@ import (
 )
 
 const (
-	DefaultPrompt    = "dfs"
-	UserSeperator    = ">>>"
-	PodSeperator     = ">>"
-	PromptSeperator  = "> "
-	DefaultSessionId = "12345678"
-	APIVersion       = "/v0"
+	DefaultPrompt   = "dfs"
+	UserSeperator   = ">>>"
+	PodSeperator    = ">>"
+	PromptSeperator = "> "
+	APIVersion      = "/v0"
 )
 
 var (
@@ -54,39 +54,39 @@ var (
 )
 
 const (
-	API_USER_SIGNUP       = APIVersion + "/user/signup"
-	API_USER_LOGIN        = APIVersion + "/user/login"
-	API_USER_IMPORT       = APIVersion + "/user/import"
-	API_USER_PRESENT      = APIVersion + "/user/present"
-	API_USER_ISLOGGEDIN   = APIVersion + "/user/isloggedin"
-	API_USER_LOGOUT       = APIVersion + "/user/logout"
-	API_USER_AVATAR       = APIVersion + "/user/avatar"
-	API_USER_NAME         = APIVersion + "/user/name"
-	API_USER_CONTACT      = APIVersion + "/user/contact"
-	API_USER_EXPORT       = APIVersion + "/user/export"
-	API_USER_DELETE       = APIVersion + "/user/delete"
-	API_USER_STAT         = APIVersion + "/user/stat"
-	API_USER_SHARE_INBOX  = APIVersion + "/user/share/inbox"
-	API_USER_SHARE_OUTBOX = APIVersion + "/user/share/inbox"
-	API_POD_NEW           = APIVersion + "/pod/new"
-	API_POD_OPEN          = APIVersion + "/pod/open"
-	API_POD_CLOSE         = APIVersion + "/pod/close"
-	API_POD_SYNC          = APIVersion + "/pod/sync"
-	API_POD_DELETE        = APIVersion + "/pod/delete"
-	API_POD_LS            = APIVersion + "/pod/ls"
-	API_POD_STAT          = APIVersion + "/pod/stat"
-	API_DIR_ISPRESENT     = APIVersion + "/dir/present"
-	API_DIR_MKDIR         = APIVersion + "/dir/mkdir"
-	API_DIR_RMDIR         = APIVersion + "/dir/rmdir"
-	API_DIR_LS            = APIVersion + "/dir/ls"
-	API_DIR_STAT          = APIVersion + "/dir/stat"
-	API_FILE_DOWNLOAD     = APIVersion + "/file/download"
-	API_FILE_UPLOAD       = APIVersion + "/file/upload"
-	API_FILE_SHARE        = APIVersion + "/file/share"
-	API_FILE_RECEIVE      = APIVersion + "/file/receive"
-	API_FILE_RECEIVEINFO  = APIVersion + "/file/receiveinfo"
-	API_FILE_DELETE       = APIVersion + "/file/delete"
-	API_FILE_STAT         = APIVersion + "/file/stat"
+	apiUserSignup      = APIVersion + "/user/signup"
+	apiUserLogin       = APIVersion + "/user/login"
+	apiUserImport      = APIVersion + "/user/import"
+	apiUserPresent     = APIVersion + "/user/present"
+	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
+	apiUserLogout      = APIVersion + "/user/logout"
+	apiUserAvatar      = APIVersion + "/user/avatar"
+	apiUserName        = APIVersion + "/user/name"
+	apiUserContact     = APIVersion + "/user/contact"
+	apiUserExport      = APIVersion + "/user/export"
+	apiUserDelete      = APIVersion + "/user/delete"
+	apiUserStat        = APIVersion + "/user/stat"
+	apiUserShareInbox  = APIVersion + "/user/share/inbox"
+	apiUserShareOutbox = APIVersion + "/user/share/outbox"
+	apiPodNew          = APIVersion + "/pod/new"
+	apiPodOpen         = APIVersion + "/pod/open"
+	apiPodClose        = APIVersion + "/pod/close"
+	apiPodSync         = APIVersion + "/pod/sync"
+	apiPodDelete       = APIVersion + "/pod/delete"
+	apiPodLs           = APIVersion + "/pod/ls"
+	apiPodStat         = APIVersion + "/pod/stat"
+	apiDirIsPresent    = APIVersion + "/dir/present"
+	apiDirMkdir        = APIVersion + "/dir/mkdir"
+	apiDirRmdir        = APIVersion + "/dir/rmdir"
+	apiDirLs           = APIVersion + "/dir/ls"
+	apiDirStat         = APIVersion + "/dir/stat"
+	apiFileDownload    = APIVersion + "/file/download"
+	apiFileUpload      = APIVersion + "/file/upload"
+	apiFileShare       = APIVersion + "/file/share"
+	apiFileReceive     = APIVersion + "/file/receive"
+	apiFileReceiveInfo = APIVersion + "/file/receiveinfo"
+	apiFileDelete      = APIVersion + "/file/delete"
+	apiFileStat        = APIVersion + "/file/stat"
 )
 
 func NewPrompt() {
@@ -186,7 +186,7 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["user"] = userName
 			args["password"] = getPassword()
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_SIGNUP, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserSignup, args)
 			if err != nil {
 				fmt.Println("create user: ", err)
 				return
@@ -216,7 +216,7 @@ func executor(in string) {
 				args["user"] = userName
 				args["address"] = address
 				args["password"] = getPassword()
-				data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_IMPORT, args)
+				data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserImport, args)
 				if err != nil {
 					fmt.Println("import user: ", err)
 					return
@@ -249,7 +249,7 @@ func executor(in string) {
 			args["user"] = userName
 			args["password"] = getPassword()
 			args["mnemonic"] = mnemonic
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_IMPORT, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserImport, args)
 			if err != nil {
 				fmt.Println("import user: ", err)
 				return
@@ -275,7 +275,7 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["user"] = userName
 			args["password"] = getPassword()
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_LOGIN, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserLogin, args)
 			if err != nil {
 				fmt.Println("login user: ", err)
 				return
@@ -293,7 +293,7 @@ func executor(in string) {
 			userName := blocks[2]
 			args := make(map[string]string)
 			args["user"] = userName
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_PRESENT, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserPresent, args)
 			if err != nil {
 				fmt.Println("user present: ", err)
 				return
@@ -327,7 +327,7 @@ func executor(in string) {
 			}
 			args := make(map[string]string)
 			args["password"] = getPassword()
-			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, API_USER_DELETE, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiUserDelete, args)
 			if err != nil {
 				fmt.Println("delete user: ", err)
 				return
@@ -342,7 +342,7 @@ func executor(in string) {
 				fmt.Println("please login as  user to do the operation")
 				return
 			}
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_LOGOUT, nil)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserLogout, nil)
 			if err != nil {
 				fmt.Println("logout user: ", err)
 				return
@@ -357,7 +357,7 @@ func executor(in string) {
 				fmt.Println("please login as  user to do the operation")
 				return
 			}
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_EXPORT, nil)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserExport, nil)
 			if err != nil {
 				fmt.Println("export user: ", err)
 				return
@@ -386,13 +386,13 @@ func executor(in string) {
 				args["last_name"] = lastName
 				args["middle_name"] = middleName
 				args["surname"] = surNmae
-				_, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_NAME, args)
+				_, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserName, args)
 				if err != nil {
 					fmt.Println("name: ", err)
 					return
 				}
 			} else if len(blocks) == 2 {
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_USER_NAME, nil)
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserName, nil)
 				if err != nil {
 					fmt.Println("name: ", err)
 					return
@@ -417,24 +417,24 @@ func executor(in string) {
 			if len(blocks) == 8 {
 				phone := blocks[2]
 				mobile := blocks[3]
-				address_line1 := blocks[4]
-				address_line2 := blocks[5]
+				addressLine1 := blocks[4]
+				addressLine2 := blocks[5]
 				state := blocks[6]
 				zip := blocks[7]
 				args := make(map[string]string)
 				args["phone"] = phone
 				args["mobile"] = mobile
-				args["address_line_1"] = address_line1
-				args["address_line_2"] = address_line2
+				args["address_line_1"] = addressLine1
+				args["address_line_2"] = addressLine2
 				args["state_province_region"] = state
 				args["zipcode"] = zip
-				_, err := fdfsAPI.callFdfsApi(http.MethodPost, API_USER_CONTACT, args)
+				_, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserContact, args)
 				if err != nil {
 					fmt.Println("contact: ", err)
 					return
 				}
 			} else if len(blocks) == 2 {
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_USER_CONTACT, nil)
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserContact, nil)
 				if err != nil {
 					fmt.Println("contact: ", err)
 					return
@@ -464,7 +464,7 @@ func executor(in string) {
 			}
 			switch blocks[2] {
 			case "inbox":
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_USER_SHARE_INBOX, nil)
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserShareInbox, nil)
 				if err != nil {
 					fmt.Println("sharing inbox: ", err)
 					return
@@ -480,12 +480,12 @@ func executor(in string) {
 				}
 				currentPrompt = getCurrentPrompt()
 			case "outbox":
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_USER_SHARE_OUTBOX, nil)
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserShareOutbox, nil)
 				if err != nil {
 					fmt.Println("sharing outbox: ", err)
 					return
 				}
-				var resp user.Inbox
+				var resp user.Outbox
 				err = json.Unmarshal(data, &resp)
 				if err != nil {
 					fmt.Println("sharing outbox: ", err)
@@ -494,6 +494,92 @@ func executor(in string) {
 				for _, entry := range resp.Entries {
 					fmt.Println(entry)
 				}
+			}
+			currentPrompt = getCurrentPrompt()
+		case "loggedin":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			userName := blocks[2]
+			args := make(map[string]string)
+			args["user"] = userName
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserIsLoggedin, args)
+			if err != nil {
+				fmt.Println("user loggedin: ", err)
+				return
+			}
+			var resp api.LoginStatus
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("user loggedin: ", err)
+				return
+			}
+			if resp.LoggedIn {
+				fmt.Println("user is logged in")
+			} else {
+				fmt.Println("user is NOT logged in")
+			}
+			currentPrompt = getCurrentPrompt()
+		case "stat":
+			if currentUser == "" {
+				fmt.Println("please login as user to do the operation")
+				return
+			}
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserStat, nil)
+			if err != nil {
+				fmt.Println("user stat: ", err)
+				return
+			}
+			var resp user.Stat
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("user stat: ", err)
+				return
+			}
+			fmt.Println("user name: ", resp.Name)
+			fmt.Println("Reference: ", resp.Reference)
+			currentPrompt = getCurrentPrompt()
+		case "avatar":
+			if currentUser == "" {
+				fmt.Println("please login as user to do the operation")
+				return
+			}
+			if len(blocks) < 3 {
+				// get avatar
+				// Create the temp file
+				tmpDir := os.TempDir()
+				fd, err := ioutil.TempFile(tmpDir, "avatar")
+				if err != nil {
+					log.Fatal(err)
+				}
+				defer fd.Close()
+
+				_, err = fdfsAPI.downloadMultipartFile(http.MethodGet, apiUserAvatar, nil, fd)
+				if err != nil {
+					fmt.Println("avatar download failed: ", err)
+					return
+				}
+				fmt.Println("Avatar downloaded in ", fd.Name())
+			} else {
+				// put avatar
+				fileName := filepath.Base(blocks[2])
+				fd, err := os.Open(blocks[2])
+				if err != nil {
+					fmt.Println("avatar file open failed: ", err)
+					return
+				}
+				fi, err := fd.Stat()
+				if err != nil {
+					fmt.Println("avatar file stat failed: ", err)
+					return
+				}
+				data, err := fdfsAPI.uploadMultipartFile(apiUserAvatar, fileName, fi.Size(), fd, nil, "avatar", "false")
+				if err != nil {
+					fmt.Println("upload failed: ", err, string(data))
+					return
+				}
+				fmt.Println(string(data))
 			}
 			currentPrompt = getCurrentPrompt()
 		default:
@@ -519,7 +605,7 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["pod"] = podName
 			args["password"] = getPassword()
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_NEW, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodNew, args)
 			if err != nil {
 				fmt.Println("could not create pod: ", err)
 				return
@@ -537,7 +623,7 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["pod"] = podName
 			args["password"] = getPassword()
-			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, API_POD_DELETE, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiPodDelete, args)
 			if err != nil {
 				fmt.Println("could not delete pod: ", err)
 				return
@@ -555,7 +641,7 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["pod"] = podName
 			args["password"] = getPassword()
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_OPEN, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodOpen, args)
 			if err != nil {
 				fmt.Println("pod open failed: ", err)
 				return
@@ -568,7 +654,7 @@ func executor(in string) {
 			if !isPodOpened() {
 				return
 			}
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_CLOSE, nil)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodClose, nil)
 			if err != nil {
 				fmt.Println("error logging out: ", err)
 				return
@@ -588,7 +674,7 @@ func executor(in string) {
 			podName := blocks[2]
 			args := make(map[string]string)
 			args["pod"] = podName
-			data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_POD_STAT, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiPodStat, args)
 			if err != nil {
 				fmt.Println("error getting stat: ", err)
 				return
@@ -626,7 +712,7 @@ func executor(in string) {
 			if !isPodOpened() {
 				return
 			}
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_POD_SYNC, nil)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodSync, nil)
 			if err != nil {
 				fmt.Println("could not sync pod: ", err)
 				return
@@ -634,7 +720,7 @@ func executor(in string) {
 			fmt.Println(string(data))
 			currentPrompt = getCurrentPrompt()
 		case "ls":
-			data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_POD_LS, nil)
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiPodLs, nil)
 			if err != nil {
 				fmt.Println("error while listing pods: %w", err)
 				return
@@ -688,7 +774,7 @@ func executor(in string) {
 
 		args := make(map[string]string)
 		args["dir"] = dirTocd
-		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_DIR_ISPRESENT, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDirIsPresent, args)
 		if err != nil {
 			fmt.Println("cd failed: ", err)
 			return
@@ -711,7 +797,7 @@ func executor(in string) {
 		}
 		args := make(map[string]string)
 		args["dir"] = currentDirectory
-		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_DIR_LS, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDirLs, args)
 		if err != nil {
 			fmt.Println("ls failed: ", err)
 			return
@@ -752,7 +838,7 @@ func executor(in string) {
 		args := make(map[string]string)
 		args["dir"] = dirToMk
 
-		data, err := fdfsAPI.callFdfsApi(http.MethodPost, API_DIR_MKDIR, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDirMkdir, args)
 		if err != nil {
 			fmt.Println("mkdir failed: ", err)
 			return
@@ -783,7 +869,7 @@ func executor(in string) {
 
 		args := make(map[string]string)
 		args["dir"] = dirToRm
-		data, err := fdfsAPI.callFdfsApi(http.MethodDelete, API_DIR_RMDIR, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiDirRmdir, args)
 		if err != nil {
 			fmt.Println("rmdir failed: ", err)
 			return
@@ -815,7 +901,10 @@ func executor(in string) {
 		}
 		blockSize := blocks[3]
 		compression := blocks[4]
-		data, err := fdfsAPI.uploadMultipartFile(API_FILE_UPLOAD, fileName, fi.Size(), fd, podDir, blockSize, compression)
+		args := make(map[string]string)
+		args["pod_dir"] = podDir
+		args["block_size"] = blockSize
+		data, err := fdfsAPI.uploadMultipartFile(apiFileUpload, fileName, fi.Size(), fd, args, "files", compression)
 		if err != nil {
 			fmt.Println("upload failed: ", err)
 			return
@@ -857,9 +946,17 @@ func executor(in string) {
 		}
 		defer out.Close()
 
+		podFile := blocks[2]
+		if !strings.HasPrefix(podFile, utils.PathSeperator) {
+			if currentDirectory == utils.PathSeperator {
+				podFile = currentDirectory + podFile
+			} else {
+				podFile = currentDirectory + utils.PathSeperator + podFile
+			}
+		}
 		args := make(map[string]string)
-		args["file"] = blocks[2]
-		n, err := fdfsAPI.downloadMultipartFile(http.MethodPost, API_FILE_DOWNLOAD, args, out)
+		args["file"] = podFile
+		n, err := fdfsAPI.downloadMultipartFile(http.MethodPost, apiFileDownload, args, out)
 		if err != nil {
 			fmt.Println("download failed: ", err)
 			return
@@ -901,12 +998,12 @@ func executor(in string) {
 		}
 		args := make(map[string]string)
 		args["dir"] = statElement
-		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_DIR_STAT, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDirStat, args)
 		if err != nil {
-			if err.Error() == "received invalid status: 500 Internal Server Error"{
+			if err.Error() == "received invalid status: 500 Internal Server Error" {
 				args := make(map[string]string)
 				args["file"] = statElement
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_STAT, args)
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiFileStat, args)
 				if err != nil {
 					fmt.Println("stat failed: ", err)
 					return
@@ -1017,7 +1114,7 @@ func executor(in string) {
 
 		args := make(map[string]string)
 		args["file"] = rmFile
-		data, err := fdfsAPI.callFdfsApi(http.MethodDelete, API_FILE_DELETE, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiFileDelete, args)
 		if err != nil {
 			fmt.Println("rm failed: ", err)
 			return
@@ -1044,7 +1141,8 @@ func executor(in string) {
 
 		args := make(map[string]string)
 		args["file"] = podFile
-		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_SHARE, args)
+		args["to"] = "add destination user address later"
+		data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiFileShare, args)
 		if err != nil {
 			fmt.Println("share: ", err)
 			return
@@ -1067,7 +1165,7 @@ func executor(in string) {
 		args := make(map[string]string)
 		args["ref"] = sharingRefString
 		args["dir"] = podDir
-		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_RECEIVE, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiFileReceive, args)
 		if err != nil {
 			fmt.Println("receive: ", err)
 			return
@@ -1089,7 +1187,7 @@ func executor(in string) {
 		sharingRefString := blocks[1]
 		args := make(map[string]string)
 		args["ref"] = sharingRefString
-		data, err := fdfsAPI.callFdfsApi(http.MethodGet, API_FILE_RECEIVEINFO, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiFileReceiveInfo, args)
 		if err != nil {
 			fmt.Println("receive info: ", err)
 			return
