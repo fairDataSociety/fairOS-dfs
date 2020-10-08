@@ -26,7 +26,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -92,29 +91,37 @@ func (s *FdfsClient) CheckConnection() bool {
 }
 
 func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]string) ([]byte, error) {
-	// set the form data got through the arguments map
-	formData := url.Values{}
-	for i, args := range arguments {
-		formData.Set(args, arguments[i])
-	}
-
 	// prepare the  request
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
 	var err error
 	if arguments != nil {
-		req, err = http.NewRequest(method, fullUrl, strings.NewReader(formData.Encode()))
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
+		for k, v := range arguments {
+			err := writer.WriteField(k, v)
+			if err != nil {
+				return nil, err
+			}
+		}
+		err = writer.Close()
+		if err != nil {
+			return nil, err
+		}
+		req, err = http.NewRequest(method, fullUrl, body)
+		if err != nil {
+			return nil, err
+		}
+		// add the headers
+
+		contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
+		req.Header.Add("Content-Type", contentType)
+		req.Header.Add("Content-Length", strconv.Itoa(len(body.Bytes())))
 	} else {
 		req, err = http.NewRequest(method, fullUrl, nil)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	// add the headers
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	if arguments != nil {
-		req.Header.Add("Content-Length", strconv.Itoa(len(formData.Encode())))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// execute the request
@@ -123,7 +130,7 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 		return nil, err
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		errStr := fmt.Sprintf("received invalid status: %s", response.Status)
 		return nil, errors.New(errStr)
 	}
@@ -139,7 +146,17 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, podDir, blockSize, compression string) ([]byte, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", fileName)
+	// Add parameters
+	err := writer.WriteField("pod_dir", podDir)
+	if err != nil {
+		return nil, err
+	}
+	err = writer.WriteField("block_size", blockSize)
+	if err != nil {
+		return nil, err
+	}
+
+	part, err := writer.CreateFormFile("files", fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +168,6 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 	if n != fileSize {
 		return nil, fmt.Errorf("partial write")
 	}
-
 	err = writer.Close()
 	if err != nil {
 		return nil, err
@@ -163,7 +179,8 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+	contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
+	req.Header.Set("Content-Type", contentType)
 	if strings.ToLower(compression) == "true" {
 		req.Header.Set(api.CompressionHeader, "true")
 	}
@@ -189,30 +206,32 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 }
 
 func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map[string]string, out *os.File) (int64, error) {
-	// set the form data got through the arguments map
-	formData := url.Values{}
-	for i, args := range arguments {
-		formData.Set(args, arguments[i])
-	}
-
 	// prepare the  request
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
 	var err error
-	if arguments != nil {
-		req, err = http.NewRequest(method, fullUrl, strings.NewReader(formData.Encode()))
-	} else {
-		req, err = http.NewRequest(method, fullUrl, nil)
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	for k, v := range arguments {
+		err := writer.WriteField(k, v)
+		if err != nil {
+			return 0, err
+		}
 	}
+	err = writer.Close()
 	if err != nil {
 		return 0, err
 	}
-
-	// add the headers
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	if arguments != nil {
-		req.Header.Add("Content-Length", strconv.Itoa(len(formData.Encode())))
+	req, err = http.NewRequest(method, fullUrl, body)
+	if err != nil {
+		return 0, err
 	}
+	// add the headers
+
+	contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
+	req.Header.Add("Content-Type", contentType)
+	req.Header.Add("Content-Length", strconv.Itoa(len(body.Bytes())))
 
 	// execute the request
 	response, err := s.client.Do(req)
@@ -220,7 +239,7 @@ func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 		return 0, err
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		errStr := fmt.Sprintf("received invalid status: %s", response.Status)
 		return 0, errors.New(errStr)
 	}
