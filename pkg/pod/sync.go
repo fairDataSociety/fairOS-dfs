@@ -95,12 +95,12 @@ func (pi *Info) SyncPod(podName string, client blockstore.Client, logger logging
 			}
 
 			path := dirInode.Meta.Path + utils.PathSeperator + dirInode.Meta.Name
-			err = pi.getDirectory().LoadDirMeta(podName, dirInode, fd, accountInfo)
+			err = pi.GetDirectory().LoadDirMeta(podName, dirInode, fd, accountInfo)
 			if err != nil {
 				logger.Warningf("sync: load meta error: %w", err)
 				return
 			}
-			pi.getDirectory().AddToDirectoryMap(path, dirInode)
+			pi.GetDirectory().AddToDirectoryMap(path, dirInode)
 			path = strings.TrimPrefix(path, podName)
 			logger.Infof(path)
 		}(ref)

@@ -65,15 +65,15 @@ func (p *Pod) DirectoryStat(podName, podFileOrDir string, printNames bool) (*dir
 	acc := info.getAccountInfo().GetAddress()
 
 	path := p.getDirectoryPath(podFileOrDir, info)
-	dirInode := info.getDirectory().GetDirFromDirectoryMap(path)
+	dirInode := info.GetDirectory().GetDirFromDirectoryMap(path)
 	if dirInode != nil {
 		meta := dirInode.Meta
-		addr, dirInode, err := info.getDirectory().GetDirNode(meta.Path+utils.PathSeperator+meta.Name, info.getFeed(), info.getAccountInfo())
+		addr, dirInode, err := info.GetDirectory().GetDirNode(meta.Path+utils.PathSeperator+meta.Name, info.getFeed(), info.getAccountInfo())
 		if err != nil {
 			return nil, err
 		}
 		podAddress := swarm.NewAddress(addr).String()
-		return info.getDirectory().DirStat(podName, path, dirInode, acc.String(), podAddress, printNames)
+		return info.GetDirectory().DirStat(podName, path, dirInode, acc.String(), podAddress, printNames)
 	}
 	return nil, fmt.Errorf("directory not found")
 }

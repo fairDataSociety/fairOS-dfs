@@ -25,7 +25,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-type receiveFileResponse struct {
+type ReceiveFileResponse struct {
 	FileName  string `json:"file_name"`
 	Reference string `json:"reference"`
 }
@@ -117,7 +117,7 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", " application/json")
-	jsonhttp.OK(w, &receiveFileResponse{
+	jsonhttp.OK(w, &ReceiveFileResponse{
 		FileName:  filePath,
 		Reference: fileRef,
 	})

@@ -14,7 +14,8 @@ all: build lint vet test-race binary
 binary: export CGO_ENABLED=1
 binary: dist FORCE
 	$(GO) version
-	$(GO) build  -o dist/dfs ./cmd/dfs
+	$(GO) build -trimpath -o dist/dfs ./cmd/dfs
+	$(GO) build -trimpath -o dist/dfs-cli ./cmd/dfs-cli
 
 dist:
 	mkdir $@

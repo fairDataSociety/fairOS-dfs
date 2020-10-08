@@ -243,7 +243,7 @@ func (d *DfsAPI) DeletePod(podName, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// delete the pod
+	// delete the pod and close if it is opened
 	err := ui.GetPod().DeletePod(podName)
 	if err != nil {
 		return err
@@ -251,12 +251,6 @@ func (d *DfsAPI) DeletePod(podName, sessionId string) error {
 
 	// close the pod and delete it from login user session, if the delete is for a opened pod
 	if ui.GetPodName() != "" && podName == ui.GetPodName() {
-		// close the pod
-		err = ui.GetPod().ClosePod(ui.GetPodName())
-		if err != nil {
-			return err
-		}
-
 		// remove from the login session
 		ui.RemovePodName()
 	}
@@ -385,6 +379,33 @@ func (d *DfsAPI) Mkdir(directoryName, sessionId string) error {
 		return err
 	}
 	return nil
+}
+
+func (d *DfsAPI) IsDirPresent(directoryName, sessionId string) (bool, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return false, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return false, ErrPodNotOpen
+	}
+
+	// get pod Info
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return false, err
+	}
+	directory := podInfo.GetDirectory()
+	podDir := podInfo.GetCurrentPodPathAndName() + directoryName
+	_, _, err = directory.GetDirNode(podDir, ui.GetFeed(), ui.GetAccount().GetUserAccountInfo())
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (d *DfsAPI) RmDir(directoryName, sessionId string) error {
