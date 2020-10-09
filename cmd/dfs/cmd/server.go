@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt"
+	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -100,7 +101,7 @@ func startHttpService(logger logging.Logger) {
 		}
 	})
 	router.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
-		_, err := fmt.Fprintln(w, showVersion())
+		_, err := fmt.Fprintln(w, dfs.Version)
 		if err != nil {
 			logger.Errorf("error in API /version: ", err)
 			return

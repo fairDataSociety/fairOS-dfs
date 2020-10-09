@@ -5,7 +5,7 @@ GOGOPROTOBUF ?= protoc-gen-gogofaster
 GOGOPROTOBUF_VERSION ?= v1.3.1
 
 COMMIT ?= "$(shell git describe --long --dirty --always --match "" || true)"
-LDFLAGS ?= -s -w -X github.com/fairdatasociety/dfs.commit="$(COMMIT)"
+LDFLAGS ?= -s -w -X github.com/fairdatasociety/fairOS-dfs.commit="$(COMMIT)"
 
 .PHONY: all
 all: build lint vet test-race binary
@@ -14,8 +14,8 @@ all: build lint vet test-race binary
 binary: export CGO_ENABLED=1
 binary: dist FORCE
 	$(GO) version
-	$(GO) build -trimpath -o dist/dfs ./cmd/dfs
-	$(GO) build -trimpath -o dist/dfs-cli ./cmd/dfs-cli
+	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o dist/dfs ./cmd/dfs
+	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o dist/dfs-cli ./cmd/dfs-cli
 
 dist:
 	mkdir $@

@@ -19,12 +19,8 @@ package cmd
 import (
 	"fmt"
 
+	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"github.com/spf13/cobra"
-)
-
-var (
-	version    = "0.2.0"
-	commitHash string
 )
 
 // versionCmd shows the version of dfs
@@ -33,17 +29,10 @@ var versionCmd = &cobra.Command{
 	Short: "prints version",
 	Long:  `Shows the version of dfs.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(showVersion())
+		fmt.Println(dfs.Version)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
-}
-
-func showVersion() string {
-	if commitHash != "" {
-		return version + "-" + commitHash
-	}
-	return version + "-dev"
 }
