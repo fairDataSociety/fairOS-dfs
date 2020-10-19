@@ -18,6 +18,8 @@ package pod
 
 import (
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"strings"
 	"sync"
 
@@ -60,9 +62,16 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		return nil, err
 	}
 
+	user := p.acc.GetAddress(account.UserAccountIndex)
+	collections, err := collection.LoadUserCollections(p.fd, user)
+	if err != nil {
+		return nil, err
+	}
+
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
 		podName:         podName,
+		user:            user,
 		accountInfo:     accountInfo,
 		feed:            p.fd,
 		dir:             dir,
@@ -71,6 +80,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		curPodMu:        sync.RWMutex{},
 		currentDirInode: dirInode,
 		curDirMu:        sync.RWMutex{},
+		collections:     collections,
 	}
 
 	p.addPodToPodMap(podName, podInfo)

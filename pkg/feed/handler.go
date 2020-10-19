@@ -39,7 +39,7 @@ import (
 )
 
 type Handler struct {
-	accountInfo *account.AccountInfo
+	accountInfo *account.Info
 	client      blockstore.Client
 	hasherPool  *bmtlegacy.TreePool
 	HashSize    int
@@ -59,7 +59,7 @@ func init() {
 	}
 }
 
-func NewHandler(accountInfo *account.AccountInfo, client blockstore.Client, hasherPool *bmtlegacy.TreePool) *Handler {
+func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool *bmtlegacy.TreePool) *Handler {
 	fh := &Handler{
 		accountInfo: accountInfo,
 		client:      client,

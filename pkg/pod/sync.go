@@ -52,8 +52,8 @@ func (p *Pod) SyncPod(podName string) error {
 }
 
 func (pi *Info) SyncPod(podName string, client blockstore.Client, logger logging.Logger) error {
-	fd := pi.getFeed()
-	accountInfo := pi.getAccountInfo()
+	fd := pi.GetFeed()
+	accountInfo := pi.GetAccountInfo()
 
 	logger.Infof("Syncing pod: %v", podName)
 	var wg sync.WaitGroup

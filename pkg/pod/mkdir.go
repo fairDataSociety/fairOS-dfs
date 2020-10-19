@@ -53,7 +53,7 @@ func (p *Pod) MakeDir(podName string, dirName string) error {
 	if len(dirs) > 1 {
 		for i, dirName := range dirs {
 			path := p.buildPath(podInfo, dirs, i)
-			_, dirInode, err = directory.GetDirNode(path, podInfo.getFeed(), podInfo.getAccountInfo())
+			_, dirInode, err = directory.GetDirNode(path, podInfo.GetFeed(), podInfo.GetAccountInfo())
 			if err != nil {
 				if previousDirINode == nil {
 					if podInfo.IsCurrentDirRoot() {
@@ -131,7 +131,7 @@ func (p *Pod) UpdateTillThePod(podName string, directory *d.Directory, topic []b
 
 	var dirInode *d.DirInode
 	for path != utils.PathSeperator {
-		_, dirInode, err = directory.GetDirNode(path, podInfo.getFeed(), podInfo.getAccountInfo())
+		_, dirInode, err = directory.GetDirNode(path, podInfo.GetFeed(), podInfo.GetAccountInfo())
 		if err != nil {
 			return err
 		}

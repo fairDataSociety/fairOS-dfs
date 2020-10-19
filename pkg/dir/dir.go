@@ -37,7 +37,7 @@ type Directory struct {
 	podName string
 	client  blockstore.Client
 	fd      *feed.API
-	acc     *account.AccountInfo
+	acc     *account.Info
 	file    *f.File
 	dirMap  map[string]*DirInode // path to dirInode cache
 	dirMu   *sync.RWMutex
@@ -49,7 +49,7 @@ type DirInode struct {
 	Hashes [][]byte
 }
 
-func NewDirectory(podName string, client blockstore.Client, fd *feed.API, acc *account.AccountInfo, file *f.File, logger logging.Logger) *Directory {
+func NewDirectory(podName string, client blockstore.Client, fd *feed.API, acc *account.Info, file *f.File, logger logging.Logger) *Directory {
 	return &Directory{
 		podName: podName,
 		client:  client,
@@ -66,7 +66,7 @@ func (d *Directory) getFeed() *feed.API {
 	return d.fd
 }
 
-func (d *Directory) getAccount() *account.AccountInfo {
+func (d *Directory) getAccount() *account.Info {
 	return d.acc
 }
 

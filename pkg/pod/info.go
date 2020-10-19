@@ -28,14 +28,16 @@ import (
 
 type Info struct {
 	podName         string
+	user            utils.Address
 	dir             *di.Directory
 	file            *f.File
-	accountInfo     *account.AccountInfo
+	accountInfo     *account.Info
 	feed            *feed.API
 	currentPodInode *di.DirInode
 	curPodMu        sync.RWMutex
 	currentDirInode *di.DirInode
 	curDirMu        sync.RWMutex
+	collections     map[string]string
 }
 
 func (i *Info) GetDirectory() *di.Directory {
@@ -46,11 +48,15 @@ func (i *Info) getFile() *f.File {
 	return i.file
 }
 
-func (i *Info) getAccountInfo() *account.AccountInfo {
+func (i *Info) GetUser() utils.Address {
+	return i.user
+}
+
+func (i *Info) GetAccountInfo() *account.Info {
 	return i.accountInfo
 }
 
-func (i *Info) getFeed() *feed.API {
+func (i *Info) GetFeed() *feed.API {
 	return i.feed
 }
 

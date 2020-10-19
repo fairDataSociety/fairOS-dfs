@@ -1,6 +1,7 @@
 # github.com/aristanetworks/goarista v0.0.0-20200521140103-6c3304613b30
 github.com/aristanetworks/goarista/monotime
 # github.com/btcsuite/btcd v0.20.1-beta
+## explicit
 github.com/btcsuite/btcd/btcec
 github.com/btcsuite/btcd/chaincfg
 github.com/btcsuite/btcd/chaincfg/chainhash

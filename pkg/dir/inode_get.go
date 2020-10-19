@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) GetDirNode(name string, fd *feed.API, accountInfo *account.AccountInfo) ([]byte, *DirInode, error) {
+func (d *Directory) GetDirNode(name string, fd *feed.API, accountInfo *account.Info) ([]byte, *DirInode, error) {
 	topic := utils.HashString(name)
 	addr, data, err := fd.GetFeedData(topic, accountInfo.GetAddress())
 	if err != nil {

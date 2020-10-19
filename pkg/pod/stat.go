@@ -62,13 +62,13 @@ func (p *Pod) DirectoryStat(podName, podFileOrDir string, printNames bool) (*dir
 		return nil, err
 	}
 
-	acc := info.getAccountInfo().GetAddress()
+	acc := info.GetAccountInfo().GetAddress()
 
 	path := p.getDirectoryPath(podFileOrDir, info)
 	dirInode := info.GetDirectory().GetDirFromDirectoryMap(path)
 	if dirInode != nil {
 		meta := dirInode.Meta
-		addr, dirInode, err := info.GetDirectory().GetDirNode(meta.Path+utils.PathSeperator+meta.Name, info.getFeed(), info.getAccountInfo())
+		addr, dirInode, err := info.GetDirectory().GetDirNode(meta.Path+utils.PathSeperator+meta.Name, info.GetFeed(), info.GetAccountInfo())
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +88,7 @@ func (p *Pod) FileStat(podName, podFileOrDir string) (*file.FileStats, error) {
 		return nil, err
 	}
 
-	acc := info.getAccountInfo().GetAddress()
+	acc := info.GetAccountInfo().GetAddress()
 
 	path := p.getDirectoryPath(podFileOrDir, info)
 	if !info.file.IsFileAlreadyPResent(path) {

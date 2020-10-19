@@ -3,6 +3,7 @@ module github.com/fairdatasociety/fairOS-dfs
 go 1.14
 
 require (
+	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ethereum/go-ethereum v1.9.21

@@ -45,7 +45,7 @@ func (p *Pod) UploadFile(podName, fileName string, fileSize int64, fd io.Reader,
 
 	path := p.getFilePath(podDir, podInfo)
 
-	_, dirInode, err := dir.GetDirNode(path, podInfo.getFeed(), podInfo.getAccountInfo())
+	_, dirInode, err := dir.GetDirNode(path, podInfo.GetFeed(), podInfo.GetAccountInfo())
 	if err != nil {
 		return "", err
 	}
