@@ -3,5 +3,11 @@ package collection
 import "errors"
 
 var (
-	ErrCollectionsReached = errors.New("max number of collections reached")
+	ErrEmptyIndex    = errors.New("empty Index")
+	ErrEntryNotFound = errors.New("entry not found")
+	ErrNoNextElement = errors.New("no next element")
+	ErrNoManifestFound = errors.New("no manifest found")
+	ErrManifestUnmarshall = errors.New("could not unmarshall manifest")
+	ErrManifestCreate = errors.New("could not create new manifest")
+	ErrDeleteingIndex = errors.New("could not delete index")
 )

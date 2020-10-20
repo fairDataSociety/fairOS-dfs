@@ -20,12 +20,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
-	"testing"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"io/ioutil"
+	"testing"
 )
 
 func TestFeed(t *testing.T) {

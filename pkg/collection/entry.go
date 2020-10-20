@@ -4,26 +4,20 @@ type Manifest struct {
 	Name         string  `json:"name"`
 	CreationTime int64   `json:"creation_time"`
 	Entries      []Entry `json:"entries,omitempty"`
+	dirtyFlag    bool
 }
 
 type Entry struct {
 	Name  string `json:"name"`
 	EType string `json:"type"`
 	Ref   []byte `json:"ref,omitempty"`
+	dirtyFlag bool
 }
 
 func NewManifest(name string, time int64) *Manifest {
 	return &Manifest{
 		Name:         name,
 		CreationTime: time,
+		dirtyFlag: true,
 	}
-}
-
-func (m *Manifest) addEntry(name, eType string, ref []byte) {
-	entry := Entry{
-		Name:  name,
-		EType: eType,
-		Ref:   ref,
-	}
-	m.Entries = append(m.Entries, entry)
 }
