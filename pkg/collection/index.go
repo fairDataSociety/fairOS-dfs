@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -100,7 +101,55 @@ func (idx *Index) Put(key string, refValue []byte) error {
 	}
 
 	ctx := context.Background()
-	return idx.addOrUpdateEntry(ctx, &manifest, key, refValue, false)
+	err = idx.addOrUpdateEntry(ctx, &manifest, key, refValue, false)
+
+	idx.Print()
+
+	return err
+
+}
+
+func (idx *Index) Print() error {
+	manifest, err := idx.loadManifest(idx.name)
+	if err != nil {
+		return err
+	}
+	return  idx.PrintManifest(manifest, "---")
+}
+
+func (idx *Index) PrintManifest(manifest *Manifest, space string) error {
+	for _, entry := range manifest.Entries {
+		if entry.EType == LeafEntry {
+			actualKey := manifest.Name + utils.PathSeperator + entry.Name
+			actualKey = strings.TrimPrefix(actualKey, idx.name)
+			actualKey = strings.Replace(actualKey, utils.PathSeperator, "", -1)
+			fmt.Println( space + entry.Name + ":" + string(idx.getValue(entry.Ref)))
+		}
+
+		if entry.EType == IntermediateEntry {
+			actualKey := manifest.Name + utils.PathSeperator + entry.Name
+			actualKey = strings.TrimPrefix(actualKey, idx.name)
+			actualKey = strings.Replace(actualKey, utils.PathSeperator, "", -1)
+			fmt.Println(space + actualKey + ":" + entry.EType)
+			newManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
+			if err != nil {
+				return err
+			}
+			idx.PrintManifest(newManifest, space )
+		}
+	}
+	return nil
+}
+
+func (idx *Index) getValue(ref []byte) []byte {
+	data, respCode, err := idx.client.DownloadBlob(ref)
+	if err != nil {
+		return nil
+	}
+	if respCode != http.StatusOK {
+		return nil
+	}
+	return data
 }
 
 func (idx *Index) Get(key string) ([]byte, error) {
@@ -218,6 +267,9 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 	// go through the manifest to find the key
 	manifest.dirtyFlag = false
 	for i := range manifest.Entries {
+		if key == "" {
+			break
+		}
 		entry := manifest.Entries[i] // we change the entry so dont simplify this
 		if entry.EType == LeafEntry {
 
@@ -259,7 +311,6 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 					if err != nil {
 						return err
 					}
-					entry.manifest = &newManifest
 				} else {
 					entry.manifest = &newManifest
 				}
@@ -271,9 +322,10 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 			}
 		} else {
 			// go inside the branch and search
-			if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
-				newKey := strings.TrimPrefix(key, entry.Name)
+			if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name){
+			    newKey := strings.TrimPrefix(key, entry.Name)
 				topic := utils.HashString(manifest.Name + utils.PathSeperator + entry.Name)
+
 				_, data, err := idx.feed.GetFeedData(topic, idx.user)
 				if err != nil {
 					return err
@@ -284,6 +336,67 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 					return err
 				}
 				return idx.addOrUpdateEntry(ctx, &intermediateManifest, newKey, value, memory)
+			} else if entry.EType == IntermediateEntry && strings.HasPrefix(entry.Name, key) {
+				// break the branch in to more deeper branch
+				// abc-> "" , d
+				// ab -> "", c -> "", d
+				prefix := key
+				newKey := strings.TrimPrefix(entry.Name, key)
+
+				// load the abc manifest
+				topic := utils.HashString(manifest.Name + utils.PathSeperator + entry.Name)
+				_, data, err := idx.feed.GetFeedData(topic, idx.user)
+				if err != nil {
+					return err
+				}
+				var existingManifest Manifest
+				err = json.Unmarshal(data, &existingManifest)
+				if err != nil {
+					return err
+				}
+				existingManifest.Name = strings.TrimSuffix(existingManifest.Name, prefix+newKey) + prefix + utils.PathSeperator + newKey
+				err = idx.updateManifest(&existingManifest)
+				if err != nil {
+					return err
+				}
+
+				// create the new manifest branch
+				var newManifest Manifest
+				newManifest.Name = manifest.Name + utils.PathSeperator + key
+				newManifest.CreationTime = time.Now().Unix()
+				entry1 := &Entry{
+					Name:  "",
+					EType: LeafEntry,
+					Ref:   value,
+				}
+				idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
+				entry2 := &Entry{
+					Name:  newKey,
+					EType: IntermediateEntry,
+					manifest: &existingManifest,
+				}
+				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
+				if !memory {
+					// create a new feed with this new manifest
+					data, err := json.Marshal(newManifest)
+					if err != nil {
+						return err
+					}
+					prefixTopic := utils.HashString(newManifest.Name)
+					_, err = idx.feed.CreateFeed(prefixTopic, idx.user, data)
+					if err != nil {
+						return err
+					}
+				} else {
+					entry.manifest = &newManifest
+				}
+
+				// convert the existing intermediate node to a reduced branch node
+				// make abc to ab
+				entry.Name = prefix
+				entry.EType = IntermediateEntry
+				manifest.dirtyFlag = true
+				break
 			}
 		}
 	}
@@ -499,6 +612,8 @@ func (idx *Index) NewIterator(start, end string, limit int64) (*Iterator, error)
 	return itr, nil
 }
 
+
+
 func (itr *Iterator) Next() bool {
 	// dont go beyond the limit
 	if itr.limit > 0 {
@@ -582,6 +697,17 @@ func (itr *Iterator) Next() bool {
 			currentIndex:    0,
 		}
 		itr.manifestStack = append(itr.manifestStack, newManifestState)
+
+		//if entry.Name == "" {
+		//	actualKey := manifestState.currentManifest.Name
+		//	actualKey = strings.TrimPrefix(actualKey, itr.index.name)
+		//	actualKey = strings.Replace(actualKey, utils.PathSeperator, "", -1)
+		//	itr.currentKey = actualKey
+		//	itr.currentValue = entry.Ref
+		//	itr.givenUntilNow++
+		//	return true
+		//}
+
 		return itr.Next()
 	}
 	return false

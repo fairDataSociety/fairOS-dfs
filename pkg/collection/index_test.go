@@ -3,6 +3,7 @@ package collection_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -35,10 +36,8 @@ func TestIndex(t *testing.T) {
 		}
 		kvMap := addLotOfDocs(t, index, mockClient)
 
-		// close the index
-		//index = nil
 
-		// open the index again
+		// open the index again, simulating like another instance
 		index1, err := collection.OpenIndex("testdb0", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
@@ -51,6 +50,7 @@ func TestIndex(t *testing.T) {
 			}
 		}
 
+		// check if anuuninserted value exists
 		gotValue := getDoc(t, "p", index1, mockClient)
 		if gotValue != nil {
 			t.Fatalf("found data for not inserted key")
@@ -152,10 +152,12 @@ func TestIndex(t *testing.T) {
 			t.Fatal(err)
 		}
 
+
 		// iterate through the keys and check for the values returned
 		count := 0
 		for itr.Next() {
 			value := getDoc(t, itr.Key(), index, mockClient)
+			fmt.Println(itr.Key() + ":" + string(value))
 			if !bytes.Equal(kvMap[itr.Key()], value) {
 				t.Fatalf("expected value %s but got %s for the key %s", string(kvMap[itr.Key()]), string(value), itr.Key())
 			}
@@ -173,7 +175,7 @@ func TestIndex(t *testing.T) {
 		}
 	})
 
-	t.Run("add-docs-seek-iterrate", func(t *testing.T) {
+	t.Run("add-docs-seek-iterate", func(t *testing.T) {
 		//  create and populate the index
 		err := collection.CreateIndex("testdb4", "key", fd, acc.GetAddress(account.UserAccountIndex))
 		if err != nil {
@@ -194,7 +196,8 @@ func TestIndex(t *testing.T) {
 		// iterate through the keys and check for the values returned
 		count := 0
 		for itr.Next() {
-			value := getDoc(t, itr.Key(), index, mockClient)
+			value := getValue(t, itr.Value(), mockClient)
+			fmt.Println(itr.Key() + ":" + string(value))
 			if !bytes.Equal(kvMap[itr.Key()], value) {
 				t.Fatalf("expected value %s but got %s for the key %s", string(kvMap[itr.Key()]), string(value), itr.Key())
 			}
@@ -204,7 +207,89 @@ func TestIndex(t *testing.T) {
 		if count != 7 {
 			t.Fatalf("number of elements mismatch in iteration")
 		}
+
+		// delete the index
+		err = index.DeleteIndex()
+		if err != nil {
+			t.Fatal(err)
+		}
 	})
+
+	t.Run("add-docs-seek-iterrate-with-limit", func(t *testing.T) {
+		//  create and populate the index
+		err := collection.CreateIndex("testdb5", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		if err != nil {
+			t.Fatal(err)
+		}
+		index, err := collection.OpenIndex("testdb5", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		if err != nil {
+			t.Fatal(err)
+		}
+		kvMap := addLotOfDocs(t, index, mockClient)
+
+		// create the iterator
+		itr, err := index.NewIterator("abc", "bbb", 5)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// iterate through the keys and check for the values returned
+		count := 0
+		for itr.Next() {
+			value := getValue(t, itr.Value(), mockClient)
+			if !bytes.Equal(kvMap[itr.Key()], value) {
+				t.Fatalf("expected value %s but got %s for the key %s", string(kvMap[itr.Key()]), string(value), itr.Key())
+			}
+			count++
+		}
+
+		if count != 5 {
+			t.Fatalf("number of elements mismatch in iteration")
+		}
+
+		// delete the index
+		err = index.DeleteIndex()
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	//t.Run("add-docs-then-batch-add-docs", func(t *testing.T) {
+	//	//  create and populate the index
+	//	err := collection.CreateIndex("testdb6", "key", fd, acc.GetAddress(account.UserAccountIndex))
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//	index, err := collection.OpenIndex("testdb6", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//	kvMap := addLotOfDocs(t, index, mockClient)
+	//
+	//	// batch load and delete
+	//	batch, err := index.Batch()
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//
+	//	batchDocs := addBatchDocs(t, batch, mockClient)
+	//	delKey := "file1.jpg"
+	//	_, err = batch.Delete(delKey)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//
+	//
+	//
+	//
+	//
+	//
+	//	// delete the index
+	//	err = index.DeleteIndex()
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//})
 }
 
 func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.MockBeeClient) {
@@ -226,6 +311,17 @@ func getDoc(t *testing.T, key string, index *collection.Index, client *mock.Mock
 		}
 		t.Fatal(err)
 	}
+	data, respCode, err := client.DownloadBlob(ref)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if respCode != http.StatusOK {
+		t.Fatalf("invalid response code")
+	}
+	return data
+}
+
+func getValue(t *testing.T, ref []byte, client *mock.MockBeeClient) []byte {
 	data, respCode, err := client.DownloadBlob(ref)
 	if err != nil {
 		t.Fatal(err)
@@ -259,9 +355,7 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeCli
 	kvMap["key2"] = []byte("value2")
 	kvMap["key3"] = []byte("value3")
 	kvMap["key11"] = []byte("value11")
-	kvMap["a"] = []byte("doc1")
 	kvMap["aa"] = []byte("doc2")
-	kvMap["ab"] = []byte("doc3")
 	kvMap["abc"] = []byte("doc4")
 	kvMap["abcd"] = []byte("doc5")
 	kvMap["aca"] = []byte("doc6")
@@ -275,7 +369,33 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeCli
 
 	// add the documents
 	for k, v := range kvMap {
+		fmt.Println("adding key: ", k)
 		addDoc(t, k, v, index, client)
+	}
+
+	fmt.Println("adding key: ab")
+	kvMap["ab"] = []byte("doc3")
+	addDoc(t, "ab", kvMap["ab"], index, client)
+	fmt.Println("adding key: a")
+	kvMap["a"] = []byte("doc1")
+	addDoc(t, "a", kvMap["a"], index, client)
+
+	return kvMap
+}
+
+
+func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.MockBeeClient) map[string][]byte {
+	kvMap := make(map[string][]byte)
+	kvMap["ke77"] = []byte("batch doc1")
+	kvMap["ke79"] = []byte("batch doc2")
+	kvMap["a94"] = []byte("batch doc3")
+
+	// add the documents
+	for k, v := range kvMap {
+		err := batch.Put(k, v)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	return kvMap
 }
