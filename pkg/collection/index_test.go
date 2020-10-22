@@ -3,7 +3,6 @@ package collection_test
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -35,7 +34,6 @@ func TestIndex(t *testing.T) {
 			t.Fatal(err)
 		}
 		kvMap := addLotOfDocs(t, index, mockClient)
-
 
 		// open the index again, simulating like another instance
 		index1, err := collection.OpenIndex("testdb0", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
@@ -152,12 +150,10 @@ func TestIndex(t *testing.T) {
 			t.Fatal(err)
 		}
 
-
 		// iterate through the keys and check for the values returned
 		count := 0
 		for itr.Next() {
 			value := getDoc(t, itr.Key(), index, mockClient)
-			fmt.Println(itr.Key() + ":" + string(value))
 			if !bytes.Equal(kvMap[itr.Key()], value) {
 				t.Fatalf("expected value %s but got %s for the key %s", string(kvMap[itr.Key()]), string(value), itr.Key())
 			}
@@ -197,7 +193,6 @@ func TestIndex(t *testing.T) {
 		count := 0
 		for itr.Next() {
 			value := getValue(t, itr.Value(), mockClient)
-			fmt.Println(itr.Key() + ":" + string(value))
 			if !bytes.Equal(kvMap[itr.Key()], value) {
 				t.Fatalf("expected value %s but got %s for the key %s", string(kvMap[itr.Key()]), string(value), itr.Key())
 			}
@@ -352,8 +347,6 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeCli
 	// Initialize the values
 	kvMap := make(map[string][]byte)
 	kvMap["key1"] = []byte("value1")
-	kvMap["key2"] = []byte("value2")
-	kvMap["key3"] = []byte("value3")
 	kvMap["key11"] = []byte("value11")
 	kvMap["aa"] = []byte("doc2")
 	kvMap["abc"] = []byte("doc4")
@@ -369,20 +362,20 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeCli
 
 	// add the documents
 	for k, v := range kvMap {
-		fmt.Println("adding key: ", k)
 		addDoc(t, k, v, index, client)
 	}
 
-	fmt.Println("adding key: ab")
 	kvMap["ab"] = []byte("doc3")
 	addDoc(t, "ab", kvMap["ab"], index, client)
-	fmt.Println("adding key: a")
 	kvMap["a"] = []byte("doc1")
 	addDoc(t, "a", kvMap["a"], index, client)
+	kvMap["key3"] = []byte("value3")
+	addDoc(t, "key3", kvMap["key3"], index, client)
+	kvMap["key2"] = []byte("value2")
+	addDoc(t, "key2", kvMap["key2"], index, client)
 
 	return kvMap
 }
-
 
 func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.MockBeeClient) map[string][]byte {
 	kvMap := make(map[string][]byte)
