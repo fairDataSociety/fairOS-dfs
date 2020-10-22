@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -25,16 +28,49 @@ type Index struct {
 	accountInfo *account.Info
 	feed        *feed.API
 	client      blockstore.Client
+	count       uint64
+	memDB       *Manifest
+}
+
+func CreateIndex(collectionName, IndexName string, fd *feed.API, user utils.Address) error {
+	indexName := utils.PathSeperator + collectionName + utils.PathSeperator + IndexName
+	topic := utils.HashString(indexName)
+	_, _, err := fd.GetFeedData(topic, user)
+	if err == nil {
+		return ErrIndexAlreadyPresent
+	}
+
+	manifest := NewManifest(indexName, time.Now().Unix())
+
+	// marshall and store the manifest as new feed
+	data, err := json.Marshal(manifest)
+	if err != nil {
+		return ErrManifestUnmarshall
+	}
+
+	_, err = fd.CreateFeed(topic, user, data)
+	if err != nil {
+		return ErrManifestCreate
+	}
+	return nil
 }
 
 func OpenIndex(collectionName, IndexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client) (*Index, error) {
-	idx :=  &Index{
-		name:        utils.PathSeperator + collectionName + utils.PathSeperator +IndexName,
+	idx := &Index{
+		name:        utils.PathSeperator + collectionName + utils.PathSeperator + IndexName,
 		user:        user,
 		accountInfo: ai,
 		feed:        fd,
 		client:      client,
+		count:       0,
+		memDB:       nil,
 	}
+
+	err := idx.syncIndex()
+	if err != nil {
+		return nil, err
+	}
+
 	return idx, nil
 }
 
@@ -53,7 +89,7 @@ func (idx *Index) Put(key string, refValue []byte) error {
 	topic := utils.HashString(idx.name)
 	_, data, err := idx.feed.GetFeedData(topic, idx.user)
 	if err != nil {
-		return idx.initIndex(key, refValue)
+		return ErrNoManifestFound
 	}
 
 	// unmarshall the manifest
@@ -64,11 +100,11 @@ func (idx *Index) Put(key string, refValue []byte) error {
 	}
 
 	ctx := context.Background()
-	return idx.addOrUpdateEntry(ctx, manifest, key, refValue)
+	return idx.addOrUpdateEntry(ctx, &manifest, key, refValue, false)
 }
 
 func (idx *Index) Get(key string) ([]byte, error) {
-	manifest, i, err := idx.seekManifestAndEntry(key)
+	_, manifest, i, err := idx.seekManifestAndEntry(key)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +112,7 @@ func (idx *Index) Get(key string) ([]byte, error) {
 }
 
 func (idx *Index) Delete(key string) ([]byte, error) {
-	manifest, i, err := idx.seekManifestAndEntry(key)
+	_, manifest, i, err := idx.seekManifestAndEntry(key)
 	if err != nil {
 		return nil, err
 	}
@@ -113,11 +149,76 @@ func (idx *Index) Delete(key string) ([]byte, error) {
 	return deletedRef, nil
 }
 
-func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest Manifest, key string, value []byte) error {
+func (idx *Index) syncIndex() error {
+	parentManifest, err := idx.loadManifest(idx.name)
+	if err != nil {
+		return err
+	}
+
+	if len(parentManifest.Entries) == 0 {
+		return nil
+	}
+
+	errC := make(chan error, 1) // get only one error
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	idx.loadIndexInMemory(ctx, cancel, parentManifest, errC)
+	select {
+	case err := <-errC:
+		if err != nil {
+			idx.count = 0
+			return err
+		}
+	default: // Default is must to avoid blocking
+	}
+
+	idx.memDB = parentManifest
+	return nil
+}
+
+func (idx *Index) loadIndexInMemory(ctx context.Context, cancel context.CancelFunc, manifest *Manifest, errC chan error) {
+	var count uint64
+	var wg sync.WaitGroup
+
+	for _, entry := range manifest.Entries {
+		if entry.EType == IntermediateEntry {
+			wg.Add(1)
+			go func(ent *Entry) {
+				defer wg.Done()
+				newManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + ent.Name)
+				if err != nil {
+					fmt.Println("error loading manifest ", manifest.Name+utils.PathSeperator+ent.Name, ent.EType)
+					select {
+					case errC <- err:
+					default: // Default is must to avoid blocking
+					}
+					cancel()
+					return
+				}
+
+				// if some other goroutine fails, terminate this one too
+				select {
+				case <-ctx.Done():
+					return
+				default: // Default is must to avoid blocking
+				}
+				entry.manifest = newManifest
+				idx.loadIndexInMemory(ctx, cancel, newManifest, errC)
+			}(entry)
+		} else {
+			count++
+		}
+	}
+	wg.Wait()
+	atomic.AddUint64(&idx.count, count)
+}
+
+func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key string, value []byte, memory bool) error {
 	// go through the manifest to find the key
 	manifest.dirtyFlag = false
-	for i, _ := range manifest.Entries {
-		entry := &manifest.Entries[i]
+	for i := range manifest.Entries {
+		entry := manifest.Entries[i] // we change the entry so dont simplify this
 		if entry.EType == LeafEntry {
 
 			// an entry with the same key is already present... so update it
@@ -134,28 +235,34 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest Manifest, key s
 				var newManifest Manifest
 				newManifest.Name = manifest.Name + utils.PathSeperator + prefix
 				newManifest.CreationTime = time.Now().Unix()
-				newManifest.Entries = append(newManifest.Entries, Entry{
-					Name:  strings.TrimPrefix(entry.Name, prefix),
-					EType: LeafEntry,
-					Ref:   entry.Ref,
-				})
-				newManifest.Entries = append(newManifest.Entries, Entry{
+				entry1 := &Entry{
 					Name:  strings.TrimPrefix(key, prefix),
 					EType: LeafEntry,
 					Ref:   value,
-				})
-
-				data, err := json.Marshal(newManifest)
-				if err != nil {
-					return err
 				}
-
-				prefixTopic := utils.HashString(newManifest.Name)
-				_, err = idx.feed.CreateFeed(prefixTopic, idx.user, data)
-				if err != nil {
-					return err
+				idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
+				entry2 := &Entry{
+					Name:  strings.TrimPrefix(entry.Name, prefix),
+					EType: LeafEntry,
+					Ref:   entry.Ref,
 				}
+				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
 
+				if !memory {
+					// create a new feed with this new manifest
+					data, err := json.Marshal(newManifest)
+					if err != nil {
+						return err
+					}
+					prefixTopic := utils.HashString(newManifest.Name)
+					_, err = idx.feed.CreateFeed(prefixTopic, idx.user, data)
+					if err != nil {
+						return err
+					}
+					entry.manifest = &newManifest
+				} else {
+					entry.manifest = &newManifest
+				}
 				// convert the existing leaf to intermediate node
 				entry.Name = prefix
 				entry.EType = IntermediateEntry
@@ -176,7 +283,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest Manifest, key s
 				if err != nil {
 					return err
 				}
-				return idx.addOrUpdateEntry(ctx, intermediateManifest, newKey, value)
+				return idx.addOrUpdateEntry(ctx, &intermediateManifest, newKey, value, memory)
 			}
 		}
 	}
@@ -188,88 +295,106 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest Manifest, key s
 			EType: LeafEntry,
 			Ref:   value,
 		}
-		manifest.Entries = append(manifest.Entries, newEntry)
+		idx.addEntryToManifestSortedLexicographically(manifest, &newEntry)
 		manifest.dirtyFlag = true
 	}
 
-	if manifest.dirtyFlag {
-		data, err := json.Marshal(manifest)
-		if err != nil {
-			return err
-		}
-		topic := utils.HashString(manifest.Name)
-		_, err = idx.feed.UpdateFeed(topic, idx.user, data)
-		if err != nil {
-			return err
-		}
-		return nil
+	if manifest.dirtyFlag && !memory {
+		return idx.updateManifest(manifest)
 	}
 	return nil
 }
 
-func (idx *Index) initIndex(key string, value []byte) error {
-	// This is the first insert, so create a new manifest index
-	var manifest Manifest
-	manifest.Name = idx.name
-	manifest.CreationTime = time.Now().Unix()
+func (idx *Index) addEntryToManifestSortedLexicographically(manifest *Manifest, entryToAdd *Entry) {
+	var entries []*Entry
 
-	// add the entry to the new manifest
-	newEntry := Entry{
-		Name:  key,
-		EType: LeafEntry,
-		Ref:   value,
-	}
-	manifest.Entries = append(manifest.Entries, newEntry)
-
-	// marshall and store the manifest as new feed
-	data, err := json.Marshal(manifest)
-	if err != nil {
-		return ErrManifestUnmarshall
+	// this is the first element
+	if len(manifest.Entries) == 0 {
+		manifest.Entries = append(manifest.Entries, entryToAdd)
+		return
 	}
 
-	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.CreateFeed(topic, idx.user, data)
-	if err != nil {
-		return ErrManifestCreate
+	// new element has an empty name, so add it in the beginning
+	if len(entryToAdd.Name) == 0 {
+		entries = append(entries, entryToAdd)
+		manifest.Entries = append(entries, manifest.Entries...)
+		return
 	}
-	manifest.dirtyFlag = false  // since the manifest is synced to Swarm
-	return nil
+
+	entryAdded := false
+	for _, entry := range manifest.Entries {
+		if len(entry.Name) == 0 {
+			entries = append(entries, entry)
+			continue
+		} else {
+			if !entryAdded {
+				a := entry.Name[0]
+				b := entryToAdd.Name[0]
+				if a > b {
+					entries = append(entries, entryToAdd)
+					entryAdded = true
+				}
+			}
+			entries = append(entries, entry)
+		}
+	}
+
+	if !entryAdded {
+		entries = append(entries, entryToAdd)
+	}
+
+	manifest.Entries = entries
 }
 
-func (idx *Index) seekManifestAndEntry(key string) (*Manifest, int, error) {
+func (idx *Index) seekManifestAndEntry(key string) (*Manifest, *Manifest, int, error) {
 	// load the first manifest of the index
 	firstManifest, err := idx.loadManifest(idx.name)
-	if err != nil && !errors.Is(err, ErrNoManifestFound){
-		return nil, 0, err
+	if err != nil && !errors.Is(err, ErrNoManifestFound) {
+		return nil, nil, 0, err
 	}
 
 	// if there are any elements in the index, then search for the entry
 	if len(firstManifest.Entries) > 0 {
-		return idx.findManifest(firstManifest, key)
+		return idx.findManifest(nil, firstManifest, key, false)
 	}
-	return nil, 0, ErrEntryNotFound
+	return nil, nil, 0, ErrEntryNotFound
 }
 
-func (idx *Index) findManifest(parentManifest *Manifest, key string) (*Manifest, int, error) {
+func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, key string, memory bool) (*Manifest, *Manifest, int, error) {
 	for i, entry := range parentManifest.Entries {
+
+		// if the first char is > keys first char, then the key wont be found
+		if len(entry.Name) > 0 {
+			if len(key) == 0 { // to check for empty entry
+				return nil, nil, 0, ErrEntryNotFound
+			}
+			if entry.Name[0] > key[0] { // to check for greater entries
+				return nil, parentManifest, 0, ErrEntryNotFound
+			}
+		}
+
 		if entry.EType == LeafEntry && entry.Name == key {
-			return parentManifest, i, nil
+			return grandParentManifest, parentManifest, i, nil
 		}
 
 		if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
 			childManifestPath := parentManifest.Name + utils.PathSeperator + entry.Name
 			childManifest, err := idx.loadManifest(childManifestPath)
 			if err != nil {
-				return nil, 0, err
+				return nil, nil, 0, err
+			}
+			if memory {
+				entry.manifest = childManifest
 			}
 			childKey := strings.TrimPrefix(key, entry.Name)
-			return idx.findManifest(childManifest, childKey)
+			return idx.findManifest(parentManifest, childManifest, childKey, memory)
 		}
 	}
-	return nil, 0, ErrEntryNotFound
+	return nil, nil, 0, ErrEntryNotFound
 }
 
 func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
+	// get feed data and unmarshall the manifest
 	topic := utils.HashString(manifestPath)
 	_, data, err := idx.feed.GetFeedData(topic, idx.user)
 	if err != nil {
@@ -285,7 +410,7 @@ func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 }
 
 func (idx *Index) updateManifest(manifest *Manifest) error {
-	// marshall and store the manifest as new feed
+	// marshall and update the manifest in the feed
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return ErrManifestUnmarshall
@@ -293,6 +418,21 @@ func (idx *Index) updateManifest(manifest *Manifest) error {
 
 	topic := utils.HashString(manifest.Name)
 	_, err = idx.feed.UpdateFeed(topic, idx.user, data)
+	if err != nil {
+		return ErrManifestCreate
+	}
+	return nil
+}
+
+func (idx *Index) storeManifest(manifest *Manifest) error {
+	// marshall and store the manifest as new feed
+	data, err := json.Marshal(manifest)
+	if err != nil {
+		return ErrManifestUnmarshall
+	}
+
+	topic := utils.HashString(manifest.Name)
+	_, err = idx.feed.CreateFeed(topic, idx.user, data)
 	if err != nil {
 		return ErrManifestCreate
 	}
@@ -348,10 +488,25 @@ func (idx *Index) NewIterator(start, end string, limit int64) (*Iterator, error)
 		currentValue:  nil,
 		error:         nil,
 	}
+
+	if itr.startPrefix != "" {
+		err := itr.Seek(itr.startPrefix)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return itr, nil
 }
 
 func (itr *Iterator) Next() bool {
+	// dont go beyond the limit
+	if itr.limit > 0 {
+		if itr.givenUntilNow >= itr.limit {
+			return false
+		}
+	}
+
 	// get the current manifest at the top of the stack
 	depthOfStack := len(itr.manifestStack)
 	if depthOfStack == 0 {
@@ -383,8 +538,18 @@ func (itr *Iterator) Next() bool {
 
 	// We have a manifest whose entries are not yet exhausted,
 	// so get the next entry and check for valid conditions of the Iterator()
-	entry := &manifestState.currentManifest.Entries[manifestState.currentIndex]
+	entry := manifestState.currentManifest.Entries[manifestState.currentIndex]
 	manifestState.currentIndex++
+
+	// check if the search has reached the end key
+	if itr.endPrefix != "" {
+		actualKey := manifestState.currentManifest.Name + utils.PathSeperator + entry.Name
+		actualKey = strings.TrimPrefix(actualKey, itr.index.name)
+		actualKey = strings.Replace(actualKey, utils.PathSeperator, "", -1)
+		if actualKey[0] > itr.endPrefix[0] {
+			return false
+		}
+	}
 
 	// if it is a leaf entry, set the key and value
 	if entry.EType == LeafEntry {
@@ -430,62 +595,196 @@ func (itr *Iterator) Value() []byte {
 	return itr.currentValue
 }
 
-func (itr *Iterator) Seek(key string) bool {
-	err := itr.seekKey(key)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
-
-func (itr *Iterator) seekKey(key string)  error {
+func (itr *Iterator) Seek(key string) error {
 	manifest, err := itr.index.loadManifest(itr.index.name)
 	if err != nil {
 		return err
 	}
 
+	err = itr.seekKey(manifest, key)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (itr *Iterator) seekKey(manifest *Manifest, key string) error {
 	// if there are any elements in the index, then search for the entry
 	if len(manifest.Entries) > 0 {
 		for i, entry := range manifest.Entries {
+
+			// even if the entry is not found, add the pointer to seek so that
+			// seek can continue from the next element
+			if len(entry.Name) > 0 {
+				if len(key) == 0 || entry.Name[0] > key[0] {
+					manifestState := &ManifestState{
+						currentManifest: manifest,
+						currentIndex:    i + 1,
+					}
+					itr.manifestStack = append(itr.manifestStack, manifestState)
+					return ErrEntryNotFound
+				}
+			}
+
 			if entry.EType == LeafEntry && entry.Name == key {
 				manifestState := &ManifestState{
 					currentManifest: manifest,
-					currentIndex: i,
+					currentIndex:    i,
 				}
 				itr.manifestStack = append(itr.manifestStack, manifestState)
-				actualKey := manifest.Name + utils.PathSeperator + entry.Name
-				actualKey = strings.TrimPrefix(actualKey, utils.PathSeperator+itr.index.name)
-				actualKey = strings.Replace(actualKey, utils.PathSeperator, "", -1)
-				itr.currentKey = actualKey
-				itr.currentValue = entry.Ref
-				itr.givenUntilNow++
+				//actualKey := manifest.Name + utils.PathSeperator + entry.Name
+				//actualKey = strings.TrimPrefix(actualKey, itr.index.name)
+				//actualKey = strings.Replace(actualKey, utils.PathSeperator, "", -1)
+				//
+				//itr.currentKey = actualKey
+				//itr.currentValue = entry.Ref
+				//itr.givenUntilNow++
 				return nil
 			}
 
 			if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
-				newKey := strings.TrimPrefix(key, entry.Name)
+				// found a branch, push the current manifest state
+				manifestState := &ManifestState{
+					currentManifest: manifest,
+					currentIndex:    i + 1,
+				}
+				itr.manifestStack = append(itr.manifestStack, manifestState)
+
+				// now load the child manifest and re-seek
 				topic := utils.HashString(manifest.Name + utils.PathSeperator + entry.Name)
 				_, data, err := itr.index.feed.GetFeedData(topic, itr.index.user)
 				if err != nil {
 					return err
 				}
-
-				var newManifest Manifest
-				err = json.Unmarshal(data, &newManifest)
+				var childManifest Manifest
+				err = json.Unmarshal(data, &childManifest)
 				if err != nil {
 					return err
 				}
-				newManifestState := &ManifestState{
-					currentManifest: &newManifest,
-					currentIndex:    0,
-				}
-				itr.manifestStack = append(itr.manifestStack, newManifestState)
-				return itr.seekKey(newKey)
+
+				childKey := strings.TrimPrefix(key, entry.Name)
+				return itr.seekKey(&childManifest, childKey)
 			}
 		}
 	}
 	return ErrEntryNotFound
+}
+
+type Batch struct {
+	idx   *Index
+	memDb *Manifest
+}
+
+func (idx *Index) Batch() (*Batch, error) {
+	return &Batch{
+		idx: idx,
+	}, nil
+}
+
+func (b *Batch) Put(key string, refValue []byte) error {
+	if b.memDb == nil {
+		manifest := &Manifest{
+			Name:      b.idx.name,
+			dirtyFlag: true,
+		}
+		b.memDb = manifest
+	}
+	ctx := context.Background()
+	return b.idx.addOrUpdateEntry(ctx, b.memDb, key, refValue, true)
+}
+
+func (b *Batch) Delete(key string) ([]byte, error) {
+	if b.memDb == nil {
+		return nil, ErrEntryNotFound
+	}
+	parentManifest, manifest, index, err := b.idx.findManifest(nil, b.memDb, key, true)
+	if err != nil {
+		return nil, err
+	}
+
+	deletedRef := manifest.Entries[index].Ref
+	if len(manifest.Entries) == 1 && manifest.Entries[0].Name == "" && parentManifest != nil {
+		// then we have to remove the intermediate node in the parent manifest
+		// so that the entire branch goes kaboom
+		parentEntryKey := filepath.Base(manifest.Name)
+		for i, entry := range parentManifest.Entries {
+			if entry.EType == IntermediateEntry && entry.Name == parentEntryKey {
+				deletedRef = entry.Ref
+				parentManifest.Entries = append(parentManifest.Entries[:i], parentManifest.Entries[i+1:]...)
+				parentManifest.dirtyFlag = true
+				break
+			}
+		}
+		return deletedRef, nil
+	}
+	manifest.Entries = append(manifest.Entries[:index], manifest.Entries[index+1:]...)
+	manifest.dirtyFlag = true
+	return deletedRef, nil
+}
+
+func (b *Batch) Write() error {
+	if b.memDb != nil {
+		return ErrEntryNotFound
+	}
+
+	if b.memDb.dirtyFlag {
+		diskManifest, err := b.idx.loadManifest(b.memDb.Name)
+		if err != nil {
+			return err
+		}
+		return b.mergeAndWriteManifest(diskManifest, b.memDb)
+	}
+	return nil
+}
+
+func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error {
+
+	// if there is no disk equivalent, then just store the memory version
+	if diskManifest == nil {
+		return b.idx.storeManifest(memManifest)
+	}
+
+	// merge the mem manifest with the disk version
+	if memManifest.dirtyFlag {
+		for _, dirtyEntry := range memManifest.Entries {
+			b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
+			diskManifest.dirtyFlag = true
+			if dirtyEntry.EType == IntermediateEntry && dirtyEntry.manifest != nil {
+				err := b.storeMemoryManifest(dirtyEntry.manifest)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		if diskManifest.dirtyFlag {
+			// save th disk manifest
+			err := b.idx.storeManifest(diskManifest)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (b *Batch) storeMemoryManifest(manifest *Manifest) error {
+	// store this manifest
+	err := b.idx.storeManifest(manifest)
+	if err != nil {
+		return err
+	}
+
+	// store any branches in this manifest
+	for _, entry := range manifest.Entries {
+		if entry.EType == IntermediateEntry && entry.manifest != nil {
+			err := b.storeMemoryManifest(entry.manifest)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func longestCommonPrefix(str1, str2 string) string {

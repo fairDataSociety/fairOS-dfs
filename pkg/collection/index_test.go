@@ -23,20 +23,69 @@ func TestIndex(t *testing.T) {
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 
+	t.Run("sync_index", func(t *testing.T) {
+		//  create and populate the index
+		err := collection.CreateIndex("testdb0", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		if err != nil {
+			t.Fatal(err)
+		}
+		index, err := collection.OpenIndex("testdb0", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		if err != nil {
+			t.Fatal(err)
+		}
+		kvMap := addLotOfDocs(t, index, mockClient)
+
+		// close the index
+		//index = nil
+
+		// open the index again
+		index1, err := collection.OpenIndex("testdb0", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for k, expectedValue := range kvMap {
+			gotValue := getDoc(t, k, index1, mockClient)
+			if !bytes.Equal(expectedValue, gotValue) {
+				t.Fatalf("expected expectedValue %s got expectedValue %s", expectedValue, gotValue)
+			}
+		}
+
+		gotValue := getDoc(t, "p", index1, mockClient)
+		if gotValue != nil {
+			t.Fatalf("found data for not inserted key")
+		}
+
+		// delete the index
+		err = index1.DeleteIndex()
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 
 	t.Run("get-doc", func(t *testing.T) {
 		//  create and populate the index
+		err := collection.CreateIndex("testdb1", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		if err != nil {
+			t.Fatal(err)
+		}
 		index, err := collection.OpenIndex("testdb1", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
 		kvMap := addLotOfDocs(t, index, mockClient)
 
-		// get the value of akey and check against its actual value
-		value :=  kvMap["aa"]
-		gotValue := getDoc(t, "aa", index, mockClient)
-		if !bytes.Equal(value, gotValue) {
-			t.Fatalf("expected value %s got value %s", value, gotValue)
+		// get the expectedValue of keys and check against its actual expectedValue
+		for k, expectedValue := range kvMap {
+			gotValue := getDoc(t, k, index, mockClient)
+			if !bytes.Equal(expectedValue, gotValue) {
+				t.Fatalf("expected expectedValue %s got expectedValue %s", expectedValue, gotValue)
+			}
+		}
+
+		gotValue := getDoc(t, "p", index, mockClient)
+		if gotValue != nil {
+			t.Fatalf("found data for not inserted key")
 		}
 
 		// delete the index
@@ -48,15 +97,18 @@ func TestIndex(t *testing.T) {
 
 	t.Run("get-doc-del-doc-get-doc", func(t *testing.T) {
 		//  create and populate the index
+		err := collection.CreateIndex("testdb2", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		if err != nil {
+			t.Fatal(err)
+		}
 		index, err := collection.OpenIndex("testdb2", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
 		kvMap := addLotOfDocs(t, index, mockClient)
 
-
 		// get the value of the key just to check
-		value :=  kvMap["aa"]
+		value := kvMap["aa"]
 		gotValue := getDoc(t, "aa", index, mockClient)
 		if !bytes.Equal(value, gotValue) {
 			t.Fatalf("expected value %s got value %s", value, gotValue)
@@ -84,12 +136,15 @@ func TestIndex(t *testing.T) {
 
 	t.Run("add-docs-iterrate", func(t *testing.T) {
 		//  create and populate the index
+		err := collection.CreateIndex("testdb3", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		if err != nil {
+			t.Fatal(err)
+		}
 		index, err := collection.OpenIndex("testdb3", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
 		kvMap := addLotOfDocs(t, index, mockClient)
-
 
 		// create the iterator
 		itr, err := index.NewIterator("", "", 100)
@@ -120,6 +175,10 @@ func TestIndex(t *testing.T) {
 
 	t.Run("add-docs-seek-iterrate", func(t *testing.T) {
 		//  create and populate the index
+		err := collection.CreateIndex("testdb4", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		if err != nil {
+			t.Fatal(err)
+		}
 		index, err := collection.OpenIndex("testdb4", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
@@ -142,12 +201,11 @@ func TestIndex(t *testing.T) {
 			count++
 		}
 
-		if count != 8{
+		if count != 7 {
 			t.Fatalf("number of elements mismatch in iteration")
 		}
 	})
 }
-
 
 func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.MockBeeClient) {
 	ref, err := client.UploadBlob(value, false, false)
@@ -159,7 +217,6 @@ func addDoc(t *testing.T, key string, value []byte, index *collection.Index, cli
 		t.Fatalf("could not add doc in index: %s:%s, %v", key, ref, err)
 	}
 }
-
 
 func getDoc(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient) []byte {
 	ref, err := index.Get(key)
@@ -179,7 +236,7 @@ func getDoc(t *testing.T, key string, index *collection.Index, client *mock.Mock
 	return data
 }
 
-func delDoc(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient)  []byte {
+func delDoc(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient) []byte {
 	ref, err := index.Delete(key)
 	if err != nil {
 		t.Fatal(err)
@@ -201,6 +258,7 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeCli
 	kvMap["key1"] = []byte("value1")
 	kvMap["key2"] = []byte("value2")
 	kvMap["key3"] = []byte("value3")
+	kvMap["key11"] = []byte("value11")
 	kvMap["a"] = []byte("doc1")
 	kvMap["aa"] = []byte("doc2")
 	kvMap["ab"] = []byte("doc3")
