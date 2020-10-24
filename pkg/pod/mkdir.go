@@ -26,7 +26,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (p *Pod) MakeDir(podName string, dirName string) error {
+func (p *Pod) MakeDir(podName, dirName string) error {
 	dirs, err := CleanDirName(dirName)
 	if err != nil {
 		return err

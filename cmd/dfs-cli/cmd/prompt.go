@@ -750,104 +750,106 @@ func executor(in string) {
 			help()
 		} // end of pod commands
 	case "kv":
-		{
-			if currentUser == "" {
-				fmt.Println("login as a user to execute these commands")
+
+		if currentUser == "" {
+			fmt.Println("login as a user to execute these commands")
+			return
+		}
+		if len(blocks) < 2 {
+			log.Println("invalid command.")
+			help()
+			return
+		}
+		if !isPodOpened() {
+			return
+		}
+		switch blocks[1] {
+		case "new":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
 				return
 			}
-			if len(blocks) < 2 {
-				log.Println("invalid command.")
-				help()
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVCreate, args)
+			if err != nil {
+				fmt.Println("kv new: ", err)
 				return
 			}
-			if !isPodOpened() {
+			fmt.Println(string(data))
+			currentPrompt = getCurrentPrompt()
+		case "open":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
 				return
 			}
-			switch blocks[1] {
-			case "new":
-				if len(blocks) < 3 {
-					fmt.Println("invalid command. Missing \"name\" argument ")
-					return
-				}
-				tableName := blocks[2]
-				args := make(map[string]string)
-				args["name"] = tableName
-				data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVCreate, args)
-				if err != nil {
-					fmt.Println("kv new: ", err)
-					return
-				}
-				fmt.Println(string(data))
-				currentPrompt = getCurrentPrompt()
-			case "open":
-				if len(blocks) < 3 {
-					fmt.Println("invalid command. Missing \"name\" argument ")
-					return
-				}
-				tableName := blocks[2]
-				args := make(map[string]string)
-				args["name"] = tableName
-				data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVOpen, args)
-				if err != nil {
-					fmt.Println("kv open: ", err)
-					return
-				}
-				fmt.Println(string(data))
-				currentPrompt = getCurrentPrompt()
-			case "put":
-				if len(blocks) < 5 {
-					fmt.Println("invalid command. Missing \"name\" argument ")
-					return
-				}
-				tableName := blocks[2]
-				key := blocks[3]
-				value := blocks[4]
-				args := make(map[string]string)
-				args["name"] = tableName
-				args["key"] = key
-				args["value"] = value
-				data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVPut, args)
-				if err != nil {
-					fmt.Println("kv put: ", err)
-					return
-				}
-				fmt.Println(string(data))
-				currentPrompt = getCurrentPrompt()
-			case "get":
-				if len(blocks) < 4 {
-					fmt.Println("invalid command. Missing \"name\" argument ")
-					return
-				}
-				tableName := blocks[2]
-				key := blocks[3]
-				args := make(map[string]string)
-				args["name"] = tableName
-				args["key"] = key
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiKVGet, args)
-				if err != nil {
-					fmt.Println("kv get: ", err)
-					return
-				}
-				fmt.Println(string(data))
-				currentPrompt = getCurrentPrompt()
-			case "del":
-				if len(blocks) < 4 {
-					fmt.Println("invalid command. Missing \"name\" argument ")
-					return
-				}
-				tableName := blocks[2]
-				key := blocks[3]
-				args := make(map[string]string)
-				args["name"] = tableName
-				args["key"] = key
-				data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiKVDelete, args)
-				if err != nil {
-					fmt.Println("kv del: ", err)
-					return
-				}
-				fmt.Println(string(data))
-				currentPrompt = getCurrentPrompt()
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVOpen, args)
+			if err != nil {
+				fmt.Println("kv open: ", err)
+				return
 			}
+			fmt.Println(string(data))
+			currentPrompt = getCurrentPrompt()
+		case "put":
+			if len(blocks) < 5 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			value := blocks[4]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["key"] = key
+			args["value"] = value
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVPut, args)
+			if err != nil {
+				fmt.Println("kv put: ", err)
+				return
+			}
+			fmt.Println(string(data))
+			currentPrompt = getCurrentPrompt()
+		case "get":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["key"] = key
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiKVGet, args)
+			if err != nil {
+				fmt.Println("kv get: ", err)
+				return
+			}
+			fmt.Println(string(data))
+			currentPrompt = getCurrentPrompt()
+		case "del":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["key"] = key
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiKVDelete, args)
+			if err != nil {
+				fmt.Println("kv del: ", err)
+				return
+			}
+			fmt.Println(string(data))
+			currentPrompt = getCurrentPrompt()
+		default:
+			fmt.Println("invalid kv command!!")
+			help()
 		}
 	case "cd":
 		if !isPodOpened() {

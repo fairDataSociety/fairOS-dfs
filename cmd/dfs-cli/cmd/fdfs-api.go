@@ -153,7 +153,7 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	return data, nil
 }
 
-func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, arguments map[string]string, formFileArgument string, compression string) ([]byte, error) {
+func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, arguments map[string]string, formFileArgument, compression string) ([]byte, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 

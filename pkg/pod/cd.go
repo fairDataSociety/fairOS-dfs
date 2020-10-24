@@ -23,7 +23,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (p *Pod) ChangeDir(podName string, dirName string) (*Info, error) {
+func (p *Pod) ChangeDir(podName, dirName string) (*Info, error) {
 	directoryName, err := CleanDirName(dirName)
 	if err != nil {
 		return nil, err

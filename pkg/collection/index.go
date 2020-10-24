@@ -359,7 +359,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 					return idx.addOrUpdateEntry(ctx, entry.manifest, keySuffix, value, memory)
 				}
 
-			} else if len(entrySuffix) == 0 && len(keySuffix) == 0 {
+			} else if entrySuffix == "" && keySuffix == "" {
 				// load the entry's manifest and add the keySuffix as a new leaf
 				if !memory {
 					topic := utils.HashString(manifest.Name + utils.PathSeperator + prefix)
@@ -458,7 +458,7 @@ func (idx *Index) addEntryToManifestSortedLexicographically(manifest *Manifest, 
 	}
 
 	// new element has an empty name, so add it in the beginning
-	if len(entryToAdd.Name) == 0 {
+	if entryToAdd.Name == "" {
 		entries = append(entries, entryToAdd)
 		manifest.Entries = append(entries, manifest.Entries...)
 		return
@@ -466,7 +466,7 @@ func (idx *Index) addEntryToManifestSortedLexicographically(manifest *Manifest, 
 
 	entryAdded := false
 	for _, entry := range manifest.Entries {
-		if len(entry.Name) == 0 {
+		if entry.Name == "" {
 			entries = append(entries, entry)
 			continue
 		} else {
@@ -508,7 +508,7 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 
 		// if the first char is > keys first char, then the key wont be found
 		if len(entry.Name) > 0 {
-			if len(key) == 0 { // to check for empty entry
+			if key == "" { // to check for empty entry
 				return nil, nil, 0, ErrEntryNotFound
 			}
 			if entry.Name[0] > key[0] { // to check for greater entries
@@ -691,7 +691,7 @@ func (itr *Iterator) Next() bool {
 	if itr.endPrefix != "" {
 		actualKey := manifestState.currentManifest.Name + utils.PathSeperator + entry.Name
 		actualKey = strings.TrimPrefix(actualKey, itr.index.name)
-		actualKey = strings.Replace(actualKey, utils.PathSeperator, "", -1)
+		actualKey = strings.ReplaceAll(actualKey, utils.PathSeperator, "")
 		if actualKey[0] > itr.endPrefix[0] {
 			return false
 		}
@@ -701,7 +701,7 @@ func (itr *Iterator) Next() bool {
 	if entry.EType == LeafEntry {
 		actualKey := manifestState.currentManifest.Name + utils.PathSeperator + entry.Name
 		actualKey = strings.TrimPrefix(actualKey, itr.index.name)
-		actualKey = strings.Replace(actualKey, utils.PathSeperator, "", -1)
+		actualKey = strings.ReplaceAll(actualKey, utils.PathSeperator, "")
 		itr.currentKey = actualKey
 		itr.currentValue = entry.Ref
 		itr.givenUntilNow++
@@ -762,7 +762,7 @@ func (itr *Iterator) seekKey(manifest *Manifest, key string) error {
 			// even if the entry is not found, add the pointer to seek so that
 			// seek can continue from the next element
 			if len(entry.Name) > 0 {
-				if len(key) == 0 || entry.Name[0] > key[0] {
+				if key == "" || entry.Name[0] > key[0] {
 					manifestState := &ManifestState{
 						currentManifest: manifest,
 						currentIndex:    i + 1,

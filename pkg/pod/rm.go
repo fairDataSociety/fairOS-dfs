@@ -29,7 +29,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (p *Pod) RemoveFile(podName string, podFile string) error {
+func (p *Pod) RemoveFile(podName, podFile string) error {
 	if !p.isPodOpened(podName) {
 		return fmt.Errorf("login to pod to do this operation")
 	}
