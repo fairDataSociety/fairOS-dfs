@@ -1,16 +1,34 @@
+/*
+Copyright © 2020 FairOS Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package collection_test
 
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"testing"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"io/ioutil"
-	"net/http"
-	"testing"
 )
 
 func TestIndex(t *testing.T) {
@@ -249,42 +267,111 @@ func TestIndex(t *testing.T) {
 		}
 	})
 
-	//t.Run("add-docs-then-batch-add-docs", func(t *testing.T) {
-	//	//  create and populate the index
-	//	err := collection.CreateIndex("testdb6", "key", fd, acc.GetAddress(account.UserAccountIndex))
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//	index, err := collection.OpenIndex("testdb6", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//	kvMap := addLotOfDocs(t, index, mockClient)
-	//
-	//	// batch load and delete
-	//	batch, err := index.Batch()
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//
-	//	batchDocs := addBatchDocs(t, batch, mockClient)
-	//	delKey := "file1.jpg"
-	//	_, err = batch.Delete(delKey)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//
-	//
-	//
-	//
-	//
-	//
-	//	// delete the index
-	//	err = index.DeleteIndex()
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//})
+	t.Run("batch-add-docs", func(t *testing.T) {
+		//  create and populate the index
+		err := collection.CreateIndex("testdb6", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		if err != nil {
+			t.Fatal(err)
+		}
+		index, err := collection.OpenIndex("testdb6", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// batch load and delete
+		batch, err := index.Batch()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		batchDocs := addBatchDocs(t, batch, mockClient)
+		err = batch.Write()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create the iterator
+		itr, err := index.NewIterator("", "", 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// iterate through the keys and check for the values returned
+		count := 0
+		for itr.Next() {
+			value := getValue(t, itr.Value(), mockClient)
+			fmt.Println(itr.Key(), string(value))
+			if !bytes.Equal(batchDocs[itr.Key()], value) {
+				t.Fatalf("expected value %s but got %s for the key %s", string(batchDocs[itr.Key()]), string(value), itr.Key())
+			}
+			count++
+		}
+
+		if len(batchDocs) != count {
+			t.Fatalf("number of elements mismatch in iteration")
+		}
+
+		// delete the index
+		err = index.DeleteIndex()
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("batch-add-del-docs", func(t *testing.T) {
+		//  create and populate the index
+		err := collection.CreateIndex("testdb7", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		if err != nil {
+			t.Fatal(err)
+		}
+		index, err := collection.OpenIndex("testdb7", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// batch load and delete
+		batch, err := index.Batch()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		batchDocs := addBatchDocs(t, batch, mockClient)
+		_, err = batch.Delete("a")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = batch.Write()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create the iterator
+		itr, err := index.NewIterator("", "", 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// iterate through the keys and check for the values returned
+		count := 0
+		for itr.Next() {
+			value := getValue(t, itr.Value(), mockClient)
+			fmt.Println(itr.Key(), string(value))
+			if !bytes.Equal(batchDocs[itr.Key()], value) {
+				t.Fatalf("expected value %s but got %s for the key %s", string(batchDocs[itr.Key()]), string(value), itr.Key())
+			}
+			count++
+		}
+
+		if len(batchDocs)-1 != count {
+			t.Fatalf("number of elements mismatch in iteration")
+		}
+
+		// delete the index
+		err = index.DeleteIndex()
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 }
 
 func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.MockBeeClient) {
@@ -379,13 +466,34 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeCli
 
 func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.MockBeeClient) map[string][]byte {
 	kvMap := make(map[string][]byte)
+	kvMap["key1"] = []byte("value1")
+	kvMap["key11"] = []byte("value11")
+	kvMap["aa"] = []byte("doc2")
+	kvMap["abc"] = []byte("doc4")
+	kvMap["abcd"] = []byte("doc5")
+	kvMap["aca"] = []byte("doc6")
+	kvMap["ac"] = []byte("doc7")
+	kvMap["acb"] = []byte("doc8")
+	kvMap["aaa"] = []byte("doc9")
+	kvMap["az"] = []byte("doc10")
+	kvMap["acdb"] = []byte("doc11")
+	kvMap["file1"] = []byte("doc12")
+	kvMap["file1.jpg"] = []byte("doc13")
+	kvMap["ab"] = []byte("doc3")
+	kvMap["a"] = []byte("doc1")
+	kvMap["key3"] = []byte("value3")
+	kvMap["key2"] = []byte("value2")
 	kvMap["ke77"] = []byte("batch doc1")
 	kvMap["ke79"] = []byte("batch doc2")
 	kvMap["a94"] = []byte("batch doc3")
 
 	// add the documents
 	for k, v := range kvMap {
-		err := batch.Put(k, v)
+		ref, err := client.UploadBlob(v, false, false)
+		if err != nil {
+			t.Fatalf("could not add doc %s:%s, %v", k, ref, err)
+		}
+		err = batch.Put(k, ref)
 		if err != nil {
 			t.Fatal(err)
 		}

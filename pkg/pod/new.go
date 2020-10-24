@@ -20,13 +20,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"io"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -83,10 +83,7 @@ func (p *Pod) CreatePod(podName, passPhrase string) (*Info, error) {
 	}
 
 	user := p.acc.GetAddress(account.UserAccountIndex)
-	collections, err := collection.LoadUserCollections(fd, user)
-	if err != nil {
-		return nil, err
-	}
+	collection := c.NewCollection(fd, accountInfo, user, p.client)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
@@ -100,7 +97,7 @@ func (p *Pod) CreatePod(podName, passPhrase string) (*Info, error) {
 		curPodMu:        sync.RWMutex{},
 		currentDirInode: dirInode,
 		curDirMu:        sync.RWMutex{},
-		collections:     collections,
+		collection:      collection,
 	}
 	pods[freeId] = podName
 	p.addPodToPodMap(podName, podInfo)

@@ -1,3 +1,19 @@
+/*
+Copyright © 2020 FairOS Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package collection
 
 import (
@@ -215,7 +231,7 @@ func (idx *Index) loadIndexInMemory(ctx context.Context, cancel context.CancelFu
 }
 
 func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key string, value []byte, memory bool) error {
-	manifest.dirtyFlag = false
+	entryAdded := false
 	for i := range manifest.Entries {
 		entry := manifest.Entries[i] // we change the entry so dont simplify this
 
@@ -228,6 +244,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 		if entry.EType == LeafEntry && entry.Name == key {
 			entry.Ref = value
 			manifest.dirtyFlag = true
+			entryAdded = true
 			break
 		}
 
@@ -262,28 +279,30 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 				}
 			} else {
 				entry.manifest = &newManifest
+				manifest.dirtyFlag = true
 			}
 
 			// convert the existing leaf to intermediate node
 			entry.Name = prefix
 			entry.EType = IntermediateEntry
-			entry.manifest = &newManifest
 			manifest.dirtyFlag = true
-
+			entryAdded = true
 			break
 		}
 
 		if entry.EType == IntermediateEntry {
 			if len(keySuffix) > 0 && len(entrySuffix) > 0 {
 				// load the manifest and update the name
-				oldManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
-				if err != nil {
-					return err
-				}
-				oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
-				err = idx.updateManifest(oldManifest)
-				if err != nil {
-					return err
+				if !memory {
+					oldManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
+					if err != nil {
+						return err
+					}
+					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
+					err = idx.updateManifest(oldManifest)
+					if err != nil {
+						return err
+					}
 				}
 
 				// create the new manifest with two entries
@@ -303,56 +322,73 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 					EType: IntermediateEntry,
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
-				err = idx.storeManifest(&newManifest)
-				if err != nil {
-					return err
+				if !memory {
+					err := idx.storeManifest(&newManifest)
+					if err != nil {
+						return err
+					}
+				} else {
+					// update the old manifest name and add the new manifest to the existing entry
+					oldManifest := entry.manifest
+					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
+					entry2.manifest = oldManifest
+					entry.manifest = &newManifest
 				}
 
 				// update the existing intermediate nodes name
 				entry.Name = prefix
 				entry.EType = IntermediateEntry
-				entry.manifest = &newManifest
 				manifest.dirtyFlag = true
+				entryAdded = true
 				break
 			} else if len(keySuffix) > 0 {
 				// load the entry's manifest and add the keySuffix as a new leaf
-				topic := utils.HashString(manifest.Name + utils.PathSeperator + entry.Name)
-				_, data, err := idx.feed.GetFeedData(topic, idx.user)
-				if err != nil {
-					return err
+				if !memory {
+					topic := utils.HashString(manifest.Name + utils.PathSeperator + entry.Name)
+					_, data, err := idx.feed.GetFeedData(topic, idx.user)
+					if err != nil {
+						return err
+					}
+					var intermediateManifest Manifest
+					err = json.Unmarshal(data, &intermediateManifest)
+					if err != nil {
+						return err
+					}
+					return idx.addOrUpdateEntry(ctx, &intermediateManifest, keySuffix, value, memory)
+				} else {
+					return idx.addOrUpdateEntry(ctx, entry.manifest, keySuffix, value, memory)
 				}
-				var intermediateManifest Manifest
-				err = json.Unmarshal(data, &intermediateManifest)
-				if err != nil {
-					return err
-				}
-				return idx.addOrUpdateEntry(ctx, &intermediateManifest, keySuffix, value, memory)
+
 			} else if len(entrySuffix) == 0 && len(keySuffix) == 0 {
 				// load the entry's manifest and add the keySuffix as a new leaf
-				topic := utils.HashString(manifest.Name + utils.PathSeperator + prefix)
-				_, data, err := idx.feed.GetFeedData(topic, idx.user)
-				if err != nil {
-					return err
+				if !memory {
+					topic := utils.HashString(manifest.Name + utils.PathSeperator + prefix)
+					_, data, err := idx.feed.GetFeedData(topic, idx.user)
+					if err != nil {
+						return err
+					}
+					var intermediateManifest Manifest
+					err = json.Unmarshal(data, &intermediateManifest)
+					if err != nil {
+						return err
+					}
+					return idx.addOrUpdateEntry(ctx, &intermediateManifest, keySuffix, value, memory)
+				} else {
+					return idx.addOrUpdateEntry(ctx, entry.manifest, keySuffix, value, memory)
 				}
-				var intermediateManifest Manifest
-				err = json.Unmarshal(data, &intermediateManifest)
-				if err != nil {
-					return err
-				}
-				return idx.addOrUpdateEntry(ctx, &intermediateManifest, keySuffix, value, memory)
 
 			} else if len(entrySuffix) > 0 {
-				// break the intermediate entry in to two branches
-
 				// load the manifest and update the name
-				oldManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
-				if err != nil {
-					return err
-				}
-				oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + key + utils.PathSeperator + entrySuffix
-				err = idx.updateManifest(oldManifest)
-				if err != nil {
-					return err
+				if !memory {
+					oldManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
+					if err != nil {
+						return err
+					}
+					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + key + utils.PathSeperator + entrySuffix
+					err = idx.updateManifest(oldManifest)
+					if err != nil {
+						return err
+					}
 				}
 
 				// create the new manifest with two entries
@@ -372,23 +408,30 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 					EType: IntermediateEntry,
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
-				err = idx.storeManifest(&newManifest)
-				if err != nil {
-					return err
+				if !memory {
+					err := idx.storeManifest(&newManifest)
+					if err != nil {
+						return err
+					}
+				} else {
+					oldManifest := entry.manifest
+					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + key + utils.PathSeperator + entrySuffix
+					entry2.manifest = oldManifest
+					entry.manifest = &newManifest
 				}
 
 				// update the existing intermediate nodes name
 				entry.Name = key
 				entry.EType = IntermediateEntry
-				entry.manifest = &newManifest
 				manifest.dirtyFlag = true
+				entryAdded = true
 				break
 			}
 		}
 	}
 
 	// if the manifest is not already changed, then this is a new entry
-	if !manifest.dirtyFlag {
+	if !entryAdded {
 		newEntry := Entry{
 			Name:  key,
 			EType: LeafEntry,
@@ -396,9 +439,10 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 		}
 		idx.addEntryToManifestSortedLexicographically(manifest, &newEntry)
 		manifest.dirtyFlag = true
+		entryAdded = true
 	}
 
-	if manifest.dirtyFlag && !memory {
+	if entryAdded && !memory {
 		return idx.updateManifest(manifest)
 	}
 	return nil
@@ -477,16 +521,19 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 		}
 
 		if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
-			childManifestPath := parentManifest.Name + utils.PathSeperator + entry.Name
-			childManifest, err := idx.loadManifest(childManifestPath)
-			if err != nil {
-				return nil, nil, 0, err
-			}
-			if memory {
-				entry.manifest = childManifest
-			}
 			childKey := strings.TrimPrefix(key, entry.Name)
-			return idx.findManifest(parentManifest, childManifest, childKey, memory)
+			if !memory {
+				childManifestPath := parentManifest.Name + utils.PathSeperator + entry.Name
+				childManifest, err := idx.loadManifest(childManifestPath)
+				if err != nil {
+					return nil, nil, 0, err
+				}
+				return idx.findManifest(parentManifest, childManifest, childKey, memory)
+			} else {
+				childManifest := entry.manifest
+				return idx.findManifest(parentManifest, childManifest, childKey, memory)
+			}
+
 		}
 	}
 	return nil, nil, 0, ErrEntryNotFound
@@ -783,8 +830,9 @@ func (idx *Index) Batch() (*Batch, error) {
 func (b *Batch) Put(key string, refValue []byte) error {
 	if b.memDb == nil {
 		manifest := &Manifest{
-			Name:      b.idx.name,
-			dirtyFlag: true,
+			Name:         b.idx.name,
+			CreationTime: time.Now().Unix(),
+			dirtyFlag:    true,
 		}
 		b.memDb = manifest
 	}
@@ -822,7 +870,7 @@ func (b *Batch) Delete(key string) ([]byte, error) {
 }
 
 func (b *Batch) Write() error {
-	if b.memDb != nil {
+	if b.memDb == nil {
 		return ErrEntryNotFound
 	}
 

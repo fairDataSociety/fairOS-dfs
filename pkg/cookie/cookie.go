@@ -67,8 +67,6 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 			Path:     "/",
 			Expires:  expire,
 			HttpOnly: true,
-			SameSite: http.SameSiteNoneMode,
-			Secure:   true,
 			MaxAge:   0, // to make sure that the browser does not persist it in disk
 		}
 	} else {

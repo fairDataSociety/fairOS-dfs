@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -29,6 +28,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 )
 
 const (
@@ -38,6 +39,7 @@ const (
 type FdfsClient struct {
 	url    string
 	client *http.Client
+	cookie *http.Cookie
 }
 
 func NewFdfsClient(host, port string) (*FdfsClient, error) {
@@ -124,6 +126,10 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 		}
 	}
 
+	if s.cookie != nil {
+		req.AddCookie(s.cookie)
+	}
+
 	// execute the request
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -133,6 +139,10 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		errStr := fmt.Sprintf("received invalid status: %s", response.Status)
 		return nil, errors.New(errStr)
+	}
+
+	if len(response.Cookies()) > 0 {
+		s.cookie = response.Cookies()[0]
 	}
 
 	data, err := ioutil.ReadAll(response.Body)

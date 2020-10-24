@@ -18,10 +18,11 @@ package cmd
 
 import (
 	"fmt"
-	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	dfs "github.com/fairdatasociety/fairOS-dfs"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -177,6 +178,15 @@ func startHttpService(logger logging.Logger) {
 	fileRouter.HandleFunc("/receiveinfo", handler.FileReceiveInfoHandler).Methods("POST")
 	fileRouter.HandleFunc("/delete", handler.FileDeleteHandler).Methods("DELETE")
 	fileRouter.HandleFunc("/stat", handler.FileStatHandler).Methods("GET")
+
+	kvRouter := baseRouter.PathPrefix("/kv/").Subrouter()
+	kvRouter.Use(handler.LoginMiddleware)
+	kvRouter.Use(handler.LogMiddleware)
+	kvRouter.HandleFunc("/new", handler.CollectionCreateHandler).Methods("POST")
+	kvRouter.HandleFunc("/open", handler.CollectionOpenHandler).Methods("POST")
+	kvRouter.HandleFunc("/put", handler.CollectionPutHandler).Methods("POST")
+	kvRouter.HandleFunc("/get", handler.CollectionGetHandler).Methods("GET")
+	kvRouter.HandleFunc("/del", handler.CollectionDelHandler).Methods("DELETE")
 
 	var origins []string
 	for _, c := range corsOrigins {

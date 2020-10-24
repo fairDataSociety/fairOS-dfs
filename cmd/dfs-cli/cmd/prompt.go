@@ -87,6 +87,11 @@ const (
 	apiFileReceiveInfo = APIVersion + "/file/receiveinfo"
 	apiFileDelete      = APIVersion + "/file/delete"
 	apiFileStat        = APIVersion + "/file/stat"
+	apiKVCreate        = APIVersion + "/kv/new"
+	apiKVOpen          = APIVersion + "/kv/open"
+	apiKVPut           = APIVersion + "/kv/put"
+	apiKVGet           = APIVersion + "/kv/get"
+	apiKVDelete        = APIVersion + "/kv/del"
 )
 
 func NewPrompt() {
@@ -139,6 +144,11 @@ var suggestions = []prompt.Suggest{
 	{Text: "pod ls", Description: "list all the existing pods of  auser"},
 	{Text: "pod stat", Description: "show the metadata of a pod of a user"},
 	{Text: "pod sync", Description: "sync the pod from swarm"},
+	{Text: "kv new", Description: "create new key value store"},
+	{Text: "kv open", Description: "open already created key value store"},
+	{Text: "kv get", Description: "get value from key"},
+	{Text: "kv put", Description: "put key and value in kv store"},
+	{Text: "kv del", Description: "delete key and value from the store"},
 	{Text: "cd", Description: "change path"},
 	{Text: "copyToLocal", Description: "copy file from dfs to local machine"},
 	{Text: "copyFromLocal", Description: "copy file from local machine to dfs"},
@@ -739,6 +749,106 @@ func executor(in string) {
 			fmt.Println("invalid pod command!!")
 			help()
 		} // end of pod commands
+	case "kv":
+		{
+			if currentUser == "" {
+				fmt.Println("login as a user to execute these commands")
+				return
+			}
+			if len(blocks) < 2 {
+				log.Println("invalid command.")
+				help()
+				return
+			}
+			if !isPodOpened() {
+				return
+			}
+			switch blocks[1] {
+			case "new":
+				if len(blocks) < 3 {
+					fmt.Println("invalid command. Missing \"name\" argument ")
+					return
+				}
+				tableName := blocks[2]
+				args := make(map[string]string)
+				args["name"] = tableName
+				data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVCreate, args)
+				if err != nil {
+					fmt.Println("kv new: ", err)
+					return
+				}
+				fmt.Println(string(data))
+				currentPrompt = getCurrentPrompt()
+			case "open":
+				if len(blocks) < 3 {
+					fmt.Println("invalid command. Missing \"name\" argument ")
+					return
+				}
+				tableName := blocks[2]
+				args := make(map[string]string)
+				args["name"] = tableName
+				data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVOpen, args)
+				if err != nil {
+					fmt.Println("kv open: ", err)
+					return
+				}
+				fmt.Println(string(data))
+				currentPrompt = getCurrentPrompt()
+			case "put":
+				if len(blocks) < 5 {
+					fmt.Println("invalid command. Missing \"name\" argument ")
+					return
+				}
+				tableName := blocks[2]
+				key := blocks[3]
+				value := blocks[4]
+				args := make(map[string]string)
+				args["name"] = tableName
+				args["key"] = key
+				args["value"] = value
+				data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVPut, args)
+				if err != nil {
+					fmt.Println("kv put: ", err)
+					return
+				}
+				fmt.Println(string(data))
+				currentPrompt = getCurrentPrompt()
+			case "get":
+				if len(blocks) < 4 {
+					fmt.Println("invalid command. Missing \"name\" argument ")
+					return
+				}
+				tableName := blocks[2]
+				key := blocks[3]
+				args := make(map[string]string)
+				args["name"] = tableName
+				args["key"] = key
+				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiKVGet, args)
+				if err != nil {
+					fmt.Println("kv get: ", err)
+					return
+				}
+				fmt.Println(string(data))
+				currentPrompt = getCurrentPrompt()
+			case "del":
+				if len(blocks) < 4 {
+					fmt.Println("invalid command. Missing \"name\" argument ")
+					return
+				}
+				tableName := blocks[2]
+				key := blocks[3]
+				args := make(map[string]string)
+				args["name"] = tableName
+				args["key"] = key
+				data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiKVDelete, args)
+				if err != nil {
+					fmt.Println("kv del: ", err)
+					return
+				}
+				fmt.Println(string(data))
+				currentPrompt = getCurrentPrompt()
+			}
+		}
 	case "cd":
 		if !isPodOpened() {
 			return
@@ -1251,6 +1361,13 @@ func help() {
 	fmt.Println(" - pod <sync> (pod-name) - sync the contents of a logged in pod from Swarm")
 	fmt.Println(" - pod <close>  - close a opened pod")
 	fmt.Println(" - pod <ls> - lists all the pods created for this account")
+
+	fmt.Println(" - kv <new> (table-name) - creates a new key value store")
+	fmt.Println(" - kv <open> (table-name) - open the key value store")
+	fmt.Println(" - kv <ls>  - list all collections")
+	fmt.Println(" - kv <put> (table-name) (key) (value) - insertkey and value in to kv store")
+	fmt.Println(" - kv <get> (table-name) (key) - get the value of the given key from the store")
+	fmt.Println(" - kv <del> (table-name) (key) - remove the key and value from the store")
 
 	fmt.Println(" - cd <directory name>")
 	fmt.Println(" - ls ")

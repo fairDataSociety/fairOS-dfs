@@ -649,3 +649,147 @@ func (d *DfsAPI) ReceiveInfo(sessionId string, sharingRef utils.SharingReference
 
 	return d.users.ReceiveFileInfo(ui.GetPodName(), sharingRef, ui, ui.GetPod())
 }
+
+//
+//  Collection related APIs
+//
+
+func (d *DfsAPI) CreateCollection(sessionId, name, index string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetCollection().CreateCollection(name, index)
+}
+
+func (d *DfsAPI) DeleteCollection(sessionId, name, index string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetCollection().DeleteCollection(name, index)
+}
+
+func (d *DfsAPI) OpenCollection(sessionId, name, index string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetCollection().OpenCollection(name, index)
+}
+
+func (d *DfsAPI) ListCollections(sessionId string) (map[string][]string, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetCollection().LoadCollections()
+}
+
+func (d *DfsAPI) Put(sessionId, name, key string, value []byte) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetCollection().Put(name, key, value)
+}
+
+func (d *DfsAPI) Get(sessionId, name, key string) ([]byte, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetCollection().Get(name, key)
+}
+
+func (d *DfsAPI) Delete(sessionId, name, key string) ([]byte, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetCollection().Delete(name, key)
+}

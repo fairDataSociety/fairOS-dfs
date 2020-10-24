@@ -17,8 +17,9 @@ limitations under the License.
 package api
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
