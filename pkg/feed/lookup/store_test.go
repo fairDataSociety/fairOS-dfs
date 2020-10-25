@@ -63,7 +63,7 @@ func (s *Store) Reset() {
 	s.cache = make(DataMap)
 }
 
-// Put stores a value in the mock store at the given epoch
+// KVPut stores a value in the mock store at the given epoch
 func (s *Store) Put(epoch lookup.Epoch, value *Data) {
 	s.data[epoch.ID()] = value
 }
@@ -75,7 +75,7 @@ func (s *Store) Update(last lookup.Epoch, now uint64, value *Data) lookup.Epoch 
 	return epoch
 }
 
-// Get retrieves data at the specified epoch, simulating a delay
+// KVGet retrieves data at the specified epoch, simulating a delay
 func (s *Store) Get(ctx context.Context, epoch lookup.Epoch, now uint64) (value interface{}, err error) {
 	epochID := epoch.ID()
 	var operationTime time.Duration

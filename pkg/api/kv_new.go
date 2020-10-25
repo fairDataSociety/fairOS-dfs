@@ -23,33 +23,32 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-func (h *Handler) CollectionOpenHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	if name == "" {
-		h.logger.Errorf("collection open: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "collection open: \"name\" argument missing")
+		h.logger.Errorf("kv create: \"name\" argument missing")
+		jsonhttp.BadRequest(w, "kv create: \"name\" argument missing")
 		return
 	}
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
-		h.logger.Errorf("collection open: invalid cookie: %v", err)
+		h.logger.Errorf("kv create: invalid cookie: %v", err)
 		jsonhttp.BadRequest(w, ErrInvalidCookie)
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("collection open: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "collection open: \"cookie-id\" parameter missing in cookie")
+		h.logger.Errorf("kv create: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "collection create: \"cookie-id\" parameter missing in cookie")
 		return
 	}
 
-	index := "key"
-	err = h.dfsAPI.OpenCollection(sessionId, name, index)
+	err = h.dfsAPI.KVCreate(sessionId, name)
 	if err != nil {
-		h.logger.Errorf("collection open: %v", err)
-		jsonhttp.InternalServerError(w, "collection open: "+err.Error())
+		h.logger.Errorf("kv create: %v", err)
+		jsonhttp.InternalServerError(w, "collection create: "+err.Error())
 		return
 	}
-	jsonhttp.OK(w, "kv store opened")
+	jsonhttp.OK(w, "kv store created")
 }

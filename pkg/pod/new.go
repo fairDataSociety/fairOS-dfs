@@ -83,7 +83,7 @@ func (p *Pod) CreatePod(podName, passPhrase string) (*Info, error) {
 	}
 
 	user := p.acc.GetAddress(account.UserAccountIndex)
-	collection := c.NewCollection(fd, accountInfo, user, p.client)
+	collection := c.NewKeyValueStore(fd, accountInfo, user, p.client)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{

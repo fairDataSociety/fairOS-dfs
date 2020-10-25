@@ -113,7 +113,7 @@ func (d *Directory) ListDirOnlyNames(podName, path string, printNames bool) ([]s
 				}
 			}
 
-			// Get the files inside the dir
+			// KVGet the files inside the dir
 			fileList := d.file.ListFiles(k)
 			for _, file := range fileList {
 				if strings.HasPrefix(file, path) {

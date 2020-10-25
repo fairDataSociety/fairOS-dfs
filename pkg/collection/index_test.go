@@ -43,7 +43,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("sync_index", func(t *testing.T) {
 		//  create and populate the index
-		err := collection.CreateIndex("testdb0", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		err := collection.CreateIndex("testdb0", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -81,7 +81,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("get-doc", func(t *testing.T) {
 		//  create and populate the index
-		err := collection.CreateIndex("testdb1", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		err := collection.CreateIndex("testdb1", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -113,7 +113,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("get-doc-del-doc-get-doc", func(t *testing.T) {
 		//  create and populate the index
-		err := collection.CreateIndex("testdb2", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		err := collection.CreateIndex("testdb2", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -152,7 +152,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("add-docs-iterrate", func(t *testing.T) {
 		//  create and populate the index
-		err := collection.CreateIndex("testdb3", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		err := collection.CreateIndex("testdb3", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -191,7 +191,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("add-docs-seek-iterate", func(t *testing.T) {
 		//  create and populate the index
-		err := collection.CreateIndex("testdb4", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		err := collection.CreateIndex("testdb4", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -230,7 +230,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("add-docs-seek-iterrate-with-limit", func(t *testing.T) {
 		//  create and populate the index
-		err := collection.CreateIndex("testdb5", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		err := collection.CreateIndex("testdb5", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -269,7 +269,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("batch-add-docs", func(t *testing.T) {
 		//  create and populate the index
-		err := collection.CreateIndex("testdb6", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		err := collection.CreateIndex("testdb6", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -320,7 +320,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("batch-add-del-docs", func(t *testing.T) {
 		//  create and populate the index
-		err := collection.CreateIndex("testdb7", "key", fd, acc.GetAddress(account.UserAccountIndex))
+		err := collection.CreateIndex("testdb7", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -26,7 +26,7 @@ import (
 )
 
 func (f *File) GetFileReference(podFile string) ([]byte, string, error) {
-	// Get the meta of the file to share
+	// KVGet the meta of the file to share
 	meta := f.GetFromFileMap(podFile)
 	if meta == nil {
 		return nil, "", fmt.Errorf("file not found in dfs")

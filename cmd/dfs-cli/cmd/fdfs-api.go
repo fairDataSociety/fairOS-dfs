@@ -60,9 +60,9 @@ func createHTTPClient() (*http.Client, error) {
 	}
 	client := &http.Client{
 		Jar: jar,
-		Transport: &http.Transport{
-			MaxIdleConnsPerHost: MaxIdleConnections,
-		},
+		//Transport: &http.Transport{
+		//	MaxIdleConnsPerHost: MaxIdleConnections,
+		//},
 	}
 	return client, nil
 }
@@ -77,6 +77,7 @@ func (s *FdfsClient) CheckConnection() bool {
 	if err != nil {
 		return false
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		return false
@@ -135,6 +136,7 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		errStr := fmt.Sprintf("received invalid status: %s", response.Status)
@@ -194,11 +196,16 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 		req.Header.Set(api.CompressionHeader, "true")
 	}
 
+	if s.cookie != nil {
+		req.AddCookie(s.cookie)
+	}
+
 	// execute the request
 	response, err := s.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		errStr := fmt.Sprintf("received invalid status: %v", response.StatusCode)
@@ -247,6 +254,7 @@ func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 	if err != nil {
 		return 0, err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		errStr := fmt.Sprintf("received invalid status: %s", response.Status)

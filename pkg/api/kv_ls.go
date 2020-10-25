@@ -23,33 +23,45 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-func (h *Handler) CollectionCreateHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
-	if name == "" {
-		h.logger.Errorf("collection create: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "collection create: \"name\" argument missing")
-		return
-	}
+type Collections struct {
+	Tables []Collection
+}
+type Collection struct {
+	Name           string   `json:"name"`
+	IndexedColumns []string `json:"indexes"`
+	CollectionType string   `json:"type"`
+}
 
+func (h *Handler) KVListHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
-		h.logger.Errorf("collection create: invalid cookie: %v", err)
+		h.logger.Errorf("kv ls: invalid cookie: %v", err)
 		jsonhttp.BadRequest(w, ErrInvalidCookie)
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("collection create: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "collection create: \"cookie-id\" parameter missing in cookie")
+		h.logger.Errorf("kv ls: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "kv ls: \"cookie-id\" parameter missing in cookie")
 		return
 	}
 
-	index := "key"
-	err = h.dfsAPI.CreateCollection(sessionId, name, index)
+	collections, err := h.dfsAPI.KVList(sessionId)
 	if err != nil {
-		h.logger.Errorf("collection create: %v", err)
-		jsonhttp.InternalServerError(w, "collection create: "+err.Error())
+		h.logger.Errorf("kv ls: %v", err)
+		jsonhttp.InternalServerError(w, "kv ls: "+err.Error())
 		return
 	}
-	jsonhttp.OK(w, "kv store created")
+
+	var col Collections
+	for k, v := range collections {
+		m := Collection{
+			Name:           k,
+			IndexedColumns: v,
+			CollectionType: "KV Store",
+		}
+		col.Tables = append(col.Tables, m)
+	}
+
+	jsonhttp.OK(w, col)
 }

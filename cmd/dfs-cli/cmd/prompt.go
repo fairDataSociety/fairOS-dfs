@@ -88,10 +88,19 @@ const (
 	apiFileDelete      = APIVersion + "/file/delete"
 	apiFileStat        = APIVersion + "/file/stat"
 	apiKVCreate        = APIVersion + "/kv/new"
+	apiKVList          = APIVersion + "/kv/ls"
 	apiKVOpen          = APIVersion + "/kv/open"
-	apiKVPut           = APIVersion + "/kv/put"
-	apiKVGet           = APIVersion + "/kv/get"
-	apiKVDelete        = APIVersion + "/kv/del"
+	apiKVDelete        = APIVersion + "/kv/delete"
+	apiKVEntryPut      = APIVersion + "/kv/entry/put"
+	apiKVEntryGet      = APIVersion + "/kv/entry/get"
+	apiKVEntryDelete   = APIVersion + "/kv/entry/del"
+	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
+	apiKVIterate       = APIVersion + "/kv/iterate"
+	apiKVIterateNext   = APIVersion + "/kv/iterate/next"
+	apiKVBatch         = APIVersion + "kv/batch"
+	apiKVBatchPut      = APIVersion + "/kv/batch/put"
+	apiKVBatchDelete   = APIVersion + "/kv/batch/delete"
+	apiKVBatchWrite    = APIVersion + "/kv/batch/write"
 )
 
 func NewPrompt() {
@@ -750,7 +759,6 @@ func executor(in string) {
 			help()
 		} // end of pod commands
 	case "kv":
-
 		if currentUser == "" {
 			fmt.Println("login as a user to execute these commands")
 			return
@@ -779,6 +787,22 @@ func executor(in string) {
 			}
 			fmt.Println(string(data))
 			currentPrompt = getCurrentPrompt()
+		case "ls":
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVList, nil)
+			if err != nil {
+				fmt.Println("kv new: ", err)
+				return
+			}
+			var resp api.Collections
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("kv ls: ", err)
+				return
+			}
+			for _, table := range resp.Tables {
+				fmt.Println("<KV>: ", table.Name)
+			}
+			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"name\" argument ")
@@ -806,7 +830,7 @@ func executor(in string) {
 			args["name"] = tableName
 			args["key"] = key
 			args["value"] = value
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVPut, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVEntryPut, args)
 			if err != nil {
 				fmt.Println("kv put: ", err)
 				return
@@ -823,7 +847,7 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["name"] = tableName
 			args["key"] = key
-			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiKVGet, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiKVEntryGet, args)
 			if err != nil {
 				fmt.Println("kv get: ", err)
 				return
@@ -840,9 +864,44 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["name"] = tableName
 			args["key"] = key
-			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiKVDelete, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiKVEntryDelete, args)
 			if err != nil {
 				fmt.Println("kv del: ", err)
+				return
+			}
+			fmt.Println(string(data))
+			currentPrompt = getCurrentPrompt()
+		case "loadcsv":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			fileName := filepath.Base(blocks[3])
+			localCsvFile := blocks[3]
+
+			fd, err := os.Open(localCsvFile)
+			if err != nil {
+				fmt.Println("loadcsv failed: ", err)
+				return
+			}
+			fi, err := fd.Stat()
+			if err != nil {
+				fmt.Println("loadcsv failed: ", err)
+				return
+			}
+
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.uploadMultipartFile(apiKVLoadCSV, fileName, fi.Size(), fd, args, "csv", "false")
+			if err != nil {
+				fmt.Println("loadcsv: ", err)
+				return
+			}
+			var resp api.UploadFileResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("loadcsv: ", err)
 				return
 			}
 			fmt.Println(string(data))

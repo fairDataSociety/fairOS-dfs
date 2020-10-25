@@ -182,11 +182,20 @@ func startHttpService(logger logging.Logger) {
 	kvRouter := baseRouter.PathPrefix("/kv/").Subrouter()
 	kvRouter.Use(handler.LoginMiddleware)
 	kvRouter.Use(handler.LogMiddleware)
-	kvRouter.HandleFunc("/new", handler.CollectionCreateHandler).Methods("POST")
-	kvRouter.HandleFunc("/open", handler.CollectionOpenHandler).Methods("POST")
-	kvRouter.HandleFunc("/put", handler.CollectionPutHandler).Methods("POST")
-	kvRouter.HandleFunc("/get", handler.CollectionGetHandler).Methods("GET")
-	kvRouter.HandleFunc("/del", handler.CollectionDelHandler).Methods("DELETE")
+	kvRouter.HandleFunc("/new", handler.KVCreateHandler).Methods("POST")
+	kvRouter.HandleFunc("/ls", handler.KVListHandler).Methods("POST")
+	kvRouter.HandleFunc("/open", handler.KVOpenHandler).Methods("POST")
+	kvRouter.HandleFunc("/entry/put", handler.KVPutHandler).Methods("POST")
+	kvRouter.HandleFunc("/entry/get", handler.KVGetHandler).Methods("GET")
+	kvRouter.HandleFunc("/entry/del", handler.KVDelHandler).Methods("DELETE")
+
+	kvRouter.HandleFunc("/loadcsv", handler.KVLoadCSVHandler).Methods("POST")
+	//kvRouter.HandleFunc("/iterate", handler.CollectionIterateHandler).Methods("POST")
+	//kvRouter.HandleFunc("/iterate/next", handler.CollectionGetNextHandler).Methods("GET")
+	//kvRouter.HandleFunc("/batch", handler.CollectionBatchtHandler).Methods("POST")
+	//kvRouter.HandleFunc("/batch/put", handler.CollectionBatchtPutHandler).Methods("POST")
+	//kvRouter.HandleFunc("/batch/put", handler.CollectionBatchtDeleteHandler).Methods("DELETE")
+	//kvRouter.HandleFunc("/batch/write", handler.CollectionBatchtWriteHandler).Methods("DELETE")
 
 	var origins []string
 	for _, c := range corsOrigins {

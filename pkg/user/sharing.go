@@ -68,7 +68,7 @@ type ReceiveFileInfo struct {
 }
 
 func (u *Users) ShareFileWithUser(podName, podFilePath, destinationRef string, userInfo *Info, pod *pod.Pod) (string, error) {
-	// Get the meta reference of the file to share
+	// KVGet the meta reference of the file to share
 	metaRef, fileName, err := pod.GetMetaReferenceOfFile(podName, podFilePath)
 	if err != nil {
 		return "", err

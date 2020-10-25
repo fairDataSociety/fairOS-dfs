@@ -39,7 +39,7 @@ type Info struct {
 	curPodMu        sync.RWMutex
 	currentDirInode *di.DirInode
 	curDirMu        sync.RWMutex
-	collection      *collection.Collection
+	collection      *collection.KeyValue
 }
 
 func (i *Info) GetDirectory() *di.Directory {
@@ -108,6 +108,6 @@ func (i *Info) GetCurrentDirPathAndName() string {
 	return i.currentDirInode.Meta.Path + utils.PathSeperator + i.currentDirInode.Meta.Name
 }
 
-func (i *Info) GetCollection() *collection.Collection {
+func (i *Info) GetCollection() *collection.KeyValue {
 	return i.collection
 }
