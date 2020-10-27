@@ -41,7 +41,8 @@ import (
 
 const (
 	MaxIdleConnections     int = 20
-	RequestTimeout         int = 1
+	MaxConnectionsPerHost      = 256
+	RequestTimeout             = 6000
 	chunkCacheSize             = 1024
 	uploadBlockCacheSize       = 100
 	downloadBlockCacheSize     = 100
@@ -111,6 +112,7 @@ func (s *BeeClient) CheckConnection() bool {
 	if err != nil {
 		return false
 	}
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return false
@@ -120,6 +122,11 @@ func (s *BeeClient) CheckConnection() bool {
 	if err != nil {
 		return false
 	}
+	err = response.Body.Close()
+	if err != nil {
+		return false
+	}
+
 	if string(data) != "Ethereum Swarm Bee\n" {
 		return false
 	}
@@ -144,9 +151,14 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return nil, errors.New("error uploading data")
+	}
+	err = response.Body.Close()
+	if err != nil {
+		return nil, err
 	}
 
 	if s.inChunkCache(ch.Address().String()) {
@@ -181,6 +193,7 @@ func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []b
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return nil, errors.New("error downloading data")
@@ -189,6 +202,10 @@ func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []b
 	data, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
+	}
+	err = response.Body.Close()
+	if err != nil {
+		return nil, err
 	}
 
 	s.addToChunkCache(addrString, data)
@@ -227,6 +244,7 @@ func (s *BeeClient) UploadBlob(data []byte, pin bool, encrypt bool) (address []b
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return nil, errors.New("error uploading blob")
@@ -235,6 +253,10 @@ func (s *BeeClient) UploadBlob(data []byte, pin bool, encrypt bool) (address []b
 	respData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error uploading blob")
+	}
+	err = response.Body.Close()
+	if err != nil {
+		return nil, err
 	}
 
 	var resp bytesPostResponse
@@ -275,6 +297,7 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return nil, response.StatusCode, errors.New("error downloading blob ")
@@ -284,6 +307,11 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, response.StatusCode, errors.New("error downloading blob")
 	}
+	err = response.Body.Close()
+	if err != nil {
+		return nil, http.StatusOK, err
+	}
+
 	fields := logrus.Fields{
 		"reference": addrString,
 		"size":      len(respData),
@@ -310,8 +338,13 @@ func (s *BeeClient) UnpinChunk(ref utils.Reference) error {
 	if err != nil {
 		return err
 	}
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
+		return err
+	}
+	err = response.Body.Close()
+	if err != nil {
 		return err
 	}
 	return nil
@@ -329,8 +362,13 @@ func (s *BeeClient) UnpinBlob(ref utils.Reference) error {
 	if err != nil {
 		return err
 	}
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
+		return err
+	}
+	err = response.Body.Close()
+	if err != nil {
 		return err
 	}
 	return nil
@@ -339,10 +377,11 @@ func (s *BeeClient) UnpinBlob(ref utils.Reference) error {
 // createHTTPClient for connection re-use
 func createHTTPClient() *http.Client {
 	client := &http.Client{
+		Timeout: time.Second * RequestTimeout,
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost: MaxIdleConnections,
+			MaxConnsPerHost: MaxConnectionsPerHost,
 		},
-		//Timeout: time.Duration(RequestTimeout) * time.Second,
 	}
 	return client
 }

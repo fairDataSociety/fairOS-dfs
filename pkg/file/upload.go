@@ -91,10 +91,15 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 		wg.Add(1)
 		worker <- true
 		go func(counter, size int) {
+			blockName := fmt.Sprintf("block-%05d", counter)
 			defer func() {
 				<-worker
 				wg.Done()
+				f.logger.Info("done uploading block ", blockName)
 			}()
+
+
+			f.logger.Info("Uploading ", blockName)
 			// compress the data
 			uploadData := data[:size]
 			if compression != "" {
@@ -110,7 +115,7 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 				return
 			}
 			fileBlock := &FileBlock{
-				Name:           fmt.Sprintf("block-%05d", counter),
+				Name:           blockName,
 				Size:           uint32(size),
 				CompressedSize: uint32(len(uploadData)),
 				Address:        addr,

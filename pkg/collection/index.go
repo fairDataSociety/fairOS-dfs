@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -46,6 +47,7 @@ type Index struct {
 	client      blockstore.Client
 	count       uint64
 	memDB       *Manifest
+	logger      logging.Logger
 }
 
 func CreateIndex(collectionName, IndexName string, fd *feed.API, user utils.Address, client blockstore.Client) error {
@@ -77,7 +79,7 @@ func CreateIndex(collectionName, IndexName string, fd *feed.API, user utils.Addr
 	return nil
 }
 
-func OpenIndex(collectionName, IndexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client) (*Index, error) {
+func OpenIndex(collectionName, IndexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
 	idx := &Index{
 		name:        utils.PathSeperator + collectionName + utils.PathSeperator + IndexName,
 		user:        user,
@@ -86,12 +88,13 @@ func OpenIndex(collectionName, IndexName string, fd *feed.API, ai *account.Info,
 		client:      client,
 		count:       0,
 		memDB:       nil,
+		logger:      logger,
 	}
 
-	err := idx.syncIndex()
-	if err != nil {
-		return nil, err
-	}
+	//err := idx.syncIndex()
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return idx, nil
 }
@@ -199,27 +202,27 @@ func (idx *Index) loadIndexInMemory(ctx context.Context, cancel context.CancelFu
 		if entry.EType == IntermediateEntry {
 			//wg.Add(1)
 			//go func(ent *Entry) {
-				//defer wg.Done()
-				fmt.Print("loading manifest: ", manifest.Name + utils.PathSeperator + entry.Name)
-				newManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
-				if err != nil {
-					fmt.Println("error loading manifest ", manifest.Name+utils.PathSeperator+entry.Name, entry.EType)
-					//select {
-					//case errC <- err:
-					//default: // Default is must to avoid blocking
-					//}
-					//cancel()
-					return
-				}
+			//defer wg.Done()
 
-				// if some other goroutine fails, terminate this one too
+			newManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
+			if err != nil {
+				fmt.Println("error loading manifest ", manifest.Name+utils.PathSeperator+entry.Name, entry.EType)
 				//select {
-				//case <-ctx.Done():
-				//	return
+				//case errC <- err:
 				//default: // Default is must to avoid blocking
 				//}
-				entry.manifest = newManifest
-				idx.loadIndexInMemory(ctx, cancel, newManifest, errC)
+				//cancel()
+				return
+			}
+
+			// if some other goroutine fails, terminate this one too
+			//select {
+			//case <-ctx.Done():
+			//	return
+			//default: // Default is must to avoid blocking
+			//}
+			entry.manifest = newManifest
+			idx.loadIndexInMemory(ctx, cancel, newManifest, errC)
 			//}(entry)
 		} else {
 			count++
@@ -347,16 +350,6 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 					if err != nil {
 						return err
 					}
-					//topic := utils.HashString(manifest.Name + utils.PathSeperator + entry.Name)
-					//_, data, err := idx.feed.GetFeedData(topic, idx.user)
-					//if err != nil {
-					//	return err
-					//}
-					//var intermediateManifest Manifest
-					//err = json.Unmarshal(data, &intermediateManifest)
-					//if err != nil {
-					//	return err
-					//}
 					return idx.addOrUpdateEntry(ctx, intermediateManifest, keySuffix, value, memory)
 				} else {
 					return idx.addOrUpdateEntry(ctx, entry.manifest, keySuffix, value, memory)
@@ -369,16 +362,6 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 					if err != nil {
 						return err
 					}
-					//topic := utils.HashString(manifest.Name + utils.PathSeperator + prefix)
-					//_, data, err := idx.feed.GetFeedData(topic, idx.user)
-					//if err != nil {
-					//	return err
-					//}
-					//var intermediateManifest Manifest
-					//err = json.Unmarshal(data, &intermediateManifest)
-					//if err != nil {
-					//	return err
-					//}
 					return idx.addOrUpdateEntry(ctx, intermediateManifest, keySuffix, value, memory)
 				} else {
 					return idx.addOrUpdateEntry(ctx, entry.manifest, keySuffix, value, memory)
@@ -400,7 +383,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 
 				// create the new manifest with two entries
 				var newManifest Manifest
-				newManifest.Name = manifest.Name + utils.PathSeperator + key
+				newManifest.Name = manifest.Name + utils.PathSeperator + prefix
 				newManifest.CreationTime = time.Now().Unix()
 				// add the new entry as a leaf
 				entry1 := &Entry{
@@ -422,7 +405,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 					}
 				} else {
 					oldManifest := entry.manifest
-					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + key + utils.PathSeperator + entrySuffix
+					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
 					entry2.manifest = oldManifest
 					entry.manifest = &newManifest
 				}
@@ -548,6 +531,7 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 
 func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 	// get feed data and unmarshall the manifest
+	idx.logger.Info("loading manifest: ", manifestPath)
 	topic := utils.HashString(manifestPath)
 	_, refData, err := idx.feed.GetFeedData(topic, idx.user)
 	if err != nil {
@@ -572,6 +556,7 @@ func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 
 func (idx *Index) updateManifest(manifest *Manifest) error {
 	// marshall and update the manifest in the feed
+	idx.logger.Info("updating manifest: ", manifest.Name)
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return ErrManifestUnmarshall
@@ -592,6 +577,7 @@ func (idx *Index) updateManifest(manifest *Manifest) error {
 
 func (idx *Index) storeManifest(manifest *Manifest) error {
 	// marshall and store the manifest as new feed
+	idx.logger.Info("storing manifest: ", manifest.Name)
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return ErrManifestUnmarshall
@@ -854,7 +840,6 @@ func (b *Batch) Write() error {
 }
 
 func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error {
-
 	// merge the mem manifest with the disk version
 	if memManifest.dirtyFlag {
 		for _, dirtyEntry := range memManifest.Entries {
@@ -883,8 +868,8 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest) error {
 	// store this manifest
 	err := b.idx.storeManifest(manifest)
 	if err != nil {
-			return err
-		}
+		return err
+	}
 
 	// store any branches in this manifest
 	for _, entry := range manifest.Entries {
@@ -895,6 +880,7 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest) error {
 			}
 		}
 	}
+
 	return nil
 }
 

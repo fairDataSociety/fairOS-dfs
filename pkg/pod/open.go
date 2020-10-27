@@ -63,7 +63,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	}
 
 	user := p.acc.GetAddress(account.UserAccountIndex)
-	collection := c.NewKeyValueStore(p.fd, accountInfo, user, p.client)
+	collection := c.NewKeyValueStore(p.fd, accountInfo, user, p.client, p.logger)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{

@@ -80,6 +80,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	reader := csv.NewReader(fd)
 	readHeader := false
 	columns := make(map[string]string)
+	rowCount := 0
 	for {
 		// read one row from csv
 		record, err := reader.Read()
@@ -117,6 +118,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 			jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
 			return
 		}
+		rowCount++
 	}
 	err = batch.Write()
 	if err != nil {

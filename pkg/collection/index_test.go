@@ -19,7 +19,6 @@ package collection_test
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -47,14 +46,14 @@ func TestIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		index, err := collection.OpenIndex("testdb0", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		index, err := collection.OpenIndex("testdb0", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// open the index again, simulating like another instance
-		index1, err := collection.OpenIndex("testdb0", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		index1, err := collection.OpenIndex("testdb0", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -85,7 +84,7 @@ func TestIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		index, err := collection.OpenIndex("testdb1", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		index, err := collection.OpenIndex("testdb1", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -117,7 +116,7 @@ func TestIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		index, err := collection.OpenIndex("testdb2", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		index, err := collection.OpenIndex("testdb2", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -156,7 +155,7 @@ func TestIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		index, err := collection.OpenIndex("testdb3", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		index, err := collection.OpenIndex("testdb3", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -195,7 +194,7 @@ func TestIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		index, err := collection.OpenIndex("testdb4", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		index, err := collection.OpenIndex("testdb4", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -234,7 +233,7 @@ func TestIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		index, err := collection.OpenIndex("testdb5", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		index, err := collection.OpenIndex("testdb5", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -273,7 +272,7 @@ func TestIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		index, err := collection.OpenIndex("testdb6", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		index, err := collection.OpenIndex("testdb6", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -300,7 +299,6 @@ func TestIndex(t *testing.T) {
 		count := 0
 		for itr.Next() {
 			value := getValue(t, itr.Value(), mockClient)
-			fmt.Println(itr.Key(), string(value))
 			if !bytes.Equal(batchDocs[itr.Key()], value) {
 				t.Fatalf("expected value %s but got %s for the key %s", string(batchDocs[itr.Key()]), string(value), itr.Key())
 			}
@@ -324,7 +322,7 @@ func TestIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		index, err := collection.OpenIndex("testdb7", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient)
+		index, err := collection.OpenIndex("testdb7", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -336,10 +334,6 @@ func TestIndex(t *testing.T) {
 		}
 
 		batchDocs := addBatchDocs(t, batch, mockClient)
-		_, err = batch.Delete("a")
-		if err != nil {
-			t.Fatal(err)
-		}
 		err = batch.Write()
 		if err != nil {
 			t.Fatal(err)
@@ -355,14 +349,13 @@ func TestIndex(t *testing.T) {
 		count := 0
 		for itr.Next() {
 			value := getValue(t, itr.Value(), mockClient)
-			fmt.Println(itr.Key(), string(value))
 			if !bytes.Equal(batchDocs[itr.Key()], value) {
 				t.Fatalf("expected value %s but got %s for the key %s", string(batchDocs[itr.Key()]), string(value), itr.Key())
 			}
 			count++
 		}
 
-		if len(batchDocs)-1 != count {
+		if len(batchDocs) != count {
 			t.Fatalf("number of elements mismatch in iteration")
 		}
 

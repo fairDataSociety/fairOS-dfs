@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"io"
 	"strings"
 	"sync"
@@ -42,15 +43,17 @@ type KeyValue struct {
 	client       blockstore.Client
 	openKVTables map[string]*Index
 	openKVTMu    sync.RWMutex
+	logger       logging.Logger
 }
 
-func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client) *KeyValue {
+func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) *KeyValue {
 	return &KeyValue{
 		fd:           fd,
 		ai:           ai,
 		user:         user,
 		client:       client,
 		openKVTables: make(map[string]*Index),
+		logger:       logger,
 	}
 }
 
@@ -98,7 +101,7 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 	if _, ok := kvtables[name]; !ok {
 		return fmt.Errorf("kv table not present")
 	}
-	idx, err := OpenIndex(name, defaultIndexName, kv.fd, kv.ai, kv.user, kv.client)
+	idx, err := OpenIndex(name, defaultIndexName, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
 	if err != nil {
 		return err
 	}

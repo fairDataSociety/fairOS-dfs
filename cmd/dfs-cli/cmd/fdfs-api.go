@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -28,12 +29,13 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"time"
 )
 
 const (
-	MaxIdleConnections int = 20
+	MaxIdleConnections    int = 20
+	MaxConnectionsPerHost     = 256
+	RequestTimeout            = 6000
 )
 
 type FdfsClient struct {
@@ -59,10 +61,12 @@ func createHTTPClient() (*http.Client, error) {
 		return nil, err
 	}
 	client := &http.Client{
-		Jar: jar,
-		//Transport: &http.Transport{
-		//	MaxIdleConnsPerHost: MaxIdleConnections,
-		//},
+		Timeout: time.Second * RequestTimeout,
+		Jar:     jar,
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: MaxIdleConnections,
+			MaxConnsPerHost:     MaxConnectionsPerHost,
+		},
 	}
 	return client, nil
 }
@@ -77,13 +81,17 @@ func (s *FdfsClient) CheckConnection() bool {
 	if err != nil {
 		return false
 	}
-	defer response.Body.Close()
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return false
 	}
 
 	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return false
+	}
+	err = response.Body.Close()
 	if err != nil {
 		return false
 	}
@@ -136,7 +144,7 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	if err != nil {
 		return nil, err
 	}
-	defer response.Body.Close()
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		errStr := fmt.Sprintf("received invalid status: %s", response.Status)
@@ -151,7 +159,10 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
-
+	err = response.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 	return data, nil
 }
 
@@ -205,7 +216,7 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 	if err != nil {
 		return nil, err
 	}
-	defer response.Body.Close()
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		errStr := fmt.Sprintf("received invalid status: %v", response.StatusCode)
@@ -215,6 +226,10 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
+	}
+	err = response.Body.Close()
+	if err != nil {
+		return nil, err
 	}
 
 	return data, nil
@@ -254,7 +269,7 @@ func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 	if err != nil {
 		return 0, err
 	}
-	defer response.Body.Close()
+	req.Close = true
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		errStr := fmt.Sprintf("received invalid status: %s", response.Status)
@@ -262,6 +277,13 @@ func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 	}
 
 	// Write the body to file
-	return io.Copy(out, response.Body)
-
+	n, err := io.Copy(out, response.Body)
+	if err != nil {
+		return 0, err
+	}
+	err = response.Body.Close()
+	if err != nil {
+		return 0, err
+	}
+	return n, nil
 }
