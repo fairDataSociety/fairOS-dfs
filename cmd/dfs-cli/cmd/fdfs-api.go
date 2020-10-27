@@ -33,9 +33,9 @@ import (
 )
 
 const (
-	MaxIdleConnections    int = 20
-	MaxConnectionsPerHost     = 256
-	RequestTimeout            = 6000
+	MaxIdleConnections    = 20
+	MaxConnectionsPerHost = 256
+	RequestTimeout        = 6000
 )
 
 type FdfsClient struct {

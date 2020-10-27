@@ -52,7 +52,7 @@ type Index struct {
 
 func CreateIndex(collectionName, IndexName string, fd *feed.API, user utils.Address, client blockstore.Client) error {
 
-	indexName := utils.PathSeperator + collectionName + utils.PathSeperator + IndexName
+	indexName := collectionName + IndexName
 	topic := utils.HashString(indexName)
 	_, _, err := fd.GetFeedData(topic, user)
 	if err == nil {
@@ -81,7 +81,7 @@ func CreateIndex(collectionName, IndexName string, fd *feed.API, user utils.Addr
 
 func OpenIndex(collectionName, IndexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
 	idx := &Index{
-		name:        utils.PathSeperator + collectionName + utils.PathSeperator + IndexName,
+		name:        collectionName + IndexName,
 		user:        user,
 		accountInfo: ai,
 		feed:        fd,
@@ -204,9 +204,9 @@ func (idx *Index) loadIndexInMemory(ctx context.Context, cancel context.CancelFu
 			//go func(ent *Entry) {
 			//defer wg.Done()
 
-			newManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
+			newManifest, err := idx.loadManifest(manifest.Name + entry.Name)
 			if err != nil {
-				fmt.Println("error loading manifest ", manifest.Name+utils.PathSeperator+entry.Name, entry.EType)
+				fmt.Println("error loading manifest ", manifest.Name+entry.Name, entry.EType)
 				//select {
 				//case errC <- err:
 				//default: // Default is must to avoid blocking
@@ -258,7 +258,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 
 		if entry.EType == LeafEntry {
 			var newManifest Manifest
-			newManifest.Name = manifest.Name + utils.PathSeperator + prefix
+			newManifest.Name = manifest.Name + prefix
 			newManifest.CreationTime = time.Now().Unix()
 			entry1 := &Entry{
 				Name:  keySuffix,
@@ -295,21 +295,21 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 		if entry.EType == IntermediateEntry {
 			if len(keySuffix) > 0 && len(entrySuffix) > 0 {
 				// load the manifest and update the name
-				if !memory {
-					oldManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
-					if err != nil {
-						return err
-					}
-					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
-					err = idx.updateManifest(oldManifest)
-					if err != nil {
-						return err
-					}
-				}
+				//if !memory {
+				//	oldManifest, err := idx.loadManifest(manifest.Name + entry.Name)
+				//	if err != nil {
+				//		return err
+				//	}
+				//	oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
+				//	err = idx.updateManifest(oldManifest)
+				//	if err != nil {
+				//		return err
+				//	}
+				//}
 
 				// create the new manifest with two entries
 				var newManifest Manifest
-				newManifest.Name = manifest.Name + utils.PathSeperator + prefix
+				newManifest.Name = manifest.Name + prefix
 				newManifest.CreationTime = time.Now().Unix()
 				// add the new entry as a leaf
 				entry1 := &Entry{
@@ -332,7 +332,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 				} else {
 					// update the old manifest name and add the new manifest to the existing entry
 					oldManifest := entry.manifest
-					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
+					//oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
 					entry2.manifest = oldManifest
 					entry.manifest = &newManifest
 				}
@@ -346,7 +346,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 			} else if len(keySuffix) > 0 {
 				// load the entry's manifest and add the keySuffix as a new leaf
 				if !memory {
-					intermediateManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
+					intermediateManifest, err := idx.loadManifest(manifest.Name + entry.Name)
 					if err != nil {
 						return err
 					}
@@ -358,7 +358,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 			} else if entrySuffix == "" && keySuffix == "" {
 				// load the entry's manifest and add the keySuffix as a new leaf
 				if !memory {
-					intermediateManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + prefix)
+					intermediateManifest, err := idx.loadManifest(manifest.Name + prefix)
 					if err != nil {
 						return err
 					}
@@ -369,21 +369,21 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 
 			} else if len(entrySuffix) > 0 {
 				// load the manifest and update the name
-				if !memory {
-					oldManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
-					if err != nil {
-						return err
-					}
-					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + key + utils.PathSeperator + entrySuffix
-					err = idx.updateManifest(oldManifest)
-					if err != nil {
-						return err
-					}
-				}
+				//if !memory {
+				//	oldManifest, err := idx.loadManifest(manifest.Name + entry.Name)
+				//	if err != nil {
+				//		return err
+				//	}
+				//	oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + key + utils.PathSeperator + entrySuffix
+				//	err = idx.updateManifest(oldManifest)
+				//	if err != nil {
+				//		return err
+				//	}
+				//}
 
 				// create the new manifest with two entries
 				var newManifest Manifest
-				newManifest.Name = manifest.Name + utils.PathSeperator + prefix
+				newManifest.Name = manifest.Name + prefix
 				newManifest.CreationTime = time.Now().Unix()
 				// add the new entry as a leaf
 				entry1 := &Entry{
@@ -405,7 +405,7 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 					}
 				} else {
 					oldManifest := entry.manifest
-					oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
+					//oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
 					entry2.manifest = oldManifest
 					entry.manifest = &newManifest
 				}
@@ -513,7 +513,7 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 		if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
 			childKey := strings.TrimPrefix(key, entry.Name)
 			if !memory {
-				childManifestPath := parentManifest.Name + utils.PathSeperator + entry.Name
+				childManifestPath := parentManifest.Name + entry.Name
 				childManifest, err := idx.loadManifest(childManifestPath)
 				if err != nil {
 					return nil, nil, 0, err
@@ -693,9 +693,9 @@ func (itr *Iterator) Next() bool {
 
 	// check if the search has reached the end key
 	if itr.endPrefix != "" {
-		actualKey := manifestState.currentManifest.Name + utils.PathSeperator + entry.Name
+		actualKey := manifestState.currentManifest.Name + entry.Name
 		actualKey = strings.TrimPrefix(actualKey, itr.index.name)
-		actualKey = strings.ReplaceAll(actualKey, utils.PathSeperator, "")
+		//actualKey = strings.ReplaceAll(actualKey, utils.PathSeperator, "")
 		if actualKey[0] > itr.endPrefix[0] {
 			return false
 		}
@@ -703,9 +703,9 @@ func (itr *Iterator) Next() bool {
 
 	// if it is a leaf entry, set the key and value
 	if entry.EType == LeafEntry {
-		actualKey := manifestState.currentManifest.Name + utils.PathSeperator + entry.Name
+		actualKey := manifestState.currentManifest.Name + entry.Name
 		actualKey = strings.TrimPrefix(actualKey, itr.index.name)
-		actualKey = strings.ReplaceAll(actualKey, utils.PathSeperator, "")
+		//actualKey = strings.ReplaceAll(actualKey, utils.PathSeperator, "")
 		itr.currentKey = actualKey
 		itr.currentValue = entry.Ref
 		itr.givenUntilNow++
@@ -714,7 +714,7 @@ func (itr *Iterator) Next() bool {
 
 	// if it is an intermediate entry, get the branch manifest and push in to the stack
 	if entry.EType == IntermediateEntry {
-		newManifest, err := itr.index.loadManifest(manifestState.currentManifest.Name + utils.PathSeperator + entry.Name)
+		newManifest, err := itr.index.loadManifest(manifestState.currentManifest.Name + entry.Name)
 		if err != nil {
 			itr.error = err
 			return false
@@ -787,7 +787,7 @@ func (itr *Iterator) seekKey(manifest *Manifest, key string) error {
 				itr.manifestStack = append(itr.manifestStack, manifestState)
 
 				// now load the child manifest and re-seek
-				childManifest, err := itr.index.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
+				childManifest, err := itr.index.loadManifest(manifest.Name + entry.Name)
 				if err != nil {
 					return err
 				}

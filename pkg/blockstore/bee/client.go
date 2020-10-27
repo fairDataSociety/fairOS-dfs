@@ -40,18 +40,18 @@ import (
 )
 
 const (
-	MaxIdleConnections     int = 20
-	MaxConnectionsPerHost      = 256
-	RequestTimeout             = 6000
-	chunkCacheSize             = 1024
-	uploadBlockCacheSize       = 100
-	downloadBlockCacheSize     = 100
-	ChunkUploadDownloadUrl     = "/chunks/"
-	BytesUploadDownloadUrl     = "/bytes"
-	pinChunksUrl               = "/pinning/chunks/"
-	pinBlobsUrl                = "/pinning/chunks/" // need to change this when bee supports it
-	SwarmPinHeader             = "Swarm-Pin"
-	SwarmEncryptHeader         = "Swarm-Encrypt"
+	MaxIdleConnections     = 20
+	MaxConnectionsPerHost  = 256
+	RequestTimeout         = 6000
+	chunkCacheSize         = 1024
+	uploadBlockCacheSize   = 100
+	downloadBlockCacheSize = 100
+	ChunkUploadDownloadUrl = "/chunks/"
+	BytesUploadDownloadUrl = "/bytes"
+	pinChunksUrl           = "/pinning/chunks/"
+	pinBlobsUrl            = "/pinning/chunks/" // need to change this when bee supports it
+	SwarmPinHeader         = "Swarm-Pin"
+	SwarmEncryptHeader     = "Swarm-Encrypt"
 )
 
 type BeeClient struct {
@@ -380,7 +380,7 @@ func createHTTPClient() *http.Client {
 		Timeout: time.Second * RequestTimeout,
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost: MaxIdleConnections,
-			MaxConnsPerHost: MaxConnectionsPerHost,
+			MaxConnsPerHost:     MaxConnectionsPerHost,
 		},
 	}
 	return client

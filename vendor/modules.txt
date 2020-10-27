@@ -126,6 +126,9 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
+# github.com/tidwall/pretty v1.0.2
+## explicit
+github.com/tidwall/pretty
 # github.com/tyler-smith/go-bip39 v1.0.2
 ## explicit
 github.com/tyler-smith/go-bip39

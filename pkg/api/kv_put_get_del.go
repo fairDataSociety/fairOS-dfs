@@ -101,6 +101,8 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "kv get: "+err.Error())
 		return
 	}
+
+	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, string(data))
 }
 

@@ -98,7 +98,6 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 				f.logger.Info("done uploading block ", blockName)
 			}()
 
-
 			f.logger.Info("Uploading ", blockName)
 			// compress the data
 			uploadData := data[:size]

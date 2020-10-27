@@ -103,6 +103,11 @@ const (
 	apiKVBatchWrite    = APIVersion + "/kv/batch/write"
 )
 
+type Message struct {
+	Message string
+	Code    int
+}
+
 func NewPrompt() {
 	var err error
 	fdfsAPI, err = NewFdfsClient(fdfsHost, fdfsPort)
@@ -852,7 +857,13 @@ func executor(in string) {
 				fmt.Println("kv get: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			var msg Message
+			err = json.Unmarshal(data, &msg)
+			if err != nil {
+				fmt.Println("kv get: ", err)
+				return
+			}
+			fmt.Println(msg.Message)
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 4 {
