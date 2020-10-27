@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -194,38 +193,39 @@ func (idx *Index) syncIndex() error {
 
 func (idx *Index) loadIndexInMemory(ctx context.Context, cancel context.CancelFunc, manifest *Manifest, errC chan error) {
 	var count uint64
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 
 	for _, entry := range manifest.Entries {
 		if entry.EType == IntermediateEntry {
-			wg.Add(1)
-			go func(ent *Entry) {
-				defer wg.Done()
-				newManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + ent.Name)
+			//wg.Add(1)
+			//go func(ent *Entry) {
+				//defer wg.Done()
+				fmt.Print("loading manifest: ", manifest.Name + utils.PathSeperator + entry.Name)
+				newManifest, err := idx.loadManifest(manifest.Name + utils.PathSeperator + entry.Name)
 				if err != nil {
-					fmt.Println("error loading manifest ", manifest.Name+utils.PathSeperator+ent.Name, ent.EType)
-					select {
-					case errC <- err:
-					default: // Default is must to avoid blocking
-					}
-					cancel()
+					fmt.Println("error loading manifest ", manifest.Name+utils.PathSeperator+entry.Name, entry.EType)
+					//select {
+					//case errC <- err:
+					//default: // Default is must to avoid blocking
+					//}
+					//cancel()
 					return
 				}
 
 				// if some other goroutine fails, terminate this one too
-				select {
-				case <-ctx.Done():
-					return
-				default: // Default is must to avoid blocking
-				}
+				//select {
+				//case <-ctx.Done():
+				//	return
+				//default: // Default is must to avoid blocking
+				//}
 				entry.manifest = newManifest
 				idx.loadIndexInMemory(ctx, cancel, newManifest, errC)
-			}(entry)
+			//}(entry)
 		} else {
 			count++
 		}
 	}
-	wg.Wait()
+	//wg.Wait()
 	atomic.AddUint64(&idx.count, count)
 }
 
@@ -838,35 +838,6 @@ func (b *Batch) Put(key string, refValue []byte) error {
 	return b.idx.addOrUpdateEntry(ctx, b.memDb, key, refValue, true)
 }
 
-func (b *Batch) Delete(key string) ([]byte, error) {
-	if b.memDb == nil {
-		return nil, ErrEntryNotFound
-	}
-	parentManifest, manifest, index, err := b.idx.findManifest(nil, b.memDb, key, true)
-	if err != nil {
-		return nil, err
-	}
-
-	deletedRef := manifest.Entries[index].Ref
-	if len(manifest.Entries) == 1 && manifest.Entries[0].Name == "" && parentManifest != nil {
-		// then we have to remove the intermediate node in the parent manifest
-		// so that the entire branch goes kaboom
-		parentEntryKey := filepath.Base(manifest.Name)
-		for i, entry := range parentManifest.Entries {
-			if entry.EType == IntermediateEntry && entry.Name == parentEntryKey {
-				deletedRef = entry.Ref
-				parentManifest.Entries = append(parentManifest.Entries[:i], parentManifest.Entries[i+1:]...)
-				parentManifest.dirtyFlag = true
-				break
-			}
-		}
-		return deletedRef, nil
-	}
-	manifest.Entries = append(manifest.Entries[:index], manifest.Entries[index+1:]...)
-	manifest.dirtyFlag = true
-	return deletedRef, nil
-}
-
 func (b *Batch) Write() error {
 	if b.memDb == nil {
 		return ErrEntryNotFound
@@ -884,21 +855,11 @@ func (b *Batch) Write() error {
 
 func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error {
 
-	// if there is no disk equivalent, then just store the memory version
-	if diskManifest.Entries == nil {
-		err := b.idx.storeManifest(memManifest)
-		if err != nil {
-			return err
-		}
-	}
-
 	// merge the mem manifest with the disk version
 	if memManifest.dirtyFlag {
 		for _, dirtyEntry := range memManifest.Entries {
-			if diskManifest.Entries != nil {
-				b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
-				diskManifest.dirtyFlag = true
-			}
+			diskManifest.dirtyFlag = true
+			b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
 			if dirtyEntry.EType == IntermediateEntry && dirtyEntry.manifest != nil {
 				err := b.storeMemoryManifest(dirtyEntry.manifest)
 				if err != nil {
@@ -907,9 +868,9 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error
 			}
 		}
 
-		if diskManifest.Entries != nil && diskManifest.dirtyFlag {
+		if diskManifest.dirtyFlag {
 			// save th disk manifest
-			err := b.idx.storeManifest(diskManifest)
+			err := b.idx.updateManifest(diskManifest)
 			if err != nil {
 				return err
 			}
@@ -922,8 +883,8 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest) error {
 	// store this manifest
 	err := b.idx.storeManifest(manifest)
 	if err != nil {
-		return err
-	}
+			return err
+		}
 
 	// store any branches in this manifest
 	for _, entry := range manifest.Entries {

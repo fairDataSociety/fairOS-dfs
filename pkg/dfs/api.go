@@ -831,21 +831,6 @@ func (d *DfsAPI) KVBatchPut(sessionId, key string, value []byte, batch *collecti
 	return batch.Put(key, value)
 }
 
-func (d *DfsAPI) KVBatchDel(sessionId, key string, batch *collection.Batch) ([]byte, error) {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-
-	// check if pod open
-	if ui.GetPodName() == "" {
-		return nil, ErrPodNotOpen
-	}
-
-	return batch.Delete(key)
-}
-
 func (d *DfsAPI) KVBatchWrite(sessionId string, batch *collection.Batch) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)

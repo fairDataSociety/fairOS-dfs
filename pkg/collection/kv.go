@@ -149,10 +149,6 @@ func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 	return batch.Put(key, value)
 }
 
-func (kv *KeyValue) KVBatchDelete(batch *Batch, key string) ([]byte, error) {
-	return batch.Delete(key)
-}
-
 func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
 	return batch.Write()
 }
