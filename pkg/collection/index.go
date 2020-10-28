@@ -20,17 +20,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"net/http"
 	"path/filepath"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -90,12 +88,6 @@ func OpenIndex(collectionName, IndexName string, fd *feed.API, ai *account.Info,
 		memDB:       nil,
 		logger:      logger,
 	}
-
-	//err := idx.syncIndex()
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	return idx, nil
 }
 
@@ -166,72 +158,6 @@ func (idx *Index) Delete(key string) ([]byte, error) {
 	return deletedRef, nil
 }
 
-func (idx *Index) syncIndex() error {
-	parentManifest, err := idx.loadManifest(idx.name)
-	if err != nil {
-		return err
-	}
-
-	if len(parentManifest.Entries) == 0 {
-		return nil
-	}
-
-	errC := make(chan error, 1) // get only one error
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	idx.loadIndexInMemory(ctx, cancel, parentManifest, errC)
-	select {
-	case err := <-errC:
-		if err != nil {
-			idx.count = 0
-			return err
-		}
-	default: // Default is must to avoid blocking
-	}
-
-	idx.memDB = parentManifest
-	return nil
-}
-
-func (idx *Index) loadIndexInMemory(ctx context.Context, cancel context.CancelFunc, manifest *Manifest, errC chan error) {
-	var count uint64
-	//var wg sync.WaitGroup
-
-	for _, entry := range manifest.Entries {
-		if entry.EType == IntermediateEntry {
-			//wg.Add(1)
-			//go func(ent *Entry) {
-			//defer wg.Done()
-
-			newManifest, err := idx.loadManifest(manifest.Name + entry.Name)
-			if err != nil {
-				fmt.Println("error loading manifest ", manifest.Name+entry.Name, entry.EType)
-				//select {
-				//case errC <- err:
-				//default: // Default is must to avoid blocking
-				//}
-				//cancel()
-				return
-			}
-
-			// if some other goroutine fails, terminate this one too
-			//select {
-			//case <-ctx.Done():
-			//	return
-			//default: // Default is must to avoid blocking
-			//}
-			entry.manifest = newManifest
-			idx.loadIndexInMemory(ctx, cancel, newManifest, errC)
-			//}(entry)
-		} else {
-			count++
-		}
-	}
-	//wg.Wait()
-	atomic.AddUint64(&idx.count, count)
-}
-
 func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key string, value []byte, memory bool) error {
 	entryAdded := false
 	for i := range manifest.Entries {
@@ -294,19 +220,6 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 
 		if entry.EType == IntermediateEntry {
 			if len(keySuffix) > 0 && len(entrySuffix) > 0 {
-				// load the manifest and update the name
-				//if !memory {
-				//	oldManifest, err := idx.loadManifest(manifest.Name + entry.Name)
-				//	if err != nil {
-				//		return err
-				//	}
-				//	oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + prefix + utils.PathSeperator + entrySuffix
-				//	err = idx.updateManifest(oldManifest)
-				//	if err != nil {
-				//		return err
-				//	}
-				//}
-
 				// create the new manifest with two entries
 				var newManifest Manifest
 				newManifest.Name = manifest.Name + prefix
@@ -368,19 +281,6 @@ func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key 
 				}
 
 			} else if len(entrySuffix) > 0 {
-				// load the manifest and update the name
-				//if !memory {
-				//	oldManifest, err := idx.loadManifest(manifest.Name + entry.Name)
-				//	if err != nil {
-				//		return err
-				//	}
-				//	oldManifest.Name = strings.TrimSuffix(oldManifest.Name, entry.Name) + key + utils.PathSeperator + entrySuffix
-				//	err = idx.updateManifest(oldManifest)
-				//	if err != nil {
-				//		return err
-				//	}
-				//}
-
 				// create the new manifest with two entries
 				var newManifest Manifest
 				newManifest.Name = manifest.Name + prefix

@@ -95,12 +95,8 @@ const (
 	apiKVEntryGet      = APIVersion + "/kv/entry/get"
 	apiKVEntryDelete   = APIVersion + "/kv/entry/del"
 	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
-	apiKVIterate       = APIVersion + "/kv/iterate"
-	apiKVIterateNext   = APIVersion + "/kv/iterate/next"
-	apiKVBatch         = APIVersion + "kv/batch"
-	apiKVBatchPut      = APIVersion + "/kv/batch/put"
-	apiKVBatchDelete   = APIVersion + "/kv/batch/delete"
-	apiKVBatchWrite    = APIVersion + "/kv/batch/write"
+	//apiKVIterate       = APIVersion + "/kv/iterate"
+	//apiKVIterateNext   = APIVersion + "/kv/iterate/next"
 )
 
 type Message struct {
@@ -792,6 +788,21 @@ func executor(in string) {
 			}
 			fmt.Println(string(data))
 			currentPrompt = getCurrentPrompt()
+		case "delete":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVDelete, args)
+			if err != nil {
+				fmt.Println("kv new: ", err)
+				return
+			}
+			fmt.Println(string(data))
+			currentPrompt = getCurrentPrompt()
 		case "ls":
 			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVList, nil)
 			if err != nil {
@@ -857,13 +868,15 @@ func executor(in string) {
 				fmt.Println("kv get: ", err)
 				return
 			}
-			var msg Message
-			err = json.Unmarshal(data, &msg)
+			var resp api.KVResponse
+			err = json.Unmarshal(data, &resp)
 			if err != nil {
 				fmt.Println("kv get: ", err)
 				return
 			}
-			fmt.Println(msg.Message)
+			for i, name := range resp.Names {
+				fmt.Println(name + " : " + resp.Values[i])
+			}
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 4 {

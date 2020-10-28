@@ -18,10 +18,16 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
+
+type KVResponse struct {
+	Names  []string `json:"names,omitempty"`
+	Values []string `json:"values"`
+}
 
 func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
@@ -61,7 +67,7 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 	err = h.dfsAPI.KVPut(sessionId, name, key, []byte(value))
 	if err != nil {
 		h.logger.Errorf("kv put: %v", err)
-		jsonhttp.InternalServerError(w, "collection put: "+err.Error())
+		jsonhttp.InternalServerError(w, "kv put: "+err.Error())
 		return
 	}
 	jsonhttp.OK(w, "key added")
@@ -95,15 +101,25 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.dfsAPI.KVGet(sessionId, name, key)
+	columns, data, err := h.dfsAPI.KVGet(sessionId, name, key)
 	if err != nil {
 		h.logger.Errorf("kv get: %v", err)
 		jsonhttp.InternalServerError(w, "kv get: "+err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", " application/json")
-	jsonhttp.OK(w, string(data))
+	var resp KVResponse
+	if columns != nil {
+		resp.Names = columns
+		values := strings.Split(string(data), ",")
+		resp.Values = values
+	} else {
+		resp.Names = []string{key}
+		resp.Values = []string{string(data)}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	jsonhttp.OK(w, &resp)
 }
 
 func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {

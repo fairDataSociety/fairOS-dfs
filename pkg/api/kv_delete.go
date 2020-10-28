@@ -17,37 +17,36 @@ limitations under the License.
 package api
 
 import (
-	"net/http"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"net/http"
 	"resenje.org/jsonhttp"
 )
 
-func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	if name == "" {
-		h.logger.Errorf("kv create: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv create: \"name\" argument missing")
+		h.logger.Errorf("kv delete: \"name\" argument missing")
+		jsonhttp.BadRequest(w, "kv delete: \"name\" argument missing")
 		return
 	}
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
-		h.logger.Errorf("kv create: invalid cookie: %v", err)
+		h.logger.Errorf("kv delete: invalid cookie: %v", err)
 		jsonhttp.BadRequest(w, ErrInvalidCookie)
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("kv create: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv create: \"cookie-id\" parameter missing in cookie")
+		h.logger.Errorf("kv delete: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "kv delete: \"cookie-id\" parameter missing in cookie")
 		return
 	}
 
-	err = h.dfsAPI.KVCreate(sessionId, name)
+	err = h.dfsAPI.KVDelete(sessionId, name)
 	if err != nil {
-		h.logger.Errorf("kv create: %v", err)
-		jsonhttp.InternalServerError(w, "kv create: "+err.Error())
+		h.logger.Errorf("kv delete: %v", err)
+		jsonhttp.InternalServerError(w, "kv delete: "+err.Error())
 		return
 	}
 	jsonhttp.OK(w, "kv store created")

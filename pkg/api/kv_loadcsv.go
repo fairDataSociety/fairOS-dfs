@@ -17,14 +17,14 @@ limitations under the License.
 package api
 
 import (
-	"encoding/csv"
-	"encoding/json"
+	"bufio"
+	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"io"
 	"net/http"
-	"strconv"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
+	"strings"
 )
 
 func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
@@ -70,55 +70,55 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	batch, err := h.dfsAPI.KVBatch(sessionId, name)
-	if err != nil {
-		h.logger.Errorf("kv loadcsv: %v", err)
-		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
-		return
-	}
-
-	reader := csv.NewReader(fd)
+	reader := bufio.NewReader(fd)
 	readHeader := false
-	columns := make(map[string]string)
 	rowCount := 0
+	successCount := 0
+	failureCount := 0
+	var batch *collection.Batch
 	for {
-		// read one row from csv
-		record, err := reader.Read()
+		// read one row from csv (assuming
+		record, err := reader.ReadString('\n')
 		if err == io.EOF {
 			break
 		}
+		rowCount++
 		if err != nil {
-			h.logger.Errorf("kv loadcsv: %v", err)
-			jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
-			return
-		}
-		if !readHeader {
-			for i, colName := range record {
-				columns[strconv.Itoa(i)] = colName
-			}
-			readHeader = true
+			h.logger.Errorf("kv loadcsv: error loading row %d: %v", rowCount, err)
+			failureCount++
 			continue
 		}
 
-		row := make(map[string]string)
-		for i, colValue := range record {
-			colName := columns[strconv.Itoa(i)]
-			row[colName] = colValue
-		}
-		jsonString, err := json.Marshal(row)
-		if err != nil {
-			h.logger.Errorf("kv loadcsv: %v", err)
-			jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
-			return
+		record = strings.TrimSuffix(record, "\n")
+		record = strings.TrimSuffix(record, "\r")
+		if !readHeader {
+			columns := strings.Split(record, ",")
+			batch, err = h.dfsAPI.KVBatch(sessionId, name, columns)
+			if err != nil {
+				h.logger.Errorf("kv loadcsv: %v", err)
+				jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
+				return
+			}
+
+			err = batch.Put(collection.CSVHeaderKey, []byte(record))
+			if err != nil {
+				h.logger.Errorf("kv loadcsv: error adding header %d: %v", rowCount, err)
+				failureCount++
+				continue
+			}
+			readHeader = true
+			successCount++
+			continue
 		}
 
-		err = batch.Put(record[0], jsonString)
+		key := strings.Split(record, ",")[0]
+		err = batch.Put(key, []byte(record))
 		if err != nil {
-			h.logger.Errorf("kv loadcsv: %v", err)
-			jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
-			return
+			h.logger.Errorf("kv loadcsv: error adding row %d: %v", rowCount, err)
+			failureCount++
+			continue
 		}
-		rowCount++
+		successCount++
 	}
 	err = batch.Write()
 	if err != nil {
@@ -134,5 +134,6 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonhttp.OK(w, "file loaded in to kv store")
+	sendStr := fmt.Sprintf("csv file loaded in to kv table (%s) with total:%d, success: %d, failure: %d rows", name, rowCount, successCount, failureCount)
+	jsonhttp.OK(w, sendStr)
 }

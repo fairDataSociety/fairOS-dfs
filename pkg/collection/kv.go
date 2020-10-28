@@ -20,7 +20,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"io"
 	"strings"
 	"sync"
@@ -28,12 +27,14 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 const (
 	kvFile           = "key_value_tables"
 	defaultIndexName = "key"
+	CSVHeaderKey     = "__csv_header__"
 )
 
 type KeyValue struct {
@@ -44,6 +45,7 @@ type KeyValue struct {
 	openKVTables map[string]*Index
 	openKVTMu    sync.RWMutex
 	logger       logging.Logger
+	columns      []string
 }
 
 func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) *KeyValue {
@@ -70,7 +72,7 @@ func (kv *KeyValue) CreateKVTable(name string) error {
 	if _, ok := kvtables[name]; ok {
 		return fmt.Errorf("kv table already present")
 	}
-	kvtables[name] = []string{name}
+	kvtables[name] = []string{defaultIndexName}
 	return kv.storeKVTables(kvtables)
 }
 
@@ -86,7 +88,7 @@ func (kv *KeyValue) DeleteKVTable(name string) error {
 				return err
 			}
 			delete(kv.openKVTables, name)
-			kvtables[name] = []string{name}
+			kvtables[name] = []string{defaultIndexName}
 			return kv.storeKVTables(kvtables)
 		}
 	}
@@ -109,6 +111,12 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	kv.openKVTables[name] = idx
+
+	hdr, err := idx.Get(CSVHeaderKey)
+	if err == nil {
+		kv.columns = strings.Split(string(hdr), ",")
+	}
+
 	return nil
 }
 
@@ -121,13 +129,17 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	return fmt.Errorf("kv table not opened")
 }
 
-func (kv *KeyValue) KVGet(name, key string) ([]byte, error) {
+func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if idx, ok := kv.openKVTables[name]; ok {
-		return idx.Get(key)
+		value, err := idx.Get(key)
+		if err != nil {
+			return nil, nil, err
+		}
+		return kv.columns, value, nil
 	}
-	return nil, fmt.Errorf("kv table not opened")
+	return nil, nil, fmt.Errorf("kv table not opened")
 }
 
 func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
@@ -139,16 +151,21 @@ func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
 	return nil, fmt.Errorf("kv table not opened")
 }
 
-func (kv *KeyValue) KVBatch(name string) (*Batch, error) {
+func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if idx, ok := kv.openKVTables[name]; ok {
+		kv.columns = columns
 		return idx.Batch()
 	}
 	return nil, fmt.Errorf("kv table not opened")
 }
 
 func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
+	if key == CSVHeaderKey {
+		kv.columns = strings.Split(string(value), ",")
+		return nil
+	}
 	return batch.Put(key, value)
 }
 
@@ -188,11 +205,8 @@ func (kv *KeyValue) storeKVTables(collections map[string][]string) error {
 	collectionLen := len(collections)
 	if collectionLen > 0 {
 		for k, v := range collections {
-			line := fmt.Sprintf("%s,", k)
-			for _, val := range v {
-				val := strings.Trim(val, "\n")
-				line = fmt.Sprintf("%s,%s", line, val)
-			}
+			indexes := strings.Join(v, ",")
+			line := fmt.Sprintf("%s,%s", k, indexes)
 			buf.WriteString(line + "\n")
 		}
 	}

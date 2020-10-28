@@ -160,6 +160,7 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 		return nil, errors.New("error downloading data")
 	}
 	err = response.Body.Close()
+
 	if err != nil {
 		return nil, err
 	}
