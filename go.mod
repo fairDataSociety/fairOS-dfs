@@ -24,7 +24,8 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
-	github.com/tidwall/pretty v1.0.2
+	github.com/tidwall/pretty v1.0.2 // indirect
+	github.com/tinygrasshopper/bettercsv v0.0.1
 	github.com/tyler-smith/go-bip39 v1.0.2
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
 	resenje.org/jsonhttp v0.2.0

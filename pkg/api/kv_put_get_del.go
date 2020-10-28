@@ -17,16 +17,14 @@ limitations under the License.
 package api
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"net/http"
 	"resenje.org/jsonhttp"
 )
 
 type KVResponse struct {
 	Names  []string `json:"names,omitempty"`
-	Values []string `json:"values"`
+	Values []byte   `json:"values"`
 }
 
 func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
@@ -111,12 +109,10 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 	var resp KVResponse
 	if columns != nil {
 		resp.Names = columns
-		values := strings.Split(string(data), ",")
-		resp.Values = values
 	} else {
 		resp.Names = []string{key}
-		resp.Values = []string{string(data)}
 	}
+	resp.Values = data
 
 	w.Header().Set("Content-Type", "application/json")
 	jsonhttp.OK(w, &resp)

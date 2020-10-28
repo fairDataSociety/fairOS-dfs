@@ -128,7 +128,9 @@ github.com/spf13/viper
 github.com/subosito/gotenv
 # github.com/tidwall/pretty v1.0.2
 ## explicit
-github.com/tidwall/pretty
+# github.com/tinygrasshopper/bettercsv v0.0.1
+## explicit
+github.com/tinygrasshopper/bettercsv
 # github.com/tyler-smith/go-bip39 v1.0.2
 ## explicit
 github.com/tyler-smith/go-bip39

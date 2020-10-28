@@ -17,8 +17,10 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,6 +36,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/tinygrasshopper/bettercsv"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -300,7 +303,8 @@ func executor(in string) {
 				fmt.Println("login user: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentUser = userName
 			currentPod = ""
 			currentDirectory = ""
@@ -352,7 +356,8 @@ func executor(in string) {
 				fmt.Println("delete user: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
@@ -367,7 +372,8 @@ func executor(in string) {
 				fmt.Println("logout user: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
@@ -599,7 +605,8 @@ func executor(in string) {
 					fmt.Println("upload failed: ", err, string(data))
 					return
 				}
-				fmt.Println(string(data))
+				message := strings.Replace(string(data), "\n", "", -1)
+				fmt.Println(message)
 			}
 			currentPrompt = getCurrentPrompt()
 		default:
@@ -630,7 +637,8 @@ func executor(in string) {
 				fmt.Println("could not create pod: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPod = podName
 			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
@@ -648,7 +656,8 @@ func executor(in string) {
 				fmt.Println("could not delete pod: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
@@ -666,7 +675,8 @@ func executor(in string) {
 				fmt.Println("pod open failed: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPod = podName
 			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
@@ -679,7 +689,8 @@ func executor(in string) {
 				fmt.Println("error logging out: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
@@ -737,7 +748,8 @@ func executor(in string) {
 				fmt.Println("could not sync pod: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
 			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiPodLs, nil)
@@ -786,7 +798,8 @@ func executor(in string) {
 				fmt.Println("kv new: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "delete":
 			if len(blocks) < 3 {
@@ -801,7 +814,8 @@ func executor(in string) {
 				fmt.Println("kv new: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
 			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVList, nil)
@@ -832,7 +846,8 @@ func executor(in string) {
 				fmt.Println("kv open: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "put":
 			if len(blocks) < 5 {
@@ -851,7 +866,8 @@ func executor(in string) {
 				fmt.Println("kv put: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "get":
 			if len(blocks) < 4 {
@@ -874,8 +890,19 @@ func executor(in string) {
 				fmt.Println("kv get: ", err)
 				return
 			}
+
+			rdr := bytes.NewReader(resp.Values)
+			csvReader := bettercsv.NewReader(rdr)
+			csvReader.Comma = ','
+			csvReader.Quote = '"'
+			content, err := csvReader.ReadAll()
+			if err != nil {
+				fmt.Println("kv get: ", err)
+				return
+			}
+			values := content[0]
 			for i, name := range resp.Names {
-				fmt.Println(name + " : " + resp.Values[i])
+				fmt.Println(name + " : " + values[i])
 			}
 			currentPrompt = getCurrentPrompt()
 		case "del":
@@ -893,7 +920,8 @@ func executor(in string) {
 				fmt.Println("kv del: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "loadcsv":
 			if len(blocks) < 4 {
@@ -928,7 +956,8 @@ func executor(in string) {
 				fmt.Println("loadcsv: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		default:
 			fmt.Println("invalid kv command!!")
@@ -1038,7 +1067,8 @@ func executor(in string) {
 			fmt.Println("mkdir failed: ", err)
 			return
 		}
-		fmt.Println(string(data))
+		message := strings.Replace(string(data), "\n", "", -1)
+		fmt.Println(message)
 		currentPrompt = getCurrentPrompt()
 	case "rmdir":
 		if !isPodOpened() {
@@ -1069,7 +1099,8 @@ func executor(in string) {
 			fmt.Println("rmdir failed: ", err)
 			return
 		}
-		fmt.Println(string(data))
+		message := strings.Replace(string(data), "\n", "", -1)
+		fmt.Println(message)
 		currentPrompt = getCurrentPrompt()
 	case "upload":
 		if !isPodOpened() {
@@ -1314,7 +1345,8 @@ func executor(in string) {
 			fmt.Println("rm failed: ", err)
 			return
 		}
-		fmt.Println(string(data))
+		message := strings.Replace(string(data), "\n", "", -1)
+		fmt.Println(message)
 		currentPrompt = getCurrentPrompt()
 	case "share":
 		if len(blocks) < 2 {
@@ -1510,7 +1542,7 @@ func getPodPrompt() string {
 }
 
 func getPassword() (password string) {
-	fmt.Println("Please enter your password: ")
+	fmt.Print("Please enter your password: ")
 	bytePassword, err := terminal.ReadPassword(0)
 	if err != nil {
 		log.Fatalf("error reading password")
