@@ -185,6 +185,7 @@ func startHttpService(logger logging.Logger) {
 	kvRouter.HandleFunc("/new", handler.KVCreateHandler).Methods("POST")
 	kvRouter.HandleFunc("/ls", handler.KVListHandler).Methods("POST")
 	kvRouter.HandleFunc("/open", handler.KVOpenHandler).Methods("POST")
+	kvRouter.HandleFunc("/delete", handler.KVDeleteHandler).Methods("DELETE")
 	kvRouter.HandleFunc("/entry/put", handler.KVPutHandler).Methods("POST")
 	kvRouter.HandleFunc("/entry/get", handler.KVGetHandler).Methods("GET")
 	kvRouter.HandleFunc("/entry/del", handler.KVDelHandler).Methods("DELETE")

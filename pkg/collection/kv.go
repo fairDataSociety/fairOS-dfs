@@ -88,9 +88,18 @@ func (kv *KeyValue) DeleteKVTable(name string) error {
 				return err
 			}
 			delete(kv.openKVTables, name)
-			kvtables[name] = []string{defaultIndexName}
-			return kv.storeKVTables(kvtables)
+		} else {
+			idx, err := OpenIndex(name, defaultIndexName, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+			if err != nil {
+				return err
+			}
+			err = idx.DeleteIndex()
+			if err != nil {
+				return err
+			}
 		}
+		delete(kvtables, name)
+		return kv.storeKVTables(kvtables)
 	}
 	return fmt.Errorf("kv table not present")
 }

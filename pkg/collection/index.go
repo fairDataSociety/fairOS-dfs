@@ -49,11 +49,11 @@ type Index struct {
 }
 
 func CreateIndex(collectionName, IndexName string, fd *feed.API, user utils.Address, client blockstore.Client) error {
-
 	indexName := collectionName + IndexName
 	topic := utils.HashString(indexName)
-	_, _, err := fd.GetFeedData(topic, user)
-	if err == nil {
+	_, oldData, err := fd.GetFeedData(topic, user)
+	if err == nil && len(oldData) != 0 {
+		// if the feed is present and it has some data means there index is still valid
 		return ErrIndexAlreadyPresent
 	}
 

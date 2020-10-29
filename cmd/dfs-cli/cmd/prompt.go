@@ -158,10 +158,13 @@ var suggestions = []prompt.Suggest{
 	{Text: "pod stat", Description: "show the metadata of a pod of a user"},
 	{Text: "pod sync", Description: "sync the pod from swarm"},
 	{Text: "kv new", Description: "create new key value store"},
+	{Text: "kv delete", Description: "delete the  key value store"},
+	{Text: "kv ls", Description: "lists all the key value stores"},
 	{Text: "kv open", Description: "open already created key value store"},
 	{Text: "kv get", Description: "get value from key"},
 	{Text: "kv put", Description: "put key and value in kv store"},
 	{Text: "kv del", Description: "delete key and value from the store"},
+	{Text: "kv loadcsv", Description: "loads the csv file in to kv store"},
 	{Text: "cd", Description: "change path"},
 	{Text: "copyToLocal", Description: "copy file from dfs to local machine"},
 	{Text: "copyFromLocal", Description: "copy file from local machine to dfs"},
@@ -809,7 +812,7 @@ func executor(in string) {
 			tableName := blocks[2]
 			args := make(map[string]string)
 			args["name"] = tableName
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVDelete, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiKVDelete, args)
 			if err != nil {
 				fmt.Println("kv new: ", err)
 				return
@@ -1480,11 +1483,13 @@ func help() {
 	fmt.Println(" - pod <ls> - lists all the pods created for this account")
 
 	fmt.Println(" - kv <new> (table-name) - creates a new key value store")
+	fmt.Println(" - kv <delete> (table-name) - deletes the key value store")
 	fmt.Println(" - kv <open> (table-name) - open the key value store")
 	fmt.Println(" - kv <ls>  - list all collections")
 	fmt.Println(" - kv <put> (table-name) (key) (value) - insertkey and value in to kv store")
 	fmt.Println(" - kv <get> (table-name) (key) - get the value of the given key from the store")
 	fmt.Println(" - kv <del> (table-name) (key) - remove the key and value from the store")
+	fmt.Println(" - kv <loadcsv> (table-name) (local csv file) - load the csv file in to the newy created table")
 
 	fmt.Println(" - cd <directory name>")
 	fmt.Println(" - ls ")
