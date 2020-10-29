@@ -40,7 +40,7 @@ func TestIndex(t *testing.T) {
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 
-	t.Run("sync_index", func(t *testing.T) {
+	t.Run("close_and_open_index", func(t *testing.T) {
 		//  create and populate the index
 		err := collection.CreateIndex("testdb0", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
 		if err != nil {
@@ -101,6 +101,35 @@ func TestIndex(t *testing.T) {
 		gotValue := getDoc(t, "p", index, mockClient)
 		if gotValue != nil {
 			t.Fatalf("found data for not inserted key")
+		}
+
+		// delete the index
+		err = index.DeleteIndex()
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("get-count", func(t *testing.T) {
+		//  create and populate the index
+		err := collection.CreateIndex("testdb11", "key", fd, acc.GetAddress(account.UserAccountIndex), mockClient)
+		if err != nil {
+			t.Fatal(err)
+		}
+		index, err := collection.OpenIndex("testdb11", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
+		if err != nil {
+			t.Fatal(err)
+		}
+		kvMap := addLotOfDocs(t, index, mockClient)
+
+		// find the count
+		count, err := index.Count()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if uint64(len(kvMap)) != count {
+			t.Fatal(err)
 		}
 
 		// delete the index

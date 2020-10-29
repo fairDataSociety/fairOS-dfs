@@ -736,6 +736,26 @@ func (d *DfsAPI) KVList(sessionId string) (map[string][]string, error) {
 	return podInfo.GetCollection().LoadKVTables()
 }
 
+func (d *DfsAPI) KVCount(sessionId, name string) (uint64, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return 0, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return 0, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return 0, err
+	}
+
+	return podInfo.GetCollection().KVCount(name)
+}
+
 func (d *DfsAPI) KVPut(sessionId, name, key string, value []byte) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)

@@ -20,9 +20,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -35,6 +38,10 @@ import (
 const (
 	LeafEntry         = "L"
 	IntermediateEntry = "I"
+)
+
+var (
+	NoOfParallelWorkers = runtime.NumCPU() * 4
 )
 
 type Index struct {
@@ -156,6 +163,76 @@ func (idx *Index) Delete(key string) ([]byte, error) {
 		return nil, err
 	}
 	return deletedRef, nil
+}
+
+func (idx *Index) Count() (uint64, error) {
+	parentManifest, err := idx.loadManifest(idx.name)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(parentManifest.Entries) == 0 {
+		return 0, nil
+	}
+
+	idx.count = 0
+	errC := make(chan error, 1) // get only one error
+	workers := make(chan bool, NoOfParallelWorkers)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	idx.loadIndexAndCount(ctx, cancel, workers, parentManifest, errC)
+	select {
+	case err := <-errC:
+		if err != nil {
+			idx.count = 0
+			return 0, err
+		}
+	default: // Default is must to avoid blocking
+	}
+
+	return idx.count, nil
+}
+
+func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFunc, workers chan bool, manifest *Manifest, errC chan error) {
+	var count uint64
+	//var wg sync.WaitGroup
+
+	for _, entry := range manifest.Entries {
+		if entry.EType == IntermediateEntry {
+			//wg.Add(1)
+			//workers <- true
+			//go func(ent *Entry) {
+			//	defer func() {
+			//		//<- workers
+			//		wg.Done()
+			//	}()
+
+				newManifest, err := idx.loadManifest(manifest.Name + entry.Name)
+				if err != nil {
+					fmt.Println("manifest load error: ", manifest.Name + entry.Name)
+					//select {
+					//case errC <- err:
+					//default: // Default is must to avoid blocking
+					//}
+					//cancel()
+					return
+				}
+
+				//if some other goroutine fails, terminate this one too
+				select {
+				case <-ctx.Done():
+					return
+				default: // Default is must to avoid blocking
+				}
+				idx.loadIndexAndCount(ctx, cancel, workers, newManifest, errC)
+			//}(entry)
+		} else {
+			count++
+		}
+	}
+	//wg.Wait()
+	atomic.AddUint64(&idx.count, count)
 }
 
 func (idx *Index) addOrUpdateEntry(ctx context.Context, manifest *Manifest, key string, value []byte, memory bool) error {

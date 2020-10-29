@@ -129,6 +129,15 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 	return nil
 }
 
+func (kv *KeyValue) KVCount(name string) (uint64, error) {
+	kv.openKVTMu.Lock()
+	defer kv.openKVTMu.Unlock()
+	if idx, ok := kv.openKVTables[name]; ok {
+		return idx.Count()
+	}
+	return 0, fmt.Errorf("kv table not opened")
+}
+
 func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()

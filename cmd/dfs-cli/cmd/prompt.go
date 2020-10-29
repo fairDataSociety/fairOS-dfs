@@ -94,12 +94,14 @@ const (
 	apiKVList          = APIVersion + "/kv/ls"
 	apiKVOpen          = APIVersion + "/kv/open"
 	apiKVDelete        = APIVersion + "/kv/delete"
+	apiKVCount         = APIVersion + "/kv/count"
 	apiKVEntryPut      = APIVersion + "/kv/entry/put"
 	apiKVEntryGet      = APIVersion + "/kv/entry/get"
 	apiKVEntryDelete   = APIVersion + "/kv/entry/del"
 	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
-	//apiKVIterate       = APIVersion + "/kv/iterate"
-	//apiKVIterateNext   = APIVersion + "/kv/iterate/next"
+	apiKVSeek          = APIVersion + "/kv/seek"
+	apiKVSeeknext      = APIVersion + "/kv/seek/getnext"
+
 )
 
 type Message struct {
@@ -845,6 +847,22 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["name"] = tableName
 			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVOpen, args)
+			if err != nil {
+				fmt.Println("kv open: ", err)
+				return
+			}
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "count":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVCount, args)
 			if err != nil {
 				fmt.Println("kv open: ", err)
 				return
