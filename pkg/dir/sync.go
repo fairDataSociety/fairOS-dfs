@@ -25,7 +25,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) LoadDirMeta(podName string, curDirInode *DirInode, fd *feed.API, accountInfo *account.AccountInfo) error {
+func (d *Directory) LoadDirMeta(podName string, curDirInode *DirInode, fd *feed.API, accountInfo *account.Info) error {
 	for _, ref := range curDirInode.Hashes {
 		_, data, err := fd.GetFeedData(ref, accountInfo.GetAddress())
 		if err != nil {

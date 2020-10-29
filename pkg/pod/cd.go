@@ -23,7 +23,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (p *Pod) ChangeDir(podName string, dirName string) (*Info, error) {
+func (p *Pod) ChangeDir(podName, dirName string) (*Info, error) {
 	directoryName, err := CleanDirName(dirName)
 	if err != nil {
 		return nil, err
@@ -48,8 +48,8 @@ func (p *Pod) ChangeDir(podName string, dirName string) (*Info, error) {
 	}
 
 	directory := podInfo.GetDirectory()
-	fd := podInfo.getFeed()
-	accountInfo := podInfo.getAccountInfo()
+	fd := podInfo.GetFeed()
+	accountInfo := podInfo.GetAccountInfo()
 
 	if directoryName[0] == ".." {
 		if podInfo.IsCurrentDirRoot() {

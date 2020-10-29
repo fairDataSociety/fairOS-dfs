@@ -1,6 +1,7 @@
 # github.com/aristanetworks/goarista v0.0.0-20200521140103-6c3304613b30
 github.com/aristanetworks/goarista/monotime
 # github.com/btcsuite/btcd v0.20.1-beta
+## explicit
 github.com/btcsuite/btcd/btcec
 github.com/btcsuite/btcd/chaincfg
 github.com/btcsuite/btcd/chaincfg/chainhash
@@ -125,6 +126,11 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
+# github.com/tidwall/pretty v1.0.2
+## explicit
+# github.com/tinygrasshopper/bettercsv v0.0.1
+## explicit
+github.com/tinygrasshopper/bettercsv
 # github.com/tyler-smith/go-bip39 v1.0.2
 ## explicit
 github.com/tyler-smith/go-bip39

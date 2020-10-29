@@ -50,12 +50,12 @@ func (p *Pod) GetName(inode *d.DirInode) string {
 	return ""
 }
 
-func (p *Pod) GetAccountInfo(podName string) (*account.AccountInfo, error) {
+func (p *Pod) GetAccountInfo(podName string) (*account.Info, error) {
 	podInfo, err := p.GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
-	return podInfo.getAccountInfo(), nil
+	return podInfo.GetAccountInfo(), nil
 }
 
 func CleanPodName(podName string) (string, error) {

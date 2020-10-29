@@ -20,6 +20,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -648,4 +650,258 @@ func (d *DfsAPI) ReceiveInfo(sessionId string, sharingRef utils.SharingReference
 	}
 
 	return d.users.ReceiveFileInfo(ui.GetPodName(), sharingRef, ui, ui.GetPod())
+}
+
+//
+//  KV related APIs
+//
+
+func (d *DfsAPI) KVCreate(sessionId, name string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetCollection().CreateKVTable(name)
+}
+
+func (d *DfsAPI) KVDelete(sessionId, name string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetCollection().DeleteKVTable(name)
+}
+
+func (d *DfsAPI) KVOpen(sessionId, name string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetCollection().OpenKVTable(name)
+}
+
+func (d *DfsAPI) KVList(sessionId string) (map[string][]string, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetCollection().LoadKVTables()
+}
+
+func (d *DfsAPI) KVCount(sessionId, name string) (uint64, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return 0, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return 0, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return 0, err
+	}
+
+	return podInfo.GetCollection().KVCount(name)
+}
+
+func (d *DfsAPI) KVPut(sessionId, name, key string, value []byte) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetCollection().KVPut(name, key, value)
+}
+
+func (d *DfsAPI) KVGet(sessionId, name, key string) ([]string, []byte, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return podInfo.GetCollection().KVGet(name, key)
+}
+
+func (d *DfsAPI) KVDel(sessionId, name, key string) ([]byte, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetCollection().KVDelete(name, key)
+}
+
+func (d *DfsAPI) KVBatch(sessionId, name string, columns []string) (*collection.Batch, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetCollection().KVBatch(name, columns)
+}
+
+func (d *DfsAPI) KVBatchPut(sessionId, key string, value []byte, batch *collection.Batch) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	return batch.Put(key, value)
+}
+
+func (d *DfsAPI) KVBatchWrite(sessionId string, batch *collection.Batch) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	return batch.Write()
+}
+
+func (d *DfsAPI) KVSeek(sessionId, name, start, end string, limit int64) (*collection.Iterator, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetCollection().KVSeek(name, start, end, limit)
+}
+
+func (d *DfsAPI) KVGetNext(sessionId, name string) ([]string, string, []byte, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, "", nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, "", nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	return podInfo.GetCollection().KVGetNext(name)
 }

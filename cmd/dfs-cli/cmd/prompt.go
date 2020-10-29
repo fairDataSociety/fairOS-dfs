@@ -17,8 +17,12 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,6 +38,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/tinygrasshopper/bettercsv"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -87,7 +92,23 @@ const (
 	apiFileReceiveInfo = APIVersion + "/file/receiveinfo"
 	apiFileDelete      = APIVersion + "/file/delete"
 	apiFileStat        = APIVersion + "/file/stat"
+	apiKVCreate        = APIVersion + "/kv/new"
+	apiKVList          = APIVersion + "/kv/ls"
+	apiKVOpen          = APIVersion + "/kv/open"
+	apiKVDelete        = APIVersion + "/kv/delete"
+	apiKVCount         = APIVersion + "/kv/count"
+	apiKVEntryPut      = APIVersion + "/kv/entry/put"
+	apiKVEntryGet      = APIVersion + "/kv/entry/get"
+	apiKVEntryDelete   = APIVersion + "/kv/entry/del"
+	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
+	apiKVSeek          = APIVersion + "/kv/seek"
+	apiKVSeekNext      = APIVersion + "/kv/seek/next"
 )
+
+type Message struct {
+	Message string
+	Code    int
+}
 
 func NewPrompt() {
 	var err error
@@ -139,6 +160,16 @@ var suggestions = []prompt.Suggest{
 	{Text: "pod ls", Description: "list all the existing pods of  auser"},
 	{Text: "pod stat", Description: "show the metadata of a pod of a user"},
 	{Text: "pod sync", Description: "sync the pod from swarm"},
+	{Text: "kv new", Description: "create new key value store"},
+	{Text: "kv delete", Description: "delete the  key value store"},
+	{Text: "kv ls", Description: "lists all the key value stores"},
+	{Text: "kv open", Description: "open already created key value store"},
+	{Text: "kv get", Description: "get value from key"},
+	{Text: "kv put", Description: "put key and value in kv store"},
+	{Text: "kv del", Description: "delete key and value from the store"},
+	{Text: "kv loadcsv", Description: "loads the csv file in to kv store"},
+	{Text: "kv seek", Description: "seek to the given start prefix"},
+	{Text: "kv getnext", Description: "get the next element"},
 	{Text: "cd", Description: "change path"},
 	{Text: "copyToLocal", Description: "copy file from dfs to local machine"},
 	{Text: "copyFromLocal", Description: "copy file from local machine to dfs"},
@@ -280,7 +311,8 @@ func executor(in string) {
 				fmt.Println("login user: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
 			currentUser = userName
 			currentPod = ""
 			currentDirectory = ""
@@ -332,7 +364,8 @@ func executor(in string) {
 				fmt.Println("delete user: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
@@ -347,7 +380,8 @@ func executor(in string) {
 				fmt.Println("logout user: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
@@ -579,7 +613,8 @@ func executor(in string) {
 					fmt.Println("upload failed: ", err, string(data))
 					return
 				}
-				fmt.Println(string(data))
+				message := strings.ReplaceAll(string(data), "\n", "")
+				fmt.Println(message)
 			}
 			currentPrompt = getCurrentPrompt()
 		default:
@@ -610,7 +645,8 @@ func executor(in string) {
 				fmt.Println("could not create pod: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
 			currentPod = podName
 			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
@@ -628,7 +664,8 @@ func executor(in string) {
 				fmt.Println("could not delete pod: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
@@ -646,7 +683,8 @@ func executor(in string) {
 				fmt.Println("pod open failed: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
 			currentPod = podName
 			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
@@ -659,7 +697,8 @@ func executor(in string) {
 				fmt.Println("error logging out: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
@@ -717,7 +756,8 @@ func executor(in string) {
 				fmt.Println("could not sync pod: ", err)
 				return
 			}
-			fmt.Println(string(data))
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
 			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiPodLs, nil)
@@ -739,6 +779,287 @@ func executor(in string) {
 			fmt.Println("invalid pod command!!")
 			help()
 		} // end of pod commands
+	case "kv":
+		if currentUser == "" {
+			fmt.Println("login as a user to execute these commands")
+			return
+		}
+		if len(blocks) < 2 {
+			log.Println("invalid command.")
+			help()
+			return
+		}
+		if !isPodOpened() {
+			return
+		}
+		switch blocks[1] {
+		case "new":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVCreate, args)
+			if err != nil {
+				fmt.Println("kv new: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "delete":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiKVDelete, args)
+			if err != nil {
+				fmt.Println("kv new: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "ls":
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVList, nil)
+			if err != nil {
+				fmt.Println("kv new: ", err)
+				return
+			}
+			var resp api.Collections
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("kv ls: ", err)
+				return
+			}
+			for _, table := range resp.Tables {
+				fmt.Println("<KV>: ", table.Name)
+			}
+			currentPrompt = getCurrentPrompt()
+		case "open":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVOpen, args)
+			if err != nil {
+				fmt.Println("kv open: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "count":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVCount, args)
+			if err != nil {
+				fmt.Println("kv open: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "put":
+			if len(blocks) < 5 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			value := blocks[4]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["key"] = key
+			args["value"] = value
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVEntryPut, args)
+			if err != nil {
+				fmt.Println("kv put: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "get":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["key"] = key
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiKVEntryGet, args)
+			if err != nil {
+				fmt.Println("kv get: ", err)
+				return
+			}
+			var resp api.KVResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("kv get: ", err)
+				return
+			}
+
+			rdr := bytes.NewReader(resp.Values)
+			csvReader := bettercsv.NewReader(rdr)
+			csvReader.Comma = ','
+			csvReader.Quote = '"'
+			content, err := csvReader.ReadAll()
+			if err != nil {
+				fmt.Println("kv get: ", err)
+				return
+			}
+			values := content[0]
+			for i, name := range resp.Names {
+				fmt.Println(name + " : " + values[i])
+			}
+			currentPrompt = getCurrentPrompt()
+		case "del":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["key"] = key
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiKVEntryDelete, args)
+			if err != nil {
+				fmt.Println("kv del: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "loadcsv":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			fileName := filepath.Base(blocks[3])
+			localCsvFile := blocks[3]
+
+			fd, err := os.Open(localCsvFile)
+			if err != nil {
+				fmt.Println("loadcsv failed: ", err)
+				return
+			}
+			fi, err := fd.Stat()
+			if err != nil {
+				fmt.Println("loadcsv failed: ", err)
+				return
+			}
+
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.uploadMultipartFile(apiKVLoadCSV, fileName, fi.Size(), fd, args, "csv", "false")
+			if err != nil {
+				fmt.Println("loadcsv: ", err)
+				return
+			}
+			var resp api.UploadFileResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("loadcsv: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "seek":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+
+			var start string
+			var end string
+			var limit string
+			if len(blocks) >= 4 {
+				start = blocks[3]
+			}
+			if len(blocks) >= 5 {
+				end = blocks[4]
+			}
+
+			if len(blocks) >= 6 {
+				limit = blocks[5]
+			}
+
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["start"] = start
+			args["end"] = end
+			args["limit"] = limit
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVSeek, args)
+			if err != nil {
+				fmt.Println("kv seek: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "getnext":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiKVSeekNext, args)
+			if err != nil && !errors.Is(err, collection.ErrNoNextElement) {
+				fmt.Println("kv get_next: ", err)
+				return
+			}
+
+			if errors.Is(err, collection.ErrNoNextElement) {
+				fmt.Println("no next element")
+			} else {
+				var resp api.KVResponse
+				err = json.Unmarshal(data, &resp)
+				if err != nil {
+					fmt.Println("kv get_next: ", err)
+					return
+				}
+
+				rdr := bytes.NewReader(resp.Values)
+				csvReader := bettercsv.NewReader(rdr)
+				csvReader.Comma = ','
+				csvReader.Quote = '"'
+				content, err := csvReader.ReadAll()
+				if err != nil {
+					fmt.Println("kv get_next: ", err)
+					return
+				}
+				values := content[0]
+				for i, name := range resp.Names {
+					fmt.Println(name + " : " + values[i])
+				}
+			}
+			currentPrompt = getCurrentPrompt()
+		default:
+			fmt.Println("invalid kv command!!")
+			help()
+		}
 	case "cd":
 		if !isPodOpened() {
 			return
@@ -843,7 +1164,8 @@ func executor(in string) {
 			fmt.Println("mkdir failed: ", err)
 			return
 		}
-		fmt.Println(string(data))
+		message := strings.ReplaceAll(string(data), "\n", "")
+		fmt.Println(message)
 		currentPrompt = getCurrentPrompt()
 	case "rmdir":
 		if !isPodOpened() {
@@ -874,7 +1196,8 @@ func executor(in string) {
 			fmt.Println("rmdir failed: ", err)
 			return
 		}
-		fmt.Println(string(data))
+		message := strings.ReplaceAll(string(data), "\n", "")
+		fmt.Println(message)
 		currentPrompt = getCurrentPrompt()
 	case "upload":
 		if !isPodOpened() {
@@ -1119,7 +1442,8 @@ func executor(in string) {
 			fmt.Println("rm failed: ", err)
 			return
 		}
-		fmt.Println(string(data))
+		message := strings.ReplaceAll(string(data), "\n", "")
+		fmt.Println(message)
 		currentPrompt = getCurrentPrompt()
 	case "share":
 		if len(blocks) < 2 {
@@ -1252,6 +1576,17 @@ func help() {
 	fmt.Println(" - pod <close>  - close a opened pod")
 	fmt.Println(" - pod <ls> - lists all the pods created for this account")
 
+	fmt.Println(" - kv <new> (table-name) - creates a new key value store")
+	fmt.Println(" - kv <delete> (table-name) - deletes the key value store")
+	fmt.Println(" - kv <open> (table-name) - open the key value store")
+	fmt.Println(" - kv <ls>  - list all collections")
+	fmt.Println(" - kv <put> (table-name) (key) (value) - insertkey and value in to kv store")
+	fmt.Println(" - kv <get> (table-name) (key) - get the value of the given key from the store")
+	fmt.Println(" - kv <del> (table-name) (key) - remove the key and value from the store")
+	fmt.Println(" - kv <loadcsv> (table-name) (local csv file) - load the csv file in to the newy created table")
+	fmt.Println(" - kv <seek> (table-name) (start-key) (end-key) (limit) - seek nearst to start key")
+	fmt.Println(" - kv <getnext> (table-name) - get the next element after seek")
+
 	fmt.Println(" - cd <directory name>")
 	fmt.Println(" - ls ")
 	fmt.Println(" - download <relative path of source file in pod, destination dir in local fs>")
@@ -1308,7 +1643,7 @@ func getPodPrompt() string {
 }
 
 func getPassword() (password string) {
-	fmt.Println("Please enter your password: ")
+	fmt.Print("Please enter your password: ")
 	bytePassword, err := terminal.ReadPassword(0)
 	if err != nil {
 		log.Fatalf("error reading password")

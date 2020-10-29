@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt"
+	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"os"
 	"path/filepath"
 
@@ -39,6 +40,7 @@ var rootCmd = &cobra.Command{
 	Long:  `This program interacts with a fdfs server with its API and displays the results`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("version    : ", dfs.Version)
 		fmt.Println("fdfsHost   : ", fdfsHost)
 		fmt.Println("fdfsPort   : ", fdfsPort)
 		NewPrompt()

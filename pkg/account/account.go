@@ -42,12 +42,12 @@ const (
 
 type Account struct {
 	wallet      *Wallet
-	userAcount  *AccountInfo
-	podAccounts map[int]*AccountInfo
+	userAcount  *Info
+	podAccounts map[int]*Info
 	logger      logging.Logger
 }
 
-type AccountInfo struct {
+type Info struct {
 	privateKey *ecdsa.PrivateKey
 	publicKey  *ecdsa.PublicKey
 	address    utils.Address
@@ -57,8 +57,8 @@ func New(logger logging.Logger) *Account {
 	wallet := NewWallet("")
 	return &Account{
 		wallet:      wallet,
-		userAcount:  &AccountInfo{},
-		podAccounts: make(map[int]*AccountInfo),
+		userAcount:  &Info{},
+		podAccounts: make(map[int]*Info),
 		logger:      logger,
 	}
 }
@@ -199,7 +199,56 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 		return err
 	}
 
-	accountInfo := &AccountInfo{}
+	accountInfo := &Info{}
+
+	accountInfo.privateKey, err = hdw.PrivateKey(acc)
+	if err != nil {
+		return err
+	}
+	accountInfo.publicKey, err = hdw.PublicKey(acc)
+	if err != nil {
+		return err
+	}
+	addrBytes, err := crypto.NewEthereumAddress(accountInfo.privateKey.PublicKey)
+	if err != nil {
+		return err
+	}
+	accountInfo.address.SetBytes(addrBytes)
+	a.podAccounts[accountId] = accountInfo
+	return nil
+}
+
+func (a *Account) CreateCollectionAccount(accountId int, passPhrase string, createCollection bool) error {
+	if _, ok := a.podAccounts[accountId]; ok {
+		return nil
+	}
+
+	password := passPhrase
+	if password == "" {
+		if createCollection {
+			fmt.Print("Enter user password to create a collection: ")
+		} else {
+			fmt.Print("Enter user password to open a collection: ")
+		}
+		password = a.getPassword()
+	}
+
+	plainMnemonic, err := a.wallet.decryptMnemonic(password)
+	if err != nil {
+		return fmt.Errorf("invalid password")
+	}
+
+	path := genericPath + strconv.Itoa(accountId)
+	acc, err := a.wallet.CreateAccount(path, plainMnemonic)
+	if err != nil {
+		return err
+	}
+	hdw, err := hdwallet.NewFromMnemonic(plainMnemonic)
+	if err != nil {
+		return err
+	}
+
+	accountInfo := &Info{}
 
 	accountInfo.privateKey, err = hdw.PrivateKey(acc)
 	if err != nil {
@@ -257,11 +306,11 @@ func (a *Account) GetAddress(index int) utils.Address {
 	}
 }
 
-func (a *Account) GetUserAccountInfo() *AccountInfo {
+func (a *Account) GetUserAccountInfo() *Info {
 	return a.userAcount
 }
 
-func (a *Account) GetPodAccountInfo(index int) (*AccountInfo, error) {
+func (a *Account) GetPodAccountInfo(index int) (*Info, error) {
 	if index < len(a.podAccounts) {
 		return a.podAccounts[index], nil
 	}
@@ -281,14 +330,14 @@ func (a *Account) getPassword() (password string) {
 	return password
 }
 
-func (ai *AccountInfo) GetAddress() utils.Address {
+func (ai *Info) GetAddress() utils.Address {
 	return ai.address
 }
 
-func (ai *AccountInfo) GetPrivateKey() *ecdsa.PrivateKey {
+func (ai *Info) GetPrivateKey() *ecdsa.PrivateKey {
 	return ai.privateKey
 }
 
-func (ai *AccountInfo) GetPublicKey() *ecdsa.PublicKey {
+func (ai *Info) GetPublicKey() *ecdsa.PublicKey {
 	return ai.publicKey
 }

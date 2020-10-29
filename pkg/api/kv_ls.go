@@ -23,43 +23,45 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-type DirPresentResponse struct {
-	Present bool   `json:"present"`
-	Error   string `json:"error,omitempty"`
+type Collections struct {
+	Tables []Collection
+}
+type Collection struct {
+	Name           string   `json:"name"`
+	IndexedColumns []string `json:"indexes"`
+	CollectionType string   `json:"type"`
 }
 
-func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request) {
-	dirToCheck := r.FormValue("dir")
-	if dirToCheck == "" {
-		h.logger.Errorf("dir present: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "dir present: \"dir\" argument missing")
-		return
-	}
-
+func (h *Handler) KVListHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
-		h.logger.Errorf("dir present: invalid cookie: %v", err)
+		h.logger.Errorf("kv ls: invalid cookie: %v", err)
 		jsonhttp.BadRequest(w, ErrInvalidCookie)
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("dir present: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "dir present: \"cookie-id\" parameter missing in cookie")
+		h.logger.Errorf("kv ls: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "kv ls: \"cookie-id\" parameter missing in cookie")
 		return
 	}
 
-	// check if user is present
-	present, err := h.dfsAPI.IsDirPresent(dirToCheck, sessionId)
+	collections, err := h.dfsAPI.KVList(sessionId)
 	if err != nil {
-		jsonhttp.OK(w, &DirPresentResponse{
-			Present: present,
-			Error:   err.Error(),
-		})
-	} else {
-		jsonhttp.OK(w, &DirPresentResponse{
-			Present: present,
-		})
+		h.logger.Errorf("kv ls: %v", err)
+		jsonhttp.InternalServerError(w, "kv ls: "+err.Error())
+		return
 	}
 
+	var col Collections
+	for k, v := range collections {
+		m := Collection{
+			Name:           k,
+			IndexedColumns: v,
+			CollectionType: "KV Store",
+		}
+		col.Tables = append(col.Tables, m)
+	}
+
+	jsonhttp.OK(w, col)
 }

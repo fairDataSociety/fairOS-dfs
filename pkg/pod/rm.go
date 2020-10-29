@@ -29,7 +29,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (p *Pod) RemoveFile(podName string, podFile string) error {
+func (p *Pod) RemoveFile(podName, podFile string) error {
 	if !p.isPodOpened(podName) {
 		return fmt.Errorf("login to pod to do this operation")
 	}
@@ -51,7 +51,7 @@ func (p *Pod) RemoveFile(podName string, podFile string) error {
 		return fmt.Errorf("file not present in pod")
 	}
 
-	_, dirInode, err := dir.GetDirNode(gopath.Dir(path), podInfo.getFeed(), podInfo.getAccountInfo())
+	_, dirInode, err := dir.GetDirNode(gopath.Dir(path), podInfo.GetFeed(), podInfo.GetAccountInfo())
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (p *Pod) RemoveFile(podName string, podFile string) error {
 	// remove the file
 	var newHashes [][]byte
 	for _, hash := range dirInode.Hashes {
-		_, _, err := podInfo.getFeed().GetFeedData(hash, podInfo.getAccountInfo().GetAddress())
+		_, _, err := podInfo.GetFeed().GetFeedData(hash, podInfo.GetAccountInfo().GetAddress())
 		if err != nil {
 			data, respCode, err := p.GetClient().DownloadBlob(hash)
 			if err != nil || respCode != http.StatusOK {

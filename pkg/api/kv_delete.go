@@ -17,49 +17,37 @@ limitations under the License.
 package api
 
 import (
-	"net/http"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"net/http"
 	"resenje.org/jsonhttp"
 )
 
-type DirPresentResponse struct {
-	Present bool   `json:"present"`
-	Error   string `json:"error,omitempty"`
-}
-
-func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request) {
-	dirToCheck := r.FormValue("dir")
-	if dirToCheck == "" {
-		h.logger.Errorf("dir present: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "dir present: \"dir\" argument missing")
+func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+	if name == "" {
+		h.logger.Errorf("kv delete: \"name\" argument missing")
+		jsonhttp.BadRequest(w, "kv delete: \"name\" argument missing")
 		return
 	}
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
-		h.logger.Errorf("dir present: invalid cookie: %v", err)
+		h.logger.Errorf("kv delete: invalid cookie: %v", err)
 		jsonhttp.BadRequest(w, ErrInvalidCookie)
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("dir present: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "dir present: \"cookie-id\" parameter missing in cookie")
+		h.logger.Errorf("kv delete: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "kv delete: \"cookie-id\" parameter missing in cookie")
 		return
 	}
 
-	// check if user is present
-	present, err := h.dfsAPI.IsDirPresent(dirToCheck, sessionId)
+	err = h.dfsAPI.KVDelete(sessionId, name)
 	if err != nil {
-		jsonhttp.OK(w, &DirPresentResponse{
-			Present: present,
-			Error:   err.Error(),
-		})
-	} else {
-		jsonhttp.OK(w, &DirPresentResponse{
-			Present: present,
-		})
+		h.logger.Errorf("kv delete: %v", err)
+		jsonhttp.InternalServerError(w, "kv delete: "+err.Error())
+		return
 	}
-
+	jsonhttp.OK(w, "kv store created")
 }

@@ -55,7 +55,7 @@ func (p *Pod) ReceiveFileAndStore(podName, podDir, fileName, metaHexRef string) 
 	path := p.getFilePath(podDir, podInfo)
 	dir := podInfo.GetDirectory()
 
-	_, dirInode, err := dir.GetDirNode(path, podInfo.getFeed(), podInfo.getAccountInfo())
+	_, dirInode, err := dir.GetDirNode(path, podInfo.GetFeed(), podInfo.GetAccountInfo())
 	if err != nil {
 		return err
 	}

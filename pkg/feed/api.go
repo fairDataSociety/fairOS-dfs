@@ -48,7 +48,7 @@ var (
 
 type API struct {
 	handler     *Handler
-	accountInfo *account.AccountInfo
+	accountInfo *account.Info
 	logger      logging.Logger
 }
 
@@ -62,7 +62,7 @@ type Request struct {
 	binaryData []byte     // cached serialized data (does not get serialized again!, for efficiency/internal use)
 }
 
-func New(accountInfo *account.AccountInfo, client blockstore.Client, logger logging.Logger) *API {
+func New(accountInfo *account.Info, client blockstore.Client, logger logging.Logger) *API {
 	bmtPool := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	return &API{
 		handler:     NewHandler(accountInfo, client, bmtPool),

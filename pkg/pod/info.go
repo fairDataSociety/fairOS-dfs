@@ -19,6 +19,8 @@ package pod
 import (
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	di "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -28,14 +30,16 @@ import (
 
 type Info struct {
 	podName         string
+	user            utils.Address
 	dir             *di.Directory
 	file            *f.File
-	accountInfo     *account.AccountInfo
+	accountInfo     *account.Info
 	feed            *feed.API
 	currentPodInode *di.DirInode
 	curPodMu        sync.RWMutex
 	currentDirInode *di.DirInode
 	curDirMu        sync.RWMutex
+	collection      *collection.KeyValue
 }
 
 func (i *Info) GetDirectory() *di.Directory {
@@ -46,11 +50,15 @@ func (i *Info) getFile() *f.File {
 	return i.file
 }
 
-func (i *Info) getAccountInfo() *account.AccountInfo {
+func (i *Info) GetUser() utils.Address {
+	return i.user
+}
+
+func (i *Info) GetAccountInfo() *account.Info {
 	return i.accountInfo
 }
 
-func (i *Info) getFeed() *feed.API {
+func (i *Info) GetFeed() *feed.API {
 	return i.feed
 }
 
@@ -98,4 +106,8 @@ func (i *Info) GetCurrentDirNameOnly() string {
 
 func (i *Info) GetCurrentDirPathAndName() string {
 	return i.currentDirInode.Meta.Path + utils.PathSeperator + i.currentDirInode.Meta.Name
+}
+
+func (i *Info) GetCollection() *collection.KeyValue {
+	return i.collection
 }

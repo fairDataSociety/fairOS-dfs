@@ -39,7 +39,7 @@ import (
 )
 
 type Handler struct {
-	accountInfo *account.AccountInfo
+	accountInfo *account.Info
 	client      blockstore.Client
 	hasherPool  *bmtlegacy.TreePool
 	HashSize    int
@@ -59,7 +59,7 @@ func init() {
 	}
 }
 
-func NewHandler(accountInfo *account.AccountInfo, client blockstore.Client, hasherPool *bmtlegacy.TreePool) *Handler {
+func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool *bmtlegacy.TreePool) *Handler {
 	fh := &Handler{
 		accountInfo: accountInfo,
 		client:      client,
@@ -332,7 +332,7 @@ func (h *Handler) getPayloadId(data []byte) ([]byte, error) {
 	return payloadId, nil
 }
 
-func (h *Handler) getSignature(id []byte, payloadId []byte) ([]byte, []byte, error) {
+func (h *Handler) getSignature(id, payloadId []byte) ([]byte, []byte, error) {
 	toSignBytes, err := toSignDigest(id, payloadId)
 	if err != nil {
 		return nil, nil, err
@@ -378,7 +378,7 @@ func (h *Handler) set(feed *Feed, feedUpdate *CacheEntry) error {
 }
 
 // toSignDigest creates a digest suitable for signing to represent the soc.
-func toSignDigest(id []byte, sum []byte) ([]byte, error) {
+func toSignDigest(id, sum []byte) ([]byte, error) {
 	h := swarm.NewHasher()
 	_, err := h.Write(id)
 	if err != nil {
