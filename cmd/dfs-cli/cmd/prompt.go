@@ -311,7 +311,7 @@ func executor(in string) {
 				fmt.Println("login user: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentUser = userName
 			currentPod = ""
@@ -364,7 +364,7 @@ func executor(in string) {
 				fmt.Println("delete user: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentUser = ""
 			currentPod = ""
@@ -380,7 +380,7 @@ func executor(in string) {
 				fmt.Println("logout user: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentUser = ""
 			currentPod = ""
