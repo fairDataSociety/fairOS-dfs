@@ -168,6 +168,8 @@ var suggestions = []prompt.Suggest{
 	{Text: "kv put", Description: "put key and value in kv store"},
 	{Text: "kv del", Description: "delete key and value from the store"},
 	{Text: "kv loadcsv", Description: "loads the csv file in to kv store"},
+	{Text: "kv seek", Description: "seek to the given start prefix"},
+	{Text: "kv getnext", Description: "get the next element"},
 	{Text: "cd", Description: "change path"},
 	{Text: "copyToLocal", Description: "copy file from dfs to local machine"},
 	{Text: "copyFromLocal", Description: "copy file from local machine to dfs"},
@@ -611,7 +613,7 @@ func executor(in string) {
 					fmt.Println("upload failed: ", err, string(data))
 					return
 				}
-				message := strings.Replace(string(data), "\n", "", -1)
+				message := strings.ReplaceAll(string(data), "\n", "")
 				fmt.Println(message)
 			}
 			currentPrompt = getCurrentPrompt()
@@ -643,7 +645,7 @@ func executor(in string) {
 				fmt.Println("could not create pod: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPod = podName
 			currentDirectory = utils.PathSeperator
@@ -662,7 +664,7 @@ func executor(in string) {
 				fmt.Println("could not delete pod: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPod = ""
 			currentDirectory = ""
@@ -681,7 +683,7 @@ func executor(in string) {
 				fmt.Println("pod open failed: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPod = podName
 			currentDirectory = utils.PathSeperator
@@ -695,7 +697,7 @@ func executor(in string) {
 				fmt.Println("error logging out: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPod = ""
 			currentDirectory = ""
@@ -754,7 +756,7 @@ func executor(in string) {
 				fmt.Println("could not sync pod: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
@@ -804,7 +806,7 @@ func executor(in string) {
 				fmt.Println("kv new: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "delete":
@@ -820,7 +822,7 @@ func executor(in string) {
 				fmt.Println("kv new: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
@@ -852,7 +854,7 @@ func executor(in string) {
 				fmt.Println("kv open: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "count":
@@ -868,7 +870,7 @@ func executor(in string) {
 				fmt.Println("kv open: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "put":
@@ -888,7 +890,7 @@ func executor(in string) {
 				fmt.Println("kv put: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "get":
@@ -942,7 +944,7 @@ func executor(in string) {
 				fmt.Println("kv del: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "loadcsv":
@@ -978,7 +980,7 @@ func executor(in string) {
 				fmt.Println("loadcsv: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "seek":
@@ -1012,7 +1014,7 @@ func executor(in string) {
 				fmt.Println("kv seek: ", err)
 				return
 			}
-			message := strings.Replace(string(data), "\n", "", -1)
+			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "getnext":
@@ -1162,7 +1164,7 @@ func executor(in string) {
 			fmt.Println("mkdir failed: ", err)
 			return
 		}
-		message := strings.Replace(string(data), "\n", "", -1)
+		message := strings.ReplaceAll(string(data), "\n", "")
 		fmt.Println(message)
 		currentPrompt = getCurrentPrompt()
 	case "rmdir":
@@ -1194,7 +1196,7 @@ func executor(in string) {
 			fmt.Println("rmdir failed: ", err)
 			return
 		}
-		message := strings.Replace(string(data), "\n", "", -1)
+		message := strings.ReplaceAll(string(data), "\n", "")
 		fmt.Println(message)
 		currentPrompt = getCurrentPrompt()
 	case "upload":
@@ -1440,7 +1442,7 @@ func executor(in string) {
 			fmt.Println("rm failed: ", err)
 			return
 		}
-		message := strings.Replace(string(data), "\n", "", -1)
+		message := strings.ReplaceAll(string(data), "\n", "")
 		fmt.Println(message)
 		currentPrompt = getCurrentPrompt()
 	case "share":
@@ -1582,6 +1584,8 @@ func help() {
 	fmt.Println(" - kv <get> (table-name) (key) - get the value of the given key from the store")
 	fmt.Println(" - kv <del> (table-name) (key) - remove the key and value from the store")
 	fmt.Println(" - kv <loadcsv> (table-name) (local csv file) - load the csv file in to the newy created table")
+	fmt.Println(" - kv <seek> (table-name) (start-key) (end-key) (limit) - seek nearst to start key")
+	fmt.Println(" - kv <getnext> (table-name) - get the next element after seek")
 
 	fmt.Println(" - cd <directory name>")
 	fmt.Println(" - ls ")

@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -579,7 +578,6 @@ func (idx *Index) storeManifest(manifest *Manifest) error {
 }
 
 type Iterator struct {
-	id            int
 	index         *Index
 	startPrefix   string
 	endPrefix     string
@@ -611,7 +609,6 @@ func (idx *Index) NewIterator(start, end string, limit int64) (*Iterator, error)
 	stack = append(stack, firstManifest)
 
 	itr := &Iterator{
-		id:            rand.Int(),
 		index:         idx,
 		startPrefix:   start,
 		endPrefix:     end,

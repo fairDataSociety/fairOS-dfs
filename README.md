@@ -89,6 +89,18 @@ Pod cretion is cheap. A user can create multiple pods and use it to organise his
 - GET  -F 'file=\<file_path\>'  http://localhost:9090/v0/file/stat
 - DELETE -F 'file=\<file_path\>'  http://localhost:9090/v0/file/delete
 
+##### Key Value store related APIs
+- POST -F 'file=\<name\>' http://localhost:9090/v0/kv/new
+- POST -F 'file=\<name\>' http://localhost:9090/v0/kv/open
+- POST -F 'file=\<name\>' http://localhost:9090/v0/kv/count
+- POST http://localhost:9090/v0/kv/ls
+- DELETE -F 'file=\<name\>' http://localhost:9090/v0/kv/delete
+- POST -F 'file=\<name\>' -F 'key=\<key\>' -F 'value=\<bytes\>' http://localhost:9090/v0/kv/entry/put
+- GET -F 'file=\<name\>' -F 'key=\<key\>' http://localhost:9090/v0/kv/entry/get
+- DELETE -F 'file=\<name\>' -F 'key=\<key\>' http://localhost:9090/v0/kv/entry/del
+- POST -F 'file=\<name\>' -F 'csv=@\<csv_file\>' http://localhost:9090/v0/kv/loadcsv
+- POST -F 'file=\<name\>' -F 'start=\<start_prefix\>' -F 'end=\<end\>' -F 'limit=\<no of records\>' http://localhost:9090/v0/kv/seek
+- GET -F 'file=\<name\>' http://localhost:9090/v0/kv/seek/getnext
 
 ### REPL Commands in dfs
 **dfs >>>** \<command\> where, \<command\> is listed below
@@ -131,6 +143,17 @@ Pod cretion is cheap. A user can create multiple pods and use it to organise his
 - share \<file name\> -  shares a file with another user
 - receive \<sharing reference\> \<pod dir\> - receives a file from another user
 - receiveinfo \<sharing reference\> - shows the received file info before accepting the receive 
+##### Key Value store commands
+- kv \<new\> (table-name) - create new key value store
+- kv \<delete\> (table-name) - delete the  key value store
+- kv \<ls\> - lists all the key value stores
+- kv \<open\> (table-name) - open already created key value store
+- kv \<get\> table-name) (key) - get value from key
+- kv \<put\> (table-name) (key) (value) - put key and value in kv store"
+- kv \<del\> (table-name) (key) - delete key and value from the store
+- kv \<loadcsv\> (table-name) (local csv file) - loads the csv file in to kv store
+- kv \<seek\> (table-name) (start-key) (end-key) (limit) - seek to the given start prefix
+- kv \<getnext\> (table-name) - get the next element
 ##### management commands
 - help - display this help
 - exit - exits from the prompt
