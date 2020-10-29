@@ -44,6 +44,7 @@ type KeyValue struct {
 	client       blockstore.Client
 	openKVTables map[string]*Index
 	openKVTMu    sync.RWMutex
+	iterator     *Iterator
 	logger       logging.Logger
 	columns      []string
 }
@@ -134,8 +135,13 @@ func (kv *KeyValue) KVCount(name string) (uint64, error) {
 	defer kv.openKVTMu.Unlock()
 	if idx, ok := kv.openKVTables[name]; ok {
 		return idx.Count()
+	} else {
+		idx, err := OpenIndex(name, defaultIndexName, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+		if err != nil {
+			return 0, err
+		}
+		return idx.Count()
 	}
-	return 0, fmt.Errorf("kv table not opened")
 }
 
 func (kv *KeyValue) KVPut(name, key string, value []byte) error {
@@ -189,6 +195,35 @@ func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 
 func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
 	return batch.Write()
+}
+
+func (kv *KeyValue) KVSeek(name, start, end string, limit int64) (*Iterator, error) {
+	kv.openKVTMu.Lock()
+	defer kv.openKVTMu.Unlock()
+	if idx, ok := kv.openKVTables[name]; ok {
+		itr, err := idx.NewIterator(start, end, limit)
+		if err != nil {
+			return nil, err
+		}
+		kv.iterator = itr
+		return itr, nil
+	}
+	return nil, fmt.Errorf("kv table not opened")
+}
+
+func (kv *KeyValue) KVGetNext(name string) ([]string, string, []byte, error) {
+	kv.openKVTMu.Lock()
+	defer kv.openKVTMu.Unlock()
+	if _, ok := kv.openKVTables[name]; ok {
+		if kv.iterator != nil {
+			ok := kv.iterator.Next()
+			if !ok {
+				return nil, "", nil, ErrNoNextElement
+			}
+			return kv.columns, kv.iterator.Key(), kv.iterator.Value(), nil
+		}
+	}
+	return nil, "", nil, fmt.Errorf("kv table not opened")
 }
 
 func (kv *KeyValue) LoadKVTables() (map[string][]string, error) {

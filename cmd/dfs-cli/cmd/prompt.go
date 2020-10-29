@@ -19,7 +19,9 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
 	"io/ioutil"
 	"log"
@@ -100,8 +102,7 @@ const (
 	apiKVEntryDelete   = APIVersion + "/kv/entry/del"
 	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
 	apiKVSeek          = APIVersion + "/kv/seek"
-	apiKVSeeknext      = APIVersion + "/kv/seek/getnext"
-
+	apiKVSeekNext      = APIVersion + "/kv/seek/next"
 )
 
 type Message struct {
@@ -979,6 +980,79 @@ func executor(in string) {
 			}
 			message := strings.Replace(string(data), "\n", "", -1)
 			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "seek":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+
+			var start string
+			var end string
+			var limit string
+			if len(blocks) >= 4 {
+				start = blocks[3]
+			}
+			if len(blocks) >= 5 {
+				end = blocks[4]
+			}
+
+			if len(blocks) >= 6 {
+				limit = blocks[5]
+			}
+
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["start"] = start
+			args["end"] = end
+			args["limit"] = limit
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVSeek, args)
+			if err != nil {
+				fmt.Println("kv seek: ", err)
+				return
+			}
+			message := strings.Replace(string(data), "\n", "", -1)
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "getnext":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiKVSeekNext, args)
+			if err != nil && !errors.Is(err, collection.ErrNoNextElement) {
+				fmt.Println("kv get_next: ", err)
+				return
+			}
+
+			if errors.Is(err, collection.ErrNoNextElement) {
+				fmt.Println("no next element")
+			} else {
+				var resp api.KVResponse
+				err = json.Unmarshal(data, &resp)
+				if err != nil {
+					fmt.Println("kv get_next: ", err)
+					return
+				}
+
+				rdr := bytes.NewReader(resp.Values)
+				csvReader := bettercsv.NewReader(rdr)
+				csvReader.Comma = ','
+				csvReader.Quote = '"'
+				content, err := csvReader.ReadAll()
+				if err != nil {
+					fmt.Println("kv get_next: ", err)
+					return
+				}
+				values := content[0]
+				for i, name := range resp.Names {
+					fmt.Println(name + " : " + values[i])
+				}
+			}
 			currentPrompt = getCurrentPrompt()
 		default:
 			fmt.Println("invalid kv command!!")

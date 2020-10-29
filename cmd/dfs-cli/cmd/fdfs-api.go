@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
@@ -27,6 +28,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"resenje.org/jsonhttp"
 	"strconv"
 	"strings"
 	"time"
@@ -147,8 +149,23 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
-		errStr := fmt.Sprintf("received invalid status: %s", response.Status)
-		return nil, errors.New(errStr)
+		if response.StatusCode == http.StatusNoContent {
+			return nil, errors.New("no content")
+		}
+		data, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, errors.New("error downloading data")
+		}
+		err = response.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+		var resp jsonhttp.StatusResponse
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			return nil, errors.New("error unmarshalling error response")
+		}
+		return nil, errors.New(resp.Message)
 	}
 
 	if len(response.Cookies()) > 0 {
@@ -160,11 +177,20 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 		return nil, errors.New("error downloading data")
 	}
 	err = response.Body.Close()
-
 	if err != nil {
 		return nil, err
 	}
-	return data, nil
+
+	var resp jsonhttp.StatusResponse
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		return nil, errors.New("error unmarshalling response")
+	}
+	if resp.Code == 0 {
+		return data, nil
+	}
+
+	return []byte(resp.Message), nil
 }
 
 func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, arguments map[string]string, formFileArgument, compression string) ([]byte, error) {

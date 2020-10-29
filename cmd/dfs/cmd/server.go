@@ -191,14 +191,9 @@ func startHttpService(logger logging.Logger) {
 	kvRouter.HandleFunc("/entry/put", handler.KVPutHandler).Methods("POST")
 	kvRouter.HandleFunc("/entry/get", handler.KVGetHandler).Methods("GET")
 	kvRouter.HandleFunc("/entry/del", handler.KVDelHandler).Methods("DELETE")
-
 	kvRouter.HandleFunc("/loadcsv", handler.KVLoadCSVHandler).Methods("POST")
-	//kvRouter.HandleFunc("/iterate", handler.CollectionIterateHandler).Methods("POST")
-	//kvRouter.HandleFunc("/iterate/next", handler.CollectionGetNextHandler).Methods("GET")
-	//kvRouter.HandleFunc("/batch", handler.CollectionBatchtHandler).Methods("POST")
-	//kvRouter.HandleFunc("/batch/put", handler.CollectionBatchtPutHandler).Methods("POST")
-	//kvRouter.HandleFunc("/batch/put", handler.CollectionBatchtDeleteHandler).Methods("DELETE")
-	//kvRouter.HandleFunc("/batch/write", handler.CollectionBatchtWriteHandler).Methods("DELETE")
+	kvRouter.HandleFunc("/seek", handler.KVSeekHandler).Methods("POST")
+	kvRouter.HandleFunc("/seek/next", handler.KVGetNextHandler).Methods("GET")
 
 	var origins []string
 	for _, c := range corsOrigins {

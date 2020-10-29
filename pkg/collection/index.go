@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -194,6 +195,10 @@ func (idx *Index) Count() (uint64, error) {
 	return idx.count, nil
 }
 
+func (idx *Index) Seek() {
+
+}
+
 func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFunc, workers chan bool, manifest *Manifest, errC chan error) {
 	var count uint64
 	//var wg sync.WaitGroup
@@ -208,24 +213,24 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 			//		wg.Done()
 			//	}()
 
-				newManifest, err := idx.loadManifest(manifest.Name + entry.Name)
-				if err != nil {
-					fmt.Println("manifest load error: ", manifest.Name + entry.Name)
-					//select {
-					//case errC <- err:
-					//default: // Default is must to avoid blocking
-					//}
-					//cancel()
-					return
-				}
+			newManifest, err := idx.loadManifest(manifest.Name + entry.Name)
+			if err != nil {
+				fmt.Println("manifest load error: ", manifest.Name+entry.Name)
+				//select {
+				//case errC <- err:
+				//default: // Default is must to avoid blocking
+				//}
+				//cancel()
+				return
+			}
 
-				//if some other goroutine fails, terminate this one too
-				select {
-				case <-ctx.Done():
-					return
-				default: // Default is must to avoid blocking
-				}
-				idx.loadIndexAndCount(ctx, cancel, workers, newManifest, errC)
+			//if some other goroutine fails, terminate this one too
+			select {
+			case <-ctx.Done():
+				return
+			default: // Default is must to avoid blocking
+			}
+			idx.loadIndexAndCount(ctx, cancel, workers, newManifest, errC)
 			//}(entry)
 		} else {
 			count++
@@ -574,6 +579,7 @@ func (idx *Index) storeManifest(manifest *Manifest) error {
 }
 
 type Iterator struct {
+	id            int
 	index         *Index
 	startPrefix   string
 	endPrefix     string
@@ -605,6 +611,7 @@ func (idx *Index) NewIterator(start, end string, limit int64) (*Iterator, error)
 	stack = append(stack, firstManifest)
 
 	itr := &Iterator{
+		id:            rand.Int(),
 		index:         idx,
 		startPrefix:   start,
 		endPrefix:     end,
@@ -742,7 +749,7 @@ func (itr *Iterator) seekKey(manifest *Manifest, key string) error {
 						currentIndex:    i + 1,
 					}
 					itr.manifestStack = append(itr.manifestStack, manifestState)
-					return ErrEntryNotFound
+					return nil
 				}
 			}
 
