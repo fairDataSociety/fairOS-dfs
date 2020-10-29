@@ -218,7 +218,7 @@ func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []b
 }
 
 // upload a chunk in bee
-func (s *BeeClient) UploadBlob(data []byte, pin bool, encrypt bool) (address []byte, err error) {
+func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err error) {
 	to := time.Now()
 
 	// return the ref if this data is already in swarm
