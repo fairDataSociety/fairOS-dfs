@@ -62,7 +62,7 @@ func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client
 
 func (kv *KeyValue) CreateKVTable(name string) error {
 	// for now , it will be a single index collection
-	err := CreateIndex(name, defaultIndexName, kv.fd, kv.user, kv.client)
+	err := CreateIndex(name, defaultIndexName, StringIndex, kv.fd, kv.user, kv.client)
 	if err != nil {
 		return err
 	}
@@ -134,13 +134,13 @@ func (kv *KeyValue) KVCount(name string) (uint64, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if idx, ok := kv.openKVTables[name]; ok {
-		return idx.Count()
+		return idx.CountIndex()
 	} else {
 		idx, err := OpenIndex(name, defaultIndexName, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
 		if err != nil {
 			return 0, err
 		}
-		return idx.Count()
+		return idx.CountIndex()
 	}
 }
 
@@ -148,7 +148,7 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if idx, ok := kv.openKVTables[name]; ok {
-		return idx.Put(key, value)
+		return idx.Put(key, value, StringIndex)
 	}
 	return fmt.Errorf("kv table not opened")
 }
@@ -201,7 +201,7 @@ func (kv *KeyValue) KVSeek(name, start, end string, limit int64) (*Iterator, err
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if idx, ok := kv.openKVTables[name]; ok {
-		itr, err := idx.NewIterator(start, end, limit)
+		itr, err := idx.NewStringIterator(start, end, limit)
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +220,7 @@ func (kv *KeyValue) KVGetNext(name string) ([]string, string, []byte, error) {
 			if !ok {
 				return nil, "", nil, ErrNoNextElement
 			}
-			return kv.columns, kv.iterator.Key(), kv.iterator.Value(), nil
+			return kv.columns, kv.iterator.StringKey(), kv.iterator.Value(), nil
 		}
 	}
 	return nil, "", nil, fmt.Errorf("kv table not opened")

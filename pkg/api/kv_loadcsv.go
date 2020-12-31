@@ -19,12 +19,13 @@ package api
 import (
 	"bufio"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"io"
 	"net/http"
-	"resenje.org/jsonhttp"
 	"strings"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"resenje.org/jsonhttp"
 )
 
 func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {

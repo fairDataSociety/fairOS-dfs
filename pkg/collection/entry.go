@@ -17,9 +17,10 @@ limitations under the License.
 package collection
 
 type Manifest struct {
-	Name         string   `json:"name"`
-	CreationTime int64    `json:"creation_time"`
-	Entries      []*Entry `json:"entries,omitempty"`
+	Name         string    `json:"name"`
+	IdxType      IndexType `json:"index_type"`
+	CreationTime int64     `json:"creation_time"`
+	Entries      []*Entry  `json:"entries,omitempty"`
 	dirtyFlag    bool
 }
 
@@ -30,10 +31,13 @@ type Entry struct {
 	manifest *Manifest
 }
 
-func NewManifest(name string, time int64) *Manifest {
+func NewManifest(name string, time int64, idxType IndexType) *Manifest {
+	var entries []*Entry
 	return &Manifest{
 		Name:         name,
+		IdxType:      idxType,
 		CreationTime: time,
+		Entries:      entries,
 		dirtyFlag:    true,
 	}
 }
