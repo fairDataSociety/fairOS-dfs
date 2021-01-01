@@ -27,4 +27,5 @@ var (
 	ErrManifestCreate      = errors.New("could not create new manifest")
 	ErrDeleteingIndex      = errors.New("could not delete index")
 	ErrIndexAlreadyPresent = errors.New("index already present")
+	ErrIndexNotPresent     = errors.New("index not present")
 )

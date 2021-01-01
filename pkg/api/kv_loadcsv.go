@@ -19,12 +19,13 @@ package api
 import (
 	"bufio"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"io"
 	"net/http"
-	"resenje.org/jsonhttp"
 	"strings"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"resenje.org/jsonhttp"
 )
 
 func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +101,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			err = batch.Put(collection.CSVHeaderKey, []byte(record))
+			err = batch.Put(collection.CSVHeaderKey, []byte(record), collection.StringIndex)
 			if err != nil {
 				h.logger.Errorf("kv loadcsv: error adding header %d: %v", rowCount, err)
 				failureCount++
@@ -112,7 +113,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		key := strings.Split(record, ",")[0]
-		err = batch.Put(key, []byte(record))
+		err = batch.Put(key, []byte(record), collection.StringIndex)
 		if err != nil {
 			h.logger.Errorf("kv loadcsv: error adding row %d: %v", rowCount, err)
 			failureCount++

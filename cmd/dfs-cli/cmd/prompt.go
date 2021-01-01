@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
 	"io/ioutil"
