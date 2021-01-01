@@ -417,7 +417,7 @@ func addDocsForRandomNumberIteration(t *testing.T, idx *collection.Index, actual
 	return keys, values
 }
 
-func sortLexicographically(t *testing.T, keys []string, values []string) ([]string, []string) {
+func sortLexicographically(t *testing.T, keys, values []string) ([]string, []string) {
 	sort.Slice(keys, func(i int, j int) bool {
 		return keys[i] < keys[j]
 	})

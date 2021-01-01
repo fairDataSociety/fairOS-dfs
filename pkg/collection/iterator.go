@@ -77,7 +77,7 @@ func (idx *Index) NewStringIterator(start, end string, limit int64) (*Iterator, 
 	return itr, nil
 }
 
-func (idx *Index) NewIntIterator(start, end int64, limit int64) (*Iterator, error) {
+func (idx *Index) NewIntIterator(start, end, limit int64) (*Iterator, error) {
 	// get the first feed of the Index
 	manifest, err := idx.loadManifest(idx.name)
 	if err != nil {
