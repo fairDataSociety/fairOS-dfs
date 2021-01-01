@@ -33,18 +33,18 @@ func (idx *Index) Batch() (*Batch, error) {
 	}, nil
 }
 
-func (b *Batch) Put(key string, refValue []byte) error {
+func (b *Batch) Put(key string, refValue []byte, idxType IndexType) error {
 	if b.memDb == nil {
 		manifest := &Manifest{
 			Name:         b.idx.name,
-			IdxType:      StringIndex,
+			IdxType:      idxType,
 			CreationTime: time.Now().Unix(),
 			dirtyFlag:    true,
 		}
 		b.memDb = manifest
 	}
 	ctx := context.Background()
-	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, key, StringIndex, refValue, true)
+	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, key, idxType, refValue, true)
 }
 
 func (b *Batch) Write() error {
