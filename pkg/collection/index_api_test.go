@@ -46,7 +46,6 @@ func TestIndexAPI(t *testing.T) {
 		// create a DB and open it
 		index := createAndOpenIndex(t, "testdb0", collection.StringIndex, fd, user, mockClient, ai, logger)
 
-
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// open the index again, simulating like another instance

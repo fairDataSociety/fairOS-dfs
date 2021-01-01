@@ -18,9 +18,10 @@ package cmd
 
 import (
 	"fmt"
-	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"os"
 	"path/filepath"
+
+	dfs "github.com/fairdatasociety/fairOS-dfs"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
