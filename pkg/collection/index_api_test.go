@@ -454,7 +454,7 @@ func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.MockBeeCli
 		if err != nil {
 			t.Fatalf("could not add doc %s:%s, %v", k, ref, err)
 		}
-		err = batch.Put(k, ref)
+		err = batch.Put(k, ref, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}

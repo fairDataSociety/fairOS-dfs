@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
-	"sort"
-	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -192,10 +190,6 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 	atomic.AddUint64(&idx.count, count)
 }
 
-func (idx *Index) getEntries(manifest Manifest) {
-
-}
-
 // Manifest related functions
 func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 	// get feed data and unmarshall the manifest
@@ -221,44 +215,6 @@ func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 	}
 
 	return &manifest, nil
-}
-
-func (idx *Index) loadManifestAndSort(manifestPath string) (*Manifest, error) {
-	manifest, err := idx.loadManifest(manifestPath)
-	if err != nil {
-		return nil, err
-	}
-
-	idx.sortEntriesOnNumber(manifest.Entries)
-	return manifest, nil
-}
-
-func (idx *Index) sortEntriesOnNumber(entries []*Entry) {
-	sort.Slice(entries, func(i, j int) bool {
-		if entries[i].Name == "" {
-			return true
-		}
-		if entries[j].Name == "" {
-			return true
-		}
-
-		if entries[i].EType == "L" && entries[j].EType == "I" {
-			return true
-		}
-		if entries[j].EType == "L" && entries[i].EType == "I" {
-			return false
-		}
-
-		a, err := strconv.ParseInt(entries[i].Name, 10, 64)
-		if err != nil {
-			return false
-		}
-		b, err := strconv.ParseInt(entries[j].Name, 10, 64)
-		if err != nil {
-			return false
-		}
-		return a < b
-	})
 }
 
 func (idx *Index) updateManifest(manifest *Manifest) error {
