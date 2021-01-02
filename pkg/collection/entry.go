@@ -41,3 +41,19 @@ func NewManifest(name string, time int64, idxType IndexType) *Manifest {
 		dirtyFlag:    true,
 	}
 }
+
+type CompoundManifest struct {
+	Name         string      `json:"name"`
+	Fields       []string    `json:"fields"`
+	IdxTypes      []IndexType `json:"index_types"`
+	CreationTime int64       `json:"creation_time"`
+}
+
+func NewCompoundManifest(name string, fields []string, indexTypes []IndexType, time int64) *CompoundManifest {
+	return &CompoundManifest{
+		Name: name,
+		Fields: fields,
+		IdxTypes: indexTypes,
+		CreationTime: time,
+	}
+}
