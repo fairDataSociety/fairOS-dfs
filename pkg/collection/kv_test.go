@@ -141,7 +141,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// check all 3 tables for existance
+		// check all 3 tables for existence
 		if len(tables) != 3 {
 			t.Fatalf("tables length is not proper. expected %d got %d", 3, len(tables))
 		}
@@ -276,7 +276,7 @@ func TestKeyValueStore(t *testing.T) {
 		if columns != nil {
 			t.Fatalf("columns present without setting")
 		}
-		if bytes.Compare(value, []byte("value1")) != 0 {
+		if !bytes.Equal(value, []byte("value1")) {
 			t.Fatal(err)
 		}
 	})
@@ -303,7 +303,7 @@ func TestKeyValueStore(t *testing.T) {
 		if columns != nil {
 			t.Fatalf("columns present without setting")
 		}
-		if bytes.Compare(value, []byte("value1")) != 0 {
+		if !bytes.Equal(value, []byte("value1")) {
 			t.Fatal(err)
 		}
 	})
@@ -349,7 +349,7 @@ func TestKeyValueStore(t *testing.T) {
 		if columns != nil {
 			t.Fatalf("columns present without setting")
 		}
-		if bytes.Compare(value, []byte("value1")) != 0 {
+		if !bytes.Equal(value, []byte("value1")) {
 			t.Fatal(err)
 		}
 
@@ -360,7 +360,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// get it again and make sure it is not there
-		columns, value, err = kvStore.KVGet("kv_table_11", "key1")
+		_, _, err = kvStore.KVGet("kv_table_11", "key1")
 		if !errors.Is(err, collection.ErrEntryNotFound) {
 			t.Fatalf("found the deleted entry")
 		}
@@ -378,7 +378,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 	})
 
-	t.Run("get_non_existant_string_index", func(t *testing.T) {
+	t.Run("get_non_existent_string_index", func(t *testing.T) {
 		err := kvStore.CreateKVTable("kv_table_13", collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -392,10 +392,10 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// delete a non existant key
+		// delete a non existent key
 		_, err = kvStore.KVDelete("kv_table_13", "key2")
 		if !errors.Is(err, collection.ErrEntryNotFound) {
-			t.Fatalf("found a non existant entry")
+			t.Fatalf("found a non existent entry")
 		}
 	})
 
@@ -407,7 +407,7 @@ func TestKeyValueStore(t *testing.T) {
 		columns := []string{"c1", "c2", "c3"}
 		_, err = kvStore.KVBatch("kv_table_batch_1", columns)
 		if !errors.Is(err, collection.ErrKVTableNotOpened) {
-			t.Fatalf("found a non existant entry")
+			t.Fatalf("found a non existent entry")
 		}
 	})
 
@@ -451,7 +451,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// also check the values returned
-		if bytes.Compare(value, gotValue) != 0 {
+		if !bytes.Equal(value, gotValue) {
 			t.Fatal(err)
 		}
 	})
@@ -483,7 +483,7 @@ func TestKeyValueStore(t *testing.T) {
 			if itr.StringKey() != sortedKeys[i] {
 				t.Fatal(err)
 			}
-			if bytes.Compare(itr.Value(), []byte(sortedValues[i])) != 0 {
+			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
 				t.Fatal(err)
 			}
 		}
@@ -524,7 +524,7 @@ func TestKeyValueStore(t *testing.T) {
 			if itr.StringKey() != sortedKeys[i] {
 				t.Fatal(err)
 			}
-			if bytes.Compare(itr.Value(), []byte(sortedValues[i])) != 0 {
+			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
 				t.Fatal(err)
 			}
 		}
@@ -575,7 +575,7 @@ func TestKeyValueStore(t *testing.T) {
 			if itr.StringKey() != sortedKeys[i] {
 				t.Fatal(err)
 			}
-			if bytes.Compare(itr.Value(), []byte(sortedValues[i])) != 0 {
+			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
 				t.Fatal(err)
 			}
 		}
@@ -614,7 +614,7 @@ func TestKeyValueStore(t *testing.T) {
 			if itr.StringKey() != sortedKeys[i] {
 				t.Fatal(err)
 			}
-			if bytes.Compare(itr.Value(), []byte(sortedValues[i])) != 0 {
+			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
 				t.Fatal(err)
 			}
 		}
@@ -648,7 +648,7 @@ func TestKeyValueStore(t *testing.T) {
 			if itr.IntegerKey() != int64(keys[i]) {
 				t.Fatal(err)
 			}
-			if bytes.Compare(itr.Value(), []byte(strconv.Itoa(values[i]))) != 0 {
+			if !bytes.Equal(itr.Value(), []byte(strconv.Itoa(values[i]))) {
 				t.Fatal(err)
 			}
 		}
@@ -694,7 +694,7 @@ func TestKeyValueStore(t *testing.T) {
 			if itr.IntegerKey() != int64(keys[i]) {
 				t.Fatal(err)
 			}
-			if bytes.Compare(itr.Value(), []byte(strconv.Itoa(values[i]))) != 0 {
+			if !bytes.Equal(itr.Value(), []byte(strconv.Itoa(values[i]))) {
 				t.Fatal(err)
 			}
 		}
@@ -741,7 +741,7 @@ func TestKeyValueStore(t *testing.T) {
 			if itr.IntegerKey() != int64(keys[i]) {
 				t.Fatal(err)
 			}
-			if bytes.Compare(itr.Value(), []byte(strconv.Itoa(values[i]))) != 0 {
+			if !bytes.Equal(itr.Value(), []byte(strconv.Itoa(values[i]))) {
 				t.Fatal(err)
 			}
 		}

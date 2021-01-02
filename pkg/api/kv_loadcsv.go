@@ -113,7 +113,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		key := strings.Split(record, ",")[0]
-		err = batch.Put(key, []byte(record), collection.StringIndex)
+		err = batch.Put(key, []byte(record))
 		if err != nil {
 			h.logger.Errorf("kv loadcsv: error adding row %d: %v", rowCount, err)
 			failureCount++
