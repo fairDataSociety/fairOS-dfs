@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -32,9 +33,9 @@ import (
 )
 
 const (
-	kvFile           = "key_value_tables"
-	defaultIndexName = "key"
-	CSVHeaderKey     = "__csv_header__"
+	kvFile                = "key_value_tables"
+	defaultCollectionName = "KV"
+	CSVHeaderKey          = "__csv_header__"
 )
 
 type KeyValue struct {
@@ -42,11 +43,16 @@ type KeyValue struct {
 	ai           *account.Info
 	user         utils.Address
 	client       blockstore.Client
-	openKVTables map[string]*Index
+	openKVTables map[string]*KVTable
 	openKVTMu    sync.RWMutex
 	iterator     *Iterator
 	logger       logging.Logger
-	columns      []string
+}
+
+type KVTable struct {
+	index     *Index
+	indexType IndexType
+	columns   []string
 }
 
 func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) *KeyValue {
@@ -55,14 +61,14 @@ func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client
 		ai:           ai,
 		user:         user,
 		client:       client,
-		openKVTables: make(map[string]*Index),
+		openKVTables: make(map[string]*KVTable),
 		logger:       logger,
 	}
 }
 
-func (kv *KeyValue) CreateKVTable(name string) error {
+func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
 	// for now , it will be a single index collection
-	err := CreateIndex(name, defaultIndexName, StringIndex, kv.fd, kv.user, kv.client)
+	err := CreateIndex(defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client)
 	if err != nil {
 		return err
 	}
@@ -73,7 +79,7 @@ func (kv *KeyValue) CreateKVTable(name string) error {
 	if _, ok := kvtables[name]; ok {
 		return fmt.Errorf("kv table already present")
 	}
-	kvtables[name] = []string{defaultIndexName}
+	kvtables[name] = []string{indexType.String()}
 	return kv.storeKVTables(kvtables)
 }
 
@@ -82,27 +88,32 @@ func (kv *KeyValue) DeleteKVTable(name string) error {
 	if err != nil {
 		return err
 	}
-	if _, ok := kvtables[name]; ok {
-		if idx, ok := kv.openKVTables[name]; ok {
-			err = idx.DeleteIndex()
-			if err != nil {
-				return err
-			}
-			delete(kv.openKVTables, name)
-		} else {
-			idx, err := OpenIndex(name, defaultIndexName, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
-			if err != nil {
-				return err
-			}
-			err = idx.DeleteIndex()
-			if err != nil {
-				return err
-			}
-		}
-		delete(kvtables, name)
-		return kv.storeKVTables(kvtables)
+
+	if _, ok := kvtables[name]; !ok {
+		return ErrKVTableNotPresent
 	}
-	return fmt.Errorf("kv table not present")
+
+	kv.openKVTMu.Lock()
+	defer kv.openKVTMu.Unlock()
+	if table, ok := kv.openKVTables[name]; ok {
+		err = table.index.DeleteIndex()
+		if err != nil {
+			return err
+		}
+		delete(kv.openKVTables, name)
+	} else {
+		idx, err := OpenIndex(defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+		if err != nil {
+			return err
+		}
+		err = idx.DeleteIndex()
+		if err != nil {
+			return err
+		}
+	}
+	delete(kvtables, name)
+	return kv.storeKVTables(kvtables)
+
 }
 
 func (kv *KeyValue) OpenKVTable(name string) error {
@@ -110,22 +121,31 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 	if err != nil {
 		return err
 	}
-	if _, ok := kvtables[name]; !ok {
-		return fmt.Errorf("kv table not present")
+	values, ok := kvtables[name]
+	if !ok {
+		return ErrKVTableNotPresent
 	}
-	idx, err := OpenIndex(name, defaultIndexName, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+	idxType := toIndexTypeEnum(values[0])
+
+	idx, err := OpenIndex(defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
 	if err != nil {
 		return err
 	}
 
+	hdr, err := idx.Get(CSVHeaderKey)
+	var columns []string
+	if err == nil {
+		columns = strings.Split(string(hdr), ",")
+	}
+
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
-	kv.openKVTables[name] = idx
-
-	hdr, err := idx.Get(CSVHeaderKey)
-	if err == nil {
-		kv.columns = strings.Split(string(hdr), ",")
+	kvTable := &KVTable{
+		index:     idx,
+		indexType: idxType,
+		columns:   columns,
 	}
+	kv.openKVTables[name] = kvTable
 
 	return nil
 }
@@ -133,10 +153,10 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 func (kv *KeyValue) KVCount(name string) (uint64, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
-	if idx, ok := kv.openKVTables[name]; ok {
-		return idx.CountIndex()
+	if table, ok := kv.openKVTables[name]; ok {
+		return table.index.CountIndex()
 	} else {
-		idx, err := OpenIndex(name, defaultIndexName, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+		idx, err := OpenIndex(defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
 		if err != nil {
 			return 0, err
 		}
@@ -147,50 +167,62 @@ func (kv *KeyValue) KVCount(name string) (uint64, error) {
 func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
-	if idx, ok := kv.openKVTables[name]; ok {
-		return idx.Put(key, value, StringIndex)
+	if table, ok := kv.openKVTables[name]; ok {
+		switch table.indexType {
+		case StringIndex:
+			return table.index.Put(key, value, StringIndex)
+		case NumberIndex:
+			return table.index.Put(key, value, NumberIndex)
+		case BytesIndex:
+			return ErrKVIndexTypeNotSupported
+		default:
+			return ErrKVInvalidIndexType
+		}
 	}
-	return fmt.Errorf("kv table not opened")
+	return ErrKVTableNotOpened
 }
 
 func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
-	if idx, ok := kv.openKVTables[name]; ok {
-		value, err := idx.Get(key)
+	if table, ok := kv.openKVTables[name]; ok {
+		value, err := table.index.Get(key)
 		if err != nil {
 			return nil, nil, err
 		}
-		return kv.columns, value, nil
+		return table.columns, value, nil
 	}
-	return nil, nil, fmt.Errorf("kv table not opened")
+	return nil, nil, ErrKVTableNotOpened
 }
 
 func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
-	if idx, ok := kv.openKVTables[name]; ok {
-		return idx.Delete(key)
+	if table, ok := kv.openKVTables[name]; ok {
+		return table.index.Delete(key)
 	}
-	return nil, fmt.Errorf("kv table not opened")
+	return nil, ErrKVTableNotOpened
 }
 
 func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
-	if idx, ok := kv.openKVTables[name]; ok {
-		kv.columns = columns
-		return idx.Batch()
+	if table, ok := kv.openKVTables[name]; ok {
+		table.columns = columns
+		return NewBatch(table.index)
 	}
-	return nil, fmt.Errorf("kv table not opened")
+	return nil, ErrKVTableNotOpened
 }
 
 func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 	if key == CSVHeaderKey {
-		kv.columns = strings.Split(string(value), ",")
-		return nil
+		kv.openKVTMu.Lock()
+		defer kv.openKVTMu.Unlock()
+		if table, ok := kv.openKVTables[batch.idx.name]; ok {
+			table.columns = strings.Split(string(value), ",")
+		}
 	}
-	return batch.Put(key, value, StringIndex)
+	return batch.Put(key, value)
 }
 
 func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
@@ -200,30 +232,53 @@ func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
 func (kv *KeyValue) KVSeek(name, start, end string, limit int64) (*Iterator, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
-	if idx, ok := kv.openKVTables[name]; ok {
-		itr, err := idx.NewStringIterator(start, end, limit)
-		if err != nil {
-			return nil, err
+	if table, ok := kv.openKVTables[name]; ok {
+		switch table.indexType {
+		case StringIndex:
+			itr, err := table.index.NewStringIterator(start, end, limit)
+			if err != nil {
+				return nil, err
+			}
+			kv.iterator = itr
+			return itr, nil
+		case NumberIndex:
+			startInt, err := strconv.ParseInt(start, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			endInt, err := strconv.ParseInt(end, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			itr, err := table.index.NewIntIterator(startInt, endInt, limit)
+			if err != nil {
+				return nil, err
+			}
+			kv.iterator = itr
+			return itr, nil
+		case BytesIndex:
+			return nil, ErrKVIndexTypeNotSupported
+		default:
+			return nil, ErrKVInvalidIndexType
 		}
-		kv.iterator = itr
-		return itr, nil
+
 	}
-	return nil, fmt.Errorf("kv table not opened")
+	return nil, ErrKVTableNotOpened
 }
 
 func (kv *KeyValue) KVGetNext(name string) ([]string, string, []byte, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
-	if _, ok := kv.openKVTables[name]; ok {
+	if table, ok := kv.openKVTables[name]; ok {
 		if kv.iterator != nil {
 			ok := kv.iterator.Next()
 			if !ok {
 				return nil, "", nil, ErrNoNextElement
 			}
-			return kv.columns, kv.iterator.StringKey(), kv.iterator.Value(), nil
+			return table.columns, kv.iterator.StringKey(), kv.iterator.Value(), nil
 		}
 	}
-	return nil, "", nil, fmt.Errorf("kv table not opened")
+	return nil, "", nil, ErrKVTableNotOpened
 }
 
 func (kv *KeyValue) LoadKVTables() (map[string][]string, error) {

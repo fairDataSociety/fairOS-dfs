@@ -656,7 +656,7 @@ func (d *DfsAPI) ReceiveInfo(sessionId string, sharingRef utils.SharingReference
 //  KV related APIs
 //
 
-func (d *DfsAPI) KVCreate(sessionId, name string) error {
+func (d *DfsAPI) KVCreate(sessionId, name string, indexType collection.IndexType) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -673,7 +673,7 @@ func (d *DfsAPI) KVCreate(sessionId, name string) error {
 		return err
 	}
 
-	return podInfo.GetCollection().CreateKVTable(name)
+	return podInfo.GetCollection().CreateKVTable(name, indexType)
 }
 
 func (d *DfsAPI) KVDelete(sessionId, name string) error {
@@ -848,7 +848,7 @@ func (d *DfsAPI) KVBatchPut(sessionId, key string, value []byte, batch *collecti
 		return ErrPodNotOpen
 	}
 
-	return batch.Put(key, value, collection.StringIndex)
+	return batch.Put(key, value)
 }
 
 func (d *DfsAPI) KVBatchWrite(sessionId string, batch *collection.Batch) error {

@@ -42,41 +42,9 @@ func TestIndexAPI(t *testing.T) {
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 
-	t.Run("close_and_open_index", func(t *testing.T) {
-		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb0", collection.StringIndex, fd, user, mockClient, ai, logger)
-
-		kvMap := addLotOfDocs(t, index, mockClient)
-
-		// open the index again, simulating like another instance
-		index1, err := collection.OpenIndex("testdb0", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		for k, expectedValue := range kvMap {
-			gotValue := getDoc(t, k, index1, mockClient)
-			if !bytes.Equal(expectedValue, gotValue) {
-				t.Fatalf("expected expectedValue %s got expectedValue %s", expectedValue, gotValue)
-			}
-		}
-
-		// check if anuuninserted value exists
-		gotValue := getDoc(t, "p", index1, mockClient)
-		if gotValue != nil {
-			t.Fatalf("found data for not inserted key")
-		}
-
-		// delete the index
-		err = index1.DeleteIndex()
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
 	t.Run("get-doc", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb1", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "testdb_api_0", collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// get the expectedValue of keys and check against its actual expectedValue
@@ -91,17 +59,11 @@ func TestIndexAPI(t *testing.T) {
 		if gotValue != nil {
 			t.Fatalf("found data for not inserted key")
 		}
-
-		// delete the index
-		err = index.DeleteIndex()
-		if err != nil {
-			t.Fatal(err)
-		}
 	})
 
 	t.Run("get-count", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb2", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "testdb_api_1", collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// find the count
@@ -113,17 +75,11 @@ func TestIndexAPI(t *testing.T) {
 		if uint64(len(kvMap)) != count {
 			t.Fatal(err)
 		}
-
-		// delete the index
-		err = index.DeleteIndex()
-		if err != nil {
-			t.Fatal(err)
-		}
 	})
 
 	t.Run("get-doc-del-doc-get-doc", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb3", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "testdb_api_2", collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// get the value of the key just to check
@@ -143,194 +99,6 @@ func TestIndexAPI(t *testing.T) {
 		afterDeletedValue := getDoc(t, "aa", index, mockClient)
 		if afterDeletedValue != nil {
 			t.Fatalf("shuld not have got any value")
-		}
-
-		// delete the index
-		err = index.DeleteIndex()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-	})
-
-	t.Run("add-docs-iterrate", func(t *testing.T) {
-		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb4", collection.StringIndex, fd, user, mockClient, ai, logger)
-		kvMap := addLotOfDocs(t, index, mockClient)
-
-		// create the iterator
-		itr, err := index.NewStringIterator("", "", 100)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// iterate through the keys and check for the values returned
-		count := 0
-		for itr.Next() {
-			value := getDoc(t, itr.StringKey(), index, mockClient)
-			if !bytes.Equal(kvMap[itr.StringKey()], value) {
-				t.Fatalf("expected value %s but got %s for the key %s", string(kvMap[itr.StringKey()]), string(value), itr.StringKey())
-			}
-			count++
-		}
-
-		if len(kvMap) != count {
-			t.Fatalf("number of elements mismatch in iteration")
-		}
-
-		// delete the index
-		err = index.DeleteIndex()
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	t.Run("add-docs-seek-iterate", func(t *testing.T) {
-		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb5", collection.StringIndex, fd, user, mockClient, ai, logger)
-		kvMap := addLotOfDocs(t, index, mockClient)
-
-		// create the iterator
-		itr, err := index.NewStringIterator("abc", "bbb", 100)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// iterate through the keys and check for the values returned
-		count := 0
-		for itr.Next() {
-			value := getValue(t, itr.Value(), mockClient)
-			if !bytes.Equal(kvMap[itr.StringKey()], value) {
-				t.Fatalf("expected value %s but got %s for the key %s", string(kvMap[itr.StringKey()]), string(value), itr.StringKey())
-			}
-			count++
-		}
-
-		if count != 7 {
-			t.Fatalf("number of elements mismatch in iteration")
-		}
-
-		// delete the index
-		err = index.DeleteIndex()
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	t.Run("add-docs-seek-iterrate-with-limit", func(t *testing.T) {
-		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb6", collection.StringIndex, fd, user, mockClient, ai, logger)
-		kvMap := addLotOfDocs(t, index, mockClient)
-
-		// create the iterator
-		itr, err := index.NewStringIterator("abc", "bbb", 5)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// iterate through the keys and check for the values returned
-		count := 0
-		for itr.Next() {
-			value := getValue(t, itr.Value(), mockClient)
-			if !bytes.Equal(kvMap[itr.StringKey()], value) {
-				t.Fatalf("expected value %s but got %s for the key %s", string(kvMap[itr.StringKey()]), string(value), itr.StringKey())
-			}
-			count++
-		}
-
-		if count != 5 {
-			t.Fatalf("number of elements mismatch in iteration")
-		}
-
-		// delete the index
-		err = index.DeleteIndex()
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	t.Run("batch-add-docs", func(t *testing.T) {
-		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb7", collection.StringIndex, fd, user, mockClient, ai, logger)
-		// batch load and delete
-		batch, err := index.Batch()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		batchDocs := addBatchDocs(t, batch, mockClient)
-		err = batch.Write()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// create the iterator
-		itr, err := index.NewStringIterator("", "", 100)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// iterate through the keys and check for the values returned
-		count := 0
-		for itr.Next() {
-			value := getValue(t, itr.Value(), mockClient)
-			if !bytes.Equal(batchDocs[itr.StringKey()], value) {
-				t.Fatalf("expected value %s but got %s for the key %s", string(batchDocs[itr.StringKey()]), string(value), itr.StringKey())
-			}
-			count++
-		}
-
-		if len(batchDocs) != count {
-			t.Fatalf("number of elements mismatch in iteration")
-		}
-
-		// delete the index
-		err = index.DeleteIndex()
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	t.Run("batch-add-del-docs", func(t *testing.T) {
-		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb8", collection.StringIndex, fd, user, mockClient, ai, logger)
-
-		// batch load and delete
-		batch, err := index.Batch()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		batchDocs := addBatchDocs(t, batch, mockClient)
-		err = batch.Write()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// create the iterator
-		itr, err := index.NewStringIterator("", "", 100)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// iterate through the keys and check for the values returned
-		count := 0
-		for itr.Next() {
-			value := getValue(t, itr.Value(), mockClient)
-			if !bytes.Equal(batchDocs[itr.StringKey()], value) {
-				t.Fatalf("expected value %s but got %s for the key %s", string(batchDocs[itr.StringKey()]), string(value), itr.StringKey())
-			}
-			count++
-		}
-
-		if len(batchDocs) != count {
-			t.Fatalf("number of elements mismatch in iteration")
-		}
-
-		// delete the index
-		err = index.DeleteIndex()
-		if err != nil {
-			t.Fatal(err)
 		}
 	})
 }
@@ -454,7 +222,7 @@ func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.MockBeeCli
 		if err != nil {
 			t.Fatalf("could not add doc %s:%s, %v", k, ref, err)
 		}
-		err = batch.Put(k, ref, collection.StringIndex)
+		err = batch.Put(k, ref)
 		if err != nil {
 			t.Fatal(err)
 		}

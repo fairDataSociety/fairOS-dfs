@@ -48,7 +48,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_all_string_keys", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "testdb0", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "testdb_iterator_0", collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -78,7 +78,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_all_random_string_keys", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "testdb1", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "testdb_iterator_1", collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -108,7 +108,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_string_end_key", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "testdb2", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "testdb_iterator_2", collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -143,7 +143,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_string_end_key", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "testdb3", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "testdb_iterator_3", collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -179,7 +179,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_string_keys_with_limit", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "testdb4", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "testdb_iterator_4", collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -214,7 +214,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_all_number_keys", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "testdb5", collection.NumberIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "testdb_iterator_5", collection.NumberIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -243,7 +243,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_all_number_random_keys", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "testdb6", collection.NumberIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "testdb_iterator_6", collection.NumberIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -274,7 +274,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_numbers_end_key", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "testdb7", collection.NumberIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "testdb_iterator_7", collection.NumberIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -308,7 +308,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_numbers_keys_with_limit", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "testdb8", collection.NumberIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "testdb_iterator_8", collection.NumberIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)

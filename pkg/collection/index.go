@@ -35,10 +35,37 @@ import (
 type IndexType int
 
 const (
-	BytesIndex IndexType = iota
+	InvalidIndex IndexType = iota
+	BytesIndex
 	StringIndex
 	NumberIndex
 )
+
+func (e IndexType) String() string {
+	switch e {
+	case BytesIndex:
+		return "BytesIndex"
+	case StringIndex:
+		return "StringIndex"
+	case NumberIndex:
+		return "NumberIndex"
+	default:
+		return "InvalidIndex"
+	}
+}
+
+func toIndexTypeEnum(s string) IndexType {
+	switch s {
+	case "BytesIndex":
+		return BytesIndex
+	case "StringIndex":
+		return StringIndex
+	case "NumberIndex":
+		return NumberIndex
+	default:
+		return InvalidIndex
+	}
+}
 
 type Index struct {
 	name        string

@@ -17,6 +17,7 @@ limitations under the License.
 package collection_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -46,48 +47,73 @@ func TestIndex(t *testing.T) {
 
 	t.Run("create_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("testdb0", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_0", "key", collection.StringIndex, fd, user, mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check if the index is created
-		if !isIndexPresent(t, "testdb0", "key", fd, user, mockClient) {
+		if !isIndexPresent(t, "testdb_index_0", "key", fd, user, mockClient) {
 			t.Fatalf("index not found")
-		}
-	})
-
-	t.Run("create_already_present_index", func(t *testing.T) {
-		//  create an index
-		err := collection.CreateIndex("testdb1", "key", collection.StringIndex, fd, user, mockClient)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		//  create an index
-		err = collection.CreateIndex("testdb1", "key", collection.StringIndex, fd, user, mockClient)
-		if !errors.Is(err, collection.ErrIndexAlreadyPresent) {
-			t.Fatal(err)
 		}
 	})
 
 	t.Run("create_and_open_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("testdb2", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_1", "key", collection.StringIndex, fd, user, mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		//Open the index
-		_, err = collection.OpenIndex("testdb2", "key", fd, ai, user, mockClient, logger)
+		_, err = collection.OpenIndex("testdb_index_1", "key", fd, ai, user, mockClient, logger)
 		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("close_and_open_index_from_another_machine", func(t *testing.T) {
+		// create a DB and open it
+		index := createAndOpenIndex(t, "testdb_index_2", collection.StringIndex, fd, user, mockClient, ai, logger)
+		kvMap := addLotOfDocs(t, index, mockClient)
+
+		// open the index again, simulating like another instance
+		index1, err := collection.OpenIndex("testdb_index_2", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for k, expectedValue := range kvMap {
+			gotValue := getDoc(t, k, index1, mockClient)
+			if !bytes.Equal(expectedValue, gotValue) {
+				t.Fatalf("expected expectedValue %s got expectedValue %s", expectedValue, gotValue)
+			}
+		}
+
+		// check if an un-inserted value exists
+		gotValue := getDoc(t, "p", index1, mockClient)
+		if gotValue != nil {
+			t.Fatalf("found data for not inserted key")
+		}
+	})
+
+	t.Run("create_already_present_index", func(t *testing.T) {
+		//  create an index
+		err := collection.CreateIndex("testdb_index_3", "key", collection.StringIndex, fd, user, mockClient)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		//  create an index
+		err = collection.CreateIndex("testdb_index_3", "key", collection.StringIndex, fd, user, mockClient)
+		if !errors.Is(err, collection.ErrIndexAlreadyPresent) {
 			t.Fatal(err)
 		}
 	})
 
 	t.Run("open_index_without_creating_it", func(t *testing.T) {
 		//Open the index
-		_, err = collection.OpenIndex("testdb3", "key", fd, ai, user, mockClient, logger)
+		_, err = collection.OpenIndex("testdb_index_4", "key", fd, ai, user, mockClient, logger)
 		if err != collection.ErrIndexNotPresent {
 			t.Fatal(err)
 		}
@@ -95,13 +121,13 @@ func TestIndex(t *testing.T) {
 
 	t.Run("create_and_delete_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("testdb4", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_5", "key", collection.StringIndex, fd, user, mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		//Open the index
-		idx, err := collection.OpenIndex("testdb4", "key", fd, ai, user, mockClient, logger)
+		idx, err := collection.OpenIndex("testdb_index_5", "key", fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -115,11 +141,11 @@ func TestIndex(t *testing.T) {
 
 	t.Run("delete_index_without_creating_it", func(t *testing.T) {
 		// simulate index not present by creating and deleting it
-		err := collection.CreateIndex("testdb5", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_6", "key", collection.StringIndex, fd, user, mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
-		idx, err := collection.OpenIndex("testdb5", "key", fd, ai, user, mockClient, logger)
+		idx, err := collection.OpenIndex("testdb_index_6", "key", fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -137,12 +163,12 @@ func TestIndex(t *testing.T) {
 
 	t.Run("count_docs", func(t *testing.T) {
 		// create index and add some docs
-		err := collection.CreateIndex("testdb6", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_7", "key", collection.StringIndex, fd, user, mockClient)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		idx, err := collection.OpenIndex("testdb6", "key", fd, ai, user, mockClient, logger)
+		idx, err := collection.OpenIndex("testdb_index_7", "key", fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}

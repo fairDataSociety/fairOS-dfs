@@ -19,6 +19,8 @@ package api
 import (
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
@@ -28,6 +30,25 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	if name == "" {
 		h.logger.Errorf("kv create: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "kv create: \"name\" argument missing")
+		return
+	}
+
+	// by default the index type in string
+	idxType := r.FormValue("indexType")
+	if idxType == "" {
+		idxType = "string"
+	}
+
+	var indexType collection.IndexType
+	switch idxType {
+	case "string":
+		indexType = collection.StringIndex
+	case "number":
+		indexType = collection.NumberIndex
+	case "bytes":
+	default:
+		h.logger.Errorf("kv create: invalid \"indexType\" ")
+		jsonhttp.BadRequest(w, "kv create: invalid \"indexType\"")
 		return
 	}
 
@@ -44,7 +65,7 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.KVCreate(sessionId, name)
+	err = h.dfsAPI.KVCreate(sessionId, name, indexType)
 	if err != nil {
 		h.logger.Errorf("kv create: %v", err)
 		jsonhttp.InternalServerError(w, "kv create: "+err.Error())
