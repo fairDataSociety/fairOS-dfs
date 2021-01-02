@@ -42,7 +42,7 @@ func (idx *Index) Put(key string, refValue []byte, idxType IndexType) error {
 	if idx.indexType == NumberIndex {
 		i, err := strconv.ParseInt(stringKey, 10, 64)
 		if err != nil {
-			return err
+			return ErrKVKeyNotANumber
 		}
 		stringKey = fmt.Sprintf("%020d", i)
 	}
@@ -56,7 +56,7 @@ func (idx *Index) Get(key string) ([]byte, error) {
 	if idx.indexType == NumberIndex {
 		i, err := strconv.ParseInt(stringKey, 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, ErrKVKeyNotANumber
 		}
 		stringKey = fmt.Sprintf("%020d", i)
 	}
@@ -74,7 +74,7 @@ func (idx *Index) Delete(key string) ([]byte, error) {
 	if idx.indexType == NumberIndex {
 		i, err := strconv.ParseInt(stringKey, 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, ErrKVKeyNotANumber
 		}
 		stringKey = fmt.Sprintf("%020d", i)
 	}

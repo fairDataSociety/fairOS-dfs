@@ -27,24 +27,24 @@ type Batch struct {
 	memDb *Manifest
 }
 
-func (idx *Index) Batch() (*Batch, error) {
+func NewBatch(idx *Index) (*Batch, error) {
 	return &Batch{
 		idx: idx,
 	}, nil
 }
 
-func (b *Batch) Put(key string, refValue []byte, idxType IndexType) error {
+func (b *Batch) Put(key string, refValue []byte) error {
 	if b.memDb == nil {
 		manifest := &Manifest{
 			Name:         b.idx.name,
-			IdxType:      idxType,
+			IdxType:      b.idx.indexType,
 			CreationTime: time.Now().Unix(),
 			dirtyFlag:    true,
 		}
 		b.memDb = manifest
 	}
 	ctx := context.Background()
-	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, key, idxType, refValue, true)
+	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, key, b.idx.indexType, refValue, true)
 }
 
 func (b *Batch) Write() error {
