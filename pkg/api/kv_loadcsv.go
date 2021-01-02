@@ -101,7 +101,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			err = batch.Put(collection.CSVHeaderKey, []byte(record))
+			err = batch.Put(collection.CSVHeaderKey, []byte(record), collection.StringIndex)
 			if err != nil {
 				h.logger.Errorf("kv loadcsv: error adding header %d: %v", rowCount, err)
 				failureCount++

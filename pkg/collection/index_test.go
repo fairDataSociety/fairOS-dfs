@@ -184,6 +184,7 @@ func TestIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if count != actualCount {
 			t.Fatalf("invalid count in index, expected %d got %d", actualCount, count)
 		}
