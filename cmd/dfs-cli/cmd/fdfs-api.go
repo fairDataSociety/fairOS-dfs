@@ -21,18 +21,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"resenje.org/jsonhttp"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
-	"resenje.org/jsonhttp"
 )
 
 const (

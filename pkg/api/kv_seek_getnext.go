@@ -18,12 +18,11 @@ package api
 
 import (
 	"errors"
-	"net/http"
-	"strconv"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"net/http"
 	"resenje.org/jsonhttp"
+	"strconv"
 )
 
 func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
