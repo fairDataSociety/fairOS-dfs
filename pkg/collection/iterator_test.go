@@ -144,7 +144,6 @@ func TestIndexIterator(t *testing.T) {
 	t.Run("iterate_with_string_end_key", func(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "testdb_iterator_3", collection.StringIndex, fd, user, mockClient, ai, logger)
-
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
 		keys, values := addDocsForStringIteration(t, idx, actualCount)
