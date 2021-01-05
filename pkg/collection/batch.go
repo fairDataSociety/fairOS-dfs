@@ -44,7 +44,7 @@ func (b *Batch) Put(key string, refValue []byte) error {
 		b.memDb = manifest
 	}
 	ctx := context.Background()
-	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, key, b.idx.indexType, refValue, true)
+	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, key, b.idx.indexType, refValue, true, false)
 }
 
 func (b *Batch) Write() error {

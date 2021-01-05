@@ -67,18 +67,22 @@ func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client
 }
 
 func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
-	// for now , it will be a single index collection
-	err := CreateIndex(defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client)
-	if err != nil {
-		return err
-	}
+	// load the existing db's and see if this name is already there
 	kvtables, err := kv.LoadKVTables()
 	if err != nil {
 		return err
 	}
 	if _, ok := kvtables[name]; ok {
-		return fmt.Errorf("kv table already present")
+		return ErrKvTableAlreadyPresent
 	}
+
+	//  since this tables is not present already, create the index required for this table
+	err = CreateIndex(defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client)
+	if err != nil {
+		return err
+	}
+
+	// record the table as created
 	kvtables[name] = []string{indexType.String()}
 	return kv.storeKVTables(kvtables)
 }
@@ -134,8 +138,8 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 
 	hdr, err := idx.Get(CSVHeaderKey)
 	var columns []string
-	if err == nil {
-		columns = strings.Split(string(hdr), ",")
+	if err == nil && len(hdr) >= 1 {
+		columns = strings.Split(string(hdr[0]), ",")
 	}
 
 	kv.openKVTMu.Lock()
@@ -170,9 +174,9 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	if table, ok := kv.openKVTables[name]; ok {
 		switch table.indexType {
 		case StringIndex:
-			return table.index.Put(key, value, StringIndex)
+			return table.index.Put(key, value, StringIndex, false)
 		case NumberIndex:
-			return table.index.Put(key, value, NumberIndex)
+			return table.index.Put(key, value, NumberIndex, false)
 		case BytesIndex:
 			return ErrKVIndexTypeNotSupported
 		default:
@@ -190,7 +194,7 @@ func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		return table.columns, value, nil
+		return table.columns, value[0], nil
 	}
 	return nil, nil, ErrKVTableNotOpened
 }
@@ -199,7 +203,11 @@ func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
-		return table.index.Delete(key)
+		refs, err := table.index.Delete(key)
+		if err != nil{
+			return nil, err
+		}
+		return refs[0], err
 	}
 	return nil, ErrKVTableNotOpened
 }

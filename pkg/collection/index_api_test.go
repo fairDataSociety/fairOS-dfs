@@ -101,14 +101,50 @@ func TestIndexAPI(t *testing.T) {
 			t.Fatalf("shuld not have got any value")
 		}
 	})
+
+	t.Run("get-multiple_docs", func(t *testing.T) {
+		// create a DB and open it
+		index := createAndOpenIndex(t, "testdb_api_3", collection.StringIndex, fd, user, mockClient, ai, logger)
+
+		// add multiple values for the same key
+		addDoc(t, "key1", []byte("value1"), index, mockClient, true)
+		addDoc(t, "key1", []byte("value2"), index, mockClient, true)
+		addDoc(t, "key1", []byte("value3"), index, mockClient, true)
+		addDoc(t, "key1", []byte("value4"), index, mockClient, true)
+
+
+		gotValues := getAllDocs(t, "key1", index, mockClient)
+		if gotValues == nil {
+			t.Fatalf("could not find any value for key")
+		}
+
+		if len(gotValues) != 4 {
+			t.Fatalf("invalid number of values for given key")
+		}
+
+		if !bytes.Equal(gotValues[0], []byte("value1")) {
+			t.Fatalf("invalid value")
+		}
+		if !bytes.Equal(gotValues[1], []byte("value2")) {
+			t.Fatalf("invalid value")
+		}
+		if !bytes.Equal(gotValues[2], []byte("value3")) {
+			t.Fatalf("invalid value")
+		}
+		if !bytes.Equal(gotValues[3], []byte("value4")) {
+			t.Fatalf("invalid value")
+		}
+	})
+
+
 }
 
-func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.MockBeeClient) {
+func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.MockBeeClient, apnd bool) {
 	ref, err := client.UploadBlob(value, false, false)
 	if err != nil {
 		t.Fatalf("could not add doc %s:%s, %v", key, value, err)
 	}
-	err = index.Put(key, ref, collection.StringIndex)
+	err = index.Put(key, ref, collection.StringIndex, apnd)
 	if err != nil {
 		t.Fatalf("could not add doc in index: %s:%s, %v", key, ref, err)
 	}
@@ -122,12 +158,34 @@ func getDoc(t *testing.T, key string, index *collection.Index, client *mock.Mock
 		}
 		t.Fatal(err)
 	}
-	data, respCode, err := client.DownloadBlob(ref)
+	data, respCode, err := client.DownloadBlob(ref[0])
 	if err != nil {
 		t.Fatal(err)
 	}
 	if respCode != http.StatusOK {
 		t.Fatalf("invalid response code")
+	}
+	return data
+}
+func getAllDocs(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient) [][]byte {
+	refs, err := index.Get(key)
+	if err != nil {
+		if errors.Is(err, collection.ErrEntryNotFound) {
+			return nil
+		}
+		t.Fatal(err)
+	}
+
+	var data [][]byte
+	for _, ref := range refs {
+		buf, respCode, err := client.DownloadBlob(ref)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if respCode != http.StatusOK {
+			t.Fatalf("invalid response code")
+		}
+		data = append(data, buf)
 	}
 	return data
 }
@@ -148,7 +206,7 @@ func delDoc(t *testing.T, key string, index *collection.Index, client *mock.Mock
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, respCode, err := client.DownloadBlob(ref)
+	data, respCode, err := client.DownloadBlob(ref[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,17 +236,17 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeCli
 
 	// add the documents
 	for k, v := range kvMap {
-		addDoc(t, k, v, index, client)
+		addDoc(t, k, v, index, client, false)
 	}
 
 	kvMap["ab"] = []byte("doc3")
-	addDoc(t, "ab", kvMap["ab"], index, client)
+	addDoc(t, "ab", kvMap["ab"], index, client, false)
 	kvMap["a"] = []byte("doc1")
-	addDoc(t, "a", kvMap["a"], index, client)
+	addDoc(t, "a", kvMap["a"], index, client, false)
 	kvMap["key3"] = []byte("value3")
-	addDoc(t, "key3", kvMap["key3"], index, client)
+	addDoc(t, "key3", kvMap["key3"], index, client, false)
 	kvMap["key2"] = []byte("value2")
-	addDoc(t, "key2", kvMap["key2"], index, client)
+	addDoc(t, "key2", kvMap["key2"], index, client, false)
 
 	return kvMap
 }

@@ -31,7 +31,7 @@ const (
 	IntermediateEntry = "I"
 )
 
-func (idx *Index) Put(key string, refValue []byte, idxType IndexType) error {
+func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool) error {
 	// get the first feed of the Index
 	manifest, err := idx.loadManifest(idx.name)
 	if err != nil {
@@ -48,10 +48,10 @@ func (idx *Index) Put(key string, refValue []byte, idxType IndexType) error {
 	}
 
 	ctx := context.Background()
-	return idx.addOrUpdateStringEntry(ctx, manifest, stringKey, idxType, refValue, false)
+	return idx.addOrUpdateStringEntry(ctx, manifest, stringKey, idxType, refValue, false, apnd)
 }
 
-func (idx *Index) Get(key string) ([]byte, error) {
+func (idx *Index) Get(key string) ([][]byte, error) {
 	stringKey := key
 	if idx.indexType == NumberIndex {
 		i, err := strconv.ParseInt(stringKey, 10, 64)
@@ -69,7 +69,7 @@ func (idx *Index) Get(key string) ([]byte, error) {
 	return manifest.Entries[i].Ref, nil
 }
 
-func (idx *Index) Delete(key string) ([]byte, error) {
+func (idx *Index) Delete(key string) ([][]byte, error) {
 	stringKey := key
 	if idx.indexType == NumberIndex {
 		i, err := strconv.ParseInt(stringKey, 10, 64)
@@ -116,7 +116,7 @@ func (idx *Index) Delete(key string) ([]byte, error) {
 	return deletedRef, nil
 }
 
-func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest, key string, idxType IndexType, value []byte, memory bool) error {
+func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest, key string, idxType IndexType, value []byte, memory bool, apnd bool) error {
 	entryAdded := false
 
 	for i := range manifest.Entries {
@@ -129,7 +129,11 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 
 		// this is the update of an existing entry
 		if entry.EType == LeafEntry && entry.Name == key {
-			entry.Ref = value
+			var refs [][]byte
+			if apnd {
+				refs = entry.Ref
+			}
+			entry.Ref = append(refs, value)
 			manifest.dirtyFlag = true
 			entryAdded = true
 			break
@@ -146,10 +150,12 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 			newManifest.Name = manifest.Name + prefix
 			newManifest.IdxType = idxType
 			newManifest.CreationTime = time.Now().Unix()
+			var refs1 [][]byte
+			refs1 = append(refs1, value)
 			entry1 := &Entry{
 				Name:  keySuffix,
 				EType: LeafEntry,
-				Ref:   value,
+				Ref:   refs1,
 			}
 			idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
 			entry2 := &Entry{
@@ -186,10 +192,12 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 				newManifest.IdxType = idxType
 				newManifest.CreationTime = time.Now().Unix()
 				// add the new entry as a leaf
+				var refs2 [][]byte
+				refs2 = append(refs2, value)
 				entry1 := &Entry{
 					Name:  keySuffix,
 					EType: LeafEntry,
-					Ref:   value,
+					Ref:   refs2,
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
 				// add the old intermediate branch as another entry
@@ -223,9 +231,9 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 					if err != nil {
 						return err
 					}
-					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory)
+					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory, apnd)
 				} else {
-					return idx.addOrUpdateStringEntry(ctx, entry.manifest, keySuffix, idxType, value, memory)
+					return idx.addOrUpdateStringEntry(ctx, entry.manifest, keySuffix, idxType, value, memory, apnd)
 				}
 
 			} else if entrySuffix == "" && keySuffix == "" {
@@ -235,9 +243,9 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 					if err != nil {
 						return err
 					}
-					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory)
+					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory, apnd)
 				} else {
-					return idx.addOrUpdateStringEntry(ctx, entry.manifest, keySuffix, idxType, value, memory)
+					return idx.addOrUpdateStringEntry(ctx, entry.manifest, keySuffix, idxType, value, memory, apnd)
 				}
 
 			} else if len(entrySuffix) > 0 {
@@ -247,10 +255,12 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 				newManifest.IdxType = idxType
 				newManifest.CreationTime = time.Now().Unix()
 				// add the new entry as a leaf
+				var refs3 [][]byte
+				refs3 = append(refs3, value)
 				entry1 := &Entry{
 					Name:  keySuffix,
 					EType: LeafEntry,
-					Ref:   value,
+					Ref:   refs3,
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
 				// add the old intermediate branch as another entry
@@ -282,10 +292,11 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 
 	// if the manifest is not already changed, then this is a new entry
 	if !entryAdded {
+		var refs [][]byte
 		newEntry := Entry{
 			Name:  key,
 			EType: LeafEntry,
-			Ref:   value,
+			Ref:   append(refs, value),
 		}
 		idx.addEntryToManifestSortedLexicographically(manifest, &newEntry)
 		manifest.dirtyFlag = true

@@ -30,7 +30,7 @@ type Iterator struct {
 	limit         int64
 	givenUntilNow int64
 	currentKey    string
-	currentValue  []byte
+	currentValue  [][]byte
 	currentDigits int
 	manifestStack []*ManifestState
 	error         error
@@ -156,7 +156,7 @@ func (itr *Iterator) IntegerKey() int64 {
 }
 
 func (itr *Iterator) Value() []byte {
-	return itr.currentValue
+	return itr.currentValue[0]
 }
 
 // Non-API functions

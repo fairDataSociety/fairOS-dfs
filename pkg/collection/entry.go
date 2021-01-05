@@ -25,9 +25,9 @@ type Manifest struct {
 }
 
 type Entry struct {
-	Name     string `json:"name"`
-	EType    string `json:"type"`
-	Ref      []byte `json:"ref,omitempty"`
+	Name     string   `json:"name"`
+	EType    string   `json:"type"`
+	Ref      [][]byte `json:"ref,omitempty"`
 	manifest *Manifest
 }
 
@@ -45,15 +45,15 @@ func NewManifest(name string, time int64, idxType IndexType) *Manifest {
 type CompoundManifest struct {
 	Name         string      `json:"name"`
 	Fields       []string    `json:"fields"`
-	IdxTypes      []IndexType `json:"index_types"`
+	IdxTypes     []IndexType `json:"index_types"`
 	CreationTime int64       `json:"creation_time"`
 }
 
 func NewCompoundManifest(name string, fields []string, indexTypes []IndexType, time int64) *CompoundManifest {
 	return &CompoundManifest{
-		Name: name,
-		Fields: fields,
-		IdxTypes: indexTypes,
+		Name:         name,
+		Fields:       fields,
+		IdxTypes:     indexTypes,
 		CreationTime: time,
 	}
 }
