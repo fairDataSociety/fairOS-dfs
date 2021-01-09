@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -148,15 +149,15 @@ func (d *Document) AddCompoundIndex(fieldNames []string, indexTypes []IndexType)
 	// TODO: creation of compound indexes
 }
 
-func (d *Document) OpenDocumentDB(dbName string) (*DocumentDB, error) {
+func (d *Document) OpenDocumentDB(dbName string) error {
 	// load the existing db's and see if this name is present
 	docTables, err := d.LoadDocumentDBSchemas()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	schema, ok := docTables[dbName]
 	if !ok {
-		return nil, ErrDocumentDBNotPresent
+		return ErrDocumentDBNotPresent
 	}
 
 	// open the simple indexes
@@ -164,7 +165,7 @@ func (d *Document) OpenDocumentDB(dbName string) (*DocumentDB, error) {
 	for _, si := range schema.SimpleIndexs {
 		idx, err := OpenIndex(dbName, si.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		simpleIndexs[si.FieldName] = idx
 	}
@@ -183,7 +184,7 @@ func (d *Document) OpenDocumentDB(dbName string) (*DocumentDB, error) {
 	defer d.openDOcDBMu.Unlock()
 	d.openDocDBs[dbName] = docDB
 
-	return docDB, nil
+	return nil
 }
 
 func (d *Document) DeleteDocumentDB(dbName string) error {
@@ -205,7 +206,6 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	return d.storeDocumentDBSchemas(docTables)
 }
 
-
 func (d *Document) Put(dbName string, doc []byte) error {
 	db := d.getOpenedDb(dbName)
 	if db == nil {
@@ -220,7 +220,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	docMap := t.(map[string]interface{})
 
 	// check if docMap has all the fields in the simpleIndex
-	for  field, _ := range db.simpleIndexes {
+	for field := range db.simpleIndexes {
 		if _, found := docMap[field]; !found {
 			return ErrDocumentDBIndexFieldNotPresent
 		}
@@ -233,8 +233,8 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	}
 
 	// update the indexes
-	for  field, index := range db.simpleIndexes {
-		 v, _ := docMap[field]  // it it already checked to be present
+	for field, index := range db.simpleIndexes {
+		v, _ := docMap[field] // it it already checked to be present
 		switch index.indexType {
 		case StringIndex:
 			err := index.Put(v.(string), ref, StringIndex, true)
@@ -255,25 +255,77 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	return nil
 }
 
-
-func (d *Document) Get(dbName, fieldName, fieldValue string, limit int) ([][]byte, error){
+func (d *Document) Get(dbName, expr string, limit int) ([][]byte, error) {
 	db := d.getOpenedDb(dbName)
 	if db == nil {
 		return nil, ErrDocumentDBNoOpened
 	}
 
-	index, found := db.simpleIndexes[fieldName]
+	var operator string
+	if strings.Contains(expr, "=>") {
+		operator = "=>"
+	} else if strings.Contains(expr, "<=") {
+		operator = "<="
+	} else if strings.Contains(expr, "=") {
+		operator = "="
+	} else {
+		return nil, ErrInvalidOperator
+	}
+
+	f := strings.Split(expr, operator)
+	fieldName := f[0]
+	fieldValue := f[1]
+
+	idx, found := db.simpleIndexes[fieldName]
 	if !found {
 		return nil, ErrIndexNotPresent
 	}
 
-	refs, err := index.Get(fieldValue)
-	if err != nil {
-		return nil, err
+	var references [][]byte
+
+	switch operator {
+	case "=":
+		refs, err := idx.Get(fieldValue)
+		if err != nil {
+			return nil, err
+		}
+		references = refs
+	case "=>":
+		if idx.indexType == NumberIndex {
+			val, err := strconv.ParseInt(fieldValue, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			itr, err := idx.NewIntIterator(val, -1, int64(limit))
+			if err != nil {
+				return nil, err
+			}
+
+			for itr.Next() {
+				if len(references) < limit {
+					valueAll := itr.ValueAll()
+					totalLen := len(references) + len(valueAll)
+					if totalLen > limit {
+						diff := totalLen - limit
+						references = append(references, valueAll[diff:]...)
+					} else {
+						references = append(references, valueAll...)
+					}
+				} else {
+					break
+				}
+			}
+		} else {
+			return nil, ErrInvalidOperator
+		}
+	case "<=":
+		return nil, ErrNotImplemented
+	default:
+		return nil, ErrInvalidOperator
 	}
 
 	var docs [][]byte
-	for _, ref := range refs {
+	for _, ref := range references {
 		if len(docs) >= limit {
 			break
 		}
@@ -352,7 +404,7 @@ func (d *Document) IsDBOpened(dbName string) bool {
 	return false
 }
 
-func (d *Document) getOpenedDb(dbName string) *DocumentDB{
+func (d *Document) getOpenedDb(dbName string) *DocumentDB {
 	d.openDOcDBMu.Lock()
 	defer d.openDOcDBMu.Unlock()
 	db, found := d.openDocDBs[dbName]
@@ -363,16 +415,8 @@ func (d *Document) getOpenedDb(dbName string) *DocumentDB{
 }
 
 func (d *Document) getFieldIndex(db *DocumentDB, fieldName string) *Index {
-	 if index, found := db.simpleIndexes[fieldName]; found {
-	 	return index
-	 }
-	 return nil
-}
-
-func (db *DocumentDB) GetSimpleIndex(fieldName string) (*Index, error){
-	if idx, found := db.simpleIndexes[fieldName]; found {
-		return idx, nil
+	if index, found := db.simpleIndexes[fieldName]; found {
+		return index
 	}
-	return nil, ErrIndexNotPresent
+	return nil
 }
-

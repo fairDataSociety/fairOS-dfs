@@ -159,6 +159,10 @@ func (itr *Iterator) Value() []byte {
 	return itr.currentValue[0]
 }
 
+func (itr *Iterator) ValueAll() [][]byte {
+	return itr.currentValue
+}
+
 // Non-API functions
 func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 	// if there are any elements in the index, then search for the entry
@@ -169,6 +173,15 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 			// seek can continue from the next element
 			if len(entry.Name) > 0 {
 				if key == "" || entry.Name[0] > key[0] {
+					manifestState := &ManifestState{
+						currentManifest: manifest,
+						currentIndex:    i,
+					}
+					itr.manifestStack = append(itr.manifestStack, manifestState)
+					return nil
+				}
+
+				if entry.EType == LeafEntry && entry.Name > key {
 					manifestState := &ManifestState{
 						currentManifest: manifest,
 						currentIndex:    i,

@@ -673,7 +673,7 @@ func (d *DfsAPI) KVCreate(sessionId, name string, indexType collection.IndexType
 		return err
 	}
 
-	return podInfo.GetCollection().CreateKVTable(name, indexType)
+	return podInfo.GetKVStore().CreateKVTable(name, indexType)
 }
 
 func (d *DfsAPI) KVDelete(sessionId, name string) error {
@@ -693,7 +693,7 @@ func (d *DfsAPI) KVDelete(sessionId, name string) error {
 		return err
 	}
 
-	return podInfo.GetCollection().DeleteKVTable(name)
+	return podInfo.GetKVStore().DeleteKVTable(name)
 }
 
 func (d *DfsAPI) KVOpen(sessionId, name string) error {
@@ -713,7 +713,7 @@ func (d *DfsAPI) KVOpen(sessionId, name string) error {
 		return err
 	}
 
-	return podInfo.GetCollection().OpenKVTable(name)
+	return podInfo.GetKVStore().OpenKVTable(name)
 }
 
 func (d *DfsAPI) KVList(sessionId string) (map[string][]string, error) {
@@ -733,7 +733,7 @@ func (d *DfsAPI) KVList(sessionId string) (map[string][]string, error) {
 		return nil, err
 	}
 
-	return podInfo.GetCollection().LoadKVTables()
+	return podInfo.GetKVStore().LoadKVTables()
 }
 
 func (d *DfsAPI) KVCount(sessionId, name string) (uint64, error) {
@@ -753,7 +753,7 @@ func (d *DfsAPI) KVCount(sessionId, name string) (uint64, error) {
 		return 0, err
 	}
 
-	return podInfo.GetCollection().KVCount(name)
+	return podInfo.GetKVStore().KVCount(name)
 }
 
 func (d *DfsAPI) KVPut(sessionId, name, key string, value []byte) error {
@@ -773,7 +773,7 @@ func (d *DfsAPI) KVPut(sessionId, name, key string, value []byte) error {
 		return err
 	}
 
-	return podInfo.GetCollection().KVPut(name, key, value)
+	return podInfo.GetKVStore().KVPut(name, key, value)
 }
 
 func (d *DfsAPI) KVGet(sessionId, name, key string) ([]string, []byte, error) {
@@ -793,7 +793,7 @@ func (d *DfsAPI) KVGet(sessionId, name, key string) ([]string, []byte, error) {
 		return nil, nil, err
 	}
 
-	return podInfo.GetCollection().KVGet(name, key)
+	return podInfo.GetKVStore().KVGet(name, key)
 }
 
 func (d *DfsAPI) KVDel(sessionId, name, key string) ([]byte, error) {
@@ -813,7 +813,7 @@ func (d *DfsAPI) KVDel(sessionId, name, key string) ([]byte, error) {
 		return nil, err
 	}
 
-	return podInfo.GetCollection().KVDelete(name, key)
+	return podInfo.GetKVStore().KVDelete(name, key)
 }
 
 func (d *DfsAPI) KVBatch(sessionId, name string, columns []string) (*collection.Batch, error) {
@@ -833,7 +833,7 @@ func (d *DfsAPI) KVBatch(sessionId, name string, columns []string) (*collection.
 		return nil, err
 	}
 
-	return podInfo.GetCollection().KVBatch(name, columns)
+	return podInfo.GetKVStore().KVBatch(name, columns)
 }
 
 func (d *DfsAPI) KVBatchPut(sessionId, key string, value []byte, batch *collection.Batch) error {
@@ -883,7 +883,7 @@ func (d *DfsAPI) KVSeek(sessionId, name, start, end string, limit int64) (*colle
 		return nil, err
 	}
 
-	return podInfo.GetCollection().KVSeek(name, start, end, limit)
+	return podInfo.GetKVStore().KVSeek(name, start, end, limit)
 }
 
 func (d *DfsAPI) KVGetNext(sessionId, name string) ([]string, string, []byte, error) {
@@ -903,5 +903,119 @@ func (d *DfsAPI) KVGetNext(sessionId, name string) ([]string, string, []byte, er
 		return nil, "", nil, err
 	}
 
-	return podInfo.GetCollection().KVGetNext(name)
+	return podInfo.GetKVStore().KVGetNext(name)
+}
+
+//
+//  Doc DB related APIs
+//
+func (d *DfsAPI) DocCreate(sessionId, name string, si map[string]collection.IndexType) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	err = podInfo.GetDocStore().CreateDocumentDB(name)
+	if err != nil {
+		return err
+	}
+
+	for fieldName, fieldType := range si {
+		err = podInfo.GetDocStore().AddSimpleIndex(name, fieldName, fieldType)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (d *DfsAPI) DocOpen(sessionId, name string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetDocStore().OpenDocumentDB(name)
+}
+
+func (d *DfsAPI) DocList(sessionId string) (map[string]collection.DBSchema, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetDocStore().LoadDocumentDBSchemas()
+}
+
+func (d *DfsAPI) DocPut(sessionId, name string, value []byte) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetDocStore().Put(name, value)
+}
+
+func (d *DfsAPI) DocGet(sessionId, name, expr string, limit int) ([][]byte, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetDocStore().Get(name, expr, limit)
 }

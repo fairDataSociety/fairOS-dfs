@@ -104,6 +104,11 @@ const (
 	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
 	apiKVSeek          = APIVersion + "/kv/seek"
 	apiKVSeekNext      = APIVersion + "/kv/seek/next"
+	apiDocCreate       = APIVersion + "/doc/new"
+	apiDocList         = APIVersion + "/doc/ls"
+	apiDocOpen         = APIVersion + "/doc/open"
+	apiDocEntryGet     = APIVersion + "/doc/entry/get"
+	apiDocLoadJson     = APIVersion + "/doc/loadjson"
 )
 
 type Message struct {
@@ -1061,6 +1066,153 @@ func executor(in string) {
 			fmt.Println("invalid kv command!!")
 			help()
 		}
+
+	case "doc":
+		if currentUser == "" {
+			fmt.Println("login as a user to execute these commands")
+			return
+		}
+		if len(blocks) < 2 {
+			log.Println("invalid command.")
+			help()
+			return
+		}
+		if !isPodOpened() {
+			return
+		}
+		switch blocks[1] {
+		case "new":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			if len(blocks) == 4 {
+				si := blocks[3]
+				args["si"] = si
+			}
+
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDocCreate, args)
+			if err != nil {
+				fmt.Println("doc new: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "ls":
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDocList, nil)
+			if err != nil {
+				fmt.Println("doc ls: ", err)
+				return
+			}
+			var resp api.DocumentDBs
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("doc ls: ", err)
+				return
+			}
+			for _, table := range resp.Tables {
+				fmt.Println("<DOC>: ", table.Name)
+				for fn, ft := range table.IndexedColumns {
+					fmt.Println("     SI:", fn, ft)
+				}
+			}
+			currentPrompt = getCurrentPrompt()
+		case "open":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDocOpen, args)
+			if err != nil {
+				fmt.Println("doc open: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "get":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			expr := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["expr"] = expr
+			if len(blocks) == 5 {
+				args["limit"] = blocks[4]
+			}
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDocEntryGet, args)
+			if err != nil {
+				fmt.Println("doc get: ", err)
+				return
+			}
+
+			var docs api.DocResponse
+			err = json.Unmarshal(data, &docs)
+			if err != nil {
+				fmt.Println("doc get: ", err)
+				return
+			}
+			for i, doc := range docs.Docs {
+				fmt.Println("--- doc ", i)
+				var d map[string]interface{}
+				err = json.Unmarshal(doc.Doc, &d)
+				if err != nil {
+					fmt.Println("doc get: ", err)
+					return
+				}
+				for k, v := range d {
+					fmt.Println(k, "=", v)
+				}
+
+			}
+			currentPrompt = getCurrentPrompt()
+		case "loadjson":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			fileName := filepath.Base(blocks[3])
+			localCsvFile := blocks[3]
+
+			fd, err := os.Open(localCsvFile)
+			if err != nil {
+				fmt.Println("loadjson failed: ", err)
+				return
+			}
+			fi, err := fd.Stat()
+			if err != nil {
+				fmt.Println("loadjson failed: ", err)
+				return
+			}
+
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.uploadMultipartFile(apiDocLoadJson, fileName, fi.Size(), fd, args, "json", "false")
+			if err != nil {
+				fmt.Println("loadjson: ", err)
+				return
+			}
+			var resp api.UploadFileResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("loadjson: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		}
 	case "cd":
 		if !isPodOpened() {
 			return
@@ -1587,6 +1739,13 @@ func help() {
 	fmt.Println(" - kv <loadcsv> (table-name) (local csv file) - load the csv file in to the newy created table")
 	fmt.Println(" - kv <seek> (table-name) (start-key) (end-key) (limit) - seek nearst to start key")
 	fmt.Println(" - kv <getnext> (table-name) - get the next element after seek")
+
+	fmt.Println(" - doc <new> (table-name) (si=indexes) - creates a new document store")
+	fmt.Println(" - doc <open> (table-name) - open the document store")
+	fmt.Println(" - doc <ls>  - list all document dbs")
+	fmt.Println(" - doc <put> (table-name) (json) - insert a json document in to document store")
+	fmt.Println(" - doc <get> (table-name) (fieldName=fieldValue) - get the document having the value of the given field name from the store")
+	fmt.Println(" - doc <loadjson> (table-name) (local json) - load the json file in to the newly created document db")
 
 	fmt.Println(" - cd <directory name>")
 	fmt.Println(" - ls ")

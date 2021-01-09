@@ -19,6 +19,7 @@ package collection
 import "errors"
 
 var (
+	ErrNotImplemented                 = errors.New("error not implemented")
 	ErrEmptyIndex                     = errors.New("empty Index")
 	ErrEntryNotFound                  = errors.New("entry not found")
 	ErrNoNextElement                  = errors.New("no next element")
@@ -41,4 +42,5 @@ var (
 	ErrDocumentDBIndexAlreadyPresent  = errors.New("document db index already present")
 	ErrDocumentDBNoOpened             = errors.New("document db not opened")
 	ErrDocumentDBIndexFieldNotPresent = errors.New("document db index field not present")
+	ErrInvalidOperator                = errors.New("invalid operator")
 )

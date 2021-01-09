@@ -112,7 +112,6 @@ func TestIndexAPI(t *testing.T) {
 		addDoc(t, "key1", []byte("value3"), index, mockClient, true)
 		addDoc(t, "key1", []byte("value4"), index, mockClient, true)
 
-
 		gotValues := getAllDocs(t, "key1", index, mockClient)
 		if gotValues == nil {
 			t.Fatalf("could not find any value for key")
@@ -135,7 +134,6 @@ func TestIndexAPI(t *testing.T) {
 			t.Fatalf("invalid value")
 		}
 	})
-
 
 }
 

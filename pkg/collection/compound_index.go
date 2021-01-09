@@ -82,10 +82,10 @@ func OpenCompoundIndex(collectionName string, indexFields []string, fd *feed.API
 
 	// construct the compound Index and return
 	return &CompoundIndex{
-		name: getCompoundIndexName(collectionName, indexFields),
+		name:        getCompoundIndexName(collectionName, indexFields),
 		indexFields: indexFields,
-		IndexTypes: rootCompoundManifest.IdxTypes,
-		index: idx,
+		IndexTypes:  rootCompoundManifest.IdxTypes,
+		index:       idx,
 	}, nil
 }
 

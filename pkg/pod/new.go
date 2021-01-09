@@ -83,7 +83,8 @@ func (p *Pod) CreatePod(podName, passPhrase string) (*Info, error) {
 	}
 
 	user := p.acc.GetAddress(account.UserAccountIndex)
-	collection := c.NewKeyValueStore(fd, accountInfo, user, p.client, p.logger)
+	kvStore := c.NewKeyValueStore(fd, accountInfo, user, p.client, p.logger)
+	docStore := c.NewDocumentStore(fd, accountInfo, user, p.client, p.logger)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
@@ -97,7 +98,8 @@ func (p *Pod) CreatePod(podName, passPhrase string) (*Info, error) {
 		curPodMu:        sync.RWMutex{},
 		currentDirInode: dirInode,
 		curDirMu:        sync.RWMutex{},
-		collection:      collection,
+		kvStore:         kvStore,
+		docStore:        docStore,
 	}
 	pods[freeId] = podName
 	p.addPodToPodMap(podName, podInfo)

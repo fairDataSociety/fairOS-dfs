@@ -1,0 +1,68 @@
+/*
+Copyright © 2020 FairOS Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package api
+
+import (
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"resenje.org/jsonhttp"
+)
+
+type DocumentDBs struct {
+	Tables []DocumentDB
+}
+type DocumentDB struct {
+	Name           string              `json:"name"`
+	IndexedColumns []collection.SIndex `json:"indexes"`
+	CollectionType string              `json:"type"`
+}
+
+func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
+	// get values from cookie
+	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	if err != nil {
+		h.logger.Errorf("doc ls: invalid cookie: %v", err)
+		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		return
+	}
+	if sessionId == "" {
+		h.logger.Errorf("doc ls: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "doc ls: \"cookie-id\" parameter missing in cookie")
+		return
+	}
+
+	collections, err := h.dfsAPI.DocList(sessionId)
+	if err != nil {
+		h.logger.Errorf("doc ls: %v", err)
+		jsonhttp.InternalServerError(w, "doc ls: "+err.Error())
+		return
+	}
+
+	var col DocumentDBs
+	for name, dbSchema := range collections {
+		m := DocumentDB{
+			Name:           name,
+			IndexedColumns: dbSchema.SimpleIndexs,
+			CollectionType: "Document Store",
+		}
+		col.Tables = append(col.Tables, m)
+	}
+
+	jsonhttp.OK(w, col)
+}

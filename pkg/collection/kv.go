@@ -204,7 +204,7 @@ func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
 		refs, err := table.index.Delete(key)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		return refs[0], err

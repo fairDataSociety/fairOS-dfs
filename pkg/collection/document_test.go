@@ -31,7 +31,7 @@ type TestDocument struct {
 	ID        string `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Age       string    `json:"age"`
+	Age       string `json:"age"`
 }
 
 func TestDocumentStore(t *testing.T) {
@@ -106,7 +106,7 @@ func TestDocumentStore(t *testing.T) {
 		// create a document DB
 		createDocumentDBs(t, []string{"doc_3"}, docStore)
 
-		docDb, err := docStore.OpenDocumentDB("doc_3")
+		err := docStore.OpenDocumentDB("doc_3")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -115,28 +115,24 @@ func TestDocumentStore(t *testing.T) {
 		if !docStore.IsDBOpened("doc_3") {
 			t.Fatalf("db not opened")
 		}
-		// see if the default field index is opened
-		_, err = docDb.GetSimpleIndex(collection.DefaultIndexFieldName)
-		if err != nil {
-			t.Fatal(err)
-		}
+
 	})
 
 	t.Run("put_and_get", func(t *testing.T) {
 		// create a document DB
 		createDocumentDBs(t, []string{"doc_4"}, docStore)
 
-		_, err := docStore.OpenDocumentDB("doc_4")
+		err := docStore.OpenDocumentDB("doc_4")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create a json document
 		document1 := &TestDocument{
-			ID: "1",
+			ID:        "1",
 			FirstName: "John",
-			LastName: "Doe",
-			Age: "25",
+			LastName:  "Doe",
+			Age:       "25",
 		}
 		data, err := json.Marshal(document1)
 		if err != nil {
@@ -150,11 +146,11 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// get the data and test if the retreived data is okay
-		gotData, err := docStore.Get("doc_4", "id", "1", 1)
+		gotData, err := docStore.Get("doc_4", "id=1", 1)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(gotData)!= 1 {
+		if len(gotData) != 1 {
 			t.Fatalf("got invalid data")
 		}
 		var doc TestDocument
@@ -186,7 +182,7 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, err := docStore.OpenDocumentDB("doc_5")
+		err := docStore.OpenDocumentDB("doc_5")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -195,11 +191,11 @@ func TestDocumentStore(t *testing.T) {
 		createTestDocuments(t, docStore, "doc_5")
 
 		// get string index and check if the documents returned are okay
-		docs, err := docStore.Get("doc_5", "first_name", "John", 10)
+		docs, err := docStore.Get("doc_5", "first_name=John", 10)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(docs)!= 2 {
+		if len(docs) != 2 {
 			t.Fatalf("got invalid data")
 		}
 		var doc1 TestDocument
@@ -227,11 +223,11 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// get number index with limit
-		docs, err = docStore.Get("doc_5", "age", "25", 2)
+		docs, err = docStore.Get("doc_5", "age=25", 2)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(docs)!= 2 {
+		if len(docs) != 2 {
 			t.Fatalf("got invalid data")
 		}
 		err = json.Unmarshal(docs[0], &doc1)
@@ -254,6 +250,16 @@ func TestDocumentStore(t *testing.T) {
 			doc2.Age != "25" {
 			t.Fatalf("invalid json data received")
 		}
+
+		// get number => expression
+		docs, err = docStore.Get("doc_5", "age=>20", 5)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(docs) != 5 {
+			t.Fatalf("got invalid data")
+		}
+
 	})
 }
 
@@ -302,7 +308,6 @@ func checkIndex(t *testing.T, si collection.SIndex, filedName string, idxType co
 	}
 }
 
-
 func createTestDocuments(t *testing.T, docStore *collection.Document, dbName string) {
 	addDocument(t, docStore, dbName, "1", "John", "Doe", "45")
 	addDocument(t, docStore, dbName, "2", "John", "boy", "25")
@@ -314,10 +319,10 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 func addDocument(t *testing.T, docStore *collection.Document, dbName string, id, fname, lname, age string) {
 	// create the doc
 	doc := &TestDocument{
-		ID: id,
+		ID:        id,
 		FirstName: fname,
-		LastName: lname,
-		Age: age,
+		LastName:  lname,
+		Age:       age,
 	}
 
 	// marshall the doc
