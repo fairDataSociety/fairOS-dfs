@@ -18,13 +18,14 @@ package collection_test
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"testing"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"io/ioutil"
-	"testing"
 )
 
 type TestDocument struct {
@@ -49,70 +50,61 @@ func TestDocumentStore(t *testing.T) {
 
 	t.Run("create_document_db", func(t *testing.T) {
 		// create a document DB
-		createDocumentDBs(t, []string{"doc_0"}, docStore)
+		createDocumentDBs(t, []string{"docdb_0"}, docStore, nil)
 
 		// load the schem and check the count of simple indexes
-		schema := loadSchemaAndCheckSimpleIndexCount(t, docStore, "doc_0", 1)
+		schema := loadSchemaAndCheckSimpleIndexCount(t, docStore, "docdb_0", 1)
 
 		// check the default index
-		checkIndex(t, schema.SimpleIndexs[0], collection.DefaultIndexFieldName, collection.StringIndex)
+		checkIndex(t, schema.SimpleIndexes[0], collection.DefaultIndexFieldName, collection.StringIndex)
 	})
 
 	t.Run("delete_document_db", func(t *testing.T) {
 		// create multiple document DB
-		createDocumentDBs(t, []string{"doc_1_1", "doc_1_2", "doc_1_3"}, docStore)
-		checkIfDBsExists(t, []string{"doc_1_1", "doc_1_2", "doc_1_3"}, docStore)
+		createDocumentDBs(t, []string{"docdb_1_1", "docdb_1_2", "docdb_1_3"}, docStore, nil)
+		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_2", "docdb_1_3"}, docStore)
 
 		// delete the db in the middle
-		err = docStore.DeleteDocumentDB("doc_1_2")
+		err = docStore.DeleteDocumentDB("docdb_1_2")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check if other two db exists
-		checkIfDBsExists(t, []string{"doc_1_1", "doc_1_3"}, docStore)
+		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_3"}, docStore)
 	})
 
-	t.Run("create_document_db_with_ultiple_simple_indexes", func(t *testing.T) {
-		// create a document DB
-		createDocumentDBs(t, []string{"doc_2"}, docStore)
-
-		// add a string index
-		err = docStore.AddSimpleIndex("doc_2", "field1", collection.StringIndex)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// add a number index
-		err = docStore.AddSimpleIndex("doc_2", "field2", collection.NumberIndex)
-		if err != nil {
-			t.Fatal(err)
-		}
+	t.Run("create_document_db_with_multiple_simple_indexes", func(t *testing.T) {
+		// create a document DB and add simple indexes
+		si := make(map[string]collection.IndexType)
+		si["field1"] = collection.StringIndex
+		si["field2"] = collection.NumberIndex
+		createDocumentDBs(t, []string{"docdb_2"}, docStore, si)
 
 		// load the schem and check the count of simple indexes
-		schema := loadSchemaAndCheckSimpleIndexCount(t, docStore, "doc_2", 3)
+		schema := loadSchemaAndCheckSimpleIndexCount(t, docStore, "docdb_2", 3)
 
 		// first check the default index
-		checkIndex(t, schema.SimpleIndexs[0], collection.DefaultIndexFieldName, collection.StringIndex)
+		checkIndex(t, schema.SimpleIndexes[0], collection.DefaultIndexFieldName, collection.StringIndex)
 
 		//second check the string index
-		checkIndex(t, schema.SimpleIndexs[1], "field1", collection.StringIndex)
+		checkIndex(t, schema.SimpleIndexes[1], "field1", collection.StringIndex)
 
 		//third check the string index
-		checkIndex(t, schema.SimpleIndexs[2], "field2", collection.NumberIndex)
+		checkIndex(t, schema.SimpleIndexes[2], "field2", collection.NumberIndex)
 	})
 
 	t.Run("create_and open_document_db", func(t *testing.T) {
 		// create a document DB
-		createDocumentDBs(t, []string{"doc_3"}, docStore)
+		createDocumentDBs(t, []string{"docdb_3"}, docStore, nil)
 
-		err := docStore.OpenDocumentDB("doc_3")
+		err := docStore.OpenDocumentDB("docdb_3")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check if the DB is opened properly
-		if !docStore.IsDBOpened("doc_3") {
+		if !docStore.IsDBOpened("docdb_3") {
 			t.Fatalf("db not opened")
 		}
 
@@ -120,9 +112,9 @@ func TestDocumentStore(t *testing.T) {
 
 	t.Run("put_and_get", func(t *testing.T) {
 		// create a document DB
-		createDocumentDBs(t, []string{"doc_4"}, docStore)
+		createDocumentDBs(t, []string{"docdb_4"}, docStore, nil)
 
-		err := docStore.OpenDocumentDB("doc_4")
+		err := docStore.OpenDocumentDB("docdb_4")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -140,13 +132,13 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// insert the docment in the DB
-		err = docStore.Put("doc_4", data)
+		err = docStore.Put("docdb_4", data)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// get the data and test if the retreived data is okay
-		gotData, err := docStore.Get("doc_4", "id=1", 1)
+		gotData, err := docStore.Get("docdb_4", "id=1", 1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -168,30 +160,21 @@ func TestDocumentStore(t *testing.T) {
 
 	t.Run("put_and_get_multiple_index", func(t *testing.T) {
 		// create a document DB
-		createDocumentDBs(t, []string{"doc_5"}, docStore)
+		si := make(map[string]collection.IndexType)
+		si["first_name"] = collection.StringIndex
+		si["age"] = collection.NumberIndex
+		createDocumentDBs(t, []string{"docdb_5"}, docStore, si)
 
-		// add a string index
-		err = docStore.AddSimpleIndex("doc_5", "first_name", collection.StringIndex)
+		err := docStore.OpenDocumentDB("docdb_5")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// adda number index
-		err = docStore.AddSimpleIndex("doc_5", "age", collection.NumberIndex)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		err := docStore.OpenDocumentDB("doc_5")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// Add d0cuments
-		createTestDocuments(t, docStore, "doc_5")
+		// Add documents
+		createTestDocuments(t, docStore, "docdb_5")
 
 		// get string index and check if the documents returned are okay
-		docs, err := docStore.Get("doc_5", "first_name=John", 10)
+		docs, err := docStore.Get("docdb_5", "first_name=John", 10)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -223,7 +206,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// get number index with limit
-		docs, err = docStore.Get("doc_5", "age=25", 2)
+		docs, err = docStore.Get("docdb_5", "age=25", 2)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -252,7 +235,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// get number => expression
-		docs, err = docStore.Get("doc_5", "age=>20", 5)
+		docs, err = docStore.Get("docdb_5", "age=>20", 5)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -263,9 +246,9 @@ func TestDocumentStore(t *testing.T) {
 	})
 }
 
-func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Document) {
+func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Document, si map[string]collection.IndexType) {
 	for _, dbName := range dbNames {
-		err := docStore.CreateDocumentDB(dbName)
+		err := docStore.CreateDocumentDB(dbName, si)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -293,7 +276,7 @@ func loadSchemaAndCheckSimpleIndexCount(t *testing.T, docStore *collection.Docum
 	if !found {
 		t.Fatalf("document db not found in schema")
 	}
-	if len(schema.SimpleIndexs) != count {
+	if len(schema.SimpleIndexes) != count {
 		t.Fatalf("index count mismatch")
 	}
 	return schema

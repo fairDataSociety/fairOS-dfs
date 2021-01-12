@@ -17,11 +17,12 @@ limitations under the License.
 package api
 
 import (
+	"net/http"
+	"strings"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-	"net/http"
 	"resenje.org/jsonhttp"
-	"strings"
 )
 
 func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {

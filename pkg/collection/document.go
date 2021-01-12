@@ -57,7 +57,7 @@ type DocumentDB struct {
 
 type DBSchema struct {
 	Name            string   `json:"name"`
-	SimpleIndexs    []SIndex `json:"simple_indexes"`
+	SimpleIndexes   []SIndex `json:"simple_indexes"`
 	CompoundIndexes []CIndex `json:"compound_indexes,omitempty"`
 }
 
@@ -67,7 +67,7 @@ type SIndex struct {
 }
 
 type CIndex struct {
-	SimpleIndexs []SIndex
+	SimpleIndexes []SIndex
 }
 
 func NewDocumentStore(fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) *Document {
@@ -81,7 +81,7 @@ func NewDocumentStore(fd *feed.API, ai *account.Info, user utils.Address, client
 	}
 }
 
-func (d *Document) CreateDocumentDB(dbName string) error {
+func (d *Document) CreateDocumentDB(dbName string, si map[string]IndexType) error {
 	// load the existing db's and see if this name is already there
 	docTables, err := d.LoadDocumentDBSchemas()
 	if err != nil {
@@ -91,62 +91,40 @@ func (d *Document) CreateDocumentDB(dbName string) error {
 		return ErrDocumentDBAlreadyPresent
 	}
 
-	///  since this db is not present already, create the default index required for this table
+	// since this db is not present already, create the table
 	err = CreateIndex(dbName, DefaultIndexFieldName, StringIndex, d.fd, d.user, d.client)
 	if err != nil {
 		return err
 	}
 
-	// record the table as created
-	si := SIndex{
+	// create the default index
+	var simpleIndexes []SIndex
+	defaultIndex := SIndex{
 		FieldName: DefaultIndexFieldName,
 		FieldType: StringIndex,
 	}
-	docTables[dbName] = DBSchema{
-		Name:         dbName,
-		SimpleIndexs: []SIndex{si},
-	}
-	return d.storeDocumentDBSchemas(docTables)
-}
+	simpleIndexes = append(simpleIndexes, defaultIndex)
 
-func (d *Document) AddSimpleIndex(dbName string, fieldName string, indexType IndexType) error {
-	// load the existing db's and see if this name is present
-	docTables, err := d.LoadDocumentDBSchemas()
-	if err != nil {
-		return err
-	}
-	schema, ok := docTables[dbName]
-	if !ok {
-		return ErrDocumentDBNotPresent
-	}
-
-	// check if this index is already present
-	for _, idx := range schema.SimpleIndexs {
-		if idx.FieldName == fieldName {
-			return ErrDocumentDBIndexAlreadyPresent
+	// Now add the other indexes to simpleIndexes array
+	for fieldName, fieldType := range si {
+		// create the simple index
+		err = CreateIndex(dbName, fieldName, fieldType, d.fd, d.user, d.client)
+		if err != nil {
+			return err
 		}
+		newIndex := SIndex{
+			FieldName: fieldName,
+			FieldType: fieldType,
+		}
+		simpleIndexes = append(simpleIndexes, newIndex)
 	}
 
-	// create the index
-	err = CreateIndex(dbName, fieldName, indexType, d.fd, d.user, d.client)
-	if err != nil {
-		return err
+	// add the simple indexes to the schema
+	docTables[dbName] = DBSchema{
+		Name:          dbName,
+		SimpleIndexes: simpleIndexes,
 	}
-
-	// Now add the index to schema
-	newIndex := SIndex{
-		FieldName: fieldName,
-		FieldType: indexType,
-	}
-	schema.SimpleIndexs = append(schema.SimpleIndexs, newIndex)
-
-	// store the modified schema
-	docTables[dbName] = schema
 	return d.storeDocumentDBSchemas(docTables)
-}
-
-func (d *Document) AddCompoundIndex(fieldNames []string, indexTypes []IndexType) {
-	// TODO: creation of compound indexes
 }
 
 func (d *Document) OpenDocumentDB(dbName string) error {
@@ -162,7 +140,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 
 	// open the simple indexes
 	simpleIndexs := make(map[string]*Index)
-	for _, si := range schema.SimpleIndexs {
+	for _, si := range schema.SimpleIndexes {
 		idx, err := OpenIndex(dbName, si.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
 		if err != nil {
 			return err

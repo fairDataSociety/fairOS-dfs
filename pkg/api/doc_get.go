@@ -17,10 +17,11 @@ limitations under the License.
 package api
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"net/http"
-	"resenje.org/jsonhttp"
 	"strconv"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"resenje.org/jsonhttp"
 )
 
 type DocResponse struct {

@@ -926,7 +926,7 @@ func (d *DfsAPI) DocCreate(sessionId, name string, si map[string]collection.Inde
 		return err
 	}
 
-	err = podInfo.GetDocStore().CreateDocumentDB(name)
+	err = podInfo.GetDocStore().CreateDocumentDB(name, si)
 	if err != nil {
 		return err
 	}

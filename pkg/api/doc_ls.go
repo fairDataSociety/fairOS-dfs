@@ -17,8 +17,9 @@ limitations under the License.
 package api
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
@@ -58,7 +59,7 @@ func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 	for name, dbSchema := range collections {
 		m := DocumentDB{
 			Name:           name,
-			IndexedColumns: dbSchema.SimpleIndexs,
+			IndexedColumns: dbSchema.SimpleIndexes,
 			CollectionType: "Document Store",
 		}
 		col.Tables = append(col.Tables, m)
