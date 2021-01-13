@@ -138,15 +138,13 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// get the data and test if the retreived data is okay
-		gotData, err := docStore.Get("docdb_4", "id=1", 1)
+		gotData, err := docStore.Get("docdb_4", "1")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(gotData) != 1 {
-			t.Fatalf("got invalid data")
-		}
+
 		var doc TestDocument
-		err = json.Unmarshal(gotData[0], &doc)
+		err = json.Unmarshal(gotData, &doc)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -174,75 +172,263 @@ func TestDocumentStore(t *testing.T) {
 		createTestDocuments(t, docStore, "docdb_5")
 
 		// get string index and check if the documents returned are okay
-		docs, err := docStore.Get("docdb_5", "first_name=John", 10)
+		docs, err := docStore.Get("docdb_5", "2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		var gotDoc TestDocument
+		err = json.Unmarshal(docs, &gotDoc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotDoc.ID != "2" ||
+			gotDoc.FirstName != "John" ||
+			gotDoc.LastName != "boy" ||
+			gotDoc.Age != "25" {
+			t.Fatalf("invalid json data received")
+		}
+	})
+
+	t.Run("count_all", func(t *testing.T) {
+		// create a document DB
+		si := make(map[string]collection.IndexType)
+		si["first_name"] = collection.StringIndex
+		si["age"] = collection.NumberIndex
+		createDocumentDBs(t, []string{"docdb_6"}, docStore, si)
+
+		err := docStore.OpenDocumentDB("docdb_6")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Add documents
+		createTestDocuments(t, docStore, "docdb_6")
+
+		count1, err := docStore.Count("docdb_6", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if count1 != 5 {
+			t.Fatalf("expected count %d, got %d", 5, count1)
+		}
+
+	})
+
+	t.Run("count_with_expr", func(t *testing.T) {
+		// create a document DB
+		si := make(map[string]collection.IndexType)
+		si["first_name"] = collection.StringIndex
+		si["age"] = collection.NumberIndex
+		createDocumentDBs(t, []string{"docdb_7"}, docStore, si)
+
+		err := docStore.OpenDocumentDB("docdb_7")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Add documents
+		createTestDocuments(t, docStore, "docdb_7")
+
+		// String count
+		count1, err := docStore.Count("docdb_7", "first_name=John")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count1 != 2 {
+			t.Fatalf("expected count %d, got %d", 2, count1)
+		}
+
+		// Number =
+		count2, err := docStore.Count("docdb_7", "age=25")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count2 != 3 {
+			t.Fatalf("expected count %d, got %d", 3, count2)
+		}
+
+		// Number =>
+		count3, err := docStore.Count("docdb_7", "age=>30")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count3 != 2 {
+			t.Fatalf("expected count %d, got %d", 2, count3)
+		}
+
+		// Number >
+		count4, err := docStore.Count("docdb_7", "age>30")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count4 != 1 {
+			t.Fatalf("expected count %d, got %d", 1, count4)
+		}
+	})
+
+	t.Run("find", func(t *testing.T) {
+		// create a document DB
+		si := make(map[string]collection.IndexType)
+		si["first_name"] = collection.StringIndex
+		si["age"] = collection.NumberIndex
+		createDocumentDBs(t, []string{"docdb_8"}, docStore, si)
+
+		err := docStore.OpenDocumentDB("docdb_8")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Add documents
+		createTestDocuments(t, docStore, "docdb_8")
+
+		// String =
+		docs, err := docStore.Find("docdb_8", "first_name=John", -1)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if len(docs) != 2 {
-			t.Fatalf("got invalid data")
+			t.Fatalf("expected count %d, got %d", 2, len(docs))
 		}
-		var doc1 TestDocument
-		err = json.Unmarshal(docs[0], &doc1)
+		var gotDoc1 TestDocument
+		err = json.Unmarshal(docs[0], &gotDoc1)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if doc1.ID != "1" ||
-			doc1.FirstName != "John" ||
-			doc1.LastName != "Doe" ||
-			doc1.Age != "45" {
+		if gotDoc1.ID != "1" ||
+			gotDoc1.FirstName != "John" ||
+			gotDoc1.LastName != "Doe" ||
+			gotDoc1.Age != "45" {
 			t.Fatalf("invalid json data received")
 		}
-
-		var doc2 TestDocument
-		err = json.Unmarshal(docs[1], &doc2)
+		var gotDoc2 TestDocument
+		err = json.Unmarshal(docs[1], &gotDoc2)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if doc2.ID != "2" ||
-			doc2.FirstName != "John" ||
-			doc2.LastName != "boy" ||
-			doc2.Age != "25" {
+		if gotDoc2.ID != "2" ||
+			gotDoc2.FirstName != "John" ||
+			gotDoc2.LastName != "boy" ||
+			gotDoc2.Age != "25" {
 			t.Fatalf("invalid json data received")
 		}
 
-		// get number index with limit
-		docs, err = docStore.Get("docdb_5", "age=25", 2)
+		// Number =
+		docs, err = docStore.Find("docdb_8", "age=25", -1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(docs) != 3 {
+			t.Fatalf("expected count %d, got %d", 3, len(docs))
+		}
+		err = json.Unmarshal(docs[0], &gotDoc1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotDoc1.ID != "2" ||
+			gotDoc1.FirstName != "John" ||
+			gotDoc1.LastName != "boy" ||
+			gotDoc1.Age != "25" {
+			t.Fatalf("invalid json data received")
+		}
+		err = json.Unmarshal(docs[1], &gotDoc2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotDoc2.ID != "4" ||
+			gotDoc2.FirstName != "Charlie" ||
+			gotDoc2.LastName != "chaplin" ||
+			gotDoc2.Age != "25" {
+			t.Fatalf("invalid json data received")
+		}
+		var gotDoc3 TestDocument
+		err = json.Unmarshal(docs[2], &gotDoc3)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotDoc3.ID != "5" ||
+			gotDoc3.FirstName != "Alice" ||
+			gotDoc3.LastName != "wonderland" ||
+			gotDoc3.Age != "25" {
+			t.Fatalf("invalid json data received")
+		}
+
+		// Number = with limit
+		docs, err = docStore.Find("docdb_8", "age=25", 2)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if len(docs) != 2 {
-			t.Fatalf("got invalid data")
+			t.Fatalf("expected count %d, got %d", 2, len(docs))
 		}
-		err = json.Unmarshal(docs[0], &doc1)
+		err = json.Unmarshal(docs[0], &gotDoc1)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if doc1.ID != "2" ||
-			doc1.FirstName != "John" ||
-			doc1.LastName != "boy" ||
-			doc1.Age != "25" {
+		if gotDoc1.ID != "2" ||
+			gotDoc1.FirstName != "John" ||
+			gotDoc1.LastName != "boy" ||
+			gotDoc1.Age != "25" {
 			t.Fatalf("invalid json data received")
 		}
-		err = json.Unmarshal(docs[1], &doc2)
+		err = json.Unmarshal(docs[1], &gotDoc2)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if doc2.ID != "4" ||
-			doc2.FirstName != "Charlie" ||
-			doc2.LastName != "chaplin" ||
-			doc2.Age != "25" {
+		if gotDoc2.ID != "4" ||
+			gotDoc2.FirstName != "Charlie" ||
+			gotDoc2.LastName != "chaplin" ||
+			gotDoc2.Age != "25" {
 			t.Fatalf("invalid json data received")
 		}
 
-		// get number => expression
-		docs, err = docStore.Get("docdb_5", "age=>20", 5)
+		// Number =>
+		docs, err = docStore.Find("docdb_8", "age=>30", -1)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(docs) != 5 {
-			t.Fatalf("got invalid data")
+		if len(docs) != 2 {
+			t.Fatalf("expected count %d, got %d", 2, len(docs))
+		}
+		err = json.Unmarshal(docs[0], &gotDoc1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotDoc1.ID != "3" ||
+			gotDoc1.FirstName != "Bob" ||
+			gotDoc1.LastName != "michel" ||
+			gotDoc1.Age != "30" {
+			t.Fatalf("invalid json data received")
+		}
+		err = json.Unmarshal(docs[1], &gotDoc2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotDoc2.ID != "1" ||
+			gotDoc2.FirstName != "John" ||
+			gotDoc2.LastName != "Doe" ||
+			gotDoc2.Age != "45" {
+			t.Fatalf("invalid json data received")
 		}
 
+		// Number >
+		docs, err = docStore.Find("docdb_8", "age>30", -1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(docs) != 1 {
+			t.Fatalf("expected count %d, got %d", 1, len(docs))
+		}
+		err = json.Unmarshal(docs[0], &gotDoc1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotDoc1.ID != "1" ||
+			gotDoc1.FirstName != "John" ||
+			gotDoc1.LastName != "Doe" ||
+			gotDoc1.Age != "45" {
+			t.Fatalf("invalid json data received")
+		}
 	})
 }
 

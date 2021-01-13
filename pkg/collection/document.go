@@ -82,6 +82,11 @@ func NewDocumentStore(fd *feed.API, ai *account.Info, user utils.Address, client
 }
 
 func (d *Document) CreateDocumentDB(dbName string, si map[string]IndexType) error {
+	// check if the db is already present and opened
+	if d.IsDBOpened(dbName) {
+		return ErrDocumentDBAlreadyOpened
+	}
+
 	// load the existing db's and see if this name is already there
 	docTables, err := d.LoadDocumentDBSchemas()
 	if err != nil {
@@ -128,6 +133,11 @@ func (d *Document) CreateDocumentDB(dbName string, si map[string]IndexType) erro
 }
 
 func (d *Document) OpenDocumentDB(dbName string) error {
+	// check if the db is already present and opened
+	if d.IsDBOpened(dbName) {
+		return ErrDocumentDBAlreadyOpened
+	}
+
 	// load the existing db's and see if this name is present
 	docTables, err := d.LoadDocumentDBSchemas()
 	if err != nil {
@@ -148,8 +158,6 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 		simpleIndexs[si.FieldName] = idx
 	}
 
-	// TODO:  open the compound indexes
-
 	// create the document DB index map
 	docDB := &DocumentDB{
 		name:            dbName,
@@ -158,10 +166,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 	}
 
 	// add to the open DB map
-	d.openDOcDBMu.Lock()
-	defer d.openDOcDBMu.Unlock()
-	d.openDocDBs[dbName] = docDB
-
+	d.addToOpenedDb(dbName, docDB)
 	return nil
 }
 
@@ -173,21 +178,107 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	}
 
 	// check if the table exists before deleting
-	if _, found := docTables[dbName]; !found {
+	_, found := docTables[dbName]
+	if !found {
 		return ErrDocumentDBNotPresent
 	}
 
-	// delete the document db with the given name
+	// open and delete the indexes
+	if !d.IsDBOpened(dbName) {
+		return d.OpenDocumentDB(dbName)
+	}
+	docDB := d.getOpenedDb(dbName)
+	//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
+	for _, si := range docDB.simpleIndexes {
+		return si.DeleteIndex()
+	}
+
+	// delete the document db from the DB file
 	delete(docTables, dbName)
 
 	// store the rest of the document db
 	return d.storeDocumentDBSchemas(docTables)
 }
 
+func (d *Document) Count(dbName, expr string) (uint64, error) {
+	db := d.getOpenedDb(dbName)
+	if db == nil {
+		return 0, ErrDocumentDBNotOpened
+	}
+
+	// count all documents
+	if expr == "" {
+		idx, found := db.simpleIndexes[DefaultIndexFieldName]
+		if !found {
+			return 0, ErrIndexNotPresent
+		}
+		return idx.CountIndex()
+	}
+
+	// count documents based on expression
+	fieldName, operator, fieldValue, err := d.resolveExpression(expr)
+	if err != nil {
+		return 0, err
+	}
+	idx, found := db.simpleIndexes[fieldName]
+	if !found {
+		return 0, ErrIndexNotPresent
+	}
+
+	switch idx.indexType {
+	case StringIndex:
+		if operator != "=" {
+			return 0, ErrInvalidOperator
+		}
+		references, err := idx.Get(fieldValue)
+		if err != nil {
+			return 0, err
+		}
+		return uint64(len(references)), nil
+	case NumberIndex:
+		start, err := strconv.ParseInt(fieldValue, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		itr, err := idx.NewIntIterator(start, -1, -1)
+		if err != nil {
+			return 0, err
+		}
+		switch operator {
+		case "=":
+			itr.Next()
+			refs := itr.ValueAll()
+			return uint64(len(refs)), nil
+		case "=>":
+			var count uint64
+			for itr.Next() {
+				refs := itr.ValueAll()
+				count = count + uint64(len(refs))
+			}
+			return count, nil
+		case ">":
+			var count uint64
+			for itr.Next() {
+				if itr.IntegerKey() == start {
+					continue
+				}
+				refs := itr.ValueAll()
+				count = count + uint64(len(refs))
+			}
+			return count, nil
+		}
+	case BytesIndex:
+		return 0, ErrIndexNotSupported
+	default:
+		return 0, ErrInvalidIndexType
+	}
+	return 0, nil
+}
+
 func (d *Document) Put(dbName string, doc []byte) error {
 	db := d.getOpenedDb(dbName)
 	if db == nil {
-		return ErrDocumentDBNoOpened
+		return ErrDocumentDBNotOpened
 	}
 
 	var t interface{}
@@ -212,7 +303,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 
 	// update the indexes
 	for field, index := range db.simpleIndexes {
-		v, _ := docMap[field] // it it already checked to be present
+		v, _ := docMap[field] // it is already checked to be present
 		switch index.indexType {
 		case StringIndex:
 			err := index.Put(v.(string), ref, StringIndex, true)
@@ -225,34 +316,63 @@ func (d *Document) Put(dbName string, doc []byte) error {
 				return err
 			}
 		case BytesIndex:
-			return ErrKVIndexTypeNotSupported
+			return ErrIndexNotSupported
 		default:
-			return ErrKVInvalidIndexType
+			return ErrInvalidIndexType
 		}
 	}
 	return nil
 }
 
-func (d *Document) Get(dbName, expr string, limit int) ([][]byte, error) {
+func (d *Document) Get(dbName, id string) ([]byte, error) {
 	db := d.getOpenedDb(dbName)
 	if db == nil {
-		return nil, ErrDocumentDBNoOpened
+		return nil, ErrDocumentDBNotOpened
 	}
 
-	var operator string
-	if strings.Contains(expr, "=>") {
-		operator = "=>"
-	} else if strings.Contains(expr, "<=") {
-		operator = "<="
-	} else if strings.Contains(expr, "=") {
-		operator = "="
-	} else {
-		return nil, ErrInvalidOperator
+	idIndex := db.simpleIndexes[DefaultIndexFieldName]
+	references, err := idIndex.Get(id)
+	if err != nil {
+		return nil, err
 	}
 
-	f := strings.Split(expr, operator)
-	fieldName := f[0]
-	fieldValue := f[1]
+	if len(references) == 0 {
+		return nil, ErrDocumentNotPresent
+	}
+
+	data, _, err := d.client.DownloadBlob(references[0])
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func (d *Document) Del(dbName, id string) error {
+	db := d.getOpenedDb(dbName)
+	if db == nil {
+		return ErrDocumentDBNotOpened
+	}
+
+	idIndex := db.simpleIndexes[DefaultIndexFieldName]
+	_, err := idIndex.Delete(id)
+	if err != nil {
+		return err
+	}
+
+	// TODO: unpin deletedRef[0]
+	return nil
+}
+
+func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
+	db := d.getOpenedDb(dbName)
+	if db == nil {
+		return nil, ErrDocumentDBNotOpened
+	}
+
+	fieldName, operator, fieldValue, err := d.resolveExpression(expr)
+	if err != nil {
+		return nil, err
+	}
 
 	idx, found := db.simpleIndexes[fieldName]
 	if !found {
@@ -260,51 +380,57 @@ func (d *Document) Get(dbName, expr string, limit int) ([][]byte, error) {
 	}
 
 	var references [][]byte
-
-	switch operator {
-	case "=":
-		refs, err := idx.Get(fieldValue)
+	switch idx.indexType {
+	case StringIndex:
+		if operator != "=" {
+			return nil, ErrInvalidOperator
+		}
+		references, err = idx.Get(fieldValue)
 		if err != nil {
 			return nil, err
 		}
-		references = refs
-	case "=>":
-		if idx.indexType == NumberIndex {
-			val, err := strconv.ParseInt(fieldValue, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			itr, err := idx.NewIntIterator(val, -1, int64(limit))
-			if err != nil {
-				return nil, err
-			}
-
+	case NumberIndex:
+		start, err := strconv.ParseInt(fieldValue, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		itr, err := idx.NewIntIterator(start, -1, int64(limit))
+		if err != nil {
+			return nil, err
+		}
+		switch operator {
+		case "=":
+			itr.Next()
+			references = itr.ValueAll()
+		case "=>":
 			for itr.Next() {
-				if len(references) < limit {
-					valueAll := itr.ValueAll()
-					totalLen := len(references) + len(valueAll)
-					if totalLen > limit {
-						diff := totalLen - limit
-						references = append(references, valueAll[diff:]...)
-					} else {
-						references = append(references, valueAll...)
-					}
-				} else {
+				if limit > 0 && len(references) > limit {
 					break
 				}
+				refs := itr.ValueAll()
+				references = append(references, refs...)
 			}
-		} else {
-			return nil, ErrInvalidOperator
+		case ">":
+			for itr.Next() {
+				if limit > 0 && len(references) > limit {
+					break
+				}
+				if itr.IntegerKey() == start {
+					continue
+				}
+				refs := itr.ValueAll()
+				references = append(references, refs...)
+			}
 		}
-	case "<=":
-		return nil, ErrNotImplemented
+	case BytesIndex:
+		return nil, ErrIndexNotSupported
 	default:
-		return nil, ErrInvalidOperator
+		return nil, ErrInvalidIndexType
 	}
 
 	var docs [][]byte
 	for _, ref := range references {
-		if len(docs) >= limit {
+		if limit > 0 && len(docs) >= limit {
 			break
 		}
 		data, _, err := d.client.DownloadBlob(ref)
@@ -315,11 +441,6 @@ func (d *Document) Get(dbName, expr string, limit int) ([][]byte, error) {
 	}
 	return docs, nil
 }
-
-//
-//func (d *Document) Delete(docId string) error {
-//
-//}
 
 func (d *Document) LoadDocumentDBSchemas() (map[string]DBSchema, error) {
 	collections := make(map[string]DBSchema)
@@ -392,9 +513,119 @@ func (d *Document) getOpenedDb(dbName string) *DocumentDB {
 	return db
 }
 
+func (d *Document) addToOpenedDb(dbName string, docDB *DocumentDB) {
+	d.openDOcDBMu.Lock()
+	defer d.openDOcDBMu.Unlock()
+	d.openDocDBs[dbName] = docDB
+}
+
 func (d *Document) getFieldIndex(db *DocumentDB, fieldName string) *Index {
 	if index, found := db.simpleIndexes[fieldName]; found {
 		return index
 	}
 	return nil
 }
+
+func (d *Document) resolveExpression(expr string) (string, string, string, error) {
+	var operator string
+	if strings.Contains(expr, "=>") {
+		operator = "=>"
+	} else if strings.Contains(expr, "<=") {
+		operator = "<="
+	} else if strings.Contains(expr, ">") {
+		operator = ">"
+	} else if strings.Contains(expr, "=") {
+		operator = "="
+	} else {
+		return "", "", "", ErrInvalidOperator
+	}
+
+	f := strings.Split(expr, operator)
+	fieldName := f[0]
+	fieldValue := f[1]
+
+	return fieldName, operator, fieldValue, nil
+}
+
+//func (d *Document) Get(dbName, expr string, limit int) ([][]byte, error) {
+//	db := d.getOpenedDb(dbName)
+//	if db == nil {
+//		return nil, ErrDocumentDBNotOpened
+//	}
+//
+//	var operator string
+//	if strings.Contains(expr, "=>") {
+//		operator = "=>"
+//	} else if strings.Contains(expr, "<=") {
+//		operator = "<="
+//	} else if strings.Contains(expr, "=") {
+//		operator = "="
+//	} else {
+//		return nil, ErrInvalidOperator
+//	}
+//
+//	f := strings.Split(expr, operator)
+//	fieldName := f[0]
+//	fieldValue := f[1]
+//
+//	idx, found := db.simpleIndexes[fieldName]
+//	if !found {
+//		return nil, ErrIndexNotPresent
+//	}
+//
+//	var references [][]byte
+//
+//	switch operator {
+//	case "=":
+//		refs, err := idx.Get(fieldValue)
+//		if err != nil {
+//			return nil, err
+//		}
+//		references = refs
+//	case "=>":
+//		if idx.indexType == NumberIndex {
+//			val, err := strconv.ParseInt(fieldValue, 10, 64)
+//			if err != nil {
+//				return nil, err
+//			}
+//			itr, err := idx.NewIntIterator(val, -1, int64(limit))
+//			if err != nil {
+//				return nil, err
+//			}
+//
+//			for itr.Next() {
+//				if len(references) < limit {
+//					valueAll := itr.ValueAll()
+//					totalLen := len(references) + len(valueAll)
+//					if totalLen > limit {
+//						diff := totalLen - limit
+//						references = append(references, valueAll[diff:]...)
+//					} else {
+//						references = append(references, valueAll...)
+//					}
+//				} else {
+//					break
+//				}
+//			}
+//		} else {
+//			return nil, ErrInvalidOperator
+//		}
+//	case "<=":
+//		return nil, ErrNotImplemented
+//	default:
+//		return nil, ErrInvalidOperator
+//	}
+//
+//	var docs [][]byte
+//	for _, ref := range references {
+//		if len(docs) >= limit {
+//			break
+//		}
+//		data, _, err := d.client.DownloadBlob(ref)
+//		if err != nil {
+//			return nil, err
+//		}
+//		docs = append(docs, data)
+//	}
+//	return docs, nil
+//}
