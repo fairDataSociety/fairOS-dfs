@@ -28,8 +28,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	lru "github.com/hashicorp/golang-lru"
@@ -48,8 +46,8 @@ const (
 	downloadBlockCacheSize = 100
 	ChunkUploadDownloadUrl = "/chunks/"
 	BytesUploadDownloadUrl = "/bytes"
-	pinChunksUrl           = "/pinning/chunks/"
-	pinBlobsUrl            = "/pinning/chunks/" // need to change this when bee supports it
+	pinChunksUrl           = "/pin/chunks/"
+	pinBlobsUrl            = "/pin/bytes/" // need to change this when bee supports it
 	SwarmPinHeader         = "Swarm-Pin"
 	SwarmEncryptHeader     = "Swarm-Encrypt"
 )
@@ -326,8 +324,10 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	return respData, response.StatusCode, nil
 }
 
-func (s *BeeClient) UnpinChunk(ref utils.Reference) error {
-	path := filepath.Join(pinChunksUrl, ref.String())
+func (s *BeeClient) DeleteChunk(address []byte) error {
+	to := time.Now()
+	addrString := swarm.NewAddress(address).String()
+	path := filepath.Join(pinChunksUrl, addrString)
 	fullUrl := fmt.Sprintf(s.url + path)
 	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
 	if err != nil {
@@ -347,11 +347,18 @@ func (s *BeeClient) UnpinChunk(ref utils.Reference) error {
 	if err != nil {
 		return err
 	}
+	fields := logrus.Fields{
+		"reference": addrString,
+		"duration":  time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete chunk: ")
 	return nil
 }
 
-func (s *BeeClient) UnpinBlob(ref utils.Reference) error {
-	path := filepath.Join(pinBlobsUrl, ref.String())
+func (s *BeeClient) DeleteBlob(address []byte) error {
+	to := time.Now()
+	addrString := swarm.NewAddress(address).String()
+	path := filepath.Join(pinBlobsUrl, addrString)
 	fullUrl := fmt.Sprintf(s.url + path)
 	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
 	if err != nil {
@@ -371,6 +378,12 @@ func (s *BeeClient) UnpinBlob(ref utils.Reference) error {
 	if err != nil {
 		return err
 	}
+
+	fields := logrus.Fields{
+		"reference": addrString,
+		"duration":  time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete Blob: ")
 	return nil
 }
 

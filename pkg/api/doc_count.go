@@ -33,11 +33,6 @@ func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expr := r.FormValue("expr")
-	if expr == "" {
-		h.logger.Errorf("doc count: \"expr\" argument missing")
-		jsonhttp.BadRequest(w, "doc count: \"expr\" argument missing")
-		return
-	}
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

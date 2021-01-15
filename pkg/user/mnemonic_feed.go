@@ -44,6 +44,5 @@ func (u *Users) deleteMnemonic(userName string, address utils.Address, fd *feed.
 	if err != nil {
 		return err
 	}
-	ref := utils.NewReference(feedAddress)
-	return client.UnpinChunk(ref)
+	return client.DeleteChunk(feedAddress)
 }

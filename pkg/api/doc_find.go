@@ -72,8 +72,8 @@ func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
 
 	data, err := h.dfsAPI.DocFind(sessionId, name, expr, limitInt)
 	if err != nil {
-		h.logger.Errorf("doc count: %v", err)
-		jsonhttp.InternalServerError(w, "doc count: "+err.Error())
+		h.logger.Errorf("doc find: %v", err)
+		jsonhttp.InternalServerError(w, "doc find: "+err.Error())
 		return
 	}
 

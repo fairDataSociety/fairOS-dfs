@@ -23,8 +23,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/ethersphere/bee/pkg/swarm"
 )
 
@@ -78,10 +76,10 @@ func (m *MockBeeClient) DownloadBlob(address []byte) (data []byte, respCode int,
 	return nil, http.StatusInternalServerError, fmt.Errorf("error downloading data")
 }
 
-func (m *MockBeeClient) UnpinChunk(ref utils.Reference) error {
+func (m *MockBeeClient) DeleteChunk(address []byte) error {
 	return nil
 }
 
-func (m *MockBeeClient) UnpinBlob(ref utils.Reference) error {
+func (m *MockBeeClient) DeleteBlob(address []byte) error {
 	return nil
 }

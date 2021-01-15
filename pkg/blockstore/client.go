@@ -19,8 +19,6 @@ package blockstore
 import (
 	"context"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/ethersphere/bee/pkg/swarm"
 )
 
@@ -30,6 +28,6 @@ type Client interface {
 	UploadBlob(data []byte, pin bool, encrypt bool) (address []byte, err error)
 	DownloadChunk(ctx context.Context, address []byte) (data []byte, err error)
 	DownloadBlob(address []byte) (data []byte, respCode int, err error)
-	UnpinChunk(ref utils.Reference) error
-	UnpinBlob(ref utils.Reference) error
+	DeleteChunk(address []byte) error
+	DeleteBlob(address []byte) error
 }

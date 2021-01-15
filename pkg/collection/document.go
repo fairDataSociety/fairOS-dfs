@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -227,14 +228,33 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 
 	switch idx.indexType {
 	case StringIndex:
-		if operator != "=" {
-			return 0, ErrInvalidOperator
-		}
-		references, err := idx.Get(fieldValue)
+		itr, err := idx.NewStringIterator(fieldValue, "", -1)
 		if err != nil {
 			return 0, err
 		}
-		return uint64(len(references)), nil
+		switch operator {
+		case "=":
+			itr.Next()
+			refs := itr.ValueAll()
+			return uint64(len(refs)), nil
+		case "=>":
+			var count uint64
+			for itr.Next() {
+				refs := itr.ValueAll()
+				count = count + uint64(len(refs))
+			}
+			return count, nil
+		case ">":
+			var count uint64
+			for itr.Next() {
+				if itr.StringKey() == fieldValue {
+					continue
+				}
+				refs := itr.ValueAll()
+				count = count + uint64(len(refs))
+			}
+			return count, nil
+		}
 	case NumberIndex:
 		start, err := strconv.ParseInt(fieldValue, 10, 64)
 		if err != nil {
@@ -295,6 +315,31 @@ func (d *Document) Put(dbName string, doc []byte) error {
 		}
 	}
 
+	// check if the id is already present
+	// and remove it if it is present
+	idValue := docMap[DefaultIndexFieldName]
+	switch idValue.(type) {
+	case string:
+		idv := idValue.(string)
+		if idv == "" {
+			return ErrInvalidDocumentId
+		} else {
+			idIndex := db.simpleIndexes[DefaultIndexFieldName]
+			refs, err := idIndex.Get(idv)
+			if err != nil {
+				break
+			}
+			if len(refs) > 0 {
+				err = d.Del(dbName, idv)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	default:
+		return ErrInvalidIndexType
+	}
+
 	// upload the document
 	ref, err := d.client.UploadBlob(doc, true, true)
 	if err != nil {
@@ -306,12 +351,19 @@ func (d *Document) Put(dbName string, doc []byte) error {
 		v, _ := docMap[field] // it is already checked to be present
 		switch index.indexType {
 		case StringIndex:
-			err := index.Put(v.(string), ref, StringIndex, true)
+			append := true
+			if field == DefaultIndexFieldName {
+				append = false
+			}
+			err := index.Put(v.(string), ref, StringIndex, append)
 			if err != nil {
 				return err
 			}
 		case NumberIndex:
-			err := index.Put(v.(string), ref, NumberIndex, true)
+			val := v.(float64)
+			val1 := int64(val)
+			valStr := strconv.FormatInt(val1, 10)
+			err := index.Put(valStr, ref, NumberIndex, true)
 			if err != nil {
 				return err
 			}
@@ -353,14 +405,57 @@ func (d *Document) Del(dbName, id string) error {
 		return ErrDocumentDBNotOpened
 	}
 
-	idIndex := db.simpleIndexes[DefaultIndexFieldName]
-	_, err := idIndex.Delete(id)
+	// get the "id" index and retrieve the original document
+	idx := db.simpleIndexes[DefaultIndexFieldName]
+	refs, err := idx.Get(id)
+	if err != nil {
+		if errors.Is(err, ErrEntryNotFound) {
+			return nil
+		}
+		return err
+	}
+	if len(refs) <= 0 {
+		return nil
+	}
+
+	data, _, err := d.client.DownloadBlob(refs[0])
 	if err != nil {
 		return err
 	}
 
-	// TODO: unpin deletedRef[0]
-	return nil
+	var t interface{}
+	err = json.Unmarshal(data, &t)
+	if err != nil {
+		return err
+	}
+	docMap := t.(map[string]interface{})
+
+	// delete all the indexes of the doc
+	for field, index := range db.simpleIndexes {
+		v, _ := docMap[field] // it is already checked to be present
+		switch index.indexType {
+		case StringIndex:
+			_, err := index.Delete(v.(string))
+			if err != nil {
+				return err
+			}
+		case NumberIndex:
+			val := v.(float64)
+			val1 := int64(val)
+			valStr := strconv.FormatInt(val1, 10)
+			_, err := index.Delete(valStr)
+			if err != nil {
+				return err
+			}
+		case BytesIndex:
+			return ErrIndexNotSupported
+		default:
+			return ErrInvalidIndexType
+		}
+	}
+
+	// delete the original data (unpin)
+	return d.client.DeleteBlob(refs[0])
 }
 
 func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
@@ -382,12 +477,33 @@ func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 	var references [][]byte
 	switch idx.indexType {
 	case StringIndex:
-		if operator != "=" {
-			return nil, ErrInvalidOperator
-		}
-		references, err = idx.Get(fieldValue)
+		itr, err := idx.NewStringIterator(fieldValue, "", int64(limit))
 		if err != nil {
 			return nil, err
+		}
+		switch operator {
+		case "=":
+			itr.Next()
+			references = itr.ValueAll()
+		case "=>":
+			for itr.Next() {
+				if limit > 0 && len(references) > limit {
+					break
+				}
+				refs := itr.ValueAll()
+				references = append(references, refs...)
+			}
+		case ">":
+			for itr.Next() {
+				if limit > 0 && len(references) > limit {
+					break
+				}
+				if itr.StringKey() == fieldValue {
+					continue
+				}
+				refs := itr.ValueAll()
+				references = append(references, refs...)
+			}
 		}
 	case NumberIndex:
 		start, err := strconv.ParseInt(fieldValue, 10, 64)

@@ -18,6 +18,7 @@ package collection_test
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"testing"
 
@@ -32,7 +33,7 @@ type TestDocument struct {
 	ID        string `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Age       string `json:"age"`
+	Age       int64  `json:"age"`
 }
 
 func TestDocumentStore(t *testing.T) {
@@ -124,7 +125,7 @@ func TestDocumentStore(t *testing.T) {
 			ID:        "1",
 			FirstName: "John",
 			LastName:  "Doe",
-			Age:       "25",
+			Age:       25,
 		}
 		data, err := json.Marshal(document1)
 		if err != nil {
@@ -184,7 +185,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc.ID != "2" ||
 			gotDoc.FirstName != "John" ||
 			gotDoc.LastName != "boy" ||
-			gotDoc.Age != "25" {
+			gotDoc.Age != 25 {
 			t.Fatalf("invalid json data received")
 		}
 	})
@@ -298,7 +299,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc1.ID != "1" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "Doe" ||
-			gotDoc1.Age != "45" {
+			gotDoc1.Age != 45 {
 			t.Fatalf("invalid json data received")
 		}
 		var gotDoc2 TestDocument
@@ -309,7 +310,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc2.ID != "2" ||
 			gotDoc2.FirstName != "John" ||
 			gotDoc2.LastName != "boy" ||
-			gotDoc2.Age != "25" {
+			gotDoc2.Age != 25 {
 			t.Fatalf("invalid json data received")
 		}
 
@@ -328,7 +329,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc1.ID != "2" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "boy" ||
-			gotDoc1.Age != "25" {
+			gotDoc1.Age != 25 {
 			t.Fatalf("invalid json data received")
 		}
 		err = json.Unmarshal(docs[1], &gotDoc2)
@@ -338,7 +339,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc2.ID != "4" ||
 			gotDoc2.FirstName != "Charlie" ||
 			gotDoc2.LastName != "chaplin" ||
-			gotDoc2.Age != "25" {
+			gotDoc2.Age != 25 {
 			t.Fatalf("invalid json data received")
 		}
 		var gotDoc3 TestDocument
@@ -349,7 +350,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc3.ID != "5" ||
 			gotDoc3.FirstName != "Alice" ||
 			gotDoc3.LastName != "wonderland" ||
-			gotDoc3.Age != "25" {
+			gotDoc3.Age != 25 {
 			t.Fatalf("invalid json data received")
 		}
 
@@ -368,7 +369,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc1.ID != "2" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "boy" ||
-			gotDoc1.Age != "25" {
+			gotDoc1.Age != 25 {
 			t.Fatalf("invalid json data received")
 		}
 		err = json.Unmarshal(docs[1], &gotDoc2)
@@ -378,7 +379,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc2.ID != "4" ||
 			gotDoc2.FirstName != "Charlie" ||
 			gotDoc2.LastName != "chaplin" ||
-			gotDoc2.Age != "25" {
+			gotDoc2.Age != 25 {
 			t.Fatalf("invalid json data received")
 		}
 
@@ -397,7 +398,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc1.ID != "3" ||
 			gotDoc1.FirstName != "Bob" ||
 			gotDoc1.LastName != "michel" ||
-			gotDoc1.Age != "30" {
+			gotDoc1.Age != 30 {
 			t.Fatalf("invalid json data received")
 		}
 		err = json.Unmarshal(docs[1], &gotDoc2)
@@ -407,7 +408,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc2.ID != "1" ||
 			gotDoc2.FirstName != "John" ||
 			gotDoc2.LastName != "Doe" ||
-			gotDoc2.Age != "45" {
+			gotDoc2.Age != 45 {
 			t.Fatalf("invalid json data received")
 		}
 
@@ -426,10 +427,86 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc1.ID != "1" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "Doe" ||
-			gotDoc1.Age != "45" {
+			gotDoc1.Age != 45 {
 			t.Fatalf("invalid json data received")
 		}
 	})
+
+	t.Run("del", func(t *testing.T) {
+		// create a document DB
+		si := make(map[string]collection.IndexType)
+		si["first_name"] = collection.StringIndex
+		si["age"] = collection.NumberIndex
+		createDocumentDBs(t, []string{"docdb_9"}, docStore, si)
+
+		err := docStore.OpenDocumentDB("docdb_9")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Add document and get to see if it is added
+		addDocument(t, docStore, "docdb_9", "1", "John", "Doe", 45)
+		docs, err := docStore.Get("docdb_9", "1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		var gotDoc TestDocument
+		err = json.Unmarshal(docs, &gotDoc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotDoc.ID != "1" ||
+			gotDoc.FirstName != "John" ||
+			gotDoc.LastName != "Doe" ||
+			gotDoc.Age != 45 {
+			t.Fatalf("invalid json data received")
+		}
+
+		// del document
+		err = docStore.Del("docdb_9", "1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		docs, err = docStore.Get("docdb_9", "1")
+		if !errors.Is(err, collection.ErrEntryNotFound) {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("add_add", func(t *testing.T) {
+		// create a document DB
+		si := make(map[string]collection.IndexType)
+		si["first_name"] = collection.StringIndex
+		si["age"] = collection.NumberIndex
+		createDocumentDBs(t, []string{"docdb_10"}, docStore, si)
+
+		err := docStore.OpenDocumentDB("docdb_10")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 45)
+		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 25)
+
+		// count the total docs using id field
+		count1, err := docStore.Count("docdb_10", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count1 != 1 {
+			t.Fatalf("expected count %d, got %d", 1, count1)
+		}
+
+		// count the total docs using another index to make sure we dont have it any index
+		docs, err := docStore.Find("docdb_10", "age=>20", -1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(docs) != 1 {
+			t.Fatalf("expected count %d, got %d", 1, len(docs))
+		}
+	})
+
 }
 
 func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Document, si map[string]collection.IndexType) {
@@ -478,14 +555,14 @@ func checkIndex(t *testing.T, si collection.SIndex, filedName string, idxType co
 }
 
 func createTestDocuments(t *testing.T, docStore *collection.Document, dbName string) {
-	addDocument(t, docStore, dbName, "1", "John", "Doe", "45")
-	addDocument(t, docStore, dbName, "2", "John", "boy", "25")
-	addDocument(t, docStore, dbName, "3", "Bob", "michel", "30")
-	addDocument(t, docStore, dbName, "4", "Charlie", "chaplin", "25")
-	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", "25")
+	addDocument(t, docStore, dbName, "1", "John", "Doe", 45)
+	addDocument(t, docStore, dbName, "2", "John", "boy", 25)
+	addDocument(t, docStore, dbName, "3", "Bob", "michel", 30)
+	addDocument(t, docStore, dbName, "4", "Charlie", "chaplin", 25)
+	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25)
 }
 
-func addDocument(t *testing.T, docStore *collection.Document, dbName string, id, fname, lname, age string) {
+func addDocument(t *testing.T, docStore *collection.Document, dbName string, id, fname, lname string, age int64) {
 	// create the doc
 	doc := &TestDocument{
 		ID:        id,
