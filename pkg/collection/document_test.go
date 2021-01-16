@@ -467,7 +467,7 @@ func TestDocumentStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		docs, err = docStore.Get("docdb_9", "1")
+		_, err = docStore.Get("docdb_9", "1")
 		if !errors.Is(err, collection.ErrEntryNotFound) {
 			t.Fatal(err)
 		}

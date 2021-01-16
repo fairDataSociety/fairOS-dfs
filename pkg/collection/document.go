@@ -46,7 +46,6 @@ type Document struct {
 	client      blockstore.Client
 	openDocDBs  map[string]*DocumentDB
 	openDOcDBMu sync.RWMutex
-	iterator    *Iterator
 	logger      logging.Logger
 }
 
@@ -318,19 +317,18 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	// check if the id is already present
 	// and remove it if it is present
 	idValue := docMap[DefaultIndexFieldName]
-	switch idValue.(type) {
+	switch v := idValue.(type) {
 	case string:
-		idv := idValue.(string)
-		if idv == "" {
+		if v == "" {
 			return ErrInvalidDocumentId
 		} else {
 			idIndex := db.simpleIndexes[DefaultIndexFieldName]
-			refs, err := idIndex.Get(idv)
+			refs, err := idIndex.Get(v)
 			if err != nil {
 				break
 			}
 			if len(refs) > 0 {
-				err = d.Del(dbName, idv)
+				err = d.Del(dbName, v)
 				if err != nil {
 					return err
 				}
@@ -348,14 +346,14 @@ func (d *Document) Put(dbName string, doc []byte) error {
 
 	// update the indexes
 	for field, index := range db.simpleIndexes {
-		v, _ := docMap[field] // it is already checked to be present
+		v := docMap[field] // it is already checked to be present
 		switch index.indexType {
 		case StringIndex:
-			append := true
+			apnd := true
 			if field == DefaultIndexFieldName {
-				append = false
+				apnd = false
 			}
-			err := index.Put(v.(string), ref, StringIndex, append)
+			err := index.Put(v.(string), ref, StringIndex, apnd)
 			if err != nil {
 				return err
 			}
@@ -432,7 +430,7 @@ func (d *Document) Del(dbName, id string) error {
 
 	// delete all the indexes of the doc
 	for field, index := range db.simpleIndexes {
-		v, _ := docMap[field] // it is already checked to be present
+		v := docMap[field] // it is already checked to be present
 		switch index.indexType {
 		case StringIndex:
 			_, err := index.Delete(v.(string))
@@ -633,13 +631,6 @@ func (d *Document) addToOpenedDb(dbName string, docDB *DocumentDB) {
 	d.openDOcDBMu.Lock()
 	defer d.openDOcDBMu.Unlock()
 	d.openDocDBs[dbName] = docDB
-}
-
-func (d *Document) getFieldIndex(db *DocumentDB, fieldName string) *Index {
-	if index, found := db.simpleIndexes[fieldName]; found {
-		return index
-	}
-	return nil
 }
 
 func (d *Document) resolveExpression(expr string) (string, string, string, error) {
