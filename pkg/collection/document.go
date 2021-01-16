@@ -776,11 +776,11 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte) error {
 			}
 		case NumberIndex:
 			var valStr string
-			switch v.(type) {
+			switch v1 := v.(type) {
 			case string:
-				valStr = v.(string)
+				valStr = v1
 			case float64:
-				val := v.(float64)
+				val := v1
 				val1 := int64(val)
 				valStr = strconv.FormatInt(val1, 10)
 			default:
