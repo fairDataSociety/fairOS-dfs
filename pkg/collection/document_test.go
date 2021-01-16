@@ -88,11 +88,19 @@ func TestDocumentStore(t *testing.T) {
 		// first check the default index
 		checkIndex(t, schema.SimpleIndexes[0], collection.DefaultIndexFieldName, collection.StringIndex)
 
-		//second check the string index
-		checkIndex(t, schema.SimpleIndexes[1], "field1", collection.StringIndex)
+		//second check the field in index 1
+		if schema.SimpleIndexes[1].FieldName == "field1" {
+			checkIndex(t, schema.SimpleIndexes[1], "field1", collection.StringIndex)
+		} else {
+			checkIndex(t, schema.SimpleIndexes[1], "field2", collection.NumberIndex)
+		}
 
-		//third check the string index
-		checkIndex(t, schema.SimpleIndexes[2], "field2", collection.NumberIndex)
+		//third check the field in index 2
+		if schema.SimpleIndexes[2].FieldName == "field2" {
+			checkIndex(t, schema.SimpleIndexes[2], "field2", collection.NumberIndex)
+		} else {
+			checkIndex(t, schema.SimpleIndexes[2], "field1", collection.StringIndex)
+		}
 	})
 
 	t.Run("create_and open_document_db", func(t *testing.T) {
