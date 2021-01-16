@@ -1,6 +1,6 @@
 /*
 Copyright © 2020 FairOS Authors
-
+push
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -598,10 +598,10 @@ func loadSchemaAndCheckSimpleIndexCount(t *testing.T, docStore *collection.Docum
 func checkIndex(t *testing.T, si collection.SIndex, filedName string, idxType collection.IndexType) {
 	t.Helper()
 	if si.FieldName != filedName {
-		t.Fatalf("index field not found")
+		t.Fatalf("index field not found: %s, %s", si.FieldName, filedName)
 	}
 	if si.FieldType != idxType {
-		t.Fatalf("index field type is not correct")
+		t.Fatalf("index field type is not correct: %s, %s",si.FieldType, idxType )
 	}
 }
 
