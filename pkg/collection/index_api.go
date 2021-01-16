@@ -116,7 +116,7 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 	return deletedRef, nil
 }
 
-func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest, key string, idxType IndexType, value []byte, memory bool, apnd bool) error {
+func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest, key string, idxType IndexType, value []byte, memory, apnd bool) error {
 	entryAdded := false
 
 	for i := range manifest.Entries {

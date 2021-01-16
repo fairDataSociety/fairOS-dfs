@@ -562,7 +562,7 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25)
 }
 
-func addDocument(t *testing.T, docStore *collection.Document, dbName string, id, fname, lname string, age int64) {
+func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age int64) {
 	// create the doc
 	doc := &TestDocument{
 		ID:        id,
