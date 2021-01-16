@@ -347,7 +347,7 @@ func addDocsForStringIteration(t *testing.T, idx *collection.Index, actualCount 
 	for i := 0; i < int(actualCount); i++ {
 		key := strconv.Itoa(i)
 		value := "value" + strconv.Itoa(i)
-		putDocInIndex(t, idx, key, value, collection.StringIndex)
+		putDocInIndex(t, idx, key, value, collection.StringIndex, false)
 		keys = append(keys, key)
 		values = append(values, value)
 	}
@@ -360,7 +360,7 @@ func addDocsForNumberIteration(t *testing.T, idx *collection.Index, actualCount 
 	for i := 0; i < int(actualCount); i++ {
 		key := strconv.Itoa(i)
 		value := "value" + strconv.Itoa(i)
-		putDocInIndex(t, idx, key, value, collection.NumberIndex)
+		putDocInIndex(t, idx, key, value, collection.NumberIndex, false)
 		keys = append(keys, key)
 		values = append(values, value)
 	}
@@ -380,7 +380,7 @@ func addDocsForRandomStringIteration(t *testing.T, idx *collection.Index, actual
 		}
 		key := strconv.Itoa(a)
 		value := strconv.Itoa(a)
-		putDocInIndex(t, idx, key, value, collection.StringIndex)
+		putDocInIndex(t, idx, key, value, collection.StringIndex, false)
 		keys = append(keys, a)
 		values = append(values, a)
 	}
@@ -409,7 +409,7 @@ func addDocsForRandomNumberIteration(t *testing.T, idx *collection.Index, actual
 		}
 		key := strconv.Itoa(a)
 		value := strconv.Itoa(a)
-		putDocInIndex(t, idx, key, value, collection.NumberIndex)
+		putDocInIndex(t, idx, key, value, collection.NumberIndex, false)
 		keys = append(keys, a)
 		values = append(values, a)
 	}

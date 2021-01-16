@@ -23,8 +23,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/ethersphere/bee/pkg/swarm"
 )
 
@@ -60,7 +58,7 @@ func (m *MockBeeClient) DownloadChunk(ctx context.Context, address []byte) (data
 	return nil, fmt.Errorf("error downloading data")
 }
 
-func (m *MockBeeClient) UploadBlob(data []byte, pin bool, encrypt bool) (address []byte, err error) {
+func (m *MockBeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	address = make([]byte, 32)
@@ -78,10 +76,10 @@ func (m *MockBeeClient) DownloadBlob(address []byte) (data []byte, respCode int,
 	return nil, http.StatusInternalServerError, fmt.Errorf("error downloading data")
 }
 
-func (m *MockBeeClient) UnpinChunk(ref utils.Reference) error {
+func (m *MockBeeClient) DeleteChunk(address []byte) error {
 	return nil
 }
 
-func (m *MockBeeClient) UnpinBlob(ref utils.Reference) error {
+func (m *MockBeeClient) DeleteBlob(address []byte) error {
 	return nil
 }

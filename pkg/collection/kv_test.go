@@ -428,7 +428,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		value := []byte("v1,v2,v3")
-		err = batch.Put("key1", value)
+		err = batch.Put("key1", value, false)
 		if err != nil {
 			t.Fatal(err)
 		}

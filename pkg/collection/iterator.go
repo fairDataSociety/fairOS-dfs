@@ -30,7 +30,7 @@ type Iterator struct {
 	limit         int64
 	givenUntilNow int64
 	currentKey    string
-	currentValue  []byte
+	currentValue  [][]byte
 	currentDigits int
 	manifestStack []*ManifestState
 	error         error
@@ -156,6 +156,10 @@ func (itr *Iterator) IntegerKey() int64 {
 }
 
 func (itr *Iterator) Value() []byte {
+	return itr.currentValue[0]
+}
+
+func (itr *Iterator) ValueAll() [][]byte {
 	return itr.currentValue
 }
 
@@ -169,6 +173,15 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 			// seek can continue from the next element
 			if len(entry.Name) > 0 {
 				if key == "" || entry.Name[0] > key[0] {
+					manifestState := &ManifestState{
+						currentManifest: manifest,
+						currentIndex:    i,
+					}
+					itr.manifestStack = append(itr.manifestStack, manifestState)
+					return nil
+				}
+
+				if entry.EType == LeafEntry && entry.Name > key {
 					manifestState := &ManifestState{
 						currentManifest: manifest,
 						currentIndex:    i,

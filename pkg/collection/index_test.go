@@ -176,7 +176,7 @@ func TestIndex(t *testing.T) {
 		// add some documents
 		actualCount := uint64(100)
 		for i := 0; i < int(actualCount); i++ {
-			putDocInIndex(t, idx, "key"+strconv.Itoa(i), "value"+strconv.Itoa(i), collection.StringIndex)
+			putDocInIndex(t, idx, "key"+strconv.Itoa(i), "value"+strconv.Itoa(i), collection.StringIndex, false)
 		}
 
 		// count and check the count
@@ -215,8 +215,8 @@ func isIndexPresent(t *testing.T, collectionName, indexName string, fd *feed.API
 	return false
 }
 
-func putDocInIndex(t *testing.T, index *collection.Index, key, value string, idxTYpe collection.IndexType) {
-	err := index.Put(key, []byte(value), idxTYpe)
+func putDocInIndex(t *testing.T, index *collection.Index, key, value string, idxTYpe collection.IndexType, apnd bool) {
+	err := index.Put(key, []byte(value), idxTYpe, apnd)
 	if err != nil {
 		t.Fatalf("could not add doc in index: %s:%s, %v", key, value, err)
 	}

@@ -183,9 +183,9 @@ func startHttpService(logger logging.Logger) {
 	kvRouter := baseRouter.PathPrefix("/kv/").Subrouter()
 	kvRouter.Use(handler.LoginMiddleware)
 	kvRouter.Use(handler.LogMiddleware)
-	kvRouter.HandleFunc("/new", handler.KVCreateHandler).Methods("POST")
-	kvRouter.HandleFunc("/ls", handler.KVListHandler).Methods("POST")
-	kvRouter.HandleFunc("/open", handler.KVOpenHandler).Methods("POST")
+	kvRouter.HandleFunc("/new", handler.DocCreateHandler).Methods("POST")
+	kvRouter.HandleFunc("/ls", handler.KVListHandler).Methods("GET")
+	kvRouter.HandleFunc("/open", handler.DocOpenHandler).Methods("POST")
 	kvRouter.HandleFunc("/count", handler.KVCountHandler).Methods("POST")
 	kvRouter.HandleFunc("/delete", handler.KVDeleteHandler).Methods("DELETE")
 	kvRouter.HandleFunc("/entry/put", handler.KVPutHandler).Methods("POST")
@@ -194,6 +194,20 @@ func startHttpService(logger logging.Logger) {
 	kvRouter.HandleFunc("/loadcsv", handler.KVLoadCSVHandler).Methods("POST")
 	kvRouter.HandleFunc("/seek", handler.KVSeekHandler).Methods("POST")
 	kvRouter.HandleFunc("/seek/next", handler.KVGetNextHandler).Methods("GET")
+
+	docRouter := baseRouter.PathPrefix("/doc/").Subrouter()
+	docRouter.Use(handler.LoginMiddleware)
+	docRouter.Use(handler.LogMiddleware)
+	docRouter.HandleFunc("/new", handler.DocCreateHandler).Methods("POST")
+	docRouter.HandleFunc("/ls", handler.DocListHandler).Methods("GET")
+	docRouter.HandleFunc("/open", handler.DocOpenHandler).Methods("POST")
+	docRouter.HandleFunc("/count", handler.DocCountHandler).Methods("POST")
+	docRouter.HandleFunc("/delete", handler.DocDeleteHandler).Methods("DELETE")
+	docRouter.HandleFunc("/find", handler.DocFindHandler).Methods("GET")
+	docRouter.HandleFunc("/loadjson", handler.DocLoadJsonHandler).Methods("POST")
+	docRouter.HandleFunc("/entry/put", handler.DocPutHandler).Methods("POST")
+	docRouter.HandleFunc("/entry/get", handler.DocGetHandler).Methods("GET")
+	docRouter.HandleFunc("/entry/del", handler.DocDelHandler).Methods("DELETE")
 
 	var origins []string
 	for _, c := range corsOrigins {

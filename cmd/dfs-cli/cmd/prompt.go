@@ -104,6 +104,16 @@ const (
 	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
 	apiKVSeek          = APIVersion + "/kv/seek"
 	apiKVSeekNext      = APIVersion + "/kv/seek/next"
+	apiDocCreate       = APIVersion + "/doc/new"
+	apiDocList         = APIVersion + "/doc/ls"
+	apiDocOpen         = APIVersion + "/doc/open"
+	apiDocCount        = APIVersion + "/doc/count"
+	apiDocDelete       = APIVersion + "/doc/delete"
+	apiDocFind         = APIVersion + "/doc/find"
+	apiDocEntryPut     = APIVersion + "/doc/entry/put"
+	apiDocEntryGet     = APIVersion + "/doc/entry/get"
+	apiDocEntryDel     = APIVersion + "/doc/entry/del"
+	apiDocLoadJson     = APIVersion + "/doc/loadjson"
 )
 
 type Message struct {
@@ -171,6 +181,16 @@ var suggestions = []prompt.Suggest{
 	{Text: "kv loadcsv", Description: "loads the csv file in to kv store"},
 	{Text: "kv seek", Description: "seek to the given start prefix"},
 	{Text: "kv getnext", Description: "get the next element"},
+	{Text: "doc new", Description: "creates a new document store"},
+	{Text: "doc delete", Description: "deletes a document store"},
+	{Text: "doc open", Description: "open the document store"},
+	{Text: "doc ls", Description: "list all document dbs"},
+	{Text: "doc count", Description: "count the docs in the table satisfying the expression"},
+	{Text: "doc find", Description: "find the docs in the table satisfying the expression and limit"},
+	{Text: "doc put", Description: "insert a json document in to document store"},
+	{Text: "doc get", Description: "get the document having the id from the store"},
+	{Text: "doc del", Description: "delete the document having the id from the store"},
+	{Text: "doc loadjson", Description: "load the json file in to the newly created document db"},
 	{Text: "cd", Description: "change path"},
 	{Text: "copyToLocal", Description: "copy file from dfs to local machine"},
 	{Text: "copyFromLocal", Description: "copy file from local machine to dfs"},
@@ -827,7 +847,7 @@ func executor(in string) {
 			fmt.Println(message)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiKVList, nil)
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiKVList, nil)
 			if err != nil {
 				fmt.Println("kv new: ", err)
 				return
@@ -1061,6 +1081,266 @@ func executor(in string) {
 			fmt.Println("invalid kv command!!")
 			help()
 		}
+
+	case "doc":
+		if currentUser == "" {
+			fmt.Println("login as a user to execute these commands")
+			return
+		}
+		if len(blocks) < 2 {
+			log.Println("invalid command.")
+			help()
+			return
+		}
+		if !isPodOpened() {
+			return
+		}
+		switch blocks[1] {
+		case "new":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			if len(blocks) == 4 {
+				si := blocks[3]
+				args["si"] = si
+			}
+
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDocCreate, args)
+			if err != nil {
+				fmt.Println("doc new: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "ls":
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDocList, nil)
+			if err != nil {
+				fmt.Println("doc ls: ", err)
+				return
+			}
+			var resp api.DocumentDBs
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("doc ls: ", err)
+				return
+			}
+			for _, table := range resp.Tables {
+				fmt.Println("<DOC>: ", table.Name)
+				for fn, ft := range table.IndexedColumns {
+					fmt.Println("     SI:", fn, ft)
+				}
+			}
+			currentPrompt = getCurrentPrompt()
+		case "open":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDocOpen, args)
+			if err != nil {
+				fmt.Println("doc open: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "count":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+
+			args := make(map[string]string)
+			args["name"] = tableName
+			if len(blocks) == 4 {
+				args["expr"] = blocks[3]
+			}
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDocCount, args)
+			if err != nil {
+				fmt.Println("doc count: ", err)
+				return
+			}
+			count, err := strconv.ParseInt(string(data), 10, 64)
+			if err != nil {
+				fmt.Println("doc count: ", err)
+				return
+			}
+			fmt.Println("Count = ", count)
+			currentPrompt = getCurrentPrompt()
+		case "delete":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiDocDelete, args)
+			if err != nil {
+				fmt.Println("doc del: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "find":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			expr := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["expr"] = expr
+			if len(blocks) == 5 {
+				args["limit"] = blocks[4]
+			} else {
+				args["limit"] = "10"
+			}
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDocFind, args)
+			if err != nil {
+				fmt.Println("doc find: ", err)
+				return
+			}
+			var docs api.DocFindResponse
+			err = json.Unmarshal(data, &docs)
+			if err != nil {
+				fmt.Println("doc find: ", err)
+				return
+			}
+			for i, doc := range docs.Docs {
+				fmt.Println("--- doc ", i)
+				var d map[string]interface{}
+				err = json.Unmarshal(doc, &d)
+				if err != nil {
+					fmt.Println("doc find: ", err)
+					return
+				}
+				for k, v := range d {
+					fmt.Println(k, "=", v)
+				}
+
+			}
+			currentPrompt = getCurrentPrompt()
+		case "put":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			value := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["doc"] = value
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDocEntryPut, args)
+			if err != nil {
+				fmt.Println("doc put: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "get":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			idValue := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["id"] = idValue
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDocEntryGet, args)
+			if err != nil {
+				fmt.Println("doc get: ", err)
+				return
+			}
+
+			var doc api.DocGetResponse
+			err = json.Unmarshal(data, &doc)
+			if err != nil {
+				fmt.Println("doc get: ", err)
+				return
+			}
+			var d map[string]interface{}
+			err = json.Unmarshal(doc.Doc, &d)
+			if err != nil {
+				fmt.Println("doc get: ", err)
+				return
+			}
+			for k, v := range d {
+				fmt.Println(k, "=", v)
+			}
+			currentPrompt = getCurrentPrompt()
+		case "del":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			idValue := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["id"] = idValue
+			data, err := fdfsAPI.callFdfsApi(http.MethodDelete, apiDocEntryDel, args)
+			if err != nil {
+				fmt.Println("doc del: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "loadjson":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			fileName := filepath.Base(blocks[3])
+			localCsvFile := blocks[3]
+
+			fd, err := os.Open(localCsvFile)
+			if err != nil {
+				fmt.Println("loadjson failed: ", err)
+				return
+			}
+			fi, err := fd.Stat()
+			if err != nil {
+				fmt.Println("loadjson failed: ", err)
+				return
+			}
+
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.uploadMultipartFile(apiDocLoadJson, fileName, fi.Size(), fd, args, "json", "false")
+			if err != nil {
+				fmt.Println("loadjson: ", err)
+				return
+			}
+			var resp api.UploadFileResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("loadjson: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		default:
+			fmt.Println("Invalid doc coammand")
+			currentPrompt = getCurrentPrompt()
+		}
+
 	case "cd":
 		if !isPodOpened() {
 			return
@@ -1587,6 +1867,17 @@ func help() {
 	fmt.Println(" - kv <loadcsv> (table-name) (local csv file) - load the csv file in to the newy created table")
 	fmt.Println(" - kv <seek> (table-name) (start-key) (end-key) (limit) - seek nearst to start key")
 	fmt.Println(" - kv <getnext> (table-name) - get the next element after seek")
+
+	fmt.Println(" - doc <new> (table-name) (si=indexes) - creates a new document store")
+	fmt.Println(" - doc <delete> (table-name) - deletes a document store")
+	fmt.Println(" - doc <open> (table-name) - open the document store")
+	fmt.Println(" - doc <ls>  - list all document dbs")
+	fmt.Println(" - doc <count> (table-name) (expr) - count the docs in the table satisfying the expression")
+	fmt.Println(" - doc <find> (table-name) (expr) (limit)- find the docs in the table satisfying the expression and limit")
+	fmt.Println(" - doc <put> (table-name) (json) - insert a json document in to document store")
+	fmt.Println(" - doc <get> (table-name) (id) - get the document having the id from the store")
+	fmt.Println(" - doc <del> (table-name) (id) - delete the document having the id from the store")
+	fmt.Println(" - doc <loadjson> (table-name) (local json file) - load the json file in to the newly created document db")
 
 	fmt.Println(" - cd <directory name>")
 	fmt.Println(" - ls ")
