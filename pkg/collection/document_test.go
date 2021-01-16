@@ -609,7 +609,7 @@ func checkIndex(t *testing.T, si collection.SIndex, filedName string, idxType co
 		t.Fatalf("index field not found: %s, %s", si.FieldName, filedName)
 	}
 	if si.FieldType != idxType {
-		t.Fatalf("index field type is not correct: %s, %s",si.FieldType, idxType )
+		t.Fatalf("index field type is not correct: %s, %s", si.FieldType, idxType)
 	}
 }
 
