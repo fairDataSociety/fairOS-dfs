@@ -230,7 +230,7 @@ func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 			table.columns = strings.Split(string(value), ",")
 		}
 	}
-	return batch.Put(key, value)
+	return batch.Put(key, value, false)
 }
 
 func (kv *KeyValue) KVBatchWrite(batch *Batch) error {

@@ -70,6 +70,11 @@ type CIndex struct {
 	SimpleIndexes []SIndex
 }
 
+type DocBatch struct {
+	db      *DocumentDB
+	batches map[string]*Batch
+}
+
 func NewDocumentStore(fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) *Document {
 	return &Document{
 		fd:         fd,
@@ -654,85 +659,153 @@ func (d *Document) resolveExpression(expr string) (string, string, string, error
 	return fieldName, operator, fieldValue, nil
 }
 
-//func (d *Document) Get(dbName, expr string, limit int) ([][]byte, error) {
-//	db := d.getOpenedDb(dbName)
-//	if db == nil {
-//		return nil, ErrDocumentDBNotOpened
-//	}
-//
-//	var operator string
-//	if strings.Contains(expr, "=>") {
-//		operator = "=>"
-//	} else if strings.Contains(expr, "<=") {
-//		operator = "<="
-//	} else if strings.Contains(expr, "=") {
-//		operator = "="
-//	} else {
-//		return nil, ErrInvalidOperator
-//	}
-//
-//	f := strings.Split(expr, operator)
-//	fieldName := f[0]
-//	fieldValue := f[1]
-//
-//	idx, found := db.simpleIndexes[fieldName]
-//	if !found {
-//		return nil, ErrIndexNotPresent
-//	}
-//
-//	var references [][]byte
-//
-//	switch operator {
-//	case "=":
-//		refs, err := idx.Get(fieldValue)
-//		if err != nil {
-//			return nil, err
-//		}
-//		references = refs
-//	case "=>":
-//		if idx.indexType == NumberIndex {
-//			val, err := strconv.ParseInt(fieldValue, 10, 64)
-//			if err != nil {
-//				return nil, err
-//			}
-//			itr, err := idx.NewIntIterator(val, -1, int64(limit))
-//			if err != nil {
-//				return nil, err
-//			}
-//
-//			for itr.Next() {
-//				if len(references) < limit {
-//					valueAll := itr.ValueAll()
-//					totalLen := len(references) + len(valueAll)
-//					if totalLen > limit {
-//						diff := totalLen - limit
-//						references = append(references, valueAll[diff:]...)
-//					} else {
-//						references = append(references, valueAll...)
-//					}
-//				} else {
-//					break
-//				}
-//			}
-//		} else {
-//			return nil, ErrInvalidOperator
-//		}
-//	case "<=":
-//		return nil, ErrNotImplemented
-//	default:
-//		return nil, ErrInvalidOperator
-//	}
-//
-//	var docs [][]byte
-//	for _, ref := range references {
-//		if len(docs) >= limit {
-//			break
-//		}
-//		data, _, err := d.client.DownloadBlob(ref)
-//		if err != nil {
-//			return nil, err
-//		}
-//		docs = append(docs, data)
-//	}
-//	return docs, nil
-//}
+func (d *Document) CreateDocBatch(name string) (*DocBatch, error) {
+	d.openDOcDBMu.Lock()
+	defer d.openDOcDBMu.Unlock()
+	if db, ok := d.openDocDBs[name]; ok {
+		var docBatch DocBatch
+		docBatch.db = db
+		docBatch.batches = make(map[string]*Batch)
+		for fieldName, idx := range db.simpleIndexes {
+			batch, err := NewBatch(idx)
+			if err != nil {
+				return nil, err
+			}
+			docBatch.batches[fieldName] = batch
+		}
+		return &docBatch, nil
+	}
+	return nil, ErrDocumentDBNotOpened
+}
+
+func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte) error {
+	d.openDOcDBMu.Lock()
+	defer d.openDOcDBMu.Unlock()
+
+	var t interface{}
+	err := json.Unmarshal(doc, &t)
+	if err != nil {
+		return err
+	}
+	docMap := t.(map[string]interface{})
+
+	// check if docMap has all the fields in the simpleIndex
+	for field := range docBatch.db.simpleIndexes {
+		if _, found := docMap[field]; !found {
+			return ErrDocumentDBIndexFieldNotPresent
+		}
+	}
+
+	// check if the id is already present
+	// and remove it if it is present
+	idValue := docMap[DefaultIndexFieldName]
+	switch v := idValue.(type) {
+	case string:
+		if v == "" {
+			return ErrInvalidDocumentId
+		} else {
+			idBatchIndex := docBatch.batches[DefaultIndexFieldName]
+			refs, err := idBatchIndex.Get(v)
+			if err != nil {
+				break
+			}
+			if len(refs) > 0 {
+				data, _, err := d.client.DownloadBlob(refs[0])
+				if err != nil {
+					return err
+				}
+
+				var t interface{}
+				err = json.Unmarshal(data, &t)
+				if err != nil {
+					return err
+				}
+				oldDocMap := t.(map[string]interface{})
+
+				for field, batchIndex := range docBatch.batches {
+					v1 := oldDocMap[field] // it is already checked to be present
+					switch batchIndex.idx.indexType {
+					case StringIndex:
+						_, err := batchIndex.Del(v1.(string))
+						if err != nil {
+							return err
+						}
+					case NumberIndex:
+						val := v1.(float64)
+						val1 := int64(val)
+						valStr := strconv.FormatInt(val1, 10)
+						_, err := batchIndex.Del(valStr)
+						if err != nil {
+							return err
+						}
+					case BytesIndex:
+						return ErrIndexNotSupported
+					default:
+						return ErrInvalidIndexType
+					}
+				}
+
+				err = d.client.DeleteBlob(refs[0])
+				if err != nil {
+					return err
+				}
+			}
+		}
+	default:
+		return ErrInvalidIndexType
+	}
+
+	// upload the document
+	ref, err := d.client.UploadBlob(doc, true, true)
+	if err != nil {
+		return err
+	}
+
+	// update the indexes
+	for field, batchIndex := range docBatch.batches {
+		v := docMap[field] // it is already checked to be present
+		switch batchIndex.idx.indexType {
+		case StringIndex:
+			apnd := true
+			if field == DefaultIndexFieldName {
+				apnd = false
+			}
+			err := batchIndex.Put(v.(string), ref, apnd)
+			if err != nil {
+				return err
+			}
+		case NumberIndex:
+			var valStr string
+			switch v.(type) {
+			case string:
+				valStr = v.(string)
+			case float64:
+				val := v.(float64)
+				val1 := int64(val)
+				valStr = strconv.FormatInt(val1, 10)
+			default:
+				return ErrIndexNotSupported
+			}
+			err := batchIndex.Put(valStr, ref, true)
+			if err != nil {
+				return err
+			}
+		case BytesIndex:
+			return ErrIndexNotSupported
+		default:
+			return ErrInvalidIndexType
+		}
+	}
+
+	return nil
+}
+
+func (d *Document) DocBatchWrite(docBatch *DocBatch) error {
+	for _, batch := range docBatch.batches {
+		err := batch.Write()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

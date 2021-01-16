@@ -212,7 +212,7 @@ func (d *DfsAPI) KVBatchPut(sessionId, key string, value []byte, batch *collecti
 		return ErrPodNotOpen
 	}
 
-	return batch.Put(key, value)
+	return batch.Put(key, value, false)
 }
 
 func (d *DfsAPI) KVBatchWrite(sessionId string, batch *collection.Batch) error {

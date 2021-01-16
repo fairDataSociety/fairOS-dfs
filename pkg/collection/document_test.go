@@ -507,9 +507,57 @@ func TestDocumentStore(t *testing.T) {
 		}
 	})
 
+	t.Run("batch", func(t *testing.T) {
+		// create a document DB
+		si := make(map[string]collection.IndexType)
+		si["first_name"] = collection.StringIndex
+		si["age"] = collection.NumberIndex
+		createDocumentDBs(t, []string{"docdb_11"}, docStore, si)
+
+		err := docStore.OpenDocumentDB("docdb_11")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		docBatch, err := docStore.CreateDocBatch("docdb_11")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 45)
+		addBatchDocument(t, docStore, docBatch, "2", "John", "boy", 25)
+		addBatchDocument(t, docStore, docBatch, "3", "Alice", "wonderland", 20)
+		addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 35) // this tests the overwriting in batch
+
+		err = docStore.DocBatchWrite(docBatch)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// count the total docs using id field
+		count1, err := docStore.Count("docdb_11", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count1 != 3 {
+			t.Fatalf("expected count %d, got %d", 3, count1)
+		}
+
+		// count the total docs using another index to make sure we dont have it any index
+		docs, err := docStore.Find("docdb_11", "age=>20", -1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(docs) != 3 {
+			t.Fatalf("expected count %d, got %d", 3, len(docs))
+		}
+
+	})
+
 }
 
 func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Document, si map[string]collection.IndexType) {
+	t.Helper()
 	for _, dbName := range dbNames {
 		err := docStore.CreateDocumentDB(dbName, si)
 		if err != nil {
@@ -519,6 +567,7 @@ func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Docu
 }
 
 func checkIfDBsExists(t *testing.T, dbNames []string, docStore *collection.Document) {
+	t.Helper()
 	tables, err := docStore.LoadDocumentDBSchemas()
 	if err != nil {
 		t.Fatal(err)
@@ -531,6 +580,7 @@ func checkIfDBsExists(t *testing.T, dbNames []string, docStore *collection.Docum
 }
 
 func loadSchemaAndCheckSimpleIndexCount(t *testing.T, docStore *collection.Document, dbName string, count int) collection.DBSchema {
+	t.Helper()
 	tables, err := docStore.LoadDocumentDBSchemas()
 	if err != nil {
 		t.Fatal(err)
@@ -546,6 +596,7 @@ func loadSchemaAndCheckSimpleIndexCount(t *testing.T, docStore *collection.Docum
 }
 
 func checkIndex(t *testing.T, si collection.SIndex, filedName string, idxType collection.IndexType) {
+	t.Helper()
 	if si.FieldName != filedName {
 		t.Fatalf("index field not found")
 	}
@@ -555,6 +606,7 @@ func checkIndex(t *testing.T, si collection.SIndex, filedName string, idxType co
 }
 
 func createTestDocuments(t *testing.T, docStore *collection.Document, dbName string) {
+	t.Helper()
 	addDocument(t, docStore, dbName, "1", "John", "Doe", 45)
 	addDocument(t, docStore, dbName, "2", "John", "boy", 25)
 	addDocument(t, docStore, dbName, "3", "Bob", "michel", 30)
@@ -563,6 +615,7 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 }
 
 func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age int64) {
+	t.Helper()
 	// create the doc
 	doc := &TestDocument{
 		ID:        id,
@@ -579,6 +632,29 @@ func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname,
 
 	// insert the docment in the DB
 	err = docStore.Put(dbName, data)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *collection.DocBatch, id, fname, lname string, age int64) {
+	t.Helper()
+	// create the doc
+	doc := &TestDocument{
+		ID:        id,
+		FirstName: fname,
+		LastName:  lname,
+		Age:       age,
+	}
+
+	// marshall the doc
+	data, err := json.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// insert the document in the batch
+	err = docStore.DocBatchPut(docBatch, data)
 	if err != nil {
 		t.Fatal(err)
 	}

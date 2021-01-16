@@ -197,3 +197,63 @@ func (d *DfsAPI) DocFind(sessionId, name, expr string, limit int) ([][]byte, err
 
 	return podInfo.GetDocStore().Find(name, expr, limit)
 }
+
+func (d *DfsAPI) DocBatch(sessionId, name string) (*collection.DocBatch, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+
+	return podInfo.GetDocStore().CreateDocBatch(name)
+}
+
+func (d *DfsAPI) DocBatchPut(sessionId string, doc []byte, docBatch *collection.DocBatch) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetDocStore().DocBatchPut(docBatch, doc)
+}
+
+func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetDocStore().DocBatchWrite(docBatch)
+}

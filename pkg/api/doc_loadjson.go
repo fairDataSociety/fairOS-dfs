@@ -74,6 +74,14 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	rowCount := 0
 	successCount := 0
 	failureCount := 0
+
+	docBatch, err := h.dfsAPI.DocBatch(sessionId, name)
+	if err != nil {
+		h.logger.Errorf("doc loadjson: %v", err)
+		jsonhttp.InternalServerError(w, "doc loadjson: "+err.Error())
+		return
+	}
+
 	for {
 		// read one row from csv (assuming
 		record, err := reader.ReadString('\n')
@@ -90,13 +98,20 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 		record = strings.TrimSuffix(record, "\n")
 		record = strings.TrimSuffix(record, "\r")
 
-		err = h.dfsAPI.DocPut(sessionId, name, []byte(record))
+		err = h.dfsAPI.DocBatchPut(sessionId, []byte(record), docBatch)
 		if err != nil {
 			failureCount++
 			continue
 		}
 		successCount++
 	}
+	err = h.dfsAPI.DocBatchWrite(sessionId, docBatch)
+	if err != nil {
+		h.logger.Errorf("doc loadjso: %v", err)
+		jsonhttp.InternalServerError(w, "doc loadjso: "+err.Error())
+		return
+	}
+
 	err = fd.Close()
 	if err != nil {
 		h.logger.Errorf("doc loadjson: %v", err)

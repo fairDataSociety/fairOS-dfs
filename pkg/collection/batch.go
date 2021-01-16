@@ -19,6 +19,9 @@ package collection
 import (
 	"context"
 	"errors"
+	"fmt"
+	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -33,7 +36,7 @@ func NewBatch(idx *Index) (*Batch, error) {
 	}, nil
 }
 
-func (b *Batch) Put(key string, refValue []byte) error {
+func (b *Batch) Put(key string, refValue []byte, apnd bool) error {
 	if b.memDb == nil {
 		manifest := &Manifest{
 			Name:         b.idx.name,
@@ -44,7 +47,78 @@ func (b *Batch) Put(key string, refValue []byte) error {
 		b.memDb = manifest
 	}
 	ctx := context.Background()
-	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, key, b.idx.indexType, refValue, true, false)
+
+	stringKey := key
+	if b.idx.indexType == NumberIndex {
+		i, err := strconv.ParseInt(stringKey, 10, 64)
+		if err != nil {
+			return ErrKVKeyNotANumber
+		}
+		stringKey = fmt.Sprintf("%020d", i)
+	}
+	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, refValue, true, apnd)
+}
+
+func (b *Batch) Get(key string) ([][]byte, error) {
+	if b.memDb == nil {
+		return nil, ErrEntryNotFound
+	}
+	if len(b.memDb.Entries) > 0 {
+		stringKey := key
+		if b.idx.indexType == NumberIndex {
+			i, err := strconv.ParseInt(stringKey, 10, 64)
+			if err != nil {
+				return nil, ErrKVKeyNotANumber
+			}
+			stringKey = fmt.Sprintf("%020d", i)
+		}
+
+		_, manifest, i, err := b.idx.findManifest(nil, b.memDb, stringKey, true)
+		if err != nil {
+			return nil, err
+		}
+		return manifest.Entries[i].Ref, nil
+	}
+	return nil, ErrEntryNotFound
+}
+
+func (b *Batch) Del(key string) ([][]byte, error) {
+	if b.memDb == nil {
+		return nil, ErrEntryNotFound
+	}
+	if len(b.memDb.Entries) > 0 {
+		stringKey := key
+		if b.idx.indexType == NumberIndex {
+			i, err := strconv.ParseInt(stringKey, 10, 64)
+			if err != nil {
+				return nil, ErrKVKeyNotANumber
+			}
+			stringKey = fmt.Sprintf("%020d", i)
+		}
+		parentManifest, manifest, i, err := b.idx.findManifest(nil, b.memDb, stringKey, true)
+		if err != nil {
+			return nil, err
+		}
+
+		deletedRef := manifest.Entries[i].Ref
+
+		if parentManifest != nil && len(manifest.Entries) == 1 && manifest.Entries[0].Name == "" {
+			// then we have to remove the intermediate node in the parent manifest
+			// so that the entire branch goes kaboom
+			parentEntryKey := filepath.Base(manifest.Name)
+			for i, entry := range parentManifest.Entries {
+				if entry.EType == IntermediateEntry && entry.Name == parentEntryKey {
+					deletedRef = entry.Ref
+					parentManifest.Entries = append(parentManifest.Entries[:i], parentManifest.Entries[i+1:]...)
+					break
+				}
+			}
+			return deletedRef, nil
+		}
+		manifest.Entries = append(manifest.Entries[:i], manifest.Entries[i+1:]...)
+		return deletedRef, nil
+	}
+	return nil, ErrEntryNotFound
 }
 
 func (b *Batch) Write() error {
