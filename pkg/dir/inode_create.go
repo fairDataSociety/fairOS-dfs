@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) CreateDirINode(podName string, dirName string, parent *DirInode) (*DirInode, []byte, error) {
+func (d *Directory) CreateDirINode(podName, dirName string, parent *DirInode) (*DirInode, []byte, error) {
 	// create the meta data
 	parentPath := getPath(podName, parent)
 	now := time.Now().Unix()
@@ -56,7 +56,7 @@ func (d *Directory) CreateDirINode(podName string, dirName string, parent *DirIn
 	return dirInode, topic, nil
 }
 
-func (d *Directory) IsDirINodePresent(podName string, dirName string, parent *DirInode) bool {
+func (d *Directory) IsDirINodePresent(podName, dirName string, parent *DirInode) bool {
 	parentPath := getPath(podName, parent)
 	totalPath := parentPath + utils.PathSeperator + dirName
 	topic := utils.HashString(totalPath)

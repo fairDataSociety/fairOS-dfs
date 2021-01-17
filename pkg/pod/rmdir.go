@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (p *Pod) RemoveDir(podName string, dirName string) error {
+func (p *Pod) RemoveDir(podName, dirName string) error {
 	if !p.isPodOpened(podName) {
 		return ErrPodNotOpened
 	}
