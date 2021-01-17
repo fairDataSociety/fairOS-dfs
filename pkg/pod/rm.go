@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/ethersphere/bee/pkg/swarm"
-
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -75,6 +75,35 @@ func (p *Pod) RemoveFile(podName, podFile string) error {
 			if meta.Name != gopath.Base(path) {
 				newHashes = append(newHashes, hash)
 			} else {
+				err = p.client.DeleteBlob(hash)
+				if err != nil {
+					p.logger.Errorf("could not delete file meta ", swarm.NewAddress(hash).String())
+					continue
+				}
+				fdata, respCode, err := p.GetClient().DownloadBlob(meta.InodeAddress)
+				if err != nil || respCode != http.StatusOK {
+					p.logger.Warningf("could not load address ", swarm.NewAddress(meta.InodeAddress).String())
+					continue
+				}
+				var fInode *file.FileINode
+				err = json.Unmarshal(fdata, &fInode)
+				if err != nil {
+					p.logger.Warningf("could not unmarshall data in address ", swarm.NewAddress(meta.InodeAddress).String())
+					continue
+				}
+				err = p.client.DeleteBlob(meta.InodeAddress)
+				if err != nil {
+					p.logger.Errorf("could not delete file inode ", swarm.NewAddress(meta.InodeAddress).String())
+					continue
+				}
+				for _, fblocks := range fInode.FileBlocks {
+					err = p.client.DeleteBlob(fblocks.Address)
+					if err != nil {
+						p.logger.Errorf("could not delete file block ", swarm.NewAddress(fblocks.Address).String())
+						continue
+					}
+				}
+
 				podInfo.getFile().RemoveFromFileMap(path)
 			}
 		}

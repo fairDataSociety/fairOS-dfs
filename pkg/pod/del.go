@@ -50,13 +50,19 @@ func (p *Pod) DeletePod(podName string) error {
 		return err
 	}
 
+	//delete the pod inode
+	podInfo, err := p.GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return err
+	}
+	err = podInfo.dir.DeletePodInode(podName)
+	if err != nil {
+		return err
+	}
+
 	if p.isPodOpened(podName) {
 		return p.ClosePod(podName)
 	} else {
-		podInfo, err := p.GetPodInfoFromPodMap(podName)
-		if err != nil {
-			return err
-		}
 		podInfo.dir.RemoveFromDirectoryMap(podName)
 		p.removePodFromPodMap(podName)
 	}

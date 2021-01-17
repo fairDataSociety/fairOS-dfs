@@ -19,6 +19,7 @@ package mock
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -77,9 +78,21 @@ func (m *MockBeeClient) DownloadBlob(address []byte) (data []byte, respCode int,
 }
 
 func (m *MockBeeClient) DeleteChunk(address []byte) error {
-	return nil
+	m.storerMu.Lock()
+	defer m.storerMu.Unlock()
+	if _, found := m.storer[swarm.NewAddress(address).String()]; found {
+		delete(m.storer, swarm.NewAddress(address).String())
+		return nil
+	}
+	return errors.New("chunk not found")
 }
 
 func (m *MockBeeClient) DeleteBlob(address []byte) error {
-	return nil
+	m.storerMu.Lock()
+	defer m.storerMu.Unlock()
+	if _, found := m.storer[swarm.NewAddress(address).String()]; found {
+		delete(m.storer, swarm.NewAddress(address).String())
+		return nil
+	}
+	return errors.New("blob not found")
 }
