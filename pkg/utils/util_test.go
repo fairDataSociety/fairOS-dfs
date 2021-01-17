@@ -19,7 +19,6 @@ package utils
 import (
 	"bytes"
 	"crypto/rand"
-	"fmt"
 	"testing"
 
 	"github.com/ethersphere/bee/pkg/content"
@@ -40,7 +39,6 @@ func Test_Address(t *testing.T) {
 	refBytes := ch.Address().Bytes()
 	ref := NewReference(refBytes)
 	refHexString := ref.String()
-	fmt.Println(refHexString)
 	newRef, err := ParseHexReference(refHexString)
 	if err != nil {
 		t.Fatal(err)

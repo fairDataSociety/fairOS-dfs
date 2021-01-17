@@ -50,9 +50,9 @@ type Document struct {
 }
 
 type DocumentDB struct {
-	name            string
-	simpleIndexes   map[string]*Index
-	compoundIndexes map[string]*CompoundIndex
+	name          string
+	simpleIndexes map[string]*Index
+	//compoundIndexes map[string]*CompoundIndex
 }
 
 type DBSchema struct {
@@ -165,9 +165,9 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 
 	// create the document DB index map
 	docDB := &DocumentDB{
-		name:            dbName,
-		simpleIndexes:   simpleIndexs,
-		compoundIndexes: nil,
+		name:          dbName,
+		simpleIndexes: simpleIndexs,
+		//compoundIndexes: nil,
 	}
 
 	// add to the open DB map

@@ -90,6 +90,10 @@ func (h *Handler) update(req *Request) ([]byte, error) {
 	return addr, nil
 }
 
+func (h *Handler) deleteChunk(ref []byte) error {
+	return h.client.DeleteChunk(ref)
+}
+
 // GetContent retrieves the data payload of the last synced update of the feed
 func (h *Handler) GetContent(feed *Feed) (swarm.Address, []byte, error) {
 	if feed == nil {

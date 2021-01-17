@@ -110,7 +110,7 @@ func TestFeed(t *testing.T) {
 		fd := New(accountInfo1, client, logger)
 		topic := hashString("topic3")
 		data := []byte{0}
-		_, err := fd.CreateFeed(topic, user1, data)
+		_, err = fd.CreateFeed(topic, user1, data)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -118,7 +118,7 @@ func TestFeed(t *testing.T) {
 		for i := 1; i < 256; i++ {
 			buf := make([]byte, 4)
 			binary.LittleEndian.PutUint16(buf, uint16(i))
-			_, err := fd.UpdateFeed(topic, user1, buf)
+			_, err = fd.UpdateFeed(topic, user1, buf)
 			if err != nil {
 				t.Fatal(err)
 			}

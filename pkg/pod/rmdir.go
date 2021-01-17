@@ -56,6 +56,12 @@ func (p *Pod) RemoveDir(podName string, dirName string) error {
 		return err
 	}
 	directory.GetPrefixPodFromPathMap(topic)
+
+	// delete the directory inode
+	err = info.dir.DeletePodInode(topic)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

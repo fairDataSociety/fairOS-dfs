@@ -104,3 +104,14 @@ func (d *Directory) CreatePodINode(podName string) (*DirInode, []byte, error) {
 	d.AddToDirectoryMap(totalPath, dirInode)
 	return dirInode, topic, nil
 }
+
+func (d *Directory) DeletePodInode(podName string) error {
+	totalPath := utils.PathSeperator + podName
+	topic := utils.HashString(totalPath)
+	return d.fd.DeleteFeed(topic, d.acc.GetAddress())
+}
+
+func (d *Directory) DeleteDirectoryInode(dirPath string) error {
+	topic := utils.HashString(dirPath)
+	return d.fd.DeleteFeed(topic, d.acc.GetAddress())
+}

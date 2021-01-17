@@ -215,9 +215,35 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 		return nil, err
 	}
 
+	//// delete the previous feed chunk before adding the new chunk
+	//delRef, _, err := a.GetFeedData(topic, user)
+	//if err != nil && err.Error() != "no feed updates found" {
+	//	return nil, err
+	//}
+	//if delRef != nil {
+	//	err = a.handler.deleteChunk(delRef)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
+
 	address, err := a.handler.update(req)
 	if err != nil {
 		return nil, err
 	}
 	return address, nil
+}
+
+func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
+	delRef, _, err := a.GetFeedData(topic, user)
+	if err != nil && err.Error() != "no feed updates found" {
+		return err
+	}
+	if delRef != nil {
+		err = a.handler.deleteChunk(delRef)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
