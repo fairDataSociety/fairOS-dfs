@@ -78,7 +78,6 @@ func TestPod_RemoveFile(t *testing.T) {
 			t.Fatal(err)
 		}
 
-
 		os.Remove(fileInfo.Name())
 		err = pod1.DeletePod(podName1)
 		if err != nil {
