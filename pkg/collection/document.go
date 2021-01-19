@@ -37,6 +37,8 @@ import (
 const (
 	DocumentFile          = "document_dbs"
 	DefaultIndexFieldName = "id"
+	FieldTypeMap          = "map"
+	FieldTypeList         = "list"
 )
 
 type Document struct {
@@ -52,12 +54,15 @@ type Document struct {
 type DocumentDB struct {
 	name          string
 	simpleIndexes map[string]*Index
-	//compoundIndexes map[string]*CompoundIndex
+	mapIndexes    map[string]*Index
+	listIndexes   map[string]*Index
 }
 
 type DBSchema struct {
 	Name            string   `json:"name"`
-	SimpleIndexes   []SIndex `json:"simple_indexes"`
+	SimpleIndexes   []SIndex `json:"simple_indexes,omitempty"`
+	MapIndexes      []SIndex `json:"map_indexes,omitempty"`
+	ListIndexes     []SIndex `json:"list_indexes,omitempty"`
 	CompoundIndexes []CIndex `json:"compound_indexes,omitempty"`
 }
 
@@ -86,7 +91,7 @@ func NewDocumentStore(fd *feed.API, ai *account.Info, user utils.Address, client
 	}
 }
 
-func (d *Document) CreateDocumentDB(dbName string, si map[string]IndexType) error {
+func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType) error {
 	// check if the db is already present and opened
 	if d.IsDBOpened(dbName) {
 		return ErrDocumentDBAlreadyOpened
@@ -107,8 +112,11 @@ func (d *Document) CreateDocumentDB(dbName string, si map[string]IndexType) erro
 		return err
 	}
 
-	// create the default index
 	var simpleIndexes []SIndex
+	var mapIndexes []SIndex
+	var listIndexes []SIndex
+
+	// create the default index
 	defaultIndex := SIndex{
 		FieldName: DefaultIndexFieldName,
 		FieldType: StringIndex,
@@ -116,7 +124,7 @@ func (d *Document) CreateDocumentDB(dbName string, si map[string]IndexType) erro
 	simpleIndexes = append(simpleIndexes, defaultIndex)
 
 	// Now add the other indexes to simpleIndexes array
-	for fieldName, fieldType := range si {
+	for fieldName, fieldType := range indexes {
 		// create the simple index
 		err = CreateIndex(dbName, fieldName, fieldType, d.fd, d.user, d.client)
 		if err != nil {
@@ -126,13 +134,21 @@ func (d *Document) CreateDocumentDB(dbName string, si map[string]IndexType) erro
 			FieldName: fieldName,
 			FieldType: fieldType,
 		}
-		simpleIndexes = append(simpleIndexes, newIndex)
+		if fieldType == MapIndex {
+			mapIndexes = append(mapIndexes, newIndex)
+		} else if fieldType == ListIndex {
+			listIndexes = append(listIndexes, newIndex)
+		} else {
+			simpleIndexes = append(simpleIndexes, newIndex)
+		}
 	}
 
 	// add the simple indexes to the schema
 	docTables[dbName] = DBSchema{
 		Name:          dbName,
 		SimpleIndexes: simpleIndexes,
+		MapIndexes:    mapIndexes,
+		ListIndexes:   listIndexes,
 	}
 	return d.storeDocumentDBSchemas(docTables)
 }
@@ -163,11 +179,32 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 		simpleIndexs[si.FieldName] = idx
 	}
 
+	// open the map indexes
+	mapIndexs := make(map[string]*Index)
+	for _, mi := range schema.MapIndexes {
+		idx, err := OpenIndex(dbName, mi.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
+		if err != nil {
+			return err
+		}
+		mapIndexs[mi.FieldName] = idx
+	}
+
+	// open the list indexes
+	listIndexes := make(map[string]*Index)
+	for _, li := range schema.MapIndexes {
+		idx, err := OpenIndex(dbName, li.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
+		if err != nil {
+			return err
+		}
+		listIndexes[li.FieldName] = idx
+	}
+
 	// create the document DB index map
 	docDB := &DocumentDB{
 		name:          dbName,
 		simpleIndexes: simpleIndexs,
-		//compoundIndexes: nil,
+		mapIndexes:    mapIndexs,
+		listIndexes:   listIndexes,
 	}
 
 	// add to the open DB map
@@ -196,6 +233,12 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
 	for _, si := range docDB.simpleIndexes {
 		return si.DeleteIndex()
+	}
+	for _, mi := range docDB.mapIndexes {
+		return mi.DeleteIndex()
+	}
+	for _, li := range docDB.listIndexes {
+		return li.DeleteIndex()
 	}
 
 	// delete the document db from the DB file
@@ -227,11 +270,19 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 	}
 	idx, found := db.simpleIndexes[fieldName]
 	if !found {
-		return 0, ErrIndexNotPresent
+		idx, found = db.mapIndexes[fieldName]
+		if !found {
+			idx, found = db.listIndexes[fieldName]
+			if !found {
+				return 0, ErrIndexNotPresent
+			}
+		} else {
+			fieldValue = strings.Replace(fieldValue, ":", "", -1)
+		}
 	}
 
 	switch idx.indexType {
-	case StringIndex:
+	case StringIndex, MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", -1)
 		if err != nil {
 			return 0, err
@@ -350,7 +401,17 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	}
 
 	// update the indexes
+	indexes := make(map[string]*Index)
 	for field, index := range db.simpleIndexes {
+		indexes[field] = index
+	}
+	for field, index := range db.mapIndexes {
+		indexes[field] = index
+	}
+	for field, index := range db.listIndexes {
+		indexes[field] = index
+	}
+	for field, index := range indexes {
 		v := docMap[field] // it is already checked to be present
 		switch index.indexType {
 		case StringIndex:
@@ -361,6 +422,24 @@ func (d *Document) Put(dbName string, doc []byte) error {
 			err := index.Put(v.(string), ref, StringIndex, apnd)
 			if err != nil {
 				return err
+			}
+		case MapIndex:
+			valMap := v.(map[string]interface{})
+			for keyField, vf := range valMap {
+				valueField := vf.(string)
+				mapField := keyField + valueField
+				err := index.Put(mapField, ref, StringIndex, true)
+				if err != nil {
+					return err
+				}
+			}
+		case ListIndex:
+			valList := v.([]string)
+			for _, listVal := range valList {
+				err := index.Put(listVal, ref, StringIndex, true)
+				if err != nil {
+					return err
+				}
 			}
 		case NumberIndex:
 			val := v.(float64)
@@ -442,6 +521,25 @@ func (d *Document) Del(dbName, id string) error {
 			if err != nil {
 				return err
 			}
+		case MapIndex:
+			valMap := v.(map[string]interface{})
+			for keyField, valueField := range valMap {
+				vf := valueField.(string)
+				mapField := keyField + vf
+				_, err := index.Delete(mapField)
+				if err != nil {
+					return err
+				}
+			}
+		case ListIndex:
+			valList := v.([]string)
+			for _, listVal := range valList {
+				_, err := index.Delete(listVal)
+				if err != nil {
+					return err
+				}
+			}
+
 		case NumberIndex:
 			val := v.(float64)
 			val1 := int64(val)
@@ -474,12 +572,20 @@ func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 
 	idx, found := db.simpleIndexes[fieldName]
 	if !found {
-		return nil, ErrIndexNotPresent
+		idx, found = db.mapIndexes[fieldName]
+		if !found {
+			idx, found = db.listIndexes[fieldName]
+			if !found {
+				return nil, ErrIndexNotPresent
+			}
+		} else {
+			fieldValue = strings.Replace(fieldValue, ":", "", -1)
+		}
 	}
 
 	var references [][]byte
 	switch idx.indexType {
-	case StringIndex:
+	case StringIndex, MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", int64(limit))
 		if err != nil {
 			return nil, err
@@ -666,6 +772,7 @@ func (d *Document) CreateDocBatch(name string) (*DocBatch, error) {
 		var docBatch DocBatch
 		docBatch.db = db
 		docBatch.batches = make(map[string]*Batch)
+
 		for fieldName, idx := range db.simpleIndexes {
 			batch, err := NewBatch(idx)
 			if err != nil {
@@ -673,6 +780,21 @@ func (d *Document) CreateDocBatch(name string) (*DocBatch, error) {
 			}
 			docBatch.batches[fieldName] = batch
 		}
+		for fieldName, idx := range db.mapIndexes {
+			batch, err := NewBatch(idx)
+			if err != nil {
+				return nil, err
+			}
+			docBatch.batches[fieldName] = batch
+		}
+		for fieldName, idx := range db.listIndexes {
+			batch, err := NewBatch(idx)
+			if err != nil {
+				return nil, err
+			}
+			docBatch.batches[fieldName] = batch
+		}
+
 		return &docBatch, nil
 	}
 	return nil, ErrDocumentDBNotOpened
@@ -730,6 +852,24 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte) error {
 						if err != nil {
 							return err
 						}
+					case MapIndex:
+						valMap := v1.(map[string]interface{})
+						for keyField, valueField := range valMap {
+							vf := valueField.(string)
+							mapField := keyField + vf
+							_, err := batchIndex.Del(mapField)
+							if err != nil {
+								return err
+							}
+						}
+					case ListIndex:
+						valList := v1.([]string)
+						for _, listVal := range valList {
+							_, err := batchIndex.Del(listVal)
+							if err != nil {
+								return err
+							}
+						}
 					case NumberIndex:
 						val := v1.(float64)
 						val1 := int64(val)
@@ -773,6 +913,25 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte) error {
 			err := batchIndex.Put(v.(string), ref, apnd)
 			if err != nil {
 				return err
+			}
+		case MapIndex:
+			valMap := v.(map[string]interface{})
+			for keyField, valueField := range valMap {
+				vf := valueField.(string)
+				mapField := keyField + vf
+				err := batchIndex.Put(mapField, ref, true)
+				if err != nil {
+					return err
+				}
+			}
+		case ListIndex:
+			valList := v.([]string)
+			for _, listVal := range valList {
+				listField := listVal
+				err := batchIndex.Put(listField, ref, true)
+				if err != nil {
+					return err
+				}
 			}
 		case NumberIndex:
 			var valStr string

@@ -39,6 +39,8 @@ const (
 	BytesIndex
 	StringIndex
 	NumberIndex
+	MapIndex
+	ListIndex
 )
 
 func (e IndexType) String() string {
@@ -49,6 +51,10 @@ func (e IndexType) String() string {
 		return "StringIndex"
 	case NumberIndex:
 		return "NumberIndex"
+	case MapIndex:
+		return "MapIndex"
+	case ListIndex:
+		return "ListIndex"
 	default:
 		return "InvalidIndex"
 	}
@@ -62,6 +68,10 @@ func toIndexTypeEnum(s string) IndexType {
 		return StringIndex
 	case "NumberIndex":
 		return NumberIndex
+	case "MapIndex":
+		return MapIndex
+	case "ListIndex":
+		return ListIndex
 	default:
 		return InvalidIndex
 	}

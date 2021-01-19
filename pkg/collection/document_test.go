@@ -30,10 +30,12 @@ import (
 )
 
 type TestDocument struct {
-	ID        string `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Age       int64  `json:"age"`
+	ID        string            `json:"id"`
+	FirstName string            `json:"first_name"`
+	LastName  string            `json:"last_name"`
+	Age       int64             `json:"age"`
+	TagMap    map[string]string `json:"tag_map"`
+	TagList   []string          `json:"tag_list"`
 }
 
 func TestDocumentStore(t *testing.T) {
@@ -75,11 +77,13 @@ func TestDocumentStore(t *testing.T) {
 		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_3"}, docStore)
 	})
 
-	t.Run("create_document_db_with_multiple_simple_indexes", func(t *testing.T) {
+	t.Run("create_document_db_with_multiple_indexes", func(t *testing.T) {
 		// create a document DB and add simple indexes
 		si := make(map[string]collection.IndexType)
 		si["field1"] = collection.StringIndex
 		si["field2"] = collection.NumberIndex
+		si["field3"] = collection.MapIndex
+		si["field4"] = collection.ListIndex
 		createDocumentDBs(t, []string{"docdb_2"}, docStore, si)
 
 		// load the schem and check the count of simple indexes
@@ -87,6 +91,8 @@ func TestDocumentStore(t *testing.T) {
 
 		// first check the default index
 		checkIndex(t, schema.SimpleIndexes[0], collection.DefaultIndexFieldName, collection.StringIndex)
+
+		checkIndex(t, schema.SimpleIndexes[0], "id", collection.StringIndex)
 
 		//second check the field in index 1
 		if schema.SimpleIndexes[1].FieldName == "field1" {
@@ -101,6 +107,15 @@ func TestDocumentStore(t *testing.T) {
 		} else {
 			checkIndex(t, schema.SimpleIndexes[2], "field1", collection.StringIndex)
 		}
+
+		if schema.MapIndexes[0].FieldName == "field3." {
+			checkIndex(t, schema.MapIndexes[0], "field3.", collection.MapIndex)
+		}
+
+		if schema.ListIndexes[0].FieldName == "field4" {
+			checkIndex(t, schema.ListIndexes[0], "field4", collection.ListIndex)
+		}
+
 	})
 
 	t.Run("create_and open_document_db", func(t *testing.T) {
@@ -170,6 +185,8 @@ func TestDocumentStore(t *testing.T) {
 		si := make(map[string]collection.IndexType)
 		si["first_name"] = collection.StringIndex
 		si["age"] = collection.NumberIndex
+		si["tag_map"] = collection.MapIndex
+		si["tag_list"] = collection.ListIndex
 		createDocumentDBs(t, []string{"docdb_5"}, docStore, si)
 
 		err := docStore.OpenDocumentDB("docdb_5")
@@ -193,7 +210,9 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc.ID != "2" ||
 			gotDoc.FirstName != "John" ||
 			gotDoc.LastName != "boy" ||
-			gotDoc.Age != 25 {
+			gotDoc.Age != 25 ||
+			gotDoc.TagMap["tgf21"] != "tgv21" ||
+			gotDoc.TagMap["tgf22"] != "tgv22" {
 			t.Fatalf("invalid json data received")
 		}
 	})
@@ -203,6 +222,8 @@ func TestDocumentStore(t *testing.T) {
 		si := make(map[string]collection.IndexType)
 		si["first_name"] = collection.StringIndex
 		si["age"] = collection.NumberIndex
+		si["tag_map"] = collection.MapIndex
+		si["tag_list"] = collection.ListIndex
 		createDocumentDBs(t, []string{"docdb_6"}, docStore, si)
 
 		err := docStore.OpenDocumentDB("docdb_6")
@@ -229,6 +250,8 @@ func TestDocumentStore(t *testing.T) {
 		si := make(map[string]collection.IndexType)
 		si["first_name"] = collection.StringIndex
 		si["age"] = collection.NumberIndex
+		si["tag_map"] = collection.MapIndex
+		si["tag_list"] = collection.ListIndex
 		createDocumentDBs(t, []string{"docdb_7"}, docStore, si)
 
 		err := docStore.OpenDocumentDB("docdb_7")
@@ -246,6 +269,14 @@ func TestDocumentStore(t *testing.T) {
 		}
 		if count1 != 2 {
 			t.Fatalf("expected count %d, got %d", 2, count1)
+		}
+
+		count1, err = docStore.Count("docdb_7", "tag_map=tgf11:tgv11")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count1 != 1 {
+			t.Fatalf("expected count %d, got %d", 1, count1)
 		}
 
 		// Number =
@@ -281,6 +312,8 @@ func TestDocumentStore(t *testing.T) {
 		si := make(map[string]collection.IndexType)
 		si["first_name"] = collection.StringIndex
 		si["age"] = collection.NumberIndex
+		si["tag_map"] = collection.MapIndex
+		si["tag_list"] = collection.ListIndex
 		createDocumentDBs(t, []string{"docdb_8"}, docStore, si)
 
 		err := docStore.OpenDocumentDB("docdb_8")
@@ -319,6 +352,26 @@ func TestDocumentStore(t *testing.T) {
 			gotDoc2.FirstName != "John" ||
 			gotDoc2.LastName != "boy" ||
 			gotDoc2.Age != 25 {
+			t.Fatalf("invalid json data received")
+		}
+
+		// tag
+		docs, err = docStore.Find("docdb_8", "tag_map=tgf21:tgv21", -1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(docs) != 1 {
+			t.Fatalf("expected count %d, got %d", 1, len(docs))
+		}
+		err = json.Unmarshal(docs[0], &gotDoc2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotDoc2.ID != "2" ||
+			gotDoc2.FirstName != "John" ||
+			gotDoc2.LastName != "boy" ||
+			gotDoc2.Age != 25 ||
+			gotDoc2.TagMap["tgf21"] != "tgv21" {
 			t.Fatalf("invalid json data received")
 		}
 
@@ -453,7 +506,13 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// Add document and get to see if it is added
-		addDocument(t, docStore, "docdb_9", "1", "John", "Doe", 45)
+		tag1 := make(map[string]string)
+		tag1["tgf11"] = "tgv11"
+		tag1["tgf12"] = "tgv12"
+		var list1 []string
+		list1 = append(list1, "lst11")
+		list1 = append(list1, "lst12")
+		addDocument(t, docStore, "docdb_9", "1", "John", "Doe", 45, tag1, list1)
 		docs, err := docStore.Get("docdb_9", "1")
 		if err != nil {
 			t.Fatal(err)
@@ -493,8 +552,14 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 45)
-		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 25)
+		tag1 := make(map[string]string)
+		tag1["tgf11"] = "tgv11"
+		tag1["tgf12"] = "tgv12"
+		var list1 []string
+		list1 = append(list1, "lst11")
+		list1 = append(list1, "lst12")
+		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 45, tag1, list1)
+		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 25, tag1, list1)
 
 		// count the total docs using id field
 		count1, err := docStore.Count("docdb_10", "")
@@ -520,6 +585,8 @@ func TestDocumentStore(t *testing.T) {
 		si := make(map[string]collection.IndexType)
 		si["first_name"] = collection.StringIndex
 		si["age"] = collection.NumberIndex
+		si["tag_map"] = collection.MapIndex
+		si["tag_list"] = collection.ListIndex
 		createDocumentDBs(t, []string{"docdb_11"}, docStore, si)
 
 		err := docStore.OpenDocumentDB("docdb_11")
@@ -532,10 +599,34 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 45)
-		addBatchDocument(t, docStore, docBatch, "2", "John", "boy", 25)
-		addBatchDocument(t, docStore, docBatch, "3", "Alice", "wonderland", 20)
-		addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 35) // this tests the overwriting in batch
+		tag1 := make(map[string]string)
+		tag1["tgf11"] = "tgv11"
+		tag1["tgf12"] = "tgv12"
+		var list1 []string
+		list1 = append(list1, "lst11")
+		list1 = append(list1, "lst12")
+		addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 45, tag1, list1)
+		tag2 := make(map[string]string)
+		tag2["tgf21"] = "tgv21"
+		tag2["tgf22"] = "tgv22"
+		var list2 []string
+		list2 = append(list2, "lst21")
+		list2 = append(list2, "lst22")
+		addBatchDocument(t, docStore, docBatch, "2", "John", "boy", 25, tag2, list2)
+		tag3 := make(map[string]string)
+		tag3["tgf31"] = "tgv31"
+		tag3["tgf32"] = "tgv32"
+		var list3 []string
+		list3 = append(list3, "lst31")
+		list3 = append(list3, "lst32")
+		addBatchDocument(t, docStore, docBatch, "3", "Alice", "wonderland", 20, tag3, list3)
+		tag4 := make(map[string]string)
+		tag4["tgf41"] = "tgv41"
+		tag4["tgf42"] = "tgv42"
+		var list4 []string
+		list4 = append(list4, "lst41")
+		list4 = append(list4, "lst42")
+		addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 35, tag4, list4) // this tests the overwriting in batch
 
 		err = docStore.DocBatchWrite(docBatch)
 		if err != nil {
@@ -560,6 +651,14 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatalf("expected count %d, got %d", 3, len(docs))
 		}
 
+		// tag
+		docs, err = docStore.Find("docdb_11", "tag_map=tgf21:tgv21", -1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(docs) != 1 {
+			t.Fatalf("expected count %d, got %d", 1, len(docs))
+		}
 	})
 
 }
@@ -615,14 +714,44 @@ func checkIndex(t *testing.T, si collection.SIndex, filedName string, idxType co
 
 func createTestDocuments(t *testing.T, docStore *collection.Document, dbName string) {
 	t.Helper()
-	addDocument(t, docStore, dbName, "1", "John", "Doe", 45)
-	addDocument(t, docStore, dbName, "2", "John", "boy", 25)
-	addDocument(t, docStore, dbName, "3", "Bob", "michel", 30)
-	addDocument(t, docStore, dbName, "4", "Charlie", "chaplin", 25)
-	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25)
+	tag1 := make(map[string]string)
+	tag1["tgf11"] = "tgv11"
+	tag1["tgf12"] = "tgv12"
+	var list1 []string
+	list1 = append(list1, "lst11")
+	list1 = append(list1, "lst12")
+	addDocument(t, docStore, dbName, "1", "John", "Doe", 45, tag1, list1)
+	tag2 := make(map[string]string)
+	tag2["tgf21"] = "tgv21"
+	tag2["tgf22"] = "tgv22"
+	var list2 []string
+	list2 = append(list2, "lst21")
+	list2 = append(list2, "lst22")
+	addDocument(t, docStore, dbName, "2", "John", "boy", 25, tag2, list2)
+	tag3 := make(map[string]string)
+	tag3["tgf31"] = "tgv31"
+	tag3["tgf32"] = "tgv32"
+	var list3 []string
+	list3 = append(list3, "lst31")
+	list3 = append(list3, "lst32")
+	addDocument(t, docStore, dbName, "3", "Bob", "michel", 30, tag3, list3)
+	tag4 := make(map[string]string)
+	tag4["tgf41"] = "tgv41"
+	tag4["tgf42"] = "tgv42"
+	var list4 []string
+	list4 = append(list4, "lst41")
+	list4 = append(list4, "lst42")
+	addDocument(t, docStore, dbName, "4", "Charlie", "chaplin", 25, tag4, list4)
+	tag5 := make(map[string]string)
+	tag5["tgf51"] = "tgv51"
+	tag5["tgf52"] = "tgv52"
+	var list5 []string
+	list5 = append(list5, "lst51")
+	list5 = append(list5, "lst52")
+	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25, tag5, list5)
 }
 
-func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age int64) {
+func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age int64, tagMap map[string]string, tagList []string) {
 	t.Helper()
 	// create the doc
 	doc := &TestDocument{
@@ -630,6 +759,8 @@ func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname,
 		FirstName: fname,
 		LastName:  lname,
 		Age:       age,
+		TagMap:    tagMap,
+		TagList:   tagList,
 	}
 
 	// marshall the doc
@@ -645,7 +776,7 @@ func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname,
 	}
 }
 
-func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *collection.DocBatch, id, fname, lname string, age int64) {
+func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *collection.DocBatch, id, fname, lname string, age int64, tagMap map[string]string, tagList []string) {
 	t.Helper()
 	// create the doc
 	doc := &TestDocument{
@@ -653,6 +784,8 @@ func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *col
 		FirstName: fname,
 		LastName:  lname,
 		Age:       age,
+		TagMap:    tagMap,
+		TagList:   tagList,
 	}
 
 	// marshall the doc
