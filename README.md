@@ -36,15 +36,15 @@ Pod cretion is cheap. A user can create multiple pods and use it to organise his
 - ./dist/dfs server (starts dfs in server mode serving API in port 9090 by default)
 
 ### Demo 1: FairOS-dfs Introduction
-[![](https://j.gifs.com/lx3x0l.gif)](https://www.youtube.com/watch?v=V4g06BBkXwI)
+[![](https://j.gifs.com/lx3x0l.gif)](https://bee.fairos.io/files/19c1bd8c5714db4f798e07421dc7a20497537e1d1d8ad4f95cfcac8775effd05)
 ### Demo 2: FairOS-dfs File Sharing
-[![](https://j.gifs.com/vl3l5g.gif)](https://www.youtube.com/watch?v=a-Qfd37V8ng&t=2s)
+[![](https://j.gifs.com/vl3l5g.gif)](https://bee.fairos.io/files/43a9a08b4ffa7aea1f1d0f0ba0e0a239e6e14bed5b5f4145821a81489d43443e)
 ### Demo 3: FairOS-dfs Adding a new Device
-[![](https://j.gifs.com/D1g1rY.gif)](https://www.youtube.com/watch?v=M5oNJ7QWiL8)
+[![](https://j.gifs.com/D1g1rY.gif)](https://bee.fairos.io/files/5b32278f5d7dbd69f08090a375ab3597956ec329d0dc14a016d8553a1e871eb0)
 ### Demo 4: Introdution to Key Value Store over Swarm
-[![](https://j.gifs.com/6XZwvl.gif)](https://www.youtube.com/watch?v=LzR-IMee1S8&t=2s)
+[![](https://j.gifs.com/6XZwvl.gif)](https://bee.fairos.io/files/94a5d957a90b52be9eab73d61c7c3f5a68848d42c5266c25d7b056bb3871d9ce)
 ### Demo 5: Adding large datasets in KV store in Swarm
-[![](https://j.gifs.com/jZDwkl.gif)](https://www.youtube.com/watch?v=QQtVrwClIp8)
+[![](https://j.gifs.com/jZDwkl.gif)](https://bee.fairos.io/files/e44f2914a19a789a7a0fff4fc37e3243dadbda5e4e8e1c9a860ef1edf8d4474e)
 
 
 
