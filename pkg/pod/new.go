@@ -72,7 +72,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
 
 		// get the inode instead of creating
-		_, dirInode, err = dir.GetDirNode(podName, fd, accountInfo)
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
 		if err != nil {
 			return nil, err
 		}

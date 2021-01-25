@@ -140,19 +140,17 @@ func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 		return "", err
 	}
 
-	shareInfoAddr, err := p.client.UploadBlob(data, true, true)
+	ref, err := p.client.UploadBlob(data, true, true)
 	if err != nil {
 		return "", err
 	}
 
-	shareInfoAddStr := utils.NewAddress(shareInfoAddr)
-	return shareInfoAddStr.String(), nil
+	shareInfoRef := utils.NewReference(ref)
+	return shareInfoRef.String(), nil
 }
 
-func (p *Pod) ReceivePodInfo(sharingRef utils.SharingReference) (*ShareInfo, error) {
-	ref := sharingRef.GetRef()
-
-	data, resp, err := p.client.DownloadBlob(ref)
+func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
+	data, resp, err := p.client.DownloadBlob(ref.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -171,9 +169,8 @@ func (p *Pod) ReceivePodInfo(sharingRef utils.SharingReference) (*ShareInfo, err
 
 }
 
-func (p *Pod) ReceivePod(sharingRef utils.SharingReference) (*Info, error) {
-	ref := sharingRef.GetRef()
-	data, resp, err := p.client.DownloadBlob(ref)
+func (p *Pod) ReceivePod(ref utils.Reference) (*Info, error) {
+	data, resp, err := p.client.DownloadBlob(ref.Bytes())
 	if err != nil {
 		return nil, err
 	}

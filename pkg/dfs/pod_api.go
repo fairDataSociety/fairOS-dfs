@@ -181,32 +181,22 @@ func (d *DfsAPI) PodShare(podName, passPhrase, sessionId string) (string, error)
 	return address, nil
 }
 
-func (d *DfsAPI) PodReceiveInfo(sessionId string, sharingRef utils.SharingReference) (*pod.ShareInfo, error) {
+func (d *DfsAPI) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareInfo, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if ui.GetPodName() == "" {
-		return nil, ErrPodNotOpen
-	}
-
-	return ui.GetPod().ReceivePodInfo(sharingRef)
+	return ui.GetPod().ReceivePodInfo(ref)
 }
 
-func (d *DfsAPI) PodReceive(sessionId string, sharingRef utils.SharingReference) (*pod.Info, error) {
+func (d *DfsAPI) PodReceive(sessionId string, ref utils.Reference) (*pod.Info, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if ui.GetPodName() == "" {
-		return nil, ErrPodNotOpen
-	}
-
-	return ui.GetPod().ReceivePod(sharingRef)
+	return ui.GetPod().ReceivePod(ref)
 }

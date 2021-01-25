@@ -21,8 +21,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 
 	"io/ioutil"
 	"log"
@@ -81,6 +81,9 @@ const (
 	apiPodDelete       = APIVersion + "/pod/delete"
 	apiPodLs           = APIVersion + "/pod/ls"
 	apiPodStat         = APIVersion + "/pod/stat"
+	apiPodShare        = APIVersion + "/pod/share"
+	apiPodReceive      = APIVersion + "/pod/receive"
+	apiPodReceiveInfo  = APIVersion + "/pod/receiveinfo"
 	apiDirIsPresent    = APIVersion + "/dir/present"
 	apiDirMkdir        = APIVersion + "/dir/mkdir"
 	apiDirRmdir        = APIVersion + "/dir/rmdir"
@@ -799,6 +802,70 @@ func executor(in string) {
 				fmt.Println("<Shared Pod>: ", pod)
 			}
 			currentPrompt = getCurrentPrompt()
+		case "share":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			podName := blocks[2]
+			args := make(map[string]string)
+			args["pod"] = podName
+			args["password"] = getPassword()
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodShare, args)
+			if err != nil {
+				fmt.Println("pod share failed: ", err)
+				return
+			}
+			var sharingRef api.PodSharingReference
+			err = json.Unmarshal(data, &sharingRef)
+			if err != nil {
+				fmt.Println("pod share failed: ", err)
+				return
+			}
+			fmt.Println("Pod Sharing Reference : ", sharingRef.Reference)
+			currentPrompt = getCurrentPrompt()
+		case "receive":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			podSharingReference := blocks[2]
+			args := make(map[string]string)
+			args["ref"] = podSharingReference
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodReceive, args)
+			if err != nil {
+				fmt.Println("pod receive failed: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "receiveinfo":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			podSharingReference := blocks[2]
+			args := make(map[string]string)
+			args["ref"] = podSharingReference
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodReceiveInfo, args)
+			if err != nil {
+				fmt.Println("pod receive info failed: ", err)
+				return
+			}
+			var podSharingInfo pod.ShareInfo
+			err = json.Unmarshal(data, &podSharingInfo)
+			if err != nil {
+				fmt.Println("pod receive info failed: ", err)
+				return
+			}
+			fmt.Println("Pod Name  : ", podSharingInfo.PodName)
+			fmt.Println("Pod Ref.  : ", podSharingInfo.Address)
+			fmt.Println("User Name : ", podSharingInfo.UserName)
+			fmt.Println("User Ref. : ", podSharingInfo.UserAddress)
+			fmt.Println("Shared Time : ", podSharingInfo.SharedTime)
+			currentPrompt = getCurrentPrompt()
+
 		default:
 			fmt.Println("invalid pod command!!")
 			help()
@@ -1783,7 +1850,7 @@ func executor(in string) {
 			fmt.Println("file share: ", err)
 			return
 		}
-		fmt.Println("Sharing Reference: ", resp.Reference)
+		fmt.Println("File Sharing Reference: ", resp.Reference)
 		currentPrompt = getCurrentPrompt()
 	case "receive":
 		if len(blocks) < 3 {

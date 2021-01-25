@@ -100,14 +100,14 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	sharingRef, err := utils.ParseSharingReference(sharingRefString)
+	ref, err := utils.ParseHexReference(sharingRefString)
 	if err != nil {
 		h.logger.Errorf("pod receive info: invalid reference: ", err)
 		jsonhttp.BadRequest(w, "pod receive info: invalid reference:"+err.Error())
 		return
 	}
 
-	shareInfo, err := h.dfsAPI.PodReceiveInfo(sessionId, sharingRef)
+	shareInfo, err := h.dfsAPI.PodReceiveInfo(sessionId, ref)
 	if err != nil {
 		h.logger.Errorf("pod receive info: %v", err)
 		jsonhttp.InternalServerError(w, "pod receive info: "+err.Error())
@@ -139,14 +139,14 @@ func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sharingRef, err := utils.ParseSharingReference(sharingRefString)
+	ref, err := utils.ParseHexReference(sharingRefString)
 	if err != nil {
 		h.logger.Errorf("pod receive: invalid reference: ", err)
 		jsonhttp.BadRequest(w, "pod receive: invalid reference:"+err.Error())
 		return
 	}
 
-	pi, err := h.dfsAPI.PodReceive(sessionId, sharingRef)
+	pi, err := h.dfsAPI.PodReceive(sessionId, ref)
 	if err != nil {
 		h.logger.Errorf("pod receive: %v", err)
 		jsonhttp.InternalServerError(w, "pod receive: "+err.Error())

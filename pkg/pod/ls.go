@@ -36,7 +36,7 @@ func (p *Pod) ListPods() ([]string, []string, error) {
 
 	var listSharedPods []string
 	for _, pod := range sharedPods {
-		listSharedPods = append(listPods, pod)
+		listSharedPods = append(listSharedPods, pod)
 	}
 
 	return listPods, listSharedPods, nil
