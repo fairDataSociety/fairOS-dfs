@@ -36,6 +36,11 @@ func (p *Pod) UploadFile(podName, fileName string, fileSize int64, fd io.Reader,
 	if err != nil {
 		return "", err
 	}
+
+	if podInfo.accountInfo.IsReadOnlyPod() {
+		return "", ErrReadOnlyPod
+	}
+
 	dir := podInfo.GetDirectory()
 
 	bs, err := humanize.ParseBytes(blockSize)

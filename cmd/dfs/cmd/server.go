@@ -161,9 +161,6 @@ func startHttpService(logger logging.Logger) {
 	podRouter.HandleFunc("/ls", handler.PodListHandler).Methods("GET")
 	podRouter.HandleFunc("/stat", handler.PodStatHandler).Methods("GET")
 
-
-
-
 	// directory related handlers
 	dirRouter := baseRouter.PathPrefix("/dir/").Subrouter()
 	dirRouter.Use(handler.LoginMiddleware)

@@ -27,7 +27,7 @@ import (
 )
 
 type PodListResponse struct {
-	Pods []string `json:"pod_name"`
+	Pods       []string `json:"pod_name"`
 	SharedPods []string `json:"shared_pod_name"`
 }
 
@@ -68,7 +68,7 @@ func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &PodListResponse{
-		Pods: pods,
+		Pods:       pods,
 		SharedPods: sharedPods,
 	})
 }

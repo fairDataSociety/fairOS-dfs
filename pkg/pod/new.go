@@ -35,7 +35,6 @@ import (
 
 const (
 	podFile = "Pods"
-	sharedIndex = -111
 )
 
 func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error) {
@@ -56,6 +55,13 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 	var dir *d.Directory
 	var dirInode *d.DirInode
 	if addressString != "" {
+		if p.checkIfPodPresent(pods, podName) {
+			return nil, ErrPodAlreadyExists
+		}
+		if p.checkIfSharedPodPresent(sharedPods, podName) {
+			return nil, ErrPodAlreadyExists
+		}
+
 		// shared pod, so add only address to the account info
 		accountInfo = p.acc.GetEmptyAccountInfo()
 		address := utils.HexToAddress(addressString)
@@ -83,6 +89,11 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		if p.checkIfPodPresent(pods, podName) {
 			return nil, ErrPodAlreadyExists
 		}
+
+		if p.checkIfSharedPodPresent(sharedPods, podName) {
+			return nil, ErrPodAlreadyExists
+		}
+
 		freeId, err := p.getFreeId(pods)
 		if err != nil {
 			return nil, err

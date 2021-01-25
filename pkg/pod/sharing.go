@@ -27,11 +27,11 @@ import (
 )
 
 type ShareInfo struct {
-	PodName      string `json:"pod_name"`
-	Address      string `json:"pod_address"`
+	PodName     string `json:"pod_name"`
+	Address     string `json:"pod_address"`
 	UserName    string `json:"user_name"`
 	UserAddress string `json:"user_address"`
-	SharedTime   string `json:"shared_time"`
+	SharedTime  string `json:"shared_time"`
 }
 
 func (p *Pod) GetMetaReferenceOfFile(podName, filePath string) ([]byte, string, error) {
@@ -128,11 +128,11 @@ func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 	address := accountInfo.GetAddress()
 	userAddress := p.acc.GetUserAccountInfo().GetAddress()
 	shareInfo := &ShareInfo{
-		PodName: podName,
-		Address: address.String(),
-		UserName: userName,
+		PodName:     podName,
+		Address:     address.String(),
+		UserName:    userName,
 		UserAddress: userAddress.String(),
-		SharedTime: time.Now().String(),
+		SharedTime:  time.Now().String(),
 	}
 
 	data, err := json.Marshal(shareInfo)
@@ -140,7 +140,7 @@ func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 		return "", err
 	}
 
-	shareInfoAddr , err := p.client.UploadBlob(data, true, true)
+	shareInfoAddr, err := p.client.UploadBlob(data, true, true)
 	if err != nil {
 		return "", err
 	}

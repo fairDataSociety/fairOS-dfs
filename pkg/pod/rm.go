@@ -38,6 +38,11 @@ func (p *Pod) RemoveFile(podName, podFile string) error {
 	if err != nil {
 		return err
 	}
+
+	if podInfo.accountInfo.IsReadOnlyPod() {
+		return ErrReadOnlyPod
+	}
+
 	dir := podInfo.GetDirectory()
 
 	var path string

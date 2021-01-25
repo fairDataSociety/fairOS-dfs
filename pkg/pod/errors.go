@@ -26,4 +26,5 @@ var (
 	ErrPodNotOpened         = errors.New("pod not opened")
 	ErrInvalidDirectory     = errors.New("invalid directory name")
 	ErrTooLongDirectoryName = errors.New("directory name too long")
+	ErrReadOnlyPod          = errors.New("operation not permitted: read only pod")
 )

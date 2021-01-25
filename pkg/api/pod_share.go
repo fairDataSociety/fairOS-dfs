@@ -18,11 +18,12 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-	"net/http"
 	"resenje.org/jsonhttp"
 )
 
@@ -64,7 +65,7 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName {
 			h.logger.Errorf("pod share: %v", err)
-			jsonhttp.BadRequest(w, "pod share: "+ err.Error())
+			jsonhttp.BadRequest(w, "pod share: "+err.Error())
 			return
 		}
 		h.logger.Errorf("pod share: %v", err)

@@ -334,14 +334,17 @@ func (a *Account) getPassword() (password string) {
 	return password
 }
 
+func (a *Info) IsReadOnlyPod() bool {
+	return a.privateKey == nil
+}
+
 func (ai *Info) GetAddress() utils.Address {
 	return ai.address
 }
 
-func (ai *Info) SetAddress(addr utils.Address)  {
+func (ai *Info) SetAddress(addr utils.Address) {
 	ai.address = addr
 }
-
 
 func (ai *Info) GetPrivateKey() *ecdsa.PrivateKey {
 	return ai.privateKey

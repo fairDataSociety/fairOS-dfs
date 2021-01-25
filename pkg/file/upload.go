@@ -34,7 +34,6 @@ import (
 
 var (
 	NoOfParallelWorkers = 4
-
 )
 
 func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize uint32, filePath, compression string) ([]byte, error) {

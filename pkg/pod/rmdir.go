@@ -35,6 +35,10 @@ func (p *Pod) RemoveDir(podName, dirName string) error {
 		return err
 	}
 
+	if info.accountInfo.IsReadOnlyPod() {
+		return ErrReadOnlyPod
+	}
+
 	directory := info.GetDirectory()
 
 	dirInode, err := p.GetInodeFromName(dirName, info.GetCurrentDirInode(), directory, info)

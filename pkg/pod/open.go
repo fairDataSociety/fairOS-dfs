@@ -44,7 +44,6 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		}
 	}
 
-
 	var accountInfo *account.Info
 	var file *f.File
 	var dir *d.Directory
