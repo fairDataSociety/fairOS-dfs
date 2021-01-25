@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -144,12 +145,13 @@ func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.dfsAPI.PodReceive(sessionId, sharingRef)
+	pi, err := h.dfsAPI.PodReceive(sessionId, sharingRef)
 	if err != nil {
 		h.logger.Errorf("pod receive: %v", err)
 		jsonhttp.InternalServerError(w, "pod receive: "+err.Error())
 		return
 	}
 
-	jsonhttp.OK(w, "pod added")
+	addedStr := fmt.Sprintf("public pod \"%s\", added as shared pod", pi.GetCurrentPodNameOnly())
+	jsonhttp.OK(w, addedStr)
 }

@@ -795,6 +795,9 @@ func executor(in string) {
 			for _, pod := range resp.Pods {
 				fmt.Println("<Pod>: ", pod)
 			}
+			for _, pod := range resp.SharedPods {
+				fmt.Println("<Shared Pod>: ", pod)
+			}
 			currentPrompt = getCurrentPrompt()
 		default:
 			fmt.Println("invalid pod command!!")

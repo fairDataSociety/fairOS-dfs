@@ -23,17 +23,23 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (p *Pod) ListPods() ([]string, error) {
-	pods, err := p.loadUserPods()
+func (p *Pod) ListPods() ([]string, []string, error) {
+	pods, sharedPods, err := p.loadUserPods()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var listPods []string
 	for _, pod := range pods {
 		listPods = append(listPods, pod)
 	}
-	return listPods, nil
+
+	var listSharedPods []string
+	for _, pod := range sharedPods {
+		listSharedPods = append(listPods, pod)
+	}
+
+	return listPods, listSharedPods, nil
 }
 
 func (p *Pod) ListEntiesInDir(podName, dirName string) ([]dir.DirOrFileEntry, error) {

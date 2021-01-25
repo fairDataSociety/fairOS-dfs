@@ -102,7 +102,7 @@ func (p *Pod) ReceiveFileAndStore(podName, podDir, fileName, metaHexRef string) 
 
 func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 	// check if pods is present and get the index of the pod
-	pods, err := p.loadUserPods()
+	pods, _, err := p.loadUserPods()
 	if err != nil {
 		return "", err
 	}
@@ -171,16 +171,14 @@ func (p *Pod) ReceivePodInfo(sharingRef utils.SharingReference) (*ShareInfo, err
 
 }
 
-func (p *Pod) ReceivePod(sharingRef utils.SharingReference) (*ShareInfo, error) {
+func (p *Pod) ReceivePod(sharingRef utils.SharingReference) (*Info, error) {
 	ref := sharingRef.GetRef()
-
 	data, resp, err := p.client.DownloadBlob(ref)
 	if err != nil {
 		return nil, err
 	}
-
 	if resp != http.StatusOK {
-		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
+		return nil, fmt.Errorf("ReceivePod: could not download blob")
 	}
 
 	var shareInfo ShareInfo
@@ -189,6 +187,5 @@ func (p *Pod) ReceivePod(sharingRef utils.SharingReference) (*ShareInfo, error) 
 		return nil, err
 	}
 
-	return &shareInfo, nil
-
+	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address)
 }

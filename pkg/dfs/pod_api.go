@@ -29,7 +29,7 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 	}
 
 	// create the pod
-	pi, err := ui.GetPod().CreatePod(podName, passPhrase)
+	pi, err := ui.GetPod().CreatePod(podName, passPhrase, "")
 	if err != nil {
 		return nil, err
 	}
@@ -151,19 +151,19 @@ func (d *DfsAPI) SyncPod(sessionId string) error {
 	return nil
 }
 
-func (d *DfsAPI) ListPods(sessionId string) ([]string, error) {
+func (d *DfsAPI) ListPods(sessionId string) ([]string, []string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
-		return nil, ErrUserNotLoggedIn
+		return nil, nil, ErrUserNotLoggedIn
 	}
 
 	// list pods of a user
-	pods, err := ui.GetPod().ListPods()
+	pods, sharedPods, err := ui.GetPod().ListPods()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return pods, nil
+	return pods, sharedPods, nil
 }
 
 func (d *DfsAPI) PodShare(podName, passPhrase, sessionId string) (string, error) {
@@ -196,7 +196,7 @@ func (d *DfsAPI) PodReceiveInfo(sessionId string, sharingRef utils.SharingRefere
 	return ui.GetPod().ReceivePodInfo(sharingRef)
 }
 
-func (d *DfsAPI) PodReceive(sessionId string, sharingRef utils.SharingReference) (*pod.ShareInfo, error) {
+func (d *DfsAPI) PodReceive(sessionId string, sharingRef utils.SharingReference) (*pod.Info, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {

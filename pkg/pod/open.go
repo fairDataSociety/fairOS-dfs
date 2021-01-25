@@ -30,38 +30,69 @@ import (
 
 func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	// check if pods is present and get the index of the pod
-	pods, err := p.loadUserPods()
+	pods, sharedPods, err := p.loadUserPods()
 	if err != nil {
 		return nil, err
 	}
+
+	sharedPodType := false
 	if !p.checkIfPodPresent(pods, podName) {
-		return nil, ErrInvalidPodName
+		if !p.checkIfSharedPodPresent(sharedPods, podName) {
+			return nil, ErrInvalidPodName
+		} else {
+			sharedPodType = true
+		}
 	}
 
-	index := p.getIndex(pods, podName)
-	if index == -1 {
-		return nil, fmt.Errorf("pod does not exist")
-	}
 
-	// Create pod account and other data structures
-	// create a child account for the user and other data structures for the pod
-	err = p.acc.CreatePodAccount(index, passPhrase, false)
-	if err != nil {
-		return nil, err
-	}
-	accountInfo, err := p.acc.GetPodAccountInfo(index)
-	if err != nil {
-		return nil, err
-	}
-	file := f.NewFile(podName, p.client, p.fd, accountInfo, p.logger)
-	dir := d.NewDirectory(podName, p.client, p.fd, accountInfo, file, p.logger)
+	var accountInfo *account.Info
+	var file *f.File
+	var dir *d.Directory
+	var dirInode *d.DirInode
+	if sharedPodType {
+		addressString := p.getAddress(sharedPods, podName)
+		if addressString == "" {
+			return nil, fmt.Errorf("shared pod does not exist")
+		}
 
-	// get the pod's inode
-	_, dirInode, err := dir.GetDirNode(utils.PathSeperator+podName, p.fd, accountInfo)
-	if err != nil {
-		return nil, err
-	}
+		accountInfo = p.acc.GetEmptyAccountInfo()
+		address := utils.HexToAddress(addressString)
+		accountInfo.SetAddress(address)
 
+		file = f.NewFile(podName, p.client, p.fd, accountInfo, p.logger)
+		dir = d.NewDirectory(podName, p.client, p.fd, accountInfo, file, p.logger)
+
+		// get the pod's inode
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, p.fd, accountInfo)
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		index := p.getIndex(pods, podName)
+		if index == -1 {
+			return nil, fmt.Errorf("pod does not exist")
+		}
+
+		// Create pod account and other data structures
+		// create a child account for the user and other data structures for the pod
+		err = p.acc.CreatePodAccount(index, passPhrase, false)
+		if err != nil {
+			return nil, err
+		}
+		accountInfo, err = p.acc.GetPodAccountInfo(index)
+		if err != nil {
+			return nil, err
+		}
+		file = f.NewFile(podName, p.client, p.fd, accountInfo, p.logger)
+		dir = d.NewDirectory(podName, p.client, p.fd, accountInfo, file, p.logger)
+
+		// get the pod's inode
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, p.fd, accountInfo)
+		if err != nil {
+			return nil, err
+		}
+	}
 	user := p.acc.GetAddress(account.UserAccountIndex)
 	kvStore := c.NewKeyValueStore(p.fd, accountInfo, user, p.client, p.logger)
 	docStore := c.NewDocumentStore(p.fd, accountInfo, user, p.client, p.logger)
@@ -101,4 +132,13 @@ func (p *Pod) getIndex(pods map[int]string, podName string) int {
 		}
 	}
 	return -1
+}
+
+func (p *Pod) getAddress(sharedPods map[string]string, podName string) string {
+	for address, pod := range sharedPods {
+		if strings.Trim(pod, "\n") == podName {
+			return address
+		}
+	}
+	return ""
 }

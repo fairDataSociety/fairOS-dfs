@@ -42,23 +42,23 @@ func TestPod_ListPods(t *testing.T) {
 	podName2 := "test2"
 
 	t.Run("list-without-pods", func(t *testing.T) {
-		_, err = pod1.ListPods()
+		_, _, err = pod1.ListPods()
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 
 	t.Run("create-two-pods", func(t *testing.T) {
-		_, err := pod1.CreatePod(podName1, "password")
+		_, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod: %v", err)
 		}
-		_, err = pod1.CreatePod(podName2, "password")
+		_, err = pod1.CreatePod(podName2, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
-		pods, err := pod1.ListPods()
+		pods, _, err := pod1.ListPods()
 		if err != nil {
 			t.Fatal(err)
 		}

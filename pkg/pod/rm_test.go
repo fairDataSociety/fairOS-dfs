@@ -44,7 +44,7 @@ func TestPod_RemoveFile(t *testing.T) {
 	firstDir := "dir1"
 
 	t.Run("remove_file", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password")
+		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
