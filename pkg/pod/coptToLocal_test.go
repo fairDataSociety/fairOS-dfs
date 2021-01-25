@@ -145,7 +145,7 @@ func TestPod_CopyToLocal(t *testing.T) {
 
 }
 
-func createRandomFileInPod(t *testing.T, size int, pod1 *Pod, podName string, podDir string) string {
+func createRandomFileInPod(t *testing.T, size int, pod1 *Pod, podName, podDir string) string {
 	file, err := ioutil.TempFile("/tmp", "fairOS-dfs")
 	if err != nil {
 		t.Fatal(err)

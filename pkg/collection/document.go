@@ -277,7 +277,7 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 				return 0, ErrIndexNotPresent
 			}
 		} else {
-			fieldValue = strings.Replace(fieldValue, ":", "", -1)
+			fieldValue = strings.ReplaceAll(fieldValue, ":", "")
 		}
 	}
 
@@ -579,7 +579,7 @@ func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 				return nil, ErrIndexNotPresent
 			}
 		} else {
-			fieldValue = strings.Replace(fieldValue, ":", "", -1)
+			fieldValue = strings.ReplaceAll(fieldValue, ":", "")
 		}
 	}
 
