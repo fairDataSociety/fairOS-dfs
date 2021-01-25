@@ -57,9 +57,13 @@ func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 
 	var col DocumentDBs
 	for name, dbSchema := range collections {
+		var indexes []collection.SIndex
+		indexes = append(indexes, dbSchema.SimpleIndexes...)
+		indexes = append(indexes, dbSchema.MapIndexes...)
+		indexes = append(indexes, dbSchema.ListIndexes...)
 		m := DocumentDB{
 			Name:           name,
-			IndexedColumns: dbSchema.SimpleIndexes,
+			IndexedColumns: indexes,
 			CollectionType: "Document Store",
 		}
 		col.Tables = append(col.Tables, m)

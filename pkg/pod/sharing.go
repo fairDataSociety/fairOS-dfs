@@ -17,12 +17,22 @@ limitations under the License.
 package pod
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
+
+type ShareInfo struct {
+	PodName      string `json:"pod_name"`
+	Address      string `json:"pod_address"`
+	UserName    string `json:"user_name"`
+	UserAddress string `json:"user_address"`
+	SharedTime   string `json:"shared_time"`
+}
 
 func (p *Pod) GetMetaReferenceOfFile(podName, filePath string) ([]byte, string, error) {
 	if !p.isPodOpened(podName) {
@@ -88,4 +98,97 @@ func (p *Pod) ReceiveFileAndStore(podName, podDir, fileName, metaHexRef string) 
 
 	// Add to file path map
 	return podInfo.getFile().AddFileToPath(fpath, metaHexRef)
+}
+
+func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
+	// check if pods is present and get the index of the pod
+	pods, err := p.loadUserPods()
+	if err != nil {
+		return "", err
+	}
+	if !p.checkIfPodPresent(pods, podName) {
+		return "", ErrInvalidPodName
+	}
+
+	index := p.getIndex(pods, podName)
+	if index == -1 {
+		return "", fmt.Errorf("pod does not exist")
+	}
+
+	// Create pod account  and get the address
+	err = p.acc.CreatePodAccount(index, passPhrase, false)
+	if err != nil {
+		return "", err
+	}
+	accountInfo, err := p.acc.GetPodAccountInfo(index)
+	if err != nil {
+		return "", err
+	}
+
+	address := accountInfo.GetAddress()
+	userAddress := p.acc.GetUserAccountInfo().GetAddress()
+	shareInfo := &ShareInfo{
+		PodName: podName,
+		Address: address.String(),
+		UserName: userName,
+		UserAddress: userAddress.String(),
+		SharedTime: time.Now().String(),
+	}
+
+	data, err := json.Marshal(shareInfo)
+	if err != nil {
+		return "", err
+	}
+
+	shareInfoAddr , err := p.client.UploadBlob(data, true, true)
+	if err != nil {
+		return "", err
+	}
+
+	shareInfoAddStr := utils.NewAddress(shareInfoAddr)
+	return shareInfoAddStr.String(), nil
+}
+
+func (p *Pod) ReceivePodInfo(sharingRef utils.SharingReference) (*ShareInfo, error) {
+	ref := sharingRef.GetRef()
+
+	data, resp, err := p.client.DownloadBlob(ref)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp != http.StatusOK {
+		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
+	}
+
+	var shareInfo ShareInfo
+	err = json.Unmarshal(data, &shareInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &shareInfo, nil
+
+}
+
+func (p *Pod) ReceivePod(sharingRef utils.SharingReference) (*ShareInfo, error) {
+	ref := sharingRef.GetRef()
+
+	data, resp, err := p.client.DownloadBlob(ref)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp != http.StatusOK {
+		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
+	}
+
+	var shareInfo ShareInfo
+	err = json.Unmarshal(data, &shareInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &shareInfo, nil
+
 }

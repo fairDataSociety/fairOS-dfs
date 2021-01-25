@@ -18,6 +18,7 @@ package dfs
 
 import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error) {
@@ -163,4 +164,49 @@ func (d *DfsAPI) ListPods(sessionId string) ([]string, error) {
 		return nil, err
 	}
 	return pods, nil
+}
+
+func (d *DfsAPI) PodShare(podName, passPhrase, sessionId string) (string, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return "", ErrUserNotLoggedIn
+	}
+
+	// get the pod stat
+	address, err := ui.GetPod().PodShare(podName, passPhrase, ui.GetUserName())
+	if err != nil {
+		return "", err
+	}
+	return address, nil
+}
+
+func (d *DfsAPI) PodReceiveInfo(sessionId string, sharingRef utils.SharingReference) (*pod.ShareInfo, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	return ui.GetPod().ReceivePodInfo(sharingRef)
+}
+
+func (d *DfsAPI) PodReceive(sessionId string, sharingRef utils.SharingReference) (*pod.ShareInfo, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, ErrPodNotOpen
+	}
+
+	return ui.GetPod().ReceivePod(sharingRef)
 }

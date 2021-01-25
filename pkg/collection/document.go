@@ -820,17 +820,25 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte) error {
 
 	// check if the id is already present
 	// and remove it if it is present
+	var valStr string
 	idValue := docMap[DefaultIndexFieldName]
 	switch v := idValue.(type) {
+	case float64:
+		val1 := int64(v)
+		valStr = strconv.FormatInt(val1, 10)
 	case string:
-		if v == "" {
-			return ErrInvalidDocumentId
-		} else {
-			idBatchIndex := docBatch.batches[DefaultIndexFieldName]
-			refs, err := idBatchIndex.Get(v)
-			if err != nil {
-				break
-			}
+		valStr = v
+	default:
+		return ErrInvalidIndexType
+	}
+
+	if valStr == "" {
+		return ErrInvalidDocumentId
+	} else {
+		idBatchIndex := docBatch.batches[DefaultIndexFieldName]
+		refs, err := idBatchIndex.Get(valStr)
+		if err == nil {
+			// found a doc with the same id, so remove it and all the indexes
 			if len(refs) > 0 {
 				data, _, err := d.client.DownloadBlob(refs[0])
 				if err != nil {
@@ -889,10 +897,9 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte) error {
 				if err != nil {
 					return err
 				}
+
 			}
 		}
-	default:
-		return ErrInvalidIndexType
 	}
 
 	// upload the document
@@ -903,56 +910,68 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte) error {
 
 	// update the indexes
 	for field, batchIndex := range docBatch.batches {
-		v := docMap[field] // it is already checked to be present
-		switch batchIndex.idx.indexType {
-		case StringIndex:
-			apnd := true
-			if field == DefaultIndexFieldName {
-				apnd = false
-			}
-			err := batchIndex.Put(v.(string), ref, apnd)
-			if err != nil {
-				return err
-			}
-		case MapIndex:
-			valMap := v.(map[string]interface{})
-			for keyField, valueField := range valMap {
-				vf := valueField.(string)
-				mapField := keyField + vf
-				err := batchIndex.Put(mapField, ref, true)
+		if v, found := docMap[field]; found { // it is already checked to be present
+			switch batchIndex.idx.indexType {
+			case StringIndex:
+				var valStr1 string
+				switch v := v.(type) {
+				case float64:
+					val1 := int64(v)
+					valStr1 = strconv.FormatInt(val1, 10)
+				case string:
+					valStr1 = v
+				default:
+					return ErrInvalidIndexType
+				}
+
+				apnd := true
+				if field == DefaultIndexFieldName {
+					apnd = false
+				}
+				err := batchIndex.Put(valStr1, ref, apnd)
 				if err != nil {
 					return err
 				}
-			}
-		case ListIndex:
-			valList := v.([]string)
-			for _, listVal := range valList {
-				listField := listVal
-				err := batchIndex.Put(listField, ref, true)
+			case MapIndex:
+				valMap := v.(map[string]interface{})
+				for keyField, valueField := range valMap {
+					vf := valueField.(string)
+					mapField := keyField + vf
+					err := batchIndex.Put(mapField, ref, true)
+					if err != nil {
+						return err
+					}
+				}
+			case ListIndex:
+				valList := v.([]string)
+				for _, listVal := range valList {
+					listField := listVal
+					err := batchIndex.Put(listField, ref, true)
+					if err != nil {
+						return err
+					}
+				}
+			case NumberIndex:
+				var valStr string
+				switch v1 := v.(type) {
+				case string:
+					valStr = v1
+				case float64:
+					val := v1
+					val1 := int64(val)
+					valStr = strconv.FormatInt(val1, 10)
+				default:
+					return ErrIndexNotSupported
+				}
+				err := batchIndex.Put(valStr, ref, true)
 				if err != nil {
 					return err
 				}
-			}
-		case NumberIndex:
-			var valStr string
-			switch v1 := v.(type) {
-			case string:
-				valStr = v1
-			case float64:
-				val := v1
-				val1 := int64(val)
-				valStr = strconv.FormatInt(val1, 10)
-			default:
+			case BytesIndex:
 				return ErrIndexNotSupported
+			default:
+				return ErrInvalidIndexType
 			}
-			err := batchIndex.Put(valStr, ref, true)
-			if err != nil {
-				return err
-			}
-		case BytesIndex:
-			return ErrIndexNotSupported
-		default:
-			return ErrInvalidIndexType
 		}
 	}
 

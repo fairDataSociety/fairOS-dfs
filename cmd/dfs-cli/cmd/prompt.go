@@ -1227,7 +1227,29 @@ func executor(in string) {
 					return
 				}
 				for k, v := range d {
-					fmt.Println(k, "=", v)
+					var valStr string
+					switch val := v.(type) {
+					case string:
+						fmt.Println(k, "=", val)
+					case float64:
+						valStr = strconv.FormatFloat(val, 'E', -1, 10)
+						fmt.Println(k, "=", valStr)
+					case map[string]interface{}:
+						for k1, v1 := range val {
+							switch val1 := v1.(type) {
+							case string:
+								fmt.Println("   "+k1+" = ", val1)
+							case float64:
+								val2 := int64(val1)
+								valStr = strconv.FormatInt(val2, 10)
+								fmt.Println("   "+k1+" = ", valStr)
+							default:
+								fmt.Println("   "+k1+" = ", val1)
+							}
+						}
+					default:
+						fmt.Println(k, "=", val)
+					}
 				}
 
 			}
@@ -1604,7 +1626,7 @@ func executor(in string) {
 		args["dir"] = statElement
 		data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDirStat, args)
 		if err != nil {
-			if err.Error() == "received invalid status: 500 Internal Server Error" {
+			if err.Error() == "dir stat: directory not found" {
 				args := make(map[string]string)
 				args["file"] = statElement
 				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiFileStat, args)
@@ -1653,7 +1675,7 @@ func executor(in string) {
 					fmt.Println(blkStr)
 				}
 			} else {
-				fmt.Println("stat: %w", err)
+				fmt.Println("stat: ", err)
 				return
 			}
 		} else {
@@ -1752,7 +1774,7 @@ func executor(in string) {
 			fmt.Println("share: ", err)
 			return
 		}
-		var resp api.SharingReference
+		var resp api.FileSharingReference
 		err = json.Unmarshal(data, &resp)
 		if err != nil {
 			fmt.Println("file share: ", err)

@@ -30,8 +30,8 @@ type ReceiveFileResponse struct {
 	Reference string `json:"reference"`
 }
 
-type SharingReference struct {
-	Reference string `json:"sharing_reference"`
+type FileSharingReference struct {
+	Reference string `json:"file_sharing_reference"`
 }
 
 func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +69,7 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", " application/json")
-	jsonhttp.OK(w, &SharingReference{
+	jsonhttp.OK(w, &FileSharingReference{
 		Reference: sharingRef,
 	})
 }

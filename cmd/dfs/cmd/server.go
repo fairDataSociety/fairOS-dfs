@@ -147,6 +147,8 @@ func startHttpService(logger logging.Logger) {
 	userRouter.HandleFunc("/share/outbox", handler.GetUserSharingOutboxHandler).Methods("GET")
 
 	// pod related handlers
+	baseRouter.HandleFunc("/pod/receive", handler.PodReceiveHandler).Methods("POST")
+	baseRouter.HandleFunc("/pod/receiveinfo", handler.PodReceiveInfoHandler).Methods("POST")
 	podRouter := baseRouter.PathPrefix("/pod/").Subrouter()
 	podRouter.Use(handler.LoginMiddleware)
 	podRouter.Use(handler.LogMiddleware)
@@ -154,9 +156,13 @@ func startHttpService(logger logging.Logger) {
 	podRouter.HandleFunc("/open", handler.PodOpenHandler).Methods("POST")
 	podRouter.HandleFunc("/close", handler.PodCloseHandler).Methods("POST")
 	podRouter.HandleFunc("/sync", handler.PodSyncHandler).Methods("POST")
+	podRouter.HandleFunc("/share", handler.PodShareHandler).Methods("POST")
 	podRouter.HandleFunc("/delete", handler.PodDeleteHandler).Methods("DELETE")
 	podRouter.HandleFunc("/ls", handler.PodListHandler).Methods("GET")
 	podRouter.HandleFunc("/stat", handler.PodStatHandler).Methods("GET")
+
+
+
 
 	// directory related handlers
 	dirRouter := baseRouter.PathPrefix("/dir/").Subrouter()

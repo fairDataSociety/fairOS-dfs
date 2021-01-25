@@ -104,6 +104,10 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		successCount++
+
+		if (rowCount % 10000) == 0 {
+			h.logger.Info("uploaded ", rowCount)
+		}
 	}
 	err = h.dfsAPI.DocBatchWrite(sessionId, docBatch)
 	if err != nil {
