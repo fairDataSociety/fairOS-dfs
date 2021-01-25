@@ -701,8 +701,37 @@ func executor(in string) {
 			podName := blocks[2]
 			args := make(map[string]string)
 			args["pod"] = podName
-			args["password"] = getPassword()
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodOpen, args)
+
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiPodLs, nil)
+			if err != nil {
+				fmt.Println("error while listing pods: %w", err)
+				return
+			}
+			var resp api.PodListResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("pod stat: ", err)
+				return
+			}
+			invalidPodName := true
+			for _, pod := range resp.Pods {
+				if pod == podName {
+					args["password"] = getPassword()
+					invalidPodName = false
+				}
+			}
+			for _, pod := range resp.SharedPods {
+				if pod == podName {
+					args["password"] = ""
+					invalidPodName = false
+				}
+			}
+			if invalidPodName {
+				fmt.Println("invalid pod name")
+				break
+			}
+
+			data, err = fdfsAPI.callFdfsApi(http.MethodPost, apiPodOpen, args)
 			if err != nil {
 				fmt.Println("pod open failed: ", err)
 				return

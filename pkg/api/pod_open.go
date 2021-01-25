@@ -39,11 +39,6 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	password := r.FormValue("password")
-	if password == "" {
-		h.logger.Errorf("pod open: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "pod open: \"password\" argument missing")
-		return
-	}
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
