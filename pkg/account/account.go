@@ -310,6 +310,10 @@ func (a *Account) GetUserAccountInfo() *Info {
 	return a.userAcount
 }
 
+func (a *Account) GetEmptyAccountInfo() *Info {
+	return &Info{}
+}
+
 func (a *Account) GetPodAccountInfo(index int) (*Info, error) {
 	if index < len(a.podAccounts) {
 		return a.podAccounts[index], nil
@@ -330,8 +334,16 @@ func (a *Account) getPassword() (password string) {
 	return password
 }
 
+func (a *Info) IsReadOnlyPod() bool {
+	return a.privateKey == nil
+}
+
 func (ai *Info) GetAddress() utils.Address {
 	return ai.address
+}
+
+func (ai *Info) SetAddress(addr utils.Address) {
+	ai.address = addr
 }
 
 func (ai *Info) GetPrivateKey() *ecdsa.PrivateKey {

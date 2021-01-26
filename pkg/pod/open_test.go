@@ -44,7 +44,7 @@ func TestPod_LoginPod(t *testing.T) {
 	podName1 := "test1"
 	firstDir := "dir1"
 	t.Run("simple-login-to-pod", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password")
+		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -71,7 +71,7 @@ func TestPod_LoginPod(t *testing.T) {
 	})
 
 	t.Run("login-with-sync-contents", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password")
+		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}

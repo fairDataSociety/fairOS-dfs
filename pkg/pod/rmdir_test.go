@@ -48,7 +48,7 @@ func TestPod_RemoveDir(t *testing.T) {
 	thirdAndFourthDir := "dir3/dir4"
 	fifthDir := "/dir5"
 	t.Run("rmdir-on-root-of-pod", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password")
+		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -81,7 +81,7 @@ func TestPod_RemoveDir(t *testing.T) {
 	})
 
 	t.Run("rmdir-second-dir-from-first-dir", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName2, "password")
+		info, err := pod1.CreatePod(podName2, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName2)
 		}
@@ -122,7 +122,7 @@ func TestPod_RemoveDir(t *testing.T) {
 	})
 
 	t.Run("rmdir-second-dir-from-pod", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName3, "password")
+		info, err := pod1.CreatePod(podName3, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName3)
 		}
@@ -164,7 +164,7 @@ func TestPod_RemoveDir(t *testing.T) {
 	})
 
 	t.Run("rmdir-multiple-dirs-from-pod", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName4, "password")
+		info, err := pod1.CreatePod(podName4, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName4)
 		}
@@ -210,7 +210,7 @@ func TestPod_RemoveDir(t *testing.T) {
 	})
 
 	t.Run("rmdir-with-slash-on-pod", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName5, "password")
+		info, err := pod1.CreatePod(podName5, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName5)
 		}

@@ -65,7 +65,7 @@ func (d *DfsAPI) IsDirPresent(directoryName, sessionId string) (bool, error) {
 	}
 	directory := podInfo.GetDirectory()
 	podDir := podInfo.GetCurrentPodPathAndName() + directoryName
-	_, _, err = directory.GetDirNode(podDir, ui.GetFeed(), ui.GetAccount().GetUserAccountInfo())
+	_, _, err = directory.GetDirNode(podDir, podInfo.GetFeed(), podInfo.GetAccountInfo())
 	if err != nil {
 		return false, err
 	}

@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 
 	"io/ioutil"
 	"log"
@@ -81,6 +82,9 @@ const (
 	apiPodDelete       = APIVersion + "/pod/delete"
 	apiPodLs           = APIVersion + "/pod/ls"
 	apiPodStat         = APIVersion + "/pod/stat"
+	apiPodShare        = APIVersion + "/pod/share"
+	apiPodReceive      = APIVersion + "/pod/receive"
+	apiPodReceiveInfo  = APIVersion + "/pod/receiveinfo"
 	apiDirIsPresent    = APIVersion + "/dir/present"
 	apiDirMkdir        = APIVersion + "/dir/mkdir"
 	apiDirRmdir        = APIVersion + "/dir/rmdir"
@@ -698,8 +702,37 @@ func executor(in string) {
 			podName := blocks[2]
 			args := make(map[string]string)
 			args["pod"] = podName
-			args["password"] = getPassword()
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodOpen, args)
+
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiPodLs, nil)
+			if err != nil {
+				fmt.Println("error while listing pods: %w", err)
+				return
+			}
+			var resp api.PodListResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("pod stat: ", err)
+				return
+			}
+			invalidPodName := true
+			for _, pod := range resp.Pods {
+				if pod == podName {
+					args["password"] = getPassword()
+					invalidPodName = false
+				}
+			}
+			for _, pod := range resp.SharedPods {
+				if pod == podName {
+					args["password"] = ""
+					invalidPodName = false
+				}
+			}
+			if invalidPodName {
+				fmt.Println("invalid pod name")
+				break
+			}
+
+			data, err = fdfsAPI.callFdfsApi(http.MethodPost, apiPodOpen, args)
 			if err != nil {
 				fmt.Println("pod open failed: ", err)
 				return
@@ -795,7 +828,74 @@ func executor(in string) {
 			for _, pod := range resp.Pods {
 				fmt.Println("<Pod>: ", pod)
 			}
+			for _, pod := range resp.SharedPods {
+				fmt.Println("<Shared Pod>: ", pod)
+			}
 			currentPrompt = getCurrentPrompt()
+		case "share":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			podName := blocks[2]
+			args := make(map[string]string)
+			args["pod"] = podName
+			args["password"] = getPassword()
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodShare, args)
+			if err != nil {
+				fmt.Println("pod share failed: ", err)
+				return
+			}
+			var sharingRef api.PodSharingReference
+			err = json.Unmarshal(data, &sharingRef)
+			if err != nil {
+				fmt.Println("pod share failed: ", err)
+				return
+			}
+			fmt.Println("Pod Sharing Reference : ", sharingRef.Reference)
+			currentPrompt = getCurrentPrompt()
+		case "receive":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			podSharingReference := blocks[2]
+			args := make(map[string]string)
+			args["ref"] = podSharingReference
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodReceive, args)
+			if err != nil {
+				fmt.Println("pod receive failed: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "receiveinfo":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			podSharingReference := blocks[2]
+			args := make(map[string]string)
+			args["ref"] = podSharingReference
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodReceiveInfo, args)
+			if err != nil {
+				fmt.Println("pod receive info failed: ", err)
+				return
+			}
+			var podSharingInfo pod.ShareInfo
+			err = json.Unmarshal(data, &podSharingInfo)
+			if err != nil {
+				fmt.Println("pod receive info failed: ", err)
+				return
+			}
+			fmt.Println("Pod Name  : ", podSharingInfo.PodName)
+			fmt.Println("Pod Ref.  : ", podSharingInfo.Address)
+			fmt.Println("User Name : ", podSharingInfo.UserName)
+			fmt.Println("User Ref. : ", podSharingInfo.UserAddress)
+			fmt.Println("Shared Time : ", podSharingInfo.SharedTime)
+			currentPrompt = getCurrentPrompt()
+
 		default:
 			fmt.Println("invalid pod command!!")
 			help()
@@ -1227,7 +1327,29 @@ func executor(in string) {
 					return
 				}
 				for k, v := range d {
-					fmt.Println(k, "=", v)
+					var valStr string
+					switch val := v.(type) {
+					case string:
+						fmt.Println(k, "=", val)
+					case float64:
+						valStr = strconv.FormatFloat(val, 'E', -1, 10)
+						fmt.Println(k, "=", valStr)
+					case map[string]interface{}:
+						for k1, v1 := range val {
+							switch val1 := v1.(type) {
+							case string:
+								fmt.Println("   "+k1+" = ", val1)
+							case float64:
+								val2 := int64(val1)
+								valStr = strconv.FormatInt(val2, 10)
+								fmt.Println("   "+k1+" = ", valStr)
+							default:
+								fmt.Println("   "+k1+" = ", val1)
+							}
+						}
+					default:
+						fmt.Println(k, "=", val)
+					}
 				}
 
 			}
@@ -1604,7 +1726,7 @@ func executor(in string) {
 		args["dir"] = statElement
 		data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDirStat, args)
 		if err != nil {
-			if err.Error() == "received invalid status: 500 Internal Server Error" {
+			if err.Error() == "dir stat: directory not found" {
 				args := make(map[string]string)
 				args["file"] = statElement
 				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiFileStat, args)
@@ -1653,7 +1775,7 @@ func executor(in string) {
 					fmt.Println(blkStr)
 				}
 			} else {
-				fmt.Println("stat: %w", err)
+				fmt.Println("stat: ", err)
 				return
 			}
 		} else {
@@ -1752,13 +1874,13 @@ func executor(in string) {
 			fmt.Println("share: ", err)
 			return
 		}
-		var resp api.SharingReference
+		var resp api.FileSharingReference
 		err = json.Unmarshal(data, &resp)
 		if err != nil {
 			fmt.Println("file share: ", err)
 			return
 		}
-		fmt.Println("Sharing Reference: ", resp.Reference)
+		fmt.Println("File Sharing Reference: ", resp.Reference)
 		currentPrompt = getCurrentPrompt()
 	case "receive":
 		if len(blocks) < 3 {

@@ -22,7 +22,7 @@ import (
 )
 
 func (p *Pod) DeletePod(podName string) error {
-	pods, err := p.loadUserPods()
+	pods, sharedPods, err := p.loadUserPods()
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (p *Pod) DeletePod(podName string) error {
 		pods[0] = ""
 	}
 
-	err = p.storeUserPods(pods)
+	err = p.storeUserPods(pods, sharedPods)
 	if err != nil {
 		return err
 	}

@@ -21,6 +21,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -30,48 +32,85 @@ import (
 
 func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	// check if pods is present and get the index of the pod
-	pods, err := p.loadUserPods()
+	pods, sharedPods, err := p.loadUserPods()
 	if err != nil {
 		return nil, err
 	}
+
+	sharedPodType := false
 	if !p.checkIfPodPresent(pods, podName) {
-		return nil, ErrInvalidPodName
+		if !p.checkIfSharedPodPresent(sharedPods, podName) {
+			return nil, ErrInvalidPodName
+		} else {
+			sharedPodType = true
+		}
 	}
 
-	index := p.getIndex(pods, podName)
-	if index == -1 {
-		return nil, fmt.Errorf("pod does not exist")
+	var accountInfo *account.Info
+	var file *f.File
+	var fd *feed.API
+	var dir *d.Directory
+	var dirInode *d.DirInode
+	var user utils.Address
+	if sharedPodType {
+		addressString := p.getAddress(sharedPods, podName)
+		if addressString == "" {
+			return nil, fmt.Errorf("shared pod does not exist")
+		}
+
+		accountInfo = p.acc.GetEmptyAccountInfo()
+		address := utils.HexToAddress(addressString)
+		accountInfo.SetAddress(address)
+
+		fd = feed.New(accountInfo, p.client, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
+
+		// get the pod's inode
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		// set the user as the pod address we got from shared pod
+		user = address
+	} else {
+		index := p.getIndex(pods, podName)
+		if index == -1 {
+			return nil, fmt.Errorf("pod does not exist")
+		}
+
+		// Create pod account and other data structures
+		// create a child account for the user and other data structures for the pod
+		err = p.acc.CreatePodAccount(index, passPhrase, false)
+		if err != nil {
+			return nil, err
+		}
+		accountInfo, err = p.acc.GetPodAccountInfo(index)
+		if err != nil {
+			return nil, err
+		}
+		fd = p.fd
+		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
+
+		// get the pod's inode
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
+		if err != nil {
+			return nil, err
+		}
+		user = p.acc.GetAddress(account.UserAccountIndex)
 	}
 
-	// Create pod account and other data structures
-	// create a child account for the user and other data structures for the pod
-	err = p.acc.CreatePodAccount(index, passPhrase, false)
-	if err != nil {
-		return nil, err
-	}
-	accountInfo, err := p.acc.GetPodAccountInfo(index)
-	if err != nil {
-		return nil, err
-	}
-	file := f.NewFile(podName, p.client, p.fd, accountInfo, p.logger)
-	dir := d.NewDirectory(podName, p.client, p.fd, accountInfo, file, p.logger)
-
-	// get the pod's inode
-	_, dirInode, err := dir.GetDirNode(utils.PathSeperator+podName, p.fd, accountInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	user := p.acc.GetAddress(account.UserAccountIndex)
-	kvStore := c.NewKeyValueStore(p.fd, accountInfo, user, p.client, p.logger)
-	docStore := c.NewDocumentStore(p.fd, accountInfo, user, p.client, p.logger)
+	kvStore := c.NewKeyValueStore(fd, accountInfo, user, p.client, p.logger)
+	docStore := c.NewDocumentStore(fd, accountInfo, user, p.client, p.logger)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
 		podName:         podName,
 		user:            user,
 		accountInfo:     accountInfo,
-		feed:            p.fd,
+		feed:            fd,
 		dir:             dir,
 		file:            file,
 		currentPodInode: dirInode,
@@ -101,4 +140,13 @@ func (p *Pod) getIndex(pods map[int]string, podName string) int {
 		}
 	}
 	return -1
+}
+
+func (p *Pod) getAddress(sharedPods map[string]string, podName string) string {
+	for address, pod := range sharedPods {
+		if strings.Trim(pod, "\n") == podName {
+			return address
+		}
+	}
+	return ""
 }

@@ -41,7 +41,7 @@ func TestPod_New(t *testing.T) {
 	podName1 := "test1"
 	podName2 := "test2"
 	t.Run("create-first-pod", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password")
+		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -54,7 +54,7 @@ func TestPod_New(t *testing.T) {
 			t.Fatalf("invalid pod name: expected %s got %s", podName1, info.GetCurrentPodNameOnly())
 		}
 
-		pods, err := pod1.loadUserPods()
+		pods, _, err := pod1.loadUserPods()
 		if err != nil {
 			t.Fatalf("error getting pods")
 		}
@@ -84,7 +84,7 @@ func TestPod_New(t *testing.T) {
 	})
 
 	t.Run("create-second-pod", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName2, "password")
+		info, err := pod1.CreatePod(podName2, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName2)
 		}
@@ -93,7 +93,7 @@ func TestPod_New(t *testing.T) {
 			t.Fatalf("invalid pod name: expected %s got %s", podName2, info.GetCurrentPodNameOnly())
 		}
 
-		pods, err := pod1.loadUserPods()
+		pods, _, err := pod1.loadUserPods()
 		if err != nil {
 			t.Fatalf("error getting pods")
 		}

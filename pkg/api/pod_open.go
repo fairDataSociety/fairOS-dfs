@@ -31,18 +31,14 @@ type PodOpenResponse struct {
 }
 
 func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
-	password := r.FormValue("password")
 	pod := r.FormValue("pod")
-	if password == "" {
-		h.logger.Errorf("pod open: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "pod open: \"password\" argument missing")
-		return
-	}
 	if pod == "" {
 		h.logger.Errorf("pod open: \"pod\" argument missing")
 		jsonhttp.BadRequest(w, "pod open: \"pod\" argument missing")
 		return
 	}
+
+	password := r.FormValue("password")
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

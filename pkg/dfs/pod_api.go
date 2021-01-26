@@ -18,6 +18,7 @@ package dfs
 
 import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error) {
@@ -28,7 +29,7 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 	}
 
 	// create the pod
-	pi, err := ui.GetPod().CreatePod(podName, passPhrase)
+	pi, err := ui.GetPod().CreatePod(podName, passPhrase, "")
 	if err != nil {
 		return nil, err
 	}
@@ -150,17 +151,52 @@ func (d *DfsAPI) SyncPod(sessionId string) error {
 	return nil
 }
 
-func (d *DfsAPI) ListPods(sessionId string) ([]string, error) {
+func (d *DfsAPI) ListPods(sessionId string) ([]string, []string, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, nil, ErrUserNotLoggedIn
+	}
+
+	// list pods of a user
+	pods, sharedPods, err := ui.GetPod().ListPods()
+	if err != nil {
+		return nil, nil, err
+	}
+	return pods, sharedPods, nil
+}
+
+func (d *DfsAPI) PodShare(podName, passPhrase, sessionId string) (string, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return "", ErrUserNotLoggedIn
+	}
+
+	// get the pod stat
+	address, err := ui.GetPod().PodShare(podName, passPhrase, ui.GetUserName())
+	if err != nil {
+		return "", err
+	}
+	return address, nil
+}
+
+func (d *DfsAPI) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareInfo, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// list pods of a user
-	pods, err := ui.GetPod().ListPods()
-	if err != nil {
-		return nil, err
+	return ui.GetPod().ReceivePodInfo(ref)
+}
+
+func (d *DfsAPI) PodReceive(sessionId string, ref utils.Reference) (*pod.Info, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
 	}
-	return pods, nil
+
+	return ui.GetPod().ReceivePod(ref)
 }

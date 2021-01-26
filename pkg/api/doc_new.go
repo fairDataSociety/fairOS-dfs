@@ -50,6 +50,10 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 				simpleIndexes[nt[0]] = collection.StringIndex
 			case "number":
 				simpleIndexes[nt[0]] = collection.NumberIndex
+			case "map":
+				simpleIndexes[nt[0]] = collection.MapIndex
+			case "list":
+				simpleIndexes[nt[0]] = collection.ListIndex
 			case "bytes":
 			default:
 				h.logger.Errorf("doc create: invalid \"indexType\" ")

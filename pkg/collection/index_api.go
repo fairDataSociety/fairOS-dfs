@@ -32,6 +32,10 @@ const (
 )
 
 func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool) error {
+	if idx.isReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	// get the first feed of the Index
 	manifest, err := idx.loadManifest(idx.name)
 	if err != nil {
@@ -70,6 +74,9 @@ func (idx *Index) Get(key string) ([][]byte, error) {
 }
 
 func (idx *Index) Delete(key string) ([][]byte, error) {
+	if idx.isReadOnlyFeed() {
+		return nil, ErrReadOnlyIndex
+	}
 	stringKey := key
 	if idx.indexType == NumberIndex {
 		i, err := strconv.ParseInt(stringKey, 10, 64)

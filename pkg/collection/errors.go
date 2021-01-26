@@ -48,4 +48,5 @@ var (
 	ErrDocumentNotPresent             = errors.New("document not present")
 	ErrDocumentIndexTypeNotSupported  = errors.New("document index type not supported yet")
 	ErrInvalidDocumentId              = errors.New("invalid document id")
+	ErrReadOnlyIndex                  = errors.New("read only index")
 )

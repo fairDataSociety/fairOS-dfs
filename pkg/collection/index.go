@@ -94,6 +94,9 @@ var (
 )
 
 func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client) error {
+	if fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
 	actualIndexName := collectionName + indexName
 	topic := utils.HashString(actualIndexName)
 	_, oldData, err := fd.GetFeedData(topic, user)
@@ -144,6 +147,9 @@ func OpenIndex(collectionName, indexName string, fd *feed.API, ai *account.Info,
 }
 
 func (idx *Index) DeleteIndex() error {
+	if idx.isReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
 	manifest := getRootManifestOfIndex(idx.name, idx.feed, idx.user, idx.client)
 	if manifest == nil {
 		return ErrIndexNotPresent
@@ -294,6 +300,10 @@ func (idx *Index) storeManifest(manifest *Manifest) error {
 		return ErrManifestCreate
 	}
 	return nil
+}
+
+func (idx *Index) isReadOnlyFeed() bool {
+	return idx.feed.IsReadOnlyFeed()
 }
 
 func longestCommonPrefix(str1, str2 string) (string, string, string) {

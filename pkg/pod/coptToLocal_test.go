@@ -45,7 +45,7 @@ func TestPod_CopyToLocal(t *testing.T) {
 	podName1 := "test1"
 	firstDir := "dir1"
 	t.Run("copy-file-from-root", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password")
+		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -73,7 +73,7 @@ func TestPod_CopyToLocal(t *testing.T) {
 	})
 
 	t.Run("copy-file-from-firstdir", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password")
+		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -110,7 +110,7 @@ func TestPod_CopyToLocal(t *testing.T) {
 	})
 
 	t.Run("copy-file-to-dot", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password")
+		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -145,7 +145,7 @@ func TestPod_CopyToLocal(t *testing.T) {
 
 }
 
-func createRandomFileInPod(t *testing.T, size int, pod1 *Pod, podName string, podDir string) string {
+func createRandomFileInPod(t *testing.T, size int, pod1 *Pod, podName, podDir string) string {
 	file, err := ioutil.TempFile("/tmp", "fairOS-dfs")
 	if err != nil {
 		t.Fatal(err)

@@ -41,6 +41,10 @@ func (p *Pod) MakeDir(podName, dirName string) error {
 		return err
 	}
 
+	if podInfo.accountInfo.IsReadOnlyPod() {
+		return ErrReadOnlyPod
+	}
+
 	directory := podInfo.GetDirectory()
 
 	var firstTopic []byte

@@ -44,6 +44,8 @@ var (
 
 	// ErrInvalidPayloadSize is returned when the payload is greater than the chunk size
 	ErrInvalidPayloadSize = fmt.Errorf("payload is greater than %d", utils.MaxChunkLength)
+
+	ErrReadOnlyFeed = fmt.Errorf("read only feed")
 )
 
 type API struct {
@@ -74,6 +76,10 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 // create feed
 func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
 	var req Request
+
+	if a.accountInfo.GetPrivateKey() == nil {
+		return nil, ErrReadOnlyFeed
+	}
 
 	if len(topic) != TopicLength {
 		return nil, ErrInvalidTopicSize
@@ -161,6 +167,10 @@ func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, err
 }
 
 func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
+	if a.accountInfo.GetPrivateKey() == nil {
+		return nil, ErrReadOnlyFeed
+	}
+
 	if len(topic) != TopicLength {
 		return nil, ErrInvalidTopicSize
 	}
@@ -235,6 +245,10 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 }
 
 func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
+	if a.accountInfo.GetPrivateKey() == nil {
+		return ErrReadOnlyFeed
+	}
+
 	delRef, _, err := a.GetFeedData(topic, user)
 	if err != nil && err.Error() != "no feed updates found" {
 		return err
@@ -246,4 +260,8 @@ func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 		}
 	}
 	return nil
+}
+
+func (a *API) IsReadOnlyFeed() bool {
+	return a.accountInfo.GetPrivateKey() == nil
 }

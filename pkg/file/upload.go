@@ -24,7 +24,6 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"time"
 
@@ -34,7 +33,7 @@ import (
 )
 
 var (
-	NoOfParallelWorkers = runtime.NumCPU() * 4
+	NoOfParallelWorkers = 4
 )
 
 func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize uint32, filePath, compression string) ([]byte, error) {

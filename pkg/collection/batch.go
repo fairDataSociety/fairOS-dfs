@@ -37,6 +37,10 @@ func NewBatch(idx *Index) (*Batch, error) {
 }
 
 func (b *Batch) Put(key string, refValue []byte, apnd bool) error {
+	if b.idx.isReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	if b.memDb == nil {
 		manifest := &Manifest{
 			Name:         b.idx.name,
@@ -83,6 +87,9 @@ func (b *Batch) Get(key string) ([][]byte, error) {
 }
 
 func (b *Batch) Del(key string) ([][]byte, error) {
+	if b.idx.isReadOnlyFeed() {
+		return nil, ErrReadOnlyIndex
+	}
 	if b.memDb == nil {
 		return nil, ErrEntryNotFound
 	}
@@ -122,6 +129,9 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 }
 
 func (b *Batch) Write() error {
+	if b.idx.isReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
 	if b.memDb == nil {
 		return ErrEntryNotFound
 	}
