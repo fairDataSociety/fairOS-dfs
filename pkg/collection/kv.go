@@ -67,6 +67,10 @@ func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client
 }
 
 func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
+	if kv.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	// load the existing db's and see if this name is already there
 	kvtables, err := kv.LoadKVTables()
 	if err != nil {
@@ -88,6 +92,10 @@ func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
 }
 
 func (kv *KeyValue) DeleteKVTable(name string) error {
+	if kv.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	kvtables, err := kv.LoadKVTables()
 	if err != nil {
 		return err
@@ -169,6 +177,10 @@ func (kv *KeyValue) KVCount(name string) (uint64, error) {
 }
 
 func (kv *KeyValue) KVPut(name, key string, value []byte) error {
+	if kv.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
@@ -200,6 +212,10 @@ func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 }
 
 func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
+	if kv.fd.IsReadOnlyFeed() {
+		return nil, ErrReadOnlyIndex
+	}
+
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
@@ -213,6 +229,9 @@ func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
 }
 
 func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
+	if kv.fd.IsReadOnlyFeed() {
+		return nil, ErrReadOnlyIndex
+	}
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
@@ -223,6 +242,10 @@ func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
 }
 
 func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
+	if kv.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	if key == CSVHeaderKey {
 		kv.openKVTMu.Lock()
 		defer kv.openKVTMu.Unlock()
@@ -234,6 +257,9 @@ func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 }
 
 func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
+	if kv.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
 	return batch.Write()
 }
 

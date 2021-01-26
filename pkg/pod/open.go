@@ -21,6 +21,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -46,8 +48,10 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 
 	var accountInfo *account.Info
 	var file *f.File
+	var fd *feed.API
 	var dir *d.Directory
 	var dirInode *d.DirInode
+	var user utils.Address
 	if sharedPodType {
 		addressString := p.getAddress(sharedPods, podName)
 		if addressString == "" {
@@ -58,15 +62,18 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		address := utils.HexToAddress(addressString)
 		accountInfo.SetAddress(address)
 
-		file = f.NewFile(podName, p.client, p.fd, accountInfo, p.logger)
-		dir = d.NewDirectory(podName, p.client, p.fd, accountInfo, file, p.logger)
+		fd = feed.New(accountInfo, p.client, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
 
 		// get the pod's inode
-		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, p.fd, accountInfo)
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
 		if err != nil {
 			return nil, err
 		}
 
+		// set the user as the pod address we got from shared pod
+		user = address
 	} else {
 		index := p.getIndex(pods, podName)
 		if index == -1 {
@@ -83,25 +90,27 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		if err != nil {
 			return nil, err
 		}
-		file = f.NewFile(podName, p.client, p.fd, accountInfo, p.logger)
-		dir = d.NewDirectory(podName, p.client, p.fd, accountInfo, file, p.logger)
+		fd = p.fd
+		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
 
 		// get the pod's inode
-		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, p.fd, accountInfo)
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
 		if err != nil {
 			return nil, err
 		}
+		user = p.acc.GetAddress(account.UserAccountIndex)
 	}
-	user := p.acc.GetAddress(account.UserAccountIndex)
-	kvStore := c.NewKeyValueStore(p.fd, accountInfo, user, p.client, p.logger)
-	docStore := c.NewDocumentStore(p.fd, accountInfo, user, p.client, p.logger)
+
+	kvStore := c.NewKeyValueStore(fd, accountInfo, user, p.client, p.logger)
+	docStore := c.NewDocumentStore(fd, accountInfo, user, p.client, p.logger)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
 		podName:         podName,
 		user:            user,
 		accountInfo:     accountInfo,
-		feed:            p.fd,
+		feed:            fd,
 		dir:             dir,
 		file:            file,
 		currentPodInode: dirInode,

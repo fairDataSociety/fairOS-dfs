@@ -92,6 +92,10 @@ func NewDocumentStore(fd *feed.API, ai *account.Info, user utils.Address, client
 }
 
 func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType) error {
+	if d.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	// check if the db is already present and opened
 	if d.IsDBOpened(dbName) {
 		return ErrDocumentDBAlreadyOpened
@@ -213,6 +217,10 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 }
 
 func (d *Document) DeleteDocumentDB(dbName string) error {
+	if d.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	// load the existing db's and see if this name is already there
 	docTables, err := d.LoadDocumentDBSchemas()
 	if err != nil {
@@ -351,6 +359,10 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 }
 
 func (d *Document) Put(dbName string, doc []byte) error {
+	if d.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	db := d.getOpenedDb(dbName)
 	if db == nil {
 		return ErrDocumentDBNotOpened
@@ -482,6 +494,10 @@ func (d *Document) Get(dbName, id string) ([]byte, error) {
 }
 
 func (d *Document) Del(dbName, id string) error {
+	if d.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	db := d.getOpenedDb(dbName)
 	if db == nil {
 		return ErrDocumentDBNotOpened
@@ -766,6 +782,10 @@ func (d *Document) resolveExpression(expr string) (string, string, string, error
 }
 
 func (d *Document) CreateDocBatch(name string) (*DocBatch, error) {
+	if d.fd.IsReadOnlyFeed() {
+		return nil, ErrReadOnlyIndex
+	}
+
 	d.openDOcDBMu.Lock()
 	defer d.openDOcDBMu.Unlock()
 	if db, ok := d.openDocDBs[name]; ok {
@@ -801,6 +821,10 @@ func (d *Document) CreateDocBatch(name string) (*DocBatch, error) {
 }
 
 func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte) error {
+	if d.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
+
 	d.openDOcDBMu.Lock()
 	defer d.openDOcDBMu.Unlock()
 
@@ -979,6 +1003,9 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte) error {
 }
 
 func (d *Document) DocBatchWrite(docBatch *DocBatch) error {
+	if d.fd.IsReadOnlyFeed() {
+		return ErrReadOnlyIndex
+	}
 	for _, batch := range docBatch.batches {
 		err := batch.Write()
 		if err != nil {
