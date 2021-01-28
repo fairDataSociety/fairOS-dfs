@@ -171,6 +171,17 @@ Pod cretion is cheap. A user can create multiple pods and use it to organise his
 - kv \<loadcsv\> (table-name) (local csv file) - loads the csv file in to kv store
 - kv \<seek\> (table-name) (start-key) (end-key) (limit) - seek to the given start prefix
 - kv \<getnext\> (table-name) - get the next element
+##### Document store commands
+- doc \<new\> (table-name) (si=indexes) - creates a new document store
+- doc \<delete\> (table-name) - deletes a document store
+- doc \<open\> (table-name) - open the document store
+- doc \<ls\>  - list all document dbs
+- doc \<count\> (table-name) (expr) - count the docs in the table satisfying the expression
+- doc \<find\> (table-name) (expr) (limit)- find the docs in the table satisfying the expression and limit
+- doc \<put\> (table-name) (json) - insert a json document in to document store
+- doc \<get\> (table-name) (id) - get the document having the id from the store
+- doc \<del\> (table-name) (id) - delete the document having the id from the store
+- doc \<loadjson\> (table-name) (local json file) - load the json file in to the newly created document db  
 ##### management commands
 - help - display this help
 - exit - exits from the prompt
