@@ -95,17 +95,29 @@ Pod cretion is cheap. A user can create multiple pods and use it to organise his
 - DELETE -F 'file=\<file_path\>'  http://localhost:9090/v0/file/delete
 
 ##### Key Value store related APIs
-- POST -F 'file=\<name\>' http://localhost:9090/v0/kv/new
-- POST -F 'file=\<name\>' http://localhost:9090/v0/kv/open
-- POST -F 'file=\<name\>' http://localhost:9090/v0/kv/count
+- POST -F 'file=\<kv table name\>' http://localhost:9090/v0/kv/new
+- POST -F 'file=\<kv table name\>' http://localhost:9090/v0/kv/open
+- POST -F 'file=\<kv table name\>' http://localhost:9090/v0/kv/count
 - POST http://localhost:9090/v0/kv/ls
-- DELETE -F 'file=\<name\>' http://localhost:9090/v0/kv/delete
-- POST -F 'file=\<name\>' -F 'key=\<key\>' -F 'value=\<bytes\>' http://localhost:9090/v0/kv/entry/put
-- GET -F 'file=\<name\>' -F 'key=\<key\>' http://localhost:9090/v0/kv/entry/get
-- DELETE -F 'file=\<name\>' -F 'key=\<key\>' http://localhost:9090/v0/kv/entry/del
-- POST -F 'file=\<name\>' -F 'csv=@\<csv_file\>' http://localhost:9090/v0/kv/loadcsv
-- POST -F 'file=\<name\>' -F 'start=\<start_prefix\>' -F 'end=\<end\>' -F 'limit=\<no of records\>' http://localhost:9090/v0/kv/seek
-- GET -F 'file=\<name\>' http://localhost:9090/v0/kv/seek/getnext
+- DELETE -F 'file=\<kv table name\>' http://localhost:9090/v0/kv/delete
+- POST -F 'file=\<kv table name\>' -F 'key=\<key\>' -F 'value=\<bytes\>' http://localhost:9090/v0/kv/entry/put
+- GET -F 'file=\<kv table name\>' -F 'key=\<key\>' http://localhost:9090/v0/kv/entry/get
+- DELETE -F 'file=\<kv table name\>' -F 'key=\<key\>' http://localhost:9090/v0/kv/entry/del
+- POST -F 'file=\<kv table name\>' -F 'csv=@\<csv_file\>' http://localhost:9090/v0/kv/loadcsv
+- POST -F 'file=\<kv table name\>' -F 'start=\<start_prefix\>' -F 'end=\<end\>' -F 'limit=\<no of records\>' http://localhost:9090/v0/kv/seek
+- GET -F 'file=\<nkv table ame\>' http://localhost:9090/v0/kv/seek/getnext
+
+##### Document store related APIs
+- POST -F 'name=\<document table name\>' http://localhost:9090/v0/doc/new
+- POST -F 'name=\<document table name\>' http://localhost:9090/v0/doc/open
+- POST -F 'name=\<tdocument able name\>' -F 'expr=\<expression\>' http://localhost:9090/v0/doc/count
+- POST -F 'name=\<document table name\>' -F 'expr=\<expression\>' -F 'limit=\<no of records\>' http://localhost:9090/v0/doc/find
+- POST http://localhost:9090/v0/doc/ls
+- DELETE -F 'name=\<tdocument able name\>' http://localhost:9090/v0/doc/delete
+- POST -F 'name=\<tdocument able name\>' -F 'doc=\<json document in bytes\>' http://localhost:9090/v0/doc/entry/put
+- GET -F 'name=\<document table name\>' -F 'id=\<document id\>' http://localhost:9090/v0/doc/entry/get
+- DELETE -F 'name=\<document table name\>' -F 'id=\<document id\>' http://localhost:9090/v0/doc/entry/del
+- POST -F 'name=\<document table name\>' -F 'json=@\<json_file\>' http://localhost:9090/v0/doc/loadjson
 
 ### REPL Commands in dfs
 **dfs >>>** \<command\> where, \<command\> is listed below
@@ -159,6 +171,17 @@ Pod cretion is cheap. A user can create multiple pods and use it to organise his
 - kv \<loadcsv\> (table-name) (local csv file) - loads the csv file in to kv store
 - kv \<seek\> (table-name) (start-key) (end-key) (limit) - seek to the given start prefix
 - kv \<getnext\> (table-name) - get the next element
+##### Document store commands
+- doc \<new\> (table-name) (si=indexes) - creates a new document store
+- doc \<delete\> (table-name) - deletes a document store
+- doc \<open\> (table-name) - open the document store
+- doc \<ls\>  - list all document dbs
+- doc \<count\> (table-name) (expr) - count the docs in the table satisfying the expression
+- doc \<find\> (table-name) (expr) (limit)- find the docs in the table satisfying the expression and limit
+- doc \<put\> (table-name) (json) - insert a json document in to document store
+- doc \<get\> (table-name) (id) - get the document having the id from the store
+- doc \<del\> (table-name) (id) - delete the document having the id from the store
+- doc \<loadjson\> (table-name) (local json file) - load the json file in to the newly created document db  
 ##### management commands
 - help - display this help
 - exit - exits from the prompt
