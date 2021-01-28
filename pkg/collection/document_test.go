@@ -510,8 +510,7 @@ func TestDocumentStore(t *testing.T) {
 		tag1["tgf11"] = "tgv11"
 		tag1["tgf12"] = "tgv12"
 		var list1 []string
-		list1 = append(list1, "lst11")
-		list1 = append(list1, "lst12")
+		list1 = append(list1, "lst11", "lst12")
 		addDocument(t, docStore, "docdb_9", "1", "John", "Doe", 45, tag1, list1)
 		docs, err := docStore.Get("docdb_9", "1")
 		if err != nil {
@@ -556,8 +555,7 @@ func TestDocumentStore(t *testing.T) {
 		tag1["tgf11"] = "tgv11"
 		tag1["tgf12"] = "tgv12"
 		var list1 []string
-		list1 = append(list1, "lst11")
-		list1 = append(list1, "lst12")
+		list1 = append(list1, "lst11", "lst12")
 		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 45, tag1, list1)
 		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 25, tag1, list1)
 
@@ -603,29 +601,25 @@ func TestDocumentStore(t *testing.T) {
 		tag1["tgf11"] = "tgv11"
 		tag1["tgf12"] = "tgv12"
 		var list1 []string
-		list1 = append(list1, "lst11")
-		list1 = append(list1, "lst12")
+		list1 = append(list1, "lst11", "lst12")
 		addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 45, tag1, list1)
 		tag2 := make(map[string]string)
 		tag2["tgf21"] = "tgv21"
 		tag2["tgf22"] = "tgv22"
 		var list2 []string
-		list2 = append(list2, "lst21")
-		list2 = append(list2, "lst22")
+		list2 = append(list2, "lst21", "lst22")
 		addBatchDocument(t, docStore, docBatch, "2", "John", "boy", 25, tag2, list2)
 		tag3 := make(map[string]string)
 		tag3["tgf31"] = "tgv31"
 		tag3["tgf32"] = "tgv32"
 		var list3 []string
-		list3 = append(list3, "lst31")
-		list3 = append(list3, "lst32")
+		list3 = append(list3, "lst31", "lst32")
 		addBatchDocument(t, docStore, docBatch, "3", "Alice", "wonderland", 20, tag3, list3)
 		tag4 := make(map[string]string)
 		tag4["tgf41"] = "tgv41"
 		tag4["tgf42"] = "tgv42"
 		var list4 []string
-		list4 = append(list4, "lst41")
-		list4 = append(list4, "lst42")
+		list4 = append(list4, "lst41", "lst42")
 		addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 35, tag4, list4) // this tests the overwriting in batch
 
 		err = docStore.DocBatchWrite(docBatch)
@@ -718,36 +712,31 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 	tag1["tgf11"] = "tgv11"
 	tag1["tgf12"] = "tgv12"
 	var list1 []string
-	list1 = append(list1, "lst11")
-	list1 = append(list1, "lst12")
+	list1 = append(list1, "lst11", "lst12")
 	addDocument(t, docStore, dbName, "1", "John", "Doe", 45, tag1, list1)
 	tag2 := make(map[string]string)
 	tag2["tgf21"] = "tgv21"
 	tag2["tgf22"] = "tgv22"
 	var list2 []string
-	list2 = append(list2, "lst21")
-	list2 = append(list2, "lst22")
+	list2 = append(list2, "lst21", "lst22")
 	addDocument(t, docStore, dbName, "2", "John", "boy", 25, tag2, list2)
 	tag3 := make(map[string]string)
 	tag3["tgf31"] = "tgv31"
 	tag3["tgf32"] = "tgv32"
 	var list3 []string
-	list3 = append(list3, "lst31")
-	list3 = append(list3, "lst32")
+	list3 = append(list3, "lst31", "lst32")
 	addDocument(t, docStore, dbName, "3", "Bob", "michel", 30, tag3, list3)
 	tag4 := make(map[string]string)
 	tag4["tgf41"] = "tgv41"
 	tag4["tgf42"] = "tgv42"
 	var list4 []string
-	list4 = append(list4, "lst41")
-	list4 = append(list4, "lst42")
+	list4 = append(list4, "lst41", "lst42")
 	addDocument(t, docStore, dbName, "4", "Charlie", "chaplin", 25, tag4, list4)
 	tag5 := make(map[string]string)
 	tag5["tgf51"] = "tgv51"
 	tag5["tgf52"] = "tgv52"
 	var list5 []string
-	list5 = append(list5, "lst51")
-	list5 = append(list5, "lst52")
+	list5 = append(list5, "lst51", "lst52")
 	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25, tag5, list5)
 }
 
