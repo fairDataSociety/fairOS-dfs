@@ -666,7 +666,7 @@ func TestDocumentStore(t *testing.T) {
 func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Document, si map[string]collection.IndexType) {
 	t.Helper()
 	for _, dbName := range dbNames {
-		err := docStore.CreateDocumentDB(dbName, si)
+		err := docStore.CreateDocumentDB(dbName, si, true)
 		if err != nil {
 			t.Fatal(err)
 		}

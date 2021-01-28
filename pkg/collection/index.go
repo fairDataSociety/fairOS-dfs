@@ -79,6 +79,7 @@ func toIndexTypeEnum(s string) IndexType {
 
 type Index struct {
 	name        string
+	mutable     bool
 	indexType   IndexType
 	user        utils.Address
 	accountInfo *account.Info
@@ -93,7 +94,7 @@ var (
 	NoOfParallelWorkers = runtime.NumCPU() * 4
 )
 
-func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client) error {
+func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client, mutable bool) error {
 	if fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
 	}
@@ -105,7 +106,7 @@ func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed
 		return ErrIndexAlreadyPresent
 	}
 
-	manifest := NewManifest(actualIndexName, time.Now().Unix(), indexType)
+	manifest := NewManifest(actualIndexName, time.Now().Unix(), indexType, mutable)
 
 	// marshall and store the manifest as new feed
 	data, err := json.Marshal(manifest)
@@ -127,20 +128,21 @@ func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed
 
 func OpenIndex(collectionName, indexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
 	actualIndexName := collectionName + indexName
-	manifest := getRootManifestOfIndex(actualIndexName, fd, user, client)
+	manifest := getRootManifestOfIndex(actualIndexName, fd, user, client) // this will load the entire manifest for immutable indexes
 	if manifest == nil {
 		return nil, ErrIndexNotPresent
 	}
 
 	idx := &Index{
 		name:        manifest.Name,
+		mutable:     manifest.Mutable,
 		indexType:   manifest.IdxType,
 		user:        user,
 		accountInfo: ai,
 		feed:        fd,
 		client:      client,
 		count:       0,
-		memDB:       nil,
+		memDB:       manifest,
 		logger:      logger,
 	}
 	return idx, nil
@@ -165,9 +167,15 @@ func (idx *Index) DeleteIndex() error {
 }
 
 func (idx *Index) CountIndex() (uint64, error) {
-	parentManifest, err := idx.loadManifest(idx.name)
-	if err != nil {
-		return 0, err
+	var parentManifest *Manifest
+	if idx.mutable {
+		manifest, err := idx.loadManifest(idx.name)
+		if err != nil {
+			return 0, err
+		}
+		parentManifest = manifest
+	} else {
+		parentManifest = idx.memDB
 	}
 
 	if len(parentManifest.Entries) == 0 {
@@ -206,15 +214,26 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 			//		wg.Done()
 			//	}()
 
-			newManifest, err := idx.loadManifest(manifest.Name + entry.Name)
-			if err != nil {
-				fmt.Println("manifest load error: ", manifest.Name+entry.Name)
-				//select {
-				//case errC <- err:
-				//default: // Default is must to avoid blocking
-				//}
-				//cancel()
-				return
+			var newManifest *Manifest
+			if idx.mutable {
+				man, err := idx.loadManifest(manifest.Name + entry.Name)
+				if err != nil {
+					fmt.Println("manifest load error: ", manifest.Name+entry.Name)
+					//select {
+					//case errC <- err:
+					//default: // Default is must to avoid blocking
+					//}
+					//cancel()
+					return
+				}
+				newManifest = man
+			} else {
+				if entry.manifest != nil {
+					newManifest = entry.manifest
+				} else {
+					return
+				}
+
 			}
 
 			//if some other goroutine fails, terminate this one too

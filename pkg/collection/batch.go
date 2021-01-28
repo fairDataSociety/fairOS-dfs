@@ -18,11 +18,14 @@ package collection
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type Batch struct {
@@ -90,6 +93,11 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 	if b.idx.isReadOnlyFeed() {
 		return nil, ErrReadOnlyIndex
 	}
+
+	if !b.idx.mutable {
+		return nil, ErrCannotModifyImmutableIndex
+	}
+
 	if b.memDb == nil {
 		return nil, ErrEntryNotFound
 	}
@@ -147,13 +155,39 @@ func (b *Batch) Write() error {
 }
 
 func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error {
-	// merge the mem manifest with the disk version
-	if memManifest.dirtyFlag {
+	if !memManifest.dirtyFlag {
+		return nil
+	}
+	if !diskManifest.Mutable {
+		for _, dirtyEntry := range memManifest.Entries {
+			diskManifest.dirtyFlag = true
+			b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
+		}
+
+		// save th entire manifest in one shot
+		data, err := json.Marshal(diskManifest)
+		if err != nil {
+			return err
+		}
+		ref, err := b.idx.client.UploadBlob(data, true, true)
+		if err != nil {
+			return err
+		}
+
+		// update the feed to point to this manifest
+		topic := utils.HashString(diskManifest.Name)
+		_, err = b.idx.feed.UpdateFeed(topic, b.idx.user, ref)
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
+		// merge the mem manifest with the disk version
 		for _, dirtyEntry := range memManifest.Entries {
 			diskManifest.dirtyFlag = true
 			b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
 			if dirtyEntry.EType == IntermediateEntry && dirtyEntry.manifest != nil {
-				err := b.storeMemoryManifest(dirtyEntry.manifest)
+				err := b.storeMutableMemoryManifest(dirtyEntry.manifest)
 				if err != nil {
 					return err
 				}
@@ -167,11 +201,11 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error
 				return err
 			}
 		}
+		return nil
 	}
-	return nil
 }
 
-func (b *Batch) storeMemoryManifest(manifest *Manifest) error {
+func (b *Batch) storeMutableMemoryManifest(manifest *Manifest) error {
 	// store this manifest
 	err := b.idx.storeManifest(manifest)
 	if err != nil {
@@ -181,12 +215,11 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest) error {
 	// store any branches in this manifest
 	for _, entry := range manifest.Entries {
 		if entry.EType == IntermediateEntry && entry.manifest != nil {
-			err := b.storeMemoryManifest(entry.manifest)
+			err := b.storeMutableMemoryManifest(entry.manifest)
 			if err != nil {
 				return err
 			}
 		}
 	}
-
 	return nil
 }

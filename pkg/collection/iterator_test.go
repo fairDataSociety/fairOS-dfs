@@ -428,7 +428,7 @@ func sortLexicographically(t *testing.T, keys, values []string) ([]string, []str
 
 func createAndOpenIndex(t *testing.T, collectionName string, indexType collection.IndexType, fd *feed.API, user utils.Address,
 	client blockstore.Client, ai *account.Info, logger logging.Logger) *collection.Index {
-	err := collection.CreateIndex(collectionName, "key", indexType, fd, user, client)
+	err := collection.CreateIndex(collectionName, "key", indexType, fd, user, client, true)
 	if err != nil {
 		t.Fatal(err)
 	}

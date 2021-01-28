@@ -35,7 +35,7 @@ func (d *DfsAPI) DocCreate(sessionId, name string, si map[string]collection.Inde
 		return err
 	}
 
-	return podInfo.GetDocStore().CreateDocumentDB(name, si)
+	return podInfo.GetDocStore().CreateDocumentDB(name, si, true)
 }
 
 func (d *DfsAPI) DocOpen(sessionId, name string) error {

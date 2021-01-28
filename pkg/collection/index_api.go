@@ -36,6 +36,10 @@ func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool)
 		return ErrReadOnlyIndex
 	}
 
+	if !idx.mutable {
+		return ErrCannotModifyImmutableIndex
+	}
+
 	// get the first feed of the Index
 	manifest, err := idx.loadManifest(idx.name)
 	if err != nil {
@@ -77,6 +81,11 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 	if idx.isReadOnlyFeed() {
 		return nil, ErrReadOnlyIndex
 	}
+
+	if !idx.mutable {
+		return nil, ErrCannotModifyImmutableIndex
+	}
+
 	stringKey := key
 	if idx.indexType == NumberIndex {
 		i, err := strconv.ParseInt(stringKey, 10, 64)

@@ -18,6 +18,7 @@ package collection
 
 type Manifest struct {
 	Name         string    `json:"name"`
+	Mutable      bool      `json:"mutable"`
 	IdxType      IndexType `json:"index_type"`
 	CreationTime int64     `json:"creation_time"`
 	Entries      []*Entry  `json:"entries,omitempty"`
@@ -31,10 +32,11 @@ type Entry struct {
 	manifest *Manifest
 }
 
-func NewManifest(name string, time int64, idxType IndexType) *Manifest {
+func NewManifest(name string, time int64, idxType IndexType, mutable bool) *Manifest {
 	var entries []*Entry
 	return &Manifest{
 		Name:         name,
+		Mutable:      mutable,
 		IdxType:      idxType,
 		CreationTime: time,
 		Entries:      entries,

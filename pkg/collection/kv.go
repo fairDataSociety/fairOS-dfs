@@ -81,7 +81,7 @@ func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
 	}
 
 	//  since this tables is not present already, create the index required for this table
-	err = CreateIndex(defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client)
+	err = CreateIndex(defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client, true)
 	if err != nil {
 		return err
 	}
