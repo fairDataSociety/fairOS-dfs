@@ -79,7 +79,9 @@ func toIndexTypeEnum(s string) IndexType {
 
 type Index struct {
 	name        string
+	mutable     bool
 	indexType   IndexType
+	podFile     string
 	user        utils.Address
 	accountInfo *account.Info
 	feed        *feed.API
@@ -93,7 +95,7 @@ var (
 	NoOfParallelWorkers = runtime.NumCPU() * 4
 )
 
-func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client) error {
+func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client, mutable bool) error {
 	if fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
 	}
@@ -105,9 +107,9 @@ func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed
 		return ErrIndexAlreadyPresent
 	}
 
-	manifest := NewManifest(actualIndexName, time.Now().Unix(), indexType)
+	manifest := NewManifest(actualIndexName, time.Now().Unix(), indexType, mutable)
 
-	// marshall and store the manifest as new feed
+	// marshall and store the Manifest as new feed
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return ErrManifestUnmarshall
@@ -127,20 +129,22 @@ func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed
 
 func OpenIndex(collectionName, indexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
 	actualIndexName := collectionName + indexName
-	manifest := getRootManifestOfIndex(actualIndexName, fd, user, client)
+	manifest := getRootManifestOfIndex(actualIndexName, fd, user, client) // this will load the entire Manifest for immutable indexes
 	if manifest == nil {
 		return nil, ErrIndexNotPresent
 	}
 
 	idx := &Index{
 		name:        manifest.Name,
+		mutable:     manifest.Mutable,
 		indexType:   manifest.IdxType,
+		podFile:     manifest.PodFile,
 		user:        user,
 		accountInfo: ai,
 		feed:        fd,
 		client:      client,
 		count:       0,
-		memDB:       nil,
+		memDB:       manifest,
 		logger:      logger,
 	}
 	return idx, nil
@@ -155,7 +159,7 @@ func (idx *Index) DeleteIndex() error {
 		return ErrIndexNotPresent
 	}
 
-	// erase the top manifest
+	// erase the top Manifest
 	topic := utils.HashString(idx.name)
 	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(""))
 	if err != nil {
@@ -165,9 +169,15 @@ func (idx *Index) DeleteIndex() error {
 }
 
 func (idx *Index) CountIndex() (uint64, error) {
-	parentManifest, err := idx.loadManifest(idx.name)
-	if err != nil {
-		return 0, err
+	var parentManifest *Manifest
+	if idx.mutable {
+		manifest, err := idx.loadManifest(idx.name)
+		if err != nil {
+			return 0, err
+		}
+		parentManifest = manifest
+	} else {
+		parentManifest = idx.memDB
 	}
 
 	if len(parentManifest.Entries) == 0 {
@@ -206,15 +216,26 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 			//		wg.Done()
 			//	}()
 
-			newManifest, err := idx.loadManifest(manifest.Name + entry.Name)
-			if err != nil {
-				fmt.Println("manifest load error: ", manifest.Name+entry.Name)
-				//select {
-				//case errC <- err:
-				//default: // Default is must to avoid blocking
-				//}
-				//cancel()
-				return
+			var newManifest *Manifest
+			if idx.mutable {
+				man, err := idx.loadManifest(manifest.Name + entry.Name)
+				if err != nil {
+					fmt.Println("Manifest load error: ", manifest.Name+entry.Name)
+					//select {
+					//case errC <- err:
+					//default: // Default is must to avoid blocking
+					//}
+					//cancel()
+					return
+				}
+				newManifest = man
+			} else {
+				if entry.Manifest != nil {
+					newManifest = entry.Manifest
+				} else {
+					return
+				}
+
 			}
 
 			//if some other goroutine fails, terminate this one too
@@ -235,8 +256,8 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 
 // Manifest related functions
 func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
-	// get feed data and unmarshall the manifest
-	idx.logger.Info("loading manifest: ", manifestPath)
+	// get feed data and unmarshall the Manifest
+	idx.logger.Info("loading Manifest: ", manifestPath)
 	topic := utils.HashString(manifestPath)
 	_, refData, err := idx.feed.GetFeedData(topic, idx.user)
 	if err != nil {
@@ -261,8 +282,8 @@ func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 }
 
 func (idx *Index) updateManifest(manifest *Manifest) error {
-	// marshall and update the manifest in the feed
-	idx.logger.Info("updating manifest: ", manifest.Name)
+	// marshall and update the Manifest in the feed
+	idx.logger.Info("updating Manifest: ", manifest.Name)
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return ErrManifestUnmarshall
@@ -282,8 +303,8 @@ func (idx *Index) updateManifest(manifest *Manifest) error {
 }
 
 func (idx *Index) storeManifest(manifest *Manifest) error {
-	// marshall and store the manifest as new feed
-	idx.logger.Info("storing manifest: ", manifest.Name)
+	// marshall and store the Manifest as new feed
+	idx.logger.Info("storing Manifest: ", manifest.Name)
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return ErrManifestUnmarshall

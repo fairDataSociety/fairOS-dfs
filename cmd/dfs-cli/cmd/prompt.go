@@ -118,6 +118,7 @@ const (
 	apiDocEntryGet     = APIVersion + "/doc/entry/get"
 	apiDocEntryDel     = APIVersion + "/doc/entry/del"
 	apiDocLoadJson     = APIVersion + "/doc/loadjson"
+	apiDocIndexJson    = APIVersion + "/doc/indexjson"
 )
 
 type Message struct {
@@ -1204,9 +1205,11 @@ func executor(in string) {
 			tableName := blocks[2]
 			args := make(map[string]string)
 			args["name"] = tableName
-			if len(blocks) == 4 {
-				si := blocks[3]
-				args["si"] = si
+			if len(blocks) >= 4 {
+				args["si"] = blocks[3]
+			}
+			if len(blocks) == 5 {
+				args["mutable"] = blocks[4]
 			}
 
 			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDocCreate, args)
@@ -1332,16 +1335,16 @@ func executor(in string) {
 					case string:
 						fmt.Println(k, "=", val)
 					case float64:
-						valStr = strconv.FormatFloat(val, 'E', -1, 10)
+						valStr = fmt.Sprintf("%g", val)
 						fmt.Println(k, "=", valStr)
 					case map[string]interface{}:
+						fmt.Println(k + ":")
 						for k1, v1 := range val {
 							switch val1 := v1.(type) {
 							case string:
 								fmt.Println("   "+k1+" = ", val1)
 							case float64:
-								val2 := int64(val1)
-								valStr = strconv.FormatInt(val2, 10)
+								valStr = fmt.Sprintf("%g", val1)
 								fmt.Println("   "+k1+" = ", valStr)
 							default:
 								fmt.Println("   "+k1+" = ", val1)
@@ -1429,9 +1432,8 @@ func executor(in string) {
 			}
 			tableName := blocks[2]
 			fileName := filepath.Base(blocks[3])
-			localCsvFile := blocks[3]
-
-			fd, err := os.Open(localCsvFile)
+			localJsonFile := blocks[3]
+			fd, err := os.Open(localJsonFile)
 			if err != nil {
 				fmt.Println("loadjson failed: ", err)
 				return
@@ -1453,6 +1455,24 @@ func executor(in string) {
 			err = json.Unmarshal(data, &resp)
 			if err != nil {
 				fmt.Println("loadjson: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "indexjson":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			podJsonFile := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["file"] = podJsonFile
+			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiDocIndexJson, args)
+			if err != nil {
+				fmt.Println("index json: ", err)
 				return
 			}
 			message := strings.ReplaceAll(string(data), "\n", "")
@@ -1606,7 +1626,7 @@ func executor(in string) {
 		if !isPodOpened() {
 			return
 		}
-		if len(blocks) < 5 {
+		if len(blocks) < 4 {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
@@ -1626,7 +1646,10 @@ func executor(in string) {
 			podDir = currentDirectory
 		}
 		blockSize := blocks[3]
-		compression := blocks[4]
+		compression := ""
+		if len(blocks) >= 5 {
+			compression = blocks[4]
+		}
 		args := make(map[string]string)
 		args["pod_dir"] = podDir
 		args["block_size"] = blockSize
@@ -2000,10 +2023,11 @@ func help() {
 	fmt.Println(" - doc <get> (table-name) (id) - get the document having the id from the store")
 	fmt.Println(" - doc <del> (table-name) (id) - delete the document having the id from the store")
 	fmt.Println(" - doc <loadjson> (table-name) (local json file) - load the json file in to the newly created document db")
+	fmt.Println(" - doc <indexjson> (table-name) (pod json file) - Index the json file in pod to the document db")
 
 	fmt.Println(" - cd <directory name>")
 	fmt.Println(" - ls ")
-	fmt.Println(" - download <relative path of source file in pod, destination dir in local fs>")
+	fmt.Println(" - download <destination dir in local fs, relative path of source file in pod>")
 	fmt.Println(" - upload <source file in local fs, destination directory in pod, block size (ex: 1Mb, 64Mb)>, compression true/false")
 	fmt.Println(" - share <file name> -  shares a file with another user")
 	fmt.Println(" - receive <sharing reference> <pod dir> - receives a file from another user")

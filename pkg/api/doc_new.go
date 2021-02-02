@@ -18,6 +18,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -34,11 +35,11 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// by default, add the index type "id" as stringIndex
-	simpleIndexes := make(map[string]collection.IndexType)
+	indexes := make(map[string]collection.IndexType)
 	si := r.FormValue("si")
 	if si != "" {
-		indexes := strings.Split(si, ",")
-		for _, idx := range indexes {
+		idxs := strings.Split(si, ",")
+		for _, idx := range idxs {
 			nt := strings.Split(idx, "=")
 			if len(nt) != 2 {
 				h.logger.Errorf("doc create: \"si\" invalid argument ")
@@ -47,13 +48,13 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			switch nt[1] {
 			case "string":
-				simpleIndexes[nt[0]] = collection.StringIndex
+				indexes[nt[0]] = collection.StringIndex
 			case "number":
-				simpleIndexes[nt[0]] = collection.NumberIndex
+				indexes[nt[0]] = collection.NumberIndex
 			case "map":
-				simpleIndexes[nt[0]] = collection.MapIndex
+				indexes[nt[0]] = collection.MapIndex
 			case "list":
-				simpleIndexes[nt[0]] = collection.ListIndex
+				indexes[nt[0]] = collection.ListIndex
 			case "bytes":
 			default:
 				h.logger.Errorf("doc create: invalid \"indexType\" ")
@@ -61,6 +62,18 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+	}
+
+	mutable := true
+	mutableStr := r.FormValue("mutable")
+	if mutableStr != "" {
+		mut, err := strconv.ParseBool(mutableStr)
+		if err != nil {
+			h.logger.Errorf("doc create: \"mutable\" argument missing")
+			jsonhttp.BadRequest(w, "doc  create: \"mutable\" argument missing")
+			return
+		}
+		mutable = mut
 	}
 
 	// get values from cookie
@@ -76,11 +89,12 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.DocCreate(sessionId, name, simpleIndexes)
+	err = h.dfsAPI.DocCreate(sessionId, name, indexes, mutable)
 	if err != nil {
 		h.logger.Errorf("doc create: %v", err)
 		jsonhttp.InternalServerError(w, "doc create: "+err.Error())
 		return
 	}
-	jsonhttp.OK(w, "document store created")
+
+	jsonhttp.OK(w, "document db created")
 }

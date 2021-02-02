@@ -208,6 +208,7 @@ func startHttpService(logger logging.Logger) {
 	docRouter.HandleFunc("/delete", handler.DocDeleteHandler).Methods("DELETE")
 	docRouter.HandleFunc("/find", handler.DocFindHandler).Methods("GET")
 	docRouter.HandleFunc("/loadjson", handler.DocLoadJsonHandler).Methods("POST")
+	docRouter.HandleFunc("/indexjson", handler.DocIndexJsonHandler).Methods("POST")
 	docRouter.HandleFunc("/entry/put", handler.DocPutHandler).Methods("POST")
 	docRouter.HandleFunc("/entry/get", handler.DocGetHandler).Methods("GET")
 	docRouter.HandleFunc("/entry/del", handler.DocDelHandler).Methods("DELETE")
@@ -232,7 +233,7 @@ func startHttpService(logger logging.Logger) {
 	logger.Infof("fairOS-dfs API server listening on port: %v", httpPort)
 	err := http.ListenAndServe(":"+httpPort, handler)
 	if err != nil {
-		logger.Errorf("listenAndServe: %w", err)
+		logger.Errorf("listenAndServe: %v ", err.Error())
 		return
 	}
 }

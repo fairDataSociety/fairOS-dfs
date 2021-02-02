@@ -18,11 +18,14 @@ package collection
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type Batch struct {
@@ -36,7 +39,12 @@ func NewBatch(idx *Index) (*Batch, error) {
 	}, nil
 }
 
-func (b *Batch) Put(key string, refValue []byte, apnd bool) error {
+func (b *Batch) PutNumber(key float64, refValue []byte, apnd, memory bool) error {
+	stringKey := fmt.Sprintf("%020.20g", key)
+	return b.Put(stringKey, refValue, apnd, memory)
+}
+
+func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 	if b.idx.isReadOnlyFeed() {
 		return ErrReadOnlyIndex
 	}
@@ -60,7 +68,7 @@ func (b *Batch) Put(key string, refValue []byte, apnd bool) error {
 		}
 		stringKey = fmt.Sprintf("%020d", i)
 	}
-	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, refValue, true, apnd)
+	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, refValue, memory, apnd)
 }
 
 func (b *Batch) Get(key string) ([][]byte, error) {
@@ -86,10 +94,20 @@ func (b *Batch) Get(key string) ([][]byte, error) {
 	return nil, ErrEntryNotFound
 }
 
+func (b *Batch) DelNumber(key float64) ([][]byte, error) {
+	stringKey := fmt.Sprintf("%020.20g", key)
+	return b.Del(stringKey)
+}
+
 func (b *Batch) Del(key string) ([][]byte, error) {
 	if b.idx.isReadOnlyFeed() {
 		return nil, ErrReadOnlyIndex
 	}
+
+	if !b.idx.mutable {
+		return nil, ErrCannotModifyImmutableIndex
+	}
+
 	if b.memDb == nil {
 		return nil, ErrEntryNotFound
 	}
@@ -102,7 +120,8 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 			}
 			stringKey = fmt.Sprintf("%020d", i)
 		}
-		parentManifest, manifest, i, err := b.idx.findManifest(nil, b.memDb, stringKey, true)
+		memory := !b.idx.mutable
+		parentManifest, manifest, i, err := b.idx.findManifest(nil, b.memDb, stringKey, memory)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +129,7 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 		deletedRef := manifest.Entries[i].Ref
 
 		if parentManifest != nil && len(manifest.Entries) == 1 && manifest.Entries[0].Name == "" {
-			// then we have to remove the intermediate node in the parent manifest
+			// then we have to remove the intermediate node in the parent Manifest
 			// so that the entire branch goes kaboom
 			parentEntryKey := filepath.Base(manifest.Name)
 			for i, entry := range parentManifest.Entries {
@@ -123,12 +142,19 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 			return deletedRef, nil
 		}
 		manifest.Entries = append(manifest.Entries[:i], manifest.Entries[i+1:]...)
+
+		if b.idx.mutable {
+			err = b.storeMutableMemoryManifest(manifest)
+			if err != nil {
+				return nil, err
+			}
+		}
 		return deletedRef, nil
 	}
 	return nil, ErrEntryNotFound
 }
 
-func (b *Batch) Write() error {
+func (b *Batch) Write(podFile string) error {
 	if b.idx.isReadOnlyFeed() {
 		return ErrReadOnlyIndex
 	}
@@ -141,52 +167,97 @@ func (b *Batch) Write() error {
 		if err != nil && errors.Is(err, ErrNoManifestFound) {
 			return err
 		}
-		return b.mergeAndWriteManifest(diskManifest, b.memDb)
-	}
-	return nil
-}
-
-func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error {
-	// merge the mem manifest with the disk version
-	if memManifest.dirtyFlag {
-		for _, dirtyEntry := range memManifest.Entries {
-			diskManifest.dirtyFlag = true
-			b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
-			if dirtyEntry.EType == IntermediateEntry && dirtyEntry.manifest != nil {
-				err := b.storeMemoryManifest(dirtyEntry.manifest)
-				if err != nil {
-					return err
-				}
-			}
+		b.memDb.Mutable = b.idx.mutable
+		if podFile != "" {
+			b.memDb.PodFile = podFile
+			b.idx.podFile = podFile
 		}
-
-		if diskManifest.dirtyFlag {
-			// save th disk manifest
-			err := b.idx.updateManifest(diskManifest)
+		if b.idx.mutable {
+			_, err := b.mergeAndWriteManifest(b.memDb, nil)
 			if err != nil {
 				return err
 			}
+			return nil
 		}
+
+		dm, err := b.mergeAndWriteManifest(diskManifest, b.memDb)
+		if err != nil {
+			return err
+		}
+		b.idx.memDB = dm
+		b.idx.memDB.dirtyFlag = false
 	}
 	return nil
 }
 
-func (b *Batch) storeMemoryManifest(manifest *Manifest) error {
-	// store this manifest
+func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Manifest, error) {
+	if !diskManifest.Mutable {
+		if !memManifest.dirtyFlag {
+			return nil, nil
+		}
+		for _, dirtyEntry := range memManifest.Entries {
+			diskManifest.dirtyFlag = true
+			b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
+		}
+		diskManifest.Mutable = memManifest.Mutable
+		diskManifest.PodFile = memManifest.PodFile
+
+		// save th entire Manifest in one shot
+		data, err := json.Marshal(diskManifest)
+		if err != nil {
+			return nil, err
+		}
+		ref, err := b.idx.client.UploadBlob(data, true, true)
+		if err != nil {
+			return nil, err
+		}
+
+		// update the feed to point to this Manifest
+		topic := utils.HashString(diskManifest.Name)
+		_, err = b.idx.feed.UpdateFeed(topic, b.idx.user, ref)
+		if err != nil {
+			return nil, err
+		}
+		return diskManifest, nil
+	} else {
+		// merge the mem Manifest with the disk version
+		//for _, dirtyEntry := range memManifest.Entries {
+		//	diskManifest.dirtyFlag = true
+		//	b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
+		//	if dirtyEntry.EType == IntermediateEntry && dirtyEntry.Manifest != nil {
+		//		err := b.storeMutableMemoryManifest(dirtyEntry.Manifest)
+		//		if err != nil {
+		//			return nil, err
+		//		}
+		//	}
+		//}
+
+		if diskManifest.dirtyFlag {
+			// save th disk Manifest
+			err := b.idx.updateManifest(diskManifest)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return diskManifest, nil
+	}
+}
+
+func (b *Batch) storeMutableMemoryManifest(manifest *Manifest) error {
+	// store this Manifest
 	err := b.idx.storeManifest(manifest)
 	if err != nil {
 		return err
 	}
 
-	// store any branches in this manifest
+	// store any branches in this Manifest
 	for _, entry := range manifest.Entries {
-		if entry.EType == IntermediateEntry && entry.manifest != nil {
-			err := b.storeMemoryManifest(entry.manifest)
+		if entry.EType == IntermediateEntry && entry.Manifest != nil {
+			err := b.storeMutableMemoryManifest(entry.Manifest)
 			if err != nil {
 				return err
 			}
 		}
 	}
-
 	return nil
 }

@@ -81,7 +81,7 @@ func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
 	}
 
 	//  since this tables is not present already, create the index required for this table
-	err = CreateIndex(defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client)
+	err = CreateIndex(defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client, true)
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,11 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 		case StringIndex:
 			return table.index.Put(key, value, StringIndex, false)
 		case NumberIndex:
-			return table.index.Put(key, value, NumberIndex, false)
+			fkey, err := strconv.ParseFloat(key, 64)
+			if err != nil {
+				return ErrKVKeyNotANumber
+			}
+			return table.index.PutNumber(fkey, value, NumberIndex, false)
 		case BytesIndex:
 			return ErrKVIndexTypeNotSupported
 		default:
@@ -253,14 +257,14 @@ func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 			table.columns = strings.Split(string(value), ",")
 		}
 	}
-	return batch.Put(key, value, false)
+	return batch.Put(key, value, false, false)
 }
 
 func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
 	if kv.fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
 	}
-	return batch.Write()
+	return batch.Write("")
 }
 
 func (kv *KeyValue) KVSeek(name, start, end string, limit int64) (*Iterator, error) {

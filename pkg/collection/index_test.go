@@ -47,7 +47,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("create_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("testdb_index_0", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_0", "key", collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -60,7 +60,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("create_and_open_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("testdb_index_1", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_1", "key", collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -99,13 +99,13 @@ func TestIndex(t *testing.T) {
 
 	t.Run("create_already_present_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("testdb_index_3", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_3", "key", collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		//  create an index
-		err = collection.CreateIndex("testdb_index_3", "key", collection.StringIndex, fd, user, mockClient)
+		err = collection.CreateIndex("testdb_index_3", "key", collection.StringIndex, fd, user, mockClient, true)
 		if !errors.Is(err, collection.ErrIndexAlreadyPresent) {
 			t.Fatal(err)
 		}
@@ -121,7 +121,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("create_and_delete_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("testdb_index_5", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_5", "key", collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -141,7 +141,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("delete_index_without_creating_it", func(t *testing.T) {
 		// simulate index not present by creating and deleting it
-		err := collection.CreateIndex("testdb_index_6", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_6", "key", collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -163,7 +163,7 @@ func TestIndex(t *testing.T) {
 
 	t.Run("count_docs", func(t *testing.T) {
 		// create index and add some docs
-		err := collection.CreateIndex("testdb_index_7", "key", collection.StringIndex, fd, user, mockClient)
+		err := collection.CreateIndex("testdb_index_7", "key", collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
