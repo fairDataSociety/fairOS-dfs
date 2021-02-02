@@ -1626,7 +1626,7 @@ func executor(in string) {
 		if !isPodOpened() {
 			return
 		}
-		if len(blocks) < 5 {
+		if len(blocks) < 4 {
 			fmt.Println("invalid command. Missing one or more arguments")
 			return
 		}
@@ -1646,7 +1646,10 @@ func executor(in string) {
 			podDir = currentDirectory
 		}
 		blockSize := blocks[3]
-		compression := blocks[4]
+		compression := ""
+		if len(blocks) >= 5 {
+			compression = blocks[4]
+		}
 		args := make(map[string]string)
 		args["pod_dir"] = podDir
 		args["block_size"] = blockSize
