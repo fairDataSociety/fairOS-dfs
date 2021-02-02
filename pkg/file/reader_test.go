@@ -333,9 +333,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 				}
 			}
 			if startIndex > endIndex {
-				tmp := startIndex
-				startIndex = endIndex
-				endIndex = tmp
+				startIndex, endIndex = endIndex, startIndex
 			}
 			randomLine = append(randomLine, buf[startIndex:endIndex]...)
 		}

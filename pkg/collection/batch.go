@@ -39,12 +39,12 @@ func NewBatch(idx *Index) (*Batch, error) {
 	}, nil
 }
 
-func (b *Batch) PutNumber(key float64, refValue []byte, apnd bool, memory bool) error {
+func (b *Batch) PutNumber(key float64, refValue []byte, apnd, memory bool) error {
 	stringKey := fmt.Sprintf("%020.20g", key)
 	return b.Put(stringKey, refValue, apnd, memory)
 }
 
-func (b *Batch) Put(key string, refValue []byte, apnd bool, memory bool) error {
+func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 	if b.idx.isReadOnlyFeed() {
 		return ErrReadOnlyIndex
 	}
