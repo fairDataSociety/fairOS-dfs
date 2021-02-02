@@ -42,12 +42,17 @@ type ManifestState struct {
 }
 
 func (idx *Index) NewStringIterator(start, end string, limit int64) (*Iterator, error) {
-	// get the first feed of the Index
-	manifest, err := idx.loadManifest(idx.name)
-	if err != nil {
-		return nil, ErrEmptyIndex
+	var manifest *Manifest
+	if idx.mutable {
+		// get the first feed of the Index
+		mf, err := idx.loadManifest(idx.name)
+		if err != nil {
+			return nil, ErrEmptyIndex
+		}
+		manifest = mf
+	} else {
+		manifest = idx.memDB
 	}
-
 	itr := &Iterator{
 		index:         idx,
 		startPrefix:   start,
@@ -78,14 +83,20 @@ func (idx *Index) NewStringIterator(start, end string, limit int64) (*Iterator, 
 }
 
 func (idx *Index) NewIntIterator(start, end, limit int64) (*Iterator, error) {
-	// get the first feed of the Index
-	manifest, err := idx.loadManifest(idx.name)
-	if err != nil {
-		return nil, ErrEmptyIndex
+	var manifest *Manifest
+	if idx.mutable {
+		// get the first feed of the Index
+		mf, err := idx.loadManifest(idx.name)
+		if err != nil {
+			return nil, ErrEmptyIndex
+		}
+		manifest = mf
+	} else {
+		manifest = idx.memDB
 	}
 
-	startPrefix := fmt.Sprintf("%020d", start)
-	endPrefix := fmt.Sprintf("%020d", end)
+	startPrefix := fmt.Sprintf("%020g", float64(start))
+	endPrefix := fmt.Sprintf("%020g", float64(end))
 	if start == -1 {
 		startPrefix = ""
 	}
@@ -123,15 +134,21 @@ func (idx *Index) NewIntIterator(start, end, limit int64) (*Iterator, error) {
 }
 
 func (itr *Iterator) Seek(key string) error {
-	manifest, err := itr.index.loadManifest(itr.index.name)
-	if err != nil {
-		return err
+	var manifest *Manifest
+	if itr.index.mutable {
+		mf, err := itr.index.loadManifest(itr.index.name)
+		if err != nil {
+			return err
+		}
+		manifest = mf
+	} else {
+		manifest = itr.index.memDB
 	}
 
-	// Set the index type here from the manifest
+	// Set the index type here from the Manifest
 	itr.indexType = manifest.IdxType
 
-	err = itr.seekStringKey(manifest, key)
+	err := itr.seekStringKey(manifest, key)
 	if err != nil {
 		return err
 	}
@@ -201,17 +218,23 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 			}
 
 			if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
-				// found a branch, push the current manifest state
+				// found a branch, push the current Manifest state
 				manifestState := &ManifestState{
 					currentManifest: manifest,
 					currentIndex:    i + 1,
 				}
 				itr.manifestStack = append(itr.manifestStack, manifestState)
 
-				// now load the child manifest and re-seek
-				childManifest, err := itr.index.loadManifest(manifest.Name + entry.Name)
-				if err != nil {
-					return err
+				var childManifest *Manifest
+				if itr.index.mutable {
+					// now load the child Manifest and re-seek
+					cf, err := itr.index.loadManifest(manifest.Name + entry.Name)
+					if err != nil {
+						return err
+					}
+					childManifest = cf
+				} else {
+					childManifest = entry.Manifest
 				}
 
 				childKey := strings.TrimPrefix(key, entry.Name)
@@ -230,21 +253,21 @@ func (itr *Iterator) nextStringKey() bool {
 		}
 	}
 
-	// get the current manifest at the top of the stack
+	// get the current Manifest at the top of the stack
 	depthOfStack := len(itr.manifestStack)
 	if depthOfStack == 0 {
 		itr.error = ErrNoNextElement
 		return false
 	}
 
-	// take the top manifest to find the next entry
+	// take the top Manifest to find the next entry
 	manifestState := itr.manifestStack[depthOfStack-1]
 
 	entriesExhausted := true
 	for entriesExhausted {
-		// see if we have exhausted the entries in the current manifest
+		// see if we have exhausted the entries in the current Manifest
 		if manifestState.currentIndex >= len(manifestState.currentManifest.Entries) {
-			// pop the exhausted manifest from the top and pick the next manifest to find the entry
+			// pop the exhausted Manifest from the top and pick the next Manifest to find the entry
 			n := depthOfStack - 1
 			if n == 0 {
 				itr.error = ErrNoNextElement
@@ -259,7 +282,7 @@ func (itr *Iterator) nextStringKey() bool {
 		}
 	}
 
-	// We have a manifest whose entries are not yet exhausted,
+	// We have a Manifest whose entries are not yet exhausted,
 	// so get the next entry and check for valid conditions of the Iterator()
 	entry := manifestState.currentManifest.Entries[manifestState.currentIndex]
 	manifestState.currentIndex++
@@ -283,12 +306,18 @@ func (itr *Iterator) nextStringKey() bool {
 		return true
 	}
 
-	// if it is an intermediate entry, get the branch manifest and push in to the stack
+	// if it is an intermediate entry, get the branch Manifest and push in to the stack
 	if entry.EType == IntermediateEntry {
-		newManifest, err := itr.index.loadManifest(manifestState.currentManifest.Name + entry.Name)
-		if err != nil {
-			itr.error = err
-			return false
+		var newManifest *Manifest
+		if itr.index.mutable {
+			mf, err := itr.index.loadManifest(manifestState.currentManifest.Name + entry.Name)
+			if err != nil {
+				itr.error = err
+				return false
+			}
+			newManifest = mf
+		} else {
+			newManifest = entry.Manifest
 		}
 
 		newManifestState := &ManifestState{

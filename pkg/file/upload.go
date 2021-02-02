@@ -63,7 +63,7 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 	refMapMu := sync.RWMutex{}
 	var contentBytes []byte
 	for {
-		data := make([]byte, blockSize)
+		data := make([]byte, blockSize, blockSize+1024)
 		r, err := reader.Read(data)
 		totalLength += uint64(r)
 		if err != nil {
@@ -101,7 +101,7 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 			// compress the data
 			uploadData := data[:size]
 			if compression != "" {
-				uploadData, err = compress(data[:size], compression, blockSize)
+				uploadData, err = Compress(data[:size], compression, blockSize)
 				if err != nil {
 					errC <- err
 				}
@@ -169,7 +169,15 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 	return metaAddr, nil
 }
 
-func compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
+func (f *File) GetContentType(bufferReader *bufio.Reader) string {
+	buffer, err := bufferReader.Peek(512)
+	if err != nil && err != io.EOF {
+		return ""
+	}
+	return http.DetectContentType(buffer)
+}
+
+func Compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
 	switch compression {
 	case "gzip":
 		var b bytes.Buffer
@@ -192,12 +200,4 @@ func compress(dataToCompress []byte, compression string, blockSize uint32) ([]by
 		return snappy.Encode(nil, dataToCompress), nil
 	}
 	return dataToCompress, nil
-}
-
-func (f *File) GetContentType(bufferReader *bufio.Reader) string {
-	buffer, err := bufferReader.Peek(512)
-	if err != nil && err != io.EOF {
-		return ""
-	}
-	return http.DetectContentType(buffer)
 }

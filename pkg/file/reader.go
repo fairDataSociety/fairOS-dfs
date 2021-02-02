@@ -18,17 +18,32 @@ package file
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strconv"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
+	"github.com/ethersphere/bee/pkg/swarm"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/golang/snappy"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/klauspost/pgzip"
 )
 
+const (
+	blockCacheSize = 500
+)
+
+var (
+	ErrInvalidOffset = errors.New("invalid offset")
+)
+
 type Reader struct {
-	offset      int64
+	readOffset  int64
 	client      blockstore.Client
 	fileInode   FileINode
 	fileC       chan []byte
@@ -38,16 +53,72 @@ type Reader struct {
 	blockCursor uint32
 	totalSize   uint64
 	compression string
+	blockCache  *lru.Cache
+
+	rlBuffer      []byte
+	rlOffset      int
+	rlReadNewLine bool
 }
 
-func NewReader(fileInode FileINode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string) *Reader {
+func (f *File) OpenFileForReading(podFile string) (io.ReadCloser, string, string, error) {
+	meta := f.GetFromFileMap(podFile)
+	if meta == nil {
+		return nil, "", "", fmt.Errorf("file not found in dfs")
+	}
+
+	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	if err != nil {
+		return nil, "", "", err
+	}
+	var fileInode FileINode
+	err = json.Unmarshal(fileInodeBytes, &fileInode)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	reader := NewReader(fileInode, f.getClient(), meta.FileSize, meta.BlockSize, meta.Compression, false)
+	ref := swarm.NewAddress(meta.InodeAddress).String()
+	size := strconv.FormatUint(meta.FileSize, 10)
+	return reader, ref, size, nil
+}
+
+func (f *File) OpenFileForIndex(podFile string) (*Reader, string, string, error) {
+	meta := f.GetFromFileMap(podFile)
+	if meta == nil {
+		return nil, "", "", fmt.Errorf("file not found in dfs")
+	}
+
+	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	if err != nil {
+		return nil, "", "", err
+	}
+	var fileInode FileINode
+	err = json.Unmarshal(fileInodeBytes, &fileInode)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	reader := NewReader(fileInode, f.getClient(), meta.FileSize, meta.BlockSize, meta.Compression, true)
+	ref := swarm.NewAddress(meta.InodeAddress).String()
+	size := strconv.FormatUint(meta.FileSize, 10)
+	return reader, ref, size, nil
+}
+
+func NewReader(fileInode FileINode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string, cache bool) *Reader {
+	var blockCache *lru.Cache
+	if cache {
+		blockCache, _ = lru.New(blockCacheSize)
+	}
+
 	r := &Reader{
-		fileInode:   fileInode,
-		client:      client,
-		fileC:       make(chan []byte),
-		fileSize:    fileSize,
-		blockSize:   blockSize,
-		compression: compression,
+		fileInode:     fileInode,
+		client:        client,
+		fileC:         make(chan []byte),
+		fileSize:      fileSize,
+		blockSize:     blockSize,
+		compression:   compression,
+		blockCache:    blockCache,
+		rlReadNewLine: false,
 	}
 	return r
 }
@@ -63,7 +134,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 		if bytesToRead <= remDataSize {
 			copy(b, r.lastBlock[r.blockCursor:r.blockCursor+bytesToRead])
 			r.blockCursor += bytesToRead
-			r.offset += int64(bytesToRead)
+			r.readOffset += int64(bytesToRead)
 			bytesRead = int(bytesToRead)
 			//bytesToRead = 0
 			if r.blockCursor == r.blockSize {
@@ -76,14 +147,13 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 			copy(b, r.lastBlock[r.blockCursor:r.blockSize])
 			r.lastBlock = nil
 			r.blockCursor = 0
-			r.offset += int64(remDataSize)
+			r.readOffset += int64(remDataSize)
 			bytesRead += int(remDataSize)
 			bytesToRead -= remDataSize
 			r.totalSize += uint64(remDataSize)
 
 			// this situation comes when the block ends
 			if r.totalSize >= r.fileSize {
-				fmt.Println("returning 2", bytesRead, r.blockCursor, r.totalSize, r.fileSize)
 				return bytesRead, io.EOF
 			}
 
@@ -95,12 +165,12 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 		noOfBlocks := int((bytesToRead / r.blockSize) + 1)
 		for i := 0; i < noOfBlocks; i++ {
 			if r.lastBlock == nil {
-				blockIndex := (r.offset / int64(r.blockSize))
+				blockIndex := (r.readOffset / int64(r.blockSize))
 				if blockIndex > int64(len(r.fileInode.FileBlocks)) {
-					return bytesRead, fmt.Errorf("asking past EOF")
+					return bytesRead, io.EOF
 				}
 				if blockIndex >= int64(len(r.fileInode.FileBlocks)) {
-					return 0, io.EOF
+					return bytesRead, io.EOF
 				}
 				r.lastBlock, err = r.getBlock(r.fileInode.FileBlocks[blockIndex].Address, r.compression, r.blockSize)
 				if err != nil {
@@ -109,7 +179,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 				r.blockSize = uint32(len(r.lastBlock))
 			}
 
-			// if length of bytes to read is greater than block size
+			//if length of bytes to read is greater than block size
 			if bytesToRead > r.blockSize {
 				bytesToRead = r.blockSize
 			}
@@ -127,7 +197,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 			} else {
 				r.blockCursor += bytesToRead
 			}
-			r.offset += int64(bytesToRead)
+			r.readOffset += int64(bytesToRead)
 			bytesRead += int(bytesToRead)
 			bytesToRead -= bytesToRead
 
@@ -139,23 +209,131 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 	return 0, nil
 }
 
-func (r *Reader) getBlock(addr []byte, compression string, blockSize uint32) ([]byte, error) {
-	stdoutBytes, _, err := r.client.DownloadBlob(addr)
+func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
+	// TODO: use whence
+	if seekOffset < 0 || seekOffset > int64(r.fileSize) {
+		return 0, ErrInvalidOffset
+	}
+
+	// seek to start if offset is zero
+	if seekOffset == 0 {
+		blockData, err := r.getBlock(r.fileInode.FileBlocks[0].Address, r.compression, r.blockSize)
+		if err != nil {
+			return 0, err
+		}
+		r.lastBlock = blockData
+		r.blockCursor = 0
+		r.readOffset = 0
+		r.blockSize = uint32(len(r.lastBlock))
+		r.totalSize = 0
+		r.rlBuffer = nil
+		r.rlOffset = 0
+		return 0, nil
+	}
+
+	blockIndex := seekOffset / int64(r.blockSize)
+	blockOffset := seekOffset % int64(r.blockSize)
+
+	blockData, err := r.getBlock(r.fileInode.FileBlocks[blockIndex].Address, r.compression, r.blockSize)
+	if err != nil {
+		return 0, err
+	}
+	r.lastBlock = blockData
+	r.blockCursor = uint32(blockOffset)
+	r.readOffset = seekOffset
+	r.blockSize = uint32(len(r.lastBlock))
+	r.totalSize = uint64(seekOffset)
+	r.rlBuffer = nil
+	r.rlOffset = 0
+	return seekOffset, nil
+}
+
+func (r *Reader) ReadLine() ([]byte, error) {
+	if r.rlBuffer == nil {
+		buf := make([]byte, r.blockSize)
+		n, err := r.Read(buf)
+		if err != nil {
+			return nil, err
+		}
+		r.rlBuffer = buf[:n]
+		r.rlOffset = 0
+	}
+
+	var destBuf []byte
+	foundNewLine := false
+READ:
+	readOffset := r.rlOffset
+	if readOffset != 0 || r.rlReadNewLine {
+		readOffset += 1
+		r.rlReadNewLine = false
+	}
+	for idx, char := range r.rlBuffer[readOffset:] {
+		if char == '\n' {
+			destBuf = append(destBuf, r.rlBuffer[readOffset:readOffset+idx+1]...)
+			r.rlOffset = readOffset + idx
+			foundNewLine = true
+			// if the first byte is the new line
+			if r.rlOffset == 0 && r.rlBuffer[0] == '\n' {
+				r.rlReadNewLine = true
+			}
+			if len(r.rlBuffer) == readOffset+idx+1 {
+				r.rlBuffer = nil
+				r.rlOffset = 0
+			}
+			break
+		}
+	}
+
+	// check if the newline is crossing the read buffer boundary
+	if !foundNewLine {
+		destBuf = append(destBuf, r.rlBuffer[readOffset:r.blockSize]...)
+		if r.totalSize == r.fileSize {
+			return destBuf, io.EOF
+		}
+		buf := make([]byte, r.blockSize)
+		_, err := r.Read(buf)
+		if err != nil {
+			return nil, err
+		}
+		r.rlBuffer = buf
+		r.rlOffset = 0
+		goto READ
+	}
+	return destBuf, nil
+}
+
+func (r *Reader) Close() error {
+	if r.blockCache != nil {
+		r.blockCache.Purge()
+	}
+	if r.rlBuffer != nil {
+		r.rlBuffer = nil
+	}
+	return nil
+}
+
+func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]byte, error) {
+	refStr := utils.NewReference(ref).String()
+	if r.blockCache != nil {
+		if data, found := r.blockCache.Get(refStr); found {
+			return data.([]byte), nil
+		}
+	}
+	stdoutBytes, _, err := r.client.DownloadBlob(ref)
 	if err != nil {
 		return nil, err
 	}
-	decompressedData, err := decompress(stdoutBytes, compression, blockSize)
+	decompressedData, err := Decompress(stdoutBytes, compression, blockSize)
 	if err != nil {
 		return nil, err
+	}
+	if r.blockCache != nil {
+		r.blockCache.Add(refStr, decompressedData)
 	}
 	return decompressedData, nil
 }
 
-func (r *Reader) Close() error {
-	return nil
-}
-
-func decompress(dataToDecompress []byte, compression string, blockSize uint32) ([]byte, error) {
+func Decompress(dataToDecompress []byte, compression string, blockSize uint32) ([]byte, error) {
 	switch compression {
 	case "gzip":
 		br := bytes.NewReader(dataToDecompress)

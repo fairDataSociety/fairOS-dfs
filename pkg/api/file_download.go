@@ -71,4 +71,5 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", " application/json")
 		jsonhttp.InternalServerError(w, "stat dir: "+err.Error())
 	}
+	_ = reader.Close()
 }

@@ -22,6 +22,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -33,7 +35,7 @@ type TestDocument struct {
 	ID        string            `json:"id"`
 	FirstName string            `json:"first_name"`
 	LastName  string            `json:"last_name"`
-	Age       int64             `json:"age"`
+	Age       float64           `json:"age"`
 	TagMap    map[string]string `json:"tag_map"`
 	TagList   []string          `json:"tag_list"`
 }
@@ -49,7 +51,8 @@ func TestDocumentStore(t *testing.T) {
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-	docStore := collection.NewDocumentStore(fd, ai, user, mockClient, logger)
+	file := f.NewFile("pod1", mockClient, fd, ai, logger)
+	docStore := collection.NewDocumentStore(fd, ai, user, file, mockClient, logger)
 
 	t.Run("create_document_db", func(t *testing.T) {
 		// create a document DB
@@ -340,7 +343,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc1.ID != "1" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "Doe" ||
-			gotDoc1.Age != 45 {
+			gotDoc1.Age != 45.523793600000005 {
 			t.Fatalf("invalid json data received")
 		}
 		var gotDoc2 TestDocument
@@ -469,7 +472,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc2.ID != "1" ||
 			gotDoc2.FirstName != "John" ||
 			gotDoc2.LastName != "Doe" ||
-			gotDoc2.Age != 45 {
+			gotDoc2.Age != 45.523793600000005 {
 			t.Fatalf("invalid json data received")
 		}
 
@@ -488,7 +491,7 @@ func TestDocumentStore(t *testing.T) {
 		if gotDoc1.ID != "1" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "Doe" ||
-			gotDoc1.Age != 45 {
+			gotDoc1.Age != 45.523793600000005 {
 			t.Fatalf("invalid json data received")
 		}
 	})
@@ -580,7 +583,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 	})
 
-	t.Run("batch", func(t *testing.T) {
+	t.Run("batch-mutable", func(t *testing.T) {
 		// create a document DB
 		si := make(map[string]collection.IndexType)
 		si["first_name"] = collection.StringIndex
@@ -626,9 +629,9 @@ func TestDocumentStore(t *testing.T) {
 		var list4 []string
 		list4 = append(list4, "lst41")
 		list4 = append(list4, "lst42")
-		addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 35, tag4, list4) // this tests the overwriting in batch
+		addBatchDocument(t, docStore, docBatch, "4", "John", "Doe", 35, tag4, list4) // this tests the overwriting in batch
 
-		err = docStore.DocBatchWrite(docBatch)
+		err = docStore.DocBatchWrite(docBatch, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -638,8 +641,8 @@ func TestDocumentStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if count1 != 3 {
-			t.Fatalf("expected count %d, got %d", 3, count1)
+		if count1 != 4 {
+			t.Fatalf("expected count %d, got %d", 4, count1)
 		}
 
 		// count the total docs using another index to make sure we dont have it any index
@@ -647,7 +650,7 @@ func TestDocumentStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(docs) != 3 {
+		if len(docs) != 4 {
 			t.Fatalf("expected count %d, got %d", 3, len(docs))
 		}
 
@@ -659,7 +662,100 @@ func TestDocumentStore(t *testing.T) {
 		if len(docs) != 1 {
 			t.Fatalf("expected count %d, got %d", 1, len(docs))
 		}
+		err = docStore.DeleteDocumentDB("docdb_11")
+		if err != nil {
+			t.Fatal(err)
+		}
 	})
+
+	//t.Run("batch-immutable", func(t *testing.T) {
+	//	// create a document DB
+	//	si := make(map[string]collection.IndexType)
+	//	si["first_name"] = collection.StringIndex
+	//	si["age"] = collection.NumberIndex
+	//	si["tag_map"] = collection.MapIndex
+	//	si["tag_list"] = collection.ListIndex
+	//	//createDocumentDBs(t, []string{"docdb_12"}, docStore, si)
+	//	err := docStore.CreateDocumentDB("docdb_12", si, false)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//
+	//	err = docStore.OpenDocumentDB("docdb_12")
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//
+	//	docBatch, err := docStore.CreateDocBatch("docdb_12")
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//
+	//	tag1 := make(map[string]string)
+	//	tag1["tgf11"] = "tgv11"
+	//	tag1["tgf12"] = "tgv12"
+	//	var list1 []string
+	//	list1 = append(list1, "lst11")
+	//	list1 = append(list1, "lst12")
+	//	addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 45, tag1, list1)
+	//	tag2 := make(map[string]string)
+	//	tag2["tgf21"] = "tgv21"
+	//	tag2["tgf22"] = "tgv22"
+	//	var list2 []string
+	//	list2 = append(list2, "lst21")
+	//	list2 = append(list2, "lst22")
+	//	addBatchDocument(t, docStore, docBatch, "2", "John", "boy", 25, tag2, list2)
+	//	tag3 := make(map[string]string)
+	//	tag3["tgf31"] = "tgv31"
+	//	tag3["tgf32"] = "tgv32"
+	//	var list3 []string
+	//	list3 = append(list3, "lst31")
+	//	list3 = append(list3, "lst32")
+	//	addBatchDocument(t, docStore, docBatch, "3", "Alice", "wonderland", 20, tag3, list3)
+	//	tag4 := make(map[string]string)
+	//	tag4["tgf41"] = "tgv41"
+	//	tag4["tgf42"] = "tgv42"
+	//	var list4 []string
+	//	list4 = append(list4, "lst41")
+	//	list4 = append(list4, "lst42")
+	//	addBatchDocument(t, docStore, docBatch, "4", "John", "Doe", 35, tag4, list4) // this tests the overwriting in batch
+	//
+	//	err = docStore.DocBatchWrite(docBatch, "")
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//
+	//	// count the total docs using id field
+	//	count1, err := docStore.Count("docdb_12", "")
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//	if count1 != 4 {
+	//		t.Fatalf("expected count %d, got %d", 4, count1)
+	//	}
+	//
+	//	// count the total docs using another index to make sure we dont have it any index
+	//	docs, err := docStore.Find("docdb_12", "age=>20", -1)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//	if len(docs) != 4 {
+	//		t.Fatalf("expected count %d, got %d", 4, len(docs))
+	//	}
+	//
+	//	// tag
+	//	docs, err = docStore.Find("docdb_12", "tag_map=tgf21:tgv21", -1)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//	if len(docs) != 1 {
+	//		t.Fatalf("expected count %d, got %d", 1, len(docs))
+	//	}
+	//	err = docStore.DeleteDocumentDB("docdb_12")
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//})
 
 }
 
@@ -720,7 +816,7 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 	var list1 []string
 	list1 = append(list1, "lst11")
 	list1 = append(list1, "lst12")
-	addDocument(t, docStore, dbName, "1", "John", "Doe", 45, tag1, list1)
+	addDocument(t, docStore, dbName, "1", "John", "Doe", 45.523793600000005, tag1, list1)
 	tag2 := make(map[string]string)
 	tag2["tgf21"] = "tgv21"
 	tag2["tgf22"] = "tgv22"
@@ -751,7 +847,7 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25, tag5, list5)
 }
 
-func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age int64, tagMap map[string]string, tagList []string) {
+func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age float64, tagMap map[string]string, tagList []string) {
 	t.Helper()
 	// create the doc
 	doc := &TestDocument{
@@ -776,7 +872,7 @@ func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname,
 	}
 }
 
-func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *collection.DocBatch, id, fname, lname string, age int64, tagMap map[string]string, tagList []string) {
+func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *collection.DocBatch, id, fname, lname string, age float64, tagMap map[string]string, tagList []string) {
 	t.Helper()
 	// create the doc
 	doc := &TestDocument{
@@ -795,7 +891,7 @@ func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *col
 	}
 
 	// insert the document in the batch
-	err = docStore.DocBatchPut(docBatch, data)
+	err = docStore.DocBatchPut(docBatch, data, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

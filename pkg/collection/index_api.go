@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -30,6 +29,11 @@ const (
 	LeafEntry         = "L"
 	IntermediateEntry = "I"
 )
+
+func (idx *Index) PutNumber(key float64, refValue []byte, idxType IndexType, apnd bool) error {
+	stringKey := fmt.Sprintf("%020.20g", key)
+	return idx.Put(stringKey, refValue, idxType, apnd)
+}
 
 func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool) error {
 	if idx.isReadOnlyFeed() {
@@ -46,35 +50,45 @@ func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool)
 		return err
 	}
 
-	stringKey := key
-	if idx.indexType == NumberIndex {
-		i, err := strconv.ParseInt(stringKey, 10, 64)
-		if err != nil {
-			return ErrKVKeyNotANumber
-		}
-		stringKey = fmt.Sprintf("%020d", i)
-	}
+	//stringKey := key
+	//if idx.indexType == NumberIndex {
+	//	i, err := strconv.ParseFloat(stringKey, 64)
+	//	if err != nil {
+	//		return ErrKVKeyNotANumber
+	//	}
+	//	stringKey = fmt.Sprintf("%020.6f", i)
+	//}
 
 	ctx := context.Background()
-	return idx.addOrUpdateStringEntry(ctx, manifest, stringKey, idxType, refValue, false, apnd)
+	return idx.addOrUpdateStringEntry(ctx, manifest, key, idxType, refValue, false, apnd)
+}
+
+func (idx *Index) GetNumber(key float64) ([][]byte, error) {
+	stringKey := fmt.Sprintf("%020.20g", key)
+	return idx.Get(stringKey)
 }
 
 func (idx *Index) Get(key string) ([][]byte, error) {
-	stringKey := key
-	if idx.indexType == NumberIndex {
-		i, err := strconv.ParseInt(stringKey, 10, 64)
-		if err != nil {
-			return nil, ErrKVKeyNotANumber
-		}
-		stringKey = fmt.Sprintf("%020d", i)
-	}
+	//stringKey := key
+	//if idx.indexType == NumberIndex {
+	//	i, err := strconv.ParseInt(stringKey, 10, 64)
+	//	if err != nil {
+	//		return nil, ErrKVKeyNotANumber
+	//	}
+	//	stringKey = fmt.Sprintf("%020d", i)
+	//}
 
-	_, manifest, i, err := idx.seekManifestAndEntry(stringKey)
+	_, manifest, i, err := idx.seekManifestAndEntry(key)
 	if err != nil {
 		return nil, err
 	}
 
 	return manifest.Entries[i].Ref, nil
+}
+
+func (idx *Index) DeleteNumber(key float64) ([][]byte, error) {
+	stringKey := fmt.Sprintf("%020.20g", key)
+	return idx.Delete(stringKey)
 }
 
 func (idx *Index) Delete(key string) ([][]byte, error) {
@@ -86,16 +100,16 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 		return nil, ErrCannotModifyImmutableIndex
 	}
 
-	stringKey := key
-	if idx.indexType == NumberIndex {
-		i, err := strconv.ParseInt(stringKey, 10, 64)
-		if err != nil {
-			return nil, ErrKVKeyNotANumber
-		}
-		stringKey = fmt.Sprintf("%020d", i)
-	}
+	//stringKey := key
+	//if idx.indexType == NumberIndex {
+	//	i, err := strconv.ParseInt(stringKey, 10, 64)
+	//	if err != nil {
+	//		return nil, ErrKVKeyNotANumber
+	//	}
+	//	stringKey = fmt.Sprintf("%020d", i)
+	//}
 
-	_, manifest, i, err := idx.seekManifestAndEntry(stringKey)
+	_, manifest, i, err := idx.seekManifestAndEntry(key)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +117,7 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 	deletedRef := manifest.Entries[i].Ref
 
 	if len(manifest.Entries) == 1 && manifest.Entries[0].Name == "" {
-		// then we have to remove the intermediate node in the parent manifest
+		// then we have to remove the intermediate node in the parent Manifest
 		// so that the entire branch goes kaboom
 		parentEntryKey := filepath.Base(manifest.Name)
 		parentManifest, err := idx.loadManifest(filepath.Dir(manifest.Name))
@@ -138,7 +152,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 	for i := range manifest.Entries {
 		entry := manifest.Entries[i] // we change the entry so dont simplify this
 
-		// add new entry with key equal to the manifest name
+		// add new entry with key equal to the Manifest name
 		if key == "" {
 			break
 		}
@@ -181,14 +195,14 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 			}
 			idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
 
-			// store the new manifest with two leaves
+			// store the new Manifest with two leaves
 			if !memory {
 				err := idx.storeManifest(&newManifest)
 				if err != nil {
 					return err
 				}
 			} else {
-				entry.manifest = &newManifest
+				entry.Manifest = &newManifest
 				manifest.dirtyFlag = true
 			}
 
@@ -202,7 +216,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 
 		if entry.EType == IntermediateEntry {
 			if len(keySuffix) > 0 && len(entrySuffix) > 0 {
-				// create the new manifest with two entries
+				// create the new Manifest with two entries
 				var newManifest Manifest
 				newManifest.Name = manifest.Name + prefix
 				newManifest.IdxType = idxType
@@ -228,10 +242,10 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 						return err
 					}
 				} else {
-					// update the old manifest name and add the new manifest to the existing entry
-					oldManifest := entry.manifest
-					entry2.manifest = oldManifest
-					entry.manifest = &newManifest
+					// update the old Manifest name and add the new Manifest to the existing entry
+					oldManifest := entry.Manifest
+					entry2.Manifest = oldManifest
+					entry.Manifest = &newManifest
 				}
 
 				// update the existing intermediate nodes name
@@ -241,7 +255,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 				entryAdded = true
 				break
 			} else if len(keySuffix) > 0 {
-				// load the entry's manifest and add the keySuffix as a new leaf
+				// load the entry's Manifest and add the keySuffix as a new leaf
 				if !memory {
 					intermediateManifest, err := idx.loadManifest(manifest.Name + entry.Name)
 					if err != nil {
@@ -249,11 +263,11 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 					}
 					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory, apnd)
 				} else {
-					return idx.addOrUpdateStringEntry(ctx, entry.manifest, keySuffix, idxType, value, memory, apnd)
+					return idx.addOrUpdateStringEntry(ctx, entry.Manifest, keySuffix, idxType, value, memory, apnd)
 				}
 
 			} else if entrySuffix == "" && keySuffix == "" {
-				// load the entry's manifest and add the keySuffix as a new leaf
+				// load the entry's Manifest and add the keySuffix as a new leaf
 				if !memory {
 					intermediateManifest, err := idx.loadManifest(manifest.Name + prefix)
 					if err != nil {
@@ -261,11 +275,11 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 					}
 					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory, apnd)
 				} else {
-					return idx.addOrUpdateStringEntry(ctx, entry.manifest, keySuffix, idxType, value, memory, apnd)
+					return idx.addOrUpdateStringEntry(ctx, entry.Manifest, keySuffix, idxType, value, memory, apnd)
 				}
 
 			} else if len(entrySuffix) > 0 {
-				// create the new manifest with two entries
+				// create the new Manifest with two entries
 				var newManifest Manifest
 				newManifest.Name = manifest.Name + prefix
 				newManifest.IdxType = idxType
@@ -291,9 +305,9 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 						return err
 					}
 				} else {
-					oldManifest := entry.manifest
-					entry2.manifest = oldManifest
-					entry.manifest = &newManifest
+					oldManifest := entry.Manifest
+					entry2.Manifest = oldManifest
+					entry.Manifest = &newManifest
 				}
 
 				// update the existing intermediate nodes name
@@ -306,7 +320,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 		}
 	}
 
-	// if the manifest is not already changed, then this is a new entry
+	// if the Manifest is not already changed, then this is a new entry
 	if !entryAdded {
 		var refs [][]byte
 		newEntry := Entry{
@@ -367,50 +381,60 @@ func (idx *Index) addEntryToManifestSortedLexicographically(manifest *Manifest, 
 }
 
 func (idx *Index) seekManifestAndEntry(key string) (*Manifest, *Manifest, int, error) {
-	// load the first manifest of the index
-	firstManifest, err := idx.loadManifest(idx.name)
-	if err != nil && !errors.Is(err, ErrNoManifestFound) {
-		return nil, nil, 0, err
+	memory := !idx.mutable
+
+	var firstManifest *Manifest
+	if !memory {
+		// load the first Manifest of the index
+		fm, err := idx.loadManifest(idx.name)
+		if err != nil && !errors.Is(err, ErrNoManifestFound) {
+			return nil, nil, 0, err
+		}
+		firstManifest = fm
+	} else {
+		firstManifest = idx.memDB
 	}
 
 	// if there are any elements in the index, then search for the entry
 	if len(firstManifest.Entries) > 0 {
-		return idx.findManifest(nil, firstManifest, key, false)
+		return idx.findManifest(nil, firstManifest, key, memory)
 	}
 	return nil, nil, 0, ErrEntryNotFound
 }
 
 func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, key string, memory bool) (*Manifest, *Manifest, int, error) {
-	for i, entry := range parentManifest.Entries {
+	if parentManifest != nil {
+		for i, entry := range parentManifest.Entries {
 
-		// if the first char is > keys first char, then the key wont be found
-		if len(entry.Name) > 0 {
-			if key == "" { // to check for empty entry
-				return nil, nil, 0, ErrEntryNotFound
-			}
-			if entry.Name[0] > key[0] { // to check for greater entries
-				return nil, parentManifest, 0, ErrEntryNotFound
-			}
-		}
-
-		if entry.EType == LeafEntry && entry.Name == key {
-			return grandParentManifest, parentManifest, i, nil
-		}
-
-		if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
-			childKey := strings.TrimPrefix(key, entry.Name)
-			if !memory {
-				childManifestPath := parentManifest.Name + entry.Name
-				childManifest, err := idx.loadManifest(childManifestPath)
-				if err != nil {
-					return nil, nil, 0, err
+			// if the first char is > keys first char, then the key wont be found
+			if len(entry.Name) > 0 {
+				if key == "" { // to check for empty entry
+					return nil, nil, 0, ErrEntryNotFound
 				}
-				return idx.findManifest(parentManifest, childManifest, childKey, memory)
-			} else {
-				childManifest := entry.manifest
-				return idx.findManifest(parentManifest, childManifest, childKey, memory)
+				if entry.Name[0] > key[0] { // to check for greater entries
+					return nil, parentManifest, 0, ErrEntryNotFound
+				}
 			}
 
+			if entry.EType == LeafEntry && entry.Name == key {
+				return grandParentManifest, parentManifest, i, nil
+			}
+
+			if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
+				childKey := strings.TrimPrefix(key, entry.Name)
+				if !memory {
+					childManifestPath := parentManifest.Name + entry.Name
+					childManifest, err := idx.loadManifest(childManifestPath)
+					if err != nil {
+						return nil, nil, 0, err
+					}
+					return idx.findManifest(parentManifest, childManifest, childKey, memory)
+				} else {
+					childManifest := entry.Manifest
+					return idx.findManifest(parentManifest, childManifest, childKey, memory)
+				}
+
+			}
 		}
 	}
 	return nil, nil, 0, ErrEntryNotFound

@@ -231,8 +231,9 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 
 	contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
 	req.Header.Set("Content-Type", contentType)
-	if strings.ToLower(compression) == "true" {
-		req.Header.Set(api.CompressionHeader, "true")
+	if compression != "" {
+		compValue := strings.ToLower(compression)
+		req.Header.Set(api.CompressionHeader, compValue)
 	}
 
 	if s.cookie != nil {
@@ -291,6 +292,10 @@ func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 	contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
 	req.Header.Add("Content-Type", contentType)
 	req.Header.Add("Content-Length", strconv.Itoa(len(body.Bytes())))
+
+	if s.cookie != nil {
+		req.AddCookie(s.cookie)
+	}
 
 	// execute the request
 	response, err := s.client.Do(req)

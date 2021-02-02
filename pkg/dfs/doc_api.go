@@ -18,7 +18,7 @@ package dfs
 
 import "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
-func (d *DfsAPI) DocCreate(sessionId, name string, si map[string]collection.IndexType) error {
+func (d *DfsAPI) DocCreate(sessionId, name string, indexes map[string]collection.IndexType, mutable bool) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -35,7 +35,7 @@ func (d *DfsAPI) DocCreate(sessionId, name string, si map[string]collection.Inde
 		return err
 	}
 
-	return podInfo.GetDocStore().CreateDocumentDB(name, si, true)
+	return podInfo.GetDocStore().CreateDocumentDB(name, indexes, mutable)
 }
 
 func (d *DfsAPI) DocOpen(sessionId, name string) error {
@@ -235,7 +235,7 @@ func (d *DfsAPI) DocBatchPut(sessionId string, doc []byte, docBatch *collection.
 		return err
 	}
 
-	return podInfo.GetDocStore().DocBatchPut(docBatch, doc)
+	return podInfo.GetDocStore().DocBatchPut(docBatch, doc, 0)
 }
 
 func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) error {
@@ -255,5 +255,29 @@ func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) 
 		return err
 	}
 
-	return podInfo.GetDocStore().DocBatchWrite(docBatch)
+	return podInfo.GetDocStore().DocBatchWrite(docBatch, "")
+}
+
+func (d *DfsAPI) DocIndexJson(sessionId, name, podFile string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return ErrPodNotOpen
+	}
+
+	fileWithPodName, err := ui.GetPod().ExpandFilePath(ui.GetPodName(), podFile)
+	if err != nil {
+		return err
+	}
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+
+	return podInfo.GetDocStore().DocFileIndex(name, fileWithPodName)
 }

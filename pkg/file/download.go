@@ -17,34 +17,10 @@ limitations under the License.
 package file
 
 import (
-	"encoding/json"
-	"fmt"
 	"io"
-	"strconv"
-
-	"github.com/ethersphere/bee/pkg/swarm"
 )
 
 func (f *File) Download(podFile string) (io.ReadCloser, string, string, error) {
 	//TODO: need to change the access time for podFile
-
-	meta := f.GetFromFileMap(podFile)
-	if meta == nil {
-		return nil, "", "", fmt.Errorf("file not found in dfs")
-	}
-
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
-	if err != nil {
-		return nil, "", "", err
-	}
-	var fileInode FileINode
-	err = json.Unmarshal(fileInodeBytes, &fileInode)
-	if err != nil {
-		return nil, "", "", err
-	}
-
-	reader := NewReader(fileInode, f.getClient(), meta.FileSize, meta.BlockSize, meta.Compression)
-	ref := swarm.NewAddress(meta.InodeAddress).String()
-	size := strconv.FormatUint(meta.FileSize, 10)
-	return reader, ref, size, nil
+	return f.OpenFileForReading(podFile)
 }

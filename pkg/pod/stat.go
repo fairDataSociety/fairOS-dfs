@@ -96,3 +96,17 @@ func (p *Pod) FileStat(podName, podFileOrDir string) (*file.FileStats, error) {
 	}
 	return info.file.FileStat(podName, path, acc.String())
 }
+
+func (p *Pod) ExpandFilePath(podName, podFileOrDir string) (string, error) {
+	if !p.isPodOpened(podName) {
+		return "", fmt.Errorf("login to pod to do this operation")
+	}
+
+	info, err := p.GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return "", err
+	}
+
+	path := p.getDirectoryPath(podFileOrDir, info)
+	return path, nil
+}

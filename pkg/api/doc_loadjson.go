@@ -74,7 +74,6 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	rowCount := 0
 	successCount := 0
 	failureCount := 0
-
 	docBatch, err := h.dfsAPI.DocBatch(sessionId, name)
 	if err != nil {
 		h.logger.Errorf("doc loadjson: %v", err)

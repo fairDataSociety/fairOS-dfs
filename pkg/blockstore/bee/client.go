@@ -30,11 +30,10 @@ import (
 
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/sha3"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
 const (

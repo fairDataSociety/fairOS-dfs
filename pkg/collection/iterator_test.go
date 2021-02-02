@@ -259,12 +259,16 @@ func TestIndexIterator(t *testing.T) {
 		// check the iteration is in order
 		for i, k := range keys {
 			if itr.Next() {
-				key := fmt.Sprintf("%d", k)
+				key := fmt.Sprintf("%020.20g", float64(k))
 				value := fmt.Sprintf("%d", values[i])
 				if itr.IntegerKey() != int64(k) {
 					t.Fatalf("invalid key, expected %s got %s", key, itr.StringKey())
 				}
-				if string(itr.Value()) != value {
+				intVal, err := strconv.ParseInt(string(itr.Value()), 10, 64)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if strconv.Itoa(int(intVal)) != value {
 					t.Fatalf("invalid key, expected %s got %s", value, string(itr.Value()))
 				}
 			}
@@ -358,7 +362,7 @@ func addDocsForNumberIteration(t *testing.T, idx *collection.Index, actualCount 
 	var keys []string
 	var values []string
 	for i := 0; i < int(actualCount); i++ {
-		key := strconv.Itoa(i)
+		key := fmt.Sprintf("%020.20g", float64(i))
 		value := "value" + strconv.Itoa(i)
 		putDocInIndex(t, idx, key, value, collection.NumberIndex, false)
 		keys = append(keys, key)
@@ -407,8 +411,8 @@ func addDocsForRandomNumberIteration(t *testing.T, idx *collection.Index, actual
 				goto DUPLICATE
 			}
 		}
-		key := strconv.Itoa(a)
-		value := strconv.Itoa(a)
+		key := fmt.Sprintf("%020.20g", float64(a))
+		value := fmt.Sprintf("%d", a)
 		putDocInIndex(t, idx, key, value, collection.NumberIndex, false)
 		keys = append(keys, a)
 		values = append(values, a)

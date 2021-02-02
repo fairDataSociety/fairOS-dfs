@@ -101,7 +101,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			err = batch.Put(collection.CSVHeaderKey, []byte(record), false)
+			err = batch.Put(collection.CSVHeaderKey, []byte(record), false, false)
 			if err != nil {
 				h.logger.Errorf("kv loadcsv: error adding header %d: %v", rowCount, err)
 				failureCount++
@@ -113,7 +113,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		key := strings.Split(record, ",")[0]
-		err = batch.Put(key, []byte(record), false)
+		err = batch.Put(key, []byte(record), false, false)
 		if err != nil {
 			h.logger.Errorf("kv loadcsv: error adding row %d: %v", rowCount, err)
 			failureCount++
@@ -121,7 +121,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		successCount++
 	}
-	err = batch.Write()
+	err = batch.Write("")
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)
 		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())

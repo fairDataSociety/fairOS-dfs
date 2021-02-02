@@ -19,6 +19,7 @@ package collection
 type Manifest struct {
 	Name         string    `json:"name"`
 	Mutable      bool      `json:"mutable"`
+	PodFile      string    `json:"pod_file,omitempty"`
 	IdxType      IndexType `json:"index_type"`
 	CreationTime int64     `json:"creation_time"`
 	Entries      []*Entry  `json:"entries,omitempty"`
@@ -26,10 +27,10 @@ type Manifest struct {
 }
 
 type Entry struct {
-	Name     string   `json:"name"`
-	EType    string   `json:"type"`
-	Ref      [][]byte `json:"ref,omitempty"`
-	manifest *Manifest
+	Name     string    `json:"name"`
+	EType    string    `json:"type"`
+	Ref      [][]byte  `json:"ref,omitempty"`
+	Manifest *Manifest `json:"Manifest,omitempty"`
 }
 
 func NewManifest(name string, time int64, idxType IndexType, mutable bool) *Manifest {
