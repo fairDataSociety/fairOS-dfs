@@ -604,7 +604,13 @@ func (d *Document) Get(dbName, id string) ([]byte, error) {
 		d.logger.Info("getting from document db: ", dbName, id, len(data))
 		return data, nil
 	} else {
-		seekOffset := binary.LittleEndian.Uint64(reference[0])
+		b := bytes.NewBuffer(reference[0])
+		seekOffset, err := binary.ReadUvarint(b)
+		if err != nil {
+			d.logger.Errorf("getting from document db: ", err.Error())
+			return nil, err
+		}
+
 		data, err := d.getLineFromFile(idIndex.podFile, seekOffset)
 		if err != nil {
 			d.logger.Errorf("getting from document db: ", err.Error())
@@ -858,7 +864,12 @@ func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 			if limit > 0 && len(docs) >= limit {
 				break
 			}
-			seekOffset := binary.LittleEndian.Uint64(ref)
+			b := bytes.NewBuffer(ref)
+			seekOffset, err := binary.ReadUvarint(b)
+			if err != nil {
+				d.logger.Errorf("getting from document db: ", err.Error())
+				return nil, err
+			}
 			data, err := d.getLineFromFile(idx.podFile, seekOffset)
 			if err != nil {
 				d.logger.Errorf("finding from document db: ", err.Error())
@@ -1159,9 +1170,12 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 		}
 	} else {
 		// store the seek index of the document instead of its reference
-		b := make([]byte, 8)
-		binary.LittleEndian.PutUint64(b, uint64(index))
-		ref = b
+		//b := make([]byte, 8)
+		//binary.LittleEndian.PutUint64(b, uint64(index))
+
+		b := make([]byte, binary.MaxVarintLen64)
+		n := binary.PutUvarint(b, uint64(index))
+		ref = b[:n]
 	}
 
 	// update the indexes
