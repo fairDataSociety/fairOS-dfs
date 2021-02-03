@@ -119,8 +119,8 @@ Pod cretion is cheap. A user can create multiple pods and use it to organise his
 - DELETE -F 'name=\<document table name\>' -F 'id=\<document id\>' http://localhost:9090/v0/doc/entry/del
 - POST -F 'name=\<document table name\>' -F 'json=@\<json_file\>' http://localhost:9090/v0/doc/loadjson
 
-### REPL Commands in dfs
-**dfs >>>** \<command\> where, \<command\> is listed below
+### REPL Commands in dfs-cli
+**dfs-cli >>>** \<command\> where, \<command\> is listed below
 ##### user related commands
 - user \<new\> (user-name) - create a new user and login as that user
 - user \<del\> (user-name) - deletes a already created user
