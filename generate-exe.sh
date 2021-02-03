@@ -21,6 +21,8 @@ do
         echo 'An error has occurred! Aborting the script execution...'
         exit 1
     fi
+    zip $output_name.zip $output_name
+    rm $output_name
 
     echo "generating $cli_output_name"
     env GOOS=$GOOS GOARCH=$GOARCH go build -o $cli_output_name ./cmd/dfs-cli
@@ -28,4 +30,6 @@ do
         echo 'An error has occurred! Aborting the script execution...'
         exit 1
     fi
+    zip $cli_output_name.zip $cli_output_name
+    rm $cli_output_name
 done
