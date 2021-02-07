@@ -1,0 +1,517 @@
+openapi: 3.0.0
+info:
+  version: 0.2.0
+  title: Common Data Types
+  description: dfs data types
+
+externalDocs:
+  description: Browse the documentation @ the FairOS-dfs Docs
+  url: 'https://docs.fairos.io'
+
+paths: {}
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: FairOS-dfs  # cookie name
+
+  schemas:
+    UserSignupResponse:
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/EthereumAddress'
+
+    UserSignupResponseWithMenonic:
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/EthereumAddress'
+        mnemonic:
+          $ref: '#/components/schemas/Mnemonic'
+
+    UserPresentResponse:
+      type: object
+      properties:
+        present:
+          type: boolean
+          example: true
+
+    UserLoggedInResponse:
+      type: object
+      properties:
+        loggedin:
+          type: boolean
+          example: true
+
+    OkResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "done"
+
+    UserExportResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserName'
+        address:
+          $ref: '#/components/schemas/EthereumAddress'
+
+    UserSharingInbox:
+      type: object
+      properties:
+        entries:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              properties:
+                name:
+                  $ref: '#/components/schemas/Name'
+                pod_name:
+                  $ref: '#/components/schemas/Name'
+                meta_ref:
+                  $ref: '#/components/schemas/FileReferenceEncrypted'
+                source_address:
+                  $ref: '#/components/schemas/EthereumAddress'
+                dest_address:
+                  $ref: '#/components/schemas/EthereumAddressAnotherOne'
+                shared_time:
+                  $ref: '#/components/schemas/Time'
+
+    UserSharingOutbox:
+      type: object
+      properties:
+        entries:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              properties:
+                name:
+                  $ref: '#/components/schemas/Name'
+                pod_name:
+                  $ref: '#/components/schemas/Name'
+                meta_ref:
+                  $ref: '#/components/schemas/FileReferenceEncrypted'
+                source_address:
+                  $ref: '#/components/schemas/EthereumAddress'
+                dest_address:
+                  $ref: '#/components/schemas/EthereumAddressAnotherOne'
+                shared_time:
+                  $ref: '#/components/schemas/Time'
+
+    PodReceiveInfo:
+      type: object
+      properties:
+        pod_name:
+          $ref: '#/components/schemas/PodName'
+        pod_address:
+          $ref: '#/components/schemas/EthereumAddress'
+        user_name:
+          $ref: '#/components/schemas/Name'
+        user_address:
+          $ref: '#/components/schemas/EthereumAddressAnotherOne'
+        shared_time:
+          $ref: '#/components/schemas/Time'
+
+    PodList:
+      type: object
+      properties:
+        type: array
+        items:
+        properties:
+          pod_name:
+            $ref: '#/components/schemas/Name'
+
+    SharedPodList:
+      type: array
+      items:
+        properties:
+          shared_pod_name:
+            $ref: '#/components/schemas/Name'
+
+    DirEntryType:
+      type: string
+      pattern: 'File/Dir'
+      example: "File"
+
+    ListDirectory:
+      type: object
+      properties:
+        entries:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              properties:
+                name:
+                  $ref: '#/components/schemas/Name'
+                type:
+                  $ref: '#/components/schemas/DirEntryType'
+                size:
+                  type: integer
+                creation_time:
+                  $ref: '#/components/schemas/Time'
+                modification_time:
+                  $ref: '#/components/schemas/Time'
+                access_time:
+                  $ref: '#/components/schemas/Time'
+
+    DirectoryStat:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/EthereumAddress'
+        pod_address:
+          $ref: '#/components/schemas/EthereumAddressAnotherOne'
+        pod_name:
+          $ref: '#/components/schemas/Name'
+        dir_path:
+          type: string
+        dir_name:
+          type: string
+        creation_time:
+          $ref: '#/components/schemas/Time'
+        modification_time:
+          $ref: '#/components/schemas/Time'
+        access_time:
+          $ref: '#/components/schemas/Time'
+        no_of_directories:
+          type: integer
+        no_of_files:
+          type: integer
+
+    DirPresentResponse:
+      type: object
+      properties:
+        present:
+          type: boolean
+          example: true
+        error:
+          type: string
+      required:
+        - present
+
+    FileUploadResponse:
+      type: object
+      properties:
+        file_name:
+          type: string
+        reference:
+          oneOf:
+            - $ref: '#/components/schemas/FileReference'
+            - $ref: '#/components/schemas/FileReferenceEncrypted'
+        error:
+          type: string
+      required:
+        - file_name
+        - reference
+
+    FileSharingResponse:
+      type: object
+      properties:
+        file_sharing_reference:
+          $ref: '#/components/schemas/FileSharingReference'
+
+    ReceiveFileInfo:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/PodFileName'
+        size:
+          type: integer
+        block_size:
+          type: string
+          example: 10M
+        number_of_blocks:
+          type: integer
+        content_type:
+          type: string
+        compression:
+          enum: [ gzip, snappy ]
+        pod_name:
+          $ref: '#/components/schemas/PodName'
+        meta_ref:
+          oneOf:
+            - $ref: '#/components/schemas/FileReference'
+            - $ref: '#/components/schemas/FileReferenceEncrypted'
+        source_address:
+          $ref: '#/components/schemas/EthereumAddress'
+        dest_address:
+          $ref: '#/components/schemas/EthereumAddressAnotherOne'
+        shared_time:
+          $ref: '#/components/schemas/Time'
+
+    FileStatInfo:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/EthereumAddress'
+        pod_name:
+          $ref: '#/components/schemas/PodName'
+        file_path:
+          $ref: '#/components/schemas/PodPath'
+        file_name:
+          $ref: '#/components/schemas/PodFileName'
+        file_size:
+          type: integer
+        block_size:
+          type: string
+          example: 10M
+        compression:
+          enum: [ gzip, snappy ]
+        content_type:
+          type: string
+        creation_time:
+          $ref: '#/components/schemas/Time'
+        modification_time:
+          $ref: '#/components/schemas/Time'
+        access_time:
+          $ref: '#/components/schemas/Time'
+        properties:
+          type: array
+          items:
+            properties:
+              name:
+                $ref: '#/components/schemas/BlockName'
+              reference:
+                oneOf:
+                  - $ref: '#/components/schemas/FileReference'
+                  - $ref: '#/components/schemas/FileReferenceEncrypted'
+              size:
+                type: integer
+              compressed_size:
+                type: integer
+
+    KVList:
+      type: array
+      items:
+        properties:
+          name:
+            $ref: '#/components/schemas/KVTableName'
+          indexes:
+            enum: [ id ]
+          type:
+            $ref: '#/components/schemas/KVIndexType'
+
+    KVgetResponseKeys:
+      type: array
+      items:
+        properties:
+          key:
+            type: string
+
+    KVgetResponseValues:
+      type: array
+      items:
+        properties:
+          value:
+            type: string
+
+    DocListResponse:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/DocTableName'
+        properties:
+          type: array
+          items:
+            properties:
+              name:
+                $ref: '#/components/schemas/DocFieldName'
+              type:
+                $ref: '#/components/schemas/DocIndexType'
+
+    DocFindResponse:
+      type: object
+      properties:
+        docs:
+          $ref: '#/components/schemas/DocTableName'
+        properties:
+          type: array
+          items:
+            properties:
+              doc:
+                type: string
+                format: byte
+
+    Time:
+      type: string
+      format: date-time
+      pattern: '^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}\+\d{2}:\d{2})$'
+      example: "2020-06-11T11:26:42.6969797+02:00"
+
+    UserName:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "alice"
+
+    PodName:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "cdrive"
+
+    DirName:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "/Documents"
+
+    PodPath:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "/home/"
+
+    PodFileName:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "/dir1/switzerland.osm"
+
+    BlockName:
+      type: string
+      example: "block00001"
+
+    KVIndexType:
+      type: string
+      enum: [ string, number]
+
+    KVTableName:
+      type: string
+      example: "kv_table1"
+
+    KVKey:
+      type: string
+      example: "key1"
+
+    KVValue:
+      type: string
+      format: byte
+
+    DocFieldName:
+      type: string
+      example: first_name
+
+    DocIndexType:
+      type: string
+      enum: [ string, number, map, list ]
+
+    DocFieldIndex:
+      description: string of field=indexType pairs seperated with comma (first_name=string,age=number,tags=map)
+      type: string
+      example: first_name=string,age=number,tags=map
+
+    DocTableName:
+      type: string
+      example: "doc_table1"
+
+    Password:
+      type: string
+      example: "DifficultPassword@%&149"
+
+    Mnemonic:
+      description: any combination of 12 words from BIP-39 mnemonic word list from https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
+      type: string
+      example: "alert record income curve mercy tree heavy loan hen recycle mean devote"
+
+    FileReference:
+      type: string
+      pattern: '^[A-Fa-f0-9]{64}$'
+      example: "dbd81832565d3396a01ecb003512a63b78c02e343a722a2f6a8f9328652280f8"
+
+    FileReferenceEncrypted:
+      type: string
+      pattern: '^[A-Fa-f0-9]{128}$'
+      example: "dbd81832565d3396a01ecb003512a63b78c02e343a722a2f6a8f9328652280f89e7acb1f7c2c5ceafc10119581b3ac4dc1e42fa6b2db9fdad8997fc52c4714f8"
+
+    FileSharingReference:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "801bb9d4ab5ff66ddf73b16f9043c3742d661b53ac51254908db450e2f0eb969abf50e96612c46bcdb6bb863764d7638bac746a3a916d72fcb0d3a2308842f091612534189"
+
+    EthereumAddress:
+      type: string
+      pattern: '^[A-Fa-f0-9]{40}$'
+      example: "36b7efd913ca4cf880b8eeac5093fa27b0825906"
+
+    EthereumAddressAnotherOne:
+      type: string
+      pattern: '^[A-Fa-f0-9]{40}$'
+      example: "1dB7eD7bD48B770593075278ca6cDf5841436CB8"
+
+    Name:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "alice"
+
+    Phone:
+      type: string
+      pattern: '^[0-9]$'
+      example: "+1 (201) 1987"
+
+    Mobile:
+      type: string
+      pattern: '^[0-9]$'
+      example: "+91 99345 67387"
+
+    AddressLine1:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "No 10, Downing street,"
+
+    AddressLine2:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "City of Westminister"
+
+    StateProvinceRegion:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "London"
+
+    Zipcode:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "60861"
+
+    ProblemDetails:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+
+    ErrorString:
+      type: string
+
+
+  responses:
+    '204':
+      description: The resource was deleted successfully.
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    '404':
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'

@@ -1,0 +1,1950 @@
+openapi: 3.0.0
+
+info:
+  version: 0.2.0
+  title: FairOS-dfs API
+  description: 'A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store'
+
+externalDocs:
+  description: Browse the documentation @ the FairOS-dfs Docs
+  url: 'https://docs.fairos.io'
+
+servers:
+  - url: 'http://{apiRoot}:{port}/v0'
+    variables:
+      apiRoot:
+        default: 'localhost'
+        description: Base address of the local dfs node API
+      port:
+        default: 9090
+        description: Base port of the local dfs node which exposes the REST APIs
+
+paths:
+  '/user/signup':
+    post:
+      summary: 'Signup user'
+      description: 'Signs up a user and subsequently logs in returning the authentication cookie `fairOS-dfs`.
+      The cookie needs to be sent n the request header in all subsequent requests.
+      Input is a form object containing the login, password and optionally mnemonic.'
+      tags:
+        - User
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                user:
+                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
+                password:
+                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+                mnemonic:
+                  $ref: 'dfs-common.yaml#/components/schemas/Mnemonic'
+              required:
+                - user
+                - password
+      responses:
+        '201':
+          description: 'Created'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: 'fairOS-dfs=MTYxMjUwNDI5NnxSMmFYcUphYU5CWTFsYTlxMkYzaG4xT3N3RkRlQlFUT2UxRVVnelZWcmVBb0dkVWNVUHNUSU95QVZhUjVodXhvR2YyUTJNM1IwRkpncGxXNXhzM0ZycHZPMW9vTlJldW4yRm9kYjBNOENfb3pEaDVEQWp2bl94M3lLOTdPWUZ6bXdpU1FQU01pTm1oUG5MMENZOHVmV1FHYlc4OVpyekE2SzBuWjVKWkFMb2Q5fAwgQztL4Efy82UoSjN5Rv9v77glLGsbqzQUmmyI0cNg; Path=/; Domain=api.fairos.io; Expires=Sat, 06 Feb 2021 05:51:36 GMT; HttpOnly; Secure; SameSite=None'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: 'dfs-common.yaml#/components/schemas/UserSignupResponse'
+                  - $ref: 'dfs-common.yaml#/components/schemas/UserSignupResponseWithMenonic'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/login':
+    post:
+      summary: 'Login user'
+      description: 'Logs in user and returns the authentication cookie `fairOS-dfs in the header.
+      The cookie needs to be sent n the request header in all subsequent requests.
+      Input is a form object containing the login and password.'
+      tags:
+        - User
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                user:
+                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
+                password:
+                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+              required:
+                - user
+                - password
+      responses:
+        '200':
+          description: 'OK'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: fairOS-dfs=MTYxMjUwNDI5NnxSMmFYcUphYU5CWTFsYTlxMkYzaG4xT3N3RkRlQlFUT2UxRVVnelZWcmVBb0dkVWNVUHNUSU95QVZhUjVodXhvR2YyUTJNM1IwRkpncGxXNXhzM0ZycHZPMW9vTlJldW4yRm9kYjBNOENfb3pEaDVEQWp2bl94M3lLOTdPWUZ6bXdpU1FQU01pTm1oUG5MMENZOHVmV1FHYlc4OVpyekE2SzBuWjVKWkFMb2Q5fAwgQztL4Efy82UoSjN5Rv9v77glLGsbqzQUmmyI0cNg; Path=/; Domain=api.fairos.io; Expires=Sat, 06 Feb 2021 05:51:36 GMT; HttpOnly; Secure; SameSite=None
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/import':
+    post:
+      summary: 'Import user'
+      description: 'Import a user from one dfs server to another and subsequently logs in returning the authentication cookie `fairOS-dfs`.
+      The cookie needs to be sent n the request header in all subsequent requests.
+      Importing is usefull when a user switches machines or lost a old machine which was running his dfs server.
+      Imput contains a form object containing the login, password, ethereum address and optionally mnemonic.
+      If mnemonic is provided a user will be created while importing.'
+      tags:
+        - User
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                user:
+                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
+                password:
+                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+                address:
+                  $ref: 'dfs-common.yaml#/components/schemas/EthereumAddress'
+                mnemonic:
+                  $ref: 'dfs-common.yaml#/components/schemas/Mnemonic'
+              required:
+                - user
+                - address
+                - password
+      responses:
+        '201':
+          description: 'Created'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: fairOS-dfs=MTYxMjUwNDI5NnxSMmFYcUphYU5CWTFsYTlxMkYzaG4xT3N3RkRlQlFUT2UxRVVnelZWcmVBb0dkVWNVUHNUSU95QVZhUjVodXhvR2YyUTJNM1IwRkpncGxXNXhzM0ZycHZPMW9vTlJldW4yRm9kYjBNOENfb3pEaDVEQWp2bl94M3lLOTdPWUZ6bXdpU1FQU01pTm1oUG5MMENZOHVmV1FHYlc4OVpyekE2SzBuWjVKWkFMb2Q5fAwgQztL4Efy82UoSjN5Rv9v77glLGsbqzQUmmyI0cNg; Path=/; Domain=api.fairos.io; Expires=Sat, 06 Feb 2021 05:51:36 GMT; HttpOnly; Secure; SameSite=None
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/UserSignupResponse'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/present':
+    get:
+      summary: 'User present'
+      description: 'Check if an user is present in a given dfs-server.
+      Input contains form object containing the user name to check if it is present in the dfs server.'
+      tags:
+        - User
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                user:
+                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
+              required:
+                - user
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/UserPresentResponse'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+
+  '/user/isloggedin':
+    get:
+      summary: 'Is logged-in'
+      description: 'Check if a user is logged in already.
+      Input contains a form object containing the user name to check if it is logged-in in the dfs server.'
+      tags:
+        - User
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                user:
+                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
+              required:
+                - user
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/UserLoggedInResponse'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+
+  '/user/logout':
+    post:
+      summary: 'Logout user'
+      description: 'Logout a logged-in user from the dfs server.'
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/avatar':
+    post:
+      summary: 'Set user avatar'
+      description: 'Set avatar for user'
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+    get:
+      summary: 'Get user avatar'
+      description: 'Get user avatar'
+      tags:
+        - User
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/name':
+    post:
+      summary: 'Set user name'
+      description: 'Set user name information'
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                last_name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                middle_name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                surname:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+    get:
+      summary: 'Get user name'
+      description: 'Get user name'
+      tags:
+        - User
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                properties:
+                  first_name:
+                    $ref: 'dfs-common.yaml#/components/schemas/Name'
+                  last_name:
+                    $ref: 'dfs-common.yaml#/components/schemas/Name'
+                  middle_name:
+                    $ref: 'dfs-common.yaml#/components/schemas/Name'
+                  surname:
+                    $ref: 'dfs-common.yaml#/components/schemas/Name'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+
+  '/user/contact':
+    post:
+      summary: 'Set user contact'
+      description: 'Set user contact details like phone and address'
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                phone:
+                  $ref: 'dfs-common.yaml#/components/schemas/Phone'
+                mobile:
+                  $ref: 'dfs-common.yaml#/components/schemas/Mobile'
+                address_line_1:
+                  $ref: 'dfs-common.yaml#/components/schemas/AddressLine1'
+                address_line_2:
+                  $ref: 'dfs-common.yaml#/components/schemas/AddressLine2'
+                state_province_region:
+                  $ref: 'dfs-common.yaml#/components/schemas/StateProvinceRegion'
+                zipcode:
+                  $ref: 'dfs-common.yaml#/components/schemas/Zipcode'
+              required:
+                - phone
+                - mobile
+                - address_line_1
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+    get:
+      summary: 'Get user contact'
+      description: 'Get user contact'
+      tags:
+        - User
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                properties:
+                  phone:
+                    $ref: 'dfs-common.yaml#/components/schemas/Phone'
+                  mobile:
+                    $ref: 'dfs-common.yaml#/components/schemas/Mobile'
+                  address_line_1:
+                    $ref: 'dfs-common.yaml#/components/schemas/AddressLine1'
+                  address_line_2:
+                    $ref: 'dfs-common.yaml#/components/schemas/AddressLine2'
+                  state_province_region:
+                    $ref: 'dfs-common.yaml#/components/schemas/StateProvinceRegion'
+                  zipcode:
+                    $ref: 'dfs-common.yaml#/components/schemas/Zipcode'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/export':
+    post:
+      summary: 'Export user'
+      description: 'Export user so that ic can be imported in another machine'
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/UserExportResponse'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/delete':
+    delete:
+      summary: 'Delete user'
+      description: 'Delete a logged-in user from the dfs server.'
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                password:
+                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+              required:
+                - password
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/stat':
+    get:
+      summary: 'User stat'
+      description: 'Delete a logged-in user from the dfs server.'
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/share/inbox':
+    get:
+      summary: 'User share inbox'
+      description: 'shows all the files that are shared with the user'
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/UserSharingInbox'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/user/share/outbox':
+    get:
+      summary: 'User share outbox'
+      description: 'shows all the files that the user has shared with others'
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/UserSharingOutbox'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/receiveinfo':
+    get:
+      summary: 'Pod receive Info'
+      description: 'shows the pod info of the pod that is to be received'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                ref:
+                  $ref: 'dfs-common.yaml#/components/schemas/FileReferenceEncrypted'
+              required:
+                - ref
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/PodReceiveInfo'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/receive':
+    get:
+      summary: 'Pod receive'
+      description: 'make a pod public and share it with others'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                ref:
+                  $ref: 'dfs-common.yaml#/components/schemas/FileReferenceEncrypted'
+              required:
+                - ref
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/new':
+    post:
+      summary: 'New pod'
+      description: 'create a new pod'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                pod:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+                password:
+                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+              required:
+                - pod
+                - password
+      responses:
+        '201':
+          description: 'Ok'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: 'fairOS-dfs=MTYxMjUwNDI5NnxSMmFYcUphYU5CWTFsYTlxMkYzaG4xT3N3RkRlQlFUT2UxRVVnelZWcmVBb0dkVWNVUHNUSU95QVZhUjVodXhvR2YyUTJNM1IwRkpncGxXNXhzM0ZycHZPMW9vTlJldW4yRm9kYjBNOENfb3pEaDVEQWp2bl94M3lLOTdPWUZ6bXdpU1FQU01pTm1oUG5MMENZOHVmV1FHYlc4OVpyekE2SzBuWjVKWkFMb2Q5fAwgQztL4Efy82UoSjN5Rv9v77glLGsbqzQUmmyI0cNg; Path=/; Domain=api.fairos.io; Expires=Sat, 06 Feb 2021 05:51:36 GMT; HttpOnly; Secure; SameSite=None'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/open':
+    post:
+      summary: 'Open pod'
+      description: 'Opens a pod'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                pod:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+                password:
+                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+              required:
+                - pod
+                - password
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/close':
+    post:
+      summary: 'Close pod'
+      description: 'Closes a pod'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/sync':
+    post:
+      summary: 'Sync pod'
+      description: 'Syncs the latest contents of the pod from Swarm'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'Synced'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/share':
+    post:
+      summary: 'Share pod'
+      description: 'Shared a pod'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                pod:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+                password:
+                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+              required:
+                - pod
+                - password
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/delete':
+    delete:
+      summary: 'Delete pod'
+      description: 'Deletes a pod'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                pod:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+              required:
+                - pod
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/ls':
+    get:
+      summary: 'List pod'
+      description: 'Lista all pods of a user'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                - 'dfs-common.yaml#/components/schemas/PodList'
+                - 'dfs-common.yaml#/components/schemas/SharedPodList'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/pod/stat':
+    get:
+      summary: 'Stat pod'
+      description: 'Show all the information about a pod'
+      tags:
+        - Pod
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                pod:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+              required:
+                - pod
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/dir/mkdir':
+    get:
+      summary: 'Make dir'
+      description: 'make a new directory inside a pod'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                dir:
+                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+              required:
+                - dir
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/dir/rmdir':
+    get:
+      summary: 'Remove dir'
+      description: 'remove a directory inside a pod'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                dir:
+                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+              required:
+                - dir
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/dir/ls':
+    get:
+      summary: 'List dir'
+      description: 'List all the files and directory inside a directory'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                dir:
+                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+              required:
+                - dir
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                - 'dfs-common.yaml#/components/schemas/ListDirectory'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/dir/stat':
+    get:
+      summary: 'Stat dir'
+      description: 'Show a directory related information'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                dir:
+                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+              required:
+                - dir
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                - 'dfs-common.yaml#/components/schemas/DirectoryStat'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/dir/present':
+    get:
+      summary: 'Dir Present'
+      description: 'Is directory present'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                dir:
+                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+              required:
+                - dir
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/DirPresentResponse'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/file/upload':
+    get:
+      summary: 'Upload File'
+      description: 'upload a file to dfs'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: header
+          name: 'fairOS-dfs-Compression'
+          schema:
+            type: string
+            enum: [gzip, snappy]
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                pod_dir:
+                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+                block_size:
+                  type: string
+                  example: 10M
+              required:
+                - pod_dir
+                - block_size
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/FileUploadResponse'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/file/download':
+    get:
+      summary: 'Download file'
+      description: 'Download a file from the pod tp the local dir'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                file:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
+              required:
+                - file
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/file/share':
+    get:
+      summary: 'Share file'
+      description: 'Share a file with another user'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                file:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
+                to:
+                  $ref: 'dfs-common.yaml#/components/schemas/EthereumAddress'
+              required:
+                - file
+                - to
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/FileSharingResponse'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/file/receive':
+    get:
+      summary: 'Receive file'
+      description: 'Receive file that was shared by another user'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                ref:
+                  $ref: 'dfs-common.yaml#/components/schemas/FileSharingReference'
+                dir:
+                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+              required:
+                - ref
+                - dir
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              type: object
+              properties:
+                file_name:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
+                reference:
+                  $ref: 'dfs-common.yaml#/components/schemas/FileSharingReference'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/file/receiveinfo':
+    get:
+      summary: 'Receive file info'
+      description: 'Receive file info that is being shared by another user'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                ref:
+                  $ref: 'dfs-common.yaml#/components/schemas/FileSharingReference'
+              required:
+                - ref
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/ReceiveFileInfo'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/file/delete':
+    delete:
+      summary: 'Delete info'
+      description: 'Delete a file in the pod'
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                file:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
+              required:
+                - file
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/file/stat':
+    get:
+      summary: 'Stat info'
+      description: 'Get the information about a file in the pod '
+      tags:
+        - File System
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                file:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
+              required:
+                - file
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/FileStatInfo'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+
+  '/kv/new':
+    post:
+      summary: 'Create New table'
+      description: 'Create a new key value table'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                indexType:
+                  $ref: 'dfs-common.yaml#/components/schemas/KVIndexType'
+              required:
+                - name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/ls':
+    get:
+      summary: 'List Tables'
+      description: 'List all the Key Value tables of this pod'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                $ref: 'dfs-common.yaml#/components/schemas/KVList'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/open':
+    post:
+      summary: 'Open table'
+      description: 'Opens a already created key value table'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+              required:
+                - name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/count':
+    post:
+      summary: 'Count table'
+      description: 'Count KV pairs in a table'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+              required:
+                - name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/delete':
+    delete:
+      summary: 'Delete table'
+      description: 'Delete a KV table of a pod'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+              required:
+                - name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/entry/put':
+    post:
+      summary: 'Put Key Value'
+      description: 'Inserts a Key Value pair in the table'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                key:
+                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
+                value:
+                  $ref: 'dfs-common.yaml#/components/schemas/KVValue'
+              required:
+                - name
+                - key
+                - value
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/entry/get':
+    get:
+      summary: 'Get Value'
+      description: 'Get value given a key'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                key:
+                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
+              required:
+                - name
+                - key
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                properties:
+                  keys:
+                    $ref: 'dfs-common.yaml#/components/schemas/KVgetResponseKeys'
+                  values:
+                    $ref: 'dfs-common.yaml#/components/schemas/KVgetResponseValues'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/entry/del':
+    delete:
+      summary: 'Delete Value'
+      description: 'Delete a KV pair given a key'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                key:
+                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
+              required:
+                - name
+                - key
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/seek':
+    post:
+      summary: 'Seek Key'
+      description: 'Seek a KV pair given a key or its prefix'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                start:
+                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
+                end:
+                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
+                limit:
+                  type: integer
+              required:
+                - name
+                - start
+                - end
+                - limit
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/seek/next':
+    get:
+      summary: 'Get Next'
+      description: 'Get Next value after the Seek'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+              required:
+                - name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                properties:
+                  keys:
+                    $ref: 'dfs-common.yaml#/components/schemas/KVgetResponseKeys'
+                  values:
+                    $ref: 'dfs-common.yaml#/components/schemas/KVgetResponseValues'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/kv/loadcsv':
+    post:
+      summary: 'LoadCSV'
+      description: 'load a csv file in to a given KV table'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+              required:
+                - name
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                csv:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+
+  '/doc/new':
+    post:
+      summary: 'Create DocumentDB'
+      description: 'create a document DB with the given fields as indexes'
+      tags:
+        - Document DB
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                si:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocFieldIndex'
+              required:
+                - name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/doc/ls':
+    get:
+      summary: 'List DocumentDBs'
+      description: 'list all the document dbs of the pod'
+      tags:
+        - Document DB
+      security:
+        - cookieAuth: []
+      requestBody:
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                properties:
+                  keys:
+                    $ref: 'dfs-common.yaml#/components/schemas/DocListResponse'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/doc/open':
+    post:
+      summary: 'Open DocumentDB'
+      description: 'open a already created document DB'
+      tags:
+        - Document DB
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+              required:
+                - name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/doc/count':
+    post:
+      summary: 'Count Documents'
+      description: 'Count all the documents based on the expression'
+      tags:
+        - Document DB
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                expr:
+                  type: string
+                  example: "age>45"
+              required:
+                - name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/doc/delete':
+    delete:
+      summary: 'Delete DocumentDB'
+      description: 'Delete the given ocument DB and all its documents and indexes'
+      tags:
+        - Document DB
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+              required:
+                - name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/doc/find':
+    get:
+      summary: 'Find Documents'
+      description: 'Find documents from the DB based on a expression'
+      tags:
+        - Document DB
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                expr:
+                  type: string
+                  example: "age>45"
+                limit:
+                  type integer
+              required:
+                - name
+                - expr
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                properties:
+                  keys:
+                    $ref: 'dfs-common.yaml#/components/schemas/DocFindResponse'
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/doc/loadjson':
+    post:
+      summary: 'LoadJson'
+      description: 'load a json file in to a given document DB'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+              required:
+                - name
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                json:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/doc/indexjson':
+    post:
+      summary: 'IndexJson'
+      description: 'Index the json file present in the pod'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                file:
+                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
+              required:
+                - name
+                - file
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/doc/entry/put':
+    post:
+      summary: 'Put Document'
+      description: 'Insert the document in the documentDB'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                doc:
+                  type: string
+                  format: byte
+              required:
+                - name
+                - doc
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+  '/doc/entry/get':
+    get:
+      summary: 'Get Document'
+      description: 'Get the document from the documentDB given the id'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                id:
+                  type: string
+              required:
+                - name
+                - id
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                properties:
+                  doc: string
+                  format: byte
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
+
+  '/doc/entry/del':
+    delete:
+      summary: 'Get Document'
+      description: 'Get the document from the documentDB given the id'
+      tags:
+        - Key Value Store
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                id:
+                  type: string
+              required:
+                - name
+                - id
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: 'dfs-common.yaml#/components/responses/400'
+        '500':
+          $ref: 'dfs-common.yaml#/components/responses/500'
+
