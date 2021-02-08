@@ -21,10 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -36,8 +32,10 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/tinygrasshopper/bettercsv"
@@ -161,7 +159,6 @@ var suggestions = []prompt.Suggest{
 	{Text: "user login", Description: "login to a existing user"},
 	{Text: "user logout", Description: "logout from a logged in user"},
 	{Text: "user present", Description: "is user present"},
-	{Text: "user ls", Description: "list all users"},
 	{Text: "user name", Description: "sets and gets the user name information"},
 	{Text: "user contact", Description: "sets and gets the user contact information"},
 	{Text: "user share inbox", Description: "gets the information about the files received by the user"},
@@ -368,16 +365,6 @@ func executor(in string) {
 				fmt.Println("User is not present")
 			}
 			currentPrompt = getCurrentPrompt()
-		case "ls":
-			//users, err := dfsAPI.ListAllUsers()
-			//if err != nil {
-			//	fmt.Println("user ls: ", err)
-			//	return
-			//}
-			//for _, usr := range users {
-			//	fmt.Println(usr)
-			//}
-			currentPrompt = getCurrentPrompt()
 		case "del":
 			if currentUser == "" {
 				fmt.Println("please login as  user to do the operation")
@@ -474,7 +461,7 @@ func executor(in string) {
 				fmt.Println("please login as  user to do the operation")
 				return
 			}
-			if len(blocks) == 8 {
+			if len(blocks) > 2 {
 				phone := blocks[2]
 				mobile := blocks[3]
 				addressLine1 := blocks[4]
@@ -863,7 +850,7 @@ func executor(in string) {
 			podSharingReference := blocks[2]
 			args := make(map[string]string)
 			args["ref"] = podSharingReference
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodReceive, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiPodReceive, args)
 			if err != nil {
 				fmt.Println("pod receive failed: ", err)
 				return
@@ -879,7 +866,7 @@ func executor(in string) {
 			podSharingReference := blocks[2]
 			args := make(map[string]string)
 			args["ref"] = podSharingReference
-			data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiPodReceiveInfo, args)
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiPodReceiveInfo, args)
 			if err != nil {
 				fmt.Println("pod receive info failed: ", err)
 				return
@@ -1915,7 +1902,7 @@ func executor(in string) {
 		args := make(map[string]string)
 		args["ref"] = sharingRefString
 		args["dir"] = podDir
-		data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiFileReceive, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiFileReceive, args)
 		if err != nil {
 			fmt.Println("receive: ", err)
 			return
@@ -1937,7 +1924,7 @@ func executor(in string) {
 		sharingRefString := blocks[1]
 		args := make(map[string]string)
 		args["ref"] = sharingRefString
-		data, err := fdfsAPI.callFdfsApi(http.MethodPost, apiFileReceiveInfo, args)
+		data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiFileReceiveInfo, args)
 		if err != nil {
 			fmt.Println("receive info: ", err)
 			return
@@ -1982,7 +1969,6 @@ func help() {
 	fmt.Println(" - user <login> (user-name) - login as a given user")
 	fmt.Println(" - user <logout> - logout a logged in user")
 	fmt.Println(" - user <present> (user-name) - returns true if the user is present, false otherwise")
-	fmt.Println(" - user <ls> - lists all the user present in this instance")
 	fmt.Println(" - user <name> (first_name) (middle_name) (last_name) (surname) - sets the user name information")
 	fmt.Println(" - user <name> - gets the user name information")
 	fmt.Println(" - user <contact> (phone) (mobile) (address_line1) (address_line2) (state) (zipcode) - sets the user contact information")

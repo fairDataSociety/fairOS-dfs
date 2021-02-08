@@ -38,7 +38,10 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// password will be empty in case of opening a shared pod
+	// so allow even if it is not set
 	password := r.FormValue("password")
+
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

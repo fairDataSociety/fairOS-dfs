@@ -89,8 +89,8 @@ func init() {
 
 	defaultDataDir := filepath.Join(home, ".fairOS/dfs")
 	rootCmd.PersistentFlags().StringVar(&dataDir, "dataDir", defaultDataDir, "store data in this dir")
-	rootCmd.PersistentFlags().StringVar(&beeHost, "beeHost", "127.0.0.1", "bee host (default 127.0.0.1)")
-	rootCmd.PersistentFlags().StringVar(&beePort, "beePort", "8080", "bee port")
+	rootCmd.PersistentFlags().StringVar(&beeHost, "beeHost", "127.0.0.1", "bee host")
+	rootCmd.PersistentFlags().StringVar(&beePort, "beePort", "1633", "bee port")
 	rootCmd.PersistentFlags().StringVar(&verbosity, "verbosity", "5", "verbosity level")
 }
 
