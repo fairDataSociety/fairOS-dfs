@@ -42,7 +42,6 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	// so allow even if it is not set
 	password := r.FormValue("password")
 
-
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {

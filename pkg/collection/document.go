@@ -1188,9 +1188,6 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 				switch v := v.(type) {
 				case float64:
 					if field == DefaultIndexFieldName {
-						if v ==  2093751843 {
-							fmt.Println("debug")
-						}
 						valStr1 = fmt.Sprintf("%d", int64(v))
 					} else {
 						valStr1 = fmt.Sprintf("%020.20g", v)

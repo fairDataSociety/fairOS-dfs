@@ -253,13 +253,13 @@ func (r *Reader) ReadLine() ([]byte, error) {
 		buf := make([]byte, r.blockSize)
 		n, err := r.Read(buf)
 		if err != nil {
-			if errors.Is(err, io.EOF){
+			if errors.Is(err, io.EOF) {
 				if buf[n-1] != '\n' {
 					return nil, err
 				} else {
 					goto SUCC
 				}
- 			}
+			}
 			return nil, err
 		}
 	SUCC:

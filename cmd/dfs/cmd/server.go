@@ -236,7 +236,7 @@ func startHttpService(logger logging.Logger) {
 	// starting the pprof server
 	go func() {
 		logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
-		err := http.ListenAndServe("localhost:" + pprofPort, nil)
+		err := http.ListenAndServe("localhost:"+pprofPort, nil)
 		if err != nil {
 			logger.Errorf("pprof listenAndServe: %v ", err.Error())
 			return
