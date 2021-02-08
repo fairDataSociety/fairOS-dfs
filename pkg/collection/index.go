@@ -353,8 +353,7 @@ func longestCommonPrefix(str1, str2 string) (string, string, string) {
 func getRootManifestOfIndex(actualIndexName string, fd *feed.API, user utils.Address, client blockstore.Client) *Manifest {
 	var manifest Manifest
 	topic := utils.HashString(actualIndexName)
-	addr, _, err := fd.GetFeedData(topic, user)
-	fmt.Println(addr)
+	_, addr, err := fd.GetFeedData(topic, user)
 	if err != nil {
 		return nil
 	}
