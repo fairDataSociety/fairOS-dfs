@@ -18,14 +18,9 @@ package main
 
 import (
 	cmd2 "github.com/fairdatasociety/fairOS-dfs/cmd/dfs/cmd"
-	"log"
-	"net/http"
 	_ "net/http/pprof"
 )
 
 func main() {
-	go func() {
-		log.Println(http.ListenAndServe("localhost:9091", nil))
-	}()
 	cmd2.Execute()
 }

@@ -34,6 +34,7 @@ import (
 
 var (
 	httpPort     string
+	pprofPort    string
 	cookieDomain string
 	corsOrigins  []string
 	handler      *api.Handler
@@ -72,6 +73,7 @@ can consume it.`,
 		logger.Info("beePort      : ", beePort)
 		logger.Info("verbosity    : ", verbosity)
 		logger.Info("httpPort     : ", httpPort)
+		logger.Info("pprofPort    : ", pprofPort)
 		logger.Info("cookieDomain : ", cookieDomain)
 		logger.Info("corsOrigins  : ", corsOrigins)
 		hdlr, err := api.NewHandler(dataDir, beeHost, beePort, cookieDomain, logger)
@@ -86,6 +88,7 @@ can consume it.`,
 
 func init() {
 	serverCmd.Flags().StringVar(&httpPort, "httpPort", "9090", "http port")
+	serverCmd.Flags().StringVar(&pprofPort, "pprofPort", "9091", "pprof port")
 	serverCmd.Flags().StringVar(&cookieDomain, "cookieDomain", "api.fairos.io", "the domain to use in the cookie")
 	serverCmd.Flags().StringSliceVar(&corsOrigins, "cors-origins", []string{}, "allow CORS headers for the given origins")
 	rootCmd.AddCommand(serverCmd)
@@ -147,8 +150,8 @@ func startHttpService(logger logging.Logger) {
 	userRouter.HandleFunc("/share/outbox", handler.GetUserSharingOutboxHandler).Methods("GET")
 
 	// pod related handlers
-	baseRouter.HandleFunc("/pod/receive", handler.PodReceiveHandler).Methods("POST")
-	baseRouter.HandleFunc("/pod/receiveinfo", handler.PodReceiveInfoHandler).Methods("POST")
+	baseRouter.HandleFunc("/pod/receive", handler.PodReceiveHandler).Methods("GET")
+	baseRouter.HandleFunc("/pod/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
 	podRouter := baseRouter.PathPrefix("/pod/").Subrouter()
 	podRouter.Use(handler.LoginMiddleware)
 	podRouter.Use(handler.LogMiddleware)
@@ -178,8 +181,8 @@ func startHttpService(logger logging.Logger) {
 	fileRouter.HandleFunc("/download", handler.FileDownloadHandler).Methods("POST")
 	fileRouter.HandleFunc("/upload", handler.FileUploadHandler).Methods("POST")
 	fileRouter.HandleFunc("/share", handler.FileShareHandler).Methods("POST")
-	fileRouter.HandleFunc("/receive", handler.FileReceiveHandler).Methods("POST")
-	fileRouter.HandleFunc("/receiveinfo", handler.FileReceiveInfoHandler).Methods("POST")
+	fileRouter.HandleFunc("/receive", handler.FileReceiveHandler).Methods("GET")
+	fileRouter.HandleFunc("/receiveinfo", handler.FileReceiveInfoHandler).Methods("GET")
 	fileRouter.HandleFunc("/delete", handler.FileDeleteHandler).Methods("DELETE")
 	fileRouter.HandleFunc("/stat", handler.FileStatHandler).Methods("GET")
 
@@ -230,10 +233,20 @@ func startHttpService(logger logging.Logger) {
 	// Insert the middleware
 	handler := c.Handler(router)
 
+	// starting the pprof server
+	go func() {
+		logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
+		err := http.ListenAndServe("localhost:" + pprofPort, nil)
+		if err != nil {
+			logger.Errorf("pprof listenAndServe: %v ", err.Error())
+			return
+		}
+	}()
+
 	logger.Infof("fairOS-dfs API server listening on port: %v", httpPort)
 	err := http.ListenAndServe(":"+httpPort, handler)
 	if err != nil {
-		logger.Errorf("listenAndServe: %v ", err.Error())
+		logger.Errorf("http listenAndServe: %v ", err.Error())
 		return
 	}
 }
