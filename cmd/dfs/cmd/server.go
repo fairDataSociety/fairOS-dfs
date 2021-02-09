@@ -104,6 +104,46 @@ func startHttpService(logger logging.Logger) {
 			logger.Errorf("error in API /: ", err)
 			return
 		}
+		_, err = fmt.Fprintln(w, dfs.Version)
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
+		_, err = fmt.Fprintln(w, dataDir)
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
+		_, err = fmt.Fprintln(w, beeHost + ":" + beePort)
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
+		_, err = fmt.Fprintln(w, verbosity)
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
+		_, err = fmt.Fprintln(w, httpPort)
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
+		_, err = fmt.Fprintln(w, pprofPort)
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
+		_, err = fmt.Fprintln(w, cookieDomain)
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
+		_, err = fmt.Fprintln(w, corsOrigins)
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
 	})
 	router.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintln(w, dfs.Version)
