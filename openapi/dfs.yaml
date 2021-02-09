@@ -7,7 +7,7 @@ info:
 
 externalDocs:
   description: Browse the documentation @ the FairOS-dfs Docs
-  url: 'https://docs.fairos.io'
+  url: 'https://fairos.io'
 
 servers:
   - url: 'http://{apiRoot}:{port}/v0'
