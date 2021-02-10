@@ -3,6 +3,8 @@
 package_name=dfs
 cli_package_name=dfs-cli
 platforms=("darwin/amd64" "linux/386" "linux/amd64" "linux/arm64" "windows/amd64" "windows/386")
+export COMMIT=`git describe --long --dirty --always --match ""`
+echo $COMMIT
 
 for platform in "${platforms[@]}"
 do
@@ -16,20 +18,16 @@ do
     fi
 
     echo "generating $output_name"
-    env GOOS=$GOOS GOARCH=$GOARCH go build -o $output_name ./cmd/dfs
+    env GOOS=$GOOS GOARCH=$GOARCH COMMIT=$COMMIT go build -o $output_name ./cmd/dfs
     if [ $? -ne 0 ]; then
         echo 'An error has occurred! Aborting the script execution...'
         exit 1
     fi
-    zip $output_name.zip $output_name
-    rm $output_name
 
     echo "generating $cli_output_name"
-    env GOOS=$GOOS GOARCH=$GOARCH go build -o $cli_output_name ./cmd/dfs-cli
+    env GOOS=$GOOS GOARCH=$GOARCH COMMIT=$COMMIT go build -o $cli_output_name ./cmd/dfs-cli
     if [ $? -ne 0 ]; then
         echo 'An error has occurred! Aborting the script execution...'
         exit 1
     fi
-    zip $cli_output_name.zip $cli_output_name
-    rm $cli_output_name
 done
