@@ -49,7 +49,7 @@ func (m *MockBeeClient) CheckConnection() bool {
 func (m *MockBeeClient) UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
-	ch, err := utils.NewChunkWithSpan(data)
+	ch, err := utils.NewChunkWithoutSpan(data)
 	if err != nil {
 		return nil, err
 	}

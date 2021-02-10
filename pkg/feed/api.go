@@ -136,8 +136,6 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	req.idAddr = sch.Address()
 	req.binaryData = sch.Data()
 
-	fmt.Println("my address: ", req.idAddr.String())
-
 	// set signature and binary data fields
 	_, err = a.handler.toChunkContent(&req, id, payloadId)
 	if err != nil {
@@ -150,7 +148,6 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 		return nil, err
 	}
 
-	fmt.Println("got addr: ", swarm.NewAddress(address).String())
 	return address, nil
 }
 
