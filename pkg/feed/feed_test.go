@@ -128,14 +128,13 @@ func TestFeed(t *testing.T) {
 		// check if you can read the data from user2
 		fd2 := New(accountInfo2, client, logger)
 		rcvdAddr, rcvdData, err := fd2.GetFeedData(topic, user2)
-		if err != nil  && err.Error() != "no feed updates found" {
+		if err != nil && err.Error() != "no feed updates found" {
 			t.Fatal(err)
 		}
 		if rcvdAddr != nil || rcvdData != nil {
 			t.Fatal("was able to read feed of user1 using user2's address")
 		}
 	})
-
 
 	t.Run("update-feed", func(t *testing.T) {
 		fd := New(accountInfo1, client, logger)

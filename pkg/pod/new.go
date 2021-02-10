@@ -132,7 +132,6 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		user = p.acc.GetAddress(freeId)
 	}
 
-
 	kvStore := c.NewKeyValueStore(fd, accountInfo, user, p.client, p.logger)
 	docStore := c.NewDocumentStore(fd, accountInfo, user, file, p.client, p.logger)
 
