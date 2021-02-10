@@ -10,12 +10,6 @@ externalDocs:
 
 paths: {}
 components:
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: FairOS-dfs  # cookie name
-
   schemas:
     UserSignupResponse:
       type: object

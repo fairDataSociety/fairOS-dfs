@@ -206,8 +206,11 @@ paths:
       description: 'Logout a logged-in user from the dfs server.'
       tags:
         - User
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -228,8 +231,11 @@ paths:
       description: 'Set avatar for user'
       tags:
         - User
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           multipart/form-data:
@@ -256,8 +262,11 @@ paths:
       description: 'Get user avatar'
       tags:
         - User
-      security:
-        - cookieAuth: [ ]
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -278,8 +287,11 @@ paths:
       description: 'Set user name information'
       tags:
         - User
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -311,8 +323,11 @@ paths:
       description: 'Get user name'
       tags:
         - User
-      security:
-        - cookieAuth: [ ]
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -341,8 +356,11 @@ paths:
       description: 'Set user contact details like phone and address'
       tags:
         - User
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -382,8 +400,11 @@ paths:
       description: 'Get user contact'
       tags:
         - User
-      security:
-        - cookieAuth: [ ]
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -415,8 +436,11 @@ paths:
       description: 'Export user so that ic can be imported in another machine'
       tags:
         - User
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -436,8 +460,11 @@ paths:
       description: 'Delete a logged-in user from the dfs server.'
       tags:
         - User
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -467,8 +494,11 @@ paths:
       description: 'Delete a logged-in user from the dfs server.'
       tags:
         - User
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -489,8 +519,11 @@ paths:
       description: 'shows all the files that are shared with the user'
       tags:
         - User
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -510,8 +543,11 @@ paths:
       description: 'shows all the files that the user has shared with others'
       tags:
         - User
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -531,8 +567,11 @@ paths:
       description: 'shows the pod info of the pod that is to be received'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -561,8 +600,11 @@ paths:
       description: 'make a pod public and share it with others'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -592,8 +634,11 @@ paths:
       description: 'create a new pod'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -631,8 +676,11 @@ paths:
       description: 'Opens a pod'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -649,6 +697,11 @@ paths:
       responses:
         '200':
           description: 'Ok'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: 'fairOS-dfs=MTYxMjUwNDI5NnxSMmFYcUphYU5CWTFsYTlxMkYzaG4xT3N3RkRlQlFUT2UxRVVnelZWcmVBb0dkVWNVUHNUSU95QVZhUjVodXhvR2YyUTJNM1IwRkpncGxXNXhzM0ZycHZPMW9vTlJldW4yRm9kYjBNOENfb3pEaDVEQWp2bl94M3lLOTdPWUZ6bXdpU1FQU01pTm1oUG5MMENZOHVmV1FHYlc4OVpyekE2SzBuWjVKWkFMb2Q5fAwgQztL4Efy82UoSjN5Rv9v77glLGsbqzQUmmyI0cNg; Path=/; Domain=api.fairos.io; Expires=Sat, 06 Feb 2021 05:51:36 GMT; HttpOnly; Secure; SameSite=None'
           content:
             application/octet-stream:
               schema:
@@ -665,8 +718,11 @@ paths:
       description: 'Closes a pod'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -687,8 +743,11 @@ paths:
       description: 'Syncs the latest contents of the pod from Swarm'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -709,8 +768,11 @@ paths:
       description: 'Shared a pod'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -743,8 +805,11 @@ paths:
       description: 'Deletes a pod'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -774,8 +839,11 @@ paths:
       description: 'Lista all pods of a user'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -796,8 +864,11 @@ paths:
       description: 'Show all the information about a pod'
       tags:
         - Pod
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -827,8 +898,11 @@ paths:
       description: 'make a new directory inside a pod'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -858,8 +932,11 @@ paths:
       description: 'remove a directory inside a pod'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -889,8 +966,11 @@ paths:
       description: 'List all the files and directory inside a directory'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -919,8 +999,11 @@ paths:
       description: 'Show a directory related information'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -949,8 +1032,11 @@ paths:
       description: 'Is directory present'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -979,9 +1065,11 @@ paths:
       description: 'upload a file to dfs'
       tags:
         - File System
-      security:
-        - cookieAuth: []
       parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
         - in: header
           name: 'fairOS-dfs-Compression'
           schema:
@@ -1026,8 +1114,11 @@ paths:
       description: 'Download a file from the pod tp the local dir'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1057,8 +1148,11 @@ paths:
       description: 'Share a file with another user'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1090,8 +1184,11 @@ paths:
       description: 'Receive file that was shared by another user'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1127,8 +1224,11 @@ paths:
       description: 'Receive file info that is being shared by another user'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1157,8 +1257,11 @@ paths:
       description: 'Delete a file in the pod'
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1188,8 +1291,11 @@ paths:
       description: 'Get the information about a file in the pod '
       tags:
         - File System
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1219,8 +1325,11 @@ paths:
       description: 'Create a new key value table'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1252,8 +1361,11 @@ paths:
       description: 'List all the Key Value tables of this pod'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -1273,8 +1385,11 @@ paths:
       description: 'Opens a already created key value table'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1304,8 +1419,11 @@ paths:
       description: 'Count KV pairs in a table'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1335,8 +1453,11 @@ paths:
       description: 'Delete a KV table of a pod'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1366,8 +1487,11 @@ paths:
       description: 'Inserts a Key Value pair in the table'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1403,8 +1527,11 @@ paths:
       description: 'Get value given a key'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1440,8 +1567,11 @@ paths:
       description: 'Delete a KV pair given a key'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1474,8 +1604,11 @@ paths:
       description: 'Seek a KV pair given a key or its prefix'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1514,8 +1647,11 @@ paths:
       description: 'Get Next value after the Seek'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1548,8 +1684,11 @@ paths:
       description: 'load a csv file in to a given KV table'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1587,8 +1726,11 @@ paths:
       description: 'create a document DB with the given fields as indexes'
       tags:
         - Document DB
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1620,8 +1762,11 @@ paths:
       description: 'list all the document dbs of the pod'
       tags:
         - Document DB
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
       responses:
         '200':
@@ -1643,8 +1788,11 @@ paths:
       description: 'open a already created document DB'
       tags:
         - Document DB
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1674,8 +1822,11 @@ paths:
       description: 'Count all the documents based on the expression'
       tags:
         - Document DB
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1708,8 +1859,11 @@ paths:
       description: 'Delete the given ocument DB and all its documents and indexes'
       tags:
         - Document DB
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1739,8 +1893,11 @@ paths:
       description: 'Find documents from the DB based on a expression'
       tags:
         - Document DB
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1777,8 +1934,11 @@ paths:
       description: 'load a json file in to a given document DB'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1815,8 +1975,11 @@ paths:
       description: 'Index the json file present in the pod'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1849,8 +2012,11 @@ paths:
       description: 'Insert the document in the documentDB'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1884,8 +2050,11 @@ paths:
       description: 'Get the document from the documentDB given the id'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1920,8 +2089,11 @@ paths:
       description: 'Get the document from the documentDB given the id'
       tags:
         - Key Value Store
-      security:
-        - cookieAuth: []
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
       requestBody:
         content:
           application/x-www-form-urlencoded:
