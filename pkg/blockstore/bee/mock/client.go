@@ -19,11 +19,14 @@ package mock
 import (
 	"context"
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"net/http"
 	"sync"
 
+	"github.com/ethersphere/bee/pkg/soc"
 	"github.com/ethersphere/bee/pkg/swarm"
 )
 
@@ -41,6 +44,36 @@ func NewMockBeeClient() *MockBeeClient {
 
 func (m *MockBeeClient) CheckConnection() bool {
 	return true
+}
+
+func (m *MockBeeClient) UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error) {
+	m.storerMu.Lock()
+	defer m.storerMu.Unlock()
+	ch, err := utils.NewChunkWithSpan(data)
+	if err != nil {
+		return nil, err
+	}
+	idBytes, err := hex.DecodeString(id)
+	if err != nil {
+		return nil, err
+	}
+	ownerBytes, err := hex.DecodeString(owner)
+	if err != nil {
+		return nil, err
+	}
+	signatureBytes, err := hex.DecodeString(signature)
+	if err != nil {
+		return nil, err
+	}
+	signedChunk, err := soc.NewSignedChunk(idBytes, ch, ownerBytes, signatureBytes)
+	if err != nil {
+		return nil, err
+	}
+	if !soc.Valid(signedChunk) {
+		return nil, fmt.Errorf("soc chunk failed in validation")
+	}
+	m.storer[signedChunk.Address().String()] = signedChunk.Data()
+	return signedChunk.Address().Bytes(), nil
 }
 
 func (m *MockBeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error) {

@@ -3,18 +3,19 @@ module github.com/fairdatasociety/fairOS-dfs
 go 1.14
 
 require (
-	github.com/btcsuite/btcd v0.20.1-beta
+	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/dustin/go-humanize v1.0.0
-	github.com/ethereum/go-ethereum v1.9.21
-	github.com/ethersphere/bee v0.2.1-0.20200911202143-349d07968e5b
-	github.com/ethersphere/bmt v0.1.2
+	github.com/ethereum/go-ethereum v1.9.22
+	github.com/ethersphere/bee v0.5.0
+	github.com/ethersphere/bmt v0.1.4
 	github.com/golang/snappy v0.0.2-0.20200707131729-196ae77b8a26
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/securecookie v1.1.1
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/klauspost/compress v1.10.1 // indirect
 	github.com/klauspost/pgzip v1.2.5
+	github.com/libp2p/go-libp2p-autonat-svc v0.1.0 // indirect
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/miguelmota/go-ethereum-hdwallet v0.0.0-20200123000308-a60dcd172b4c
 	github.com/mitchellh/go-homedir v1.1.0
@@ -27,6 +28,6 @@ require (
 	github.com/tidwall/pretty v1.0.2 // indirect
 	github.com/tinygrasshopper/bettercsv v0.0.1
 	github.com/tyler-smith/go-bip39 v1.0.2
-	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
+	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	resenje.org/jsonhttp v0.2.0
 )

@@ -98,7 +98,7 @@ func (s *FdfsClient) CheckConnection() bool {
 	if err != nil {
 		return false
 	}
-	if string(data) != "FairOS-dfs\n" {
+	if !strings.HasPrefix(string(data), "FairOS-dfs") {
 		return false
 	}
 	return true

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ethersphere/bee/pkg/content"
 	"github.com/ethersphere/bee/pkg/crypto"
 	"github.com/ethersphere/bee/pkg/soc"
 	"github.com/ethersphere/bee/pkg/swarm"
@@ -112,7 +111,7 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
-	ch, err := content.NewChunk(data)
+	ch, err := utils.NewChunkWithSpan(data)
 	if err != nil {
 		return nil, err
 	}
@@ -121,9 +120,23 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 		return nil, err
 	}
 
+	// generate the data to sign
+	toSignBytes, err := toSignDigest(id, ch.Address().Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the chunk
+	signature, err := signer.Sign(toSignBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	// set the address and the data for the soc chunk
 	req.idAddr = sch.Address()
 	req.binaryData = sch.Data()
+
+	fmt.Println("my address: ", req.idAddr.String())
 
 	// set signature and binary data fields
 	_, err = a.handler.toChunkContent(&req, id, payloadId)
@@ -132,10 +145,12 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	}
 
 	// send the updated soc chunk to bee
-	address, err := a.handler.update(&req)
+	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("got addr: ", swarm.NewAddress(address).String())
 	return address, nil
 }
 
@@ -206,11 +221,23 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
-	ch, err := content.NewChunk(data)
+	ch, err := utils.NewChunkWithSpan(data)
 	if err != nil {
 		return nil, err
 	}
 	sch, err := soc.NewChunk(id, ch, signer)
+	if err != nil {
+		return nil, err
+	}
+
+	// generate the data to sign
+	toSignBytes, err := toSignDigest(id, ch.Address().Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the chunk
+	signature, err := signer.Sign(toSignBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -225,19 +252,7 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 		return nil, err
 	}
 
-	//// delete the previous feed chunk before adding the new chunk
-	//delRef, _, err := a.GetFeedData(topic, user)
-	//if err != nil && err.Error() != "no feed updates found" {
-	//	return nil, err
-	//}
-	//if delRef != nil {
-	//	err = a.handler.deleteChunk(delRef)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
-
-	address, err := a.handler.update(req)
+	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
 	if err != nil {
 		return nil, err
 	}

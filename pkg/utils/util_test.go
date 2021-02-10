@@ -20,8 +20,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"testing"
-
-	"github.com/ethersphere/bee/pkg/content"
 )
 
 func Test_Address(t *testing.T) {
@@ -31,7 +29,7 @@ func Test_Address(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ch, err := content.NewChunk(buf)
+	ch, err := NewChunkWithSpan(buf)
 	if err != nil {
 		t.Fatal(err)
 	}

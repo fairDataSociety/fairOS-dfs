@@ -43,7 +43,8 @@ const (
 	chunkCacheSize         = 1024
 	uploadBlockCacheSize   = 100
 	downloadBlockCacheSize = 100
-	ChunkUploadDownloadUrl = "/chunks/"
+	ChunkUploadDownloadUrl = "/chunks"
+	SOCUploadDownloadUrl   = "/soc"
 	BytesUploadDownloadUrl = "/bytes"
 	pinChunksUrl           = "/pin/chunks/"
 	pinBlobsUrl            = "/pin/bytes/" // need to change this when bee supports it
@@ -99,6 +100,14 @@ func NewBeeClient(host, port string, logger logging.Logger) *BeeClient {
 	}
 }
 
+type chunkAddressResponse struct {
+	Reference swarm.Address `json:"reference"`
+}
+
+func socResource(owner, id, sig string) string {
+	return fmt.Sprintf("/soc/%s/%s?sig=%s", owner, id, sig)
+}
+
 func (s *BeeClient) CheckConnection() bool {
 	req, err := http.NewRequest(http.MethodGet, s.url, nil)
 	if err != nil {
@@ -131,10 +140,56 @@ func (s *BeeClient) CheckConnection() bool {
 }
 
 // upload a chunk in bee
+func (s *BeeClient) UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error) {
+	to := time.Now()
+	socResStr := socResource(owner, id, signature)
+	fullUrl := fmt.Sprintf(s.url + socResStr)
+
+	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	req.Close = true
+
+	if response.StatusCode != http.StatusCreated {
+		return nil, errors.New("error uploading data")
+	}
+
+	addrData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, errors.New("error downloading data")
+	}
+	err = response.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var addrResp *chunkAddressResponse
+	err = json.Unmarshal(addrData, &addrResp)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.inChunkCache(addrResp.Reference.String()) {
+		s.addToChunkCache(addrResp.Reference.String(), data)
+	}
+	fields := logrus.Fields{
+		"reference": addrResp.Reference.String(),
+		"duration":  time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
+	return addrResp.Reference.Bytes(), nil
+}
+
+// upload a chunk in bee
 func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error) {
 	to := time.Now()
-	path := filepath.Join(ChunkUploadDownloadUrl, ch.Address().String())
-	fullUrl := fmt.Sprintf(s.url + path)
+	fullUrl := fmt.Sprintf(s.url + ChunkUploadDownloadUrl)
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(ch.Data()))
 	if err != nil {
 		return nil, err
@@ -153,7 +208,18 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 	if response.StatusCode != http.StatusOK {
 		return nil, errors.New("error uploading data")
 	}
+
+	addrData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, errors.New("error downloading data")
+	}
 	err = response.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var addrResp *chunkAddressResponse
+	err = json.Unmarshal(addrData, &addrResp)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +232,7 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
-	return ch.Address().Bytes(), nil
+	return addrResp.Reference.Bytes(), nil
 }
 
 // download a chunk from bee

@@ -24,6 +24,7 @@ import (
 
 type Client interface {
 	CheckConnection() bool
+	UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error)
 	UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error)
 	UploadBlob(data []byte, pin bool, encrypt bool) (address []byte, err error)
 	DownloadChunk(ctx context.Context, address []byte) (data []byte, err error)

@@ -17,7 +17,11 @@ limitations under the License.
 package utils
 
 import (
+	"encoding/binary"
 	"encoding/hex"
+	"errors"
+	"fmt"
+	"github.com/ethersphere/bee/pkg/bmtpool"
 	"hash"
 	"os"
 	"runtime"
@@ -148,4 +152,35 @@ func HashString(path string) []byte {
 		return []byte{0}
 	}
 	return hasher.Sum(nil)
+}
+
+func NewChunkWithSpan(data []byte) (swarm.Chunk, error) {
+	span := int64(len(data))
+
+	if len(data) > swarm.ChunkSize {
+		return nil, errors.New("max chunk size exceeded")
+	}
+	if span < swarm.ChunkSize && span != int64(len(data)) {
+		return nil, fmt.Errorf("single-span chunk size mismatch; span is %d, chunk data length %d", span, len(data))
+	}
+
+	hasher := bmtpool.Get()
+	defer bmtpool.Put(hasher)
+
+	// execute hash, compare and return result
+	spanBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(spanBytes, uint64(span))
+	err := hasher.SetSpanBytes(spanBytes)
+	if err != nil {
+		return nil, err
+	}
+	_, err = hasher.Write(data)
+	if err != nil {
+		return nil, err
+	}
+	s := hasher.Sum(nil)
+
+	payload := append(spanBytes, data...)
+	address := swarm.NewAddress(s)
+	return swarm.NewChunk(address, payload), nil
 }

@@ -114,7 +114,7 @@ func startHttpService(logger logging.Logger) {
 			logger.Errorf("error in API /: ", err)
 			return
 		}
-		_, err = fmt.Fprintln(w, beeHost + ":" + beePort)
+		_, err = fmt.Fprintln(w, beeHost+":"+beePort)
 		if err != nil {
 			logger.Errorf("error in API /: ", err)
 			return

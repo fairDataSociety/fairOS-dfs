@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package swarm contains most basic and general Swarm concepts.
 package soc
 
 import (
@@ -10,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ethersphere/bee/pkg/content"
+	"github.com/ethersphere/bee/pkg/bmtpool"
 	"github.com/ethersphere/bee/pkg/crypto"
 	"github.com/ethersphere/bee/pkg/swarm"
 )
@@ -18,7 +17,6 @@ import (
 const (
 	IdSize        = 32
 	SignatureSize = 65
-	AddressSize   = crypto.AddressSize
 	minChunkSize  = IdSize + SignatureSize + swarm.SpanSize
 )
 
@@ -32,7 +30,7 @@ type Owner struct {
 
 // NewOwner creates a new Owner.
 func NewOwner(address []byte) (*Owner, error) {
-	if len(address) != AddressSize {
+	if len(address) != crypto.AddressSize {
 		return nil, fmt.Errorf("invalid address %x", address)
 	}
 	return &Owner{
@@ -58,6 +56,25 @@ func NewChunk(id Id, ch swarm.Chunk, signer crypto.Signer) (swarm.Chunk, error) 
 		return nil, err
 	}
 	return s.ToChunk()
+}
+
+// NewChunk is a convenience function to create a single-owner chunk ready to be sent
+// on the network.
+func NewSignedChunk(id Id, ch swarm.Chunk, owner, sig []byte) (swarm.Chunk, error) {
+	s := New(id, ch)
+	s.signature = sig
+	o, err := NewOwner(owner)
+	if err != nil {
+		return nil, err
+	}
+	s.owner = o
+
+	// create chunk
+	socAddress, err := s.Address()
+	if err != nil {
+		return nil, err
+	}
+	return swarm.NewChunk(socAddress, s.toBytes()), nil
 }
 
 // New creates a new Soc representation from arbitrary soc id and
@@ -111,6 +128,10 @@ func (s *Soc) Address() (swarm.Address, error) {
 	return CreateAddress(s.id, s.owner)
 }
 
+func (s *Soc) Signature() []byte {
+	return s.signature
+}
+
 // FromChunk recreates an Soc representation from swarm.Chunk data.
 func FromChunk(sch swarm.Chunk) (*Soc, error) {
 	chunkData := sch.Data()
@@ -131,7 +152,7 @@ func FromChunk(sch swarm.Chunk) (*Soc, error) {
 	spanBytes := chunkData[cursor : cursor+swarm.SpanSize]
 	cursor += swarm.SpanSize
 
-	ch, err := content.NewChunkWithSpanBytes(chunkData[cursor:], spanBytes)
+	ch, err := contentAddressedChunk(chunkData[cursor:], spanBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -176,19 +197,22 @@ func (s *Soc) ToChunk() (swarm.Chunk, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// prepare the payload
-	buf := bytes.NewBuffer(nil)
-	buf.Write(s.id)
-	buf.Write(signature)
-	buf.Write(s.Chunk.Data())
+	s.signature = signature
 
 	// create chunk
 	socAddress, err := s.Address()
 	if err != nil {
 		return nil, err
 	}
-	return swarm.NewChunk(socAddress, buf.Bytes()), nil
+	return swarm.NewChunk(socAddress, s.toBytes()), nil
+}
+
+func (s *Soc) toBytes() []byte {
+	buf := bytes.NewBuffer(nil)
+	buf.Write(s.id)
+	buf.Write(s.signature)
+	buf.Write(s.Chunk.Data())
+	return buf.Bytes()
 }
 
 // toSignDigest creates a digest suitable for signing to represent the soc.
@@ -231,4 +255,24 @@ func recoverAddress(signature, digest []byte) ([]byte, error) {
 		return nil, err
 	}
 	return recoveredEthereumAddress, nil
+}
+
+func contentAddressedChunk(data, spanBytes []byte) (swarm.Chunk, error) {
+	hasher := bmtpool.Get()
+	defer bmtpool.Put(hasher)
+
+	// execute hash, compare and return result
+	err := hasher.SetSpanBytes(spanBytes)
+	if err != nil {
+		return nil, err
+	}
+	_, err = hasher.Write(data)
+	if err != nil {
+		return nil, err
+	}
+	s := hasher.Sum(nil)
+
+	payload := append(append([]byte{}, spanBytes...), data...)
+	address := swarm.NewAddress(s)
+	return swarm.NewChunk(address, payload), nil
 }

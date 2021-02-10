@@ -30,12 +30,11 @@ import (
 	beecrypto "github.com/ethersphere/bee/pkg/crypto"
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
-	"golang.org/x/crypto/sha3"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"golang.org/x/crypto/sha3"
 )
 
 type Handler struct {
@@ -76,14 +75,9 @@ func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool 
 	return fh
 }
 
-func (h *Handler) update(req *Request) ([]byte, error) {
-	if req.idAddr.Equal(swarm.ZeroAddress) || req.binaryData == nil {
-		return nil, fmt.Errorf("invlaid address or chunk data")
-	}
-	ch := swarm.NewChunk(req.idAddr, req.binaryData)
-
-	// send the chunk
-	addr, err := h.client.UploadChunk(ch, true)
+func (h *Handler) update(id, owner, signature, data []byte) ([]byte, error) {
+	// send the SOC chunk
+	addr, err := h.client.UploadSOC(utils.Encode(owner), utils.Encode(id), utils.Encode(signature), data)
 	if err != nil {
 		return nil, err
 	}

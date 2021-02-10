@@ -39,7 +39,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/tinygrasshopper/bettercsv"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 const (
@@ -2068,7 +2068,7 @@ func getPodPrompt() string {
 
 func getPassword() (password string) {
 	fmt.Print("Please enter your password: ")
-	bytePassword, err := terminal.ReadPassword(0)
+	bytePassword, err := term.ReadPassword(0)
 	if err != nil {
 		log.Fatalf("error reading password")
 		return

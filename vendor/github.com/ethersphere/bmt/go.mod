@@ -1,6 +1,6 @@
 module github.com/ethersphere/bmt
 
-go 1.14
+go 1.15
 
 require (
 	gitlab.com/nolash/go-mockbytes v0.0.7

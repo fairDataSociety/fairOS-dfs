@@ -28,12 +28,11 @@ import (
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/ethersphere/bee/pkg/crypto"
-	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
-	"github.com/tyler-smith/go-bip39"
-	"golang.org/x/crypto/ssh/terminal"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
+	"github.com/tyler-smith/go-bip39"
+	"golang.org/x/term"
 )
 
 const (
@@ -323,7 +322,7 @@ func (a *Account) GetPodAccountInfo(index int) (*Info, error) {
 
 func (a *Account) getPassword() (password string) {
 	// read the pass phrase
-	bytePassword, err := terminal.ReadPassword(0)
+	bytePassword, err := term.ReadPassword(0)
 	if err != nil {
 		log.Fatalf("error reading password")
 		return

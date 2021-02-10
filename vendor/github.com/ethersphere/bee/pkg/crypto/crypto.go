@@ -24,16 +24,21 @@ const (
 	AddressSize = 20
 )
 
-// NewOverlayAddress constructs a Swarm Address from ECDSA private key.
+// NewOverlayAddress constructs a Swarm Address from ECDSA public key.
 func NewOverlayAddress(p ecdsa.PublicKey, networkID uint64) (swarm.Address, error) {
 	ethAddr, err := NewEthereumAddress(p)
 	if err != nil {
 		return swarm.ZeroAddress, err
 	}
+	return NewOverlayFromEthereumAddress(ethAddr, networkID), nil
+}
+
+// NewOverlayFromEthereumAddress constructs a Swarm Address for an Ethereum address.
+func NewOverlayFromEthereumAddress(ethAddr []byte, networkID uint64) swarm.Address {
 	netIDBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(netIDBytes, networkID)
 	h := sha3.Sum256(append(ethAddr, netIDBytes...))
-	return swarm.NewAddress(h[:]), nil
+	return swarm.NewAddress(h[:])
 }
 
 // GenerateSecp256k1Key generates an ECDSA private key using
@@ -47,6 +52,11 @@ func EncodeSecp256k1PrivateKey(k *ecdsa.PrivateKey) []byte {
 	return (*btcec.PrivateKey)(k).Serialize()
 }
 
+// EncodeSecp256k1PublicKey encodes raw ECDSA public key in a 33-byte compressed format.
+func EncodeSecp256k1PublicKey(k *ecdsa.PublicKey) []byte {
+	return (*btcec.PublicKey)(k).SerializeCompressed()
+}
+
 // DecodeSecp256k1PrivateKey decodes raw ECDSA private key.
 func DecodeSecp256k1PrivateKey(data []byte) (*ecdsa.PrivateKey, error) {
 	if l := len(data); l != btcec.PrivKeyBytesLen {
@@ -54,6 +64,13 @@ func DecodeSecp256k1PrivateKey(data []byte) (*ecdsa.PrivateKey, error) {
 	}
 	privk, _ := btcec.PrivKeyFromBytes(btcec.S256(), data)
 	return (*ecdsa.PrivateKey)(privk), nil
+}
+
+// Secp256k1PrivateKeyFromBytes returns an ECDSA private key based on
+// the byte slice.
+func Secp256k1PrivateKeyFromBytes(data []byte) *ecdsa.PrivateKey {
+	privk, _ := btcec.PrivKeyFromBytes(btcec.S256(), data)
+	return (*ecdsa.PrivateKey)(privk)
 }
 
 // NewEthereumAddress returns a binary representation of ethereum blockchain address.
