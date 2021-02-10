@@ -63,7 +63,7 @@ func TestFeed(t *testing.T) {
 		}
 	})
 
-	t.Run("create-from-user1-read-from-user2", func(t *testing.T) {
+	t.Run("create-from-user1-read-from-user2-with-user1-address", func(t *testing.T) {
 		// create account2
 		acc2 := account.New(logger)
 		_, _, err = acc2.CreateUserAccount("password", "")
@@ -105,6 +105,37 @@ func TestFeed(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+
+	t.Run("create-from-user1-read-from-user2-with-user2-address", func(t *testing.T) {
+		// create account2
+		acc2 := account.New(logger)
+		_, _, err = acc2.CreateUserAccount("password", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		accountInfo2 := acc2.GetUserAccountInfo()
+		user2 := acc2.GetAddress(account.UserAccountIndex)
+
+		// create feed from user1
+		fd1 := New(accountInfo1, client, logger)
+		topic := utils.HashString("topic1")
+		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+		_, err := fd1.CreateFeed(topic, user1, data)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check if you can read the data from user2
+		fd2 := New(accountInfo2, client, logger)
+		rcvdAddr, rcvdData, err := fd2.GetFeedData(topic, user2)
+		if err != nil  && err.Error() != "no feed updates found" {
+			t.Fatal(err)
+		}
+		if rcvdAddr != nil || rcvdData != nil {
+			t.Fatal("was able to read feed of user1 using user2's address")
+		}
+	})
+
 
 	t.Run("update-feed", func(t *testing.T) {
 		fd := New(accountInfo1, client, logger)

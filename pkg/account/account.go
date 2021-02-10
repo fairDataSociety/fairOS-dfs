@@ -314,10 +314,10 @@ func (a *Account) GetEmptyAccountInfo() *Info {
 }
 
 func (a *Account) GetPodAccountInfo(index int) (*Info, error) {
-	if index < len(a.podAccounts) {
-		return a.podAccounts[index], nil
+	if info, found := a.podAccounts[index]; found {
+		return info, nil
 	}
-	return nil, fmt.Errorf("invalid index")
+	return nil, fmt.Errorf("invalid index : %d", index)
 }
 
 func (a *Account) getPassword() (password string) {

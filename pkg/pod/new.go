@@ -54,6 +54,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 	var file *f.File
 	var dir *d.Directory
 	var dirInode *d.DirInode
+	var user utils.Address
 	if addressString != "" {
 		if p.checkIfPodPresent(pods, podName) {
 			return nil, ErrPodAlreadyExists
@@ -84,6 +85,8 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 			return nil, err
 		}
 
+		// set the user as the pod address we got from shared pod
+		user = address
 	} else {
 		// your own pod, so create a new account with private key
 		if p.checkIfPodPresent(pods, podName) {
@@ -125,9 +128,11 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		if err != nil {
 			return nil, err
 		}
+
+		user = p.acc.GetAddress(freeId)
 	}
 
-	user := p.acc.GetAddress(account.UserAccountIndex)
+
 	kvStore := c.NewKeyValueStore(fd, accountInfo, user, p.client, p.logger)
 	docStore := c.NewDocumentStore(fd, accountInfo, user, file, p.client, p.logger)
 

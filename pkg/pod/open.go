@@ -99,7 +99,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		if err != nil {
 			return nil, err
 		}
-		user = p.acc.GetAddress(account.UserAccountIndex)
+		user = p.acc.GetAddress(index)
 	}
 
 	kvStore := c.NewKeyValueStore(fd, accountInfo, user, p.client, p.logger)

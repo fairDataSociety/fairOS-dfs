@@ -17,8 +17,8 @@ limitations under the License.
 package pod
 
 import (
-	"crypto/rand"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"testing"
@@ -142,7 +142,6 @@ func TestPod_LoginPod(t *testing.T) {
 			t.Fatalf("could not delete pod")
 		}
 	})
-
 }
 
 func createRandomFile(t *testing.T, size int) (string, func()) {
