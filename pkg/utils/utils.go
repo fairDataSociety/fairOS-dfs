@@ -185,9 +185,8 @@ func NewChunkWithSpan(data []byte) (swarm.Chunk, error) {
 	return swarm.NewChunk(address, payload), nil
 }
 
-
 func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
-	if len(data) > swarm.ChunkSize  + swarm.SpanSize{
+	if len(data) > swarm.ChunkSize+swarm.SpanSize {
 		return nil, errors.New("max chunk size exceeded")
 	}
 	hasher := bmtpool.Get()
