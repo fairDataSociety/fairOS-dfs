@@ -466,7 +466,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		keys, values, err := addRandomStrings(t, kvStore, 1000, "kv_table_Itr_0")
+		keys, values, err := addRandomStrings(t, kvStore, 100, "kv_table_Itr_0")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -478,7 +478,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// check the order of the keys
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 100; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
 				t.Fatal(err)
@@ -499,7 +499,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		keys, values, err := addRandomStrings(t, kvStore, 1000, "kv_table_Itr_1")
+		keys, values, err := addRandomStrings(t, kvStore, 100, "kv_table_Itr_1")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -511,7 +511,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		startIndex := 0
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 100; i++ {
 			if strings.HasPrefix(keys[i], "B") {
 				startIndex = i
 				break
@@ -546,31 +546,41 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		keys, values, err := addRandomStrings(t, kvStore, 1000, "kv_table_Itr_2")
+		keys, values, err := addRandomStrings(t, kvStore, 100, "kv_table_Itr_2")
 		if err != nil {
 			t.Fatal(err)
 		}
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
 
-		itr, err := kvStore.KVSeek("kv_table_Itr_2", "B", "C", -1)
+		startIndex := 0
+		endIndex := 0
+
+		startPrefix := "B"
+		endPrefix := "C"
+		for i := 0; i < 100; i++ {
+			if startIndex == 0 && strings.HasPrefix(keys[i], startPrefix) {
+				startIndex = i
+			}
+			if strings.HasPrefix(keys[i], endPrefix) {
+				if startIndex == 0 {
+					startIndex = i
+					startPrefix = endPrefix
+					endPrefix = "E"
+				} else {
+					endIndex = i
+					break
+				}
+
+			}
+		}
+
+		itr, err := kvStore.KVSeek("kv_table_Itr_2", startPrefix, endPrefix, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		startIndex := 0
-		endIndex := 0
-		for i := 0; i < 1000; i++ {
-			if startIndex == 0 && strings.HasPrefix(keys[i], "B") {
-				startIndex = i
-			}
-			if strings.HasPrefix(keys[i], "C") {
-				endIndex = i
-				break
-			}
-		}
-
 		// check the order of the keys
-		for i := startIndex; i < endIndex+1; i++ {
+		for i := startIndex; i < endIndex; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
 				t.Fatal(err)
@@ -597,7 +607,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		keys, values, err := addRandomNumbersAsString(t, kvStore, 1000, "kv_table_Itr_3")
+		keys, values, err := addRandomNumbersAsString(t, kvStore, 100, "kv_table_Itr_3")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -609,7 +619,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// check the order of the keys
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 100; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
 				t.Fatal(err)
@@ -630,7 +640,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		keys, values, err := addRandomNumbers(t, kvStore, 1000, "kv_table_Itr_4")
+		keys, values, err := addRandomNumbers(t, kvStore, 100, "kv_table_Itr_4")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -643,7 +653,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// check the order of the keys
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 100; i++ {
 			itr.Next()
 			if itr.IntegerKey() != int64(keys[i]) {
 				t.Fatal(err)
@@ -664,23 +674,25 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		keys, values, err := addRandomNumbers(t, kvStore, 1000, "kv_table_Itr_5")
+		keys, values, err := addRandomNumbers(t, kvStore, 100, "kv_table_Itr_5")
 		if err != nil {
 			t.Fatal(err)
 		}
 		sort.Ints(keys)
 		sort.Ints(values)
 
-		itr, err := kvStore.KVSeek("kv_table_Itr_5", "100", "200", -1)
+		itr, err := kvStore.KVSeek("kv_table_Itr_5", "10", "200", -1)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		startIndex := 0
 		endIndex := 0
-		for i := 0; i < 1000; i++ {
-			if startIndex == 0 && keys[i] >= 100 {
+		startIndexDone := false
+		for i := 0; i < 10; i++ {
+			if !startIndexDone && keys[i] >= 10 {
 				startIndex = i
+				startIndexDone = true
 			}
 			if keys[i] > 200 {
 				endIndex = i
@@ -715,28 +727,28 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		keys, values, err := addRandomNumbers(t, kvStore, 1000, "kv_table_Itr_6")
+		keys, values, err := addRandomNumbers(t, kvStore, 100, "kv_table_Itr_6")
 		if err != nil {
 			t.Fatal(err)
 		}
 		sort.Ints(keys)
 		sort.Ints(values)
 
-		itr, err := kvStore.KVSeek("kv_table_Itr_6", "100", "-1", 100)
-		if err != nil {
-			t.Fatal(err)
-		}
-
 		startIndex := 0
-		for i := 0; i < 1000; i++ {
-			if startIndex == 0 && keys[i] >= 100 {
+		for i := 0; i < 10; i++ {
+			if startIndex == 0 && keys[i] >= 50 {
 				startIndex = i
 				break
 			}
 		}
 
+		itr, err := kvStore.KVSeek("kv_table_Itr_6", "50", "-1", 10)
+		if err != nil && !errors.Is(err, collection.ErrEntryNotFound) {
+			t.Fatal(err)
+		}
+
 		// check the order of the keys
-		for i := startIndex; i < startIndex+100; i++ {
+		for i := startIndex; i < startIndex+10; i++ {
 			itr.Next()
 			if itr.IntegerKey() != int64(keys[i]) {
 				t.Fatal(err)

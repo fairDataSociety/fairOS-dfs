@@ -17,6 +17,7 @@ limitations under the License.
 package collection
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -238,7 +239,51 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 				}
 
 				childKey := strings.TrimPrefix(key, entry.Name)
-				return itr.seekStringKey(childManifest, childKey)
+				err := itr.seekStringKey(childManifest, childKey)
+				if err != nil {
+					if errors.Is(err, ErrEntryNotFound) {
+						return nil
+					}
+				}
+				return err
+			}
+
+			if entry.EType == IntermediateEntry && (len(entry.Name) < len(key)) {
+				reducedKey := key[:len(entry.Name)]
+				for kk := 0; kk < len(entry.Name); kk++ {
+					if reducedKey[kk] == entry.Name[kk] {
+						continue
+					} else if reducedKey[kk] > entry.Name[kk] {
+						break
+					} else if reducedKey[kk] < entry.Name[kk] {
+						manifestState := &ManifestState{
+							currentManifest: manifest,
+							currentIndex:    i + 1,
+						}
+						itr.manifestStack = append(itr.manifestStack, manifestState)
+
+						var childManifest *Manifest
+						if itr.index.mutable {
+							// now load the child Manifest and re-seek
+							cf, err := itr.index.loadManifest(manifest.Name + entry.Name)
+							if err != nil {
+								return err
+							}
+							childManifest = cf
+						} else {
+							childManifest = entry.Manifest
+						}
+
+						childKey := key[len(reducedKey):]
+						err := itr.seekStringKey(childManifest, childKey)
+						if err != nil {
+							if errors.Is(err, ErrEntryNotFound) {
+								return nil
+							}
+						}
+						return err
+					}
+				}
 			}
 		}
 	}
