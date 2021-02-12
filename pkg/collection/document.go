@@ -1257,14 +1257,14 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 	return nil
 }
 
-func (d *Document) DocBatchWrite(docBatch *DocBatch, podFile string) error {
+func (d *Document) DocBatchWrite(docBatch *DocBatch) error {
 	d.logger.Info("writing batch: ", docBatch.db.name)
 	if d.fd.IsReadOnlyFeed() {
 		d.logger.Errorf("writing batch: ", ErrReadOnlyIndex)
 		return ErrReadOnlyIndex
 	}
 	for _, batch := range docBatch.batches {
-		err := batch.Write(podFile)
+		err := batch.Write()
 		if err != nil {
 			d.logger.Errorf("writing batch: ", err.Error())
 			return err
@@ -1318,7 +1318,7 @@ func (d *Document) DocFileIndex(dbName, podFile string) error {
 		}
 	}
 
-	err = d.DocBatchWrite(batch, podFile)
+	err = d.DocBatchWrite(batch)
 	if err != nil {
 		d.logger.Errorf("Indexing file: ", err.Error())
 		return err

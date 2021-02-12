@@ -26,7 +26,13 @@ func (p *Pod) ClosePod(podName string) error {
 		return err
 	}
 
+	podIndex, err := p.getPodIndex(podName)
+	if err != nil {
+		return err
+	}
+
 	p.removePodFromPodMap(podName)
 	podInfo.dir.RemoveFromDirectoryMap(podName)
+	p.acc.DeletePodAccount(podIndex)
 	return nil
 }

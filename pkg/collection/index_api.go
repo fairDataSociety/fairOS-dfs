@@ -17,6 +17,7 @@ limitations under the License.
 package collection
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -357,6 +358,22 @@ func (idx *Index) addEntryToManifestSortedLexicographically(manifest *Manifest, 
 
 	entryAdded := false
 	for _, entry := range manifest.Entries {
+		// if the enty is already there, just return
+		if entry.Name == entryToAdd.Name &&
+			entry.EType == entryToAdd.EType {
+			if len(entry.Ref) == len(entryToAdd.Ref) {
+				equal := true
+				for kk, r := range entry.Ref {
+					if !bytes.Equal(r, entryToAdd.Ref[kk]) {
+						equal = false
+					}
+				}
+				if equal {
+					return
+				}
+			}
+		}
+
 		if entry.Name == "" {
 			entries = append(entries, entry)
 			continue

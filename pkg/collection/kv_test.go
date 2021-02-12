@@ -433,7 +433,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = batch.Write("")
+		err = batch.Write()
 		if err != nil {
 			t.Fatal(err)
 		}

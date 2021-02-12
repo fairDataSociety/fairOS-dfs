@@ -264,7 +264,7 @@ func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
 	if kv.fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
 	}
-	return batch.Write("")
+	return batch.Write()
 }
 
 func (kv *KeyValue) KVSeek(name, start, end string, limit int64) (*Iterator, error) {

@@ -168,9 +168,9 @@ func (a *Account) Authorise(password string) bool {
 	return true
 }
 
-func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod bool) error {
+func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod bool) (*Info, error) {
 	if _, ok := a.podAccounts[accountId]; ok {
-		return nil
+		return nil, fmt.Errorf("account already present for id %v", accountId)
 	}
 
 	password := passPhrase
@@ -185,36 +185,36 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 
 	plainMnemonic, err := a.wallet.decryptMnemonic(password)
 	if err != nil {
-		return fmt.Errorf("invalid password")
+		return nil, fmt.Errorf("invalid password")
 	}
 
 	path := genericPath + strconv.Itoa(accountId)
 	acc, err := a.wallet.CreateAccount(path, plainMnemonic)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	hdw, err := hdwallet.NewFromMnemonic(plainMnemonic)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	accountInfo := &Info{}
 
 	accountInfo.privateKey, err = hdw.PrivateKey(acc)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	accountInfo.publicKey, err = hdw.PublicKey(acc)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	addrBytes, err := crypto.NewEthereumAddress(accountInfo.privateKey.PublicKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	accountInfo.address.SetBytes(addrBytes)
 	a.podAccounts[accountId] = accountInfo
-	return nil
+	return accountInfo, nil
 }
 
 func (a *Account) CreateCollectionAccount(accountId int, passPhrase string, createCollection bool) error {

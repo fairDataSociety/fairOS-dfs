@@ -169,18 +169,13 @@ func (idx *Index) DeleteIndex() error {
 }
 
 func (idx *Index) CountIndex() (uint64, error) {
-	var parentManifest *Manifest
-	if idx.mutable {
-		manifest, err := idx.loadManifest(idx.name)
-		if err != nil {
-			return 0, err
-		}
-		parentManifest = manifest
-	} else {
-		parentManifest = idx.memDB
+	manifest, err := idx.loadManifest(idx.name)
+	if err != nil {
+		return 0, err
 	}
+	idx.memDB = manifest
 
-	if len(parentManifest.Entries) == 0 {
+	if len(idx.memDB.Entries) == 0 {
 		return 0, nil
 	}
 
@@ -190,7 +185,7 @@ func (idx *Index) CountIndex() (uint64, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	idx.loadIndexAndCount(ctx, cancel, workers, parentManifest, errC)
+	idx.loadIndexAndCount(ctx, cancel, workers, idx.memDB, errC)
 	select {
 	case err := <-errC:
 		if err != nil {
@@ -217,7 +212,9 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 			//	}()
 
 			var newManifest *Manifest
-			if idx.mutable {
+			if entry.Manifest == nil {
+
+				//if idx.mutable {
 				man, err := idx.loadManifest(manifest.Name + entry.Name)
 				if err != nil {
 					fmt.Println("Manifest load error: ", manifest.Name+entry.Name)
@@ -229,14 +226,18 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 					return
 				}
 				newManifest = man
+				entry.Manifest = newManifest
 			} else {
-				if entry.Manifest != nil {
-					newManifest = entry.Manifest
-				} else {
-					return
-				}
-
+				newManifest = entry.Manifest
 			}
+			//} else {
+			//	if entry.Manifest != nil {
+			//		newManifest = entry.Manifest
+			//	} else {
+			//		return
+			//	}
+			//
+			//}
 
 			//if some other goroutine fails, terminate this one too
 			select {
@@ -304,14 +305,16 @@ func (idx *Index) updateManifest(manifest *Manifest) error {
 
 func (idx *Index) storeManifest(manifest *Manifest) error {
 	// marshall and store the Manifest as new feed
-	idx.logger.Info("storing Manifest: ", manifest.Name)
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return ErrManifestUnmarshall
 	}
-
+	logStr := fmt.Sprintf("storing Manifest: %s, %d", manifest.Name, len(data))
+	idx.logger.Debug(logStr)
 	ref, err := idx.client.UploadBlob(data, true, true)
-	if err != nil {
+	//TODO: once the tags issue is fixed i bytes..
+	// remove the error string check
+	if err != nil && err.Error() != "error uploading blob" {
 		return ErrManifestUnmarshall
 	}
 

@@ -116,11 +116,7 @@ func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 	}
 
 	// Create pod account  and get the address
-	err = p.acc.CreatePodAccount(index, passPhrase, false)
-	if err != nil {
-		return "", err
-	}
-	accountInfo, err := p.acc.GetPodAccountInfo(index)
+	accountInfo, err := p.acc.CreatePodAccount(index, passPhrase, false)
 	if err != nil {
 		return "", err
 	}

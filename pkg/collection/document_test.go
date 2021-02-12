@@ -625,7 +625,7 @@ func TestDocumentStore(t *testing.T) {
 		list4 = append(list4, "lst41", "lst42")
 		addBatchDocument(t, docStore, docBatch, "4", "John", "Doe", 35, tag4, list4) // this tests the overwriting in batch
 
-		err = docStore.DocBatchWrite(docBatch, "")
+		err = docStore.DocBatchWrite(docBatch)
 		if err != nil {
 			t.Fatal(err)
 		}

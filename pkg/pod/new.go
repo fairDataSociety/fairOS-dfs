@@ -103,11 +103,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		}
 
 		// create a child account for the user and other data structures for the pod
-		err = p.acc.CreatePodAccount(freeId, passPhrase, true)
-		if err != nil {
-			return nil, err
-		}
-		accountInfo, err = p.acc.GetPodAccountInfo(freeId)
+		accountInfo, err = p.acc.CreatePodAccount(freeId, passPhrase, true)
 		if err != nil {
 			return nil, err
 		}
@@ -244,4 +240,19 @@ func (p *Pod) checkIfSharedPodPresent(sharedPods map[string]string, podName stri
 		}
 	}
 	return false
+}
+
+func (p *Pod) getPodIndex(podName string) (int, error) {
+	pods, _, err := p.loadUserPods()
+	if err != nil {
+		return -1, err
+	}
+	podIndex := -1
+	for index, pod := range pods {
+		if strings.Trim(pod, "\n") == podName {
+			delete(pods, index)
+			podIndex = index
+		}
+	}
+	return podIndex, nil
 }

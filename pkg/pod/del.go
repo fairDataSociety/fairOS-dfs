@@ -39,17 +39,6 @@ func (p *Pod) DeletePod(podName string) error {
 		return fmt.Errorf("pod not found")
 	}
 
-	// if last pod is deleted.. something should be there to update the feed
-	if pods == nil {
-		pods = make(map[int]string)
-		pods[0] = ""
-	}
-
-	err = p.storeUserPods(pods, sharedPods)
-	if err != nil {
-		return err
-	}
-
 	//delete the pod inode
 	podInfo, err := p.GetPodInfoFromPodMap(podName)
 	if err != nil {
@@ -60,12 +49,17 @@ func (p *Pod) DeletePod(podName string) error {
 		return err
 	}
 
-	if p.isPodOpened(podName) {
-		return p.ClosePod(podName)
-	} else {
-		podInfo.dir.RemoveFromDirectoryMap(podName)
-		p.removePodFromPodMap(podName)
-	}
+	// remove it from other data structures
+	podInfo.dir.RemoveFromDirectoryMap(podName)
+	p.removePodFromPodMap(podName)
 	p.acc.DeletePodAccount(podIndex)
-	return nil
+
+	// if last pod is deleted.. something should be there to update the feed
+	if pods == nil {
+		pods = make(map[int]string)
+		pods[0] = ""
+	}
+
+	// remove the pod finally
+	return p.storeUserPods(pods, sharedPods)
 }

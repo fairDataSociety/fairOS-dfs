@@ -82,15 +82,11 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 
 		// Create pod account and other data structures
 		// create a child account for the user and other data structures for the pod
-		err = p.acc.CreatePodAccount(index, passPhrase, false)
+		accountInfo, err = p.acc.CreatePodAccount(index, passPhrase, false)
 		if err != nil {
 			return nil, err
 		}
-		accountInfo, err = p.acc.GetPodAccountInfo(index)
-		if err != nil {
-			return nil, err
-		}
-		fd = p.fd
+		fd = feed.New(accountInfo, p.client, p.logger)
 		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
 
