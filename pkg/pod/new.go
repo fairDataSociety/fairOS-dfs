@@ -177,6 +177,7 @@ func (p *Pod) loadUserPods() (map[int]string, map[string]string, error) {
 		line = strings.Trim(line, "\n")
 		lines := strings.Split(line, ",")
 		index, err := strconv.ParseInt(lines[1], 10, 64)
+		p.logger.Debug(line)
 		if err != nil {
 			sharedPods[lines[1]] = lines[0]
 			continue

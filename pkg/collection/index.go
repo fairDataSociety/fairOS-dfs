@@ -169,11 +169,13 @@ func (idx *Index) DeleteIndex() error {
 }
 
 func (idx *Index) CountIndex() (uint64, error) {
-	manifest, err := idx.loadManifest(idx.name)
-	if err != nil {
-		return 0, err
+	if idx.memDB == nil || idx.memDB.Entries == nil {
+		manifest, err := idx.loadManifest(idx.name)
+		if err != nil {
+			return 0, err
+		}
+		idx.memDB = manifest
 	}
-	idx.memDB = manifest
 
 	if len(idx.memDB.Entries) == 0 {
 		return 0, nil
