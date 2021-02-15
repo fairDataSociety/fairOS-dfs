@@ -60,39 +60,39 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 
 	expire := time.Now().Add(cookieExpirationTime)
 	var cookie *http.Cookie
-	if cookieDomain == "localhost" {
-	  cookie = &http.Cookie{
-	    Name:     CookieName,
-	    Value:    encoded,
-	    Path:     "/",
-	    Expires:  expire,
-	    HttpOnly: true,
-	    MaxAge:   0, // to make sure that the browser does not persist it in disk
-	  }
-	} else if cookieDomain == "" {
-	  cookie = &http.Cookie{
-	    Name:     CookieName,
-	    Value:    encoded,
-	    Path:     "/",
-	    Expires:  expire,
-	    HttpOnly: true,
-	    SameSite: http.SameSiteNoneMode,
-	    Secure:   true,
-	    MaxAge:   0, // to make sure that the browser does not persist it in disk
-	  }
-	} else {
-	  cookie = &http.Cookie{
-	    Name:     CookieName,
-	    Value:    encoded,
-	    Path:     "/",
-	    Expires:  expire,
-	    HttpOnly: true,
-	    Domain:   cookieDomain,
-	    SameSite: http.SameSiteNoneMode,
-	    Secure:   true,
-	    MaxAge:   0, // to make sure that the browser does not persist it in disk
-	  }
-	}
+  if cookieDomain == "localhost" {
+    cookie = &http.Cookie{
+      Name:     CookieName,
+      Value:    encoded,
+      Path:     "/",
+      Expires:  expire,
+      HttpOnly: true,
+      MaxAge:   0, // to make sure that the browser does not persist it in disk
+    }
+   } else if cookieDomain == "" {
+    cookie = &http.Cookie{
+      Name:     CookieName,
+      Value:    encoded,
+      Path:     "/",
+      Expires:  expire,
+      HttpOnly: true,
+      SameSite: http.SameSiteNoneMode,
+      Secure:   true,
+      MaxAge:   0, // to make sure that the browser does not persist it in disk
+    }
+   } else {
+   cookie = &http.Cookie{
+      Name:     CookieName,
+      Value:    encoded,
+      Path:     "/",
+      Expires:  expire,
+      HttpOnly: true,
+      Domain:   cookieDomain,
+      SameSite: http.SameSiteNoneMode,
+      Secure:   true,
+      MaxAge:   0, // to make sure that the browser does not persist it in disk
+    }
+  }
 
 	http.SetCookie(response, cookie)
 	return nil
