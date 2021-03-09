@@ -103,6 +103,16 @@ func GetSessionIdFromCookie(request *http.Request) (sessionId string, err error)
 	return sessionId, nil
 }
 
+func GetSessionIdFromRawCookie(cookieStr string) (sessionId string, err error)  {
+	cookieValue := make(map[string]string)
+	err = cookieHandler.Decode(CookieName, cookieStr, &cookieValue)
+	if err != nil {
+		return "", err
+	}
+	sessionId = cookieValue[cookieSessionId]
+	return sessionId, nil
+}
+
 func GetSessionIdAndLoginTimeFromCookie(request *http.Request) (sessionId, loginTime string, err error) {
 	cookie, err := request.Cookie(CookieName)
 	if err != nil {

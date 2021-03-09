@@ -227,7 +227,8 @@ func (d *DfsAPI) KVBatchWrite(sessionId string, batch *collection.Batch) error {
 		return ErrPodNotOpen
 	}
 
-	return batch.Write()
+	_, err := batch.Write("")
+	return err
 }
 
 func (d *DfsAPI) KVSeek(sessionId, name, start, end string, limit int64) (*collection.Iterator, error) {

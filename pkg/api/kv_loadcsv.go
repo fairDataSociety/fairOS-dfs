@@ -121,7 +121,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		successCount++
 	}
-	err = batch.Write()
+	_, err = batch.Write("")
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)
 		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())

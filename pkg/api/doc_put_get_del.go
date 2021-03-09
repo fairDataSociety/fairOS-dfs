@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"github.com/gorilla/mux"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -104,6 +105,49 @@ func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	jsonhttp.OK(w, &getResponse)
+}
+
+func (h *Handler) DocNewGetHandler(w http.ResponseWriter, r *http.Request) {
+	name := mux.Vars(r)["name"]
+	if name == "" {
+		h.logger.Errorf("doc get: \"name\" argument missing")
+		jsonhttp.BadRequest(w, "doc get: \"name\" argument missing")
+		return
+	}
+
+	id := mux.Vars(r)["id"]
+	if id == "" {
+		h.logger.Errorf("doc get: \"id\" argument missing")
+		jsonhttp.BadRequest(w, "doc get: \"id\" argument missing")
+		return
+	}
+
+	// get values from cookie
+	cookieStr := r.FormValue("fairOS-dfs")
+	sessionId, err := cookie.GetSessionIdFromRawCookie(cookieStr)
+	if err != nil {
+		h.logger.Errorf("doc get: invalid cookie: %v", err)
+		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		return
+	}
+	if sessionId == "" {
+		h.logger.Errorf("doc get: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "doc get: \"cookie-id\" parameter missing in cookie")
+		return
+	}
+
+	data, err := h.dfsAPI.DocGet(sessionId, name, id)
+	if err != nil {
+		h.logger.Errorf("doc get: %v", err)
+		jsonhttp.InternalServerError(w, "doc get: "+err.Error())
+		return
+	}
+
+	//var getResponse DocGetResponse
+	//getResponse.Doc = data
+
+	//w.Header().Set("Content-Type", "application/json")
+	jsonhttp.OK(w, data)
 }
 
 func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {

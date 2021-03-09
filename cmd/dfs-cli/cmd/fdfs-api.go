@@ -106,6 +106,19 @@ func (s *FdfsClient) CheckConnection() bool {
 
 func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]string) ([]byte, error) {
 	// prepare the  request
+
+	if strings.HasPrefix(urlPath, "/v0/doc/entry/newget") {
+		if s.cookie != nil {
+			urlPath = urlPath + "?fairOS-dfs=" + s.cookie.Value
+		}
+	}
+
+	if strings.HasPrefix(urlPath, "/v0/kv/entry/newget") {
+		if s.cookie != nil {
+			urlPath = urlPath + "?fairOS-dfs=" + s.cookie.Value
+		}
+	}
+
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
 	var err error
@@ -139,6 +152,7 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	}
 
 	if s.cookie != nil {
+		fmt.Println(s.cookie.Name, " : ", s.cookie.Value)
 		req.AddCookie(s.cookie)
 	}
 
@@ -171,6 +185,7 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 
 	if len(response.Cookies()) > 0 {
 		s.cookie = response.Cookies()[0]
+		fmt.Println(s.cookie.Name, " : ", s.cookie.Value)
 	}
 
 	data, err := ioutil.ReadAll(response.Body)
@@ -185,7 +200,8 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	var resp jsonhttp.StatusResponse
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
-		return nil, errors.New("error unmarshalling response")
+		errStr := fmt.Sprintf("error unmarshalling response: %d", len(data))
+		return nil, errors.New(errStr)
 	}
 	if resp.Code == 0 {
 		return data, nil

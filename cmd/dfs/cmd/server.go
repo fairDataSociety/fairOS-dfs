@@ -226,8 +226,10 @@ func startHttpService(logger logging.Logger) {
 	fileRouter.HandleFunc("/delete", handler.FileDeleteHandler).Methods("DELETE")
 	fileRouter.HandleFunc("/stat", handler.FileStatHandler).Methods("GET")
 
+	baseRouter.HandleFunc("/kv/entry/newget/{name}/{key}", handler.KVNewGetHandler).Methods("GET").Queries("fairOS-dfs", "{fairOS-dfs}")
 	kvRouter := baseRouter.PathPrefix("/kv/").Subrouter()
 	kvRouter.Use(handler.LoginMiddleware)
+
 	kvRouter.Use(handler.LogMiddleware)
 	kvRouter.HandleFunc("/new", handler.KVCreateHandler).Methods("POST")
 	kvRouter.HandleFunc("/ls", handler.KVListHandler).Methods("GET")
@@ -241,6 +243,8 @@ func startHttpService(logger logging.Logger) {
 	kvRouter.HandleFunc("/seek", handler.KVSeekHandler).Methods("POST")
 	kvRouter.HandleFunc("/seek/next", handler.KVGetNextHandler).Methods("GET")
 
+
+	baseRouter.HandleFunc("/doc/entry/newget/{name}/{id}", handler.DocNewGetHandler).Methods("GET").Queries("fairOS-dfs", "{fairOS-dfs}")
 	docRouter := baseRouter.PathPrefix("/doc/").Subrouter()
 	docRouter.Use(handler.LoginMiddleware)
 	docRouter.Use(handler.LogMiddleware)

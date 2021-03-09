@@ -194,7 +194,11 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 			}
 			return table.index.PutNumber(fkey, value, NumberIndex, false)
 		case BytesIndex:
-			return ErrKVIndexTypeNotSupported
+			ref, err := kv.client.UploadBlob(value, true, true)
+			if err != nil {
+				return err
+			}
+			return table.index.Put(key, ref, StringIndex, false)
 		default:
 			return ErrKVInvalidIndexType
 		}
@@ -209,6 +213,13 @@ func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 		value, err := table.index.Get(key)
 		if err != nil {
 			return nil, nil, err
+		}
+		if table.indexType == BytesIndex {
+			data, _, err := kv.client.DownloadBlob(value[0])
+			if err != nil {
+				return nil, nil, err
+			}
+			value[0] = data
 		}
 		return table.columns, value[0], nil
 	}
@@ -264,7 +275,8 @@ func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
 	if kv.fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
 	}
-	return batch.Write()
+	_, err := batch.Write("")
+	return err
 }
 
 func (kv *KeyValue) KVSeek(name, start, end string, limit int64) (*Iterator, error) {

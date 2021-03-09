@@ -398,28 +398,21 @@ func (idx *Index) addEntryToManifestSortedLexicographically(manifest *Manifest, 
 }
 
 func (idx *Index) seekManifestAndEntry(key string) (*Manifest, *Manifest, int, error) {
-	memory := !idx.mutable
 
-	var firstManifest *Manifest
-	if !memory {
-		// load the first Manifest of the index
-		fm, err := idx.loadManifest(idx.name)
-		if err != nil && !errors.Is(err, ErrNoManifestFound) {
-			return nil, nil, 0, err
-		}
-		firstManifest = fm
-	} else {
-		firstManifest = idx.memDB
+	// load the first Manifest of the index
+	fm, err := idx.loadManifest(idx.name)
+	if err != nil && !errors.Is(err, ErrNoManifestFound) {
+		return nil, nil, 0, err
 	}
 
 	// if there are any elements in the index, then search for the entry
-	if len(firstManifest.Entries) > 0 {
-		return idx.findManifest(nil, firstManifest, key, memory)
+	if len(fm.Entries) > 0 {
+		return idx.findManifest(nil, fm, key)
 	}
 	return nil, nil, 0, ErrEntryNotFound
 }
 
-func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, key string, memory bool) (*Manifest, *Manifest, int, error) {
+func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, key string) (*Manifest, *Manifest, int, error) {
 	if parentManifest != nil {
 		for i, entry := range parentManifest.Entries {
 
@@ -438,18 +431,20 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 			}
 
 			if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
+				var childManifest *Manifest
 				childKey := strings.TrimPrefix(key, entry.Name)
-				if !memory {
+				if entry.Manifest == nil {
 					childManifestPath := parentManifest.Name + entry.Name
-					childManifest, err := idx.loadManifest(childManifestPath)
+					var err error
+					childManifest, err = idx.loadManifest(childManifestPath)
 					if err != nil {
 						return nil, nil, 0, err
 					}
-					return idx.findManifest(parentManifest, childManifest, childKey, memory)
 				} else {
-					childManifest := entry.Manifest
-					return idx.findManifest(parentManifest, childManifest, childKey, memory)
+					childManifest = entry.Manifest
+
 				}
+				return idx.findManifest(parentManifest, childManifest, childKey)
 
 			}
 		}

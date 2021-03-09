@@ -169,8 +169,8 @@ func (a *Account) Authorise(password string) bool {
 }
 
 func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod bool) (*Info, error) {
-	if _, ok := a.podAccounts[accountId]; ok {
-		return nil, fmt.Errorf("account already present for id %v", accountId)
+	if acc, ok := a.podAccounts[accountId]; ok {
+		return acc, nil
 	}
 
 	password := passPhrase

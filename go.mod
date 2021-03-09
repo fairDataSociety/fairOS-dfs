@@ -16,6 +16,7 @@ require (
 	github.com/klauspost/compress v1.10.1 // indirect
 	github.com/klauspost/pgzip v1.2.5
 	github.com/libp2p/go-libp2p-autonat-svc v0.1.0 // indirect
+	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/miguelmota/go-ethereum-hdwallet v0.0.0-20200123000308-a60dcd172b4c
 	github.com/mitchellh/go-homedir v1.1.0
@@ -29,5 +30,6 @@ require (
 	github.com/tinygrasshopper/bettercsv v0.0.1
 	github.com/tyler-smith/go-bip39 v1.0.2
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
 	resenje.org/jsonhttp v0.2.0
 )

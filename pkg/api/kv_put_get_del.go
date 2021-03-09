@@ -17,9 +17,10 @@ limitations under the License.
 package api
 
 import (
-	"net/http"
-
+	"fmt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"github.com/gorilla/mux"
+	"net/http"
 	"resenje.org/jsonhttp"
 )
 
@@ -81,7 +82,7 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := r.FormValue("key")
-	if name == "" {
+	if key == "" {
 		h.logger.Errorf("kv get: \"key\" argument missing")
 		jsonhttp.BadRequest(w, "kv get: \"key\" argument missing")
 		return
@@ -117,6 +118,54 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	jsonhttp.OK(w, &resp)
+}
+
+func (h *Handler) KVNewGetHandler(w http.ResponseWriter, r *http.Request) {
+	name := mux.Vars(r)["name"]
+	if name == "" {
+		h.logger.Errorf("kv get: \"name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"name\" argument missing")
+		return
+	}
+
+	key := mux.Vars(r)["key"]
+	if key == "" {
+		h.logger.Errorf("kv get: \"key\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"key\" argument missing")
+		return
+	}
+
+	// get values from cookie
+	cookieStr := r.FormValue("fairOS-dfs")
+	sessionId, err := cookie.GetSessionIdFromRawCookie(cookieStr)
+	if err != nil {
+		h.logger.Errorf("kv get: invalid cookie: %v", err)
+		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		return
+	}
+	if sessionId == "" {
+		h.logger.Errorf("kv get: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "kv get: \"cookie-id\" parameter missing in cookie")
+		return
+	}
+
+	_, data, err := h.dfsAPI.KVGet(sessionId, name, key)
+	if err != nil {
+		h.logger.Errorf("kv get: %v", err)
+		jsonhttp.InternalServerError(w, "kv get: "+err.Error())
+		return
+	}
+
+	fmt.Println(key, len(data))
+
+	w.Header().Set("Content-Type", "application/x-protobuf")
+	w.Header().Set("Content-Encoding", "gzip")
+	_, err = w.Write(data)
+	if err != nil {
+		h.logger.Errorf("download: %v", err)
+		w.Header().Set("Content-Type", " application/json")
+		jsonhttp.InternalServerError(w, "stat dir: "+err.Error())
+	}
 }
 
 func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
@@ -155,3 +204,5 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonhttp.OK(w, "key deleted")
 }
+
+

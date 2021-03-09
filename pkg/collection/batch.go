@@ -89,7 +89,7 @@ func (b *Batch) Get(key string) ([][]byte, error) {
 			stringKey = fmt.Sprintf("%020d", i)
 		}
 
-		_, manifest, i, err := b.idx.findManifest(nil, b.memDb, stringKey, true)
+		_, manifest, i, err := b.idx.findManifest(nil, b.memDb, stringKey)
 		if err != nil {
 			return nil, err
 		}
@@ -124,8 +124,7 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 			}
 			stringKey = fmt.Sprintf("%020d", i)
 		}
-		memory := !b.idx.mutable
-		parentManifest, manifest, i, err := b.idx.findManifest(nil, b.memDb, stringKey, memory)
+		parentManifest, manifest, i, err := b.idx.findManifest(nil, b.memDb, stringKey)
 		if err != nil {
 			return nil, err
 		}
@@ -151,25 +150,28 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 	return nil, ErrEntryNotFound
 }
 
-func (b *Batch) Write() error {
+func (b *Batch) Write(podFile string) (*Manifest, error) {
 	if b.idx.isReadOnlyFeed() {
-		return ErrReadOnlyIndex
+		return nil, ErrReadOnlyIndex
 	}
 	if b.memDb == nil {
-		return ErrEntryNotFound
+		return nil, ErrEntryNotFound
 	}
 
 	if b.memDb.dirtyFlag {
 		diskManifest, err := b.idx.loadManifest(b.memDb.Name)
 		if err != nil && errors.Is(err, ErrNoManifestFound) {
-			return err
+			return nil, err
 		}
+		diskManifest.PodFile = podFile
+		b.memDb.PodFile = podFile
+		b.idx.podFile = podFile
 		return b.mergeAndWriteManifest(diskManifest, b.memDb)
 	}
-	return nil
+	return b.memDb, nil
 }
 
-func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error {
+func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Manifest, error) {
 	// merge the mem manifest with the disk version
 	if memManifest.dirtyFlag {
 		for _, dirtyEntry := range memManifest.Entries {
@@ -178,14 +180,13 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error
 			if dirtyEntry.EType == IntermediateEntry && dirtyEntry.Manifest != nil {
 				err := b.storeMemoryManifest(dirtyEntry.Manifest, 0)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				dirtyEntry.Manifest = nil
 				fmt.Println(atomic.LoadUint64(&b.storageCount))
 			}
 		}
 		diskManifest.Mutable = memManifest.Mutable
-		diskManifest.PodFile = memManifest.PodFile
 
 		for _, dirtyEntry := range diskManifest.Entries {
 			dirtyEntry.Manifest = nil
@@ -195,13 +196,18 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) error
 			// save th disk manifest
 			err := b.idx.updateManifest(diskManifest)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 
-		return b.emptyManifestStack()
+		err :=  b.emptyManifestStack()
+		if err != nil {
+			return nil, err
+		}
+
+		return diskManifest, nil
 	}
-	return nil
+	return diskManifest, nil
 }
 
 func (b *Batch) emptyManifestStack() error {
@@ -244,6 +250,7 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 			//	defer func() {
 			//		wg.Done()
 			//	}()
+			entry.Manifest.PodFile = manifest.PodFile
 			err := b.storeMemoryManifest(entry.Manifest, depth+1)
 			if err != nil {
 				return err

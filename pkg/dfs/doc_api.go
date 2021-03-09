@@ -255,7 +255,7 @@ func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) 
 		return err
 	}
 
-	return podInfo.GetDocStore().DocBatchWrite(docBatch)
+	return podInfo.GetDocStore().DocBatchWrite(docBatch, "")
 }
 
 func (d *DfsAPI) DocIndexJson(sessionId, name, podFile string) error {

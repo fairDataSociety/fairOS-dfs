@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/mbtiles"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -102,6 +103,7 @@ const (
 	apiKVCount         = APIVersion + "/kv/count"
 	apiKVEntryPut      = APIVersion + "/kv/entry/put"
 	apiKVEntryGet      = APIVersion + "/kv/entry/get"
+	apiKVEntryNewGet      = APIVersion + "/kv/entry/newget"
 	apiKVEntryDelete   = APIVersion + "/kv/entry/del"
 	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
 	apiKVSeek          = APIVersion + "/kv/seek"
@@ -113,7 +115,7 @@ const (
 	apiDocDelete       = APIVersion + "/doc/delete"
 	apiDocFind         = APIVersion + "/doc/find"
 	apiDocEntryPut     = APIVersion + "/doc/entry/put"
-	apiDocEntryGet     = APIVersion + "/doc/entry/get"
+	apiDocEntryGet     = APIVersion + "/doc/entry/newget"
 	apiDocEntryDel     = APIVersion + "/doc/entry/del"
 	apiDocLoadJson     = APIVersion + "/doc/loadjson"
 	apiDocIndexJson    = APIVersion + "/doc/indexjson"
@@ -1038,6 +1040,25 @@ func executor(in string) {
 				fmt.Println(name + " : " + values[i])
 			}
 			currentPrompt = getCurrentPrompt()
+
+		case "newget":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["key"] = key
+			fullUrl := apiKVEntryNewGet + "/" +tableName+ "/" + key
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, fullUrl, args)
+			if err != nil {
+				fmt.Println("kv get: ", err)
+				return
+			}
+			fmt.Println(len(data))
+			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 4 {
 				fmt.Println("invalid command. Missing \"name\" argument ")
@@ -1091,6 +1112,69 @@ func executor(in string) {
 			}
 			message := strings.ReplaceAll(string(data), "\n", "")
 			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "loadmbtiles":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			mbtilesFile := blocks[3]
+			mbtFileName := filepath.Base(mbtilesFile)
+			mbtExtension := filepath.Ext(mbtFileName)
+
+			if mbtExtension != ".mbtiles" {
+				fmt.Println("loadmbtiles: Invalid .mbtiles file")
+				return
+			}
+
+			db, err := mbtiles.NewDB(mbtilesFile)
+			if err != nil {
+				fmt.Println("loadmbtiles: error reading mbtiles file : ", mbtilesFile, err.Error())
+				return
+			}
+
+			rows, err := db.GetRowForExport()
+			if err != nil {
+				fmt.Println("loadmbtile: error getting rows from db : ",  err.Error())
+				return
+			}
+
+
+			count := 0
+			for true {
+				zoom, x, y, data, err := db.GetNext(rows)
+				if err != nil {
+					rows.Close()
+					break
+				}
+
+				if zoom == -1 && x == -1 && y == -1 {
+					rows.Close()
+					break
+				}
+
+				key := fmt.Sprintf("%d_%d_%d.pbf", zoom,x,y+1)
+				value := data
+
+				if data == nil {
+					rows.Close()
+					break
+				}
+
+				args := make(map[string]string)
+				args["name"] = tableName
+				args["key"] = key
+				args["value"] = string(value)
+				_, err = fdfsAPI.callFdfsApi(http.MethodPost, apiKVEntryPut, args)
+				if err != nil {
+					fmt.Println("loadmbtiles: put error ", err)
+					rows.Close()
+					break
+				}
+				count++
+			}
+			fmt.Println("added " + string(count) + " rows")
 			currentPrompt = getCurrentPrompt()
 		case "seek":
 			if len(blocks) < 3 {
@@ -1193,7 +1277,11 @@ func executor(in string) {
 			args := make(map[string]string)
 			args["name"] = tableName
 			if len(blocks) >= 4 {
-				args["si"] = blocks[3]
+				if blocks[3] == "none" {
+					args["si"] = ""
+				} else {
+					args["si"] = blocks[3]
+				}
 			}
 			if len(blocks) == 5 {
 				args["mutable"] = blocks[4]
@@ -1369,10 +1457,11 @@ func executor(in string) {
 			}
 			tableName := blocks[2]
 			idValue := blocks[3]
-			args := make(map[string]string)
-			args["name"] = tableName
-			args["id"] = idValue
-			data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiDocEntryGet, args)
+			//args := make(map[string]string)
+			//args["name"] = tableName
+			//args["id"] = idValue
+			queryStr := apiDocEntryGet + "/" + tableName + "/" + idValue
+			data, err := fdfsAPI.callFdfsApi(http.MethodGet, queryStr, nil)
 			if err != nil {
 				fmt.Println("doc get: ", err)
 				return
