@@ -201,30 +201,14 @@ func (idx *Index) CountIndex() (uint64, error) {
 
 func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFunc, workers chan bool, manifest *Manifest, errC chan error) {
 	var count uint64
-	//var wg sync.WaitGroup
-
 	for _, entry := range manifest.Entries {
 		if entry.EType == IntermediateEntry {
-			//wg.Add(1)
-			//workers <- true
-			//go func(ent *Entry) {
-			//	defer func() {
-			//		//<- workers
-			//		wg.Done()
-			//	}()
-
 			var newManifest *Manifest
 			if entry.Manifest == nil {
 
-				//if idx.mutable {
 				man, err := idx.loadManifest(manifest.Name + entry.Name)
 				if err != nil {
 					fmt.Println("Manifest load error: ", manifest.Name+entry.Name)
-					//select {
-					//case errC <- err:
-					//default: // Default is must to avoid blocking
-					//}
-					//cancel()
 					return
 				}
 				newManifest = man
@@ -232,28 +216,11 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 			} else {
 				newManifest = entry.Manifest
 			}
-			//} else {
-			//	if entry.Manifest != nil {
-			//		newManifest = entry.Manifest
-			//	} else {
-			//		return
-			//	}
-			//
-			//}
-
-			//if some other goroutine fails, terminate this one too
-			select {
-			case <-ctx.Done():
-				return
-			default: // Default is must to avoid blocking
-			}
 			idx.loadIndexAndCount(ctx, cancel, workers, newManifest, errC)
-			//}(entry)
 		} else {
 			count++
 		}
 	}
-	//wg.Wait()
 	atomic.AddUint64(&idx.count, count)
 }
 

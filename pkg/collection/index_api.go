@@ -51,15 +51,6 @@ func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool)
 		return err
 	}
 
-	//stringKey := key
-	//if idx.indexType == NumberIndex {
-	//	i, err := strconv.ParseFloat(stringKey, 64)
-	//	if err != nil {
-	//		return ErrKVKeyNotANumber
-	//	}
-	//	stringKey = fmt.Sprintf("%020.6f", i)
-	//}
-
 	ctx := context.Background()
 	return idx.addOrUpdateStringEntry(ctx, manifest, key, idxType, refValue, false, apnd)
 }
@@ -70,15 +61,6 @@ func (idx *Index) GetNumber(key float64) ([][]byte, error) {
 }
 
 func (idx *Index) Get(key string) ([][]byte, error) {
-	//stringKey := key
-	//if idx.indexType == NumberIndex {
-	//	i, err := strconv.ParseInt(stringKey, 10, 64)
-	//	if err != nil {
-	//		return nil, ErrKVKeyNotANumber
-	//	}
-	//	stringKey = fmt.Sprintf("%020d", i)
-	//}
-
 	_, manifest, i, err := idx.seekManifestAndEntry(key)
 	if err != nil {
 		return nil, err
@@ -100,15 +82,6 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 	if !idx.mutable {
 		return nil, ErrCannotModifyImmutableIndex
 	}
-
-	//stringKey := key
-	//if idx.indexType == NumberIndex {
-	//	i, err := strconv.ParseInt(stringKey, 10, 64)
-	//	if err != nil {
-	//		return nil, ErrKVKeyNotANumber
-	//	}
-	//	stringKey = fmt.Sprintf("%020d", i)
-	//}
 
 	_, manifest, i, err := idx.seekManifestAndEntry(key)
 	if err != nil {

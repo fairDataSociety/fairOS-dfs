@@ -1170,9 +1170,6 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 		}
 	} else {
 		// store the seek index of the document instead of its reference
-		//b := make([]byte, 8)
-		//binary.LittleEndian.PutUint64(b, uint64(index))
-
 		b := make([]byte, binary.MaxVarintLen64)
 		n := binary.PutUvarint(b, uint64(index))
 		ref = b[:n]
