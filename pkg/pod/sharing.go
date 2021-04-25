@@ -72,7 +72,7 @@ func (p *Pod) ReceiveFileAndStore(podName, podDir, fileName, metaHexRef string) 
 
 	// check if the file exists already
 	fpath := path + utils.PathSeperator + fileName
-	if podInfo.file.IsFileAlreadyPResent(fpath) {
+	if podInfo.file.IsFileAlreadyPresent(fpath) {
 		return fmt.Errorf("file already present in the destination dir")
 	}
 

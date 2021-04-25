@@ -18,9 +18,22 @@ package user
 
 import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
+
+type Info struct {
+	name      string
+	podName   string
+	sessionId string
+	feedApi   *feed.API
+	account   *account.Account
+	file      *f.File
+	dir       *d.Directory
+	pod       *pod.Pod
+}
 
 func (i *Info) GetUserName() string {
 	return i.name
@@ -31,7 +44,7 @@ func (i *Info) GetSessionId() string {
 }
 
 func (i *Info) GetPod() *pod.Pod {
-	return i.pods
+	return i.pod
 }
 
 func (i *Info) GetAccount() *account.Account {

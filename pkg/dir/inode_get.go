@@ -24,14 +24,14 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) GetDirNode(name string, fd *feed.API, accountInfo *account.Info) ([]byte, *DirInode, error) {
+func (d *Directory) GetDirNode(name string, fd *feed.API, accountInfo *account.Info) ([]byte, *Inode, error) {
 	topic := utils.HashString(name)
 	addr, data, err := fd.GetFeedData(topic, accountInfo.GetAddress())
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var dirInode DirInode
+	var dirInode Inode
 	err = json.Unmarshal(data, &dirInode)
 	if err != nil {
 		return nil, nil, err

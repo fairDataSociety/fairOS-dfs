@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 FairOS Authors
+Copyright © 2021 FairOS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package datapod
+package dir
 
-var (
-	DirMetaVersion uint8 = 1
-)
+type Inode struct {
+	Meta   *MetaData
+	fileOrDirNames []string
+}
 
-type DirectoryMetaData struct {
-	Version          uint8
-	Path             string
-	Name             string
-	CreationTime     int64
-	AccessTime       int64
-	ModificationTime int64
+func (in *Inode) GetMeta() *MetaData {
+	return in.Meta
+}
+
+func (in *Inode) GetFileOrDirNames() []string {
+	return in.fileOrDirNames
 }

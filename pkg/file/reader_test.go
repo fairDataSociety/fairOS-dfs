@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"io"
 	"math/rand"
 	"testing"
@@ -245,8 +246,8 @@ func TestFileReader(t *testing.T) {
 	})
 }
 
-func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.MockBeeClient) file.FileINode {
-	var fileBlocks []*file.FileBlock
+func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.MockBeeClient) file.INode {
+	var fileBlocks []*file.BlockInfo
 	noOfBlocks := fileSize / uint64(blockSize)
 	if fileSize%uint64(blockSize) != 0 {
 		noOfBlocks += 1
@@ -272,23 +273,23 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 			t.Fatal(err)
 		}
 		blockName := fmt.Sprintf("block-%05d", i)
-		fileBlock := &file.FileBlock{
+		fileBlock := &file.BlockInfo{
 			Name:           blockName,
 			Size:           bytesToWrite,
 			CompressedSize: uint32(len(buf)),
-			Address:        addr,
+			Reference:      utils.NewReference(addr),
 		}
 		fileBlocks = append(fileBlocks, fileBlock)
 		bytesRemaining -= uint64(bytesToWrite)
 	}
 
-	return file.FileINode{
-		FileBlocks: fileBlocks,
+	return file.INode{
+		Blocks: fileBlocks,
 	}
 }
 
-func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.MockBeeClient, linesPerBlock uint32) (file.FileINode, int, []byte, int, []byte) {
-	var fileBlocks []*file.FileBlock
+func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.MockBeeClient, linesPerBlock uint32) (file.INode, int, []byte, int, []byte) {
+	var fileBlocks []*file.BlockInfo
 	noOfBlocks := fileSize / uint64(blockSize)
 	if fileSize%uint64(blockSize) != 0 {
 		noOfBlocks += 1
@@ -381,27 +382,27 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			t.Fatal(err)
 		}
 		blockName := fmt.Sprintf("block-%05d", i)
-		fileBlock := &file.FileBlock{
+		fileBlock := &file.BlockInfo{
 			Name:           blockName,
 			Size:           bytesToWrite,
 			CompressedSize: uint32(len(buf)),
-			Address:        addr,
+			Reference:      utils.NewReference(addr),
 		}
 		fileBlocks = append(fileBlocks, fileBlock)
 		bytesRemaining -= uint64(bytesToWrite)
 		bytesWritten += int(bytesToWrite)
 	}
 
-	return file.FileINode{
-		FileBlocks: fileBlocks,
+	return file.INode{
+		Blocks: fileBlocks,
 	}, randomLineStartPoint, randomLine, borderCrossingLineStartingPoint, borderCrossingLine
 }
 
-func checkFileContents(t *testing.T, fileInode file.FileINode, outputBytes []byte, mockClient *mock.MockBeeClient, compression string) bool {
+func checkFileContents(t *testing.T, fileInode file.INode, outputBytes []byte, mockClient *mock.MockBeeClient, compression string) bool {
 	var inpBuf []byte
 	fileSize := uint32(0)
-	for _, block := range fileInode.FileBlocks {
-		buf, _, err := mockClient.DownloadBlob(block.Address)
+	for _, block := range fileInode.Blocks {
+		buf, _, err := mockClient.DownloadBlob(block.Reference.Bytes())
 		if err != nil {
 			t.Fatal(err)
 		}

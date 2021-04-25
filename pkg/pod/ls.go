@@ -53,10 +53,8 @@ func (p *Pod) ListEntiesInDir(podName, dirName string) ([]dir.DirOrFileEntry, er
 	}
 
 	directory := info.GetDirectory()
-	printNames := false
 	path := dirName // dirname is supplied in API, in REPL it is picked up from the current dir
 	if path == "" {
-		printNames = true
 		path = info.GetCurrentDirPathAndName()
 		if info.IsCurrentDirRoot() {
 			path = info.GetCurrentPodPathAndName()
@@ -66,5 +64,5 @@ func (p *Pod) ListEntiesInDir(podName, dirName string) ([]dir.DirOrFileEntry, er
 		path = strings.TrimSuffix(path, utils.PathSeperator)
 	}
 
-	return directory.ListDir(podName, path, printNames), nil
+	return directory.ListDir(podName, path)
 }

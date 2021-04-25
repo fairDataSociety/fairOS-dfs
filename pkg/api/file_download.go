@@ -50,7 +50,7 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// download file from bee
-	reader, reference, size, err := h.dfsAPI.DownloadFile(podFile, sessionId)
+	reader, size, err := h.dfsAPI.DownloadFile(podFile, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("download: %v", err)
@@ -62,7 +62,6 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("ETag", fmt.Sprintf("%q", reference))
 	w.Header().Set("Content-Length", size)
 
 	_, err = io.Copy(w, reader)

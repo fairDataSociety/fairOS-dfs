@@ -14,31 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package user
+package dir
 
-import (
-	"os"
-	"path/filepath"
+var (
+	MetaVersion uint8 = 1
 )
 
-func (u *Users) ListAllUsers(dataDir string) ([]string, error) {
-	var users []string
-	destDir := filepath.Join(dataDir, userDirectoryName)
-	err := filepath.Walk(destDir,
-		func(path string, info os.FileInfo, err error) error {
-			if info == nil {
-				return nil
-			}
-			if info.Name() == userDirectoryName {
-				return nil
-			}
-			userName := info.Name()
-			userName = "<User> " + userName
-			users = append(users, userName)
-			return nil
-		})
-	if err != nil {
-		return nil, err
-	}
-	return users, nil
+type MetaData struct {
+	Version          uint8
+	Path             string
+	Name             string
+	CreationTime     int64
+	AccessTime       int64
+	ModificationTime int64
 }

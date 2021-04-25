@@ -247,23 +247,23 @@ func (d *DfsAPI) UploadFile(fileName, sessionId string, fileSize int64, fd io.Re
 	return ref, nil
 }
 
-func (d *DfsAPI) DownloadFile(podFile, sessionId string) (io.ReadCloser, string, string, error) {
+func (d *DfsAPI) DownloadFile(podFile, sessionId string) (io.ReadCloser, string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
-		return nil, "", "", ErrUserNotLoggedIn
+		return nil, "", ErrUserNotLoggedIn
 	}
 
 	// check if pod open
 	if ui.GetPodName() == "" {
-		return nil, "", "", ErrPodNotOpen
+		return nil, "", ErrPodNotOpen
 	}
 
-	reader, ref, size, err := ui.GetPod().DownloadFile(ui.GetPodName(), podFile)
+	reader, size, err := ui.GetPod().DownloadFile(ui.GetPodName(), podFile)
 	if err != nil {
-		return nil, "", "", err
+		return nil, "", err
 	}
-	return reader, ref, size, nil
+	return reader, size, nil
 }
 
 func (d *DfsAPI) ShareFile(podFile, destinationUser, sessionId string) (string, error) {

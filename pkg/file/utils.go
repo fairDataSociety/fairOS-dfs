@@ -16,29 +16,12 @@ limitations under the License.
 
 package file
 
-import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"strings"
-
-	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-)
-
-func (f *File) LoadFileMeta(podName string, addr []byte) (int, error) {
-	data, respCode, err := f.getClient().DownloadBlob(addr)
+func (f *File) LoadFileMeta(fileNameWithPath string) error {
+	_, meta, err := f.getMetaFromFileName(fileNameWithPath)
 	if err != nil {
-		return respCode, fmt.Errorf("not a file")
+		return err
 	}
-	var meta *m.FileMetaData
-	err = json.Unmarshal(data, &meta)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-	meta.MetaReference = addr
-	f.AddToFileMap(meta.Path+utils.PathSeperator+meta.Name, meta)
-	fileName := strings.TrimPrefix(meta.Path+utils.PathSeperator+meta.Name, podName)
-	f.logger.Infof(fileName)
-	return http.StatusOK, nil
+	f.AddToFileMap(fileNameWithPath, meta)
+	f.logger.Infof(fileNameWithPath)
+	return nil
 }

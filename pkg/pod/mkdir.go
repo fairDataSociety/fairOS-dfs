@@ -49,8 +49,8 @@ func (p *Pod) MakeDir(podName, dirName string) error {
 
 	var firstTopic []byte
 	var topic []byte
-	var dirInode *d.DirInode
-	var previousDirINode *d.DirInode
+	var dirInode *d.Inode
+	var previousDirINode *d.Inode
 	addToPod := false
 
 	// ex: mkdir make/all/this/dir
@@ -133,7 +133,7 @@ func (p *Pod) UpdateTillThePod(podName string, directory *d.Directory, topic []b
 		return err
 	}
 
-	var dirInode *d.DirInode
+	var dirInode *d.Inode
 	for path != utils.PathSeperator {
 		_, dirInode, err = directory.GetDirNode(path, podInfo.GetFeed(), podInfo.GetAccountInfo())
 		if err != nil {

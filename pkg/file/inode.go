@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 FairOS Authors
+Copyright © 2021 FairOS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,24 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package user
+package file
 
-import "net/http"
+import "github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
-func (u *Users) LogoutUser(userName, dataDir, sessionId string, response http.ResponseWriter) error {
-	// basic validations
-	if !u.IsUsernameAvailable(userName, dataDir) {
-		return ErrInvalidUserName
-	}
+type INode struct {
+	Blocks []*BlockInfo
+}
 
-	// unset cookie and remove user from map
-	if !u.IsUserLoggedIn(sessionId) {
-		return ErrUserNotLoggedIn
-	}
-	err := u.Logout(sessionId, response)
-	if err != nil {
-		return err
-	}
-
-	return nil
+type BlockInfo struct {
+	Name           string
+	Size           uint32
+	CompressedSize uint32
+	Reference      utils.Reference
 }

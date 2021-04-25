@@ -17,48 +17,37 @@ limitations under the License.
 package dir
 
 import (
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"strings"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-)
-
-const (
-	DirectoryNameLength = 25
 )
 
 type Directory struct {
-	podName string
-	client  blockstore.Client
-	fd      *feed.API
-	acc     *account.Info
-	file    *f.File
-	dirMap  map[string]*DirInode // path to dirInode cache
-	dirMu   *sync.RWMutex
-	logger  logging.Logger
+	podName     string
+	client      blockstore.Client
+	fd          *feed.API
+	userAddress utils.Address
+	file        *f.File
+	dirMap      map[string]*Inode // path to dirInode cache
+	dirMu       *sync.RWMutex
+	logger      logging.Logger
 }
 
-type DirInode struct {
-	Meta   *m.DirectoryMetaData
-	Hashes [][]byte
-}
-
-func NewDirectory(podName string, client blockstore.Client, fd *feed.API, acc *account.Info, file *f.File, logger logging.Logger) *Directory {
+func NewDirectory(podName string, client blockstore.Client, fd *feed.API, user utils.Address, file *f.File, logger logging.Logger) *Directory {
 	return &Directory{
-		podName: podName,
-		client:  client,
-		fd:      fd,
-		acc:     acc,
-		file:    file,
-		dirMap:  make(map[string]*DirInode),
-		dirMu:   &sync.RWMutex{},
-		logger:  logger,
+		podName:     podName,
+		client:      client,
+		fd:          fd,
+		userAddress: user,
+		file:        file,
+		dirMap:      make(map[string]*Inode),
+		dirMu:       &sync.RWMutex{},
+		logger:      logger,
 	}
 }
 
@@ -66,38 +55,29 @@ func (d *Directory) getFeed() *feed.API {
 	return d.fd
 }
 
-func (d *Directory) getAccount() *account.Info {
-	return d.acc
+func (d *Directory) getAddress() utils.Address {
+	return d.userAddress
 }
 
 func (d *Directory) getClient() blockstore.Client {
 	return d.client
 }
 
-func (d *Directory) AddToDirectoryMap(path string, dirInode *DirInode) {
+func (d *Directory) AddToDirectoryMap(path string, dirInode *Inode) {
 	d.dirMu.Lock()
 	defer d.dirMu.Unlock()
-	if !strings.HasPrefix(path, "/") {
-		path = utils.PathSeperator + path
-	}
 	d.dirMap[path] = dirInode
 }
 
 func (d *Directory) RemoveFromDirectoryMap(path string) {
 	d.dirMu.Lock()
 	defer d.dirMu.Unlock()
-	if !strings.HasPrefix(path, "/") {
-		path = utils.PathSeperator + path
-	}
 	delete(d.dirMap, path)
 }
 
-func (d *Directory) GetDirFromDirectoryMap(path string) *DirInode {
+func (d *Directory) GetDirFromDirectoryMap(path string) *Inode {
 	d.dirMu.Lock()
 	defer d.dirMu.Unlock()
-	if !strings.HasPrefix(path, "/") {
-		path = utils.PathSeperator + path
-	}
 	for k := range d.dirMap {
 		if k == path {
 			return d.dirMap[path]
@@ -106,7 +86,7 @@ func (d *Directory) GetDirFromDirectoryMap(path string) *DirInode {
 	return nil
 }
 
-func (d *Directory) GetPrefixPodFromPathMap(prefix string) *DirInode {
+func (d *Directory) GetPrefixPodFromPathMap(prefix string) *Inode {
 	d.dirMu.Lock()
 	defer d.dirMu.Unlock()
 	for k := range d.dirMap {

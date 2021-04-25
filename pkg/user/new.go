@@ -25,25 +25,21 @@ import (
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
 func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) (string, string, *Info, error) {
 	if u.IsUsernameAvailable(userName, dataDir) {
 		return "", "", nil, ErrUserAlreadyPresent
 	}
+
+	//create account and feed
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, client, u.logger)
-	file := f.NewFile(userName, client, fd, accountInfo, u.logger)
 
+	//create a new base user account with the mnemonic
 	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	// store the username -> address mapping locally
-	err = u.storeUserNameToAddressFileMapping(userName, dataDir, accountInfo.GetAddress())
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -54,8 +50,16 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, dataDir string, cl
 		return "", "", nil, err
 	}
 
-	dir := d.NewDirectory(userName, client, fd, accountInfo, file, u.logger)
+	// store the username -> address mapping locally
+	err = u.storeUserNameToAddressFileMapping(userName, dataDir, accountInfo.GetAddress())
+	if err != nil {
+		return "", "", nil, err
+	}
 
+	// Instantiate pod, dir & file objects
+	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
+	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
+	pod := p.NewPod(u.client, fd, acc, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}
@@ -67,7 +71,7 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, dataDir string, cl
 		account:   acc,
 		file:      file,
 		dir:       dir,
-		pods:      pod.NewPod(u.client, fd, acc, u.logger),
+		pod:       pod,
 	}
 
 	// set cookie and add user to map

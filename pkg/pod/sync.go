@@ -18,14 +18,13 @@ package pod
 
 import (
 	"encoding/json"
-	"net/http"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"strings"
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -44,66 +43,60 @@ func (p *Pod) SyncPod(podName string) error {
 		return err
 	}
 
-	err = podInfo.SyncPod(podName, p.client, p.logger)
+	err = podInfo.SyncPod(podName, "", p.client, p.logger)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (pi *Info) SyncPod(podName string, client blockstore.Client, logger logging.Logger) error {
+func (pi *Info) SyncPod(podName string, path string, client blockstore.Client, logger logging.Logger) error {
 	fd := pi.GetFeed()
 	accountInfo := pi.GetAccountInfo()
 
 	logger.Infof("Syncing pod: %v", podName)
 	var wg sync.WaitGroup
-	for _, ref := range pi.currentPodInode.Hashes {
+	for _, name := range pi.GetCurrentPodInode().GetFileOrDirNames() {
 		wg.Add(1)
-		go func(reference []byte) {
+		go func(fileOrDirName string) {
 			defer wg.Done()
-			_, data, err := fd.GetFeedData(reference, accountInfo.GetAddress())
-			if err != nil {
-				data, respCode, err := client.DownloadBlob(reference)
+			if strings.HasPrefix(fileOrDirName, "_D_") {
+				dirName := strings.TrimLeft(fileOrDirName, "_D_")
+				dirPath := path + utils.PathSeperator + dirName
+				dirTopic := utils.HashString(dirPath)
+				_, data, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress())
 				if err != nil {
-					logger.Warningf("sync: download error: ", err)
-					return
-				}
-				if respCode != http.StatusOK {
-					logger.Warningf("sync: download status not okay: ", respCode)
-					return
-				}
-				var meta *m.FileMetaData
-				err = json.Unmarshal(data, &meta)
-				if err != nil {
-					logger.Errorf("sync: unmarshall error: ", err)
+					logger.Warningf("sync: : %w", err)
 					return
 				}
 
-				path := meta.Path + utils.PathSeperator + meta.Name
-				meta.MetaReference = reference
+				var dirInode *d.Inode
+				err = json.Unmarshal(data, &dirInode)
+				if err != nil {
+					logger.Errorf("sync: unmarshall error: %w", err)
+					return
+				}
+
+				pi.GetDirectory().AddToDirectoryMap(path, dirInode)
+				path = strings.TrimPrefix(path, podName)
+				logger.Infof(path)
+
+			} else if strings.HasPrefix(fileOrDirName, "_F_") {
+				fileName := strings.TrimLeft(fileOrDirName, "_F_")
+				filePath := path + utils.PathSeperator + fileName
+				fileTopic := utils.HashString(filePath)
+				_, data, err := fd.GetFeedData(fileTopic, accountInfo.GetAddress())
+				var meta *file.MetaData
+				err = json.Unmarshal(data, &meta)
+				if err != nil {
+					logger.Errorf("sync: unmarshall error: %w", err)
+					return
+				}
 				pi.file.AddToFileMap(path, meta)
 				path = strings.TrimPrefix(path, podName)
 				logger.Infof(path)
-				return
 			}
-
-			var dirInode *d.DirInode
-			err = json.Unmarshal(data, &dirInode)
-			if err != nil {
-				logger.Warningf("sync: unmarshall error: %w", err)
-				return
-			}
-
-			path := dirInode.Meta.Path + utils.PathSeperator + dirInode.Meta.Name
-			err = pi.GetDirectory().LoadDirMeta(podName, dirInode, fd, accountInfo)
-			if err != nil {
-				logger.Warningf("sync: load meta error: %w", err)
-				return
-			}
-			pi.GetDirectory().AddToDirectoryMap(path, dirInode)
-			path = strings.TrimPrefix(path, podName)
-			logger.Infof(path)
-		}(ref)
+		}(name)
 	}
 	wg.Wait()
 	return nil

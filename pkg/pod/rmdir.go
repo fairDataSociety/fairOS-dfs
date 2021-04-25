@@ -69,7 +69,7 @@ func (p *Pod) RemoveDir(podName, dirName string) error {
 	return nil
 }
 
-func (p *Pod) GetInodeFromName(nameToGetMeta string, curDirInode *d.DirInode, directory *d.Directory, info *Info) (*d.DirInode, error) {
+func (p *Pod) GetInodeFromName(nameToGetMeta string, curDirInode *d.Inode, directory *d.Directory, info *Info) (*d.Inode, error) {
 	path := info.GetCurrentDirPathAndName() + utils.PathSeperator + nameToGetMeta
 	if info.IsCurrentDirRoot() {
 		if strings.HasPrefix(nameToGetMeta, utils.PathSeperator) {

@@ -102,7 +102,7 @@ func TestPod_LoginPod(t *testing.T) {
 		if err != nil {
 			t.Fatalf("upload failed: %s", err.Error())
 		}
-		if !info.getFile().IsFileAlreadyPResent(dirPath + utils.PathSeperator + filepath.Base(localFile)) {
+		if !info.getFile().IsFileAlreadyPresent(dirPath + utils.PathSeperator + filepath.Base(localFile)) {
 			t.Fatalf("file not copied in pod")
 		}
 

@@ -18,46 +18,54 @@ package dir
 
 import (
 	"encoding/json"
-	"net/http"
+	"fmt"
+	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) LoadDirMeta(podName string, curDirInode *DirInode, fd *feed.API, accountInfo *account.Info) error {
-	for _, ref := range curDirInode.Hashes {
-		_, data, err := fd.GetFeedData(ref, accountInfo.GetAddress())
-		if err != nil {
-			respCode, err := d.file.LoadFileMeta(podName, ref)
+func (d *Directory) LoadDirMeta(podName, dirNameWithPath  string, fd *feed.API, accountInfo *account.Info) error {
+	totalPath := podName + dirNameWithPath
+	topic := utils.HashString(totalPath)
+	_, data, err := d.fd.GetFeedData(topic, d.acc.GetAddress())
+	if err != nil {
+		return fmt.Errorf("dir sync: %v", err)
+	}
+
+	var dirInode Inode
+	err = json.Unmarshal(data, &dirInode)
+	if err != nil {
+		return fmt.Errorf("dir sync: %v", err)
+	}
+
+	for _, fileOrDirName := range dirInode.fileOrDirNames {
+		if strings.HasPrefix(fileOrDirName, "_F_") {
+			fileName := strings.TrimLeft(fileOrDirName, "_F_")
+			filePath := totalPath + utils.PathSeperator + fileName
+			err := d.file.LoadFileMeta(filePath)
 			if err != nil {
 				return err
 			}
-			if respCode == http.StatusOK {
-				continue
+
+		} else if strings.HasPrefix(fileOrDirName, "_D_") {
+			var dirInode *Inode
+			err = json.Unmarshal(data, &dirInode)
+			if err != nil {
+				return err
 			}
-			return err
-		}
 
-		var dirInode *DirInode
-		err = json.Unmarshal(data, &dirInode)
-		if err != nil {
-			return err
-		}
+			path := dirInode.Meta.Path + utils.PathSeperator + dirInode.Meta.Name
+			d.AddToDirectoryMap(path, dirInode)
+			d.logger.Infof(path)
 
-		path := dirInode.Meta.Path + utils.PathSeperator + dirInode.Meta.Name
-		d.AddToDirectoryMap(path, dirInode)
-		d.logger.Infof(path)
 
-		_, newDirInode, err := d.GetDirNode(path, fd, accountInfo)
-		if err != nil {
-			return err
+			err = d.LoadDirMeta(podName, path, fd, accountInfo)
+			if err != nil {
+				return err
+			}
 		}
-		err = d.LoadDirMeta(podName, newDirInode, fd, accountInfo)
-		if err != nil {
-			return err
-		}
-
 	}
 	return nil
 }

@@ -23,10 +23,6 @@ import (
 )
 
 func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, string, error) {
-	if !d.client.CheckConnection() {
-		return "", "", ErrBeeClient
-	}
-
 	reference, rcvdMnemonic, userInfo, err := d.users.CreateNewUser(userName, passPhrase, mnemonic, d.dataDir, d.client, response, sessionId)
 	if err != nil {
 		return reference, rcvdMnemonic, err
@@ -79,66 +75,6 @@ func (d *DfsAPI) IsUserNameAvailable(userName string) bool {
 func (d *DfsAPI) IsUserLoggedIn(userName string) bool {
 	// check if a given user is logged in
 	return d.users.IsUserNameLoggedIn(userName)
-}
-
-func (d *DfsAPI) ListAllUsers() ([]string, error) {
-	return d.users.ListAllUsers(d.dataDir)
-}
-
-func (d *DfsAPI) SaveAvatar(sessionId string, data []byte) error {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return ErrUserNotLoggedIn
-	}
-
-	return d.users.SaveAvatar(data, ui)
-}
-
-func (d *DfsAPI) GetAvatar(sessionId string) ([]byte, error) {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-
-	return d.users.GetAvatar(ui)
-}
-
-func (d *DfsAPI) SaveName(firstName, lastName, middleName, surname, sessionId string) error {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return ErrUserNotLoggedIn
-	}
-	return d.users.SaveName(firstName, lastName, middleName, surname, ui)
-}
-
-func (d *DfsAPI) GetName(sessionId string) (*user.Name, error) {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-	return d.users.GetName(ui)
-}
-
-func (d *DfsAPI) SaveContact(phone, mobile string, address *user.Address, sessionId string) error {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return ErrUserNotLoggedIn
-	}
-	return d.users.SaveContacts(phone, mobile, address, ui)
-}
-
-func (d *DfsAPI) GetContact(sessionId string) (*user.Contacts, error) {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-	return d.users.GetContacts(ui)
 }
 
 func (d *DfsAPI) GetUserStat(sessionId string) (*user.Stat, error) {

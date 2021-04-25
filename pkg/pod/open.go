@@ -50,7 +50,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	var file *f.File
 	var fd *feed.API
 	var dir *d.Directory
-	var dirInode *d.DirInode
+	var dirInode *d.Inode
 	var user utils.Address
 	if sharedPodType {
 		addressString := p.getAddress(sharedPods, podName)
@@ -63,8 +63,8 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		accountInfo.SetAddress(address)
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
-		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// get the pod's inode
 		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
@@ -87,8 +87,8 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 			return nil, err
 		}
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
-		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// get the pod's inode
 		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)

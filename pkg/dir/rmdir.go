@@ -14,31 +14,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pod
+package dir
 
 import (
-	"fmt"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (p *Pod) Cat(podName string, fileName string) error {
-
-	if !p.isPodOpened(podName) {
-		return fmt.Errorf("login to pod to do this operation")
+func (d *Directory) RmDir(podName, parentPath, dirName string) error {
+	// validation checks of the arguments
+	if podName == "" {
+		return ErrInvalidPodName
 	}
 
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
+	if dirName == ""  {
+		return ErrInvalidDirectoryName
+	}
+
+	// check if directory present
+	totalPath := podName + parentPath + utils.PathSeperator + dirName
+	if d.GetDirFromDirectoryMap(totalPath) == nil {
+		return ErrDirectoryNotPresent
+	}
+
+	// remove the feed and clear the data structure
+	topic := utils.HashString(totalPath)
+	err := d.fd.DeleteFeed(topic, d.acc.GetAddress())
 	if err != nil {
 		return err
 	}
-
-	var fname string
-	if podInfo.IsCurrentDirRoot() {
-		fname = podInfo.GetCurrentPodPathAndName() + fileName
-	} else {
-		fname = podInfo.GetCurrentDirPathAndName() + utils.PathSeperator + fileName
-	}
-
-	return podInfo.getFile().Cat(fname)
+	d.RemoveFromDirectoryMap(totalPath)
+	return nil
 }

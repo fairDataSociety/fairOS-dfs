@@ -25,14 +25,14 @@ import (
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
 func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) error {
+	// basic validations
 	if u.IsUserLoggedIn(sessionId) {
 		return ErrUserAlreadyLoggedIn
 	}
-
 	if !u.IsUsernameAvailable(userName, dataDir) {
 		return ErrInvalidUserName
 	}
@@ -40,7 +40,7 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, client, u.logger)
-	file := f.NewFile(userName, client, fd, accountInfo, u.logger)
+
 
 	// load address from userName
 	address, err := u.getAddressFromUserName(userName, dataDir)
@@ -61,8 +61,11 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 		}
 		return err
 	}
-	dir := d.NewDirectory(userName, client, fd, accountInfo, file, u.logger)
 
+	// Instantiate pod, dir & file objects
+	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
+	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
+	pod := p.NewPod(u.client, fd, acc, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}
@@ -74,7 +77,7 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 		account:   acc,
 		file:      file,
 		dir:       dir,
-		pods:      pod.NewPod(u.client, fd, acc, u.logger),
+		pod:       pod,
 	}
 
 	// set cookie and add user to map

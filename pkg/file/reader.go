@@ -21,13 +21,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"io"
 	"io/ioutil"
-	"strconv"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
-	"github.com/ethersphere/bee/pkg/swarm"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/golang/snappy"
 	lru "github.com/hashicorp/golang-lru"
@@ -45,7 +42,7 @@ var (
 type Reader struct {
 	readOffset  int64
 	client      blockstore.Client
-	fileInode   FileINode
+	fileInode   INode
 	fileC       chan []byte
 	lastBlock   []byte
 	fileSize    uint64
@@ -60,51 +57,27 @@ type Reader struct {
 	rlReadNewLine bool
 }
 
-func (f *File) OpenFileForReading(podFile string) (io.ReadCloser, string, string, error) {
+func (f *File) OpenFileForIndex(podFile string) (*Reader,  error) {
 	meta := f.GetFromFileMap(podFile)
 	if meta == nil {
-		return nil, "", "", fmt.Errorf("file not found in dfs")
+		return nil, fmt.Errorf("file not found in dfs")
 	}
 
 	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil {
-		return nil, "", "", err
+		return nil,  err
 	}
-	var fileInode FileINode
+	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil {
-		return nil, "", "", err
+		return nil, err
 	}
 
-	reader := NewReader(fileInode, f.getClient(), meta.FileSize, meta.BlockSize, meta.Compression, false)
-	ref := swarm.NewAddress(meta.InodeAddress).String()
-	size := strconv.FormatUint(meta.FileSize, 10)
-	return reader, ref, size, nil
+	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, true)
+	return reader,  nil
 }
 
-func (f *File) OpenFileForIndex(podFile string) (*Reader, string, string, error) {
-	meta := f.GetFromFileMap(podFile)
-	if meta == nil {
-		return nil, "", "", fmt.Errorf("file not found in dfs")
-	}
-
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
-	if err != nil {
-		return nil, "", "", err
-	}
-	var fileInode FileINode
-	err = json.Unmarshal(fileInodeBytes, &fileInode)
-	if err != nil {
-		return nil, "", "", err
-	}
-
-	reader := NewReader(fileInode, f.getClient(), meta.FileSize, meta.BlockSize, meta.Compression, true)
-	ref := swarm.NewAddress(meta.InodeAddress).String()
-	size := strconv.FormatUint(meta.FileSize, 10)
-	return reader, ref, size, nil
-}
-
-func NewReader(fileInode FileINode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string, cache bool) *Reader {
+func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string, cache bool) *Reader {
 	var blockCache *lru.Cache
 	if cache {
 		blockCache, _ = lru.New(blockCacheSize)
@@ -166,13 +139,13 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 		for i := 0; i < noOfBlocks; i++ {
 			if r.lastBlock == nil {
 				blockIndex := (r.readOffset / int64(r.blockSize))
-				if blockIndex > int64(len(r.fileInode.FileBlocks)) {
+				if blockIndex > int64(len(r.fileInode.Blocks)) {
 					return bytesRead, io.EOF
 				}
-				if blockIndex >= int64(len(r.fileInode.FileBlocks)) {
+				if blockIndex >= int64(len(r.fileInode.Blocks)) {
 					return bytesRead, io.EOF
 				}
-				r.lastBlock, err = r.getBlock(r.fileInode.FileBlocks[blockIndex].Address, r.compression, r.blockSize)
+				r.lastBlock, err = r.getBlock(r.fileInode.Blocks[blockIndex].Reference.Bytes(), r.compression, r.blockSize)
 				if err != nil {
 					return bytesRead, err
 				}
@@ -217,7 +190,7 @@ func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
 
 	// seek to start if offset is zero
 	if seekOffset == 0 {
-		blockData, err := r.getBlock(r.fileInode.FileBlocks[0].Address, r.compression, r.blockSize)
+		blockData, err := r.getBlock(r.fileInode.Blocks[0].Reference.Bytes(), r.compression, r.blockSize)
 		if err != nil {
 			return 0, err
 		}
@@ -234,7 +207,7 @@ func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
 	blockIndex := seekOffset / int64(r.blockSize)
 	blockOffset := seekOffset % int64(r.blockSize)
 
-	blockData, err := r.getBlock(r.fileInode.FileBlocks[blockIndex].Address, r.compression, r.blockSize)
+	blockData, err := r.getBlock(r.fileInode.Blocks[blockIndex].Reference.Bytes(), r.compression, r.blockSize)
 	if err != nil {
 		return 0, err
 	}

@@ -17,6 +17,8 @@ limitations under the License.
 package dir
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -36,19 +38,31 @@ type DirStats struct {
 	NoOfFiles        string `json:"no_of_files"`
 }
 
-func (d *Directory) DirStat(podName, dirName string, dirInode *DirInode, account, podAddr string, printNames bool) (*DirStats, error) {
-	meta := dirInode.Meta
-	fl, dl := d.ListDirOnlyNames(podName, dirName, printNames)
+func (d *Directory) DirStat(podName, dirNameWithPath string, account, podAddr string) (*DirStats, error) {
+	totalPath := podName + dirNameWithPath
+	topic := utils.HashString(totalPath)
+	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
+	if err != nil {
+		return nil, fmt.Errorf("dir stat: %v", err)
+	}
+
+	var dirInode Inode
+	err = json.Unmarshal(data, &dirInode)
+	if err != nil {
+		return nil, fmt.Errorf("dir stat: %v", err)
+	}
 
 	files := 0
 	dirs := 0
-	for _, list := range dl {
-		if strings.HasPrefix(list, "<Dir>") {
+	for _, k := range dirInode.fileOrDirNames {
+		if strings.HasPrefix(k, "_D_") {
 			dirs++
-		} else {
+		} else if strings.HasPrefix(k, "_F_") {
 			files++
 		}
 	}
+
+	meta := dirInode.Meta
 	path := meta.Path
 	if meta.Path == podName {
 		path = utils.PathSeperator
@@ -63,7 +77,7 @@ func (d *Directory) DirStat(podName, dirName string, dirInode *DirInode, account
 		CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
 		ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
 		AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
-		NoOfDirectories:  strconv.FormatInt(int64(len(dl)), 10),
-		NoOfFiles:        strconv.FormatInt(int64(len(fl)), 10),
+		NoOfDirectories:  strconv.FormatInt(int64(dirs), 10),
+		NoOfFiles:        strconv.FormatInt(int64(files), 10),
 	}, nil
 }

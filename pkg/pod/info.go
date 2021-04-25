@@ -35,9 +35,9 @@ type Info struct {
 	file            *f.File
 	accountInfo     *account.Info
 	feed            *feed.API
-	currentPodInode *di.DirInode
+	currentPodInode *di.Inode
 	curPodMu        sync.RWMutex
-	currentDirInode *di.DirInode
+	currentDirInode *di.Inode
 	curDirMu        sync.RWMutex
 	kvStore         *collection.KeyValue
 	docStore        *collection.Document
@@ -63,17 +63,17 @@ func (i *Info) GetFeed() *feed.API {
 	return i.feed
 }
 
-func (i *Info) GetCurrentPodInode() *di.DirInode {
+func (i *Info) GetCurrentPodInode() *di.Inode {
 	return i.currentPodInode
 }
-func (i *Info) GetCurrentDirInode() *di.DirInode {
+func (i *Info) GetCurrentDirInode() *di.Inode {
 	return i.currentDirInode
 }
 
-func (i *Info) SetCurrentPodInode(podInode *di.DirInode) {
+func (i *Info) SetCurrentPodInode(podInode *di.Inode) {
 	i.currentPodInode = podInode
 }
-func (i *Info) SetCurrentDirInode(podInode *di.DirInode) {
+func (i *Info) SetCurrentDirInode(podInode *di.Inode) {
 	i.currentDirInode = podInode
 }
 

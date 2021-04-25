@@ -20,23 +20,22 @@ import (
 	"encoding/json"
 	"time"
 
-	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) CreateDirINode(podName, dirName string, parent *DirInode) (*DirInode, []byte, error) {
+func (d *Directory) CreateDirINode(podName, dirName string, parent *Inode) (*Inode, []byte, error) {
 	// create the meta data
 	parentPath := getPath(podName, parent)
 	now := time.Now().Unix()
-	meta := m.DirectoryMetaData{
-		Version:          m.DirMetaVersion,
+	meta := MetaData{
+		Version:          MetaVersion,
 		Path:             parentPath,
 		Name:             dirName,
 		CreationTime:     now,
 		ModificationTime: now,
 		AccessTime:       now,
 	}
-	dirInode := &DirInode{
+	dirInode := &Inode{
 		Meta: &meta,
 	}
 	data, err := json.Marshal(dirInode)
@@ -47,7 +46,7 @@ func (d *Directory) CreateDirINode(podName, dirName string, parent *DirInode) (*
 	// create a feed for the directory and add data to it
 	totalPath := parentPath + utils.PathSeperator + dirName
 	topic := utils.HashString(totalPath)
-	_, err = d.fd.CreateFeed(topic, d.acc.GetAddress(), data)
+	_, err = d.fd.CreateFeed(topic, d.getAddress(), data)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -56,15 +55,15 @@ func (d *Directory) CreateDirINode(podName, dirName string, parent *DirInode) (*
 	return dirInode, topic, nil
 }
 
-func (d *Directory) IsDirINodePresent(podName, dirName string, parent *DirInode) bool {
+func (d *Directory) IsDirINodePresent(podName, dirName string, parent *Inode) bool {
 	parentPath := getPath(podName, parent)
 	totalPath := parentPath + utils.PathSeperator + dirName
 	topic := utils.HashString(totalPath)
-	_, _, err := d.fd.GetFeedData(topic, d.getAccount().GetAddress())
+	_, _, err := d.fd.GetFeedData(topic, d.getAddress())
 	return err == nil
 }
 
-func getPath(podName string, parent *DirInode) string {
+func getPath(podName string, parent *Inode) string {
 	var path string
 	if parent.Meta.Path == utils.PathSeperator {
 		path = parent.Meta.Path + parent.Meta.Name
@@ -74,18 +73,18 @@ func getPath(podName string, parent *DirInode) string {
 	return path
 }
 
-func (d *Directory) CreatePodINode(podName string) (*DirInode, []byte, error) {
+func (d *Directory) CreatePodINode(podName string) (*Inode, []byte, error) {
 	// create the metadata
 	now := time.Now().Unix()
-	meta := m.DirectoryMetaData{
-		Version:          m.DirMetaVersion,
+	meta := MetaData{
+		Version:          MetaVersion,
 		Path:             "/",
 		Name:             podName,
 		CreationTime:     now,
 		ModificationTime: now,
 		AccessTime:       now,
 	}
-	dirInode := &DirInode{
+	dirInode := &Inode{
 		Meta: &meta,
 	}
 	data, err := json.Marshal(dirInode)
@@ -96,7 +95,7 @@ func (d *Directory) CreatePodINode(podName string) (*DirInode, []byte, error) {
 	// create a feed and store the metadata of the pod
 	totalPath := utils.PathSeperator + podName
 	topic := utils.HashString(totalPath)
-	_, err = d.fd.CreateFeed(topic, d.acc.GetAddress(), data)
+	_, err = d.fd.CreateFeed(topic, d.getAddress(), data)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -108,10 +107,10 @@ func (d *Directory) CreatePodINode(podName string) (*DirInode, []byte, error) {
 func (d *Directory) DeletePodInode(podName string) error {
 	totalPath := utils.PathSeperator + podName
 	topic := utils.HashString(totalPath)
-	return d.fd.DeleteFeed(topic, d.acc.GetAddress())
+	return d.fd.DeleteFeed(topic, d.getAddress())
 }
 
 func (d *Directory) DeleteDirectoryInode(dirPath string) error {
 	topic := utils.HashString(dirPath)
-	return d.fd.DeleteFeed(topic, d.acc.GetAddress())
+	return d.fd.DeleteFeed(topic, d.getAddress())
 }

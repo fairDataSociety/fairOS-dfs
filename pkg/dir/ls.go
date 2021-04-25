@@ -18,11 +18,11 @@ package dir
 
 import (
 	"encoding/json"
-	"path/filepath"
+	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"strconv"
 	"strings"
 
-	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -40,101 +40,66 @@ type DirOrFileEntry struct {
 	AccessTime       string `json:"access_time"`
 }
 
-func (d *Directory) ListDir(podName, path string, printNames bool) []DirOrFileEntry {
-	_, dirInode, err := d.GetDirNode(path, d.getFeed(), d.getAccount())
+func (d *Directory) ListDir(podName, dirNameWithPath string) ([]DirOrFileEntry, error) {
+	totalPath := podName + dirNameWithPath
+	topic := utils.HashString(totalPath)
+	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("list dir : %v", err)
+	}
+
+	var dirInode Inode
+	err = json.Unmarshal(data, &dirInode)
+	if err != nil {
+		return nil, fmt.Errorf("list dir : %v", err)
 	}
 
 	var listEntries []DirOrFileEntry
-	for _, ref := range dirInode.Hashes {
-		// check if this is a directory
-		_, data, err := d.getFeed().GetFeedData(ref, d.getAccount().GetAddress())
-		if err != nil {
-			// if it is not a dir, then treat this reference as a file
-			data, _, err := d.getClient().DownloadBlob(ref)
+	for _, fileOrDirName := range dirInode.fileOrDirNames {
+		if strings.HasPrefix(fileOrDirName, "_D_") {
+			dirName := strings.TrimLeft(fileOrDirName, "_D_")
+			dirPath := totalPath + utils.PathSeperator + dirName
+			dirTopic := utils.HashString(dirPath)
+			_, data, err := d.fd.GetFeedData(dirTopic, d.getAddress())
+			if err != nil {
+				return nil, fmt.Errorf("list dir : %v", err)
+			}
+
+			var dirInode *Inode
+			err = json.Unmarshal(data, &dirInode)
 			if err != nil {
 				continue
 			}
-			var meta *m.FileMetaData
+			entry := DirOrFileEntry{
+				Name:             dirInode.Meta.Name,
+				ContentType:      MineTypeDirectory, // per RFC2425
+				CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
+				AccessTime:       strconv.FormatInt(dirInode.Meta.AccessTime, 10),
+				ModificationTime: strconv.FormatInt(dirInode.Meta.ModificationTime, 10),
+			}
+			listEntries = append(listEntries, entry)
+		} else if strings.HasPrefix(fileOrDirName, "_F_") {
+			fileName := strings.TrimLeft(fileOrDirName, "_F_")
+			filePath := totalPath + utils.PathSeperator + fileName
+			fileTopic := utils.HashString(filePath)
+			_, data, err := d.getFeed().GetFeedData(fileTopic, d.getAddress())
+			var meta *file.MetaData
 			err = json.Unmarshal(data, &meta)
 			if err != nil {
 				continue
 			}
-
 			entry := DirOrFileEntry{
 				Name:             meta.Name,
 				ContentType:      meta.ContentType,
-				Size:             strconv.FormatUint(meta.FileSize, 10),
+				Size:             strconv.FormatUint(meta.Size, 10),
 				BlockSize:        strconv.FormatInt(int64(uint64(meta.BlockSize)), 10),
 				CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
 				AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
 				ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
 			}
+
 			listEntries = append(listEntries, entry)
-			continue
-		}
-
-		var dirInode *DirInode
-		err = json.Unmarshal(data, &dirInode)
-		if err != nil {
-			continue
-		}
-		entry := DirOrFileEntry{
-			Name:             dirInode.Meta.Name,
-			ContentType:      MineTypeDirectory, // per RFC2425
-			CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
-			AccessTime:       strconv.FormatInt(dirInode.Meta.AccessTime, 10),
-			ModificationTime: strconv.FormatInt(dirInode.Meta.ModificationTime, 10),
-		}
-		listEntries = append(listEntries, entry)
-	}
-	return listEntries
-
-}
-
-func (d *Directory) ListDirOnlyNames(podName, path string, printNames bool) ([]string, []string) {
-	d.dirMu.Lock()
-	defer d.dirMu.Unlock()
-	var fileListing []string
-	var dirListing []string
-
-	directory := ("<Dir>  : ")
-	fl := ("<File> : ")
-	for k := range d.dirMap {
-		if strings.HasPrefix(k, path) {
-			name := strings.TrimPrefix(k, path)
-			if name != "" {
-				if printNames {
-					dirListing = append(dirListing, directory+name)
-				} else {
-					dirListing = append(dirListing, name)
-
-				}
-			}
-
-			// KVGet the files inside the dir
-			fileList := d.file.ListFiles(k)
-			for _, file := range fileList {
-				if strings.HasPrefix(file, path) {
-					if filepath.Dir(file) != k {
-						continue
-					}
-					var fileName string
-					fileName = strings.TrimPrefix(file, path)
-					fileName = strings.TrimSpace(fileName)
-					fileName = strings.TrimPrefix(fileName, utils.PathSeperator)
-					if strings.ContainsAny(fileName, utils.PathSeperator) {
-						fileName = utils.PathSeperator + fileName
-					}
-					if printNames {
-						fileListing = append(fileListing, fl+fileName)
-					} else {
-						fileListing = append(fileListing, fileName)
-					}
-				}
-			}
 		}
 	}
-	return fileListing, dirListing
+	return listEntries, nil
 }

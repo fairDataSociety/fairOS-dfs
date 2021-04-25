@@ -17,14 +17,7 @@ limitations under the License.
 package pod
 
 import (
-	"fmt"
 	"strconv"
-
-	"github.com/ethersphere/bee/pkg/swarm"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type PodStat struct {
@@ -50,63 +43,4 @@ func (p *Pod) PodStat(podName string) (*PodStat, error) {
 		AccessTime:       strconv.FormatInt(podInode.Meta.AccessTime, 10),
 		ModificationTime: strconv.FormatInt(podInode.Meta.AccessTime, 10),
 	}, nil
-}
-
-func (p *Pod) DirectoryStat(podName, podFileOrDir string, printNames bool) (*dir.DirStats, error) {
-	if !p.isPodOpened(podName) {
-		return nil, ErrPodNotOpened
-	}
-
-	info, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return nil, err
-	}
-
-	acc := info.GetAccountInfo().GetAddress()
-
-	path := p.getDirectoryPath(podFileOrDir, info)
-	dirInode := info.GetDirectory().GetDirFromDirectoryMap(path)
-	if dirInode != nil {
-		meta := dirInode.Meta
-		addr, dirInode, err := info.GetDirectory().GetDirNode(meta.Path+utils.PathSeperator+meta.Name, info.GetFeed(), info.GetAccountInfo())
-		if err != nil {
-			return nil, err
-		}
-		podAddress := swarm.NewAddress(addr).String()
-		return info.GetDirectory().DirStat(podName, path, dirInode, acc.String(), podAddress, printNames)
-	}
-	return nil, fmt.Errorf("directory not found")
-}
-
-func (p *Pod) FileStat(podName, podFileOrDir string) (*file.FileStats, error) {
-	if !p.isPodOpened(podName) {
-		return nil, fmt.Errorf("login to pod to do this operation")
-	}
-
-	info, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return nil, err
-	}
-
-	acc := info.GetAccountInfo().GetAddress()
-
-	path := p.getDirectoryPath(podFileOrDir, info)
-	if !info.file.IsFileAlreadyPResent(path) {
-		return nil, fmt.Errorf("file not present in pod")
-	}
-	return info.file.FileStat(podName, path, acc.String())
-}
-
-func (p *Pod) ExpandFilePath(podName, podFileOrDir string) (string, error) {
-	if !p.isPodOpened(podName) {
-		return "", fmt.Errorf("login to pod to do this operation")
-	}
-
-	info, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return "", err
-	}
-
-	path := p.getDirectoryPath(podFileOrDir, info)
-	return path, nil
 }

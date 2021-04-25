@@ -21,11 +21,10 @@ import (
 )
 
 func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, response http.ResponseWriter, ui *Info) error {
-
+	// basic validations
 	if !u.IsUsernameAvailable(userName, dataDir) {
 		return ErrInvalidUserName
 	}
-
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
 	}

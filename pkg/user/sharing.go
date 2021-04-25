@@ -26,7 +26,6 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -324,7 +323,7 @@ func (u *Users) ReceiveFileInfo(podName string, sharingRef utils.SharingReferenc
 		return nil, err
 	}
 
-	meta := m.FileMetaData{}
+	meta := f.MetaData{}
 	err = json.Unmarshal(fileMetaBytes, &meta)
 	if err != nil {
 		return nil, err
@@ -338,7 +337,7 @@ func (u *Users) ReceiveFileInfo(podName string, sharingRef utils.SharingReferenc
 	if err != nil || respCode != http.StatusOK {
 		return nil, err
 	}
-	var fileInode f.FileINode
+	var fileInode f.INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil {
 		return nil, err
@@ -346,9 +345,9 @@ func (u *Users) ReceiveFileInfo(podName string, sharingRef utils.SharingReferenc
 
 	info := ReceiveFileInfo{
 		FileName:       meta.Name,
-		Size:           strconv.FormatInt(int64(meta.FileSize), 10),
+		Size:           strconv.FormatInt(int64(meta.Size), 10),
 		BlockSize:      strconv.FormatInt(int64(meta.BlockSize), 10),
-		NumberOfBlocks: strconv.FormatInt(int64(len(fileInode.FileBlocks)), 10),
+		NumberOfBlocks: strconv.FormatInt(int64(len(fileInode.Blocks)), 10),
 		ContentType:    meta.ContentType,
 		Compression:    compression,
 		PodName:        sharingEntry.PodName,

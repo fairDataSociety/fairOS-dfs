@@ -25,7 +25,6 @@ import (
 
 	"github.com/ethersphere/bee/pkg/swarm"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -52,7 +51,7 @@ func (p *Pod) RemoveFile(podName, podFile string) error {
 		path = podInfo.GetCurrentDirPathAndName() + utils.PathSeperator + podFile
 	}
 
-	if !podInfo.getFile().IsFileAlreadyPResent(path) {
+	if !podInfo.getFile().IsFileAlreadyPresent(path) {
 		return fmt.Errorf("file not present in pod")
 	}
 
@@ -71,7 +70,7 @@ func (p *Pod) RemoveFile(podName, podFile string) error {
 				p.logger.Warningf("could not load address ", swarm.NewAddress(hash).String())
 				continue
 			}
-			var meta *m.FileMetaData
+			var meta *file.MetaData
 			err = json.Unmarshal(data, &meta)
 			if err != nil {
 				p.logger.Warningf("could not unmarshall data in address ", swarm.NewAddress(hash).String())
@@ -90,7 +89,7 @@ func (p *Pod) RemoveFile(podName, podFile string) error {
 					p.logger.Warningf("could not load address ", swarm.NewAddress(meta.InodeAddress).String())
 					continue
 				}
-				var fInode *file.FileINode
+				var fInode *file.INode
 				err = json.Unmarshal(fdata, &fInode)
 				if err != nil {
 					p.logger.Warningf("could not unmarshall data in address ", swarm.NewAddress(meta.InodeAddress).String())
@@ -101,7 +100,7 @@ func (p *Pod) RemoveFile(podName, podFile string) error {
 					p.logger.Errorf("could not delete file inode ", swarm.NewAddress(meta.InodeAddress).String())
 					continue
 				}
-				for _, fblocks := range fInode.FileBlocks {
+				for _, fblocks := range fInode.Blocks {
 					err = p.client.DeleteBlob(fblocks.Address)
 					if err != nil {
 						p.logger.Errorf("could not delete file block ", swarm.NewAddress(fblocks.Address).String())

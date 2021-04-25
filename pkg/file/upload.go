@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -28,7 +29,6 @@ import (
 	"sync"
 	"time"
 
-	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
 	"github.com/golang/snappy"
 	"github.com/klauspost/pgzip"
 )
@@ -37,14 +37,16 @@ var (
 	NoOfParallelWorkers = runtime.NumCPU()
 )
 
-func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize uint32, filePath, compression string) ([]byte, error) {
+func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize uint32, filePath, compression string) error {
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()
-	meta := m.FileMetaData{
-		Version:          m.FileMetaVersion,
+	meta := MetaData{
+		Version:          MetaVersion,
+		UserAddress:      f.userAddress,
+		PodName:          f.podName,
 		Path:             filepath.Dir(filePath),
 		Name:             fileName,
-		FileSize:         uint64(fileSize),
+		Size:             uint64(fileSize),
 		BlockSize:        blockSize,
 		Compression:      compression,
 		CreationTime:     now,
@@ -52,15 +54,13 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 		ModificationTime: now,
 	}
 
-	fileINode := FileINode{}
-
 	var totalLength uint64
 	i := 0
 	errC := make(chan error)
 	doneC := make(chan bool)
 	worker := make(chan bool, NoOfParallelWorkers)
 	var wg sync.WaitGroup
-	refMap := make(map[int]*FileBlock)
+	refMap := make(map[int]*BlockInfo)
 	refMapMu := sync.RWMutex{}
 	var contentBytes []byte
 	for {
@@ -70,11 +70,11 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 		if err != nil {
 			if err == io.EOF {
 				if totalLength < uint64(fileSize) {
-					return nil, fmt.Errorf("invalid file length of file data received")
+					return fmt.Errorf("invalid file length of file data received")
 				}
 				break
 			} else {
-				return nil, err
+				return err
 			}
 		}
 
@@ -113,11 +113,11 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 				errC <- err
 				return
 			}
-			fileBlock := &FileBlock{
+			fileBlock := &BlockInfo{
 				Name:           blockName,
 				Size:           uint32(size),
 				CompressedSize: uint32(len(uploadData)),
-				Address:        addr,
+				Reference:      utils.NewReference(addr),
 			}
 
 			refMapMu.Lock()
@@ -138,36 +138,32 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 		break
 	case err := <-errC:
 		close(errC)
-		return nil, err
+		return err
 	}
 
 	// copy the block references to the fileInode
+	fileINode := INode{}
 	for i := 0; i < len(refMap); i++ {
-		fileINode.FileBlocks = append(fileINode.FileBlocks, refMap[i])
+		fileINode.Blocks = append(fileINode.Blocks, refMap[i])
 	}
 
 	fileInodeData, err := json.Marshal(fileINode)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	addr, err := f.client.UploadBlob(fileInodeData, true, true)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	meta.InodeAddress = addr
-	fileMetaBytes, err := json.Marshal(meta)
+	err = f.uploadMeta(&meta)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	metaAddr, err := f.client.UploadBlob(fileMetaBytes, true, true)
-	if err != nil {
-		return nil, err
-	}
-	meta.MetaReference = metaAddr // the self address is stored to share this file easily
 	f.AddToFileMap(filePath, &meta)
-	return metaAddr, nil
+	return nil
 }
 
 func (f *File) GetContentType(bufferReader *bufio.Reader) string {

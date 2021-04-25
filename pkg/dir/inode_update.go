@@ -23,7 +23,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) UpdateDirectory(dirInode *DirInode) ([]byte, error) {
+func (d *Directory) UpdateDirectory(dirInode *Inode) ([]byte, error) {
 	dirName := dirInode.Meta.Name
 	path := dirInode.Meta.Path
 	meta := dirInode.Meta
@@ -40,7 +40,7 @@ func (d *Directory) UpdateDirectory(dirInode *DirInode) ([]byte, error) {
 		curDir = path + dirName
 	}
 	topic := utils.HashString(curDir)
-	_, err = d.getFeed().UpdateFeed(topic, d.getAccount().GetAddress(), data)
+	_, err = d.getFeed().UpdateFeed(topic, d.getAddress(), data)
 	if err != nil {
 		return nil, err
 	}

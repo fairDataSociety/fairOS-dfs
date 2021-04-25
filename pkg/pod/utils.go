@@ -36,14 +36,14 @@ func (p *Pod) isPodOpened(podName string) bool {
 	return false
 }
 
-func (p *Pod) GetPath(inode *d.DirInode) string {
+func (p *Pod) GetPath(inode *d.Inode) string {
 	if inode != nil {
 		return inode.Meta.Path
 	}
 	return ""
 }
 
-func (p *Pod) GetName(inode *d.DirInode) string {
+func (p *Pod) GetName(inode *d.Inode) string {
 	if inode != nil {
 		return inode.Meta.Name
 	}
@@ -66,32 +66,6 @@ func CleanPodName(podName string) (string, error) {
 		return "", ErrTooLongPodName
 	}
 	podName = strings.TrimSpace(podName)
-	podName = strings.Trim(podName, "\\/,\t ")
 	return podName, nil
 }
 
-func CleanDirName(dirName string) ([]string, error) {
-	if dirName == "" {
-		return nil, ErrInvalidDirectory
-	}
-
-	var cleanedDirs []string
-	if dirName == utils.PathSeperator {
-		cleanedDirs = append(cleanedDirs, dirName)
-		return cleanedDirs, nil
-	}
-
-	dirs := strings.Split(dirName, utils.PathSeperator)
-
-	for _, dir := range dirs {
-		if len(dir) > utils.MaxDirectoryNameLength {
-			return nil, ErrTooLongDirectoryName
-		}
-		dir = strings.TrimSpace(dir)
-		dir = strings.Trim(dir, "\\/,\t ")
-		if dir != "" {
-			cleanedDirs = append(cleanedDirs, dir)
-		}
-	}
-	return cleanedDirs, nil
-}

@@ -53,7 +53,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 	var fd *feed.API
 	var file *f.File
 	var dir *d.Directory
-	var dirInode *d.DirInode
+	var dirInode *d.Inode
 	var user utils.Address
 	if addressString != "" {
 		if p.checkIfPodPresent(pods, podName) {
@@ -69,8 +69,8 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		accountInfo.SetAddress(address)
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
-		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
+		file = f.NewFile(podName, p.client, fd,  user, p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// get the inode instead of creating
 		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
@@ -109,8 +109,8 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		}
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
-		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// create the pod inode
 		dirInode, _, err = dir.CreatePodINode(podName)
