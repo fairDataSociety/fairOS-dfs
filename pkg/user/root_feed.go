@@ -25,50 +25,10 @@ import (
 
 func (u *Users) CreateRootFeeds(userInfo *Info) error {
 	rootAddress := userInfo.GetAccount().GetAddress(account.UserAccountIndex)
-	err := u.CreateSettingsFeeds(rootAddress, userInfo)
+	err := u.CreateSharingFeeds(rootAddress, userInfo)
 	if err != nil {
 		return err
 	}
-	err = u.CreateSharingFeeds(rootAddress, userInfo)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (u *Users) CreateSettingsFeeds(rootAddress utils.Address, userInfo *Info) error {
-	// create name feed
-	name := &Name{}
-	data, err := json.Marshal(&name)
-	if err != nil {
-		return err
-	}
-	topic := utils.HashString(nameFeedName)
-	_, err = userInfo.GetFeed().CreateFeed(topic, rootAddress, data)
-	if err != nil {
-		return err
-	}
-
-	// create contacts feed
-	contacts := &Contacts{}
-	data, err = json.Marshal(&contacts)
-	if err != nil {
-		return err
-	}
-	topic = utils.HashString(contactsFeedName)
-	_, err = userInfo.GetFeed().CreateFeed(topic, rootAddress, data)
-	if err != nil {
-		return err
-	}
-
-	// create avatar feed
-	topic = utils.HashString(avatarFeedName)
-	data = make([]byte, 0)
-	_, err = userInfo.GetFeed().CreateFeed(topic, rootAddress, data)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 

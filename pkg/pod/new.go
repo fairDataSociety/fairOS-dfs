@@ -69,11 +69,11 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		accountInfo.SetAddress(address)
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd,  user, p.logger)
+		file = f.NewFile(podName, p.client, fd, user, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// get the inode instead of creating
-		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo.GetAddress())
 		if err != nil {
 			return nil, err
 		}
@@ -85,7 +85,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 			return nil, err
 		}
 
-		// set the user as the pod address we got from shared pod
+		// set the userAddress as the pod address we got from shared pod
 		user = address
 	} else {
 		// your own pod, so create a new account with private key
@@ -102,7 +102,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 			return nil, err
 		}
 
-		// create a child account for the user and other data structures for the pod
+		// create a child account for the userAddress and other data structures for the pod
 		accountInfo, err = p.acc.CreatePodAccount(freeId, passPhrase, true)
 		if err != nil {
 			return nil, err
@@ -134,7 +134,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
 		podName:         podName,
-		user:            user,
+		userAddress:     user,
 		dir:             dir,
 		file:            file,
 		accountInfo:     accountInfo,
@@ -153,7 +153,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 }
 
 func (p *Pod) loadUserPods() (map[int]string, map[string]string, error) {
-	// The user pod file topic should be in the name of the user account
+	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
 	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex))
 	if err != nil {

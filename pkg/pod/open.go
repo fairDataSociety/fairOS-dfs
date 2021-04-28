@@ -67,12 +67,12 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// get the pod's inode
-		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo.GetAddress())
 		if err != nil {
 			return nil, err
 		}
 
-		// set the user as the pod address we got from shared pod
+		// set the userAddress as the pod address we got from shared pod
 		user = address
 	} else {
 		index := p.getIndex(pods, podName)
@@ -81,7 +81,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		}
 
 		// Create pod account and other data structures
-		// create a child account for the user and other data structures for the pod
+		// create a child account for the userAddress and other data structures for the pod
 		accountInfo, err = p.acc.CreatePodAccount(index, passPhrase, false)
 		if err != nil {
 			return nil, err
@@ -91,7 +91,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// get the pod's inode
-		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
+		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo.GetAddress())
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
 		podName:         podName,
-		user:            user,
+		userAddress:     user,
 		accountInfo:     accountInfo,
 		feed:            fd,
 		dir:             dir,

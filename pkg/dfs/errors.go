@@ -22,4 +22,5 @@ var (
 	ErrUserNotLoggedIn = errors.New("user not logged in")
 	ErrPodNotOpen      = errors.New("pod not open")
 	ErrBeeClient       = errors.New("could not connect to bee client")
+	ErrReadOnlyPod     = errors.New("operation not permitted: read only pod")
 )

@@ -26,10 +26,10 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) LoadDirMeta(podName, dirNameWithPath  string, fd *feed.API, accountInfo *account.Info) error {
+func (d *Directory) LoadDirMeta(podName, dirNameWithPath string, fd *feed.API, accountInfo *account.Info) error {
 	totalPath := podName + dirNameWithPath
 	topic := utils.HashString(totalPath)
-	_, data, err := d.fd.GetFeedData(topic, d.acc.GetAddress())
+	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
 	if err != nil {
 		return fmt.Errorf("dir sync: %v", err)
 	}
@@ -59,7 +59,6 @@ func (d *Directory) LoadDirMeta(podName, dirNameWithPath  string, fd *feed.API, 
 			path := dirInode.Meta.Path + utils.PathSeperator + dirInode.Meta.Name
 			d.AddToDirectoryMap(path, dirInode)
 			d.logger.Infof(path)
-
 
 			err = d.LoadDirMeta(podName, path, fd, accountInfo)
 			if err != nil {

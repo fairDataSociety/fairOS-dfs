@@ -200,7 +200,7 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Man
 			}
 		}
 
-		err :=  b.emptyManifestStack()
+		err := b.emptyManifestStack()
 		if err != nil {
 			return nil, err
 		}

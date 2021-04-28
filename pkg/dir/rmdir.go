@@ -26,7 +26,7 @@ func (d *Directory) RmDir(podName, parentPath, dirName string) error {
 		return ErrInvalidPodName
 	}
 
-	if dirName == ""  {
+	if dirName == "" {
 		return ErrInvalidDirectoryName
 	}
 
@@ -38,7 +38,7 @@ func (d *Directory) RmDir(podName, parentPath, dirName string) error {
 
 	// remove the feed and clear the data structure
 	topic := utils.HashString(totalPath)
-	err := d.fd.DeleteFeed(topic, d.acc.GetAddress())
+	err := d.fd.DeleteFeed(topic, d.userAddress)
 	if err != nil {
 		return err
 	}

@@ -18,6 +18,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
 	"resenje.org/jsonhttp"
 
@@ -26,13 +27,12 @@ import (
 )
 
 type UploadFileResponse struct {
-	References []Reference
+	Responses []Response
 }
 
-type Reference struct {
-	FileName  string `json:"file_name"`
-	Reference string `json:"reference,omitempty"`
-	Error     string `json:"error,omitempty"`
+type Response struct {
+	FileName string `json:"file_name"`
+	Message  string `json:"message,omitempty"`
 }
 
 const (
@@ -83,6 +83,14 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, "file upload: "+err.Error())
 		return
 	}
+
+	blkSize, err := strconv.ParseUint(blockSize, 10, 32)
+	if err != nil {
+		h.logger.Errorf("file upload: %v", err)
+		jsonhttp.BadRequest(w, "file upload: "+err.Error())
+		return
+	}
+
 	files := r.MultipartForm.File["files"]
 	if len(files) == 0 {
 		h.logger.Errorf("file upload: parameter \"files\" missing")
@@ -91,7 +99,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// upload files one by one
-	var references []Reference
+	var responses []Response
 	for _, file := range files {
 		fd, err := file.Open()
 		defer func() {
@@ -102,12 +110,12 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}()
 		if err != nil {
 			h.logger.Errorf("file upload: %v", err)
-			references = append(references, Reference{FileName: file.Filename, Error: err.Error()})
+			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
 
 		//upload file to bee
-		reference, err := h.dfsAPI.UploadFile(file.Filename, sessionId, file.Size, fd, podDir, blockSize, compression)
+		err = h.dfsAPI.UploadFile(file.Filename, sessionId, file.Size, fd, podDir, compression, uint32(blkSize))
 		if err != nil {
 			if err == dfs.ErrPodNotOpen {
 				h.logger.Errorf("file upload: %v", err)
@@ -115,14 +123,14 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.logger.Errorf("file upload: %v", err)
-			references = append(references, Reference{FileName: file.Filename, Error: err.Error()})
+			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
-		references = append(references, Reference{FileName: file.Filename, Reference: reference})
+		responses = append(responses, Response{FileName: file.Filename, Message: "uploaded succesfully"})
 	}
 
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &UploadFileResponse{
-		References: references,
+		Responses: responses,
 	})
 }

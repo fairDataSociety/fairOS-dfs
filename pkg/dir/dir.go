@@ -17,7 +17,6 @@ limitations under the License.
 package dir
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"strings"
 	"sync"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type Directory struct {

@@ -18,9 +18,10 @@ package pod
 
 import (
 	"encoding/json"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"strings"
 	"sync"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -34,7 +35,7 @@ func (p *Pod) SyncPod(podName string) error {
 		return err
 	}
 
-	if !p.isPodOpened(podName) {
+	if !p.IsPodOpened(podName) {
 		return ErrPodNotOpened
 	}
 

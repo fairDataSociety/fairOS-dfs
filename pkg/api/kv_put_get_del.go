@@ -18,9 +18,10 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/gorilla/mux"
-	"net/http"
 	"resenje.org/jsonhttp"
 )
 
@@ -204,5 +205,3 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonhttp.OK(w, "key deleted")
 }
-
-

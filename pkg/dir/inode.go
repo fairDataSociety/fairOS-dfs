@@ -17,7 +17,7 @@ limitations under the License.
 package dir
 
 type Inode struct {
-	Meta   *MetaData
+	Meta           *MetaData
 	fileOrDirNames []string
 }
 
@@ -27,4 +27,8 @@ func (in *Inode) GetMeta() *MetaData {
 
 func (in *Inode) GetFileOrDirNames() []string {
 	return in.fileOrDirNames
+}
+
+func (in *Inode) SetFileOrDirNames(fileOrDirNames []string) {
+	in.fileOrDirNames = fileOrDirNames
 }

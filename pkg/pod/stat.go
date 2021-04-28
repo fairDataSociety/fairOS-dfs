@@ -17,7 +17,11 @@ limitations under the License.
 package pod
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type PodStat struct {
@@ -43,4 +47,30 @@ func (p *Pod) PodStat(podName string) (*PodStat, error) {
 		AccessTime:       strconv.FormatInt(podInode.Meta.AccessTime, 10),
 		ModificationTime: strconv.FormatInt(podInode.Meta.AccessTime, 10),
 	}, nil
+}
+func (p *Pod) ExpandFilePath(podName, podFileOrDir string) (string, error) {
+	if !p.IsPodOpened(podName) {
+		return "", fmt.Errorf("login to pod to do this operation")
+	}
+
+	info, err := p.GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return "", err
+	}
+
+	path := p.getDirectoryPath(podFileOrDir, info)
+	return path, nil
+}
+
+func (p *Pod) getDirectoryPath(directoryName string, podInfo *Info) string {
+	path := podInfo.GetCurrentDirPathAndName() + utils.PathSeperator + directoryName
+
+	if podInfo.IsCurrentDirRoot() {
+		if strings.HasPrefix(directoryName, utils.PathSeperator) {
+			path = podInfo.GetCurrentPodPathAndName() + directoryName
+		} else {
+			path = podInfo.GetCurrentPodPathAndName() + utils.PathSeperator + directoryName
+		}
+	}
+	return path
 }

@@ -47,7 +47,7 @@ func TestPod_New(t *testing.T) {
 		}
 
 		if pod1.fd == nil || pod1.acc == nil {
-			t.Fatalf("user not initialized")
+			t.Fatalf("userAddress not initialized")
 		}
 
 		if info.GetCurrentPodNameOnly() != podName1 {

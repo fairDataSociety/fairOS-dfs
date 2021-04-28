@@ -21,13 +21,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"io"
 	"net/http"
 	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/golang/snappy"
 	"github.com/klauspost/pgzip"

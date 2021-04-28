@@ -17,16 +17,16 @@ limitations under the License.
 package dfs
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *DfsAPI) Mkdir(directoryName, sessionId string) error {
+func (d *DfsAPI) Mkdir(path, directoryName, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -38,8 +38,13 @@ func (d *DfsAPI) Mkdir(directoryName, sessionId string) error {
 		return ErrPodNotOpen
 	}
 
-	// make dir
-	err := ui.GetPod().MakeDir(ui.GetPodName(), directoryName)
+	// get the dir object and make directory
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+	directory := podInfo.GetDirectory()
+	err = directory.MkDir(ui.GetPodName(), path, directoryName)
 	if err != nil {
 		return err
 	}
@@ -65,15 +70,14 @@ func (d *DfsAPI) IsDirPresent(directoryName, sessionId string) (bool, error) {
 	}
 	directory := podInfo.GetDirectory()
 	podDir := podInfo.GetCurrentPodPathAndName() + directoryName
-	_, _, err = directory.GetDirNode(podDir, podInfo.GetFeed(), podInfo.GetAccountInfo())
+	_, _, err = directory.GetDirNode(podDir, podInfo.GetFeed(), podInfo.GetUserAddress())
 	if err != nil {
 		return false, err
 	}
-
 	return true, nil
 }
 
-func (d *DfsAPI) RmDir(directoryName, sessionId string) error {
+func (d *DfsAPI) RmDir(path, directoryName, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -85,14 +89,50 @@ func (d *DfsAPI) RmDir(directoryName, sessionId string) error {
 		return ErrPodNotOpen
 	}
 
-	err := ui.GetPod().RemoveDir(ui.GetPodName(), directoryName)
+	// get the dir object and remove directory
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return err
+	}
+	directory := podInfo.GetDirectory()
+	err = directory.RmDir(ui.GetPodName(), path, directoryName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (d *DfsAPI) ListDir(currentDir, sessionId string) ([]dir.DirOrFileEntry, error) {
+func (d *DfsAPI) ListDir(currentDir, sessionId string) ([]dir.Entry, []f.Entry, error) {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if ui.GetPodName() == "" {
+		return nil, nil, ErrPodNotOpen
+	}
+
+	// get the dir object and list directory
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, nil, err
+	}
+	directory := podInfo.GetDirectory()
+	dEntries, fileList, err := directory.ListDir(ui.GetPodName(), currentDir)
+	if err != nil {
+		return nil, nil, err
+	}
+	file := podInfo.GetFile()
+	fEntries, err := file.ListFiles(fileList)
+	if err != nil {
+		return nil, nil, err
+	}
+	return dEntries, fEntries, nil
+}
+
+func (d *DfsAPI) DirectoryStat(directoryName, sessionId string) (*dir.DirStats, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -104,55 +144,23 @@ func (d *DfsAPI) ListDir(currentDir, sessionId string) ([]dir.DirOrFileEntry, er
 		return nil, ErrPodNotOpen
 	}
 
-	entries, err := ui.GetPod().ListEntiesInDir(ui.GetPodName(), currentDir)
+	// get the dir object and stat directory
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
 	if err != nil {
 		return nil, err
 	}
-	return entries, nil
-}
-
-func (d *DfsAPI) DirectoryStat(directoryName, sessionId string, printNames bool) (*dir.DirStats, error) {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-
-	// check if pod open
-	if ui.GetPodName() == "" {
-		return nil, ErrPodNotOpen
-	}
-
-	ds, err := ui.GetPod().DirectoryStat(ui.GetPodName(), directoryName, printNames)
+	directory := podInfo.GetDirectory()
+	ds, err := directory.DirStat(ui.GetPodName(), directoryName)
 	if err != nil {
 		return nil, err
 	}
 	return ds, nil
-}
-
-func (d *DfsAPI) ChangeDirectory(directoryName, sessionId string) (*pod.Info, error) {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-
-	// check if pod open
-	if ui.GetPodName() == "" {
-		return nil, ErrPodNotOpen
-	}
-
-	podInfo, err := ui.GetPod().ChangeDir(ui.GetPodName(), directoryName)
-	if err != nil {
-		return nil, err
-	}
-	return podInfo, nil
 }
 
 //
 // File related API's
 //
-func (d *DfsAPI) CopyToLocal(localDir, podFile, sessionId string) error {
+func (d *DfsAPI) DeleteFile(path, podFile, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -164,52 +172,28 @@ func (d *DfsAPI) CopyToLocal(localDir, podFile, sessionId string) error {
 		return ErrPodNotOpen
 	}
 
-	err := ui.GetPod().CopyToLocal(ui.GetPodName(), localDir, podFile)
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
 	if err != nil {
 		return err
 	}
-	return nil
-}
 
-func (d *DfsAPI) Cat(fileName, sessionId string) error {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return ErrUserNotLoggedIn
+	// check if the pod is readonly before deleting a file
+	if podInfo.GetAccountInfo().IsReadOnlyPod() {
+		return ErrReadOnlyPod
 	}
+	directory := podInfo.GetDirectory()
 
-	// check if pod open
-	if ui.GetPodName() == "" {
-		return ErrPodNotOpen
-	}
-
-	err := ui.GetPod().Cat(ui.GetPodName(), fileName)
+	file := podInfo.GetFile()
+	err = file.RmFile(ui.GetPodName(), path, podFile)
 	if err != nil {
 		return err
 	}
-	return nil
+
+	// update the directory by removing the file from it
+	return directory.RemoveFileFromDirectory(path, podFile)
 }
 
-func (d *DfsAPI) DeleteFile(podFile, sessionId string) error {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return ErrUserNotLoggedIn
-	}
-
-	// check if pod open
-	if ui.GetPodName() == "" {
-		return ErrPodNotOpen
-	}
-
-	err := ui.GetPod().RemoveFile(ui.GetPodName(), podFile)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (d *DfsAPI) FileStat(fileName, sessionId string) (*file.FileStats, error) {
+func (d *DfsAPI) FileStat(fileName, sessionId string) (*f.Stats, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -221,30 +205,43 @@ func (d *DfsAPI) FileStat(fileName, sessionId string) (*file.FileStats, error) {
 		return nil, ErrPodNotOpen
 	}
 
-	ds, err := ui.GetPod().FileStat(ui.GetPodName(), fileName)
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, err
+	}
+	file := podInfo.GetFile()
+	ds, err := file.GetStats(ui.GetPodName(), fileName)
 	if err != nil {
 		return nil, err
 	}
 	return ds, nil
 }
 
-func (d *DfsAPI) UploadFile(fileName, sessionId string, fileSize int64, fd io.Reader, podDir, blockSize, compression string) (string, error) {
+func (d *DfsAPI) UploadFile(fileName, sessionId string, fileSize int64, fd io.Reader, podDir, compression string, blockSize uint32) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
-		return "", ErrUserNotLoggedIn
+		return ErrUserNotLoggedIn
 	}
 
 	// check if pod open
 	if ui.GetPodName() == "" {
-		return "", ErrPodNotOpen
+		return ErrPodNotOpen
 	}
 
-	ref, err := ui.GetPod().UploadFile(ui.GetPodName(), fileName, fileSize, fd, podDir, blockSize, compression)
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
 	if err != nil {
-		return "", err
+		return err
 	}
-	return ref, nil
+	file := podInfo.GetFile()
+	directory := podInfo.GetDirectory()
+	err = file.Upload(fd, fileName, fileSize, blockSize, podDir, compression)
+	if err != nil {
+		return err
+	}
+
+	// add the file to the directory metadata
+	return directory.AddFileToDirectory(podDir, fileName)
 }
 
 func (d *DfsAPI) DownloadFile(podFile, sessionId string) (io.ReadCloser, string, error) {
@@ -259,7 +256,31 @@ func (d *DfsAPI) DownloadFile(podFile, sessionId string) (io.ReadCloser, string,
 		return nil, "", ErrPodNotOpen
 	}
 
-	reader, size, err := ui.GetPod().DownloadFile(ui.GetPodName(), podFile)
+	// check if logged in to pod
+	if !ui.GetPod().IsPodOpened(ui.GetPodName()) {
+		return nil, "", fmt.Errorf("login to pod to do this operation")
+	}
+
+	// get podInfo and construct the path
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return nil, "", err
+	}
+	var path string
+	if podInfo.IsCurrentDirRoot() {
+		path = podInfo.GetCurrentPodPathAndName() + podFile
+	} else {
+		path = podInfo.GetCurrentDirPathAndName() + utils.PathSeperator + podFile
+	}
+
+	// check if file already present
+	if !podInfo.GetFile().IsFileAlreadyPresent(path) {
+		return nil, "", fmt.Errorf("file not present in pod")
+	}
+
+	// download the file by creating the reader
+	file := podInfo.GetFile()
+	reader, size, err := file.Download(podFile)
 	if err != nil {
 		return nil, "", err
 	}

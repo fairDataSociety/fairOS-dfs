@@ -42,11 +42,10 @@ func (d *Directory) MkDir(podName, parentPath, dirName string) error {
 		return ErrTooLongDirectoryName
 	}
 
-
 	// check if directory already present
 	totalPath := podName + parentPath + utils.PathSeperator + dirName
 	topic := utils.HashString(totalPath)
-	addr, data, err := d.fd.GetFeedData(topic, d.acc.GetAddress())
+	addr, data, err := d.fd.GetFeedData(topic, d.userAddress)
 	if err == nil && addr != nil && data != nil {
 		return ErrDirectoryAlreadyPresent
 	}
@@ -70,7 +69,7 @@ func (d *Directory) MkDir(podName, parentPath, dirName string) error {
 	}
 
 	// upload the metadata as blob
-	_, err = d.fd.CreateFeed(topic, d.acc.GetAddress(), data)
+	_, err = d.fd.CreateFeed(topic, d.userAddress, data)
 	if err != nil {
 		return err
 	}
@@ -78,4 +77,3 @@ func (d *Directory) MkDir(podName, parentPath, dirName string) error {
 	d.AddToDirectoryMap(totalPath, dirInode)
 	return nil
 }
-

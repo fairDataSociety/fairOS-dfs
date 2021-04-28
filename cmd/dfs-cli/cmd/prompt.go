@@ -1628,12 +1628,11 @@ func executor(in string) {
 			fmt.Println("dir ls: ", err)
 			return
 		}
-		for _, entry := range resp.Entries {
-			if entry.ContentType == "inode/directory" {
+		for _, entry := range resp.Directories {
 				fmt.Println("<Dir>: ", entry.Name)
-			} else {
-				fmt.Println("<File>: ", entry.Name)
-			}
+		}
+		for _, entry := range resp.Files {
+			fmt.Println("<File>: ", entry.Name)
 		}
 		currentPrompt = getCurrentPrompt()
 	case "mkdir":
@@ -1740,7 +1739,9 @@ func executor(in string) {
 			fmt.Println("file upload: ", err)
 			return
 		}
-		fmt.Println("reference : ", resp.References)
+		for _, response := range resp.Responses {
+			fmt.Println(response.FileName, " : ", response.Message)
+		}
 		currentPrompt = getCurrentPrompt()
 	case "download":
 		if !isPodOpened() {
@@ -1833,7 +1834,7 @@ func executor(in string) {
 					fmt.Println("stat failed: ", err)
 					return
 				}
-				var resp file.FileStats
+				var resp file.Stats
 				err = json.Unmarshal(data, &resp)
 				if err != nil {
 					fmt.Println("file stat: ", err)
@@ -1858,7 +1859,6 @@ func executor(in string) {
 				if compression == "" {
 					compression = "None"
 				}
-				fmt.Println("Account 	   	: ", resp.Account)
 				fmt.Println("PodName 	   	: ", resp.PodName)
 				fmt.Println("File Path	   	: ", resp.FilePath)
 				fmt.Println("File Name	   	: ", resp.FileName)

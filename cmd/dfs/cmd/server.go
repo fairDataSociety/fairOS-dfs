@@ -176,16 +176,10 @@ func startHttpService(logger logging.Logger) {
 	userRouter.Use(handler.LoginMiddleware)
 	userRouter.Use(handler.LogMiddleware)
 	userRouter.HandleFunc("/logout", handler.UserLogoutHandler).Methods("POST")
-	userRouter.HandleFunc("/avatar", handler.SaveUserAvatarHandler).Methods("POST")
-	userRouter.HandleFunc("/name", handler.SaveUserNameHandler).Methods("POST")
-	userRouter.HandleFunc("/contact", handler.SaveUserContactHandler).Methods("POST")
 	userRouter.HandleFunc("/export", handler.ExportUserHandler).Methods("POST")
 
 	userRouter.HandleFunc("/delete", handler.UserDeleteHandler).Methods("DELETE")
 	userRouter.HandleFunc("/stat", handler.GetUserStatHandler).Methods("GET")
-	userRouter.HandleFunc("/avatar", handler.GetUserAvatarHandler).Methods("GET")
-	userRouter.HandleFunc("/name", handler.GetUserNameHandler).Methods("GET")
-	userRouter.HandleFunc("/contact", handler.GetUserContactHandler).Methods("GET")
 	userRouter.HandleFunc("/share/inbox", handler.GetUserSharingInboxHandler).Methods("GET")
 	userRouter.HandleFunc("/share/outbox", handler.GetUserSharingOutboxHandler).Methods("GET")
 

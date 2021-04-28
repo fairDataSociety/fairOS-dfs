@@ -34,6 +34,13 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	path := r.FormValue("path")
+	if path == "" {
+		h.logger.Errorf("rmdir: \"path\" argument missing")
+		jsonhttp.BadRequest(w, "rmdir: \"path\" argument missing")
+		return
+	}
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -48,7 +55,7 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// remove directory
-	err = h.dfsAPI.RmDir(dir, sessionId)
+	err = h.dfsAPI.RmDir(path, dir, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {

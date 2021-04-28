@@ -41,7 +41,6 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, client, u.logger)
 
-
 	// load address from userName
 	address, err := u.getAddressFromUserName(userName, dataDir)
 	if err != nil {

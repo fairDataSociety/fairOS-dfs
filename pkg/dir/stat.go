@@ -38,7 +38,7 @@ type DirStats struct {
 	NoOfFiles        string `json:"no_of_files"`
 }
 
-func (d *Directory) DirStat(podName, dirNameWithPath string, account, podAddr string) (*DirStats, error) {
+func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) {
 	totalPath := podName + dirNameWithPath
 	topic := utils.HashString(totalPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
@@ -69,8 +69,6 @@ func (d *Directory) DirStat(podName, dirNameWithPath string, account, podAddr st
 	}
 
 	return &DirStats{
-		Account:          account,
-		PodAddress:       podAddr,
 		PodName:          podName,
 		DirPath:          path,
 		DirName:          meta.Name,

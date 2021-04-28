@@ -34,6 +34,13 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	path := r.FormValue("path")
+	if path == "" {
+		h.logger.Errorf("mkdir: \"path\" argument missing")
+		jsonhttp.BadRequest(w, "mkdir: \"path\" argument missing")
+		return
+	}
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -48,7 +55,7 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// make directory
-	err = h.dfsAPI.Mkdir(dirToCreate, sessionId)
+	err = h.dfsAPI.Mkdir(path, dirToCreate, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidDirectory ||

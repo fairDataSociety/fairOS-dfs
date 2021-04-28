@@ -34,6 +34,13 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	path := r.FormValue("path")
+	if path == "" {
+		h.logger.Errorf("file delete: \"path\" argument missing")
+		jsonhttp.BadRequest(w, "file delete: \"path\" argument missing")
+		return
+	}
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -48,7 +55,7 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete file
-	err = h.dfsAPI.DeleteFile(podFile, sessionId)
+	err = h.dfsAPI.DeleteFile(path, podFile, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file delete: %v", err)

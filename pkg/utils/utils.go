@@ -21,12 +21,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/ethersphere/bee/pkg/bmtpool"
 	"hash"
 	"os"
 	"runtime"
 	"strconv"
 	"unsafe"
+
+	"github.com/ethersphere/bee/pkg/bmtpool"
 
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"

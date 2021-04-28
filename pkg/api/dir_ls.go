@@ -24,20 +24,13 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
 type ListFileResponse struct {
-	Entries []dir.DirOrFileEntry `json:"entries"`
-}
-
-type DirOrFileEntry struct {
-	Name             string `json:"name"`
-	Type             string `json:"type"`
-	Size             string `json:"size,omitempty"`
-	CreationTime     string `json:"creation_time"`
-	ModificationTime string `json:"modification_time"`
-	AccessTime       string `json:"access_time"`
+	Directories []dir.Entry  `json:"dirs,omitempty"`
+	Files       []file.Entry `json:"files,omitempty"`
 }
 
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +55,7 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// list directory
-	entries, err := h.dfsAPI.ListDir(directory, sessionId)
+	dEntries, fEntries, err := h.dfsAPI.ListDir(directory, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
@@ -75,11 +68,15 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if entries == nil {
-		entries = make([]dir.DirOrFileEntry, 0)
+	if dEntries == nil {
+		dEntries = make([]dir.Entry, 0)
+	}
+	if fEntries == nil {
+		fEntries = make([]file.Entry, 0)
 	}
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &ListFileResponse{
-		Entries: entries,
+		Directories: dEntries,
+		Files:       fEntries,
 	})
 }

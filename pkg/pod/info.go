@@ -30,7 +30,7 @@ import (
 
 type Info struct {
 	podName         string
-	user            utils.Address
+	userAddress     utils.Address
 	dir             *di.Directory
 	file            *f.File
 	accountInfo     *account.Info
@@ -47,12 +47,12 @@ func (i *Info) GetDirectory() *di.Directory {
 	return i.dir
 }
 
-func (i *Info) getFile() *f.File {
+func (i *Info) GetFile() *f.File {
 	return i.file
 }
 
-func (i *Info) GetUser() utils.Address {
-	return i.user
+func (i *Info) GetUserAddress() utils.Address {
+	return i.userAddress
 }
 
 func (i *Info) GetAccountInfo() *account.Info {

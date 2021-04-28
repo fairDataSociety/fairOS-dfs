@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (p *Pod) isPodOpened(podName string) bool {
+func (p *Pod) IsPodOpened(podName string) bool {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
 	name1 := utils.PathSeperator + podName
@@ -68,4 +68,3 @@ func CleanPodName(podName string) (string, error) {
 	podName = strings.TrimSpace(podName)
 	return podName, nil
 }
-

@@ -170,7 +170,39 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	// add the file to the pod directory specified
 	fileName := sharingEntry.FileName
 	sharingEntry.PodName = podName
-	err = pod.ReceiveFileAndStore(podName, podDir, fileName, sharingEntry.FileMetaHash)
+
+	// check if pod is open
+	if !pod.IsPodOpened(podName) {
+		return "", "", fmt.Errorf("login to pod to do this operation")
+	}
+
+	podInfo, err := pod.GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return "", "", err
+	}
+
+	path := pod.GetFilePath(podDir, podInfo)
+	dir := podInfo.GetDirectory()
+
+	_, dirInode, err := dir.GetDirNode(path, podInfo.GetFeed(), podInfo.GetAccountInfo().GetAddress())
+	if err != nil {
+		return "", "", err
+	}
+
+	// check if file is already present
+	if podInfo.GetFile().IsFileAlreadyPresent(path) {
+		return "", "", fmt.Errorf("file already present in the destination dir")
+	}
+
+	// modify the modification time
+	dirInode.Meta.ModificationTime = time.Now().Unix()
+	_, err = dir.UpdateDirectory(dirInode)
+	if err != nil {
+		return "", "", err
+	}
+
+	// Add to file path map
+	err = podInfo.GetFile().AddFileToPath(path, sharingEntry.FileMetaHash)
 	if err != nil {
 		return "", "", err
 	}

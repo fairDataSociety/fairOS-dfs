@@ -21,9 +21,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"io"
 	"io/ioutil"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/golang/snappy"
@@ -57,7 +58,7 @@ type Reader struct {
 	rlReadNewLine bool
 }
 
-func (f *File) OpenFileForIndex(podFile string) (*Reader,  error) {
+func (f *File) OpenFileForIndex(podFile string) (*Reader, error) {
 	meta := f.GetFromFileMap(podFile)
 	if meta == nil {
 		return nil, fmt.Errorf("file not found in dfs")
@@ -65,7 +66,7 @@ func (f *File) OpenFileForIndex(podFile string) (*Reader,  error) {
 
 	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil {
-		return nil,  err
+		return nil, err
 	}
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
@@ -74,7 +75,7 @@ func (f *File) OpenFileForIndex(podFile string) (*Reader,  error) {
 	}
 
 	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, true)
-	return reader,  nil
+	return reader, nil
 }
 
 func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string, cache bool) *Reader {

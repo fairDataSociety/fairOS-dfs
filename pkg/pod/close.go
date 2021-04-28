@@ -17,7 +17,7 @@ limitations under the License.
 package pod
 
 func (p *Pod) ClosePod(podName string) error {
-	if !p.isPodOpened(podName) {
+	if !p.IsPodOpened(podName) {
 		return ErrPodNotOpened
 	}
 

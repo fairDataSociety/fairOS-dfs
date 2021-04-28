@@ -19,7 +19,6 @@ package dir
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"strconv"
 	"strings"
 
@@ -30,7 +29,7 @@ const (
 	MineTypeDirectory = "inode/directory"
 )
 
-type DirOrFileEntry struct {
+type Entry struct {
 	Name             string `json:"name"`
 	ContentType      string `json:"content_type"`
 	Size             string `json:"size,omitempty"`
@@ -40,21 +39,22 @@ type DirOrFileEntry struct {
 	AccessTime       string `json:"access_time"`
 }
 
-func (d *Directory) ListDir(podName, dirNameWithPath string) ([]DirOrFileEntry, error) {
+func (d *Directory) ListDir(podName, dirNameWithPath string) ([]Entry, []string, error) {
 	totalPath := podName + dirNameWithPath
 	topic := utils.HashString(totalPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
 	if err != nil {
-		return nil, fmt.Errorf("list dir : %v", err)
+		return nil, nil, fmt.Errorf("list dir : %v", err)
 	}
 
 	var dirInode Inode
 	err = json.Unmarshal(data, &dirInode)
 	if err != nil {
-		return nil, fmt.Errorf("list dir : %v", err)
+		return nil, nil, fmt.Errorf("list dir : %v", err)
 	}
 
-	var listEntries []DirOrFileEntry
+	var listEntries []Entry
+	var files []string
 	for _, fileOrDirName := range dirInode.fileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimLeft(fileOrDirName, "_D_")
@@ -62,7 +62,7 @@ func (d *Directory) ListDir(podName, dirNameWithPath string) ([]DirOrFileEntry, 
 			dirTopic := utils.HashString(dirPath)
 			_, data, err := d.fd.GetFeedData(dirTopic, d.getAddress())
 			if err != nil {
-				return nil, fmt.Errorf("list dir : %v", err)
+				return nil, nil, fmt.Errorf("list dir : %v", err)
 			}
 
 			var dirInode *Inode
@@ -70,7 +70,7 @@ func (d *Directory) ListDir(podName, dirNameWithPath string) ([]DirOrFileEntry, 
 			if err != nil {
 				continue
 			}
-			entry := DirOrFileEntry{
+			entry := Entry{
 				Name:             dirInode.Meta.Name,
 				ContentType:      MineTypeDirectory, // per RFC2425
 				CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
@@ -81,25 +81,8 @@ func (d *Directory) ListDir(podName, dirNameWithPath string) ([]DirOrFileEntry, 
 		} else if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimLeft(fileOrDirName, "_F_")
 			filePath := totalPath + utils.PathSeperator + fileName
-			fileTopic := utils.HashString(filePath)
-			_, data, err := d.getFeed().GetFeedData(fileTopic, d.getAddress())
-			var meta *file.MetaData
-			err = json.Unmarshal(data, &meta)
-			if err != nil {
-				continue
-			}
-			entry := DirOrFileEntry{
-				Name:             meta.Name,
-				ContentType:      meta.ContentType,
-				Size:             strconv.FormatUint(meta.Size, 10),
-				BlockSize:        strconv.FormatInt(int64(uint64(meta.BlockSize)), 10),
-				CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
-				AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
-				ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
-			}
-
-			listEntries = append(listEntries, entry)
+			files = append(files, filePath)
 		}
 	}
-	return listEntries, nil
+	return listEntries, files, nil
 }

@@ -19,14 +19,13 @@ package dir
 import (
 	"encoding/json"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) GetDirNode(name string, fd *feed.API, accountInfo *account.Info) ([]byte, *Inode, error) {
+func (d *Directory) GetDirNode(name string, fd *feed.API, userAddress utils.Address) ([]byte, *Inode, error) {
 	topic := utils.HashString(name)
-	addr, data, err := fd.GetFeedData(topic, accountInfo.GetAddress())
+	addr, data, err := fd.GetFeedData(topic, userAddress)
 	if err != nil {
 		return nil, nil, err
 	}

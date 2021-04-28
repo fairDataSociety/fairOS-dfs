@@ -19,6 +19,7 @@ package dir
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -28,7 +29,7 @@ func (d *Directory) AddToDir(podName, dirNameWithPath, itemToAdd string, isFile 
 		return ErrInvalidPodName
 	}
 
-	if dirNameWithPath == ""  {
+	if dirNameWithPath == "" {
 		return ErrInvalidDirectoryName
 	}
 
@@ -62,7 +63,6 @@ func (d *Directory) AddToDir(podName, dirNameWithPath, itemToAdd string, isFile 
 		itemToAdd = "_D_" + itemToAdd
 	}
 	dirInode.fileOrDirNames = append(dirInode.fileOrDirNames, itemToAdd)
-
 
 	// update the feed of the dir and the data structure with latest info
 	data, err = json.Marshal(dirInode)

@@ -377,7 +377,7 @@ func (tileset *DB) GetRowForExport() (*sql.Rows, error) {
 	return rows, nil
 }
 
-func (tileset *DB) GetNext(rows *sql.Rows) ( int, int, int, []byte, error) {
+func (tileset *DB) GetNext(rows *sql.Rows) (int, int, int, []byte, error) {
 	var (
 		zoom_level  int
 		tile_column int

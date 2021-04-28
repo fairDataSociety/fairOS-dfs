@@ -48,7 +48,7 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// stat directory
-	ds, err := h.dfsAPI.DirectoryStat(dir, sessionId, false)
+	ds, err := h.dfsAPI.DirectoryStat(dir, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
