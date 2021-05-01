@@ -19,6 +19,7 @@ package api
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 
@@ -61,7 +62,8 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Length", size)
+	sizeString := strconv.FormatUint(size, 10)
+	w.Header().Set("Content-Length", sizeString)
 
 	_, err = io.Copy(w, reader)
 	if err != nil {

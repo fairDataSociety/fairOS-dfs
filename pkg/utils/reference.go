@@ -24,11 +24,11 @@ const (
 )
 
 type Reference struct {
-	r []byte
+	R []byte
 }
 
 func NewReference(b []byte) Reference {
-	return Reference{r: b}
+	return Reference{R: b}
 }
 func ParseHexReference(s string) (a Reference, err error) {
 	b, err := hex.DecodeString(s)
@@ -38,8 +38,8 @@ func ParseHexReference(s string) (a Reference, err error) {
 	return NewReference(b), nil
 }
 func (ref Reference) String() string {
-	return hex.EncodeToString(ref.r)
+	return hex.EncodeToString(ref.R)
 }
 func (ref Reference) Bytes() []byte {
-	return ref.r
+	return ref.R
 }

@@ -244,27 +244,27 @@ func (d *DfsAPI) UploadFile(fileName, sessionId string, fileSize int64, fd io.Re
 	return directory.AddFileToDirectory(podDir, fileName)
 }
 
-func (d *DfsAPI) DownloadFile(podFile, sessionId string) (io.ReadCloser, string, error) {
+func (d *DfsAPI) DownloadFile(podFile, sessionId string) (io.ReadCloser, uint64, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
-		return nil, "", ErrUserNotLoggedIn
+		return nil, 0, ErrUserNotLoggedIn
 	}
 
 	// check if pod open
 	if ui.GetPodName() == "" {
-		return nil, "", ErrPodNotOpen
+		return nil, 0, ErrPodNotOpen
 	}
 
 	// check if logged in to pod
 	if !ui.GetPod().IsPodOpened(ui.GetPodName()) {
-		return nil, "", fmt.Errorf("login to pod to do this operation")
+		return nil, 0, fmt.Errorf("login to pod to do this operation")
 	}
 
 	// get podInfo and construct the path
 	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
 	if err != nil {
-		return nil, "", err
+		return nil, 0, err
 	}
 	var path string
 	if podInfo.IsCurrentDirRoot() {
@@ -275,14 +275,14 @@ func (d *DfsAPI) DownloadFile(podFile, sessionId string) (io.ReadCloser, string,
 
 	// check if file already present
 	if !podInfo.GetFile().IsFileAlreadyPresent(path) {
-		return nil, "", fmt.Errorf("file not present in pod")
+		return nil, 0, fmt.Errorf("file not present in pod")
 	}
 
 	// download the file by creating the reader
 	file := podInfo.GetFile()
 	reader, size, err := file.Download(podFile)
 	if err != nil {
-		return nil, "", err
+		return nil, 0, err
 	}
 	return reader, size, nil
 }

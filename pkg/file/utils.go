@@ -16,6 +16,8 @@ limitations under the License.
 
 package file
 
+import "github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 func (f *File) LoadFileMeta(fileNameWithPath string) error {
 	_, meta, err := f.getMetaFromFileName(fileNameWithPath)
 	if err != nil {
@@ -24,4 +26,14 @@ func (f *File) LoadFileMeta(fileNameWithPath string) error {
 	f.AddToFileMap(fileNameWithPath, meta)
 	f.logger.Infof(fileNameWithPath)
 	return nil
+}
+
+func combinePathAndFile(path, fileName string) string {
+	var totalPath string
+	if path == utils.PathSeperator {
+		totalPath = path + fileName
+	} else {
+		totalPath = path + utils.PathSeperator + fileName
+	}
+	return totalPath
 }

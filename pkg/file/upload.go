@@ -23,13 +23,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/golang/snappy"
 	"github.com/klauspost/pgzip"
 )
@@ -45,7 +43,7 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 		Version:          MetaVersion,
 		UserAddress:      f.userAddress,
 		PodName:          f.podName,
-		Path:             filepath.Dir(filePath),
+		Path:             filePath,
 		Name:             fileName,
 		Size:             uint64(fileSize),
 		BlockSize:        blockSize,
@@ -163,7 +161,7 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 	if err != nil {
 		return err
 	}
-	f.AddToFileMap(filePath, &meta)
+	f.AddToFileMap(combinePathAndFile(filePath, fileName), &meta)
 	return nil
 }
 

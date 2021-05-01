@@ -20,34 +20,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strconv"
 	"time"
 )
 
-func (f *File) Download(podFile string) (io.ReadCloser, string, error) {
+func (f *File) Download(podFile string) (io.ReadCloser, uint64, error) {
 	meta := f.GetFromFileMap(podFile)
 	if meta == nil {
-		return nil, "", fmt.Errorf("file not found in dfs")
+		return nil, 0, fmt.Errorf("file not found in dfs")
 	}
 
 	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil {
-		return nil, "", err
+		return nil, 0, err
 	}
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil {
-		return nil, "", err
+		return nil, 0, err
 	}
 
 	//need to change the access time for podFile
 	meta.AccessTime = time.Now().Unix()
 	err = f.uploadMeta(meta)
 	if err != nil {
-		return nil, "", err
+		return nil, 0, err
 	}
 
 	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)
-	size := strconv.FormatUint(meta.Size, 10)
-	return reader, size, nil
+	return reader, meta.Size, nil
 }
