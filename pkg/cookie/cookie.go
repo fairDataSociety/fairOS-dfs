@@ -60,7 +60,18 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 
 	expire := time.Now().Add(cookieExpirationTime)
 	var cookie *http.Cookie
-	if cookieDomain == "" {
+	if cookieDomain == "localhost" {
+		cookie = &http.Cookie{
+			Name:    CookieName,
+			Value:   encoded,
+			Path:    "/",
+			Expires: expire,
+			//SameSite: http.SameSiteNoneMode, // Can't have SameSite || Secure on localhost or cookie will be blocked
+			//Secure:   true, // Can't have SameSite || Secure on localhost or cookie will be blocked
+			//HttpOnly: true, // Can't have this on localhost or cookie will be inaccessibe via document.cookie
+			MaxAge: 0, // to make sure that the browser does not persist it in disk
+		}
+	} else if cookieDomain == "" {
 		cookie = &http.Cookie{
 			Name:     CookieName,
 			Value:    encoded,
