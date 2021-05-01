@@ -36,15 +36,15 @@ var (
 	NoOfParallelWorkers = runtime.NumCPU()
 )
 
-func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize uint32, filePath, compression string) error {
+func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error {
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()
 	meta := MetaData{
 		Version:          MetaVersion,
 		UserAddress:      f.userAddress,
 		PodName:          f.podName,
-		Path:             filePath,
-		Name:             fileName,
+		Path:             podPath,
+		Name:             podFileName,
 		Size:             uint64(fileSize),
 		BlockSize:        blockSize,
 		Compression:      compression,
@@ -161,7 +161,7 @@ func (f *File) Upload(fd io.Reader, fileName string, fileSize int64, blockSize u
 	if err != nil {
 		return err
 	}
-	f.AddToFileMap(combinePathAndFile(filePath, fileName), &meta)
+	f.AddToFileMap(CombinePathAndFile(podPath, podFileName), &meta)
 	return nil
 }
 

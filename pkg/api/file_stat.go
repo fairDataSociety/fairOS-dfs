@@ -26,10 +26,17 @@ import (
 )
 
 func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
-	podFile := r.FormValue("file")
-	if podFile == "" {
-		h.logger.Errorf("file stat: \"file\" argument missing")
-		jsonhttp.BadRequest(w, "file stat: \"file\" argument missing")
+	podFileWithPath := r.FormValue("pod_path_file")
+	if podFileWithPath == "" {
+		h.logger.Errorf("file stat: \"pod_path_file\" argument missing")
+		jsonhttp.BadRequest(w, "file stat: \"pod_path_file\" argument missing")
+		return
+	}
+
+	podPath := r.FormValue("pod_path")
+	if podPath == "" {
+		h.logger.Errorf("file stat: \"pod_path\" argument missing")
+		jsonhttp.BadRequest(w, "file pod_path: \"path\" argument missing")
 		return
 	}
 
@@ -47,7 +54,7 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get file stat
-	stat, err := h.dfsAPI.FileStat(podFile, sessionId)
+	stat, err := h.dfsAPI.FileStat(podFileWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file stat: %v", err)

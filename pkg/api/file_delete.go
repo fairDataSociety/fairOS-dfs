@@ -27,17 +27,10 @@ import (
 )
 
 func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	podFile := r.FormValue("file")
-	if podFile == "" {
-		h.logger.Errorf("file delete: \"file\" argument missing")
-		jsonhttp.BadRequest(w, "file delete: \"file\" argument missing")
-		return
-	}
-
-	path := r.FormValue("path")
-	if path == "" {
-		h.logger.Errorf("file delete: \"path\" argument missing")
-		jsonhttp.BadRequest(w, "file delete: \"path\" argument missing")
+	podFileWithPath := r.FormValue("pod_path_file")
+	if podFileWithPath == "" {
+		h.logger.Errorf("file delete: \"pod_path_file\" argument missing")
+		jsonhttp.BadRequest(w, "file delete: \"pod_path_file\" argument missing")
 		return
 	}
 
@@ -55,7 +48,7 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete file
-	err = h.dfsAPI.DeleteFile(path, podFile, sessionId)
+	err = h.dfsAPI.DeleteFile(podFileWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file delete: %v", err)

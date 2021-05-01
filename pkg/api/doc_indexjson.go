@@ -52,21 +52,13 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.dfsAPI.FileStat(podFile, sessionId)
+	err = h.dfsAPI.DocIndexJson(sessionId, name, podFile)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen || err.Error() == "file not present in pod" {
+		if err == dfs.ErrPodNotOpen || err == dfs.ErrFileNotPresent  {
 			h.logger.Errorf("doc indexjson: %v", err)
 			jsonhttp.BadRequest(w, "doc indexjson: "+err.Error())
 			return
 		}
-
-		h.logger.Errorf("doc indexjson: %v", err)
-		jsonhttp.InternalServerError(w, "doc indexjson: "+err.Error())
-		return
-	}
-
-	err = h.dfsAPI.DocIndexJson(sessionId, name, podFile)
-	if err != nil {
 		h.logger.Errorf("doc indexjson: %v", err)
 		jsonhttp.InternalServerError(w, "doc indexjson: "+err.Error())
 		return

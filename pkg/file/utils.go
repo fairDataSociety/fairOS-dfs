@@ -28,7 +28,7 @@ func (f *File) LoadFileMeta(fileNameWithPath string) error {
 	return nil
 }
 
-func combinePathAndFile(path, fileName string) string {
+func CombinePathAndFile(path, fileName string) string {
 	var totalPath string
 	if path == utils.PathSeperator {
 		totalPath = path + fileName

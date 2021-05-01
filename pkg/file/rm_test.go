@@ -17,7 +17,6 @@ limitations under the License.
 package file
 
 import (
-	"bytes"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -26,7 +25,7 @@ import (
 	"testing"
 )
 
-func TestDownload(t *testing.T) {
+func TestRemoveFile(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(ioutil.Discard, 0)
 	acc := account.New(logger)
@@ -41,39 +40,36 @@ func TestDownload(t *testing.T) {
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 
-	t.Run("download-small-file", func(t *testing.T) {
-		filePath := "/dir1"
-		fileName := "file1"
-		compression := ""
-		fileSize := int64(100)
-		blockSize := uint32(10)
+	t.Run("delete-file", func(t *testing.T) {
 		fileObject := NewFile("pod1", mockClient, fd, user, logger)
 
-		// upload a file
-		content, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
-		if err != nil {
-			t.Fatal(err)
+		// upload few files
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
+		if err != nil { t.Fatal(err) }
+
+		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", 200, 20)
+		if err != nil { t.Fatal(err) }
+
+		// remove file2
+		err = fileObject.RmFile("/dir1/file2")
+		if err != nil { t.Fatal(err) }
+
+
+		// validate file deletion
+		meta := fileObject.GetFromFileMap(CombinePathAndFile("/dir1", "file2"))
+		if meta != nil {
+			t.Fatalf("file is not removed")
 		}
 
-		// Download the file and read from reader
-		podFile := CombinePathAndFile(filePath, fileName)
-		reader , rcvdSize, err := fileObject.Download(podFile)
-		if err != nil {
-			t.Fatal(err)
+		// check if other file is present
+		meta = fileObject.GetFromFileMap(CombinePathAndFile("/dir1", "file1"))
+		if meta == nil {
+			t.Fatalf("file is not present")
 		}
-		rcvdBuffer := new(bytes.Buffer)
-		_, err = rcvdBuffer.ReadFrom(reader)
-		if err !=nil {
-			t.Fatal(err)
-		}
-
-		// validate the result
-		if len(rcvdBuffer.Bytes()) != len(content)  || int(rcvdSize) != len(content){
-			t.Fatalf("downloaded content size is invalid")
-		}
-		if !bytes.Equal(content,rcvdBuffer.Bytes()) {
-			t.Fatalf("downloaded content is not equal")
+		if meta.Name != "file1" {
+			t.Fatalf("retrieved invalid file name")
 		}
 
 	})
+
 }

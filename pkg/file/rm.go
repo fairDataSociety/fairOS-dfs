@@ -25,13 +25,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (f *File) RmFile(podName, path, fileToDelete string) error {
-	totalPath := podName + utils.PathSeperator + path + utils.PathSeperator + fileToDelete
-	if path == utils.PathSeperator {
-		totalPath = podName + utils.PathSeperator + path + fileToDelete
-	}
-
-	_, meta, err := f.getMetaFromFileName(totalPath)
+func (f *File) RmFile(podFileWithPath string) error {
+	_, meta, err := f.getMetaFromFileName(podFileWithPath)
 	if err != nil {
 		return err
 	}
@@ -67,11 +62,14 @@ func (f *File) RmFile(podName, path, fileToDelete string) error {
 	}
 
 	// remove the meta
-	topic := utils.HashString(totalPath)
+	topic := utils.HashString(podFileWithPath)
 	_, err = f.fd.UpdateFeed(topic, f.userAddress, []byte{})
 	if err != nil {
 		return err
 	}
+
+	// remove the file from file map
+	f.RemoveFromFileMap(podFileWithPath)
 
 	return nil
 }

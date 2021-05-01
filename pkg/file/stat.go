@@ -44,8 +44,8 @@ type Blocks struct {
 	CompressedSize string `json:"compressed_size"`
 }
 
-func (f *File) GetStats(podName, fileName string) (*Stats, error) {
-	meta := f.GetFromFileMap(fileName)
+func (f *File) GetStats(podName, podFileWithPath string) (*Stats, error) {
+	meta := f.GetFromFileMap(podFileWithPath)
 	if meta == nil {
 		return nil, fmt.Errorf("file not found")
 	}

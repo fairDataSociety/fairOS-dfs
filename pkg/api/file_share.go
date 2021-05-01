@@ -35,10 +35,10 @@ type FileSharingReference struct {
 }
 
 func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
-	podFile := r.FormValue("file")
-	if podFile == "" {
-		h.logger.Errorf("file share: \"file\" argument missing")
-		jsonhttp.BadRequest(w, "file share: \"file\" argument missing")
+	podFileWithPath := r.FormValue("pod_path_file")
+	if podFileWithPath == "" {
+		h.logger.Errorf("file share: \"pod_path_file\" argument missing")
+		jsonhttp.BadRequest(w, "file share: \"pod_path_file\" argument missing")
 		return
 	}
 	destinationRef := r.FormValue("to")
@@ -61,7 +61,7 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sharingRef, err := h.dfsAPI.ShareFile(podFile, destinationRef, sessionId)
+	sharingRef, err := h.dfsAPI.ShareFile(podFileWithPath, destinationRef, sessionId)
 	if err != nil {
 		h.logger.Errorf("file share: %v", err)
 		jsonhttp.InternalServerError(w, "file share: "+err.Error())

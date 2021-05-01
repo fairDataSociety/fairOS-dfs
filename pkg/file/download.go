@@ -23,8 +23,14 @@ import (
 	"time"
 )
 
-func (f *File) Download(podFile string) (io.ReadCloser, uint64, error) {
-	meta := f.GetFromFileMap(podFile)
+func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
+
+	// check if file present
+	if !f.IsFileAlreadyPresent(podFileWithPath) {
+		return nil, 0, fmt.Errorf("file not present")
+	}
+
+	meta := f.GetFromFileMap(podFileWithPath)
 	if meta == nil {
 		return nil, 0, fmt.Errorf("file not found in dfs")
 	}

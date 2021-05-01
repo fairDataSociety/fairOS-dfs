@@ -258,7 +258,7 @@ func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) 
 	return podInfo.GetDocStore().DocBatchWrite(docBatch, "")
 }
 
-func (d *DfsAPI) DocIndexJson(sessionId, name, podFile string) error {
+func (d *DfsAPI) DocIndexJson(sessionId, name, podFileWithPath string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -270,14 +270,15 @@ func (d *DfsAPI) DocIndexJson(sessionId, name, podFile string) error {
 		return ErrPodNotOpen
 	}
 
-	fileWithPodName, err := ui.GetPod().ExpandFilePath(ui.GetPodName(), podFile)
-	if err != nil {
-		return err
-	}
+	// check if file present
 	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
 	if err != nil {
 		return err
 	}
+	file := podInfo.GetFile()
+	if !file.IsFileAlreadyPresent(podFileWithPath) {
+		return ErrFileNotPresent
+	}
 
-	return podInfo.GetDocStore().DocFileIndex(name, fileWithPodName)
+	return podInfo.GetDocStore().DocFileIndex(name, podFileWithPath)
 }

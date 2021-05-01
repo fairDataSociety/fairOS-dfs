@@ -66,9 +66,9 @@ type ReceiveFileInfo struct {
 	SharedTime     string `json:"shared_time"`
 }
 
-func (u *Users) ShareFileWithUser(podName, podFilePath, destinationRef string, userInfo *Info, pod *pod.Pod) (string, error) {
+func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod) (string, error) {
 	// KVGet the meta reference of the file to share
-	metaRef, fileName, err := pod.GetMetaReferenceOfFile(podName, podFilePath)
+	metaRef, fileName, err := pod.GetMetaReferenceOfFile(podName, podFileWithPath)
 	if err != nil {
 		return "", err
 	}

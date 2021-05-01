@@ -54,7 +54,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(combinePathAndFile(filePath, fileName))
+		meta := fileObject.GetFromFileMap(CombinePathAndFile(filePath, fileName))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}

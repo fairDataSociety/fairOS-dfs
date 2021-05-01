@@ -17,16 +17,16 @@ limitations under the License.
 package file
 
 import (
-	"bytes"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"io/ioutil"
+	"strconv"
 	"testing"
 )
 
-func TestDownload(t *testing.T) {
+func TestStat(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(ioutil.Discard, 0)
 	acc := account.New(logger)
@@ -41,39 +41,33 @@ func TestDownload(t *testing.T) {
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 
-	t.Run("download-small-file", func(t *testing.T) {
-		filePath := "/dir1"
-		fileName := "file1"
-		compression := ""
-		fileSize := int64(100)
-		blockSize := uint32(10)
+	t.Run("stat-file", func(t *testing.T) {
 		fileObject := NewFile("pod1", mockClient, fd, user, logger)
 
 		// upload a file
-		content, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
-		if err != nil {
-			t.Fatal(err)
-		}
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
+		if err != nil { t.Fatal(err) }
 
-		// Download the file and read from reader
-		podFile := CombinePathAndFile(filePath, fileName)
-		reader , rcvdSize, err := fileObject.Download(podFile)
-		if err != nil {
-			t.Fatal(err)
-		}
-		rcvdBuffer := new(bytes.Buffer)
-		_, err = rcvdBuffer.ReadFrom(reader)
-		if err !=nil {
-			t.Fatal(err)
-		}
+		// stat the file
+		stats, err := fileObject.GetStats("pod1", "/dir1/file1")
+		if err != nil { t.Fatal(err) }
 
-		// validate the result
-		if len(rcvdBuffer.Bytes()) != len(content)  || int(rcvdSize) != len(content){
-			t.Fatalf("downloaded content size is invalid")
+		// validate state
+		if stats.PodName != "pod1" {
+			t.Fatalf("invalid pod name in stats")
 		}
-		if !bytes.Equal(content,rcvdBuffer.Bytes()) {
-			t.Fatalf("downloaded content is not equal")
+		if stats.FilePath != "/dir1" {
+			t.Fatalf("invalid file path in stats")
 		}
-
+		if stats.FileName != "file1" {
+			t.Fatalf("invalid file name in stats")
+		}
+		if stats.FileSize != strconv.FormatUint(100, 10) {
+			t.Fatalf("invalid file size in stats")
+		}
+		if stats.BlockSize != strconv.FormatUint(10, 10) {
+			t.Fatalf("invalid block size in stats")
+		}
 	})
+
 }

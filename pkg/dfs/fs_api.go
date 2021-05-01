@@ -19,6 +19,7 @@ package dfs
 import (
 	"fmt"
 	"io"
+	"path/filepath"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -160,7 +161,7 @@ func (d *DfsAPI) DirectoryStat(directoryName, sessionId string) (*dir.DirStats, 
 //
 // File related API's
 //
-func (d *DfsAPI) DeleteFile(path, podFile, sessionId string) error {
+func (d *DfsAPI) DeleteFile(podFileWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -184,16 +185,18 @@ func (d *DfsAPI) DeleteFile(path, podFile, sessionId string) error {
 	directory := podInfo.GetDirectory()
 
 	file := podInfo.GetFile()
-	err = file.RmFile(ui.GetPodName(), path, podFile)
+	err = file.RmFile(podFileWithPath)
 	if err != nil {
 		return err
 	}
 
 	// update the directory by removing the file from it
-	return directory.RemoveFileFromDirectory(path, podFile)
+	fileDir := filepath.Dir(podFileWithPath)
+	fileName := filepath.Base(podFileWithPath)
+	return directory.RemoveFileFromDirectory(fileDir, fileName)
 }
 
-func (d *DfsAPI) FileStat(fileName, sessionId string) (*f.Stats, error) {
+func (d *DfsAPI) FileStat(podFileWithPath, sessionId string) (*f.Stats, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -210,14 +213,14 @@ func (d *DfsAPI) FileStat(fileName, sessionId string) (*f.Stats, error) {
 		return nil, err
 	}
 	file := podInfo.GetFile()
-	ds, err := file.GetStats(ui.GetPodName(), fileName)
+	ds, err := file.GetStats(ui.GetPodName(), podFileWithPath)
 	if err != nil {
 		return nil, err
 	}
 	return ds, nil
 }
 
-func (d *DfsAPI) UploadFile(fileName, sessionId string, fileSize int64, fd io.Reader, podDir, compression string, blockSize uint32) error {
+func (d *DfsAPI) UploadFile(podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -235,16 +238,16 @@ func (d *DfsAPI) UploadFile(fileName, sessionId string, fileSize int64, fd io.Re
 	}
 	file := podInfo.GetFile()
 	directory := podInfo.GetDirectory()
-	err = file.Upload(fd, fileName, fileSize, blockSize, podDir, compression)
+	err = file.Upload(fd, podFileName, fileSize, blockSize, podPath, compression)
 	if err != nil {
 		return err
 	}
 
 	// add the file to the directory metadata
-	return directory.AddFileToDirectory(podDir, fileName)
+	return directory.AddFileToDirectory(podPath, podFileName)
 }
 
-func (d *DfsAPI) DownloadFile(podFile, sessionId string) (io.ReadCloser, uint64, error) {
+func (d *DfsAPI) DownloadFile(podFileWithPath, sessionId string) (io.ReadCloser, uint64, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -266,28 +269,17 @@ func (d *DfsAPI) DownloadFile(podFile, sessionId string) (io.ReadCloser, uint64,
 	if err != nil {
 		return nil, 0, err
 	}
-	var path string
-	if podInfo.IsCurrentDirRoot() {
-		path = podInfo.GetCurrentPodPathAndName() + podFile
-	} else {
-		path = podInfo.GetCurrentDirPathAndName() + utils.PathSeperator + podFile
-	}
-
-	// check if file already present
-	if !podInfo.GetFile().IsFileAlreadyPresent(path) {
-		return nil, 0, fmt.Errorf("file not present in pod")
-	}
 
 	// download the file by creating the reader
 	file := podInfo.GetFile()
-	reader, size, err := file.Download(podFile)
+	reader, size, err := file.Download(podFileWithPath)
 	if err != nil {
 		return nil, 0, err
 	}
 	return reader, size, nil
 }
 
-func (d *DfsAPI) ShareFile(podFile, destinationUser, sessionId string) (string, error) {
+func (d *DfsAPI) ShareFile(podFileWithPath, destinationUser, sessionId string) (string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -299,7 +291,7 @@ func (d *DfsAPI) ShareFile(podFile, destinationUser, sessionId string) (string, 
 		return "", ErrPodNotOpen
 	}
 
-	sharingRef, err := d.users.ShareFileWithUser(ui.GetPodName(), podFile, destinationUser, ui, ui.GetPod())
+	sharingRef, err := d.users.ShareFileWithUser(ui.GetPodName(), podFileWithPath, destinationUser, ui, ui.GetPod())
 	if err != nil {
 		return "", err
 	}

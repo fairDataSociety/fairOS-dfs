@@ -41,20 +41,21 @@ const (
 )
 
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
-	podDir := r.FormValue("pod_dir")
-	blockSize := r.FormValue("block_size")
-	compression := r.Header.Get(CompressionHeader)
-	if podDir == "" {
-		h.logger.Errorf("file upload: \"pod_dir\" argument missing")
-		jsonhttp.BadRequest(w, "file upload: \"pod_dir\" argument missing")
+	podPath := r.FormValue("pod_path")
+	if podPath == "" {
+		h.logger.Errorf("file upload: \"pod_path\" argument missing")
+		jsonhttp.BadRequest(w, "file upload: \"pod_path\" argument missing")
 		return
 	}
+
+	blockSize := r.FormValue("block_size")
 	if blockSize == "" {
 		h.logger.Errorf("file upload: \"block_size\" argument missing")
 		jsonhttp.BadRequest(w, "file upload: \"block_size\" argument missing")
 		return
 	}
 
+	compression := r.Header.Get(CompressionHeader)
 	if compression != "" {
 		if compression != "snappy" && compression != "gzip" {
 			h.logger.Errorf("file upload: invalid value for \"compression\" header")
@@ -115,7 +116,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//upload file to bee
-		err = h.dfsAPI.UploadFile(file.Filename, sessionId, file.Size, fd, podDir, compression, uint32(blkSize))
+		err = h.dfsAPI.UploadFile(file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(blkSize))
 		if err != nil {
 			if err == dfs.ErrPodNotOpen {
 				h.logger.Errorf("file upload: %v", err)

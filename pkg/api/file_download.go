@@ -29,10 +29,10 @@ import (
 )
 
 func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
-	podFile := r.FormValue("file")
-	if podFile == "" {
-		h.logger.Errorf("download: \"file\" argument missing")
-		jsonhttp.BadRequest(w, "download: \"file\" argument missing")
+	podFileWithPath := r.FormValue("pod_path_file")
+	if podFileWithPath == "" {
+		h.logger.Errorf("download: \"pod_path_file\" argument missing")
+		jsonhttp.BadRequest(w, "download: \"pod_path_file\" argument missing")
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// download file from bee
-	reader, size, err := h.dfsAPI.DownloadFile(podFile, sessionId)
+	reader, size, err := h.dfsAPI.DownloadFile(podFileWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("download: %v", err)
