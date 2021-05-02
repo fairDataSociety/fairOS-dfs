@@ -18,10 +18,8 @@ package pod
 
 import (
 	"fmt"
-	"strings"
-	"sync"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -50,7 +48,6 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	var file *f.File
 	var fd *feed.API
 	var dir *d.Directory
-	var dirInode *d.Inode
 	var user utils.Address
 	if sharedPodType {
 		addressString := p.getAddress(sharedPods, podName)
@@ -65,12 +62,6 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		fd = feed.New(accountInfo, p.client, p.logger)
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
-
-		// get the pod's inode
-		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo.GetAddress())
-		if err != nil {
-			return nil, err
-		}
 
 		// set the userAddress as the pod address we got from shared pod
 		user = address
@@ -90,11 +81,6 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
-		// get the pod's inode
-		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo.GetAddress())
-		if err != nil {
-			return nil, err
-		}
 		user = p.acc.GetAddress(index)
 	}
 
@@ -109,16 +95,11 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		feed:            fd,
 		dir:             dir,
 		file:            file,
-		currentPodInode: dirInode,
-		curPodMu:        sync.RWMutex{},
-		currentDirInode: dirInode,
-		curDirMu:        sync.RWMutex{},
 		kvStore:         kvStore,
 		docStore:        docStore,
 	}
 
 	p.addPodToPodMap(podName, podInfo)
-	dir.AddToDirectoryMap(podName, dirInode)
 
 	// sync the pod's files and directories
 	err = p.SyncPod(podName)

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pod
+package pod_test
 
 import (
 	"io/ioutil"
@@ -25,6 +25,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
 func TestNewPod(t *testing.T) {
@@ -36,7 +37,7 @@ func TestNewPod(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := NewPod(mockClient, fd, acc, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, logger)
 
 	podName1 := "test1"
 	podName2 := "test2"
@@ -46,15 +47,15 @@ func TestNewPod(t *testing.T) {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
-		if pod1.fd == nil || pod1.acc == nil {
+		if pod1.GetFeed() == nil || pod1.GetAccount() == nil {
 			t.Fatalf("userAddress not initialized")
 		}
 
-		if info.GetCurrentPodNameOnly() != podName1 {
-			t.Fatalf("invalid pod name: expected %s got %s", podName1, info.GetCurrentPodNameOnly())
+		if info.GetPodName() != podName1 {
+			t.Fatalf("invalid pod name: expected %s got %s", podName1, info.GetPodName())
 		}
 
-		pods, _, err := pod1.loadUserPods()
+		pods, _, err := pod1.ListPods()
 		if err != nil {
 			t.Fatalf("error getting pods")
 		}
@@ -72,15 +73,9 @@ func TestNewPod(t *testing.T) {
 			t.Fatalf("could not get pod from podMap")
 		}
 
-		if infoGot.GetCurrentPodNameOnly() != podName1 {
-			t.Fatalf("invalid pod name: expected %s got %s", podName1, infoGot.GetCurrentPodNameOnly())
+		if infoGot.GetPodName() != podName1 {
+			t.Fatalf("invalid pod name: expected %s got %s", podName1, infoGot.GetPodName())
 		}
-
-		dirInode := info.dir.GetDirFromDirectoryMap(podName1)
-		if dirInode == nil {
-			t.Fatalf("pod not added as direcory")
-		}
-
 	})
 
 	t.Run("create-second-pod", func(t *testing.T) {
@@ -89,11 +84,11 @@ func TestNewPod(t *testing.T) {
 			t.Fatalf("error creating pod %s", podName2)
 		}
 
-		if info.GetCurrentPodNameOnly() != podName2 {
-			t.Fatalf("invalid pod name: expected %s got %s", podName2, info.GetCurrentPodNameOnly())
+		if info.GetPodName() != podName2 {
+			t.Fatalf("invalid pod name: expected %s got %s", podName2, info.GetPodName())
 		}
 
-		pods, _, err := pod1.loadUserPods()
+		pods, _, err := pod1.ListPods()
 		if err != nil {
 			t.Fatalf("error getting pods")
 		}
@@ -102,7 +97,7 @@ func TestNewPod(t *testing.T) {
 			t.Fatalf("length of pods is not 2")
 		}
 
-		if strings.Trim(pods[1], "\n") != podName2 {
+		if strings.Trim(pods[0], "\n") != podName2 && strings.Trim(pods[1], "\n") != podName2 {
 			t.Fatalf("podName is not %s", podName2)
 		}
 
@@ -111,13 +106,8 @@ func TestNewPod(t *testing.T) {
 			t.Fatalf("could not get pod from podMap")
 		}
 
-		if infoGot.GetCurrentPodNameOnly() != podName2 {
-			t.Fatalf("invalid pod name: expected %s got %s", podName2, infoGot.GetCurrentPodNameOnly())
-		}
-
-		dirInode := info.dir.GetDirFromDirectoryMap(podName2)
-		if dirInode == nil {
-			t.Fatalf("pod not added as direcory")
+		if infoGot.GetPodName() != podName2 {
+			t.Fatalf("invalid pod name: expected %s got %s", podName2, infoGot.GetPodName())
 		}
 	})
 }

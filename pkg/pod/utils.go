@@ -27,11 +27,8 @@ import (
 func (p *Pod) IsPodOpened(podName string) bool {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
-	name1 := utils.PathSeperator + podName
-	if podInfo, ok := p.podMap[name1]; ok {
-		if podInfo.currentPodInode != nil {
-			return true
-		}
+	if _, ok := p.podMap[podName]; ok {
+		return true
 	}
 	return false
 }

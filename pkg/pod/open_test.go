@@ -15,19 +15,3 @@ limitations under the License.
 */
 
 package pod
-
-type PodStat struct {
-	PodName          string
-	PodAddress       string
-}
-
-func (p *Pod) PodStat(podName string) (*PodStat, error) {
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return nil, ErrInvalidPodName
-	}
-	return &PodStat{
-		PodName:          podInfo.GetPodName(),
-		PodAddress:       podInfo.userAddress.String(),
-	}, nil
-}

@@ -21,12 +21,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) LoadDirMeta(podName, dirNameWithPath string, fd *feed.API, accountInfo *account.Info) error {
+func (d *Directory) SyncDirectory(podName, dirNameWithPath string) error {
 	totalPath := podName + dirNameWithPath
 	topic := utils.HashString(totalPath)
 	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
@@ -60,7 +58,7 @@ func (d *Directory) LoadDirMeta(podName, dirNameWithPath string, fd *feed.API, a
 			d.AddToDirectoryMap(path, dirInode)
 			d.logger.Infof(path)
 
-			err = d.LoadDirMeta(podName, path, fd, accountInfo)
+			err = d.SyncDirectory(podName, path,)
 			if err != nil {
 				return err
 			}

@@ -52,7 +52,7 @@ func (d *DfsAPI) Mkdir(path, directoryName, sessionId string) error {
 	return nil
 }
 
-func (d *DfsAPI) IsDirPresent(directoryName, sessionId string) (bool, error) {
+func (d *DfsAPI) IsDirPresent(directoryNameWithPath, sessionId string) (bool, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -70,8 +70,8 @@ func (d *DfsAPI) IsDirPresent(directoryName, sessionId string) (bool, error) {
 		return false, err
 	}
 	directory := podInfo.GetDirectory()
-	podDir := podInfo.GetCurrentPodPathAndName() + directoryName
-	dirPresent := directory.IsDirectoryPresent(podDir)
+
+	dirPresent := directory.IsDirectoryPresent(directoryNameWithPath)
 	return dirPresent, nil
 }
 

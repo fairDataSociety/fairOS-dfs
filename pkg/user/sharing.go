@@ -181,22 +181,23 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 		return "", "", err
 	}
 
-	path := pod.GetFilePath(podDir, podInfo)
+	totalPath := utils.CombinePathAndFile(podDir, fileName)
 	dir := podInfo.GetDirectory()
+	file := podInfo.GetFile()
 
 	// check if file is already present
-	if podInfo.GetFile().IsFileAlreadyPresent(path) {
+	if file.IsFileAlreadyPresent(totalPath) {
 		return "", "", fmt.Errorf("file already present in the destination dir")
 	}
 
 	// add the file to the prent dir
-	err = dir.AddEntryToDir(path, fileName, true)
+	err = dir.AddEntryToDir(podDir, fileName, true)
 	if err != nil {
 		return "", "", err
 	}
 
 	// Add to file path map
-	err = podInfo.GetFile().AddFileToPath(path, sharingEntry.FileMetaHash)
+	err = file.AddFileToPath(podDir, sharingEntry.FileMetaHash)
 	if err != nil {
 		return "", "", err
 	}

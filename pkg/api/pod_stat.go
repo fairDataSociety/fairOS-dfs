@@ -27,12 +27,8 @@ import (
 )
 
 type PodStatResponse struct {
-	Version          string `json:"version"`
 	PodName          string `json:"name"`
-	PodPath          string `json:"path"`
-	CreationTime     string `json:"cTime"`
-	AccessTime       string `json:"aTime"`
-	ModificationTime string `json:"mTime"`
+	PodAddress          string `json:"address"`
 }
 
 func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
@@ -71,11 +67,7 @@ func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &PodStatResponse{
-		Version:          stat.Version,
 		PodName:          stat.PodName,
-		PodPath:          stat.PodPath,
-		CreationTime:     stat.CreationTime,
-		AccessTime:       stat.AccessTime,
-		ModificationTime: stat.ModificationTime,
+		PodAddress:       stat.PodAddress,
 	})
 }

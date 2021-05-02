@@ -20,17 +20,15 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io"
-	"strconv"
-	"strings"
-	"sync"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"io"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -53,7 +51,6 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 	var fd *feed.API
 	var file *f.File
 	var dir *d.Directory
-	var dirInode *d.Inode
 	var user utils.Address
 	if addressString != "" {
 		if p.checkIfPodPresent(pods, podName) {
@@ -71,12 +68,6 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		fd = feed.New(accountInfo, p.client, p.logger)
 		file = f.NewFile(podName, p.client, fd, user, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
-
-		// get the inode instead of creating
-		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo.GetAddress())
-		if err != nil {
-			return nil, err
-		}
 
 		// store the pod file with shared pod
 		sharedPods[addressString] = podName
@@ -112,12 +103,6 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
-		// create the pod inode
-		dirInode, _, err = dir.CreatePodINode(podName)
-		if err != nil {
-			return nil, err
-		}
-
 		// store the pod file
 		pods[freeId] = podName
 		err = p.storeUserPods(pods, sharedPods)
@@ -139,16 +124,10 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		file:            file,
 		accountInfo:     accountInfo,
 		feed:            fd,
-		currentPodInode: dirInode,
-		curPodMu:        sync.RWMutex{},
-		currentDirInode: dirInode,
-		curDirMu:        sync.RWMutex{},
 		kvStore:         kvStore,
 		docStore:        docStore,
 	}
 	p.addPodToPodMap(podName, podInfo)
-	dir.AddToDirectoryMap(podName, dirInode)
-
 	return podInfo, nil
 }
 

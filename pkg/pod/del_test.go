@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pod
+package pod_test
 
 import (
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -25,7 +26,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestDeleteNewPod(t *testing.T) {
@@ -37,17 +37,17 @@ func TestDeleteNewPod(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := NewPod(mockClient, fd, acc, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, logger)
 
 	podName1 := "test1"
 	podName2 := "test2"
 	t.Run("create-one-pod-and-del", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password", "")
+		_, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
-		pods, _, err := pod1.loadUserPods()
+		pods, _, err := pod1.ListPods()
 		if err != nil {
 			t.Fatalf("error getting pods")
 		}
@@ -61,7 +61,7 @@ func TestDeleteNewPod(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		pods, _, err = pod1.loadUserPods()
+		pods, _, err = pod1.ListPods()
 		if err != nil {
 			t.Fatalf("error getting pods")
 		}
@@ -70,36 +70,27 @@ func TestDeleteNewPod(t *testing.T) {
 			t.Fatalf("delete failed")
 		}
 
-		if strings.Trim(pods[0], "\n") != "" {
-			t.Fatalf("delete pod failed")
-		}
 
 		infoGot, err := pod1.GetPodInfoFromPodMap(podName1)
-		if err.Error() != ("could not find pod: " + utils.PathSeperator + podName1) {
+		if err == nil {
 			t.Fatalf("pod not deleted from map")
 		}
 		if infoGot != nil {
 			t.Fatalf("pod not deleted from map")
 		}
-
-		dirInode := info.dir.GetDirFromDirectoryMap(podName1)
-		if dirInode != nil {
-			t.Fatalf("pod directory not deleted from directory map")
-		}
-
 	})
 
 	t.Run("create-two-pod-and-del", func(t *testing.T) {
-		info1, err := pod1.CreatePod(podName1, "password", "")
+		_, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
-		info2, err := pod1.CreatePod(podName2, "password", "")
+		_, err = pod1.CreatePod(podName2, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
-		pods, _, err := pod1.loadUserPods()
+		pods, _, err := pod1.ListPods()
 		if err != nil {
 			t.Fatalf("error getting pods")
 		}
@@ -117,7 +108,7 @@ func TestDeleteNewPod(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		pods, _, err = pod1.loadUserPods()
+		pods, _, err = pod1.ListPods()
 		if err != nil {
 			t.Fatalf("error getting pods")
 		}
@@ -126,30 +117,21 @@ func TestDeleteNewPod(t *testing.T) {
 			t.Fatalf("delete failed")
 		}
 
-		if strings.Trim(pods[1], "\n") != podName2 {
+		if strings.Trim(pods[0], "\n") != podName2 {
 			t.Fatalf("delete pod failed")
 		}
 
 		infoGot, err := pod1.GetPodInfoFromPodMap(podName1)
-		if err.Error() != ("could not find pod: " + utils.PathSeperator + podName1) {
+		if err == nil {
 			t.Fatalf("pod not deleted from map")
 		}
 		if infoGot != nil {
 			t.Fatalf("pod not deleted from map")
 		}
 
-		dirInode := info1.dir.GetDirFromDirectoryMap(podName1)
-		if dirInode != nil {
-			t.Fatalf("pod directory not deleted from directory map")
-		}
-
 		_, err = pod1.GetPodInfoFromPodMap(podName2)
 		if err != nil {
 			t.Fatalf("removed wrong pod")
-		}
-		dirInode = info2.dir.GetDirFromDirectoryMap(podName2)
-		if dirInode == nil {
-			t.Fatalf("pod directory wrongly deleted from directory map")
 		}
 
 	})

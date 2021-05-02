@@ -20,8 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -45,12 +43,7 @@ func (p *Pod) GetMetaReferenceOfFile(podName, filePath string) ([]byte, string, 
 		return nil, "", err
 	}
 
-	podDir := filepath.Dir(filePath)
-	fileName := filepath.Base(filePath)
-	path := p.GetFilePath(podDir, podInfo)
-	fpath := path + utils.PathSeperator + fileName
-
-	return podInfo.GetFile().GetFileReference(fpath)
+	return podInfo.GetFile().GetFileReference(filePath)
 }
 
 func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
@@ -134,31 +127,4 @@ func (p *Pod) ReceivePod(ref utils.Reference) (*Info, error) {
 	}
 
 	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address)
-}
-
-func (p *Pod) GetFilePath(podDir string, podInfo *Info) string {
-	var path string
-	if podDir == utils.PathSeperator || podDir == podInfo.GetCurrentPodPathAndName() {
-		return podInfo.GetCurrentPodPathAndName()
-	}
-
-	// this is a full path.. so use it as it is
-	if strings.HasPrefix(podDir, "/") {
-		return podInfo.GetCurrentPodPathAndName() + podDir
-	}
-
-	if podInfo.IsCurrentDirRoot() {
-		if podDir == "." {
-			path = podInfo.GetCurrentPodPathAndName()
-		} else {
-			path = podInfo.GetCurrentPodPathAndName() + utils.PathSeperator + podDir
-		}
-	} else {
-		if podDir == "." {
-			path = podInfo.GetCurrentDirPathAndName()
-		} else {
-			path = podInfo.GetCurrentDirPathAndName() + utils.PathSeperator + podDir
-		}
-	}
-	return path
 }

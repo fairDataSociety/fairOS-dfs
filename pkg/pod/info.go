@@ -17,8 +17,6 @@ limitations under the License.
 package pod
 
 import (
-	"sync"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -35,12 +33,16 @@ type Info struct {
 	file            *f.File
 	accountInfo     *account.Info
 	feed            *feed.API
-	currentPodInode *di.Inode
-	curPodMu        sync.RWMutex
-	currentDirInode *di.Inode
-	curDirMu        sync.RWMutex
 	kvStore         *collection.KeyValue
 	docStore        *collection.Document
+}
+
+func (i *Info) GetPodName() string {
+	return i.podName
+}
+
+func (i *Info) GetPodAddress() utils.Address {
+	return i.userAddress
 }
 
 func (i *Info) GetDirectory() *di.Directory {
@@ -51,62 +53,12 @@ func (i *Info) GetFile() *f.File {
 	return i.file
 }
 
-func (i *Info) GetUserAddress() utils.Address {
-	return i.userAddress
-}
-
 func (i *Info) GetAccountInfo() *account.Info {
 	return i.accountInfo
 }
 
 func (i *Info) GetFeed() *feed.API {
 	return i.feed
-}
-
-func (i *Info) GetCurrentPodInode() *di.Inode {
-	return i.currentPodInode
-}
-func (i *Info) GetCurrentDirInode() *di.Inode {
-	return i.currentDirInode
-}
-
-func (i *Info) SetCurrentPodInode(podInode *di.Inode) {
-	i.currentPodInode = podInode
-}
-func (i *Info) SetCurrentDirInode(podInode *di.Inode) {
-	i.currentDirInode = podInode
-}
-
-func (p *Info) IsCurrentDirRoot() bool {
-	if p.currentDirInode.Meta.Path == utils.PathSeperator {
-		return true
-	} else {
-		return false
-	}
-}
-
-func (i *Info) GetCurrentPodPathOnly() string {
-	return i.currentPodInode.Meta.Path
-}
-
-func (i *Info) GetCurrentPodNameOnly() string {
-	return i.currentPodInode.Meta.Name
-}
-
-func (i *Info) GetCurrentPodPathAndName() string {
-	return i.currentPodInode.Meta.Path + i.currentPodInode.Meta.Name
-}
-
-func (i *Info) GetCurrentDirPathOnly() string {
-	return i.currentDirInode.Meta.Path
-}
-
-func (i *Info) GetCurrentDirNameOnly() string {
-	return i.currentDirInode.Meta.Name
-}
-
-func (i *Info) GetCurrentDirPathAndName() string {
-	return i.currentDirInode.Meta.Path + utils.PathSeperator + i.currentDirInode.Meta.Name
 }
 
 func (i *Info) GetKVStore() *collection.KeyValue {
