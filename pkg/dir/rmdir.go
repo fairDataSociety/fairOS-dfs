@@ -20,20 +20,26 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) RmDir(podName, parentPath, dirName string) error {
+func (d *Directory) RmDir(parentPath, dirToDelete string) error {
 	// validation checks of the arguments
-	if podName == "" {
-		return ErrInvalidPodName
+	if parentPath == "" {
+		return ErrInvalidDirectoryName
 	}
-
-	if dirName == "" {
+	if dirToDelete == "" {
 		return ErrInvalidDirectoryName
 	}
 
 	// check if directory present
-	totalPath := podName + parentPath + utils.PathSeperator + dirName
+	totalPath := utils.CombinePathAndFile(parentPath, dirToDelete)
 	if d.GetDirFromDirectoryMap(totalPath) == nil {
 		return ErrDirectoryNotPresent
+	}
+
+	// return if the directory is not empty
+	// TODO: in future do a recursive delete
+	dirInode := d.GetDirFromDirectoryMap(totalPath)
+	if dirInode.FileOrDirNames != nil && len(dirInode.FileOrDirNames) > 0 {
+		return ErrDirectoryNotEmpty
 	}
 
 	// remove the feed and clear the data structure
@@ -43,5 +49,7 @@ func (d *Directory) RmDir(podName, parentPath, dirName string) error {
 		return err
 	}
 	d.RemoveFromDirectoryMap(totalPath)
-	return nil
+
+	// remove the directory entry from the parent dir
+	return d.RemoveEntryFromDir(parentPath, dirToDelete, false)
 }

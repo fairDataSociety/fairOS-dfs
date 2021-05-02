@@ -45,7 +45,7 @@ func (d *DfsAPI) Mkdir(path, directoryName, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	err = directory.MkDir(ui.GetPodName(), path, directoryName)
+	err = directory.MkDir(path, directoryName)
 	if err != nil {
 		return err
 	}
@@ -71,11 +71,8 @@ func (d *DfsAPI) IsDirPresent(directoryName, sessionId string) (bool, error) {
 	}
 	directory := podInfo.GetDirectory()
 	podDir := podInfo.GetCurrentPodPathAndName() + directoryName
-	_, _, err = directory.GetDirNode(podDir, podInfo.GetFeed(), podInfo.GetUserAddress())
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	dirPresent := directory.IsDirectoryPresent(podDir)
+	return dirPresent, nil
 }
 
 func (d *DfsAPI) RmDir(path, directoryName, sessionId string) error {
@@ -96,7 +93,7 @@ func (d *DfsAPI) RmDir(path, directoryName, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	err = directory.RmDir(ui.GetPodName(), path, directoryName)
+	err = directory.RmDir(path, directoryName)
 	if err != nil {
 		return err
 	}
@@ -121,7 +118,7 @@ func (d *DfsAPI) ListDir(currentDir, sessionId string) ([]dir.Entry, []f.Entry, 
 		return nil, nil, err
 	}
 	directory := podInfo.GetDirectory()
-	dEntries, fileList, err := directory.ListDir(ui.GetPodName(), currentDir)
+	dEntries, fileList, err := directory.ListDir(currentDir)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -193,7 +190,7 @@ func (d *DfsAPI) DeleteFile(podFileWithPath, sessionId string) error {
 	// update the directory by removing the file from it
 	fileDir := filepath.Dir(podFileWithPath)
 	fileName := filepath.Base(podFileWithPath)
-	return directory.RemoveFileFromDirectory(fileDir, fileName)
+	return directory.RemoveEntryFromDir(fileDir, fileName, true)
 }
 
 func (d *DfsAPI) FileStat(podFileWithPath, sessionId string) (*f.Stats, error) {
@@ -244,7 +241,7 @@ func (d *DfsAPI) UploadFile(podFileName, sessionId string, fileSize int64, fd io
 	}
 
 	// add the file to the directory metadata
-	return directory.AddFileToDirectory(podPath, podFileName)
+	return directory.AddEntryToDir(podPath, podFileName, true)
 }
 
 func (d *DfsAPI) DownloadFile(podFileWithPath, sessionId string) (io.ReadCloser, uint64, error) {

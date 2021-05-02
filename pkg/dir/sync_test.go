@@ -14,22 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package file_test
+package dir_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"io/ioutil"
 	"testing"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
-func TestRemoveFile(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
+func TestSync(t *testing.T) {
+	mockClient := bm.NewMockBeeClient()
 	logger := logging.New(ioutil.Discard, 0)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("password", "")
@@ -42,40 +41,35 @@ func TestRemoveFile(t *testing.T) {
 	}
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
+	mockFile := fm.NewMockFile()
 
-	t.Run("delete-file", func(t *testing.T) {
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+	t.Run("sync-dir", func(t *testing.T) {
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
 
-		// upload few files
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
+		// populate the directory with few directory and files
+		err := dirObject.MkDir("/", "dirToStat")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/dirToStat", "subDir1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/dirToStat", "subDir2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// just add dummy file enty as file listing is not tested here
+		err = dirObject.AddEntryToDir("/dirToStat", "file1", true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.AddEntryToDir("/dirToStat", "file2", true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", 200, 20)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// remove file2
-		err = fileObject.RmFile("/dir1/file2")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// validate file deletion
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file2"))
-		if meta != nil {
-			t.Fatalf("file is not removed")
-		}
-
-		// check if other file is present
-		meta = fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file1"))
-		if meta == nil {
-			t.Fatalf("file is not present")
-		}
-		if meta.Name != "file1" {
-			t.Fatalf("retrieved invalid file name")
-		}
+		// sync the directory
+		// TODO: finish the test after pod test is over
 	})
 }

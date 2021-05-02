@@ -39,9 +39,8 @@ type Entry struct {
 	AccessTime       string `json:"access_time"`
 }
 
-func (d *Directory) ListDir(podName, dirNameWithPath string) ([]Entry, []string, error) {
-	totalPath := podName + dirNameWithPath
-	topic := utils.HashString(totalPath)
+func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
+	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
 	if err != nil {
 		return nil, nil, fmt.Errorf("list dir : %v", err)
@@ -55,10 +54,10 @@ func (d *Directory) ListDir(podName, dirNameWithPath string) ([]Entry, []string,
 
 	var listEntries []Entry
 	var files []string
-	for _, fileOrDirName := range dirInode.fileOrDirNames {
+	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimLeft(fileOrDirName, "_D_")
-			dirPath := totalPath + utils.PathSeperator + dirName
+			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			dirTopic := utils.HashString(dirPath)
 			_, data, err := d.fd.GetFeedData(dirTopic, d.getAddress())
 			if err != nil {
@@ -80,7 +79,7 @@ func (d *Directory) ListDir(podName, dirNameWithPath string) ([]Entry, []string,
 			listEntries = append(listEntries, entry)
 		} else if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimLeft(fileOrDirName, "_F_")
-			filePath := totalPath + utils.PathSeperator + fileName
+			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
 			files = append(files, filePath)
 		}
 	}

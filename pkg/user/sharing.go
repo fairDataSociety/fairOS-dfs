@@ -184,19 +184,13 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	path := pod.GetFilePath(podDir, podInfo)
 	dir := podInfo.GetDirectory()
 
-	_, dirInode, err := dir.GetDirNode(path, podInfo.GetFeed(), podInfo.GetAccountInfo().GetAddress())
-	if err != nil {
-		return "", "", err
-	}
-
 	// check if file is already present
 	if podInfo.GetFile().IsFileAlreadyPresent(path) {
 		return "", "", fmt.Errorf("file already present in the destination dir")
 	}
 
-	// modify the modification time
-	dirInode.Meta.ModificationTime = time.Now().Unix()
-	_, err = dir.UpdateDirectory(dirInode)
+	// add the file to the prent dir
+	err = dir.AddEntryToDir(path, fileName, true)
 	if err != nil {
 		return "", "", err
 	}

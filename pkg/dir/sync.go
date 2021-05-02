@@ -40,7 +40,7 @@ func (d *Directory) LoadDirMeta(podName, dirNameWithPath string, fd *feed.API, a
 		return fmt.Errorf("dir sync: %v", err)
 	}
 
-	for _, fileOrDirName := range dirInode.fileOrDirNames {
+	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimLeft(fileOrDirName, "_F_")
 			filePath := totalPath + utils.PathSeperator + fileName

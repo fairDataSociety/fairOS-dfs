@@ -18,7 +18,7 @@ package dir
 
 type Inode struct {
 	Meta           *MetaData
-	fileOrDirNames []string
+	FileOrDirNames []string
 }
 
 func (in *Inode) GetMeta() *MetaData {
@@ -26,9 +26,9 @@ func (in *Inode) GetMeta() *MetaData {
 }
 
 func (in *Inode) GetFileOrDirNames() []string {
-	return in.fileOrDirNames
+	return in.FileOrDirNames
 }
 
 func (in *Inode) SetFileOrDirNames(fileOrDirNames []string) {
-	in.fileOrDirNames = fileOrDirNames
+	in.FileOrDirNames = fileOrDirNames
 }

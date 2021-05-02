@@ -14,17 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package file
+package file_test
 
 import (
 	"crypto/rand"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestUpload(t *testing.T) {
@@ -47,27 +50,35 @@ func TestUpload(t *testing.T) {
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
-		fileObject := NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(CombinePathAndFile(filePath, fileName))
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, fileName))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath { t.Fatalf("invalid path in meta") }
-		if meta.Name != fileName { t.Fatalf("invalid file name in meta") }
-		if meta.Size != uint64(fileSize) { t.Fatalf("invalid file size in meta") }
-		if meta.BlockSize != blockSize { t.Fatalf("invalid block size in meta") }
+		if meta.Path != filePath {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(fileSize) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
 	})
 }
 
-func uploadFile(t *testing.T, fileObject *File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
 	fd, err := ioutil.TempFile("", fileName)
 	if err != nil {
@@ -88,7 +99,6 @@ func uploadFile(t *testing.T, fileObject *File, filePath, fileName, compression 
 	if err != nil {
 		t.Fatal(err)
 	}
-
 
 	// open file to upload
 	f1, err := os.Open(uploadFileName)

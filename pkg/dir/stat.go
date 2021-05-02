@@ -39,8 +39,7 @@ type DirStats struct {
 }
 
 func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) {
-	totalPath := podName + dirNameWithPath
-	topic := utils.HashString(totalPath)
+	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
 	if err != nil {
 		return nil, fmt.Errorf("dir stat: %v", err)
@@ -54,7 +53,7 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) 
 
 	files := 0
 	dirs := 0
-	for _, k := range dirInode.fileOrDirNames {
+	for _, k := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(k, "_D_") {
 			dirs++
 		} else if strings.HasPrefix(k, "_F_") {
@@ -63,14 +62,9 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) 
 	}
 
 	meta := dirInode.Meta
-	path := meta.Path
-	if meta.Path == podName {
-		path = utils.PathSeperator
-	}
-
 	return &DirStats{
 		PodName:          podName,
-		DirPath:          path,
+		DirPath:          meta.Path,
 		DirName:          meta.Name,
 		CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
 		ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),

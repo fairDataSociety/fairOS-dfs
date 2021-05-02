@@ -14,16 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package file
+package file_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"io/ioutil"
 	"strconv"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
 func TestListFiles(t *testing.T) {
@@ -42,23 +44,30 @@ func TestListFiles(t *testing.T) {
 	user := acc.GetAddress(1)
 
 	t.Run("list-file", func(t *testing.T) {
-		fileObject := NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
 
 		// upload few files
 		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
-		if err != nil { t.Fatal(err) }
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", 200, 20)
-		if err != nil { t.Fatal(err) }
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		_, err = uploadFile(t, fileObject, "/dir1", "file3", "", 300, 30)
-		if err != nil { t.Fatal(err) }
-
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		//list the files
 		fileList := []string{"/dir1/file1", "/dir1/file2", "/dir1/file3"}
 		entries, err := fileObject.ListFiles(fileList)
-		if err != nil { t.Fatal(err) }
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// validate the entries
 		entry := entries[0]

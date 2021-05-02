@@ -32,13 +32,13 @@ type Directory struct {
 	client      blockstore.Client
 	fd          *feed.API
 	userAddress utils.Address
-	file        *f.File
+	file        f.IFile
 	dirMap      map[string]*Inode // path to dirInode cache
 	dirMu       *sync.RWMutex
 	logger      logging.Logger
 }
 
-func NewDirectory(podName string, client blockstore.Client, fd *feed.API, user utils.Address, file *f.File, logger logging.Logger) *Directory {
+func NewDirectory(podName string, client blockstore.Client, fd *feed.API, user utils.Address, file f.IFile, logger logging.Logger) *Directory {
 	return &Directory{
 		podName:     podName,
 		client:      client,

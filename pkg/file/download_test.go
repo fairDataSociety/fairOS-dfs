@@ -14,16 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package file
+package file_test
 
 import (
 	"bytes"
+	"io/ioutil"
+	"testing"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"io/ioutil"
-	"testing"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestDownload(t *testing.T) {
@@ -47,7 +50,7 @@ func TestDownload(t *testing.T) {
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
-		fileObject := NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
 
 		// upload a file
 		content, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
@@ -56,22 +59,22 @@ func TestDownload(t *testing.T) {
 		}
 
 		// Download the file and read from reader
-		podFile := CombinePathAndFile(filePath, fileName)
-		reader , rcvdSize, err := fileObject.Download(podFile)
+		podFile := utils.CombinePathAndFile(filePath, fileName)
+		reader, rcvdSize, err := fileObject.Download(podFile)
 		if err != nil {
 			t.Fatal(err)
 		}
 		rcvdBuffer := new(bytes.Buffer)
 		_, err = rcvdBuffer.ReadFrom(reader)
-		if err !=nil {
+		if err != nil {
 			t.Fatal(err)
 		}
 
 		// validate the result
-		if len(rcvdBuffer.Bytes()) != len(content)  || int(rcvdSize) != len(content){
+		if len(rcvdBuffer.Bytes()) != len(content) || int(rcvdSize) != len(content) {
 			t.Fatalf("downloaded content size is invalid")
 		}
-		if !bytes.Equal(content,rcvdBuffer.Bytes()) {
+		if !bytes.Equal(content, rcvdBuffer.Bytes()) {
 			t.Fatalf("downloaded content is not equal")
 		}
 

@@ -83,7 +83,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 			if len(contentBytes) >= 512 {
 				cBytes := bytes.NewReader(contentBytes[:512])
 				cReader := bufio.NewReader(cBytes)
-				meta.ContentType = f.GetContentType(cReader)
+				meta.ContentType = f.getContentType(cReader)
 			}
 		}
 
@@ -101,7 +101,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 			// compress the data
 			uploadData := data[:size]
 			if compression != "" {
-				uploadData, err = Compress(data[:size], compression, blockSize)
+				uploadData, err = compress(data[:size], compression, blockSize)
 				if err != nil {
 					errC <- err
 				}
@@ -161,11 +161,11 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil {
 		return err
 	}
-	f.AddToFileMap(CombinePathAndFile(podPath, podFileName), &meta)
+	f.AddToFileMap(utils.CombinePathAndFile(podPath, podFileName), &meta)
 	return nil
 }
 
-func (f *File) GetContentType(bufferReader *bufio.Reader) string {
+func (f *File) getContentType(bufferReader *bufio.Reader) string {
 	buffer, err := bufferReader.Peek(512)
 	if err != nil && err != io.EOF {
 		return ""
@@ -173,7 +173,7 @@ func (f *File) GetContentType(bufferReader *bufio.Reader) string {
 	return http.DetectContentType(buffer)
 }
 
-func Compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
+func compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
 	switch compression {
 	case "gzip":
 		var b bytes.Buffer

@@ -14,16 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package file
+package file_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"io/ioutil"
 	"strconv"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
 func TestStat(t *testing.T) {
@@ -42,15 +44,19 @@ func TestStat(t *testing.T) {
 	user := acc.GetAddress(1)
 
 	t.Run("stat-file", func(t *testing.T) {
-		fileObject := NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
 
 		// upload a file
 		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
-		if err != nil { t.Fatal(err) }
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// stat the file
 		stats, err := fileObject.GetStats("pod1", "/dir1/file1")
-		if err != nil { t.Fatal(err) }
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// validate state
 		if stats.PodName != "pod1" {

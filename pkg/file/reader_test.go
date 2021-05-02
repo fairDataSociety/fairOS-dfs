@@ -24,10 +24,9 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestFileReader(t *testing.T) {

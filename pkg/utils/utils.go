@@ -207,3 +207,13 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 	address := swarm.NewAddress(s)
 	return swarm.NewChunk(address, data), nil
 }
+
+func CombinePathAndFile(path, fileName string) string {
+	var totalPath string
+	if path == PathSeperator {
+		totalPath = path + fileName
+	} else {
+		totalPath = path + PathSeperator + fileName
+	}
+	return totalPath
+}

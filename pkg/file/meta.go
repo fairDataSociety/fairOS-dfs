@@ -43,6 +43,17 @@ type MetaData struct {
 	InodeAddress     []byte        `json:"file_inode_reference"`
 }
 
+// used in syncing
+func (f *File) LoadFileMeta(fileNameWithPath string) error {
+	_, meta, err := f.getMetaFromFileName(fileNameWithPath)
+	if err != nil {
+		return err
+	}
+	f.AddToFileMap(fileNameWithPath, meta)
+	f.logger.Infof(fileNameWithPath)
+	return nil
+}
+
 func (f *File) uploadMeta(meta *MetaData) error {
 	// marshall the meta structure
 	fileMetaBytes, err := json.Marshal(meta)

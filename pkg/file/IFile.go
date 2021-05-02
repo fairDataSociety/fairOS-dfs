@@ -14,15 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package dir
+package file
 
-import "errors"
+import "io"
 
-var (
-	ErrInvalidDirectoryName       = errors.New("invalid directory name")
-	ErrTooLongDirectoryName       = errors.New("too long directory name")
-	ErrDirectoryAlreadyPresent    = errors.New("directory name already present")
-	ErrDirectoryNotPresent        = errors.New("directory not present")
-	ErrDirectoryNotEmpty          = errors.New("directory not empty")
-	ErrInvalidFileOrDirectoryName = errors.New("invalid file or directory name")
-)
+type IFile interface {
+	Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error
+	Download(podFileWithPath string) (io.ReadCloser, uint64, error)
+	ListFiles(files []string) ([]Entry, error)
+	GetStats(podName, podFileWithPath string) (*Stats, error)
+	RmFile(podFileWithPath string) error
+	Read(b []byte) (n int, err error)
+	GetFileReference(podFile string) ([]byte, string, error)
+	AddFileToPath(filePath, metaHexRef string) error
+	LoadFileMeta(fileNameWithPath string) error
+}

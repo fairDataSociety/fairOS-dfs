@@ -17,34 +17,14 @@ limitations under the License.
 package dir
 
 import (
-	"encoding/json"
-	"time"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) UpdateDirectory(dirInode *Inode) ([]byte, error) {
-	dirName := dirInode.Meta.Name
-	path := dirInode.Meta.Path
-	meta := dirInode.Meta
-	meta.ModificationTime = time.Now().Unix()
-	dirInode.Meta = meta
-
-	data, err := json.Marshal(dirInode)
+func (d *Directory) IsDirectoryPresent(directoryNameWithPath string) bool {
+	topic := utils.HashString(directoryNameWithPath)
+	_, _, err := d.fd.GetFeedData(topic, d.userAddress)
 	if err != nil {
-		return nil, err
+		return false
 	}
-
-	curDir := path + utils.PathSeperator + dirName
-	if path == utils.PathSeperator {
-		curDir = path + dirName
-	}
-	topic := utils.HashString(curDir)
-	_, err = d.getFeed().UpdateFeed(topic, d.getAddress(), data)
-	if err != nil {
-		return nil, err
-	}
-
-	d.AddToDirectoryMap(curDir, dirInode)
-	return topic, nil
+	return true
 }
