@@ -24,41 +24,35 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) SyncDirectory(podName, dirNameWithPath string) error {
-	totalPath := podName + dirNameWithPath
-	topic := utils.HashString(totalPath)
+func (d *Directory) SyncDirectory(dirNameWithPath string) error {
+	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
 	if err != nil {
 		return fmt.Errorf("dir sync: %v", err)
 	}
 
-	var dirInode Inode
+	var dirInode *Inode
 	err = json.Unmarshal(data, &dirInode)
 	if err != nil {
 		return fmt.Errorf("dir sync: %v", err)
 	}
+	d.AddToDirectoryMap(dirNameWithPath, dirInode)
 
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimLeft(fileOrDirName, "_F_")
-			filePath := totalPath + utils.PathSeperator + fileName
+			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
 			err := d.file.LoadFileMeta(filePath)
 			if err != nil {
 				return err
 			}
 
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
-			var dirInode *Inode
-			err = json.Unmarshal(data, &dirInode)
-			if err != nil {
-				return err
-			}
+			dirName := strings.TrimLeft(fileOrDirName, "_D_")
+			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
+			d.logger.Infof(dirNameWithPath)
 
-			path := dirInode.Meta.Path + utils.PathSeperator + dirInode.Meta.Name
-			d.AddToDirectoryMap(path, dirInode)
-			d.logger.Infof(path)
-
-			err = d.SyncDirectory(podName, path,)
+			err = d.SyncDirectory(path)
 			if err != nil {
 				return err
 			}

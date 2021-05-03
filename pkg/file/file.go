@@ -80,3 +80,9 @@ func (f *File) IsFileAlreadyPresent(fileWithPath string) bool {
 	}
 	return false
 }
+
+func (f *File) RemoveAllFromFileMap() {
+	f.fileMu.Lock()
+	defer f.fileMu.Unlock()
+	f.fileMap = make(map[string]*MetaData)
+}

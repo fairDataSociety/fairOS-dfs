@@ -19,12 +19,10 @@ package account
 import (
 	"crypto/sha256"
 	"fmt"
-	"strings"
-	"sync"
-
 	"github.com/ethereum/go-ethereum/accounts"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 	"github.com/tyler-smith/go-bip39"
+	"strings"
 )
 
 const (
@@ -32,21 +30,15 @@ const (
 	genericPath = "m/44'/60'/0'/0/"
 )
 
-var (
-	wallet *Wallet
-	once   sync.Once
-)
 
 type Wallet struct {
 	encryptedmnemonic string
 }
 
 func NewWallet(mnemonic string) *Wallet {
-	once.Do(func() {
-		wallet = &Wallet{
-			encryptedmnemonic: mnemonic,
-		}
-	})
+	wallet := &Wallet{
+		encryptedmnemonic: mnemonic,
+	}
 	return wallet
 }
 
@@ -63,7 +55,7 @@ func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Acc
 			return accounts.Account{}, "", err
 		}
 	} else {
-		err = w.isValidMnemonic(mnemonic)
+		err = w.IsValidMnemonic(mnemonic)
 		if err != nil {
 			return accounts.Account{}, "", err
 		}
@@ -108,14 +100,14 @@ func (w *Wallet) decryptMnemonic(password string) (string, error) {
 		return "", err
 	}
 
-	err = w.isValidMnemonic(mnemonic)
+	err = w.IsValidMnemonic(mnemonic)
 	if err != nil {
 		return "", fmt.Errorf("Invalid password")
 	}
 	return mnemonic, nil
 }
 
-func (w *Wallet) isValidMnemonic(mnemonic string) error {
+func (w *Wallet) IsValidMnemonic(mnemonic string) error {
 	// test the mnemonic for validity
 	words := strings.Split(mnemonic, " ")
 	if len(words) != 12 {

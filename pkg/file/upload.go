@@ -161,7 +161,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil {
 		return err
 	}
-	f.AddToFileMap(utils.CombinePathAndFile(podPath, podFileName), &meta)
+	f.AddToFileMap(utils.CombinePathAndFile(meta.Path, meta.Name), &meta)
 	return nil
 }
 

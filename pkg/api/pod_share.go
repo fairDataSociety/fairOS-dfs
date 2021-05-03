@@ -153,6 +153,6 @@ func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addedStr := fmt.Sprintf("public pod \"%s\", added as shared pod", pi.GetCurrentPodNameOnly())
+	addedStr := fmt.Sprintf("public pod \"%s\", added as shared pod", pi.GetPodName())
 	jsonhttp.OK(w, addedStr)
 }

@@ -32,7 +32,7 @@ func (p *Pod) SyncPod(podName string) error {
 	}
 
 	// sync from the root directory
-	err = podInfo.GetDirectory().SyncDirectory(podName, "/")
+	err = podInfo.GetDirectory().SyncDirectory("/")
 	if err != nil {
 		return err
 	}

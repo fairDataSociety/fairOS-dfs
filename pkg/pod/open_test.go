@@ -14,4 +14,138 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pod
+package pod_test
+
+import (
+	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"io/ioutil"
+	"math/rand"
+	"os"
+	"testing"
+)
+
+func TestOpen(t *testing.T) {
+	mockClient := mock.NewMockBeeClient()
+	logger := logging.New(ioutil.Discard, 0)
+	acc := account.New(logger)
+	_, _, err := acc.CreateUserAccount("password", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, logger)
+	podName1 := "test1"
+
+	t.Run("open-pod", func(t *testing.T) {
+		// create a pod
+		info, err := pod1.CreatePod(podName1, "password", "")
+		if err != nil {
+			t.Fatalf("error creating pod %s", podName1)
+		}
+
+		// create some dir and files
+		addFilesAndDirectories(t, info, pod1, podName1)
+
+
+		// open the pod
+		podInfo, err := pod1.OpenPod(podName1, "password")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// validate if properly opened
+		if podInfo == nil {
+			t.Fatalf("pod not opened")
+		}
+		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName1)
+		if err != nil {
+			t.Fatalf("pod not opened")
+		}
+		if gotPodInfo == nil {
+			t.Fatalf("pod not opened")
+		}
+		if gotPodInfo.GetPodName() != podName1 {
+			t.Fatalf("invalid pod name")
+		}
+	})
+}
+
+
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+	// create a temp file
+	fd, err := ioutil.TempFile("", fileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(fd.Name())
+
+	// write contents to file
+	content := make([]byte, fileSize)
+	rand.Read(content)
+	if _, err = fd.Write(content); err != nil {
+		t.Fatal(err)
+	}
+
+	// close file
+	uploadFileName := fd.Name()
+	err = fd.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// open file to upload
+	f1, err := os.Open(uploadFileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// upload  the temp file
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+}
+
+func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1 string) () {
+	t.Helper()
+	dirObject := info.GetDirectory()
+	err := dirObject.MkDir("/", "parentDir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// populate the directory with few directory and files
+	err = dirObject.MkDir("/parentDir", "subDir1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dirObject.MkDir("/parentDir", "subDir2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fileObject := info.GetFile()
+	_, err = uploadFile(t, fileObject, "/parentDir", "file1", "", 100, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dirObject.AddEntryToDir("/parentDir", "file1", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = uploadFile(t, fileObject, "/parentDir", "file2", "", 200, 20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dirObject.AddEntryToDir("/parentDir", "file2", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// close the pod
+	err = pod1.ClosePod(podName1)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -46,7 +46,7 @@ func TestListDirectory(t *testing.T) {
 	t.Run("list-dirr", func(t *testing.T) {
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
 
-		// create a new dir
+		// create some dir and files
 		err := dirObject.MkDir("/", "parentDir")
 		if err != nil {
 			t.Fatal(err)

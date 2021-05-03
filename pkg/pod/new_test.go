@@ -28,7 +28,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-func TestNewPod(t *testing.T) {
+func TestNew(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(ioutil.Discard, 0)
 	acc := account.New(logger)

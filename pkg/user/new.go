@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -28,15 +27,15 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) (string, string, *Info, error) {
-	if u.IsUsernameAvailable(userName, dataDir) {
+func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, string, *Info, error) {
+	if u.IsUsernameAvailable(userName, u.dataDir) {
 		return "", "", nil, ErrUserAlreadyPresent
 	}
 
 	//create account and feed
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
-	fd := feed.New(accountInfo, client, u.logger)
+	fd := feed.New(accountInfo, u.client, u.logger)
 
 	//create a new base user account with the mnemonic
 	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
@@ -51,14 +50,14 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, dataDir string, cl
 	}
 
 	// store the username -> address mapping locally
-	err = u.storeUserNameToAddressFileMapping(userName, dataDir, accountInfo.GetAddress())
+	err = u.storeUserNameToAddressFileMapping(userName, u.dataDir, accountInfo.GetAddress())
 	if err != nil {
 		return "", "", nil, err
 	}
 
 	// Instantiate pod, dir & file objects
-	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
-	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
+	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), u.logger)
+	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, u.logger)
 	pod := p.NewPod(u.client, fd, acc, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()

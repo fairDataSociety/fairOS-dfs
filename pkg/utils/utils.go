@@ -210,7 +210,7 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 
 func CombinePathAndFile(path, fileName string) string {
 	var totalPath string
-	if path == PathSeperator {
+	if path == PathSeperator || path == "" {
 		totalPath = path + fileName
 	} else {
 		totalPath = path + PathSeperator + fileName

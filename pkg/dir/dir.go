@@ -96,3 +96,9 @@ func (d *Directory) GetPrefixPodFromPathMap(prefix string) *Inode {
 	}
 	return nil
 }
+
+func (d *Directory) RemoveAllFromDirectoryMap() {
+	d.dirMu.Lock()
+	defer d.dirMu.Unlock()
+	d.dirMap = make(map[string]*Inode)
+}
