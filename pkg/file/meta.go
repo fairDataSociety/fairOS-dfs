@@ -43,7 +43,7 @@ type MetaData struct {
 
 // used in syncing
 func (f *File) LoadFileMeta(fileNameWithPath string) error {
-	_, meta, err := f.getMetaFromFileName(fileNameWithPath)
+	meta, err := f.GetMetaFromFileName(fileNameWithPath)
 	if err != nil {
 		return err
 	}
@@ -70,18 +70,35 @@ func (f *File) uploadMeta(meta *MetaData) error {
 	return nil
 }
 
-func (f *File) getMetaFromFileName(fileNameWithPath string) ([]byte, *MetaData, error) {
+func (f *File) GetMetaFromFileName(fileNameWithPath string) (*MetaData, error) {
 	topic := utils.HashString(fileNameWithPath)
-	metaReference, metaBytes, err := f.fd.GetFeedData(topic, f.userAddress)
+	_, metaBytes, err := f.fd.GetFeedData(topic, f.userAddress)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	var meta *MetaData
 	err = json.Unmarshal(metaBytes, &meta)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return metaReference, meta, nil
+	return  meta, nil
+}
+
+
+func (f *File) GetMetaFromFileNameAndAddress(fileNameWithPath string, userAddress utils.Address) (*MetaData, error) {
+	topic := utils.HashString(fileNameWithPath)
+	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var meta *MetaData
+	err = json.Unmarshal(metaBytes, &meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return  meta, nil
 }

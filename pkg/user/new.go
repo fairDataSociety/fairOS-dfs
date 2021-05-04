@@ -28,11 +28,16 @@ import (
 )
 
 func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, string, *Info, error) {
+	// check if session id  present in map
+	if u.isSessionPresentInMap(sessionId){
+		return "", "", nil, ErrUserAlreadyPresent
+	}
+
+	// username validation
 	if u.IsUsernameAvailable(userName, u.dataDir) {
 		return "", "", nil, ErrUserAlreadyPresent
 	}
 
-	//create account and feed
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, u.client, u.logger)
@@ -59,13 +64,17 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response ht
 	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), u.logger)
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, u.logger)
 	pod := p.NewPod(u.client, fd, acc, u.logger)
-	if sessionId == "" {
-		sessionId = cookie.GetUniqueSessionId()
+	if u.gatewayMode {
+		if sessionId == "" {
+			sessionId = cookie.GetUniqueSessionId()
+		}
 	}
 
+	userAddressString := accountInfo.GetAddress().Hex()
 	ui := &Info{
 		name:      userName,
 		sessionId: sessionId,
+		userAddress: userAddressString,
 		feedApi:   fd,
 		account:   acc,
 		file:      file,
@@ -74,10 +83,10 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response ht
 	}
 
 	// set cookie and add user to map
-	err = u.Login(ui, response)
+	err = u.addUserAndSessionToMap(ui, response)
 	if err != nil {
 		return "", "", nil, err
 	}
 
-	return accountInfo.GetAddress().Hex(), mnemonic, ui, nil
+	return userAddressString, mnemonic, ui, nil
 }

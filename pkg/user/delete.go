@@ -20,24 +20,26 @@ import (
 	"net/http"
 )
 
-func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, response http.ResponseWriter, ui *Info) error {
-	// basic validations
-	if !u.IsUsernameAvailable(userName, dataDir) {
-		return ErrInvalidUserName
-	}
-	if !u.IsUserLoggedIn(sessionId) {
+func (u *Users) DeleteUser(userName, dataDir, password, sessionId, userAddressString string, response http.ResponseWriter, ui *Info) error {
+	// check if session id and user address present in map
+	if !u.IsUserLoggedIn(userAddressString, sessionId) {
 		return ErrUserNotLoggedIn
 	}
 
+	// username validation
+	if !u.IsUsernameAvailable(userName, dataDir) {
+		return ErrInvalidUserName
+	}
+
 	// check for valid password
-	userInfo := u.getUserFromMap(sessionId)
+	userInfo := u.getUserFromMap(userAddressString)
 	acc := userInfo.account
 	if !acc.Authorise(password) {
 		return ErrInvalidPassword
 	}
 
 	// Logout user
-	err := u.Logout(sessionId, response)
+	err := u.Logout(sessionId, userAddressString, response)
 	if err != nil {
 		return err
 	}

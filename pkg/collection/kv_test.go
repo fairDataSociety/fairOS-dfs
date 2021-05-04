@@ -19,6 +19,7 @@ package collection_test
 import (
 	"bytes"
 	"errors"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"io/ioutil"
 	"math/rand"
 	"sort"
@@ -43,8 +44,14 @@ func TestKeyValueStore(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 	kvStore := collection.NewKeyValueStore(fd, ai, user, mockClient, logger)
+
+	_, err = pod1.CreatePod("pod1", "password", "")
+	if err != nil {
+		t.Fatalf("error creating pod %s", "pod1")
+	}
 
 	t.Run("create_kv_table_with_string_index", func(t *testing.T) {
 		err := kvStore.CreateKVTable("kv_table_0", collection.StringIndex)

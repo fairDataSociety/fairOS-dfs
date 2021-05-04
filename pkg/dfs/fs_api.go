@@ -288,23 +288,31 @@ func (d *DfsAPI) ShareFile(podFileWithPath, destinationUser, sessionId string) (
 		return "", ErrPodNotOpen
 	}
 
-	sharingRef, err := d.users.ShareFileWithUser(ui.GetPodName(), podFileWithPath, destinationUser, ui, ui.GetPod())
+
+	// get podInfo and construct the path
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	if err != nil {
+		return "", err
+	}
+
+	podAddressString := podInfo.GetAccountInfo().GetAddress().Hex()
+	sharingRef, err := d.users.ShareFileWithUser(ui.GetPodName(), podFileWithPath, destinationUser, ui, ui.GetPod(), podAddressString)
 	if err != nil {
 		return "", err
 	}
 	return sharingRef, nil
 }
 
-func (d *DfsAPI) ReceiveFile(sessionId string, sharingRef utils.SharingReference, dir string) (string, string, error) {
+func (d *DfsAPI) ReceiveFile(sessionId string, sharingRef utils.SharingReference, dir string) (string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
-		return "", "", ErrUserNotLoggedIn
+		return "", ErrUserNotLoggedIn
 	}
 
 	// check if pod open
 	if ui.GetPodName() == "" {
-		return "", "", ErrPodNotOpen
+		return "", ErrPodNotOpen
 	}
 
 	return d.users.ReceiveFileFromUser(ui.GetPodName(), sharingRef, ui, ui.GetPod(), dir)
@@ -322,5 +330,5 @@ func (d *DfsAPI) ReceiveInfo(sessionId string, sharingRef utils.SharingReference
 		return nil, ErrPodNotOpen
 	}
 
-	return d.users.ReceiveFileInfo(ui.GetPodName(), sharingRef, ui, ui.GetPod())
+	return d.users.ReceiveFileInfo(sharingRef)
 }

@@ -26,7 +26,7 @@ import (
 )
 
 func (f *File) RmFile(podFileWithPath string) error {
-	_, meta, err := f.getMetaFromFileName(podFileWithPath)
+	meta, err := f.GetMetaFromFileName(podFileWithPath)
 	if err != nil {
 		return err
 	}

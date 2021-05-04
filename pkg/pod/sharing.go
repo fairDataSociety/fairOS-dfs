@@ -33,19 +33,6 @@ type ShareInfo struct {
 	SharedTime  string `json:"shared_time"`
 }
 
-func (p *Pod) GetMetaReferenceOfFile(podName, filePath string) ([]byte, string, error) {
-	if !p.IsPodOpened(podName) {
-		return nil, "", fmt.Errorf("login to pod to do this operation")
-	}
-
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return podInfo.GetFile().GetFileReference(filePath)
-}
-
 func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 	// check if pods is present and get the index of the pod
 	pods, _, err := p.loadUserPods()

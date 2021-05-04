@@ -66,7 +66,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		accountInfo.SetAddress(address)
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd, user, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// store the pod file with shared pod
@@ -78,6 +78,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 
 		// set the userAddress as the pod address we got from shared pod
 		user = address
+
 	} else {
 		// your own pod, so create a new account with private key
 		if p.checkIfPodPresent(pods, podName) {

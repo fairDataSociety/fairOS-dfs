@@ -28,16 +28,22 @@ type Users struct {
 	client       blockstore.Client
 	userMap      map[string]*Info
 	userMu       *sync.RWMutex
+	sessionMap   map[string]string
+	sessionMu    *sync.RWMutex
+	gatewayMode  bool
 	cookieDomain string
 	logger       logging.Logger
 }
 
-func NewUsers(dataDir string, client blockstore.Client, cookieDomain string, logger logging.Logger) *Users {
+func NewUsers(dataDir string, client blockstore.Client, cookieDomain string, gatewayMode bool, logger logging.Logger) *Users {
 	return &Users{
 		dataDir:      dataDir,
 		client:       client,
 		userMap:      make(map[string]*Info),
 		userMu:       &sync.RWMutex{},
+		sessionMap:   make(map[string]string),
+		sessionMu:    &sync.RWMutex{},
+		gatewayMode: gatewayMode,
 		cookieDomain: cookieDomain,
 		logger:       logger,
 	}
@@ -46,25 +52,25 @@ func NewUsers(dataDir string, client blockstore.Client, cookieDomain string, log
 func (u *Users) addUserToMap(info *Info) {
 	u.userMu.Lock()
 	defer u.userMu.Unlock()
-	u.userMap[info.sessionId] = info
+	u.userMap[info.userAddress] = info
 }
 
-func (u *Users) removeUserFromMap(sessionId string) {
+func (u *Users) removeUserFromMap(userAddressString string) {
 	u.userMu.Lock()
 	defer u.userMu.Unlock()
-	delete(u.userMap, sessionId)
+	delete(u.userMap, userAddressString)
 }
 
-func (u *Users) getUserFromMap(sessionId string) *Info {
+func (u *Users) getUserFromMap(userAddressString string) *Info {
 	u.userMu.Lock()
 	defer u.userMu.Unlock()
-	return u.userMap[sessionId]
+	return u.userMap[userAddressString]
 }
 
-func (u *Users) isUserPresentInMap(sessionId string) bool {
+func (u *Users) isUserPresentInMap(userAddressString string) bool {
 	u.userMu.Lock()
 	defer u.userMu.Unlock()
-	if _, ok := u.userMap[sessionId]; ok {
+	if _, ok := u.userMap[userAddressString]; ok {
 		return true
 	}
 	return false
@@ -77,6 +83,28 @@ func (u *Users) isUserNameInMap(userName string) bool {
 		if ui.name == userName {
 			return true
 		}
+	}
+	return false
+}
+
+// session management
+func (u *Users) addSessionrToMap(sessionId string) {
+	u.sessionMu.Lock()
+	defer u.sessionMu.Unlock()
+	u.sessionMap[sessionId] = ""
+}
+
+func (u *Users) removeSessionFromMap(sessionId string) {
+	u.sessionMu.Lock()
+	defer u.sessionMu.Unlock()
+	delete(u.sessionMap, sessionId)
+}
+
+func (u *Users) isSessionPresentInMap(sessionId string) bool {
+	u.sessionMu.Lock()
+	defer u.sessionMu.Unlock()
+	if _, ok := u.sessionMap[sessionId]; ok {
+		return true
 	}
 	return false
 }

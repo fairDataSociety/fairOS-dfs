@@ -29,17 +29,15 @@ import (
 )
 
 func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) error {
-	// basic validations
-	if u.IsUserLoggedIn(sessionId) {
-		return ErrUserAlreadyLoggedIn
-	}
+	// check if username is available (user created)
 	if !u.IsUsernameAvailable(userName, dataDir) {
 		return ErrInvalidUserName
 	}
 
+	// create account
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
-	fd := feed.New(accountInfo, client, u.logger)
+
 
 	// load address from userName
 	address, err := u.getAddressFromUserName(userName, dataDir)
@@ -48,10 +46,12 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	}
 
 	// load encrypted mnemonic from Swarm
+	fd := feed.New(accountInfo, client, u.logger)
 	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, address, fd)
 	if err != nil {
 		return err
 	}
+
 
 	err = acc.LoadUserAccount(passPhrase, encryptedMnemonic)
 	if err != nil {
@@ -61,17 +61,25 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 		return err
 	}
 
+	userAddressString := accountInfo.GetAddress().Hex()
+	if u.IsUserLoggedIn(userAddressString, sessionId) {
+		return ErrUserAlreadyLoggedIn
+	}
+
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
 	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
 	pod := p.NewPod(u.client, fd, acc, u.logger)
-	if sessionId == "" {
-		sessionId = cookie.GetUniqueSessionId()
+	if u.gatewayMode {
+		if sessionId == "" {
+			sessionId = cookie.GetUniqueSessionId()
+		}
 	}
 
 	ui := &Info{
 		name:      userName,
 		sessionId: sessionId,
+		userAddress: userAddressString,
 		feedApi:   fd,
 		account:   acc,
 		file:      file,
@@ -80,40 +88,58 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	}
 
 	// set cookie and add user to map
-	return u.Login(ui, response)
+	return u.addUserAndSessionToMap(ui, response)
 }
 
-func (u *Users) Login(ui *Info, response http.ResponseWriter) error {
-	if response != nil {
-		err := cookie.SetSession(ui.GetSessionId(), response, u.cookieDomain)
-		if err != nil {
-			return err
+func (u *Users) addUserAndSessionToMap(ui *Info, response http.ResponseWriter) error {
+	if u.gatewayMode {
+		if response != nil {
+			err := cookie.SetSession(ui.GetSessionId(), response, u.cookieDomain)
+			if err != nil {
+				return err
+			}
+			u.addSessionrToMap(ui.sessionId)
 		}
 	}
 	u.addUserToMap(ui)
 	return nil
 }
 
-func (u *Users) Logout(sessionId string, response http.ResponseWriter) error {
-	yes := u.isUserPresentInMap(sessionId)
-	if !yes {
+func (u *Users) Logout(sessionId, userAddressString string, response http.ResponseWriter) error {
+	// check if session or user present in map
+	if u.gatewayMode {
+		if  !u.isSessionPresentInMap(sessionId) {
+			return ErrUserNotLoggedIn
+		}
+	}
+	if !u.isUserPresentInMap(userAddressString) {
 		return ErrUserNotLoggedIn
 	}
 
 	// remove from the user map
-	u.removeUserFromMap(sessionId)
-	if response != nil {
-		cookie.ClearSession(response)
+	u.removeSessionFromMap(sessionId)
+	u.removeUserFromMap(userAddressString)
+
+	// clear cookie
+	if u.gatewayMode {
+		if response != nil {
+			cookie.ClearSession(response)
+		}
 	}
 	return nil
 }
 
-func (u *Users) IsUserLoggedIn(sessionId string) bool {
-	return u.isUserPresentInMap(sessionId)
+func (u *Users) IsUserLoggedIn(userAddressString, sessionId string) bool {
+	if u.gatewayMode {
+		if !u.isSessionPresentInMap(sessionId) {
+			return false
+		}
+	}
+	return u.isUserPresentInMap(userAddressString)
 }
 
-func (u *Users) GetLoggedInUserInfo(sessionId string) *Info {
-	return u.getUserFromMap(sessionId)
+func (u *Users) GetLoggedInUserInfo(userAddressString string) *Info {
+	return u.getUserFromMap(userAddressString)
 }
 
 func (u *Users) IsUserNameLoggedIn(userName string) bool {

@@ -24,7 +24,6 @@ type IFile interface {
 	ListFiles(files []string) ([]Entry, error)
 	GetStats(podName, podFileWithPath string) (*Stats, error)
 	RmFile(podFileWithPath string) error
-	GetFileReference(podFile string) ([]byte, string, error)
 	AddFileToPath(filePath, metaHexRef string) error
 	LoadFileMeta(fileNameWithPath string) error
 }

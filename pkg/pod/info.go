@@ -68,3 +68,4 @@ func (i *Info) GetKVStore() *collection.KeyValue {
 func (i *Info) GetDocStore() *collection.Document {
 	return i.docStore
 }
+

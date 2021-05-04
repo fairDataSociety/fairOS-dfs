@@ -51,7 +51,7 @@ func TestBatchIndex(t *testing.T) {
 		}
 
 		batchDocs := addBatchDocs(t, batch, mockClient)
-		err = batch.Write()
+		_, err = batch.Write()
 		if err != nil {
 			t.Fatal(err)
 		}

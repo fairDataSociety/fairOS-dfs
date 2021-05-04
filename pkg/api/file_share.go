@@ -27,7 +27,6 @@ import (
 
 type ReceiveFileResponse struct {
 	FileName  string `json:"file_name"`
-	Reference string `json:"reference"`
 }
 
 type FileSharingReference struct {
@@ -109,7 +108,7 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filePath, fileRef, err := h.dfsAPI.ReceiveFile(sessionId, sharingRef, dir)
+	filePath, err := h.dfsAPI.ReceiveFile(sessionId, sharingRef, dir)
 	if err != nil {
 		h.logger.Errorf("file receive: %v", err)
 		jsonhttp.InternalServerError(w, "file receive: "+err.Error())
@@ -119,7 +118,6 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &ReceiveFileResponse{
 		FileName:  filePath,
-		Reference: fileRef,
 	})
 }
 

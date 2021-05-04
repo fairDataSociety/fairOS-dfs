@@ -23,12 +23,7 @@ import (
 )
 
 func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, string, error) {
-	reference, rcvdMnemonic, userInfo, err := d.users.CreateNewUser(userName, passPhrase, mnemonic, response, sessionId)
-	if err != nil {
-		return reference, rcvdMnemonic, err
-	}
-
-	err = d.users.CreateRootFeeds(userInfo)
+	reference, rcvdMnemonic, _, err := d.users.CreateNewUser(userName, passPhrase, mnemonic, response, sessionId)
 	if err != nil {
 		return reference, rcvdMnemonic, err
 	}
@@ -55,7 +50,7 @@ func (d *DfsAPI) LogoutUser(sessionId string, response http.ResponseWriter) erro
 		return ErrUserNotLoggedIn
 	}
 
-	return d.users.LogoutUser(ui.GetUserName(), d.dataDir, sessionId, response)
+	return d.users.LogoutUser(ui.GetUserName(), d.dataDir, ui.GetUserAddress(),  sessionId, response)
 }
 
 func (d *DfsAPI) DeleteUser(passPhrase, sessionId string, response http.ResponseWriter) error {
@@ -65,7 +60,7 @@ func (d *DfsAPI) DeleteUser(passPhrase, sessionId string, response http.Response
 		return ErrUserNotLoggedIn
 	}
 
-	return d.users.DeleteUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, response, ui)
+	return d.users.DeleteUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, ui.GetUserAddress(), response, ui)
 }
 
 func (d *DfsAPI) IsUserNameAvailable(userName string) bool {
@@ -84,24 +79,6 @@ func (d *DfsAPI) GetUserStat(sessionId string) (*user.Stat, error) {
 		return nil, ErrUserNotLoggedIn
 	}
 	return d.users.GetUserStat(ui)
-}
-
-func (d *DfsAPI) GetUserSharingInbox(sessionId string) (*user.Inbox, error) {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-	return d.users.GetSharingInbox(ui)
-}
-
-func (d *DfsAPI) GetUserSharingOutbox(sessionId string) (*user.Outbox, error) {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-	return d.users.GetSharingOutbox(ui)
 }
 
 func (d *DfsAPI) ExportUser(sessionId string) (string, string, error) {

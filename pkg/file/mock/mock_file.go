@@ -56,10 +56,6 @@ func (mf *MockFile) Read(b []byte) (n int, err error) {
 	return 0, nil
 }
 
-func (mf *MockFile) GetFileReference(podFile string) ([]byte, string, error) {
-	return nil, "", nil
-}
-
 func (mf *MockFile) AddFileToPath(filePath, metaHexRef string) error {
 	return nil
 }
