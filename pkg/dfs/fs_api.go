@@ -295,8 +295,7 @@ func (d *DfsAPI) ShareFile(podFileWithPath, destinationUser, sessionId string) (
 		return "", err
 	}
 
-	podAddressString := podInfo.GetAccountInfo().GetAddress().Hex()
-	sharingRef, err := d.users.ShareFileWithUser(ui.GetPodName(), podFileWithPath, destinationUser, ui, ui.GetPod(), podAddressString)
+	sharingRef, err := d.users.ShareFileWithUser(ui.GetPodName(), podFileWithPath, destinationUser, ui, ui.GetPod(), podInfo.GetAccountInfo().GetAddress())
 	if err != nil {
 		return "", err
 	}

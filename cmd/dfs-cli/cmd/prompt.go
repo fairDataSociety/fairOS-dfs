@@ -67,7 +67,6 @@ const (
 	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
 	apiUserLogout      = APIVersion + "/user/logout"
 	apiUserAvatar      = APIVersion + "/user/avatar"
-	apiUserName        = APIVersion + "/user/name"
 	apiUserContact     = APIVersion + "/user/contact"
 	apiUserExport      = APIVersion + "/user/export"
 	apiUserDelete      = APIVersion + "/user/delete"
@@ -420,132 +419,7 @@ func executor(in string) {
 			fmt.Println("user name:", resp.Name)
 			fmt.Println("address  :", resp.Address)
 			currentPrompt = getCurrentPrompt()
-		case "name":
-			if currentUser == "" {
-				fmt.Println("please login as  user to do the operation")
-				return
-			}
-			if len(blocks) == 6 {
-				firstName := blocks[2]
-				middleName := blocks[3]
-				lastName := blocks[4]
-				surNmae := blocks[5]
-				args := make(map[string]string)
-				args["first_name"] = firstName
-				args["last_name"] = lastName
-				args["middle_name"] = middleName
-				args["surname"] = surNmae
-				_, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserName, args)
-				if err != nil {
-					fmt.Println("name: ", err)
-					return
-				}
-			} else if len(blocks) == 2 {
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserName, nil)
-				if err != nil {
-					fmt.Println("name: ", err)
-					return
-				}
-				var resp user.Name
-				err = json.Unmarshal(data, &resp)
-				if err != nil {
-					fmt.Println("namer: ", err)
-					return
-				}
-				fmt.Println("first_name : ", resp.FirstName)
-				fmt.Println("middle_name: ", resp.MiddleName)
-				fmt.Println("last_name  : ", resp.LastName)
-				fmt.Println("surname    : ", resp.SurName)
-			}
-			currentPrompt = getCurrentPrompt()
-		case "contact":
-			if currentUser == "" {
-				fmt.Println("please login as  user to do the operation")
-				return
-			}
-			if len(blocks) > 2 {
-				phone := blocks[2]
-				mobile := blocks[3]
-				addressLine1 := blocks[4]
-				addressLine2 := blocks[5]
-				state := blocks[6]
-				zip := blocks[7]
-				args := make(map[string]string)
-				args["phone"] = phone
-				args["mobile"] = mobile
-				args["address_line_1"] = addressLine1
-				args["address_line_2"] = addressLine2
-				args["state_province_region"] = state
-				args["zipcode"] = zip
-				_, err := fdfsAPI.callFdfsApi(http.MethodPost, apiUserContact, args)
-				if err != nil {
-					fmt.Println("contact: ", err)
-					return
-				}
-			} else if len(blocks) == 2 {
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserContact, nil)
-				if err != nil {
-					fmt.Println("contact: ", err)
-					return
-				}
-				var resp user.Contacts
-				err = json.Unmarshal(data, &resp)
-				if err != nil {
-					fmt.Println("contact: ", err)
-					return
-				}
-				fmt.Println("phone        : ", resp.Phone)
-				fmt.Println("mobile       : ", resp.Mobile)
-				fmt.Println("address_line1: ", resp.Addr.AddressLine1)
-				fmt.Println("address_line2: ", resp.Addr.AddressLine2)
-				fmt.Println("state        : ", resp.Addr.State)
-				fmt.Println("zipcode      : ", resp.Addr.ZipCode)
-			}
-			currentPrompt = getCurrentPrompt()
-		case "share":
-			if currentUser == "" {
-				fmt.Println("please login as  user to do the operation")
-				return
-			}
-			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"inbox/outbox\" argument ")
-				return
-			}
-			switch blocks[2] {
-			case "inbox":
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserShareInbox, nil)
-				if err != nil {
-					fmt.Println("sharing inbox: ", err)
-					return
-				}
-				var resp user.Inbox
-				err = json.Unmarshal(data, &resp)
-				if err != nil {
-					fmt.Println("sharing inbox: ", err)
-					return
-				}
-				for _, entry := range resp.Entries {
-					fmt.Println(entry)
-				}
-				currentPrompt = getCurrentPrompt()
-			case "outbox":
-				data, err := fdfsAPI.callFdfsApi(http.MethodGet, apiUserShareOutbox, nil)
-				if err != nil {
-					fmt.Println("sharing outbox: ", err)
-					return
-				}
-				var resp user.Outbox
-				err = json.Unmarshal(data, &resp)
-				if err != nil {
-					fmt.Println("sharing outbox: ", err)
-					return
-				}
-				for _, entry := range resp.Entries {
-					fmt.Println(entry)
-				}
-			}
-			currentPrompt = getCurrentPrompt()
-		case "loggedin":
+   		case "loggedin":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"name\" argument ")
 				return
@@ -769,27 +643,8 @@ func executor(in string) {
 				return
 			}
 
-			crTime, err := strconv.ParseInt(resp.CreationTime, 10, 64)
-			if err != nil {
-				fmt.Println("error getting stat: ", err)
-				return
-			}
-			accTime, err := strconv.ParseInt(resp.AccessTime, 10, 64)
-			if err != nil {
-				fmt.Println("error getting stat: ", err)
-				return
-			}
-			modTime, err := strconv.ParseInt(resp.ModificationTime, 10, 64)
-			if err != nil {
-				fmt.Println("error getting stat: ", err)
-				return
-			}
-			fmt.Println("Version          : ", resp.Version)
 			fmt.Println("pod Name         : ", resp.PodName)
-			fmt.Println("Path             : ", resp.PodPath)
-			fmt.Println("Creation Time    :", time.Unix(crTime, 0).String())
-			fmt.Println("Access Time      :", time.Unix(accTime, 0).String())
-			fmt.Println("Modification Time:", time.Unix(modTime, 0).String())
+			fmt.Println("pod Address      : ", resp.PodAddress)
 			currentPrompt = getCurrentPrompt()
 		case "sync":
 			if !isPodOpened() {
@@ -2003,7 +1858,6 @@ func executor(in string) {
 			return
 		}
 		fmt.Println("file path  : ", resp.FileName)
-		fmt.Println("reference  : ", resp.Reference)
 		currentPrompt = getCurrentPrompt()
 	case "receiveinfo":
 		if len(blocks) < 2 {
@@ -2036,7 +1890,6 @@ func executor(in string) {
 		fmt.Println("ContentType    : ", resp.ContentType)
 		fmt.Println("Compression    : ", resp.Compression)
 		fmt.Println("PodName        : ", resp.PodName)
-		fmt.Println("FileMetaHash   : ", resp.FileMetaHash)
 		fmt.Println("Sender         : ", resp.Sender)
 		fmt.Println("Receiver       : ", resp.Receiver)
 		fmt.Println("SharedTime     : ", shTime)

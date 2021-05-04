@@ -36,6 +36,7 @@ var (
 	httpPort     string
 	pprofPort    string
 	cookieDomain string
+	gateWayMode  bool
 	corsOrigins  []string
 	handler      *api.Handler
 )
@@ -74,9 +75,10 @@ can consume it.`,
 		logger.Info("verbosity    : ", verbosity)
 		logger.Info("httpPort     : ", httpPort)
 		logger.Info("pprofPort    : ", pprofPort)
+		logger.Info("gatewayMode  : ", gateWayMode)
 		logger.Info("cookieDomain : ", cookieDomain)
 		logger.Info("corsOrigins  : ", corsOrigins)
-		hdlr, err := api.NewHandler(dataDir, beeHost, beePort, cookieDomain, logger)
+		hdlr, err := api.NewHandler(dataDir, beeHost, beePort, cookieDomain, gateWayMode, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return
@@ -89,6 +91,7 @@ can consume it.`,
 func init() {
 	serverCmd.Flags().StringVar(&httpPort, "httpPort", "9090", "http port")
 	serverCmd.Flags().StringVar(&pprofPort, "pprofPort", "9091", "pprof port")
+	serverCmd.Flags().BoolVar(&gateWayMode, "gateway", false, "gateway mode supporting multiple users")
 	serverCmd.Flags().StringVar(&cookieDomain, "cookieDomain", "api.fairos.io", "the domain to use in the cookie")
 	serverCmd.Flags().StringSliceVar(&corsOrigins, "cors-origins", []string{}, "allow CORS headers for the given origins")
 	rootCmd.AddCommand(serverCmd)
@@ -177,11 +180,8 @@ func startHttpService(logger logging.Logger) {
 	userRouter.Use(handler.LogMiddleware)
 	userRouter.HandleFunc("/logout", handler.UserLogoutHandler).Methods("POST")
 	userRouter.HandleFunc("/export", handler.ExportUserHandler).Methods("POST")
-
 	userRouter.HandleFunc("/delete", handler.UserDeleteHandler).Methods("DELETE")
 	userRouter.HandleFunc("/stat", handler.GetUserStatHandler).Methods("GET")
-	userRouter.HandleFunc("/share/inbox", handler.GetUserSharingInboxHandler).Methods("GET")
-	userRouter.HandleFunc("/share/outbox", handler.GetUserSharingOutboxHandler).Methods("GET")
 
 	// pod related handlers
 	baseRouter.HandleFunc("/pod/receive", handler.PodReceiveHandler).Methods("GET")

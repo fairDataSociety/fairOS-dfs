@@ -250,7 +250,6 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 			//	defer func() {
 			//		wg.Done()
 			//	}()
-			entry.Manifest.PodFile = manifest.PodFile
 			err := b.storeMemoryManifest(entry.Manifest, depth+1)
 			if err != nil {
 				return err
