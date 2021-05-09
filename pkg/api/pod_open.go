@@ -17,6 +17,8 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
 
 	"resenje.org/jsonhttp"
@@ -31,16 +33,26 @@ type PodOpenResponse struct {
 }
 
 func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
-	pod := r.FormValue("pod")
-	if pod == "" {
-		h.logger.Errorf("pod open: \"pod\" argument missing")
-		jsonhttp.BadRequest(w, "pod open: \"pod\" argument missing")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("pod open: invalid request body type")
+		jsonhttp.BadRequest(w, "pod open: invalid request body type")
 		return
 	}
 
+	decoder := json.NewDecoder(r.Body)
+	var podReq common.PodRequest
+	err := decoder.Decode(&podReq)
+	if err != nil {
+		h.logger.Errorf("pod open: could not decode arguments")
+		jsonhttp.BadRequest(w, "pod open: could not decode arguments")
+		return
+	}
+	pod := podReq.PodName
+
 	// password will be empty in case of opening a shared pod
 	// so allow even if it is not set
-	password := r.FormValue("password")
+	password := podReq.Password
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

@@ -17,6 +17,8 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
 
 	"resenje.org/jsonhttp"
@@ -26,10 +28,26 @@ import (
 )
 
 func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	podName := r.FormValue("pod")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("pod delete: invalid request body type")
+		jsonhttp.BadRequest(w, "pod delete: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var podReq common.PodRequest
+	err := decoder.Decode(&podReq)
+	if err != nil {
+		h.logger.Errorf("pod delete: could not decode arguments")
+		jsonhttp.BadRequest(w, "pod delete: could not decode arguments")
+		return
+	}
+
+	podName := podReq.PodName
 	if podName == "" {
-		h.logger.Errorf("delete pod: \"pod\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "delete pod: \"pod\" parameter missing in cookie")
+		h.logger.Errorf("pod delete: \"pod\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "pod delete: \"pod\" parameter missing in cookie")
 		return
 	}
 

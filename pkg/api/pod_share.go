@@ -17,7 +17,9 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -32,14 +34,30 @@ type PodSharingReference struct {
 }
 
 func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
-	pod := r.FormValue("pod")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("pod share: invalid request body type")
+		jsonhttp.BadRequest(w, "pod share: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var podReq common.PodRequest
+	err := decoder.Decode(&podReq)
+	if err != nil {
+		h.logger.Errorf("pod share: could not decode arguments")
+		jsonhttp.BadRequest(w, "pod share: could not decode arguments")
+		return
+	}
+
+	pod := podReq.PodName
 	if pod == "" {
 		h.logger.Errorf("pod share: \"pod\" argument missing")
 		jsonhttp.BadRequest(w, "pod share: \"pod\" argument missing")
 		return
 	}
 
-	password := r.FormValue("password")
+	password := podReq.Password
 	if password == "" {
 		h.logger.Errorf("pod share: \"password\" argument missing")
 		jsonhttp.BadRequest(w, "pod share: \"password\" argument missing")
@@ -80,7 +98,14 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
-	sharingRefString := r.FormValue("ref")
+	keys, ok := r.URL.Query()["sharing_ref"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("pod receive info: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "pod receiv infoe: \"pod_name\" argument missing")
+		return
+	}
+
+	sharingRefString := keys[0]
 	if sharingRefString == "" {
 		h.logger.Errorf("pod receive info: \"ref\" argument missing")
 		jsonhttp.BadRequest(w, "pod receive info: \"ref\" argument missing")
@@ -119,7 +144,14 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
-	sharingRefString := r.FormValue("ref")
+	keys, ok := r.URL.Query()["sharing_ref"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("pod receive: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "pod receive: \"pod_name\" argument missing")
+		return
+	}
+
+	sharingRefString := keys[0]
 	if sharingRefString == "" {
 		h.logger.Errorf("pod receive: \"ref\" argument missing")
 		jsonhttp.BadRequest(w, "pod receive: \"ref\" argument missing")

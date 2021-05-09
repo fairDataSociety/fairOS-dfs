@@ -78,6 +78,7 @@ func (d *DfsAPI) GetUserStat(sessionId string) (*user.Stat, error) {
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
+
 	return d.users.GetUserStat(ui)
 }
 

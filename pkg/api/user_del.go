@@ -17,16 +17,33 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"resenje.org/jsonhttp"
-
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"resenje.org/jsonhttp"
 )
 
 func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	password := r.FormValue("password")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("user signup: invalid request body type")
+		jsonhttp.BadRequest(w, "user signup: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var userReq common.UserRequest
+	err := decoder.Decode(&userReq)
+	if err != nil {
+		h.logger.Errorf("user signup: could not decode arguments")
+		jsonhttp.BadRequest(w, "user signup: could not decode arguments")
+		return
+	}
+
+	password := userReq.Password
 	if password == "" {
 		h.logger.Errorf("user delete: \"password\" argument missing")
 		jsonhttp.BadRequest(w, "user delete: \"password\" argument missing")

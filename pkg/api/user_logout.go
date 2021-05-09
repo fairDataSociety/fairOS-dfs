@@ -19,10 +19,9 @@ package api
 import (
 	"net/http"
 
-	"resenje.org/jsonhttp"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"resenje.org/jsonhttp"
 )
 
 func (h *Handler) UserLogoutHandler(w http.ResponseWriter, r *http.Request) {

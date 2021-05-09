@@ -32,7 +32,14 @@ type PodStatResponse struct {
 }
 
 func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
-	pod := r.FormValue("pod")
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("pod stat: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "pod stat: \"pod_name\" argument missing")
+		return
+	}
+
+	pod := keys[0]
 	if pod == "" {
 		h.logger.Errorf("pod stat: \"pod\" argument missing")
 		jsonhttp.BadRequest(w, "pod stat: \"pod\" argument missing")

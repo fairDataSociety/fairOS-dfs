@@ -17,16 +17,33 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"resenje.org/jsonhttp"
-
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"resenje.org/jsonhttp"
 )
 
 func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
-	user := r.FormValue("user")
-	password := r.FormValue("password")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("user login: invalid request body type")
+		jsonhttp.BadRequest(w, "user login: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var userReq common.UserRequest
+	err := decoder.Decode(&userReq)
+	if err != nil {
+		h.logger.Errorf("user login: could not decode arguments")
+		jsonhttp.BadRequest(w, "user login: could not decode arguments")
+		return
+	}
+
+	user := userReq.UserName
+	password := userReq.Password
 	if user == "" {
 		h.logger.Errorf("user login: \"user\" argument missing")
 		jsonhttp.BadRequest(w, "user login: \"user\" argument missing")
@@ -39,7 +56,7 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// login user
-	err := h.dfsAPI.LoginUser(user, password, w, "")
+	err = h.dfsAPI.LoginUser(user, password, w, "")
 	if err != nil {
 		if err == u.ErrUserAlreadyLoggedIn ||
 			err == u.ErrInvalidUserName ||
