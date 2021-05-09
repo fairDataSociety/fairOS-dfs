@@ -41,10 +41,10 @@ const (
 )
 
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
-	podPath := r.FormValue("pod_path")
+	podPath := r.FormValue("dir_path")
 	if podPath == "" {
-		h.logger.Errorf("file upload: \"pod_path\" argument missing")
-		jsonhttp.BadRequest(w, "file upload: \"pod_path\" argument missing")
+		h.logger.Errorf("file upload: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "file upload: \"dir_path\" argument missing")
 		return
 	}
 

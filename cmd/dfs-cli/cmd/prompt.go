@@ -17,20 +17,14 @@ limitations under the License.
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/c-bata/go-prompt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"golang.org/x/term"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"time"
 )
 
 const (
@@ -1267,16 +1261,7 @@ func executor(in string) {
 				rmFile = currentDirectory + utils.PathSeperator + rmFile
 			}
 		}
-
-		args := make(map[string]string)
-		args["file"] = rmFile
-		data, err := fdfsAPI.postReq(http.MethodDelete, apiFileDelete, args)
-		if err != nil {
-			fmt.Println("rm failed: ", err)
-			return
-		}
-		message := strings.ReplaceAll(string(data), "\n", "")
-		fmt.Println(message)
+		deleteFile(rmFile)
 		currentPrompt = getCurrentPrompt()
 	case "share":
 		if len(blocks) < 2 {
@@ -1295,22 +1280,7 @@ func executor(in string) {
 				podFile = currentDirectory + utils.PathSeperator + podFile
 			}
 		}
-
-		args := make(map[string]string)
-		args["file"] = podFile
-		args["to"] = "add destination user address later"
-		data, err := fdfsAPI.postReq(http.MethodPost, apiFileShare, args)
-		if err != nil {
-			fmt.Println("share: ", err)
-			return
-		}
-		var resp api.FileSharingReference
-		err = json.Unmarshal(data, &resp)
-		if err != nil {
-			fmt.Println("file share: ", err)
-			return
-		}
-		fmt.Println("File Sharing Reference: ", resp.Reference)
+		fileShare(podFile, "TODO: add dest. user address")
 		currentPrompt = getCurrentPrompt()
 	case "receive":
 		if len(blocks) < 3 {
@@ -1319,21 +1289,7 @@ func executor(in string) {
 		}
 		sharingRefString := blocks[1]
 		podDir := blocks[2]
-		args := make(map[string]string)
-		args["ref"] = sharingRefString
-		args["dir"] = podDir
-		data, err := fdfsAPI.postReq(http.MethodGet, apiFileReceive, args)
-		if err != nil {
-			fmt.Println("receive: ", err)
-			return
-		}
-		var resp api.ReceiveFileResponse
-		err = json.Unmarshal(data, &resp)
-		if err != nil {
-			fmt.Println("file receive: ", err)
-			return
-		}
-		fmt.Println("file path  : ", resp.FileName)
+		fileReceive(sharingRefString, podDir)
 		currentPrompt = getCurrentPrompt()
 	case "receiveinfo":
 		if len(blocks) < 2 {
@@ -1341,34 +1297,7 @@ func executor(in string) {
 			return
 		}
 		sharingRefString := blocks[1]
-		args := make(map[string]string)
-		args["ref"] = sharingRefString
-		data, err := fdfsAPI.postReq(http.MethodGet, apiFileReceiveInfo, args)
-		if err != nil {
-			fmt.Println("receive info: ", err)
-			return
-		}
-		var resp user.ReceiveFileInfo
-		err = json.Unmarshal(data, &resp)
-		if err != nil {
-			fmt.Println("file receiveinfo: ", err)
-			return
-		}
-		shTime, err := strconv.ParseInt(resp.SharedTime, 10, 64)
-		if err != nil {
-			fmt.Println(" info: ", err)
-			return
-		}
-		fmt.Println("FileName       : ", resp.FileName)
-		fmt.Println("Size           : ", resp.Size)
-		fmt.Println("BlockSize      : ", resp.BlockSize)
-		fmt.Println("NumberOfBlocks : ", resp.NumberOfBlocks)
-		fmt.Println("ContentType    : ", resp.ContentType)
-		fmt.Println("Compression    : ", resp.Compression)
-		fmt.Println("PodName        : ", resp.PodName)
-		fmt.Println("Sender         : ", resp.Sender)
-		fmt.Println("Receiver       : ", resp.Receiver)
-		fmt.Println("SharedTime     : ", shTime)
+		fileReceiveInfo(sharingRefString)
 		currentPrompt = getCurrentPrompt()
 	default:
 		fmt.Println("invalid command")

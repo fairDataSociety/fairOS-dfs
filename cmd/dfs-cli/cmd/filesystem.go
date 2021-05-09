@@ -23,6 +23,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -214,7 +215,7 @@ func uploadFile(fileName, localFileWithPath, podDir, blockSize, compression stri
 	}
 
 	args := make(map[string]string)
-	args["pod_dir"] = podDir
+	args["dir_path"] = podDir
 	args["block_size"] = blockSize
 	data, err := fdfsAPI.uploadMultipartFile(apiFileUpload, fileName, fi.Size(), fd, args, "files", compression)
 	if err != nil {
@@ -234,15 +235,6 @@ func uploadFile(fileName, localFileWithPath, podDir, blockSize, compression stri
 
 
 func downloadFile(localFileName, podFileName string) {
-	downloadFileReq := common.FileSystemRequest{
-		FileName: podFileName,
-	}
-	jsonData, err := json.Marshal(downloadFileReq)
-	if err != nil {
-		fmt.Println("download: error marshalling request")
-		return
-	}
-
 	// Create the local file fd
 	out, err := os.Create(localFileName)
 	if err != nil {
@@ -251,10 +243,99 @@ func downloadFile(localFileName, podFileName string) {
 	}
 	defer out.Close()
 
-	n, err := fdfsAPI.downloadMultipartFile(http.MethodPost, apiFileDownload, jsonData, out)
+	args := make(map[string]string)
+	args["file_path"] = podFileName
+	n, err := fdfsAPI.downloadMultipartFile(http.MethodPost, apiFileDownload, args, out)
 	if err != nil {
 		fmt.Println("download failed: ", err)
 		return
 	}
 	fmt.Println("Downloaded ", n, " bytes")
+}
+
+func fileShare(fileNameWithPath, destinationUser string) {
+	rmdirReq := common.FileSystemRequest{
+		FilePath: fileNameWithPath,
+		Destination: destinationUser,
+	}
+	jsonData, err := json.Marshal(rmdirReq)
+	if err != nil {
+		fmt.Println("share file: error marshalling request")
+		return
+	}
+	data, err := fdfsAPI.postReq(http.MethodPost, apiFileShare, jsonData)
+	if err != nil {
+		fmt.Println("share: ", err)
+		return
+	}
+	var resp api.FileSharingReference
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		fmt.Println("file share: ", err)
+		return
+	}
+	fmt.Println("File Sharing Reference: ", resp.Reference)
+}
+
+func fileReceiveInfo(sharingRef string) {
+	data, err := fdfsAPI.getReq(apiFileReceiveInfo, "sharing_ref=" + sharingRef)
+	if err != nil {
+		fmt.Println("receive info: ", err)
+		return
+	}
+	var resp user.ReceiveFileInfo
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		fmt.Println("file receiveinfo: ", err)
+		return
+	}
+	shTime, err := strconv.ParseInt(resp.SharedTime, 10, 64)
+	if err != nil {
+		fmt.Println(" info: ", err)
+		return
+	}
+	fmt.Println("FileName       : ", resp.FileName)
+	fmt.Println("Size           : ", resp.Size)
+	fmt.Println("BlockSize      : ", resp.BlockSize)
+	fmt.Println("NumberOfBlocks : ", resp.NumberOfBlocks)
+	fmt.Println("ContentType    : ", resp.ContentType)
+	fmt.Println("Compression    : ", resp.Compression)
+	fmt.Println("PodName        : ", resp.PodName)
+	fmt.Println("Sender         : ", resp.Sender)
+	fmt.Println("Receiver       : ", resp.Receiver)
+	fmt.Println("SharedTime     : ", shTime)
+}
+
+func fileReceive(sharingRef, destDirectory string) {
+	argsStr := fmt.Sprintf("sharing_ref=%s&dir_path=%s", sharingRef, destDirectory)
+	data, err := fdfsAPI.getReq(apiFileReceive, argsStr)
+	if err != nil {
+		fmt.Println("receive: ", err)
+		return
+	}
+	var resp api.ReceiveFileResponse
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		fmt.Println("file receive: ", err)
+		return
+	}
+	fmt.Println("file path  : ", resp.FileName)
+}
+
+func deleteFile(fileNameWithPath string) {
+	rmFileReq := common.FileSystemRequest{
+		FilePath: fileNameWithPath,
+	}
+	jsonData, err := json.Marshal(rmFileReq)
+	if err != nil {
+		fmt.Println("rm file: error marshalling request")
+		return
+	}
+	data, err := fdfsAPI.postReq(http.MethodDelete, apiFileDelete, jsonData)
+	if err != nil {
+		fmt.Println("rm failed: ", err)
+		return
+	}
+	message := strings.ReplaceAll(string(data), "\n", "")
+	fmt.Println(message)
 }

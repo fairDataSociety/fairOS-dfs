@@ -17,6 +17,8 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
@@ -27,10 +29,26 @@ import (
 )
 
 func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	podFileWithPath := r.FormValue("pod_path_file")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("file delete: invalid request body type")
+		jsonhttp.BadRequest(w, "file delete: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var fsReq common.FileSystemRequest
+	err := decoder.Decode(&fsReq)
+	if err != nil {
+		h.logger.Errorf("file delete: could not decode arguments")
+		jsonhttp.BadRequest(w, "file delete: could not decode arguments")
+		return
+	}
+
+	podFileWithPath := fsReq.FilePath
 	if podFileWithPath == "" {
-		h.logger.Errorf("file delete: \"pod_path_file\" argument missing")
-		jsonhttp.BadRequest(w, "file delete: \"pod_path_file\" argument missing")
+		h.logger.Errorf("file delete: \"file_path\" argument missing")
+		jsonhttp.BadRequest(w, "file delete: \"file_path\" argument missing")
 		return
 	}
 

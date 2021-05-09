@@ -34,6 +34,5 @@ type FileSystemRequest struct {
 	DirectoryName string `json:"dir_name,omitempty"`
 	FilePath      string `json:"file_path,omitempty"`
 	FileName      string `json:"file_name,omitempty"`
-	Reference     string `json:"reference,omitempty"`
-	BlockSize     string `json:"block_size,omitempty"`
+	Destination   string `json:"dest_user,omitempty"`
 }

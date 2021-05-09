@@ -291,7 +291,7 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 	}
 
 	fullUrl := fmt.Sprintf(s.url + urlPath)
-	req, err := http.NewRequest("POST", fullUrl, body)
+	req, err := http.NewRequest(http.MethodPost, fullUrl, body)
 	if err != nil {
 		return nil, err
 	}
@@ -332,26 +332,33 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 
 }
 
-func (s *FdfsClient) downloadMultipartFile(method, urlPath string, jsonBytes []byte, out *os.File) (int64, error) {
+func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map[string]string, out *os.File) (int64, error) {
 	// prepare the  request
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
 	var err error
-	if jsonBytes != nil {
-		req, err = http.NewRequest(method, fullUrl, bytes.NewBuffer(jsonBytes))
-		if err != nil {
-			return 0, err
-		}
 
-		// add the headers
-		req.Header.Add("Content-Type", "application/json")
-		req.Header.Add("Content-Length", strconv.Itoa(len(jsonBytes)))
-	} else {
-		req, err = http.NewRequest(method, fullUrl, nil)
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	for k, v := range arguments {
+		err := writer.WriteField(k, v)
 		if err != nil {
 			return 0, err
 		}
 	}
+	err = writer.Close()
+	if err != nil {
+		return 0, err
+	}
+	req, err = http.NewRequest(method, fullUrl, body)
+	if err != nil {
+		return 0, err
+	}
+	// add the headers
+
+	contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
+	req.Header.Add("Content-Type", contentType)
+	req.Header.Add("Content-Length", strconv.Itoa(len(body.Bytes())))
 
 	if s.cookie != nil {
 		req.AddCookie(s.cookie)

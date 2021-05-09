@@ -17,6 +17,8 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
 
 	"resenje.org/jsonhttp"
@@ -34,13 +36,29 @@ type FileSharingReference struct {
 }
 
 func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
-	podFileWithPath := r.FormValue("pod_path_file")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("file share: invalid request body type")
+		jsonhttp.BadRequest(w, "file share: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var fsReq common.FileSystemRequest
+	err := decoder.Decode(&fsReq)
+	if err != nil {
+		h.logger.Errorf("file share: could not decode arguments")
+		jsonhttp.BadRequest(w, "file share: could not decode arguments")
+		return
+	}
+
+	podFileWithPath := fsReq.FilePath
 	if podFileWithPath == "" {
 		h.logger.Errorf("file share: \"pod_path_file\" argument missing")
 		jsonhttp.BadRequest(w, "file share: \"pod_path_file\" argument missing")
 		return
 	}
-	destinationRef := r.FormValue("to")
+	destinationRef := fsReq.Destination
 	if destinationRef == "" {
 		h.logger.Errorf("file share: \"to\" argument missing")
 		jsonhttp.BadRequest(w, "file share: \"to\" argument missing")
@@ -74,19 +92,26 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
-	sharingRefString := r.FormValue("ref")
+	keys, ok := r.URL.Query()["sharing_ref"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("file receive: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "file receive: \"sharing_ref\" argument missing")
+		return
+	}
+	sharingRefString := keys[0]
 	if sharingRefString == "" {
 		h.logger.Errorf("file receive: \"ref\" argument missing")
 		jsonhttp.BadRequest(w, "file receive: \"ref\" argument missing")
 		return
 	}
 
-	dir := r.FormValue("dir")
-	if dir == "" {
-		h.logger.Errorf("file receive: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "file receive: \"dir\" argument missing")
+	keys1, ok1 := r.URL.Query()["dir_path"]
+	if !ok1 || len(keys1[0]) < 1  || keys1[0] == ""{
+		h.logger.Errorf("file receive: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "file receive: \"dir_path\" argument missing")
 		return
 	}
+	dir := keys1[0]
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
@@ -122,7 +147,13 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
-	sharingRefString := r.FormValue("ref")
+	keys, ok := r.URL.Query()["sharing_ref"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("file receive info: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "file receive info: \"sharing_ref\" argument missing")
+		return
+	}
+	sharingRefString := keys[0]
 	if sharingRefString == "" {
 		h.logger.Errorf("file receive info: \"ref\" argument missing")
 		jsonhttp.BadRequest(w, "file receive info: \"ref\" argument missing")

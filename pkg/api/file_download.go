@@ -29,10 +29,10 @@ import (
 )
 
 func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
-	podFileWithPath := r.FormValue("pod_path_file")
+	podFileWithPath := r.FormValue("file_path")
 	if podFileWithPath == "" {
-		h.logger.Errorf("download: \"pod_path_file\" argument missing")
-		jsonhttp.BadRequest(w, "download: \"pod_path_file\" argument missing")
+		h.logger.Errorf("download: \"file_path\" argument missing")
+		jsonhttp.BadRequest(w, "download: \"file_path\" argument missing")
 		return
 	}
 
