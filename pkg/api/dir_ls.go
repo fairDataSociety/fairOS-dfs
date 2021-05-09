@@ -34,12 +34,13 @@ type ListFileResponse struct {
 }
 
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
-	directory := r.FormValue("dir")
-	if directory == "" {
-		h.logger.Errorf("ls: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "ls: \"dir\" argument missing")
+	keys, ok := r.URL.Query()["dir_path"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("ls: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "ls: \"dir_path\" argument missing")
 		return
 	}
+	directory := keys[0]
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

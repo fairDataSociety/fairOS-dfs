@@ -1,0 +1,260 @@
+/*
+Copyright © 2020 FairOS Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package cmd
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+)
+
+func isDirectoryPresent(dirNameWithpath string) bool {
+	data, err := fdfsAPI.getReq(apiDirIsPresent, "dir_path=" + dirNameWithpath)
+	if err != nil {
+		fmt.Println("dir present: ", err)
+		return false
+	}
+	var resp api.DirPresentResponse
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		fmt.Println("dir present: ", err)
+		return false
+	}
+	if !resp.Present {
+		fmt.Println("dir present: ", resp.Error)
+		return false
+	}
+	return  resp.Present
+}
+
+func listFileAndDirectories(dirNameWithpath string) {
+	data, err := fdfsAPI.getReq(apiDirLs, "dir_path=" + dirNameWithpath)
+	if err != nil {
+		fmt.Println("ls failed: ", err)
+		return
+	}
+	var resp api.ListFileResponse
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		fmt.Println("dir ls: ", err)
+		return
+	}
+	for _, entry := range resp.Directories {
+		fmt.Println("<Dir>: ", entry.Name)
+	}
+	for _, entry := range resp.Files {
+		fmt.Println("<File>: ", entry.Name)
+	}
+}
+
+func statFileOrDirectory(statElement string) {
+	data, err := fdfsAPI.getReq(apiDirStat, "dir_path=" + statElement)
+	if err != nil {
+		if err.Error() == "dir stat: directory not found" {
+			args := make(map[string]string)
+			args["file"] = statElement
+			data, err := fdfsAPI.getReq(apiFileStat, "file_path=" + statElement)
+			if err != nil {
+				fmt.Println("stat failed: ", err)
+				return
+			}
+			var resp file.Stats
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("file stat: ", err)
+				return
+			}
+			crTime, err := strconv.ParseInt(resp.CreationTime, 10, 64)
+			if err != nil {
+				fmt.Println("stat failed: ", err)
+				return
+			}
+			accTime, err := strconv.ParseInt(resp.AccessTime, 10, 64)
+			if err != nil {
+				fmt.Println("stat failed: ", err)
+				return
+			}
+			modTime, err := strconv.ParseInt(resp.ModificationTime, 10, 64)
+			if err != nil {
+				fmt.Println("stat failed: ", err)
+				return
+			}
+			compression := resp.Compression
+			if compression == "" {
+				compression = "None"
+			}
+			fmt.Println("PodName 	   	: ", resp.PodName)
+			fmt.Println("File Path	   	: ", resp.FilePath)
+			fmt.Println("File Name	   	: ", resp.FileName)
+			fmt.Println("File Size	   	: ", resp.FileSize)
+			fmt.Println("Block Size	   	: ", resp.BlockSize)
+			fmt.Println("Compression   		: ", compression)
+			fmt.Println("Content Type  		: ", resp.ContentType)
+			fmt.Println("Cr. Time	   	: ", time.Unix(crTime, 0).String())
+			fmt.Println("Mo. Time	   	: ", time.Unix(accTime, 0).String())
+			fmt.Println("Ac. Time	   	: ", time.Unix(modTime, 0).String())
+			for _, b := range resp.Blocks {
+				blkStr := fmt.Sprintf("%s, 0x%s, %s bytes, %s bytes", b.Name, b.Reference, b.Size, b.CompressedSize)
+				fmt.Println(blkStr)
+			}
+		} else {
+			fmt.Println("stat: ", err)
+			return
+		}
+	} else {
+		var resp dir.DirStats
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			fmt.Println("file stat: ", err)
+			return
+		}
+		crTime, err := strconv.ParseInt(resp.CreationTime, 10, 64)
+		if err != nil {
+			fmt.Println("stat failed: ", err)
+			return
+		}
+		accTime, err := strconv.ParseInt(resp.AccessTime, 10, 64)
+		if err != nil {
+			fmt.Println("stat failed: ", err)
+			return
+		}
+		modTime, err := strconv.ParseInt(resp.ModificationTime, 10, 64)
+		if err != nil {
+			fmt.Println("stat failed: ", err)
+			return
+		}
+		fmt.Println("Account 	   	: ", resp.Account)
+		fmt.Println("PodAddress    		: ", resp.PodAddress)
+		fmt.Println("PodName 	   	: ", resp.PodName)
+		fmt.Println("Dir Path	   	: ", resp.DirPath)
+		fmt.Println("Dir Name	   	: ", resp.DirName)
+		fmt.Println("Cr. Time	   	: ", time.Unix(crTime, 0).String())
+		fmt.Println("Mo. Time	   	: ", time.Unix(accTime, 0).String())
+		fmt.Println("Ac. Time	   	: ", time.Unix(modTime, 0).String())
+		fmt.Println("No of Dir.	   	: ", resp.NoOfDirectories)
+		fmt.Println("No of Files   		: ", resp.NoOfFiles)
+	}
+}
+
+func mkdir(dirNameWithpath string) {
+	dirPath := filepath.Dir(dirNameWithpath)
+	dirName := filepath.Base(dirNameWithpath)
+	mkdirReq := common.FileSystemRequest{
+		DirectoryName: dirName,
+		DirectoryPath: dirPath,
+	}
+	jsonData, err := json.Marshal(mkdirReq)
+	if err != nil {
+		fmt.Println("mkdir: error marshalling request")
+		return
+	}
+	data, err := fdfsAPI.postReq(http.MethodPost, apiDirMkdir, jsonData)
+	if err != nil {
+		fmt.Println("mkdir: ", err)
+		return
+	}
+	message := strings.ReplaceAll(string(data), "\n", "")
+	fmt.Println(message)
+}
+
+func rmDir(dirNameWithpath string) {
+	dirPath := filepath.Dir(dirNameWithpath)
+	dirName := filepath.Base(dirNameWithpath)
+	rmdirReq := common.FileSystemRequest{
+		DirectoryName: dirName,
+		DirectoryPath: dirPath,
+	}
+	jsonData, err := json.Marshal(rmdirReq)
+	if err != nil {
+		fmt.Println("rmdir: error marshalling request")
+		return
+	}
+	data, err := fdfsAPI.postReq(http.MethodDelete, apiDirRmdir, jsonData)
+	if err != nil {
+		fmt.Println("rmdir failed: ", err)
+		return
+	}
+	message := strings.ReplaceAll(string(data), "\n", "")
+	fmt.Println(message)
+}
+
+func uploadFile(fileName, localFileWithPath, podDir, blockSize, compression string) {
+	fd, err := os.Open(localFileWithPath)
+	if err != nil {
+		fmt.Println("upload failed: ", err)
+		return
+	}
+	fi, err := fd.Stat()
+	if err != nil {
+		fmt.Println("upload failed: ", err)
+		return
+	}
+
+	args := make(map[string]string)
+	args["pod_dir"] = podDir
+	args["block_size"] = blockSize
+	data, err := fdfsAPI.uploadMultipartFile(apiFileUpload, fileName, fi.Size(), fd, args, "files", compression)
+	if err != nil {
+		fmt.Println("upload failed: ", err)
+		return
+	}
+	var resp api.UploadFileResponse
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		fmt.Println("file upload: ", err)
+		return
+	}
+	for _, response := range resp.Responses {
+		fmt.Println(response.FileName, " : ", response.Message)
+	}
+}
+
+
+func downloadFile(localFileName, podFileName string) {
+	downloadFileReq := common.FileSystemRequest{
+		FileName: podFileName,
+	}
+	jsonData, err := json.Marshal(downloadFileReq)
+	if err != nil {
+		fmt.Println("download: error marshalling request")
+		return
+	}
+
+	// Create the local file fd
+	out, err := os.Create(localFileName)
+	if err != nil {
+		fmt.Println("download failed: ", err)
+		return
+	}
+	defer out.Close()
+
+	n, err := fdfsAPI.downloadMultipartFile(http.MethodPost, apiFileDownload, jsonData, out)
+	if err != nil {
+		fmt.Println("download failed: ", err)
+		return
+	}
+	fmt.Println("Downloaded ", n, " bytes")
+}

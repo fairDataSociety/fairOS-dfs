@@ -17,6 +17,8 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
 
 	"resenje.org/jsonhttp"
@@ -27,14 +29,30 @@ import (
 )
 
 func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) {
-	dir := r.FormValue("dir")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("rmdir: invalid request body type")
+		jsonhttp.BadRequest(w, "rmdir: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var fsReq common.FileSystemRequest
+	err := decoder.Decode(&fsReq)
+	if err != nil {
+		h.logger.Errorf("rmdir: could not decode arguments")
+		jsonhttp.BadRequest(w, "rmdir: could not decode arguments")
+		return
+	}
+
+	dir := fsReq.DirectoryName
 	if dir == "" {
 		h.logger.Errorf("rmdir: \"dir\" argument missing")
 		jsonhttp.BadRequest(w, "rmdir: \"dir\" argument missing")
 		return
 	}
 
-	path := r.FormValue("path")
+	path := fsReq.DirectoryPath
 	if path == "" {
 		h.logger.Errorf("rmdir: \"path\" argument missing")
 		jsonhttp.BadRequest(w, "rmdir: \"path\" argument missing")

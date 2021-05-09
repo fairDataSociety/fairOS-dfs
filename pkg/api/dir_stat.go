@@ -18,7 +18,6 @@ package api
 
 import (
 	"net/http"
-
 	"resenje.org/jsonhttp"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -27,12 +26,13 @@ import (
 )
 
 func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
-	dir := r.FormValue("dir")
-	if dir == "" {
-		h.logger.Errorf("dir stat: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "dir stat: \"dir\" argument missing")
+	keys, ok := r.URL.Query()["dir_path"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("dir present: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "dir present: \"dir_path\" argument missing")
 		return
 	}
+	dir := keys[0]
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

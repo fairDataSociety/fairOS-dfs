@@ -29,12 +29,13 @@ type DirPresentResponse struct {
 }
 
 func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request) {
-	dirToCheck := r.FormValue("dir")
-	if dirToCheck == "" {
-		h.logger.Errorf("dir present: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "dir present: \"dir\" argument missing")
+	keys, ok := r.URL.Query()["dir_path"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("dir present: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "dir present: \"dir_path\" argument missing")
 		return
 	}
+	dirToCheck := keys[0]
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

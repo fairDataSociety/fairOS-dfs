@@ -17,13 +17,20 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/c-bata/go-prompt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"golang.org/x/term"
 	"log"
+	"net/http"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -1076,472 +1083,293 @@ func executor(in string) {
 	//		fmt.Println("Invalid doc coammand")
 	//		currentPrompt = getCurrentPrompt()
 	//	}
-	//case "cd":
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	if len(blocks) < 2 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	dirTocd := blocks[1]
-	//
-	//	// if cd'ing to previous dir, just do it
-	//	if dirTocd == ".." && currentDirectory != utils.PathSeperator {
-	//		currentDirectory = filepath.Dir(currentDirectory)
-	//		currentPrompt = getCurrentPrompt()
-	//		return
-	//	}
-	//
-	//	// if cd'ing to root dir, just do it
-	//	if dirTocd == utils.PathSeperator {
-	//		currentDirectory = utils.PathSeperator
-	//		currentPrompt = getCurrentPrompt()
-	//		return
-	//	}
-	//
-	//	// if cd'ing forward, we have to check if that dir is present
-	//	if dirTocd != utils.PathSeperator {
-	//		if currentDirectory == utils.PathSeperator {
-	//			dirTocd = currentDirectory + dirTocd
-	//		} else {
-	//			dirTocd = currentDirectory + utils.PathSeperator + dirTocd
-	//		}
-	//	}
-	//
-	//	args := make(map[string]string)
-	//	args["dir"] = dirTocd
-	//	data, err := fdfsAPI.postReq(http.MethodGet, apiDirIsPresent, args)
-	//	if err != nil {
-	//		fmt.Println("cd failed: ", err)
-	//		return
-	//	}
-	//	var resp api.DirPresentResponse
-	//	err = json.Unmarshal(data, &resp)
-	//	if err != nil {
-	//		fmt.Println("dir cd: ", err)
-	//		return
-	//	}
-	//	if resp.Present {
-	//		currentDirectory = dirTocd
-	//	} else {
-	//		fmt.Println("dir is not present: ", resp.Error)
-	//	}
-	//	currentPrompt = getCurrentPrompt()
-	//case "ls":
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	args := make(map[string]string)
-	//	args["dir"] = currentDirectory
-	//	data, err := fdfsAPI.postReq(http.MethodGet, apiDirLs, args)
-	//	if err != nil {
-	//		fmt.Println("ls failed: ", err)
-	//		return
-	//	}
-	//	var resp api.ListFileResponse
-	//	err = json.Unmarshal(data, &resp)
-	//	if err != nil {
-	//		fmt.Println("dir ls: ", err)
-	//		return
-	//	}
-	//	for _, entry := range resp.Directories {
-	//		fmt.Println("<Dir>: ", entry.Name)
-	//	}
-	//	for _, entry := range resp.Files {
-	//		fmt.Println("<File>: ", entry.Name)
-	//	}
-	//	currentPrompt = getCurrentPrompt()
-	//case "mkdir":
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	if len(blocks) < 2 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	dirToMk := blocks[1]
-	//	if dirToMk == "" {
-	//		fmt.Println("invalid dir")
-	//		return
-	//	}
-	//
-	//	if !strings.HasPrefix(dirToMk, utils.PathSeperator) {
-	//		// then this path is not from root
-	//		dirToMk = currentDirectory + utils.PathSeperator + dirToMk
-	//	}
-	//
-	//	args := make(map[string]string)
-	//	args["dir"] = dirToMk
-	//
-	//	data, err := fdfsAPI.postReq(http.MethodPost, apiDirMkdir, args)
-	//	if err != nil {
-	//		fmt.Println("mkdir failed: ", err)
-	//		return
-	//	}
-	//	message := strings.ReplaceAll(string(data), "\n", "")
-	//	fmt.Println(message)
-	//	currentPrompt = getCurrentPrompt()
-	//case "rmdir":
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	if len(blocks) < 2 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	dirToRm := blocks[1]
-	//	if dirToRm == "" {
-	//		fmt.Println("invalid dir")
-	//		return
-	//	}
-	//	if !strings.HasPrefix(dirToRm, utils.PathSeperator) {
-	//		// then this path is not from root
-	//		if currentDirectory == utils.PathSeperator {
-	//			dirToRm = currentDirectory + dirToRm
-	//		} else {
-	//			dirToRm = currentDirectory + utils.PathSeperator + dirToRm
-	//		}
-	//	}
-	//
-	//	args := make(map[string]string)
-	//	args["dir"] = dirToRm
-	//	data, err := fdfsAPI.postReq(http.MethodDelete, apiDirRmdir, args)
-	//	if err != nil {
-	//		fmt.Println("rmdir failed: ", err)
-	//		return
-	//	}
-	//	message := strings.ReplaceAll(string(data), "\n", "")
-	//	fmt.Println(message)
-	//	currentPrompt = getCurrentPrompt()
-	//case "upload":
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	if len(blocks) < 4 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	fileName := filepath.Base(blocks[1])
-	//	fd, err := os.Open(blocks[1])
-	//	if err != nil {
-	//		fmt.Println("upload failed: ", err)
-	//		return
-	//	}
-	//	fi, err := fd.Stat()
-	//	if err != nil {
-	//		fmt.Println("upload failed: ", err)
-	//		return
-	//	}
-	//	podDir := blocks[2]
-	//	if podDir == "." {
-	//		podDir = currentDirectory
-	//	}
-	//	blockSize := blocks[3]
-	//	compression := ""
-	//	if len(blocks) >= 5 {
-	//		compression = blocks[4]
-	//	}
-	//	args := make(map[string]string)
-	//	args["pod_dir"] = podDir
-	//	args["block_size"] = blockSize
-	//	data, err := fdfsAPI.uploadMultipartFile(apiFileUpload, fileName, fi.Size(), fd, args, "files", compression)
-	//	if err != nil {
-	//		fmt.Println("upload failed: ", err)
-	//		return
-	//	}
-	//	var resp api.UploadFileResponse
-	//	err = json.Unmarshal(data, &resp)
-	//	if err != nil {
-	//		fmt.Println("file upload: ", err)
-	//		return
-	//	}
-	//	for _, response := range resp.Responses {
-	//		fmt.Println(response.FileName, " : ", response.Message)
-	//	}
-	//	currentPrompt = getCurrentPrompt()
-	//case "download":
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	if len(blocks) < 3 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	localDir := blocks[1]
-	//	dirStat, err := os.Stat(localDir)
-	//	if err != nil {
-	//		fmt.Println("local path is not a present: ", err)
-	//		return
-	//	}
-	//
-	//	if !dirStat.IsDir() {
-	//		fmt.Println("local path is not a directory")
-	//		return
-	//	}
-	//
-	//	// Create the file
-	//	loalFile := filepath.Join(localDir + utils.PathSeperator + filepath.Base(blocks[2]))
-	//	out, err := os.Create(loalFile)
-	//	if err != nil {
-	//		fmt.Println("download failed: ", err)
-	//		return
-	//	}
-	//	defer out.Close()
-	//
-	//	podFile := blocks[2]
-	//	if !strings.HasPrefix(podFile, utils.PathSeperator) {
-	//		if currentDirectory == utils.PathSeperator {
-	//			podFile = currentDirectory + podFile
-	//		} else {
-	//			podFile = currentDirectory + utils.PathSeperator + podFile
-	//		}
-	//	}
-	//	args := make(map[string]string)
-	//	args["file"] = podFile
-	//	n, err := fdfsAPI.downloadMultipartFile(http.MethodPost, apiFileDownload, args, out)
-	//	if err != nil {
-	//		fmt.Println("download failed: ", err)
-	//		return
-	//	}
-	//	fmt.Println("Downloaded ", n, " bytes")
-	//	currentPrompt = getCurrentPrompt()
-	//case "stat":
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	if len(blocks) < 2 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	statElement := blocks[1]
-	//	if statElement == "" {
-	//		return
-	//	}
-	//	if !strings.HasPrefix(statElement, utils.PathSeperator) {
-	//		if currentDirectory == utils.PathSeperator {
-	//			statElement = currentDirectory + statElement
-	//		} else {
-	//			statElement = currentDirectory + utils.PathSeperator + statElement
-	//		}
-	//	}
-	//	args := make(map[string]string)
-	//	args["dir"] = statElement
-	//	data, err := fdfsAPI.postReq(http.MethodGet, apiDirStat, args)
-	//	if err != nil {
-	//		if err.Error() == "dir stat: directory not found" {
-	//			args := make(map[string]string)
-	//			args["file"] = statElement
-	//			data, err := fdfsAPI.postReq(http.MethodGet, apiFileStat, args)
-	//			if err != nil {
-	//				fmt.Println("stat failed: ", err)
-	//				return
-	//			}
-	//			var resp file.Stats
-	//			err = json.Unmarshal(data, &resp)
-	//			if err != nil {
-	//				fmt.Println("file stat: ", err)
-	//				return
-	//			}
-	//			crTime, err := strconv.ParseInt(resp.CreationTime, 10, 64)
-	//			if err != nil {
-	//				fmt.Println("stat failed: ", err)
-	//				return
-	//			}
-	//			accTime, err := strconv.ParseInt(resp.AccessTime, 10, 64)
-	//			if err != nil {
-	//				fmt.Println("stat failed: ", err)
-	//				return
-	//			}
-	//			modTime, err := strconv.ParseInt(resp.ModificationTime, 10, 64)
-	//			if err != nil {
-	//				fmt.Println("stat failed: ", err)
-	//				return
-	//			}
-	//			compression := resp.Compression
-	//			if compression == "" {
-	//				compression = "None"
-	//			}
-	//			fmt.Println("PodName 	   	: ", resp.PodName)
-	//			fmt.Println("File Path	   	: ", resp.FilePath)
-	//			fmt.Println("File Name	   	: ", resp.FileName)
-	//			fmt.Println("File Size	   	: ", resp.FileSize)
-	//			fmt.Println("Block Size	   	: ", resp.BlockSize)
-	//			fmt.Println("Compression   		: ", compression)
-	//			fmt.Println("Content Type  		: ", resp.ContentType)
-	//			fmt.Println("Cr. Time	   	: ", time.Unix(crTime, 0).String())
-	//			fmt.Println("Mo. Time	   	: ", time.Unix(accTime, 0).String())
-	//			fmt.Println("Ac. Time	   	: ", time.Unix(modTime, 0).String())
-	//			for _, b := range resp.Blocks {
-	//				blkStr := fmt.Sprintf("%s, 0x%s, %s bytes, %s bytes", b.Name, b.Reference, b.Size, b.CompressedSize)
-	//				fmt.Println(blkStr)
-	//			}
-	//		} else {
-	//			fmt.Println("stat: ", err)
-	//			return
-	//		}
-	//	} else {
-	//		var resp dir.DirStats
-	//		err = json.Unmarshal(data, &resp)
-	//		if err != nil {
-	//			fmt.Println("file stat: ", err)
-	//			return
-	//		}
-	//		crTime, err := strconv.ParseInt(resp.CreationTime, 10, 64)
-	//		if err != nil {
-	//			fmt.Println("stat failed: ", err)
-	//			return
-	//		}
-	//		accTime, err := strconv.ParseInt(resp.AccessTime, 10, 64)
-	//		if err != nil {
-	//			fmt.Println("stat failed: ", err)
-	//			return
-	//		}
-	//		modTime, err := strconv.ParseInt(resp.ModificationTime, 10, 64)
-	//		if err != nil {
-	//			fmt.Println("stat failed: ", err)
-	//			return
-	//		}
-	//		fmt.Println("Account 	   	: ", resp.Account)
-	//		fmt.Println("PodAddress    		: ", resp.PodAddress)
-	//		fmt.Println("PodName 	   	: ", resp.PodName)
-	//		fmt.Println("Dir Path	   	: ", resp.DirPath)
-	//		fmt.Println("Dir Name	   	: ", resp.DirName)
-	//		fmt.Println("Cr. Time	   	: ", time.Unix(crTime, 0).String())
-	//		fmt.Println("Mo. Time	   	: ", time.Unix(accTime, 0).String())
-	//		fmt.Println("Ac. Time	   	: ", time.Unix(modTime, 0).String())
-	//		fmt.Println("No of Dir.	   	: ", resp.NoOfDirectories)
-	//		fmt.Println("No of Files   		: ", resp.NoOfFiles)
-	//	}
-	//	currentPrompt = getCurrentPrompt()
-	//case "pwd":
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	fmt.Println(currentDirectory)
-	//	currentPrompt = getCurrentPrompt()
-	//case "rm":
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	if len(blocks) < 2 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	rmFile := blocks[1]
-	//	if rmFile == "" {
-	//		return
-	//	}
-	//	if !strings.HasPrefix(rmFile, utils.PathSeperator) {
-	//		if currentDirectory == utils.PathSeperator {
-	//			rmFile = currentDirectory + rmFile
-	//		} else {
-	//			rmFile = currentDirectory + utils.PathSeperator + rmFile
-	//		}
-	//	}
-	//
-	//	args := make(map[string]string)
-	//	args["file"] = rmFile
-	//	data, err := fdfsAPI.postReq(http.MethodDelete, apiFileDelete, args)
-	//	if err != nil {
-	//		fmt.Println("rm failed: ", err)
-	//		return
-	//	}
-	//	message := strings.ReplaceAll(string(data), "\n", "")
-	//	fmt.Println(message)
-	//	currentPrompt = getCurrentPrompt()
-	//case "share":
-	//	if len(blocks) < 2 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	podFile := blocks[1]
-	//
-	//	if podFile == "" {
-	//		return
-	//	}
-	//	if !strings.HasPrefix(podFile, utils.PathSeperator) {
-	//		if currentDirectory == utils.PathSeperator {
-	//			podFile = currentDirectory + podFile
-	//		} else {
-	//			podFile = currentDirectory + utils.PathSeperator + podFile
-	//		}
-	//	}
-	//
-	//	args := make(map[string]string)
-	//	args["file"] = podFile
-	//	args["to"] = "add destination user address later"
-	//	data, err := fdfsAPI.postReq(http.MethodPost, apiFileShare, args)
-	//	if err != nil {
-	//		fmt.Println("share: ", err)
-	//		return
-	//	}
-	//	var resp api.FileSharingReference
-	//	err = json.Unmarshal(data, &resp)
-	//	if err != nil {
-	//		fmt.Println("file share: ", err)
-	//		return
-	//	}
-	//	fmt.Println("File Sharing Reference: ", resp.Reference)
-	//	currentPrompt = getCurrentPrompt()
-	//case "receive":
-	//	if len(blocks) < 3 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	sharingRefString := blocks[1]
-	//	podDir := blocks[2]
-	//	args := make(map[string]string)
-	//	args["ref"] = sharingRefString
-	//	args["dir"] = podDir
-	//	data, err := fdfsAPI.postReq(http.MethodGet, apiFileReceive, args)
-	//	if err != nil {
-	//		fmt.Println("receive: ", err)
-	//		return
-	//	}
-	//	var resp api.ReceiveFileResponse
-	//	err = json.Unmarshal(data, &resp)
-	//	if err != nil {
-	//		fmt.Println("file receive: ", err)
-	//		return
-	//	}
-	//	fmt.Println("file path  : ", resp.FileName)
-	//	currentPrompt = getCurrentPrompt()
-	//case "receiveinfo":
-	//	if len(blocks) < 2 {
-	//		fmt.Println("invalid command. Missing one or more arguments")
-	//		return
-	//	}
-	//	sharingRefString := blocks[1]
-	//	args := make(map[string]string)
-	//	args["ref"] = sharingRefString
-	//	data, err := fdfsAPI.postReq(http.MethodGet, apiFileReceiveInfo, args)
-	//	if err != nil {
-	//		fmt.Println("receive info: ", err)
-	//		return
-	//	}
-	//	var resp user.ReceiveFileInfo
-	//	err = json.Unmarshal(data, &resp)
-	//	if err != nil {
-	//		fmt.Println("file receiveinfo: ", err)
-	//		return
-	//	}
-	//	shTime, err := strconv.ParseInt(resp.SharedTime, 10, 64)
-	//	if err != nil {
-	//		fmt.Println(" info: ", err)
-	//		return
-	//	}
-	//	fmt.Println("FileName       : ", resp.FileName)
-	//	fmt.Println("Size           : ", resp.Size)
-	//	fmt.Println("BlockSize      : ", resp.BlockSize)
-	//	fmt.Println("NumberOfBlocks : ", resp.NumberOfBlocks)
-	//	fmt.Println("ContentType    : ", resp.ContentType)
-	//	fmt.Println("Compression    : ", resp.Compression)
-	//	fmt.Println("PodName        : ", resp.PodName)
-	//	fmt.Println("Sender         : ", resp.Sender)
-	//	fmt.Println("Receiver       : ", resp.Receiver)
-	//	fmt.Println("SharedTime     : ", shTime)
-	//	currentPrompt = getCurrentPrompt()
+	case "cd":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 2 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		dirTocd := blocks[1]
+
+		// if cd'ing to previous dir, just do it
+		if dirTocd == ".." && currentDirectory != utils.PathSeperator {
+			currentDirectory = filepath.Dir(currentDirectory)
+			currentPrompt = getCurrentPrompt()
+			return
+		}
+
+		// if cd'ing to root dir, just do it
+		if dirTocd == utils.PathSeperator {
+			currentDirectory = utils.PathSeperator
+			currentPrompt = getCurrentPrompt()
+			return
+		}
+
+		// if cd'ing forward, we have to check if that dir is present
+		if dirTocd != utils.PathSeperator {
+			if currentDirectory == utils.PathSeperator {
+				dirTocd = currentDirectory + dirTocd
+			} else {
+				dirTocd = currentDirectory + utils.PathSeperator + dirTocd
+			}
+		}
+
+		present := isDirectoryPresent(dirTocd)
+		if present {
+			currentDirectory = dirTocd
+		}
+		currentPrompt = getCurrentPrompt()
+	case "ls":
+		if !isPodOpened() {
+			return
+		}
+		listFileAndDirectories(currentDirectory)
+		currentPrompt = getCurrentPrompt()
+	case "mkdir":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 2 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		dirToMk := blocks[1]
+		if dirToMk == "" {
+			fmt.Println("invalid dir")
+			return
+		}
+		if !strings.HasPrefix(dirToMk, utils.PathSeperator) {
+			// then this path is not from root
+			dirToMk = currentDirectory + utils.PathSeperator + dirToMk
+		}
+		mkdir(dirToMk)
+		currentPrompt = getCurrentPrompt()
+	case "rmdir":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 2 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		dirToRm := blocks[1]
+		if dirToRm == "" {
+			fmt.Println("invalid dir")
+			return
+		}
+		if !strings.HasPrefix(dirToRm, utils.PathSeperator) {
+			// then this path is not from root
+			if currentDirectory == utils.PathSeperator {
+				dirToRm = currentDirectory + dirToRm
+			} else {
+				dirToRm = currentDirectory + utils.PathSeperator + dirToRm
+			}
+		}
+		rmDir(dirToRm)
+		currentPrompt = getCurrentPrompt()
+	case "upload":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 4 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		fileName := filepath.Base(blocks[1])
+		podDir := blocks[2]
+		if podDir == "." {
+			podDir = currentDirectory
+		}
+		blockSize := blocks[3]
+		compression := ""
+		if len(blocks) >= 5 {
+			compression = blocks[4]
+		}
+		uploadFile(fileName, blocks[1], podDir, blockSize, compression)
+		currentPrompt = getCurrentPrompt()
+	case "download":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 3 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		localDir := blocks[1]
+		dirStat, err := os.Stat(localDir)
+		if err != nil {
+			fmt.Println("local path is not a present: ", err)
+			return
+		}
+
+		if !dirStat.IsDir() {
+			fmt.Println("local path is not a directory")
+			return
+		}
+
+		loalFile := filepath.Join(localDir + utils.PathSeperator + filepath.Base(blocks[2]))
+		podFile := blocks[2]
+		if !strings.HasPrefix(podFile, utils.PathSeperator) {
+			if currentDirectory == utils.PathSeperator {
+				podFile = currentDirectory + podFile
+			} else {
+				podFile = currentDirectory + utils.PathSeperator + podFile
+			}
+		}
+
+		downloadFile(loalFile, podFile)
+		currentPrompt = getCurrentPrompt()
+	case "stat":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 2 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		statElement := blocks[1]
+		if statElement == "" {
+			return
+		}
+		if !strings.HasPrefix(statElement, utils.PathSeperator) {
+			if currentDirectory == utils.PathSeperator {
+				statElement = currentDirectory + statElement
+			} else {
+				statElement = currentDirectory + utils.PathSeperator + statElement
+			}
+		}
+		statFileOrDirectory(statElement)
+		currentPrompt = getCurrentPrompt()
+	case "pwd":
+		if !isPodOpened() {
+			return
+		}
+		fmt.Println(currentDirectory)
+		currentPrompt = getCurrentPrompt()
+	case "rm":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 2 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		rmFile := blocks[1]
+		if rmFile == "" {
+			return
+		}
+		if !strings.HasPrefix(rmFile, utils.PathSeperator) {
+			if currentDirectory == utils.PathSeperator {
+				rmFile = currentDirectory + rmFile
+			} else {
+				rmFile = currentDirectory + utils.PathSeperator + rmFile
+			}
+		}
+
+		args := make(map[string]string)
+		args["file"] = rmFile
+		data, err := fdfsAPI.postReq(http.MethodDelete, apiFileDelete, args)
+		if err != nil {
+			fmt.Println("rm failed: ", err)
+			return
+		}
+		message := strings.ReplaceAll(string(data), "\n", "")
+		fmt.Println(message)
+		currentPrompt = getCurrentPrompt()
+	case "share":
+		if len(blocks) < 2 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		podFile := blocks[1]
+
+		if podFile == "" {
+			return
+		}
+		if !strings.HasPrefix(podFile, utils.PathSeperator) {
+			if currentDirectory == utils.PathSeperator {
+				podFile = currentDirectory + podFile
+			} else {
+				podFile = currentDirectory + utils.PathSeperator + podFile
+			}
+		}
+
+		args := make(map[string]string)
+		args["file"] = podFile
+		args["to"] = "add destination user address later"
+		data, err := fdfsAPI.postReq(http.MethodPost, apiFileShare, args)
+		if err != nil {
+			fmt.Println("share: ", err)
+			return
+		}
+		var resp api.FileSharingReference
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			fmt.Println("file share: ", err)
+			return
+		}
+		fmt.Println("File Sharing Reference: ", resp.Reference)
+		currentPrompt = getCurrentPrompt()
+	case "receive":
+		if len(blocks) < 3 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		sharingRefString := blocks[1]
+		podDir := blocks[2]
+		args := make(map[string]string)
+		args["ref"] = sharingRefString
+		args["dir"] = podDir
+		data, err := fdfsAPI.postReq(http.MethodGet, apiFileReceive, args)
+		if err != nil {
+			fmt.Println("receive: ", err)
+			return
+		}
+		var resp api.ReceiveFileResponse
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			fmt.Println("file receive: ", err)
+			return
+		}
+		fmt.Println("file path  : ", resp.FileName)
+		currentPrompt = getCurrentPrompt()
+	case "receiveinfo":
+		if len(blocks) < 2 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		sharingRefString := blocks[1]
+		args := make(map[string]string)
+		args["ref"] = sharingRefString
+		data, err := fdfsAPI.postReq(http.MethodGet, apiFileReceiveInfo, args)
+		if err != nil {
+			fmt.Println("receive info: ", err)
+			return
+		}
+		var resp user.ReceiveFileInfo
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			fmt.Println("file receiveinfo: ", err)
+			return
+		}
+		shTime, err := strconv.ParseInt(resp.SharedTime, 10, 64)
+		if err != nil {
+			fmt.Println(" info: ", err)
+			return
+		}
+		fmt.Println("FileName       : ", resp.FileName)
+		fmt.Println("Size           : ", resp.Size)
+		fmt.Println("BlockSize      : ", resp.BlockSize)
+		fmt.Println("NumberOfBlocks : ", resp.NumberOfBlocks)
+		fmt.Println("ContentType    : ", resp.ContentType)
+		fmt.Println("Compression    : ", resp.Compression)
+		fmt.Println("PodName        : ", resp.PodName)
+		fmt.Println("Sender         : ", resp.Sender)
+		fmt.Println("Receiver       : ", resp.Receiver)
+		fmt.Println("SharedTime     : ", shTime)
+		currentPrompt = getCurrentPrompt()
 	default:
 		fmt.Println("invalid command")
 	}
