@@ -50,7 +50,7 @@ func (d *DfsAPI) LogoutUser(sessionId string, response http.ResponseWriter) erro
 		return ErrUserNotLoggedIn
 	}
 
-	return d.users.LogoutUser(ui.GetUserName(), d.dataDir, ui.GetUserAddress(),  sessionId, response)
+	return d.users.LogoutUser(ui.GetUserName(), d.dataDir, sessionId, response)
 }
 
 func (d *DfsAPI) DeleteUser(passPhrase, sessionId string, response http.ResponseWriter) error {
@@ -60,7 +60,7 @@ func (d *DfsAPI) DeleteUser(passPhrase, sessionId string, response http.Response
 		return ErrUserNotLoggedIn
 	}
 
-	return d.users.DeleteUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, ui.GetUserAddress(), response, ui)
+	return d.users.DeleteUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, response, ui)
 }
 
 func (d *DfsAPI) IsUserNameAvailable(userName string) bool {

@@ -17,19 +17,19 @@ limitations under the License.
 package mock
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"io"
 	"sync"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 )
 
 type MockFile struct {
-	fileMap     map[string]string
-	fileMu      *sync.RWMutex
+	fileMap map[string]string
+	fileMu  *sync.RWMutex
 }
 
 func NewMockFile() *MockFile {
-	return &MockFile{
-	}
+	return &MockFile{}
 }
 
 func (mf *MockFile) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error {

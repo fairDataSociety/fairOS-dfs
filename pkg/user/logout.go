@@ -18,18 +18,18 @@ package user
 
 import "net/http"
 
-func (u *Users) LogoutUser(userName, dataDir,userAddressStringm, sessionId string, response http.ResponseWriter) error {
+func (u *Users) LogoutUser(userName, dataDir, sessionId string, response http.ResponseWriter) error {
 	// basic validations
 	if !u.IsUsernameAvailable(userName, dataDir) {
 		return ErrInvalidUserName
 	}
 
 	// unset cookie and remove user from map
-	if !u.IsUserLoggedIn(userAddressStringm, sessionId) {
+	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
 	}
 
-	err := u.Logout(sessionId, userAddressStringm, response)
+	err := u.Logout(sessionId, response)
 	if err != nil {
 		return err
 	}

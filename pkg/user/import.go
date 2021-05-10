@@ -30,11 +30,6 @@ import (
 )
 
 func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) error {
-	// check if session id  present in map
-	if u.isSessionPresentInMap(sessionId){
-		return ErrUserAlreadyPresent
-	}
-
 	// basic validation
 	if u.IsUsernameAvailable(userName, dataDir) {
 		return ErrUserAlreadyPresent
@@ -75,7 +70,6 @@ func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir 
 	ui := &Info{
 		name:      userName,
 		sessionId: sessionId,
-		userAddress: addressString,
 		feedApi:   fd,
 		account:   acc,
 		file:      file,

@@ -18,6 +18,7 @@ package file
 
 import (
 	"encoding/json"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -70,6 +71,24 @@ func (f *File) uploadMeta(meta *MetaData) error {
 	return nil
 }
 
+func (f *File) updateMeta(meta *MetaData) error {
+	// marshall the meta structure
+	fileMetaBytes, err := json.Marshal(meta)
+	if err != nil {
+		return err
+	}
+
+	// put the file meta as a feed
+	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
+	topic := utils.HashString(totalPath)
+	_, err = f.fd.UpdateFeed(topic, meta.UserAddress, fileMetaBytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (f *File) GetMetaFromFileName(fileNameWithPath string) (*MetaData, error) {
 	topic := utils.HashString(fileNameWithPath)
 	_, metaBytes, err := f.fd.GetFeedData(topic, f.userAddress)
@@ -83,9 +102,8 @@ func (f *File) GetMetaFromFileName(fileNameWithPath string) (*MetaData, error) {
 		return nil, err
 	}
 
-	return  meta, nil
+	return meta, nil
 }
-
 
 func (f *File) GetMetaFromFileNameAndAddress(fileNameWithPath string, userAddress utils.Address) (*MetaData, error) {
 	topic := utils.HashString(fileNameWithPath)
@@ -100,5 +118,5 @@ func (f *File) GetMetaFromFileNameAndAddress(fileNameWithPath string, userAddres
 		return nil, err
 	}
 
-	return  meta, nil
+	return meta, nil
 }

@@ -76,7 +76,7 @@ func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, error) {
 	return nil, fmt.Errorf("could not find pod: %s", podName)
 }
 
-func (p *Pod) GetFeed() *feed.API{
+func (p *Pod) GetFeed() *feed.API {
 	return p.fd
 }
 func (p *Pod) GetAccount() *account.Account {

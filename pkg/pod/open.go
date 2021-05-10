@@ -18,8 +18,9 @@ package pod
 
 import (
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"strings"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -89,14 +90,14 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
-		podName:         podName,
-		userAddress:     user,
-		accountInfo:     accountInfo,
-		feed:            fd,
-		dir:             dir,
-		file:            file,
-		kvStore:         kvStore,
-		docStore:        docStore,
+		podName:     podName,
+		userAddress: user,
+		accountInfo: accountInfo,
+		feed:        fd,
+		dir:         dir,
+		file:        file,
+		kvStore:     kvStore,
+		docStore:    docStore,
 	}
 
 	p.addPodToPodMap(podName, podInfo)

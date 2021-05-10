@@ -18,13 +18,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/c-bata/go-prompt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-	"golang.org/x/term"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/c-bata/go-prompt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"golang.org/x/term"
 )
 
 const (

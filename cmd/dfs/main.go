@@ -17,8 +17,9 @@ limitations under the License.
 package main
 
 import (
-	cmd2 "github.com/fairdatasociety/fairOS-dfs/cmd/dfs/cmd"
 	_ "net/http/pprof"
+
+	cmd2 "github.com/fairdatasociety/fairOS-dfs/cmd/dfs/cmd"
 )
 
 func main() {

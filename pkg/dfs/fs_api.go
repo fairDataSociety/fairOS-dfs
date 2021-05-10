@@ -288,7 +288,6 @@ func (d *DfsAPI) ShareFile(podFileWithPath, destinationUser, sessionId string) (
 		return "", ErrPodNotOpen
 	}
 
-
 	// get podInfo and construct the path
 	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
 	if err != nil {

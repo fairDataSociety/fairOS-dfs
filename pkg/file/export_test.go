@@ -17,5 +17,5 @@ limitations under the License.
 package file
 
 var (
-	Compress     = compress
+	Compress = compress
 )

@@ -19,17 +19,17 @@ package account
 import (
 	"crypto/sha256"
 	"fmt"
+	"strings"
+
 	"github.com/ethereum/go-ethereum/accounts"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 	"github.com/tyler-smith/go-bip39"
-	"strings"
 )
 
 const (
 	rootPath    = "m/44'/60'/0'/0/0"
 	genericPath = "m/44'/60'/0'/0/"
 )
-
 
 type Wallet struct {
 	encryptedmnemonic string

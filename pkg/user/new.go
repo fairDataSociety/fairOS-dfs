@@ -28,11 +28,6 @@ import (
 )
 
 func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, string, *Info, error) {
-	// check if session id  present in map
-	if u.isSessionPresentInMap(sessionId){
-		return "", "", nil, ErrUserAlreadyPresent
-	}
-
 	// username validation
 	if u.IsUsernameAvailable(userName, u.dataDir) {
 		return "", "", nil, ErrUserAlreadyPresent
@@ -64,17 +59,14 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response ht
 	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), u.logger)
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, u.logger)
 	pod := p.NewPod(u.client, fd, acc, u.logger)
-	if u.gatewayMode {
-		if sessionId == "" {
-			sessionId = cookie.GetUniqueSessionId()
-		}
+	if sessionId == "" {
+		sessionId = cookie.GetUniqueSessionId()
 	}
 
 	userAddressString := accountInfo.GetAddress().Hex()
 	ui := &Info{
 		name:      userName,
 		sessionId: sessionId,
-		userAddress: userAddressString,
 		feedApi:   fd,
 		account:   acc,
 		file:      file,

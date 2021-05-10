@@ -24,7 +24,6 @@ import (
 )
 
 func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
-
 	// check if file present
 	if !f.IsFileAlreadyPresent(podFileWithPath) {
 		return nil, 0, fmt.Errorf("file not present")
@@ -47,7 +46,7 @@ func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
 
 	//need to change the access time for podFile
 	meta.AccessTime = time.Now().Unix()
-	err = f.uploadMeta(meta)
+	err = f.updateMeta(meta)
 	if err != nil {
 		return nil, 0, err
 	}

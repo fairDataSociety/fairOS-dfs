@@ -17,10 +17,11 @@ limitations under the License.
 package pod_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"io/ioutil"
 	"strings"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -69,7 +70,6 @@ func TestDelete(t *testing.T) {
 		if len(pods) > 1 {
 			t.Fatalf("delete failed")
 		}
-
 
 		infoGot, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err == nil {

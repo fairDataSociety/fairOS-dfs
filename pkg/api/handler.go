@@ -26,8 +26,8 @@ type Handler struct {
 	logger logging.Logger
 }
 
-func NewHandler(dataDir, beeHost, beePort, cookieDomain string, gatewayMode bool, logger logging.Logger) (*Handler, error) {
-	api, err := dfs.NewDfsAPI(dataDir, beeHost, beePort, cookieDomain, gatewayMode, logger)
+func NewHandler(dataDir, beeHost, beePort, cookieDomain string, logger logging.Logger) (*Handler, error) {
+	api, err := dfs.NewDfsAPI(dataDir, beeHost, beePort, cookieDomain, logger)
 	if err != nil {
 		return nil, dfs.ErrBeeClient
 	}

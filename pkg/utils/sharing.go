@@ -35,7 +35,7 @@ func NewSharingReference(b []byte, n int64) SharingReference {
 func ParseSharingReference(s string) (a SharingReference, err error) {
 	refLen := ReferenceLength * 2
 	timeLen := len(strconv.FormatInt(time.Now().Unix(), 10))
-	if len(s) > refLen + timeLen {
+	if len(s) > refLen+timeLen {
 		refLen = encryptedRefLength * 2
 	}
 	if len(s) < refLen+1 {

@@ -17,12 +17,13 @@ limitations under the License.
 package user_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func TestLogout(t *testing.T) {
@@ -37,27 +38,25 @@ func TestLogout(t *testing.T) {
 		defer os.RemoveAll(dataDir)
 
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", false, logger)
-		userAddressString, _, _, err := userObject.CreateNewUser("user1", "password1", "", nil, "" )
+		userObject := user.NewUsers(dataDir, mockClient, "", logger)
+		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Logout user
-		err = userObject.LogoutUser("user1", dataDir, userAddressString, "", nil)
+		err = userObject.LogoutUser(ui.GetUserName(), dataDir, ui.GetSessionId(), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-
 		// Validate logout
-		if userObject.IsUserLoggedIn(userAddressString, "") {
+		if userObject.IsUserNameLoggedIn(ui.GetUserName()) {
 			t.Fatalf("user still loggin in")
 		}
-		if !userObject.IsUsernameAvailable("user1", dataDir) {
+		if !userObject.IsUsernameAvailable(ui.GetUserName(), dataDir) {
 			t.Fatalf("user not created")
 		}
 	})
 
 }
-

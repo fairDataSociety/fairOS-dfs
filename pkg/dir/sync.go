@@ -28,7 +28,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
 	if err != nil {
-		return fmt.Errorf("dir sync: %v", err)
+		return nil // pod is empty
 	}
 
 	var dirInode *Inode

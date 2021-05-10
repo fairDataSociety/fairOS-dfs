@@ -30,12 +30,11 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-
 type SharingEntry struct {
-	Meta         *f.MetaData `json:"meta"`
-	Sender       string `json:"source_address"`
-	Receiver     string `json:"dest_address"`
-	SharedTime   string `json:"shared_time"`
+	Meta       *f.MetaData `json:"meta"`
+	Sender     string      `json:"source_address"`
+	Receiver   string      `json:"dest_address"`
+	SharedTime string      `json:"shared_time"`
 }
 
 type ReceiveFileInfo struct {
@@ -52,7 +51,7 @@ type ReceiveFileInfo struct {
 }
 
 func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
-	meta, err := userInfo.file.GetMetaFromFileNameAndAddress(podFileWithPath, userAddress )
+	meta, err := userInfo.file.GetMetaFromFileNameAndAddress(podFileWithPath, userAddress)
 	if err != nil {
 		return "", err
 	}
@@ -60,10 +59,10 @@ func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef strin
 	// Create a outbox entry
 	now := time.Now()
 	sharingEntry := SharingEntry{
-		Meta:     	  meta,
-		Sender:       userAddress.String(),
-		Receiver:     destinationRef,
-		SharedTime:   strconv.FormatInt(now.Unix(), 10),
+		Meta:       meta,
+		Sender:     userAddress.String(),
+		Receiver:   destinationRef,
+		SharedTime: strconv.FormatInt(now.Unix(), 10),
 	}
 
 	// marshall the entry
@@ -102,7 +101,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	// decrypt the data
 	decryptedData, err := decryptData(encryptedData, unixTime)
 	if err != nil {
-		return  "", err
+		return "", err
 	}
 
 	// unmarshall the entry
@@ -119,7 +118,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 
 	podInfo, err := pod.GetPodInfoFromPodMap(podName)
 	if err != nil {
-		return  "", err
+		return "", err
 	}
 
 	fileNameToAdd := sharingEntry.Meta.Name
@@ -135,21 +134,20 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	// Add to file path map
 	now := time.Now().Unix()
 	newMeta := f.MetaData{
-		Version: sharingEntry.Meta.Version,
-		UserAddress: podInfo.GetPodAddress(),
-		PodName: podName,
-		Path: podDir,
-		Name: fileNameToAdd,
-		Size: sharingEntry.Meta.Size,
-		BlockSize: sharingEntry.Meta.BlockSize,
-		ContentType: sharingEntry.Meta.ContentType,
-		Compression: sharingEntry.Meta.Compression,
-		CreationTime: now,
-		AccessTime: now,
+		Version:          sharingEntry.Meta.Version,
+		UserAddress:      podInfo.GetPodAddress(),
+		PodName:          podName,
+		Path:             podDir,
+		Name:             fileNameToAdd,
+		Size:             sharingEntry.Meta.Size,
+		BlockSize:        sharingEntry.Meta.BlockSize,
+		ContentType:      sharingEntry.Meta.ContentType,
+		Compression:      sharingEntry.Meta.Compression,
+		CreationTime:     now,
+		AccessTime:       now,
 		ModificationTime: now,
-		InodeAddress: sharingEntry.Meta.InodeAddress,
+		InodeAddress:     sharingEntry.Meta.InodeAddress,
 	}
-
 
 	file.AddToFileMap(totalPath, &newMeta)
 	err = dir.AddEntryToDir(podDir, fileNameToAdd, true)
@@ -159,7 +157,6 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 
 	return totalPath, nil
 }
-
 
 func encryptData(data []byte, now int64) ([]byte, error) {
 	pk, err := account.CreateRandomKeyPair(now)
@@ -192,7 +189,7 @@ func (u *Users) ReceiveFileInfo(sharingRef utils.SharingReference) (*ReceiveFile
 	// decrypt the data
 	decryptedData, err := decryptData(encryptedData, unixTime)
 	if err != nil {
-		return  nil, err
+		return nil, err
 	}
 
 	// unmarshall the entry

@@ -19,17 +19,18 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-	"net/http"
-	"strings"
 )
 
 func podNew(podName string) {
 	password := getPassword()
 	newPod := common.PodRequest{
-		PodName: podName,
+		PodName:  podName,
 		Password: password,
 	}
 	jsonData, err := json.Marshal(newPod)
@@ -65,7 +66,7 @@ func deletePod(podName string) {
 }
 
 func openPod(podName string) {
-	data, err := fdfsAPI.getReq( apiPodLs, "")
+	data, err := fdfsAPI.getReq(apiPodLs, "")
 	if err != nil {
 		fmt.Println("error while listing pods: %w", err)
 		return
@@ -95,7 +96,7 @@ func openPod(podName string) {
 	}
 
 	openPodReq := common.PodRequest{
-		PodName: podName,
+		PodName:  podName,
 		Password: password,
 	}
 	jsonData, err := json.Marshal(openPodReq)
@@ -135,7 +136,7 @@ func syncPod() {
 func sharePod(podName string) {
 	password := getPassword()
 	sharePodReq := common.PodRequest{
-		PodName: podName,
+		PodName:  podName,
 		Password: password,
 	}
 	jsonData, err := json.Marshal(sharePodReq)
@@ -156,7 +157,6 @@ func sharePod(podName string) {
 	}
 	fmt.Println("Pod Sharing Reference : ", sharingRef.Reference)
 }
-
 
 func listPod() {
 	data, err := fdfsAPI.getReq(apiPodLs, "")
@@ -196,7 +196,7 @@ func podStat(podName string) {
 }
 
 func receive(sharingRef string) {
-	data, err := fdfsAPI.getReq(apiPodReceive,  "sharing_ref="+ sharingRef)
+	data, err := fdfsAPI.getReq(apiPodReceive, "sharing_ref="+sharingRef)
 	if err != nil {
 		fmt.Println("pod receive failed: ", err)
 		return
@@ -206,7 +206,7 @@ func receive(sharingRef string) {
 }
 
 func receiveInfo(sharingRef string) {
-	data, err := fdfsAPI.getReq(apiPodReceiveInfo, "sharing_ref="+ sharingRef)
+	data, err := fdfsAPI.getReq(apiPodReceiveInfo, "sharing_ref="+sharingRef)
 	if err != nil {
 		fmt.Println("pod receive info failed: ", err)
 		return

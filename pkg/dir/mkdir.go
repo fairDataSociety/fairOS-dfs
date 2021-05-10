@@ -75,11 +75,13 @@ func (d *Directory) MkDir(parentPath, dirName string) error {
 	parentHash := utils.HashString(parentPath)
 	var parentData []byte
 	var parentDirInode *Inode
-	if parentPath == utils.PathSeperator {
-		//create the root directory entry
-		_, parentData, err = d.fd.GetFeedData(parentHash, d.userAddress)
-		if err != nil {
-			// create the root("/") dir
+	dirName = "_D_" + dirName
+
+	// get the parent directory entry
+	_, parentData, err = d.fd.GetFeedData(parentHash, d.userAddress)
+	if err != nil {
+		if parentPath == utils.PathSeperator {
+			// if the missing parent directory is root dir, then create it
 			meta := MetaData{
 				Version:          MetaVersion,
 				Path:             "",
@@ -89,30 +91,39 @@ func (d *Directory) MkDir(parentPath, dirName string) error {
 				AccessTime:       now,
 			}
 			parentDirInode = &Inode{
-				Meta: &meta,
+				Meta:           &meta,
+				FileOrDirNames: []string{dirName},
 			}
-		}
-	} else {
-		// update the root directory entry
-		_, parentData, err = d.fd.GetFeedData(parentHash, d.userAddress)
-		if err != nil {
-			return err
-		}
 
-		err = json.Unmarshal(parentData, &parentDirInode)
-		if err != nil {
+			err = json.Unmarshal(parentData, &parentDirInode)
+			if err != nil {
+				return err
+			}
+
+			_, err = d.fd.CreateFeed(parentHash, d.userAddress, parentData)
+			if err != nil {
+				return err
+			}
+			d.AddToDirectoryMap(parentPath, parentDirInode)
+			return nil
+		} else {
 			return err
 		}
 	}
 
-	// add the directory entry to the parent
-	dirName = "_D_" + dirName
+	// unmarshall the data and add the directory entry to the parent
+	err = json.Unmarshal(parentData, &parentDirInode)
+	if err != nil {
+		return err
+	}
 	parentDirInode.FileOrDirNames = append(parentDirInode.FileOrDirNames, dirName)
+
+	// marshall it back and update the parent feed
 	parentData, err = json.Marshal(parentDirInode)
 	if err != nil {
 		return err
 	}
-	_, err = d.fd.CreateFeed(parentHash, d.userAddress, parentData)
+	_, err = d.fd.UpdateFeed(parentHash, d.userAddress, parentData)
 	if err != nil {
 		return err
 	}

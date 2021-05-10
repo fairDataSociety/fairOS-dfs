@@ -17,10 +17,11 @@ limitations under the License.
 package file_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"io/ioutil"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"

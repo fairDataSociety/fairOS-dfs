@@ -17,12 +17,13 @@ limitations under the License.
 package user_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func TestStat(t *testing.T) {
@@ -37,8 +38,8 @@ func TestStat(t *testing.T) {
 		defer os.RemoveAll(dataDir)
 
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", false, logger)
-		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "" )
+		userObject := user.NewUsers(dataDir, mockClient, "", logger)
+		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -56,10 +57,6 @@ func TestStat(t *testing.T) {
 		if stat.Name != "user1" {
 			t.Fatalf("invalid user name")
 		}
-		if stat.Reference != ui.GetUserAddress() {
-			t.Fatalf("invalid user reference")
-		}
-
 
 	})
 }

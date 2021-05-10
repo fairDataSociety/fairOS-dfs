@@ -20,15 +20,16 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
+	"strconv"
+	"strings"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-	"io"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -119,14 +120,14 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
-		podName:         podName,
-		userAddress:     user,
-		dir:             dir,
-		file:            file,
-		accountInfo:     accountInfo,
-		feed:            fd,
-		kvStore:         kvStore,
-		docStore:        docStore,
+		podName:     podName,
+		userAddress: user,
+		dir:         dir,
+		file:        file,
+		accountInfo: accountInfo,
+		feed:        fd,
+		kvStore:     kvStore,
+		docStore:    docStore,
 	}
 	p.addPodToPodMap(podName, podInfo)
 	return podInfo, nil

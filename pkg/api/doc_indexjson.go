@@ -54,7 +54,7 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = h.dfsAPI.DocIndexJson(sessionId, name, podFile)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen || err == dfs.ErrFileNotPresent  {
+		if err == dfs.ErrPodNotOpen || err == dfs.ErrFileNotPresent {
 			h.logger.Errorf("doc indexjson: %v", err)
 			jsonhttp.BadRequest(w, "doc indexjson: "+err.Error())
 			return

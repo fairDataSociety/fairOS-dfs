@@ -17,12 +17,13 @@ limitations under the License.
 package user_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func TestImport(t *testing.T) {
@@ -37,8 +38,8 @@ func TestImport(t *testing.T) {
 		defer os.RemoveAll(dataDir1)
 
 		//create user to export
-		userObject1 := user.NewUsers(dataDir1, mockClient, "", false, logger)
-		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", nil, "" )
+		userObject1 := user.NewUsers(dataDir1, mockClient, "", logger)
+		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -55,8 +56,8 @@ func TestImport(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer os.RemoveAll(dataDir2)
-		userObject2 := user.NewUsers(dataDir2, mockClient, "", false, logger)
-		err = userObject2.ImportUsingAddress(userName, "password1", address, dataDir2, mockClient, nil, "" )
+		userObject2 := user.NewUsers(dataDir2, mockClient, "", logger)
+		err = userObject2.ImportUsingAddress(userName, "password1", address, dataDir2, mockClient, nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -65,7 +66,7 @@ func TestImport(t *testing.T) {
 		if !userObject2.IsUsernameAvailable("user1", dataDir2) {
 			t.Fatalf("user not created")
 		}
-		if !userObject2.IsUserLoggedIn(address, "") {
+		if !userObject2.IsUserNameLoggedIn("user1") {
 			t.Fatalf("user not loggin in")
 		}
 

@@ -126,7 +126,6 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 	}
 
 	if s.cookie != nil {
-		fmt.Println(s.cookie.Name, " : ", s.cookie.Value)
 		req.AddCookie(s.cookie)
 	}
 
@@ -159,7 +158,6 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 
 	if len(response.Cookies()) > 0 {
 		s.cookie = response.Cookies()[0]
-		fmt.Println(s.cookie.Name, " : ", s.cookie.Value)
 	}
 
 	data, err := ioutil.ReadAll(response.Body)
@@ -190,19 +188,18 @@ func (s *FdfsClient) getReq(urlPath string, argsString string) ([]byte, error) {
 	var err error
 	if argsString != "" {
 		fullUrl = fullUrl + "?" + argsString
-		req, err = http.NewRequest(http.MethodGet, fullUrl, nil )
+		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		req, err = http.NewRequest(http.MethodGet, fullUrl, nil )
+		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if s.cookie != nil {
-		fmt.Println(s.cookie.Name, " : ", s.cookie.Value)
 		req.AddCookie(s.cookie)
 	}
 
@@ -235,7 +232,6 @@ func (s *FdfsClient) getReq(urlPath string, argsString string) ([]byte, error) {
 
 	if len(response.Cookies()) > 0 {
 		s.cookie = response.Cookies()[0]
-		fmt.Println(s.cookie.Name, " : ", s.cookie.Value)
 	}
 
 	data, err := ioutil.ReadAll(response.Body)
@@ -259,7 +255,6 @@ func (s *FdfsClient) getReq(urlPath string, argsString string) ([]byte, error) {
 
 	return []byte(resp.Message), nil
 }
-
 
 func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, arguments map[string]string, formFileArgument, compression string) ([]byte, error) {
 	body := new(bytes.Buffer)

@@ -38,17 +38,17 @@ func TestNew(t *testing.T) {
 		defer os.RemoveAll(dataDir)
 
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", false, logger)
-		userAddressString, mnemonic, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "" )
+		userObject := user.NewUsers(dataDir, mockClient, "", logger)
+		_, mnemonic, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// validate user
-		if !userObject.IsUsernameAvailable("user1", dataDir) {
+		if !userObject.IsUsernameAvailable(ui.GetUserName(), dataDir) {
 			t.Fatalf("user not created")
 		}
-		if !userObject.IsUserLoggedIn(userAddressString, "") {
+		if !userObject.IsUserNameLoggedIn(ui.GetUserName()) {
 			t.Fatalf("user not loggin in")
 		}
 		if ui == nil {
@@ -57,7 +57,7 @@ func TestNew(t *testing.T) {
 		if ui.GetUserName() != "user1" {
 			t.Fatalf("invalid user name")
 		}
-		if ui.GetFeed() == nil || ui.GetAccount()  == nil{
+		if ui.GetFeed() == nil || ui.GetAccount() == nil {
 			t.Fatalf("invalid feed or account")
 		}
 		err = ui.GetAccount().GetWallet().IsValidMnemonic(mnemonic)

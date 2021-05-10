@@ -17,12 +17,13 @@ limitations under the License.
 package user_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func TestDelete(t *testing.T) {
@@ -37,21 +38,20 @@ func TestDelete(t *testing.T) {
 		defer os.RemoveAll(dataDir)
 
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", false, logger)
-		userAddressString, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "" )
+		userObject := user.NewUsers(dataDir, mockClient, "", logger)
+		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// delete user
-		err = userObject.DeleteUser("user1", dataDir, "password1", "", userAddressString, nil, ui)
+		err = userObject.DeleteUser("user1", dataDir, "password1", ui.GetSessionId(), nil, ui)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-
 		// validate deletion
-		if userObject.IsUserLoggedIn(userAddressString, "") {
+		if userObject.IsUserNameLoggedIn("user1") {
 			t.Fatalf("user not deleted")
 		}
 		if userObject.IsUsernameAvailable("user1", dataDir) {

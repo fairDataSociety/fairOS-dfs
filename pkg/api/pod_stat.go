@@ -27,8 +27,8 @@ import (
 )
 
 type PodStatResponse struct {
-	PodName          string `json:"name"`
-	PodAddress          string `json:"address"`
+	PodName    string `json:"name"`
+	PodAddress string `json:"address"`
 }
 
 func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +74,7 @@ func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &PodStatResponse{
-		PodName:          stat.PodName,
-		PodAddress:       stat.PodAddress,
+		PodName:    stat.PodName,
+		PodAddress: stat.PodAddress,
 	})
 }

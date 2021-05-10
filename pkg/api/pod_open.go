@@ -18,8 +18,9 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"resenje.org/jsonhttp"
 

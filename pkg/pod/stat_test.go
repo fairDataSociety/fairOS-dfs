@@ -17,14 +17,15 @@ limitations under the License.
 package pod_test
 
 import (
+	"io/ioutil"
+	"strings"
+	"testing"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-	"io/ioutil"
-	"strings"
-	"testing"
 )
 
 func TestStat(t *testing.T) {
@@ -60,7 +61,7 @@ func TestStat(t *testing.T) {
 		}
 		addr := info.GetAccountInfo().GetAddress().Hex()[2:]
 		addr = strings.ToLower(addr)
-		if  podStat.PodAddress != addr {
+		if podStat.PodAddress != addr {
 			t.Fatalf("invalid pod address")
 		}
 

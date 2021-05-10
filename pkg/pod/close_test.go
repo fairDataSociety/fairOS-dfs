@@ -17,13 +17,14 @@ limitations under the License.
 package pod_test
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-	"io/ioutil"
-	"testing"
 )
 
 func TestClose(t *testing.T) {
@@ -48,7 +49,6 @@ func TestClose(t *testing.T) {
 
 		// create some dir and files
 		addFilesAndDirectories(t, info, pod1, podName1)
-
 
 		// verify if the pod is closed
 		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName1)
@@ -76,5 +76,3 @@ func TestClose(t *testing.T) {
 	})
 
 }
-
-

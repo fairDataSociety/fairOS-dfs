@@ -18,12 +18,11 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
-	"resenje.org/jsonhttp"
-
+	"github.com/dustin/go-humanize"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
+	"resenje.org/jsonhttp"
 )
 
 type UploadFileResponse struct {
@@ -85,7 +84,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	blkSize, err := strconv.ParseUint(blockSize, 10, 32)
+	bs, err := humanize.ParseBytes(blockSize)
 	if err != nil {
 		h.logger.Errorf("file upload: %v", err)
 		jsonhttp.BadRequest(w, "file upload: "+err.Error())
@@ -116,7 +115,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//upload file to bee
-		err = h.dfsAPI.UploadFile(file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(blkSize))
+		err = h.dfsAPI.UploadFile(file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
 		if err != nil {
 			if err == dfs.ErrPodNotOpen {
 				h.logger.Errorf("file upload: %v", err)

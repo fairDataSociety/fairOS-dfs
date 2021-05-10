@@ -28,7 +28,7 @@ func (f *File) GetFileReference(podFile string) (*MetaData, error) {
 	// Get the meta of the file to share
 	meta := f.GetFromFileMap(podFile)
 	if meta == nil {
-		return nil,  fmt.Errorf("file not found in dfs")
+		return nil, fmt.Errorf("file not found in dfs")
 	}
 
 	meta, err := f.GetMetaFromFileName(podFile)

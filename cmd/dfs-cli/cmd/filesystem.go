@@ -19,21 +19,22 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func isDirectoryPresent(dirNameWithpath string) bool {
-	data, err := fdfsAPI.getReq(apiDirIsPresent, "dir_path=" + dirNameWithpath)
+	data, err := fdfsAPI.getReq(apiDirIsPresent, "dir_path="+dirNameWithpath)
 	if err != nil {
 		fmt.Println("dir present: ", err)
 		return false
@@ -48,11 +49,11 @@ func isDirectoryPresent(dirNameWithpath string) bool {
 		fmt.Println("dir present: ", resp.Error)
 		return false
 	}
-	return  resp.Present
+	return resp.Present
 }
 
 func listFileAndDirectories(dirNameWithpath string) {
-	data, err := fdfsAPI.getReq(apiDirLs, "dir_path=" + dirNameWithpath)
+	data, err := fdfsAPI.getReq(apiDirLs, "dir_path="+dirNameWithpath)
 	if err != nil {
 		fmt.Println("ls failed: ", err)
 		return
@@ -72,12 +73,12 @@ func listFileAndDirectories(dirNameWithpath string) {
 }
 
 func statFileOrDirectory(statElement string) {
-	data, err := fdfsAPI.getReq(apiDirStat, "dir_path=" + statElement)
+	data, err := fdfsAPI.getReq(apiDirStat, "dir_path="+statElement)
 	if err != nil {
-		if err.Error() == "dir stat: directory not found" {
+		if strings.Contains(err.Error(), "directory not found") {
 			args := make(map[string]string)
 			args["file"] = statElement
-			data, err := fdfsAPI.getReq(apiFileStat, "file_path=" + statElement)
+			data, err := fdfsAPI.getReq(apiFileStat, "file_path="+statElement)
 			if err != nil {
 				fmt.Println("stat failed: ", err)
 				return
@@ -233,7 +234,6 @@ func uploadFile(fileName, localFileWithPath, podDir, blockSize, compression stri
 	}
 }
 
-
 func downloadFile(localFileName, podFileName string) {
 	// Create the local file fd
 	out, err := os.Create(localFileName)
@@ -255,7 +255,7 @@ func downloadFile(localFileName, podFileName string) {
 
 func fileShare(fileNameWithPath, destinationUser string) {
 	rmdirReq := common.FileSystemRequest{
-		FilePath: fileNameWithPath,
+		FilePath:    fileNameWithPath,
 		Destination: destinationUser,
 	}
 	jsonData, err := json.Marshal(rmdirReq)
@@ -278,7 +278,7 @@ func fileShare(fileNameWithPath, destinationUser string) {
 }
 
 func fileReceiveInfo(sharingRef string) {
-	data, err := fdfsAPI.getReq(apiFileReceiveInfo, "sharing_ref=" + sharingRef)
+	data, err := fdfsAPI.getReq(apiFileReceiveInfo, "sharing_ref="+sharingRef)
 	if err != nil {
 		fmt.Println("receive info: ", err)
 		return

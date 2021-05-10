@@ -17,14 +17,15 @@ limitations under the License.
 package pod_test
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-	"io/ioutil"
-	"testing"
 )
 
 func TestShare(t *testing.T) {

@@ -17,12 +17,13 @@ limitations under the License.
 package user_test
 
 import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func TestLogin(t *testing.T) {
@@ -37,26 +38,26 @@ func TestLogin(t *testing.T) {
 		defer os.RemoveAll(dataDir)
 
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", false, logger)
-		userAddressString, _, _, err := userObject.CreateNewUser("user1", "password1", "", nil, "" )
+		userObject := user.NewUsers(dataDir, mockClient, "", logger)
+		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Logout user
-		err = userObject.LogoutUser("user1", dataDir, userAddressString, "", nil)
+		err = userObject.LogoutUser(ui.GetUserName(), dataDir, ui.GetSessionId(), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// addUserAndSessionToMap user again
-		err = userObject.LoginUser("user1", "password1", dataDir, mockClient,  nil, "")
+		err = userObject.LoginUser("user1", "password1", dataDir, mockClient, nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Validate login
-		if !userObject.IsUserLoggedIn(userAddressString, "") {
+		if !userObject.IsUserNameLoggedIn("user1") {
 			t.Fatalf("user not loggin in")
 		}
 

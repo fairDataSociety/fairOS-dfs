@@ -19,12 +19,13 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func userNew(userName string) {
@@ -57,6 +58,7 @@ func userNew(userName string) {
 	fmt.Println("=============== Mnemonic ==========================")
 	fmt.Println(resp.Mnemonic)
 	fmt.Println("=============== Mnemonic ==========================")
+	return
 }
 
 func userImportUsingAddress(userName, address string) {
@@ -91,7 +93,7 @@ func userImportUsingMnemonic(userName, mnemonic string) {
 	importUser := common.UserRequest{
 		UserName: userName,
 		Password: password,
-		Mnemonic:  mnemonic,
+		Mnemonic: mnemonic,
 	}
 	jsonData, err := json.Marshal(importUser)
 	if err != nil {
@@ -195,7 +197,7 @@ func StatUser() {
 }
 
 func presentUser(userName string) {
-	data, err := fdfsAPI.getReq(apiUserPresent, "user_name="+ userName)
+	data, err := fdfsAPI.getReq(apiUserPresent, "user_name="+userName)
 	if err != nil {
 		fmt.Println("user present: ", err)
 		return
@@ -214,7 +216,7 @@ func presentUser(userName string) {
 }
 
 func isUserLoggedIn(userName string) {
-	data, err := fdfsAPI.getReq(apiUserIsLoggedin, "user_name="+ userName)
+	data, err := fdfsAPI.getReq(apiUserIsLoggedin, "user_name="+userName)
 	if err != nil {
 		fmt.Println("user loggedin: ", err)
 		return

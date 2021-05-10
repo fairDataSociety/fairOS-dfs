@@ -74,7 +74,6 @@ func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) erro
 	return nil
 }
 
-
 func (d *Directory) RemoveEntryFromDir(parentDir, itemToDelete string, isFile bool) error {
 	// validation checks of the arguments
 	if parentDir == "" {
@@ -96,7 +95,6 @@ func (d *Directory) RemoveEntryFromDir(parentDir, itemToDelete string, isFile bo
 	if err != nil {
 		return err
 	}
-
 
 	if isFile {
 		itemToDelete = "_F_" + itemToDelete

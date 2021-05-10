@@ -27,14 +27,14 @@ import (
 )
 
 type Info struct {
-	podName         string
-	userAddress     utils.Address
-	dir             *di.Directory
-	file            *f.File
-	accountInfo     *account.Info
-	feed            *feed.API
-	kvStore         *collection.KeyValue
-	docStore        *collection.Document
+	podName     string
+	userAddress utils.Address
+	dir         *di.Directory
+	file        *f.File
+	accountInfo *account.Info
+	feed        *feed.API
+	kvStore     *collection.KeyValue
+	docStore    *collection.Document
 }
 
 func (i *Info) GetPodName() string {
@@ -68,4 +68,3 @@ func (i *Info) GetKVStore() *collection.KeyValue {
 func (i *Info) GetDocStore() *collection.Document {
 	return i.docStore
 }
-

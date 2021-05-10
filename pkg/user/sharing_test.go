@@ -17,6 +17,12 @@ limitations under the License.
 package user_test
 
 import (
+	"io/ioutil"
+	"math/rand"
+	"os"
+	"strconv"
+	"testing"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -25,11 +31,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-	"io/ioutil"
-	"math/rand"
-	"os"
-	"strconv"
-	"testing"
 )
 
 func TestSharing(t *testing.T) {
@@ -49,7 +50,7 @@ func TestSharing(t *testing.T) {
 	pod1 := pod.NewPod(mockClient, fd1, acc1, logger)
 	podName1 := "test1"
 
-	acc2:= account.New(logger)
+	acc2 := account.New(logger)
 	_, _, err = acc2.CreateUserAccount("password", "")
 	if err != nil {
 		t.Fatal(err)
@@ -62,7 +63,6 @@ func TestSharing(t *testing.T) {
 	pod2 := pod.NewPod(mockClient, fd2, acc2, logger)
 	podName2 := "test2"
 
-
 	t.Run("sharing-user", func(t *testing.T) {
 		dataDir1, err := ioutil.TempDir("", "sharing")
 		if err != nil {
@@ -71,8 +71,8 @@ func TestSharing(t *testing.T) {
 		defer os.RemoveAll(dataDir1)
 
 		//create source user
-		userObject1 := user.NewUsers(dataDir1, mockClient, "", false, logger)
-		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", nil, "" )
+		userObject1 := user.NewUsers(dataDir1, mockClient, "", logger)
+		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -96,14 +96,11 @@ func TestSharing(t *testing.T) {
 			t.Fatal(err)
 		}
 
-
-
 		// share file with another user
-		sharingRefString,err := userObject1.ShareFileWithUser(podName1, "/parentDir1/file1", "user2", ui, pod1, info1.GetPodAddress())
+		sharingRefString, err := userObject1.ShareFileWithUser(podName1, "/parentDir1/file1", "user2", ui, pod1, info1.GetPodAddress())
 		if err != nil {
 			t.Fatal(err)
 		}
-
 
 		// create destination user
 		dataDir2, err := ioutil.TempDir("", "sharing")
@@ -113,8 +110,8 @@ func TestSharing(t *testing.T) {
 		defer os.RemoveAll(dataDir2)
 
 		//create destination user
-		userObject2 := user.NewUsers(dataDir2, mockClient, "", false, logger)
-		_, _, ui, err = userObject2.CreateNewUser("user2", "password2", "", nil, "" )
+		userObject2 := user.NewUsers(dataDir2, mockClient, "", logger)
+		_, _, ui, err = userObject2.CreateNewUser("user2", "password2", "", nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -131,8 +128,6 @@ func TestSharing(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-
 
 		// receive file info
 		sharingRef, err := utils.ParseSharingReference(sharingRefString)
@@ -161,9 +156,8 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("invalid block size received")
 		}
 
-
 		// receive file
-		destinationFilePath , err := userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2" )
+		destinationFilePath, err := userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -186,10 +180,8 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("file not imported")
 		}
 
-
 	})
 }
-
 
 func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file

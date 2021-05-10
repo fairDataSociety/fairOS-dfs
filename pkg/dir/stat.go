@@ -26,8 +26,6 @@ import (
 )
 
 type DirStats struct {
-	Account          string `json:"account"`
-	PodAddress       string `json:"pod_address"`
 	PodName          string `json:"pod_name"`
 	DirPath          string `json:"dir_path"`
 	DirName          string `json:"dir_name"`
@@ -49,6 +47,10 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) 
 	err = json.Unmarshal(data, &dirInode)
 	if err != nil {
 		return nil, fmt.Errorf("dir stat: %v", err)
+	}
+
+	if dirInode.Meta == nil || dirInode.FileOrDirNames == nil {
+		return nil, fmt.Errorf("dir stat: directory not found" )
 	}
 
 	files := 0

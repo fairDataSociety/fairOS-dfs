@@ -18,8 +18,9 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"resenje.org/jsonhttp"
 
@@ -28,7 +29,7 @@ import (
 )
 
 type ReceiveFileResponse struct {
-	FileName  string `json:"file_name"`
+	FileName string `json:"file_name"`
 }
 
 type FileSharingReference struct {
@@ -106,7 +107,7 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keys1, ok1 := r.URL.Query()["dir_path"]
-	if !ok1 || len(keys1[0]) < 1  || keys1[0] == ""{
+	if !ok1 || len(keys1[0]) < 1 || keys1[0] == "" {
 		h.logger.Errorf("file receive: \"dir_path\" argument missing")
 		jsonhttp.BadRequest(w, "file receive: \"dir_path\" argument missing")
 		return
@@ -142,7 +143,7 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &ReceiveFileResponse{
-		FileName:  filePath,
+		FileName: filePath,
 	})
 }
 

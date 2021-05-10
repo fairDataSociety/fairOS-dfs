@@ -27,7 +27,6 @@ import (
 type Info struct {
 	name      string
 	podName   string
-	userAddress string
 	sessionId string
 	feedApi   *feed.API
 	account   *account.Account
@@ -42,11 +41,6 @@ func (i *Info) GetUserName() string {
 
 func (i *Info) GetSessionId() string {
 	return i.sessionId
-}
-
-
-func (i *Info) GetUserAddress() string {
-	return i.userAddress
 }
 
 func (i *Info) GetPod() *pod.Pod {

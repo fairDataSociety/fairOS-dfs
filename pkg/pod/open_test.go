@@ -17,16 +17,17 @@ limitations under the License.
 package pod_test
 
 import (
+	"io/ioutil"
+	"math/rand"
+	"os"
+	"testing"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-	"io/ioutil"
-	"math/rand"
-	"os"
-	"testing"
 )
 
 func TestOpen(t *testing.T) {
@@ -52,7 +53,6 @@ func TestOpen(t *testing.T) {
 		// create some dir and files
 		addFilesAndDirectories(t, info, pod1, podName1)
 
-
 		// open the pod
 		podInfo, err := pod1.OpenPod(podName1, "password")
 		if err != nil {
@@ -75,7 +75,6 @@ func TestOpen(t *testing.T) {
 		}
 	})
 }
-
 
 func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
@@ -109,7 +108,7 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
 }
 
-func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1 string) () {
+func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1 string) {
 	t.Helper()
 	dirObject := info.GetDirectory()
 	err := dirObject.MkDir("/", "parentDir")
