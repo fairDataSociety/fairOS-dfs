@@ -23,8 +23,7 @@ import (
 	"strconv"
 )
 
-type FileStats struct {
-	Account          string `json:"account"`
+type Stats struct {
 	PodName          string `json:"pod_name"`
 	FilePath         string `json:"file_path"`
 	FileName         string `json:"file_name"`
@@ -45,8 +44,8 @@ type Blocks struct {
 	CompressedSize string `json:"compressed_size"`
 }
 
-func (f *File) FileStat(podName, fileName, account string) (*FileStats, error) {
-	meta := f.GetFromFileMap(fileName)
+func (f *File) GetStats(podName, podFileWithPath string) (*Stats, error) {
+	meta := f.GetFromFileMap(podFileWithPath)
 	if meta == nil {
 		return nil, fmt.Errorf("file not found")
 	}
@@ -55,28 +54,28 @@ func (f *File) FileStat(podName, fileName, account string) (*FileStats, error) {
 	if err != nil {
 		return nil, err
 	}
-	var fileInode FileINode
+
+	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil {
 		return nil, err
 	}
 
 	var fileBlocks []Blocks
-	for _, b := range fileInode.FileBlocks {
+	for _, b := range fileInode.Blocks {
 		fb := Blocks{
 			Name:           b.Name,
-			Reference:      hex.EncodeToString(b.Address),
+			Reference:      hex.EncodeToString(b.Reference.Bytes()),
 			Size:           strconv.Itoa(int(b.Size)),
 			CompressedSize: strconv.Itoa(int(b.CompressedSize)),
 		}
 		fileBlocks = append(fileBlocks, fb)
 	}
-	return &FileStats{
-		Account:          account,
+	return &Stats{
 		PodName:          podName,
 		FilePath:         meta.Path,
 		FileName:         meta.Name,
-		FileSize:         strconv.FormatUint(meta.FileSize, 10),
+		FileSize:         strconv.FormatUint(meta.Size, 10),
 		BlockSize:        strconv.Itoa(int(meta.BlockSize)),
 		Compression:      meta.Compression,
 		ContentType:      meta.ContentType,

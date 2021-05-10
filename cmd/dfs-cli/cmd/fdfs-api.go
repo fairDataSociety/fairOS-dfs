@@ -104,46 +104,20 @@ func (s *FdfsClient) CheckConnection() bool {
 	return true
 }
 
-func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]string) ([]byte, error) {
+func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, error) {
 	// prepare the  request
-
-	if strings.HasPrefix(urlPath, "/v0/doc/entry/newget") {
-		if s.cookie != nil {
-			urlPath = urlPath + "?fairOS-dfs=" + s.cookie.Value
-		}
-	}
-
-	if strings.HasPrefix(urlPath, "/v0/kv/entry/newget") {
-		if s.cookie != nil {
-			urlPath = urlPath + "?fairOS-dfs=" + s.cookie.Value
-		}
-	}
-
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
 	var err error
-	if arguments != nil {
-		body := new(bytes.Buffer)
-		writer := multipart.NewWriter(body)
-		for k, v := range arguments {
-			err := writer.WriteField(k, v)
-			if err != nil {
-				return nil, err
-			}
-		}
-		err = writer.Close()
+	if jsonBytes != nil {
+		req, err = http.NewRequest(method, fullUrl, bytes.NewBuffer(jsonBytes))
 		if err != nil {
 			return nil, err
 		}
-		req, err = http.NewRequest(method, fullUrl, body)
-		if err != nil {
-			return nil, err
-		}
-		// add the headers
 
-		contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
-		req.Header.Add("Content-Type", contentType)
-		req.Header.Add("Content-Length", strconv.Itoa(len(body.Bytes())))
+		// add the headers
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Content-Length", strconv.Itoa(len(jsonBytes)))
 	} else {
 		req, err = http.NewRequest(method, fullUrl, nil)
 		if err != nil {
@@ -152,7 +126,6 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 	}
 
 	if s.cookie != nil {
-		fmt.Println(s.cookie.Name, " : ", s.cookie.Value)
 		req.AddCookie(s.cookie)
 	}
 
@@ -185,7 +158,80 @@ func (s *FdfsClient) callFdfsApi(method, urlPath string, arguments map[string]st
 
 	if len(response.Cookies()) > 0 {
 		s.cookie = response.Cookies()[0]
-		fmt.Println(s.cookie.Name, " : ", s.cookie.Value)
+	}
+
+	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, errors.New("error downloading data")
+	}
+	err = response.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var resp jsonhttp.StatusResponse
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		errStr := fmt.Sprintf("error unmarshalling response: %d", len(data))
+		return nil, errors.New(errStr)
+	}
+	if resp.Code == 0 {
+		return data, nil
+	}
+
+	return []byte(resp.Message), nil
+}
+
+func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
+	fullUrl := fmt.Sprintf(s.url + urlPath)
+	var req *http.Request
+	var err error
+	if argsString != "" {
+		fullUrl = fullUrl + "?" + argsString
+		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if s.cookie != nil {
+		req.AddCookie(s.cookie)
+	}
+
+	// execute the request
+	response, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	req.Close = true
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		if response.StatusCode == http.StatusNoContent {
+			return nil, errors.New("no content")
+		}
+		data, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, errors.New("error downloading data")
+		}
+		err = response.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+		var resp jsonhttp.StatusResponse
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			return nil, errors.New("error unmarshalling error response")
+		}
+		return nil, errors.New(resp.Message)
+	}
+
+	if len(response.Cookies()) > 0 {
+		s.cookie = response.Cookies()[0]
 	}
 
 	data, err := ioutil.ReadAll(response.Body)
@@ -240,7 +286,7 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 	}
 
 	fullUrl := fmt.Sprintf(s.url + urlPath)
-	req, err := http.NewRequest("POST", fullUrl, body)
+	req, err := http.NewRequest(http.MethodPost, fullUrl, body)
 	if err != nil {
 		return nil, err
 	}

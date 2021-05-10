@@ -17,11 +17,16 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"resenje.org/jsonhttp"
-
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"resenje.org/jsonhttp"
+)
+
+var (
+	jsonContentType = "application/json"
 )
 
 type UserSignupResponse struct {
@@ -30,9 +35,25 @@ type UserSignupResponse struct {
 }
 
 func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
-	user := r.FormValue("user")
-	password := r.FormValue("password")
-	mnemonic := r.FormValue("mnemonic") // this is optional
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("user signup: invalid request body type")
+		jsonhttp.BadRequest(w, "user signup: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var userReq common.UserRequest
+	err := decoder.Decode(&userReq)
+	if err != nil {
+		h.logger.Errorf("user signup: could not decode arguments")
+		jsonhttp.BadRequest(w, "user signup: could not decode arguments")
+		return
+	}
+
+	user := userReq.UserName
+	password := userReq.Password
+	mnemonic := userReq.Mnemonic
 	if user == "" {
 		h.logger.Errorf("user signup: \"user\" argument missing")
 		jsonhttp.BadRequest(w, "user signup: \"user\" argument missing")

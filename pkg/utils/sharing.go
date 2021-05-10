@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
+	"time"
 )
 
 type SharingReference struct {
@@ -33,7 +34,8 @@ func NewSharingReference(b []byte, n int64) SharingReference {
 
 func ParseSharingReference(s string) (a SharingReference, err error) {
 	refLen := ReferenceLength * 2
-	if len(s) > encryptedRefLength {
+	timeLen := len(strconv.FormatInt(time.Now().Unix(), 10))
+	if len(s) > refLen+timeLen {
 		refLen = encryptedRefLength * 2
 	}
 	if len(s) < refLen+1 {

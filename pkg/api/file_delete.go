@@ -17,7 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 
@@ -27,10 +30,26 @@ import (
 )
 
 func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	podFile := r.FormValue("file")
-	if podFile == "" {
-		h.logger.Errorf("file delete: \"file\" argument missing")
-		jsonhttp.BadRequest(w, "file delete: \"file\" argument missing")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("file delete: invalid request body type")
+		jsonhttp.BadRequest(w, "file delete: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var fsReq common.FileSystemRequest
+	err := decoder.Decode(&fsReq)
+	if err != nil {
+		h.logger.Errorf("file delete: could not decode arguments")
+		jsonhttp.BadRequest(w, "file delete: could not decode arguments")
+		return
+	}
+
+	podFileWithPath := fsReq.FilePath
+	if podFileWithPath == "" {
+		h.logger.Errorf("file delete: \"file_path\" argument missing")
+		jsonhttp.BadRequest(w, "file delete: \"file_path\" argument missing")
 		return
 	}
 
@@ -48,7 +67,7 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete file
-	err = h.dfsAPI.DeleteFile(podFile, sessionId)
+	err = h.dfsAPI.DeleteFile(podFileWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file delete: %v", err)

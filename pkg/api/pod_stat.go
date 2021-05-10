@@ -27,16 +27,19 @@ import (
 )
 
 type PodStatResponse struct {
-	Version          string `json:"version"`
-	PodName          string `json:"name"`
-	PodPath          string `json:"path"`
-	CreationTime     string `json:"cTime"`
-	AccessTime       string `json:"aTime"`
-	ModificationTime string `json:"mTime"`
+	PodName    string `json:"name"`
+	PodAddress string `json:"address"`
 }
 
 func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
-	pod := r.FormValue("pod")
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("pod stat: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "pod stat: \"pod_name\" argument missing")
+		return
+	}
+
+	pod := keys[0]
 	if pod == "" {
 		h.logger.Errorf("pod stat: \"pod\" argument missing")
 		jsonhttp.BadRequest(w, "pod stat: \"pod\" argument missing")
@@ -71,11 +74,7 @@ func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &PodStatResponse{
-		Version:          stat.Version,
-		PodName:          stat.PodName,
-		PodPath:          stat.PodPath,
-		CreationTime:     stat.CreationTime,
-		AccessTime:       stat.AccessTime,
-		ModificationTime: stat.ModificationTime,
+		PodName:    stat.PodName,
+		PodAddress: stat.PodAddress,
 	})
 }

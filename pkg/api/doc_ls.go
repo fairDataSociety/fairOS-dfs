@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )

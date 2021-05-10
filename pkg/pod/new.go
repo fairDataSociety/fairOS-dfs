@@ -23,7 +23,6 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -53,7 +52,6 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 	var fd *feed.API
 	var file *f.File
 	var dir *d.Directory
-	var dirInode *d.DirInode
 	var user utils.Address
 	if addressString != "" {
 		if p.checkIfPodPresent(pods, podName) {
@@ -69,14 +67,8 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		accountInfo.SetAddress(address)
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
-		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
-
-		// get the inode instead of creating
-		_, dirInode, err = dir.GetDirNode(utils.PathSeperator+podName, fd, accountInfo)
-		if err != nil {
-			return nil, err
-		}
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// store the pod file with shared pod
 		sharedPods[addressString] = podName
@@ -85,8 +77,9 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 			return nil, err
 		}
 
-		// set the user as the pod address we got from shared pod
+		// set the userAddress as the pod address we got from shared pod
 		user = address
+
 	} else {
 		// your own pod, so create a new account with private key
 		if p.checkIfPodPresent(pods, podName) {
@@ -102,21 +95,15 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 			return nil, err
 		}
 
-		// create a child account for the user and other data structures for the pod
+		// create a child account for the userAddress and other data structures for the pod
 		accountInfo, err = p.acc.CreatePodAccount(freeId, passPhrase, true)
 		if err != nil {
 			return nil, err
 		}
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd, accountInfo, p.logger)
-		dir = d.NewDirectory(podName, p.client, fd, accountInfo, file, p.logger)
-
-		// create the pod inode
-		dirInode, _, err = dir.CreatePodINode(podName)
-		if err != nil {
-			return nil, err
-		}
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
 
 		// store the pod file
 		pods[freeId] = podName
@@ -133,27 +120,21 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
-		podName:         podName,
-		user:            user,
-		dir:             dir,
-		file:            file,
-		accountInfo:     accountInfo,
-		feed:            fd,
-		currentPodInode: dirInode,
-		curPodMu:        sync.RWMutex{},
-		currentDirInode: dirInode,
-		curDirMu:        sync.RWMutex{},
-		kvStore:         kvStore,
-		docStore:        docStore,
+		podName:     podName,
+		userAddress: user,
+		dir:         dir,
+		file:        file,
+		accountInfo: accountInfo,
+		feed:        fd,
+		kvStore:     kvStore,
+		docStore:    docStore,
 	}
 	p.addPodToPodMap(podName, podInfo)
-	dir.AddToDirectoryMap(podName, dirInode)
-
 	return podInfo, nil
 }
 
 func (p *Pod) loadUserPods() (map[int]string, map[string]string, error) {
-	// The user pod file topic should be in the name of the user account
+	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
 	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex))
 	if err != nil {

@@ -17,7 +17,7 @@ limitations under the License.
 package pod
 
 func (p *Pod) ClosePod(podName string) error {
-	if !p.isPodOpened(podName) {
+	if !p.IsPodOpened(podName) {
 		return ErrPodNotOpened
 	}
 
@@ -31,8 +31,10 @@ func (p *Pod) ClosePod(podName string) error {
 		return err
 	}
 
+	// remove from all thr maps
+	podInfo.dir.RemoveAllFromDirectoryMap()
+	podInfo.file.RemoveAllFromFileMap()
 	p.removePodFromPodMap(podName)
-	podInfo.dir.RemoveFromDirectoryMap(podName)
 	p.acc.DeletePodAccount(podIndex)
 	return nil
 }

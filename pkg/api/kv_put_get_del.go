@@ -17,10 +17,12 @@ limitations under the License.
 package api
 
 import (
-	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-	"github.com/gorilla/mux"
+	"encoding/json"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
@@ -30,7 +32,23 @@ type KVResponse struct {
 }
 
 func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("kv put: invalid request body type")
+		jsonhttp.BadRequest(w, "kv put: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var kvReq common.KVRequest
+	err := decoder.Decode(&kvReq)
+	if err != nil {
+		h.logger.Errorf("kv put: could not decode arguments")
+		jsonhttp.BadRequest(w, "kv put: could not decode arguments")
+		return
+	}
+
+	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv put: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "kv put: \"name\" argument missing")
@@ -74,14 +92,26 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	keys, ok := r.URL.Query()["table_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("kv get: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"sharing_ref\" argument missing")
+		return
+	}
+	name := keys[0]
 	if name == "" {
 		h.logger.Errorf("kv get: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "kv get: \"name\" argument missing")
 		return
 	}
 
-	key := r.FormValue("key")
+	keys, ok = r.URL.Query()["key"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("kv get: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"sharing_ref\" argument missing")
+		return
+	}
+	key := keys[0]
 	if key == "" {
 		h.logger.Errorf("kv get: \"key\" argument missing")
 		jsonhttp.BadRequest(w, "kv get: \"key\" argument missing")
@@ -120,63 +150,31 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &resp)
 }
 
-func (h *Handler) KVNewGetHandler(w http.ResponseWriter, r *http.Request) {
-	name := mux.Vars(r)["name"]
-	if name == "" {
-		h.logger.Errorf("kv get: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"name\" argument missing")
-		return
-	}
-
-	key := mux.Vars(r)["key"]
-	if key == "" {
-		h.logger.Errorf("kv get: \"key\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"key\" argument missing")
-		return
-	}
-
-	// get values from cookie
-	cookieStr := r.FormValue("fairOS-dfs")
-	sessionId, err := cookie.GetSessionIdFromRawCookie(cookieStr)
-	if err != nil {
-		h.logger.Errorf("kv get: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
-		return
-	}
-	if sessionId == "" {
-		h.logger.Errorf("kv get: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv get: \"cookie-id\" parameter missing in cookie")
-		return
-	}
-
-	_, data, err := h.dfsAPI.KVGet(sessionId, name, key)
-	if err != nil {
-		h.logger.Errorf("kv get: %v", err)
-		jsonhttp.InternalServerError(w, "kv get: "+err.Error())
-		return
-	}
-
-	fmt.Println(key, len(data))
-
-	w.Header().Set("Content-Type", "application/x-protobuf")
-	w.Header().Set("Content-Encoding", "gzip")
-	_, err = w.Write(data)
-	if err != nil {
-		h.logger.Errorf("download: %v", err)
-		w.Header().Set("Content-Type", " application/json")
-		jsonhttp.InternalServerError(w, "stat dir: "+err.Error())
-	}
-}
-
 func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("kv delete: invalid request body type")
+		jsonhttp.BadRequest(w, "kv delete: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var kvReq common.KVRequest
+	err := decoder.Decode(&kvReq)
+	if err != nil {
+		h.logger.Errorf("kv delete: could not decode arguments")
+		jsonhttp.BadRequest(w, "kv delete: could not decode arguments")
+		return
+	}
+
+	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv del: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "kv del: \"name\" argument missing")
 		return
 	}
 
-	key := r.FormValue("key")
+	key := kvReq.Key
 	if name == "" {
 		h.logger.Errorf("kv del: \"key\" argument missing")
 		jsonhttp.BadRequest(w, "kv del: \"key\" argument missing")
@@ -204,5 +202,3 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonhttp.OK(w, "key deleted")
 }
-
-

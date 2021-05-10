@@ -17,18 +17,35 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"resenje.org/jsonhttp"
-
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"resenje.org/jsonhttp"
 )
 
 func (h *Handler) ImportUserHandler(w http.ResponseWriter, r *http.Request) {
-	user := r.FormValue("user")
-	address := r.FormValue("address")
-	mnemonic := r.FormValue("mnemonic") // this is optional
-	password := r.FormValue("password")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("user import: invalid request body type")
+		jsonhttp.BadRequest(w, "user import: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var userReq common.UserRequest
+	err := decoder.Decode(&userReq)
+	if err != nil {
+		h.logger.Errorf("user import: could not decode arguments")
+		jsonhttp.BadRequest(w, "user import: could not decode arguments")
+		return
+	}
+
+	user := userReq.UserName
+	address := userReq.Address
+	mnemonic := userReq.Mnemonic
+	password := userReq.Password
 	if user == "" {
 		h.logger.Errorf("user import: \"user\" argument missing")
 		jsonhttp.BadRequest(w, "user import: \"user\" argument missing")

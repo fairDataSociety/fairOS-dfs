@@ -17,7 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"resenje.org/jsonhttp"
 
@@ -27,10 +30,33 @@ import (
 )
 
 func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) {
-	dirToCreate := r.FormValue("dir")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("mkdir: invalid request body type")
+		jsonhttp.BadRequest(w, "mkdir: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var fsReq common.FileSystemRequest
+	err := decoder.Decode(&fsReq)
+	if err != nil {
+		h.logger.Errorf("mkdir: could not decode arguments")
+		jsonhttp.BadRequest(w, "mkdir: could not decode arguments")
+		return
+	}
+
+	dirToCreate := fsReq.DirectoryName
 	if dirToCreate == "" {
 		h.logger.Errorf("mkdir: \"dir\" argument missing")
 		jsonhttp.BadRequest(w, "mkdir: \"dir\" argument missing")
+		return
+	}
+
+	path := fsReq.DirectoryPath
+	if path == "" {
+		h.logger.Errorf("mkdir: \"path\" argument missing")
+		jsonhttp.BadRequest(w, "mkdir: \"path\" argument missing")
 		return
 	}
 
@@ -48,7 +74,7 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// make directory
-	err = h.dfsAPI.Mkdir(dirToCreate, sessionId)
+	err = h.dfsAPI.Mkdir(path, dirToCreate, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidDirectory ||

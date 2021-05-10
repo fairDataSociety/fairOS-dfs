@@ -17,6 +17,8 @@ limitations under the License.
 package dir
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -24,8 +26,6 @@ import (
 )
 
 type DirStats struct {
-	Account          string `json:"account"`
-	PodAddress       string `json:"pod_address"`
 	PodName          string `json:"pod_name"`
 	DirPath          string `json:"dir_path"`
 	DirName          string `json:"dir_name"`
@@ -36,34 +36,42 @@ type DirStats struct {
 	NoOfFiles        string `json:"no_of_files"`
 }
 
-func (d *Directory) DirStat(podName, dirName string, dirInode *DirInode, account, podAddr string, printNames bool) (*DirStats, error) {
-	meta := dirInode.Meta
-	fl, dl := d.ListDirOnlyNames(podName, dirName, printNames)
+func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) {
+	topic := utils.HashString(dirNameWithPath)
+	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
+	if err != nil {
+		return nil, fmt.Errorf("dir stat: %v", err)
+	}
+
+	var dirInode Inode
+	err = json.Unmarshal(data, &dirInode)
+	if err != nil {
+		return nil, fmt.Errorf("dir stat: %v", err)
+	}
+
+	if dirInode.Meta == nil || dirInode.FileOrDirNames == nil {
+		return nil, fmt.Errorf("dir stat: directory not found")
+	}
 
 	files := 0
 	dirs := 0
-	for _, list := range dl {
-		if strings.HasPrefix(list, "<Dir>") {
+	for _, k := range dirInode.FileOrDirNames {
+		if strings.HasPrefix(k, "_D_") {
 			dirs++
-		} else {
+		} else if strings.HasPrefix(k, "_F_") {
 			files++
 		}
 	}
-	path := meta.Path
-	if meta.Path == podName {
-		path = utils.PathSeperator
-	}
 
+	meta := dirInode.Meta
 	return &DirStats{
-		Account:          account,
-		PodAddress:       podAddr,
 		PodName:          podName,
-		DirPath:          path,
+		DirPath:          meta.Path,
 		DirName:          meta.Name,
 		CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
 		ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
 		AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
-		NoOfDirectories:  strconv.FormatInt(int64(len(dl)), 10),
-		NoOfFiles:        strconv.FormatInt(int64(len(fl)), 10),
+		NoOfDirectories:  strconv.FormatInt(int64(dirs), 10),
+		NoOfFiles:        strconv.FormatInt(int64(files), 10),
 	}, nil
 }

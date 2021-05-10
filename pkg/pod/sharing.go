@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -32,72 +31,6 @@ type ShareInfo struct {
 	UserName    string `json:"user_name"`
 	UserAddress string `json:"user_address"`
 	SharedTime  string `json:"shared_time"`
-}
-
-func (p *Pod) GetMetaReferenceOfFile(podName, filePath string) ([]byte, string, error) {
-	if !p.isPodOpened(podName) {
-		return nil, "", fmt.Errorf("login to pod to do this operation")
-	}
-
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return nil, "", err
-	}
-
-	podDir := filepath.Dir(filePath)
-	fileName := filepath.Base(filePath)
-	path := p.getFilePath(podDir, podInfo)
-	fpath := path + utils.PathSeperator + fileName
-
-	return podInfo.getFile().GetFileReference(fpath)
-}
-
-func (p *Pod) ReceiveFileAndStore(podName, podDir, fileName, metaHexRef string) error {
-	if !p.isPodOpened(podName) {
-		return fmt.Errorf("login to pod to do this operation")
-	}
-
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return err
-	}
-
-	path := p.getFilePath(podDir, podInfo)
-	dir := podInfo.GetDirectory()
-
-	_, dirInode, err := dir.GetDirNode(path, podInfo.GetFeed(), podInfo.GetAccountInfo())
-	if err != nil {
-		return err
-	}
-
-	// check if the file exists already
-	fpath := path + utils.PathSeperator + fileName
-	if podInfo.file.IsFileAlreadyPResent(fpath) {
-		return fmt.Errorf("file already present in the destination dir")
-	}
-
-	// append the file meta to the parent directory and update the directory feed
-	metaReference, err := utils.ParseHexReference(metaHexRef)
-	if err != nil {
-		return err
-	}
-	dirInode.Hashes = append(dirInode.Hashes, metaReference.Bytes())
-	dirInode.Meta.ModificationTime = time.Now().Unix()
-	topic, err := dir.UpdateDirectory(dirInode)
-	if err != nil {
-		return err
-	}
-
-	// if the directory path is not root.. then update all the parents too
-	if path != podInfo.GetCurrentPodPathAndName() {
-		err = p.UpdateTillThePod(podName, podInfo.GetDirectory(), topic, path, true)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Add to file path map
-	return podInfo.getFile().AddFileToPath(fpath, metaHexRef)
 }
 
 func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {

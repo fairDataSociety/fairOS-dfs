@@ -17,7 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"resenje.org/jsonhttp"
 
@@ -31,8 +34,24 @@ type PodCreateResponse struct {
 }
 
 func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
-	password := r.FormValue("password")
-	pod := r.FormValue("pod")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("pod new: invalid request body type")
+		jsonhttp.BadRequest(w, "pod new: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var podReq common.PodRequest
+	err := decoder.Decode(&podReq)
+	if err != nil {
+		h.logger.Errorf("pod new: could not decode arguments")
+		jsonhttp.BadRequest(w, "pod new: could not decode arguments")
+		return
+	}
+
+	pod := podReq.PodName
+	password := podReq.Password
 	if password == "" {
 		h.logger.Errorf("pod new: \"password\" argument missing")
 		jsonhttp.BadRequest(w, "pod new: \"password\" argument missing")

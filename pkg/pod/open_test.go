@@ -14,23 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pod
+package pod_test
 
 import (
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-func TestPod_LoginPod(t *testing.T) {
+func TestOpen(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(ioutil.Discard, 0)
 	acc := account.New(logger)
@@ -38,127 +38,113 @@ func TestPod_LoginPod(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := NewPod(mockClient, fd, acc, logger)
-
+	pod1 := pod.NewPod(mockClient, fd, acc, logger)
 	podName1 := "test1"
-	firstDir := "dir1"
-	t.Run("simple-login-to-pod", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password", "")
-		if err != nil {
-			t.Fatalf("error creating pod %s", podName1)
-		}
-		err = pod1.ClosePod(podName1)
-		if err != nil {
-			t.Fatalf("could not logout")
-		}
 
-		infoLogin, err := pod1.OpenPod(podName1, "password")
-		if err != nil {
-			t.Fatalf("login failed")
-		}
-		if info.podName != infoLogin.podName {
-			t.Fatalf("invalid podname")
-		}
-		if info.GetCurrentPodPathAndName() != infoLogin.GetCurrentPodPathAndName() {
-			t.Fatalf("invalid podname path and name")
-		}
-
-		err = pod1.DeletePod(podName1)
-		if err != nil {
-			t.Fatalf("could not delete pod")
-		}
-	})
-
-	t.Run("login-with-sync-contents", func(t *testing.T) {
+	t.Run("open-pod", func(t *testing.T) {
+		// create a pod
 		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
-		//Make a dir
-		err = pod1.MakeDir(podName1, firstDir)
-		if err != nil {
-			t.Fatalf("error creating directory %s", firstDir)
-		}
+		// create some dir and files
+		addFilesAndDirectories(t, info, pod1, podName1)
 
-		dirPath := utils.PathSeperator + podName1 + utils.PathSeperator + firstDir
-		dirInode := info.GetDirectory().GetDirFromDirectoryMap(dirPath)
-		if dirInode == nil {
-			t.Fatalf("directory not created")
-		}
-
-		// create a file
-		localFile, clean := createRandomFile(t, 540)
-		defer clean()
-		podDir := utils.PathSeperator + firstDir
-		fileName := filepath.Base(localFile)
-		fd, err := os.Open(localFile)
+		// open the pod
+		podInfo, err := pod1.OpenPod(podName1, "password")
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer fd.Close()
-		_, err = pod1.UploadFile(podName1, fileName, 540, fd, podDir, "100", "false")
-		if err != nil {
-			t.Fatalf("upload failed: %s", err.Error())
-		}
-		if !info.getFile().IsFileAlreadyPResent(dirPath + utils.PathSeperator + filepath.Base(localFile)) {
-			t.Fatalf("file not copied in pod")
-		}
 
-		err = pod1.ClosePod(podName1)
+		// validate if properly opened
+		if podInfo == nil {
+			t.Fatalf("pod not opened")
+		}
+		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err != nil {
-			t.Fatalf("could not logout")
+			t.Fatalf("pod not opened")
 		}
-
-		// Now login and check if the dir and file exists
-		infoLogin, err := pod1.OpenPod(podName1, "password")
-		if err != nil {
-			t.Fatalf("login failed")
+		if gotPodInfo == nil {
+			t.Fatalf("pod not opened")
 		}
-		if info.podName != infoLogin.podName {
-			t.Fatalf("invalid podname")
-		}
-		if info.GetCurrentPodPathAndName() != infoLogin.GetCurrentPodPathAndName() {
-			t.Fatalf("invalid podname path and name")
-		}
-		dirInodeLogin := infoLogin.dir.GetDirFromDirectoryMap(dirPath)
-		if dirInodeLogin == nil {
-			t.Fatalf("dir not synced")
-		}
-		if dirInodeLogin.Meta.Path != info.GetCurrentPodPathAndName() {
-			t.Fatalf("dir not synced")
-		}
-		if dirInodeLogin.Meta.Name != firstDir {
-			t.Fatalf("dir not synced")
-		}
-		fileMeta := infoLogin.getFile().GetFromFileMap(dirPath + utils.PathSeperator + filepath.Base(localFile))
-		if fileMeta == nil {
-			t.Fatalf("file not synced")
-		}
-
-		err = pod1.DeletePod(podName1)
-		if err != nil {
-			t.Fatalf("could not delete pod")
+		if gotPodInfo.GetPodName() != podName1 {
+			t.Fatalf("invalid pod name")
 		}
 	})
 }
 
-func createRandomFile(t *testing.T, size int) (string, func()) {
-	file, err := ioutil.TempFile("/tmp", "FairOS")
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+	// create a temp file
+	fd, err := ioutil.TempFile("", fileName)
 	if err != nil {
 		t.Fatal(err)
 	}
-	bytes := make([]byte, size)
-	_, err = rand.Read(bytes)
+	defer os.Remove(fd.Name())
+
+	// write contents to file
+	content := make([]byte, fileSize)
+	rand.Read(content)
+	if _, err = fd.Write(content); err != nil {
+		t.Fatal(err)
+	}
+
+	// close file
+	uploadFileName := fd.Name()
+	err = fd.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = file.Write(bytes)
+
+	// open file to upload
+	f1, err := os.Open(uploadFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
-	clean := func() { os.Remove(file.Name()) }
-	fileName := file.Name()
-	return fileName, clean
+
+	// upload  the temp file
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+}
+
+func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1 string) {
+	t.Helper()
+	dirObject := info.GetDirectory()
+	err := dirObject.MkDir("/", "parentDir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// populate the directory with few directory and files
+	err = dirObject.MkDir("/parentDir", "subDir1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dirObject.MkDir("/parentDir", "subDir2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fileObject := info.GetFile()
+	_, err = uploadFile(t, fileObject, "/parentDir", "file1", "", 100, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dirObject.AddEntryToDir("/parentDir", "file1", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = uploadFile(t, fileObject, "/parentDir", "file2", "", 200, 20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dirObject.AddEntryToDir("/parentDir", "file2", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// close the pod
+	err = pod1.ClosePod(podName1)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

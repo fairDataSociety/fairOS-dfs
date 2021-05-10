@@ -19,20 +19,19 @@ package api
 import (
 	"net/http"
 
-	"resenje.org/jsonhttp"
-
+	"github.com/dustin/go-humanize"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
+	"resenje.org/jsonhttp"
 )
 
 type UploadFileResponse struct {
-	References []Reference
+	Responses []Response
 }
 
-type Reference struct {
-	FileName  string `json:"file_name"`
-	Reference string `json:"reference,omitempty"`
-	Error     string `json:"error,omitempty"`
+type Response struct {
+	FileName string `json:"file_name"`
+	Message  string `json:"message,omitempty"`
 }
 
 const (
@@ -41,20 +40,21 @@ const (
 )
 
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
-	podDir := r.FormValue("pod_dir")
-	blockSize := r.FormValue("block_size")
-	compression := r.Header.Get(CompressionHeader)
-	if podDir == "" {
-		h.logger.Errorf("file upload: \"pod_dir\" argument missing")
-		jsonhttp.BadRequest(w, "file upload: \"pod_dir\" argument missing")
+	podPath := r.FormValue("dir_path")
+	if podPath == "" {
+		h.logger.Errorf("file upload: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "file upload: \"dir_path\" argument missing")
 		return
 	}
+
+	blockSize := r.FormValue("block_size")
 	if blockSize == "" {
 		h.logger.Errorf("file upload: \"block_size\" argument missing")
 		jsonhttp.BadRequest(w, "file upload: \"block_size\" argument missing")
 		return
 	}
 
+	compression := r.Header.Get(CompressionHeader)
 	if compression != "" {
 		if compression != "snappy" && compression != "gzip" {
 			h.logger.Errorf("file upload: invalid value for \"compression\" header")
@@ -83,6 +83,14 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, "file upload: "+err.Error())
 		return
 	}
+
+	bs, err := humanize.ParseBytes(blockSize)
+	if err != nil {
+		h.logger.Errorf("file upload: %v", err)
+		jsonhttp.BadRequest(w, "file upload: "+err.Error())
+		return
+	}
+
 	files := r.MultipartForm.File["files"]
 	if len(files) == 0 {
 		h.logger.Errorf("file upload: parameter \"files\" missing")
@@ -91,7 +99,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// upload files one by one
-	var references []Reference
+	var responses []Response
 	for _, file := range files {
 		fd, err := file.Open()
 		defer func() {
@@ -102,12 +110,12 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}()
 		if err != nil {
 			h.logger.Errorf("file upload: %v", err)
-			references = append(references, Reference{FileName: file.Filename, Error: err.Error()})
+			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
 
 		//upload file to bee
-		reference, err := h.dfsAPI.UploadFile(file.Filename, sessionId, file.Size, fd, podDir, blockSize, compression)
+		err = h.dfsAPI.UploadFile(file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
 		if err != nil {
 			if err == dfs.ErrPodNotOpen {
 				h.logger.Errorf("file upload: %v", err)
@@ -115,14 +123,14 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.logger.Errorf("file upload: %v", err)
-			references = append(references, Reference{FileName: file.Filename, Error: err.Error()})
+			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
-		references = append(references, Reference{FileName: file.Filename, Reference: reference})
+		responses = append(responses, Response{FileName: file.Filename, Message: "uploaded successfully"})
 	}
 
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &UploadFileResponse{
-		References: references,
+		Responses: responses,
 	})
 }

@@ -39,18 +39,7 @@ func (p *Pod) DeletePod(podName string) error {
 		return fmt.Errorf("pod not found")
 	}
 
-	//delete the pod inode
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return err
-	}
-	err = podInfo.dir.DeletePodInode(podName)
-	if err != nil {
-		return err
-	}
-
 	// remove it from other data structures
-	podInfo.dir.RemoveFromDirectoryMap(podName)
 	p.removePodFromPodMap(podName)
 	p.acc.DeletePodAccount(podIndex)
 

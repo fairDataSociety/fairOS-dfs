@@ -17,8 +17,12 @@ limitations under the License.
 package api
 
 import (
-	"github.com/gorilla/mux"
+	"encoding/json"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+
+	"github.com/gorilla/mux"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
@@ -29,14 +33,30 @@ type DocGetResponse struct {
 }
 
 func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("doc put: invalid request body type")
+		jsonhttp.BadRequest(w, "doc put: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var docReq common.DocRequest
+	err := decoder.Decode(&docReq)
+	if err != nil {
+		h.logger.Errorf("doc put: could not decode arguments")
+		jsonhttp.BadRequest(w, "doc put: could not decode arguments")
+		return
+	}
+
+	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc put: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "doc put: \"name\" argument missing")
 		return
 	}
 
-	doc := r.FormValue("doc")
+	doc := docReq.Document
 	if doc == "" {
 		h.logger.Errorf("doc put: \"doc\" argument missing")
 		jsonhttp.BadRequest(w, "doc put: \"doc\" argument missing")
@@ -66,14 +86,26 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	keys, ok := r.URL.Query()["table_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("doc get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc get: \"pod_name\" argument missing")
+		return
+	}
+	name := keys[0]
 	if name == "" {
 		h.logger.Errorf("doc get: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "doc get: \"name\" argument missing")
 		return
 	}
 
-	id := r.FormValue("id")
+	keys, ok = r.URL.Query()["table_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("doc get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc get: \"pod_name\" argument missing")
+		return
+	}
+	id := keys[0]
 	if id == "" {
 		h.logger.Errorf("doc get: \"id\" argument missing")
 		jsonhttp.BadRequest(w, "doc get: \"id\" argument missing")
@@ -151,14 +183,30 @@ func (h *Handler) DocNewGetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("doc del: invalid request body type")
+		jsonhttp.BadRequest(w, "doc del: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var docReq common.DocRequest
+	err := decoder.Decode(&docReq)
+	if err != nil {
+		h.logger.Errorf("doc del: could not decode arguments")
+		jsonhttp.BadRequest(w, "doc del: could not decode arguments")
+		return
+	}
+
+	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc del: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "doc del: \"name\" argument missing")
 		return
 	}
 
-	id := r.FormValue("id")
+	id := docReq.ID
 	if id == "" {
 		h.logger.Errorf("doc del: \"id\" argument missing")
 		jsonhttp.BadRequest(w, "doc del: \"id\" argument missing")

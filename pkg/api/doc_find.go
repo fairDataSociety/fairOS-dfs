@@ -29,21 +29,38 @@ type DocFindResponse struct {
 }
 
 func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	keys, ok := r.URL.Query()["table_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("doc find: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc find: \"pod_name\" argument missing")
+		return
+	}
+	name := keys[0]
 	if name == "" {
 		h.logger.Errorf("doc find: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "doc find: \"name\" argument missing")
 		return
 	}
 
-	expr := r.FormValue("expr")
+	keys, ok = r.URL.Query()["expr"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("pod stat: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "pod stat: \"pod_name\" argument missing")
+		return
+	}
+	expr := keys[0]
 	if expr == "" {
 		h.logger.Errorf("doc find: \"expr\" argument missing")
 		jsonhttp.BadRequest(w, "doc find: \"expr\" argument missing")
 		return
 	}
 
-	limit := r.FormValue("limit")
+	limit := ""
+	keys, ok = r.URL.Query()["expr"]
+	if ok && len(keys[0]) >= 1 {
+		limit = keys[0]
+	}
+
 	var limitInt int
 	if limit == "" {
 		limitInt = 10

@@ -19,43 +19,31 @@ package file
 import (
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	m "github.com/fairdatasociety/fairOS-dfs/pkg/meta"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type File struct {
-	podName string
-	client  blockstore.Client
-	fd      *feed.API
-	acc     *account.Info
-	fileMap map[string]*m.FileMetaData
-	fileMu  *sync.RWMutex
-	logger  logging.Logger
+	podName     string
+	userAddress utils.Address
+	client      blockstore.Client
+	fd          *feed.API
+	fileMap     map[string]*MetaData
+	fileMu      *sync.RWMutex
+	logger      logging.Logger
 }
 
-type FileINode struct {
-	FileBlocks []*FileBlock
-}
-
-type FileBlock struct {
-	Name           string
-	Size           uint32
-	CompressedSize uint32
-	Address        []byte
-}
-
-func NewFile(podName string, client blockstore.Client, fd *feed.API, acc *account.Info, logger logging.Logger) *File {
+func NewFile(podName string, client blockstore.Client, fd *feed.API, user utils.Address, logger logging.Logger) *File {
 	return &File{
-		podName: podName,
-		client:  client,
-		fd:      fd,
-		acc:     acc,
-		fileMap: make(map[string]*m.FileMetaData),
-		fileMu:  &sync.RWMutex{},
-		logger:  logger,
+		podName:     podName,
+		userAddress: user,
+		client:      client,
+		fd:          fd,
+		fileMap:     make(map[string]*MetaData),
+		fileMu:      &sync.RWMutex{},
+		logger:      logger,
 	}
 }
 
@@ -63,7 +51,7 @@ func (f *File) getClient() blockstore.Client {
 	return f.client
 }
 
-func (f *File) AddToFileMap(filePath string, meta *m.FileMetaData) {
+func (f *File) AddToFileMap(filePath string, meta *MetaData) {
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()
 	f.fileMap[filePath] = meta
@@ -75,7 +63,7 @@ func (f *File) RemoveFromFileMap(filePath string) {
 	delete(f.fileMap, filePath)
 }
 
-func (f *File) GetFromFileMap(filePath string) *m.FileMetaData {
+func (f *File) GetFromFileMap(filePath string) *MetaData {
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()
 	if meta, ok := f.fileMap[filePath]; ok {
@@ -84,11 +72,17 @@ func (f *File) GetFromFileMap(filePath string) *m.FileMetaData {
 	return nil
 }
 
-func (f *File) IsFileAlreadyPResent(fileWithPath string) bool {
+func (f *File) IsFileAlreadyPresent(fileWithPath string) bool {
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()
 	if _, ok := f.fileMap[fileWithPath]; ok {
 		return true
 	}
 	return false
+}
+
+func (f *File) RemoveAllFromFileMap() {
+	f.fileMu.Lock()
+	defer f.fileMu.Unlock()
+	f.fileMap = make(map[string]*MetaData)
 }

@@ -18,46 +18,45 @@ package dir
 
 import (
 	"encoding/json"
-	"net/http"
+	"fmt"
+	"strings"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) LoadDirMeta(podName string, curDirInode *DirInode, fd *feed.API, accountInfo *account.Info) error {
-	for _, ref := range curDirInode.Hashes {
-		_, data, err := fd.GetFeedData(ref, accountInfo.GetAddress())
-		if err != nil {
-			respCode, err := d.file.LoadFileMeta(podName, ref)
+func (d *Directory) SyncDirectory(dirNameWithPath string) error {
+	topic := utils.HashString(dirNameWithPath)
+	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
+	if err != nil {
+		return nil // pod is empty
+	}
+
+	var dirInode *Inode
+	err = json.Unmarshal(data, &dirInode)
+	if err != nil {
+		return fmt.Errorf("dir sync: %v", err)
+	}
+	d.AddToDirectoryMap(dirNameWithPath, dirInode)
+
+	for _, fileOrDirName := range dirInode.FileOrDirNames {
+		if strings.HasPrefix(fileOrDirName, "_F_") {
+			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
+			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
+			err := d.file.LoadFileMeta(filePath)
 			if err != nil {
 				return err
 			}
-			if respCode == http.StatusOK {
-				continue
+
+		} else if strings.HasPrefix(fileOrDirName, "_D_") {
+			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
+			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
+			d.logger.Infof(dirNameWithPath)
+
+			err = d.SyncDirectory(path)
+			if err != nil {
+				return err
 			}
-			return err
 		}
-
-		var dirInode *DirInode
-		err = json.Unmarshal(data, &dirInode)
-		if err != nil {
-			return err
-		}
-
-		path := dirInode.Meta.Path + utils.PathSeperator + dirInode.Meta.Name
-		d.AddToDirectoryMap(path, dirInode)
-		d.logger.Infof(path)
-
-		_, newDirInode, err := d.GetDirNode(path, fd, accountInfo)
-		if err != nil {
-			return err
-		}
-		err = d.LoadDirMeta(podName, newDirInode, fd, accountInfo)
-		if err != nil {
-			return err
-		}
-
 	}
 	return nil
 }

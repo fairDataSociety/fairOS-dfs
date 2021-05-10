@@ -20,6 +20,9 @@ import "errors"
 
 var (
 	ErrUserNotLoggedIn = errors.New("user not logged in")
+	ErrInvalidUserName = errors.New("invalid user name")
 	ErrPodNotOpen      = errors.New("pod not open")
 	ErrBeeClient       = errors.New("could not connect to bee client")
+	ErrReadOnlyPod     = errors.New("operation not permitted: read only pod")
+	ErrFileNotPresent  = errors.New("file not present")
 )

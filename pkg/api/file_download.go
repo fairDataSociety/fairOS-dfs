@@ -17,9 +17,9 @@ limitations under the License.
 package api
 
 import (
-	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 
@@ -29,10 +29,10 @@ import (
 )
 
 func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
-	podFile := r.FormValue("file")
-	if podFile == "" {
-		h.logger.Errorf("download: \"file\" argument missing")
-		jsonhttp.BadRequest(w, "download: \"file\" argument missing")
+	podFileWithPath := r.FormValue("file_path")
+	if podFileWithPath == "" {
+		h.logger.Errorf("download: \"file_path\" argument missing")
+		jsonhttp.BadRequest(w, "download: \"file_path\" argument missing")
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// download file from bee
-	reader, reference, size, err := h.dfsAPI.DownloadFile(podFile, sessionId)
+	reader, size, err := h.dfsAPI.DownloadFile(podFileWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("download: %v", err)
@@ -62,8 +62,8 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("ETag", fmt.Sprintf("%q", reference))
-	w.Header().Set("Content-Length", size)
+	sizeString := strconv.FormatUint(size, 10)
+	w.Header().Set("Content-Length", sizeString)
 
 	_, err = io.Copy(w, reader)
 	if err != nil {

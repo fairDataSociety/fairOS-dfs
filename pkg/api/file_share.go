@@ -17,7 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"resenje.org/jsonhttp"
 
@@ -26,8 +29,7 @@ import (
 )
 
 type ReceiveFileResponse struct {
-	FileName  string `json:"file_name"`
-	Reference string `json:"reference"`
+	FileName string `json:"file_name"`
 }
 
 type FileSharingReference struct {
@@ -35,13 +37,29 @@ type FileSharingReference struct {
 }
 
 func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
-	podFile := r.FormValue("file")
-	if podFile == "" {
-		h.logger.Errorf("file share: \"file\" argument missing")
-		jsonhttp.BadRequest(w, "file share: \"file\" argument missing")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("file share: invalid request body type")
+		jsonhttp.BadRequest(w, "file share: invalid request body type")
 		return
 	}
-	destinationRef := r.FormValue("to")
+
+	decoder := json.NewDecoder(r.Body)
+	var fsReq common.FileSystemRequest
+	err := decoder.Decode(&fsReq)
+	if err != nil {
+		h.logger.Errorf("file share: could not decode arguments")
+		jsonhttp.BadRequest(w, "file share: could not decode arguments")
+		return
+	}
+
+	podFileWithPath := fsReq.FilePath
+	if podFileWithPath == "" {
+		h.logger.Errorf("file share: \"pod_path_file\" argument missing")
+		jsonhttp.BadRequest(w, "file share: \"pod_path_file\" argument missing")
+		return
+	}
+	destinationRef := fsReq.Destination
 	if destinationRef == "" {
 		h.logger.Errorf("file share: \"to\" argument missing")
 		jsonhttp.BadRequest(w, "file share: \"to\" argument missing")
@@ -61,7 +79,7 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sharingRef, err := h.dfsAPI.ShareFile(podFile, destinationRef, sessionId)
+	sharingRef, err := h.dfsAPI.ShareFile(podFileWithPath, destinationRef, sessionId)
 	if err != nil {
 		h.logger.Errorf("file share: %v", err)
 		jsonhttp.InternalServerError(w, "file share: "+err.Error())
@@ -75,19 +93,26 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
-	sharingRefString := r.FormValue("ref")
+	keys, ok := r.URL.Query()["sharing_ref"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("file receive: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "file receive: \"sharing_ref\" argument missing")
+		return
+	}
+	sharingRefString := keys[0]
 	if sharingRefString == "" {
 		h.logger.Errorf("file receive: \"ref\" argument missing")
 		jsonhttp.BadRequest(w, "file receive: \"ref\" argument missing")
 		return
 	}
 
-	dir := r.FormValue("dir")
-	if dir == "" {
-		h.logger.Errorf("file receive: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "file receive: \"dir\" argument missing")
+	keys1, ok1 := r.URL.Query()["dir_path"]
+	if !ok1 || len(keys1[0]) < 1 || keys1[0] == "" {
+		h.logger.Errorf("file receive: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "file receive: \"dir_path\" argument missing")
 		return
 	}
+	dir := keys1[0]
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
@@ -109,7 +134,7 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filePath, fileRef, err := h.dfsAPI.ReceiveFile(sessionId, sharingRef, dir)
+	filePath, err := h.dfsAPI.ReceiveFile(sessionId, sharingRef, dir)
 	if err != nil {
 		h.logger.Errorf("file receive: %v", err)
 		jsonhttp.InternalServerError(w, "file receive: "+err.Error())
@@ -118,13 +143,18 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &ReceiveFileResponse{
-		FileName:  filePath,
-		Reference: fileRef,
+		FileName: filePath,
 	})
 }
 
 func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
-	sharingRefString := r.FormValue("ref")
+	keys, ok := r.URL.Query()["sharing_ref"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("file receive info: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "file receive info: \"sharing_ref\" argument missing")
+		return
+	}
+	sharingRefString := keys[0]
 	if sharingRefString == "" {
 		h.logger.Errorf("file receive info: \"ref\" argument missing")
 		jsonhttp.BadRequest(w, "file receive info: \"ref\" argument missing")

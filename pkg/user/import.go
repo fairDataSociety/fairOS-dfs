@@ -25,11 +25,12 @@ import (
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) error {
+	// basic validation
 	if u.IsUsernameAvailable(userName, dataDir) {
 		return ErrUserAlreadyPresent
 	}
@@ -37,8 +38,6 @@ func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir 
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, client, u.logger)
-	file := f.NewFile(userName, client, fd, accountInfo, u.logger)
-
 	address := utils.HexToAddress(addressString)
 
 	// load the encrypted mnemonic and see if it is valid
@@ -59,8 +58,11 @@ func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir 
 	if err != nil {
 		return err
 	}
-	dir := d.NewDirectory(userName, client, fd, accountInfo, file, u.logger)
 
+	// Instantiate pod, dir & file objects
+	pod := p.NewPod(u.client, fd, acc, u.logger)
+	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
+	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}
@@ -72,11 +74,11 @@ func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir 
 		account:   acc,
 		file:      file,
 		dir:       dir,
-		pods:      pod.NewPod(u.client, fd, acc, u.logger),
+		pod:       pod,
 	}
 
 	// set cookie and add user to map
-	err = u.Login(ui, response)
+	err = u.addUserAndSessionToMap(ui, response)
 	if err != nil {
 		return err
 	}

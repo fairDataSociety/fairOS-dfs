@@ -53,9 +53,9 @@ type Info struct {
 }
 
 func New(logger logging.Logger) *Account {
-	wallet := NewWallet("")
+	wal := NewWallet("")
 	return &Account{
-		wallet:      wallet,
+		wallet:      wal,
 		userAcount:  &Info{},
 		podAccounts: make(map[int]*Info),
 		logger:      logger,
@@ -70,9 +70,9 @@ func CreateRandomKeyPair(now int64) (*ecdsa.PrivateKey, error) {
 }
 
 func (a *Account) CreateUserAccount(passPhrase, mnemonic string) (string, string, error) {
-	wallet := NewWallet("")
-	a.wallet = wallet
-	acc, mnemonic, err := wallet.LoadMnemonicAndCreateRootAccount(mnemonic)
+	wal := NewWallet("")
+	a.wallet = wal
+	acc, mnemonic, err := wal.LoadMnemonicAndCreateRootAccount(mnemonic)
 	if err != nil {
 		return "", "", err
 	}
@@ -331,6 +331,10 @@ func (a *Account) getPassword() (password string) {
 	passwd := string(bytePassword)
 	password = strings.TrimSpace(passwd)
 	return password
+}
+
+func (a *Account) GetWallet() *Wallet {
+	return a.wallet
 }
 
 func (a *Info) IsReadOnlyPod() bool {

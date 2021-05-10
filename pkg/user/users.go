@@ -19,25 +19,9 @@ package user
 import (
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
-	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
-
-type Info struct {
-	name      string
-	podName   string
-	sessionId string
-	feedApi   *feed.API
-	account   *account.Account
-	file      *f.File
-	dir       *d.Directory
-	pods      *pod.Pod
-}
 
 type Users struct {
 	dataDir      string

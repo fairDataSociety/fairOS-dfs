@@ -29,7 +29,7 @@ import (
 )
 
 func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	name := r.FormValue("table_name")
 	if name == "" {
 		h.logger.Errorf("kv loadcsv: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "kv loadcsv: \"name\" argument missing")

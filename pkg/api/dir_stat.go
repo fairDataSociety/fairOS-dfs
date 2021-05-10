@@ -27,12 +27,13 @@ import (
 )
 
 func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
-	dir := r.FormValue("dir")
-	if dir == "" {
-		h.logger.Errorf("dir stat: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "dir stat: \"dir\" argument missing")
+	keys, ok := r.URL.Query()["dir_path"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("dir present: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "dir present: \"dir_path\" argument missing")
 		return
 	}
+	dir := keys[0]
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
@@ -48,7 +49,7 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// stat directory
-	ds, err := h.dfsAPI.DirectoryStat(dir, sessionId, false)
+	ds, err := h.dfsAPI.DirectoryStat(dir, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {

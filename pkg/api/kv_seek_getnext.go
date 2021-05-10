@@ -17,9 +17,12 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -27,28 +30,44 @@ import (
 )
 
 func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("kv delete: invalid request body type")
+		jsonhttp.BadRequest(w, "kv delete: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var kvReq common.KVRequest
+	err := decoder.Decode(&kvReq)
+	if err != nil {
+		h.logger.Errorf("kv delete: could not decode arguments")
+		jsonhttp.BadRequest(w, "kv delete: could not decode arguments")
+		return
+	}
+
+	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv seek: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "kv seek: \"name\" argument missing")
 		return
 	}
 
-	start := r.FormValue("start")
+	start := kvReq.StartPrefix
 	if start == "" {
 		h.logger.Errorf("kv seek: \"start\" argument missing")
 		jsonhttp.BadRequest(w, "kv seek: \"start\" argument missing")
 		return
 	}
 
-	end := r.FormValue("end")
+	end := kvReq.EndPrefix
 	if end == "" {
 		h.logger.Errorf("kv seek: \"end\" argument missing")
 		jsonhttp.BadRequest(w, "kv seek: \"end\" argument missing")
 		return
 	}
 
-	limit := r.FormValue("limit")
+	limit := kvReq.Limit
 	if limit == "" {
 		h.logger.Errorf("kv seek: \"limit\" argument missing")
 		jsonhttp.BadRequest(w, "kv limit: \"start\" argument missing")
@@ -84,7 +103,14 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) KVGetNextHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	keys, ok := r.URL.Query()["table_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("kv get_next: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"sharing_ref\" argument missing")
+		return
+	}
+
+	name := keys[0]
 	if name == "" {
 		h.logger.Errorf("kv get_next: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "kv get_next: \"name\" argument missing")

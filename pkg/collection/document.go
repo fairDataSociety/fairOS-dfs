@@ -1276,7 +1276,7 @@ func (d *Document) DocBatchWrite(docBatch *DocBatch, podFile string) error {
 
 func (d *Document) DocFileIndex(dbName, podFile string) error {
 	d.logger.Info("Indexing file to db: ", podFile, dbName)
-	reader, _, _, err := d.file.OpenFileForIndex(podFile)
+	reader, err := d.file.OpenFileForIndex(podFile)
 	if err != nil {
 		d.logger.Errorf("Indexing file: ", err.Error())
 		return err
@@ -1328,7 +1328,7 @@ func (d *Document) DocFileIndex(dbName, podFile string) error {
 }
 
 func (d *Document) getLineFromFile(podFile string, seekOffset uint64) ([]byte, error) {
-	reader, _, _, err := d.file.OpenFileForIndex(podFile)
+	reader, err := d.file.OpenFileForIndex(podFile)
 	if err != nil {
 		d.logger.Errorf("getting  line: ", err.Error())
 		return nil, err

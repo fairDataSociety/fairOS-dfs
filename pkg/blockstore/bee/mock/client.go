@@ -22,9 +22,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"net/http"
 	"sync"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/ethersphere/bee/pkg/soc"
 	"github.com/ethersphere/bee/pkg/swarm"
@@ -46,7 +47,7 @@ func (m *MockBeeClient) CheckConnection() bool {
 	return true
 }
 
-func (m *MockBeeClient) UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error) {
+func (m *MockBeeClient) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	ch, err := utils.NewChunkWithoutSpan(data)

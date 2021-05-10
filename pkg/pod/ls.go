@@ -16,13 +16,6 @@ limitations under the License.
 
 package pod
 
-import (
-	"strings"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-)
-
 func (p *Pod) ListPods() ([]string, []string, error) {
 	pods, sharedPods, err := p.loadUserPods()
 	if err != nil {
@@ -40,31 +33,4 @@ func (p *Pod) ListPods() ([]string, []string, error) {
 	}
 
 	return listPods, listSharedPods, nil
-}
-
-func (p *Pod) ListEntiesInDir(podName, dirName string) ([]dir.DirOrFileEntry, error) {
-	if !p.isPodOpened(podName) {
-		return nil, ErrPodNotOpened
-	}
-
-	info, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return nil, err
-	}
-
-	directory := info.GetDirectory()
-	printNames := false
-	path := dirName // dirname is supplied in API, in REPL it is picked up from the current dir
-	if path == "" {
-		printNames = true
-		path = info.GetCurrentDirPathAndName()
-		if info.IsCurrentDirRoot() {
-			path = info.GetCurrentPodPathAndName()
-		}
-	} else {
-		path = utils.PathSeperator + podName + path
-		path = strings.TrimSuffix(path, utils.PathSeperator)
-	}
-
-	return directory.ListDir(podName, path, printNames), nil
 }

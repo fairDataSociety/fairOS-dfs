@@ -18,7 +18,6 @@ package pod
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -26,7 +25,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 const (
@@ -57,32 +55,30 @@ func (p *Pod) GetClient() blockstore.Client {
 	return p.client
 }
 
-func (p *Pod) addPodToPodMap(name string, podInfo *Info) {
+func (p *Pod) addPodToPodMap(podName string, podInfo *Info) {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
-	if !strings.HasPrefix(name, "/") {
-		name = utils.PathSeperator + name
-	}
-	p.podMap[name] = podInfo
+	p.podMap[podName] = podInfo
 }
 
-func (p *Pod) removePodFromPodMap(name string) {
+func (p *Pod) removePodFromPodMap(podName string) {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
-	if !strings.HasPrefix(name, "/") {
-		name = utils.PathSeperator + name
-	}
-	delete(p.podMap, name)
+	delete(p.podMap, podName)
 }
 
-func (p *Pod) GetPodInfoFromPodMap(name string) (*Info, error) {
+func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, error) {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
-	if !strings.HasPrefix(name, "/") {
-		name = utils.PathSeperator + name
-	}
-	if podInfo, ok := p.podMap[name]; ok {
+	if podInfo, ok := p.podMap[podName]; ok {
 		return podInfo, nil
 	}
-	return nil, fmt.Errorf("could not find pod: %s", name)
+	return nil, fmt.Errorf("could not find pod: %s", podName)
+}
+
+func (p *Pod) GetFeed() *feed.API {
+	return p.fd
+}
+func (p *Pod) GetAccount() *account.Account {
+	return p.acc
 }

@@ -19,6 +19,7 @@ package user
 import "net/http"
 
 func (u *Users) LogoutUser(userName, dataDir, sessionId string, response http.ResponseWriter) error {
+	// basic validations
 	if !u.IsUsernameAvailable(userName, dataDir) {
 		return ErrInvalidUserName
 	}
@@ -27,6 +28,7 @@ func (u *Users) LogoutUser(userName, dataDir, sessionId string, response http.Re
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
 	}
+
 	err := u.Logout(sessionId, response)
 	if err != nil {
 		return err

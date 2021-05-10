@@ -25,22 +25,18 @@ import (
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
 func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) error {
-	if u.IsUserLoggedIn(sessionId) {
-		return ErrUserAlreadyLoggedIn
-	}
-
+	// check if username is available (user created)
 	if !u.IsUsernameAvailable(userName, dataDir) {
 		return ErrInvalidUserName
 	}
 
+	// create account
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
-	fd := feed.New(accountInfo, client, u.logger)
-	file := f.NewFile(userName, client, fd, accountInfo, u.logger)
 
 	// load address from userName
 	address, err := u.getAddressFromUserName(userName, dataDir)
@@ -49,6 +45,7 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	}
 
 	// load encrypted mnemonic from Swarm
+	fd := feed.New(accountInfo, client, u.logger)
 	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, address, fd)
 	if err != nil {
 		return err
@@ -61,8 +58,15 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 		}
 		return err
 	}
-	dir := d.NewDirectory(userName, client, fd, accountInfo, file, u.logger)
 
+	if u.IsUserLoggedIn(sessionId) {
+		return ErrUserAlreadyLoggedIn
+	}
+
+	// Instantiate pod, dir & file objects
+	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
+	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
+	pod := p.NewPod(u.client, fd, acc, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}
@@ -74,14 +78,14 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 		account:   acc,
 		file:      file,
 		dir:       dir,
-		pods:      pod.NewPod(u.client, fd, acc, u.logger),
+		pod:       pod,
 	}
 
 	// set cookie and add user to map
-	return u.Login(ui, response)
+	return u.addUserAndSessionToMap(ui, response)
 }
 
-func (u *Users) Login(ui *Info, response http.ResponseWriter) error {
+func (u *Users) addUserAndSessionToMap(ui *Info, response http.ResponseWriter) error {
 	if response != nil {
 		err := cookie.SetSession(ui.GetSessionId(), response, u.cookieDomain)
 		if err != nil {
@@ -93,13 +97,15 @@ func (u *Users) Login(ui *Info, response http.ResponseWriter) error {
 }
 
 func (u *Users) Logout(sessionId string, response http.ResponseWriter) error {
-	yes := u.isUserPresentInMap(sessionId)
-	if !yes {
+	// check if session or user present in map
+	if !u.isUserPresentInMap(sessionId) {
 		return ErrUserNotLoggedIn
 	}
 
 	// remove from the user map
 	u.removeUserFromMap(sessionId)
+
+	// clear cookie
 	if response != nil {
 		cookie.ClearSession(response)
 	}

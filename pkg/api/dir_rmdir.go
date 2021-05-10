@@ -17,7 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"resenje.org/jsonhttp"
 
@@ -27,10 +30,33 @@ import (
 )
 
 func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) {
-	dir := r.FormValue("dir")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("rmdir: invalid request body type")
+		jsonhttp.BadRequest(w, "rmdir: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var fsReq common.FileSystemRequest
+	err := decoder.Decode(&fsReq)
+	if err != nil {
+		h.logger.Errorf("rmdir: could not decode arguments")
+		jsonhttp.BadRequest(w, "rmdir: could not decode arguments")
+		return
+	}
+
+	dir := fsReq.DirectoryName
 	if dir == "" {
 		h.logger.Errorf("rmdir: \"dir\" argument missing")
 		jsonhttp.BadRequest(w, "rmdir: \"dir\" argument missing")
+		return
+	}
+
+	path := fsReq.DirectoryPath
+	if path == "" {
+		h.logger.Errorf("rmdir: \"path\" argument missing")
+		jsonhttp.BadRequest(w, "rmdir: \"path\" argument missing")
 		return
 	}
 
@@ -48,7 +74,7 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// remove directory
-	err = h.dfsAPI.RmDir(dir, sessionId)
+	err = h.dfsAPI.RmDir(path, dir, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
