@@ -17,6 +17,8 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -26,7 +28,23 @@ import (
 )
 
 func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("kv create: invalid request body type")
+		jsonhttp.BadRequest(w, "kv create: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var kvReq common.KVRequest
+	err := decoder.Decode(&kvReq)
+	if err != nil {
+		h.logger.Errorf("kv create: could not decode arguments")
+		jsonhttp.BadRequest(w, "kv create: could not decode arguments")
+		return
+	}
+
+	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv create: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "kv create: \"name\" argument missing")

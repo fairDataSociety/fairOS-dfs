@@ -36,3 +36,12 @@ type FileSystemRequest struct {
 	FileName      string `json:"file_name,omitempty"`
 	Destination   string `json:"dest_user,omitempty"`
 }
+
+type KVRequest struct {
+	TableName      string `json:"table_name,omitempty"`
+	Key            string `json:"key,omitempty"`
+	Value          string `json:"value,omitempty"`
+	StartPrefix    string `json:"start_prefix,omitempty"`
+	EndPrefix      string `json:"end_prefix,omitempty"`
+	Limit          string `json:"limit,omitempty"`
+}

@@ -17,10 +17,19 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/mbtiles"
+	"github.com/tinygrasshopper/bettercsv"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/c-bata/go-prompt"
@@ -51,7 +60,6 @@ const (
 	apiUserPresent     = APIVersion + "/user/present"
 	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
 	apiUserLogout      = APIVersion + "/user/logout"
-	apiUserAvatar      = APIVersion + "/user/avatar"
 	apiUserExport      = APIVersion + "/user/export"
 	apiUserDelete      = APIVersion + "/user/delete"
 	apiUserStat        = APIVersion + "/user/stat"
@@ -84,7 +92,6 @@ const (
 	apiKVCount         = APIVersion + "/kv/count"
 	apiKVEntryPut      = APIVersion + "/kv/entry/put"
 	apiKVEntryGet      = APIVersion + "/kv/entry/get"
-	apiKVEntryNewGet   = APIVersion + "/kv/entry/newget"
 	apiKVEntryDelete   = APIVersion + "/kv/entry/del"
 	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
 	apiKVSeek          = APIVersion + "/kv/seek"
@@ -412,672 +419,430 @@ func executor(in string) {
 			fmt.Println("invalid pod command!!")
 			help()
 		} // end of pod commands
-	//case "kv":
-	//	if currentUser == "" {
-	//		fmt.Println("login as a user to execute these commands")
-	//		return
-	//	}
-	//	if len(blocks) < 2 {
-	//		log.Println("invalid command.")
-	//		help()
-	//		return
-	//	}
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	switch blocks[1] {
-	//	case "new":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiKVCreate, args)
-	//		if err != nil {
-	//			fmt.Println("kv new: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "delete":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		data, err := fdfsAPI.postReq(http.MethodDelete, apiKVDelete, args)
-	//		if err != nil {
-	//			fmt.Println("kv new: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "ls":
-	//		data, err := fdfsAPI.postReq(http.MethodGet, apiKVList, nil)
-	//		if err != nil {
-	//			fmt.Println("kv new: ", err)
-	//			return
-	//		}
-	//		var resp api.Collections
-	//		err = json.Unmarshal(data, &resp)
-	//		if err != nil {
-	//			fmt.Println("kv ls: ", err)
-	//			return
-	//		}
-	//		for _, table := range resp.Tables {
-	//			fmt.Println("<KV>: ", table.Name)
-	//		}
-	//		currentPrompt = getCurrentPrompt()
-	//	case "open":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiKVOpen, args)
-	//		if err != nil {
-	//			fmt.Println("kv open: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "count":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiKVCount, args)
-	//		if err != nil {
-	//			fmt.Println("kv open: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "put":
-	//		if len(blocks) < 5 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		key := blocks[3]
-	//		value := blocks[4]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		args["key"] = key
-	//		args["value"] = value
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiKVEntryPut, args)
-	//		if err != nil {
-	//			fmt.Println("kv put: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "get":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		key := blocks[3]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		args["key"] = key
-	//		data, err := fdfsAPI.postReq(http.MethodGet, apiKVEntryGet, args)
-	//		if err != nil {
-	//			fmt.Println("kv get: ", err)
-	//			return
-	//		}
-	//		var resp api.KVResponse
-	//		err = json.Unmarshal(data, &resp)
-	//		if err != nil {
-	//			fmt.Println("kv get: ", err)
-	//			return
-	//		}
-	//
-	//		rdr := bytes.NewReader(resp.Values)
-	//		csvReader := bettercsv.NewReader(rdr)
-	//		csvReader.Comma = ','
-	//		csvReader.Quote = '"'
-	//		content, err := csvReader.ReadAll()
-	//		if err != nil {
-	//			fmt.Println("kv get: ", err)
-	//			return
-	//		}
-	//		values := content[0]
-	//		for i, name := range resp.Names {
-	//			fmt.Println(name + " : " + values[i])
-	//		}
-	//		currentPrompt = getCurrentPrompt()
-	//
-	//	case "newget":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		key := blocks[3]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		args["key"] = key
-	//		fullUrl := apiKVEntryNewGet + "/" + tableName + "/" + key
-	//		data, err := fdfsAPI.postReq(http.MethodGet, fullUrl, args)
-	//		if err != nil {
-	//			fmt.Println("kv get: ", err)
-	//			return
-	//		}
-	//		fmt.Println(len(data))
-	//		currentPrompt = getCurrentPrompt()
-	//	case "del":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		key := blocks[3]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		args["key"] = key
-	//		data, err := fdfsAPI.postReq(http.MethodDelete, apiKVEntryDelete, args)
-	//		if err != nil {
-	//			fmt.Println("kv del: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "loadcsv":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		fileName := filepath.Base(blocks[3])
-	//		localCsvFile := blocks[3]
-	//
-	//		fd, err := os.Open(localCsvFile)
-	//		if err != nil {
-	//			fmt.Println("loadcsv failed: ", err)
-	//			return
-	//		}
-	//		fi, err := fd.Stat()
-	//		if err != nil {
-	//			fmt.Println("loadcsv failed: ", err)
-	//			return
-	//		}
-	//
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		data, err := fdfsAPI.uploadMultipartFile(apiKVLoadCSV, fileName, fi.Size(), fd, args, "csv", "false")
-	//		if err != nil {
-	//			fmt.Println("loadcsv: ", err)
-	//			return
-	//		}
-	//		var resp api.UploadFileResponse
-	//		err = json.Unmarshal(data, &resp)
-	//		if err != nil {
-	//			fmt.Println("loadcsv: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "loadmbtiles":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		mbtilesFile := blocks[3]
-	//		mbtFileName := filepath.Base(mbtilesFile)
-	//		mbtExtension := filepath.Ext(mbtFileName)
-	//
-	//		if mbtExtension != ".mbtiles" {
-	//			fmt.Println("loadmbtiles: Invalid .mbtiles file")
-	//			return
-	//		}
-	//
-	//		db, err := mbtiles.NewDB(mbtilesFile)
-	//		if err != nil {
-	//			fmt.Println("loadmbtiles: error reading mbtiles file : ", mbtilesFile, err.Error())
-	//			return
-	//		}
-	//
-	//		rows, err := db.GetRowForExport()
-	//		if err != nil {
-	//			fmt.Println("loadmbtile: error getting rows from db : ", err.Error())
-	//			return
-	//		}
-	//
-	//		count := 0
-	//		for true {
-	//			zoom, x, y, data, err := db.GetNext(rows)
-	//			if err != nil {
-	//				rows.Close()
-	//				break
-	//			}
-	//
-	//			if zoom == -1 && x == -1 && y == -1 {
-	//				rows.Close()
-	//				break
-	//			}
-	//
-	//			key := fmt.Sprintf("%d_%d_%d.pbf", zoom, x, y+1)
-	//			value := data
-	//
-	//			if data == nil {
-	//				rows.Close()
-	//				break
-	//			}
-	//
-	//			args := make(map[string]string)
-	//			args["name"] = tableName
-	//			args["key"] = key
-	//			args["value"] = string(value)
-	//			_, err = fdfsAPI.postReq(http.MethodPost, apiKVEntryPut, args)
-	//			if err != nil {
-	//				fmt.Println("loadmbtiles: put error ", err)
-	//				rows.Close()
-	//				break
-	//			}
-	//			count++
-	//		}
-	//		fmt.Println("added " + string(count) + " rows")
-	//		currentPrompt = getCurrentPrompt()
-	//	case "seek":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//
-	//		var start string
-	//		var end string
-	//		var limit string
-	//		if len(blocks) >= 4 {
-	//			start = blocks[3]
-	//		}
-	//		if len(blocks) >= 5 {
-	//			end = blocks[4]
-	//		}
-	//
-	//		if len(blocks) >= 6 {
-	//			limit = blocks[5]
-	//		}
-	//
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		args["start"] = start
-	//		args["end"] = end
-	//		args["limit"] = limit
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiKVSeek, args)
-	//		if err != nil {
-	//			fmt.Println("kv seek: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "getnext":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		data, err := fdfsAPI.postReq(http.MethodGet, apiKVSeekNext, args)
-	//		if err != nil && !errors.Is(err, collection.ErrNoNextElement) {
-	//			fmt.Println("kv get_next: ", err)
-	//			return
-	//		}
-	//
-	//		if errors.Is(err, collection.ErrNoNextElement) {
-	//			fmt.Println("no next element")
-	//		} else {
-	//			var resp api.KVResponse
-	//			err = json.Unmarshal(data, &resp)
-	//			if err != nil {
-	//				fmt.Println("kv get_next: ", err)
-	//				return
-	//			}
-	//
-	//			rdr := bytes.NewReader(resp.Values)
-	//			csvReader := bettercsv.NewReader(rdr)
-	//			csvReader.Comma = ','
-	//			csvReader.Quote = '"'
-	//			content, err := csvReader.ReadAll()
-	//			if err != nil {
-	//				fmt.Println("kv get_next: ", err)
-	//				return
-	//			}
-	//			values := content[0]
-	//			for i, name := range resp.Names {
-	//				fmt.Println(name + " : " + values[i])
-	//			}
-	//		}
-	//		currentPrompt = getCurrentPrompt()
-	//	default:
-	//		fmt.Println("invalid kv command!!")
-	//		help()
-	//	}
-	//case "doc":
-	//	if currentUser == "" {
-	//		fmt.Println("login as a user to execute these commands")
-	//		return
-	//	}
-	//	if len(blocks) < 2 {
-	//		log.Println("invalid command.")
-	//		help()
-	//		return
-	//	}
-	//	if !isPodOpened() {
-	//		return
-	//	}
-	//	switch blocks[1] {
-	//	case "new":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		if len(blocks) >= 4 {
-	//			if blocks[3] == "none" {
-	//				args["si"] = ""
-	//			} else {
-	//				args["si"] = blocks[3]
-	//			}
-	//		}
-	//		if len(blocks) == 5 {
-	//			args["mutable"] = blocks[4]
-	//		}
-	//
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiDocCreate, args)
-	//		if err != nil {
-	//			fmt.Println("doc new: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "ls":
-	//		data, err := fdfsAPI.postReq(http.MethodGet, apiDocList, nil)
-	//		if err != nil {
-	//			fmt.Println("doc ls: ", err)
-	//			return
-	//		}
-	//		var resp api.DocumentDBs
-	//		err = json.Unmarshal(data, &resp)
-	//		if err != nil {
-	//			fmt.Println("doc ls: ", err)
-	//			return
-	//		}
-	//		for _, table := range resp.Tables {
-	//			fmt.Println("<DOC>: ", table.Name)
-	//			for fn, ft := range table.IndexedColumns {
-	//				fmt.Println("     SI:", fn, ft)
-	//			}
-	//		}
-	//		currentPrompt = getCurrentPrompt()
-	//	case "open":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiDocOpen, args)
-	//		if err != nil {
-	//			fmt.Println("doc open: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "count":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		if len(blocks) == 4 {
-	//			args["expr"] = blocks[3]
-	//		}
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiDocCount, args)
-	//		if err != nil {
-	//			fmt.Println("doc count: ", err)
-	//			return
-	//		}
-	//		count, err := strconv.ParseInt(string(data), 10, 64)
-	//		if err != nil {
-	//			fmt.Println("doc count: ", err)
-	//			return
-	//		}
-	//		fmt.Println("Count = ", count)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "delete":
-	//		if len(blocks) < 3 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		data, err := fdfsAPI.postReq(http.MethodDelete, apiDocDelete, args)
-	//		if err != nil {
-	//			fmt.Println("doc del: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "find":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		expr := blocks[3]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		args["expr"] = expr
-	//		if len(blocks) == 5 {
-	//			args["limit"] = blocks[4]
-	//		} else {
-	//			args["limit"] = "10"
-	//		}
-	//		data, err := fdfsAPI.postReq(http.MethodGet, apiDocFind, args)
-	//		if err != nil {
-	//			fmt.Println("doc find: ", err)
-	//			return
-	//		}
-	//		var docs api.DocFindResponse
-	//		err = json.Unmarshal(data, &docs)
-	//		if err != nil {
-	//			fmt.Println("doc find: ", err)
-	//			return
-	//		}
-	//		for i, doc := range docs.Docs {
-	//			fmt.Println("--- doc ", i)
-	//			var d map[string]interface{}
-	//			err = json.Unmarshal(doc, &d)
-	//			if err != nil {
-	//				fmt.Println("doc find: ", err)
-	//				return
-	//			}
-	//			for k, v := range d {
-	//				var valStr string
-	//				switch val := v.(type) {
-	//				case string:
-	//					fmt.Println(k, "=", val)
-	//				case float64:
-	//					valStr = fmt.Sprintf("%g", val)
-	//					fmt.Println(k, "=", valStr)
-	//				case map[string]interface{}:
-	//					fmt.Println(k + ":")
-	//					for k1, v1 := range val {
-	//						switch val1 := v1.(type) {
-	//						case string:
-	//							fmt.Println("   "+k1+" = ", val1)
-	//						case float64:
-	//							valStr = fmt.Sprintf("%g", val1)
-	//							fmt.Println("   "+k1+" = ", valStr)
-	//						default:
-	//							fmt.Println("   "+k1+" = ", val1)
-	//						}
-	//					}
-	//				default:
-	//					fmt.Println(k, "=", val)
-	//				}
-	//			}
-	//
-	//		}
-	//		currentPrompt = getCurrentPrompt()
-	//	case "put":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		value := blocks[3]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		args["doc"] = value
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiDocEntryPut, args)
-	//		if err != nil {
-	//			fmt.Println("doc put: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "get":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		idValue := blocks[3]
-	//		//args := make(map[string]string)
-	//		//args["name"] = tableName
-	//		//args["id"] = idValue
-	//		queryStr := apiDocEntryGet + "/" + tableName + "/" + idValue
-	//		data, err := fdfsAPI.postReq(http.MethodGet, queryStr, nil)
-	//		if err != nil {
-	//			fmt.Println("doc get: ", err)
-	//			return
-	//		}
-	//
-	//		var doc api.DocGetResponse
-	//		err = json.Unmarshal(data, &doc)
-	//		if err != nil {
-	//			fmt.Println("doc get: ", err)
-	//			return
-	//		}
-	//		var d map[string]interface{}
-	//		err = json.Unmarshal(doc.Doc, &d)
-	//		if err != nil {
-	//			fmt.Println("doc get: ", err)
-	//			return
-	//		}
-	//		for k, v := range d {
-	//			fmt.Println(k, "=", v)
-	//		}
-	//		currentPrompt = getCurrentPrompt()
-	//	case "del":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		idValue := blocks[3]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		args["id"] = idValue
-	//		data, err := fdfsAPI.postReq(http.MethodDelete, apiDocEntryDel, args)
-	//		if err != nil {
-	//			fmt.Println("doc del: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "loadjson":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		fileName := filepath.Base(blocks[3])
-	//		localJsonFile := blocks[3]
-	//		fd, err := os.Open(localJsonFile)
-	//		if err != nil {
-	//			fmt.Println("loadjson failed: ", err)
-	//			return
-	//		}
-	//		fi, err := fd.Stat()
-	//		if err != nil {
-	//			fmt.Println("loadjson failed: ", err)
-	//			return
-	//		}
-	//
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		data, err := fdfsAPI.uploadMultipartFile(apiDocLoadJson, fileName, fi.Size(), fd, args, "json", "false")
-	//		if err != nil {
-	//			fmt.Println("loadjson: ", err)
-	//			return
-	//		}
-	//		var resp api.UploadFileResponse
-	//		err = json.Unmarshal(data, &resp)
-	//		if err != nil {
-	//			fmt.Println("loadjson: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	case "indexjson":
-	//		if len(blocks) < 4 {
-	//			fmt.Println("invalid command. Missing \"name\" argument ")
-	//			return
-	//		}
-	//		tableName := blocks[2]
-	//		podJsonFile := blocks[3]
-	//		args := make(map[string]string)
-	//		args["name"] = tableName
-	//		args["file"] = podJsonFile
-	//		data, err := fdfsAPI.postReq(http.MethodPost, apiDocIndexJson, args)
-	//		if err != nil {
-	//			fmt.Println("index json: ", err)
-	//			return
-	//		}
-	//		message := strings.ReplaceAll(string(data), "\n", "")
-	//		fmt.Println(message)
-	//		currentPrompt = getCurrentPrompt()
-	//	default:
-	//		fmt.Println("Invalid doc coammand")
-	//		currentPrompt = getCurrentPrompt()
-	//	}
+	case "kv":
+		if currentUser == "" {
+			fmt.Println("login as a user to execute these commands")
+			return
+		}
+		if len(blocks) < 2 {
+			log.Println("invalid command.")
+			help()
+			return
+		}
+		if !isPodOpened() {
+			return
+		}
+		switch blocks[1] {
+		case "new":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			kvNew(tableName)
+			currentPrompt = getCurrentPrompt()
+		case "delete":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			kvDelete(tableName)
+			currentPrompt = getCurrentPrompt()
+		case "ls":
+			kvList()
+			currentPrompt = getCurrentPrompt()
+		case "open":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			kvOpen(tableName)
+			currentPrompt = getCurrentPrompt()
+		case "count":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			kvCount(tableName)
+			currentPrompt = getCurrentPrompt()
+		case "put":
+			if len(blocks) < 5 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			value := blocks[4]
+			kvPut(tableName, key, value)
+			currentPrompt = getCurrentPrompt()
+		case "get":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			kvget(tableName, key)
+			currentPrompt = getCurrentPrompt()
+		case "del":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			key := blocks[3]
+			kvDel(tableName, key)
+			currentPrompt = getCurrentPrompt()
+		case "loadcsv":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			fileName := filepath.Base(blocks[3])
+			localCsvFile := blocks[3]
+			loadcsv(tableName, fileName, localCsvFile)
+			currentPrompt = getCurrentPrompt()
+		case "seek":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			var start string
+			var end string
+			var limit string
+			if len(blocks) >= 4 {
+				start = blocks[3]
+			}
+			if len(blocks) >= 5 {
+				end = blocks[4]
+			}
+
+			if len(blocks) >= 6 {
+				limit = blocks[5]
+			}
+			kvSeek(tableName, start, end, limit)
+			currentPrompt = getCurrentPrompt()
+		case "getnext":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			kvGetNext(tableName)
+			currentPrompt = getCurrentPrompt()
+		default:
+			fmt.Println("invalid kv command!!")
+			help()
+		}
+	case "doc":
+		if currentUser == "" {
+			fmt.Println("login as a user to execute these commands")
+			return
+		}
+		if len(blocks) < 2 {
+			log.Println("invalid command.")
+			help()
+			return
+		}
+		if !isPodOpened() {
+			return
+		}
+		switch blocks[1] {
+		case "new":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			if len(blocks) >= 4 {
+				if blocks[3] == "none" {
+					args["si"] = ""
+				} else {
+					args["si"] = blocks[3]
+				}
+			}
+			if len(blocks) == 5 {
+				args["mutable"] = blocks[4]
+			}
+
+			data, err := fdfsAPI.postReq(http.MethodPost, apiDocCreate, args)
+			if err != nil {
+				fmt.Println("doc new: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "ls":
+			data, err := fdfsAPI.postReq(http.MethodGet, apiDocList, nil)
+			if err != nil {
+				fmt.Println("doc ls: ", err)
+				return
+			}
+			var resp api.DocumentDBs
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("doc ls: ", err)
+				return
+			}
+			for _, table := range resp.Tables {
+				fmt.Println("<DOC>: ", table.Name)
+				for fn, ft := range table.IndexedColumns {
+					fmt.Println("     SI:", fn, ft)
+				}
+			}
+			currentPrompt = getCurrentPrompt()
+		case "open":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.postReq(http.MethodPost, apiDocOpen, args)
+			if err != nil {
+				fmt.Println("doc open: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "count":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+
+			args := make(map[string]string)
+			args["name"] = tableName
+			if len(blocks) == 4 {
+				args["expr"] = blocks[3]
+			}
+			data, err := fdfsAPI.postReq(http.MethodPost, apiDocCount, args)
+			if err != nil {
+				fmt.Println("doc count: ", err)
+				return
+			}
+			count, err := strconv.ParseInt(string(data), 10, 64)
+			if err != nil {
+				fmt.Println("doc count: ", err)
+				return
+			}
+			fmt.Println("Count = ", count)
+			currentPrompt = getCurrentPrompt()
+		case "delete":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.postReq(http.MethodDelete, apiDocDelete, args)
+			if err != nil {
+				fmt.Println("doc del: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "find":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			expr := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["expr"] = expr
+			if len(blocks) == 5 {
+				args["limit"] = blocks[4]
+			} else {
+				args["limit"] = "10"
+			}
+			data, err := fdfsAPI.postReq(http.MethodGet, apiDocFind, args)
+			if err != nil {
+				fmt.Println("doc find: ", err)
+				return
+			}
+			var docs api.DocFindResponse
+			err = json.Unmarshal(data, &docs)
+			if err != nil {
+				fmt.Println("doc find: ", err)
+				return
+			}
+			for i, doc := range docs.Docs {
+				fmt.Println("--- doc ", i)
+				var d map[string]interface{}
+				err = json.Unmarshal(doc, &d)
+				if err != nil {
+					fmt.Println("doc find: ", err)
+					return
+				}
+				for k, v := range d {
+					var valStr string
+					switch val := v.(type) {
+					case string:
+						fmt.Println(k, "=", val)
+					case float64:
+						valStr = fmt.Sprintf("%g", val)
+						fmt.Println(k, "=", valStr)
+					case map[string]interface{}:
+						fmt.Println(k + ":")
+						for k1, v1 := range val {
+							switch val1 := v1.(type) {
+							case string:
+								fmt.Println("   "+k1+" = ", val1)
+							case float64:
+								valStr = fmt.Sprintf("%g", val1)
+								fmt.Println("   "+k1+" = ", valStr)
+							default:
+								fmt.Println("   "+k1+" = ", val1)
+							}
+						}
+					default:
+						fmt.Println(k, "=", val)
+					}
+				}
+
+			}
+			currentPrompt = getCurrentPrompt()
+		case "put":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			value := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["doc"] = value
+			data, err := fdfsAPI.postReq(http.MethodPost, apiDocEntryPut, args)
+			if err != nil {
+				fmt.Println("doc put: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "get":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			idValue := blocks[3]
+			//args := make(map[string]string)
+			//args["name"] = tableName
+			//args["id"] = idValue
+			queryStr := apiDocEntryGet + "/" + tableName + "/" + idValue
+			data, err := fdfsAPI.postReq(http.MethodGet, queryStr, nil)
+			if err != nil {
+				fmt.Println("doc get: ", err)
+				return
+			}
+
+			var doc api.DocGetResponse
+			err = json.Unmarshal(data, &doc)
+			if err != nil {
+				fmt.Println("doc get: ", err)
+				return
+			}
+			var d map[string]interface{}
+			err = json.Unmarshal(doc.Doc, &d)
+			if err != nil {
+				fmt.Println("doc get: ", err)
+				return
+			}
+			for k, v := range d {
+				fmt.Println(k, "=", v)
+			}
+			currentPrompt = getCurrentPrompt()
+		case "del":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			idValue := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["id"] = idValue
+			data, err := fdfsAPI.postReq(http.MethodDelete, apiDocEntryDel, args)
+			if err != nil {
+				fmt.Println("doc del: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "loadjson":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			fileName := filepath.Base(blocks[3])
+			localJsonFile := blocks[3]
+			fd, err := os.Open(localJsonFile)
+			if err != nil {
+				fmt.Println("loadjson failed: ", err)
+				return
+			}
+			fi, err := fd.Stat()
+			if err != nil {
+				fmt.Println("loadjson failed: ", err)
+				return
+			}
+
+			args := make(map[string]string)
+			args["name"] = tableName
+			data, err := fdfsAPI.uploadMultipartFile(apiDocLoadJson, fileName, fi.Size(), fd, args, "json", "false")
+			if err != nil {
+				fmt.Println("loadjson: ", err)
+				return
+			}
+			var resp api.UploadFileResponse
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				fmt.Println("loadjson: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		case "indexjson":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			tableName := blocks[2]
+			podJsonFile := blocks[3]
+			args := make(map[string]string)
+			args["name"] = tableName
+			args["file"] = podJsonFile
+			data, err := fdfsAPI.postReq(http.MethodPost, apiDocIndexJson, args)
+			if err != nil {
+				fmt.Println("index json: ", err)
+				return
+			}
+			message := strings.ReplaceAll(string(data), "\n", "")
+			fmt.Println(message)
+			currentPrompt = getCurrentPrompt()
+		default:
+			fmt.Println("Invalid doc coammand")
+			currentPrompt = getCurrentPrompt()
+		}
 	case "cd":
 		if !isPodOpened() {
 			return
