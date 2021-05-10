@@ -38,10 +38,22 @@ type FileSystemRequest struct {
 }
 
 type KVRequest struct {
-	TableName      string `json:"table_name,omitempty"`
-	Key            string `json:"key,omitempty"`
-	Value          string `json:"value,omitempty"`
-	StartPrefix    string `json:"start_prefix,omitempty"`
-	EndPrefix      string `json:"end_prefix,omitempty"`
-	Limit          string `json:"limit,omitempty"`
+	TableName   string `json:"table_name,omitempty"`
+	Key         string `json:"key,omitempty"`
+	Value       string `json:"value,omitempty"`
+	StartPrefix string `json:"start_prefix,omitempty"`
+	EndPrefix   string `json:"end_prefix,omitempty"`
+	Limit       string `json:"limit,omitempty"`
+}
+
+type DocRequest struct {
+	TableName     string `json:"table_name,omitempty"`
+	ID            string `json:"id,omitempty"`
+	Document      string `json:"doc,omitempty"`
+	SimpleIndex   string `json:"si,omitempty"`
+	CompoundIndex string `json:"ci,omitempty"`
+	Expression    string `json:"expr,omitempty"`
+	Mutable       string `json:"mutable,omitempty"`
+	Limit         string `json:"limit,omitempty"`
+	FileName      string `json:"file_name,omitempty"`
 }

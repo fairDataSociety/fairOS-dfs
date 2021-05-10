@@ -17,19 +17,10 @@ limitations under the License.
 package cmd
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/mbtiles"
-	"github.com/tinygrasshopper/bettercsv"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/c-bata/go-prompt"
@@ -559,45 +550,22 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			args := make(map[string]string)
-			args["name"] = tableName
+			si := ""
+			mutable := ""
 			if len(blocks) >= 4 {
 				if blocks[3] == "none" {
-					args["si"] = ""
+					si = ""
 				} else {
-					args["si"] = blocks[3]
+					si = blocks[3]
 				}
 			}
 			if len(blocks) == 5 {
-				args["mutable"] = blocks[4]
+				mutable = blocks[4]
 			}
-
-			data, err := fdfsAPI.postReq(http.MethodPost, apiDocCreate, args)
-			if err != nil {
-				fmt.Println("doc new: ", err)
-				return
-			}
-			message := strings.ReplaceAll(string(data), "\n", "")
-			fmt.Println(message)
+			docNew(tableName, si, mutable)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
-			data, err := fdfsAPI.postReq(http.MethodGet, apiDocList, nil)
-			if err != nil {
-				fmt.Println("doc ls: ", err)
-				return
-			}
-			var resp api.DocumentDBs
-			err = json.Unmarshal(data, &resp)
-			if err != nil {
-				fmt.Println("doc ls: ", err)
-				return
-			}
-			for _, table := range resp.Tables {
-				fmt.Println("<DOC>: ", table.Name)
-				for fn, ft := range table.IndexedColumns {
-					fmt.Println("     SI:", fn, ft)
-				}
-			}
+			docList()
 			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
@@ -605,15 +573,7 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			args := make(map[string]string)
-			args["name"] = tableName
-			data, err := fdfsAPI.postReq(http.MethodPost, apiDocOpen, args)
-			if err != nil {
-				fmt.Println("doc open: ", err)
-				return
-			}
-			message := strings.ReplaceAll(string(data), "\n", "")
-			fmt.Println(message)
+			docOpen(tableName)
 			currentPrompt = getCurrentPrompt()
 		case "count":
 			if len(blocks) < 3 {
@@ -621,23 +581,11 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-
-			args := make(map[string]string)
-			args["name"] = tableName
+			expr := ""
 			if len(blocks) == 4 {
-				args["expr"] = blocks[3]
+				expr = blocks[3]
 			}
-			data, err := fdfsAPI.postReq(http.MethodPost, apiDocCount, args)
-			if err != nil {
-				fmt.Println("doc count: ", err)
-				return
-			}
-			count, err := strconv.ParseInt(string(data), 10, 64)
-			if err != nil {
-				fmt.Println("doc count: ", err)
-				return
-			}
-			fmt.Println("Count = ", count)
+			docCount(tableName, expr)
 			currentPrompt = getCurrentPrompt()
 		case "delete":
 			if len(blocks) < 3 {
@@ -645,15 +593,7 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			args := make(map[string]string)
-			args["name"] = tableName
-			data, err := fdfsAPI.postReq(http.MethodDelete, apiDocDelete, args)
-			if err != nil {
-				fmt.Println("doc del: ", err)
-				return
-			}
-			message := strings.ReplaceAll(string(data), "\n", "")
-			fmt.Println(message)
+			docDelete(tableName)
 			currentPrompt = getCurrentPrompt()
 		case "find":
 			if len(blocks) < 4 {
@@ -662,60 +602,11 @@ func executor(in string) {
 			}
 			tableName := blocks[2]
 			expr := blocks[3]
-			args := make(map[string]string)
-			args["name"] = tableName
-			args["expr"] = expr
+			limit := "10"
 			if len(blocks) == 5 {
-				args["limit"] = blocks[4]
-			} else {
-				args["limit"] = "10"
+				limit = blocks[4]
 			}
-			data, err := fdfsAPI.postReq(http.MethodGet, apiDocFind, args)
-			if err != nil {
-				fmt.Println("doc find: ", err)
-				return
-			}
-			var docs api.DocFindResponse
-			err = json.Unmarshal(data, &docs)
-			if err != nil {
-				fmt.Println("doc find: ", err)
-				return
-			}
-			for i, doc := range docs.Docs {
-				fmt.Println("--- doc ", i)
-				var d map[string]interface{}
-				err = json.Unmarshal(doc, &d)
-				if err != nil {
-					fmt.Println("doc find: ", err)
-					return
-				}
-				for k, v := range d {
-					var valStr string
-					switch val := v.(type) {
-					case string:
-						fmt.Println(k, "=", val)
-					case float64:
-						valStr = fmt.Sprintf("%g", val)
-						fmt.Println(k, "=", valStr)
-					case map[string]interface{}:
-						fmt.Println(k + ":")
-						for k1, v1 := range val {
-							switch val1 := v1.(type) {
-							case string:
-								fmt.Println("   "+k1+" = ", val1)
-							case float64:
-								valStr = fmt.Sprintf("%g", val1)
-								fmt.Println("   "+k1+" = ", valStr)
-							default:
-								fmt.Println("   "+k1+" = ", val1)
-							}
-						}
-					default:
-						fmt.Println(k, "=", val)
-					}
-				}
-
-			}
+			docFind(tableName, expr, limit)
 			currentPrompt = getCurrentPrompt()
 		case "put":
 			if len(blocks) < 4 {
@@ -724,16 +615,7 @@ func executor(in string) {
 			}
 			tableName := blocks[2]
 			value := blocks[3]
-			args := make(map[string]string)
-			args["name"] = tableName
-			args["doc"] = value
-			data, err := fdfsAPI.postReq(http.MethodPost, apiDocEntryPut, args)
-			if err != nil {
-				fmt.Println("doc put: ", err)
-				return
-			}
-			message := strings.ReplaceAll(string(data), "\n", "")
-			fmt.Println(message)
+			docPut(tableName, value)
 			currentPrompt = getCurrentPrompt()
 		case "get":
 			if len(blocks) < 4 {
@@ -742,31 +624,7 @@ func executor(in string) {
 			}
 			tableName := blocks[2]
 			idValue := blocks[3]
-			//args := make(map[string]string)
-			//args["name"] = tableName
-			//args["id"] = idValue
-			queryStr := apiDocEntryGet + "/" + tableName + "/" + idValue
-			data, err := fdfsAPI.postReq(http.MethodGet, queryStr, nil)
-			if err != nil {
-				fmt.Println("doc get: ", err)
-				return
-			}
-
-			var doc api.DocGetResponse
-			err = json.Unmarshal(data, &doc)
-			if err != nil {
-				fmt.Println("doc get: ", err)
-				return
-			}
-			var d map[string]interface{}
-			err = json.Unmarshal(doc.Doc, &d)
-			if err != nil {
-				fmt.Println("doc get: ", err)
-				return
-			}
-			for k, v := range d {
-				fmt.Println(k, "=", v)
-			}
+			docGet(tableName, idValue)
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 4 {
@@ -775,16 +633,7 @@ func executor(in string) {
 			}
 			tableName := blocks[2]
 			idValue := blocks[3]
-			args := make(map[string]string)
-			args["name"] = tableName
-			args["id"] = idValue
-			data, err := fdfsAPI.postReq(http.MethodDelete, apiDocEntryDel, args)
-			if err != nil {
-				fmt.Println("doc del: ", err)
-				return
-			}
-			message := strings.ReplaceAll(string(data), "\n", "")
-			fmt.Println(message)
+			docDel(tableName, idValue)
 			currentPrompt = getCurrentPrompt()
 		case "loadjson":
 			if len(blocks) < 4 {
@@ -794,32 +643,7 @@ func executor(in string) {
 			tableName := blocks[2]
 			fileName := filepath.Base(blocks[3])
 			localJsonFile := blocks[3]
-			fd, err := os.Open(localJsonFile)
-			if err != nil {
-				fmt.Println("loadjson failed: ", err)
-				return
-			}
-			fi, err := fd.Stat()
-			if err != nil {
-				fmt.Println("loadjson failed: ", err)
-				return
-			}
-
-			args := make(map[string]string)
-			args["name"] = tableName
-			data, err := fdfsAPI.uploadMultipartFile(apiDocLoadJson, fileName, fi.Size(), fd, args, "json", "false")
-			if err != nil {
-				fmt.Println("loadjson: ", err)
-				return
-			}
-			var resp api.UploadFileResponse
-			err = json.Unmarshal(data, &resp)
-			if err != nil {
-				fmt.Println("loadjson: ", err)
-				return
-			}
-			message := strings.ReplaceAll(string(data), "\n", "")
-			fmt.Println(message)
+			docLoadJson(localJsonFile, tableName, fileName)
 			currentPrompt = getCurrentPrompt()
 		case "indexjson":
 			if len(blocks) < 4 {
@@ -828,16 +652,7 @@ func executor(in string) {
 			}
 			tableName := blocks[2]
 			podJsonFile := blocks[3]
-			args := make(map[string]string)
-			args["name"] = tableName
-			args["file"] = podJsonFile
-			data, err := fdfsAPI.postReq(http.MethodPost, apiDocIndexJson, args)
-			if err != nil {
-				fmt.Println("index json: ", err)
-				return
-			}
-			message := strings.ReplaceAll(string(data), "\n", "")
-			fmt.Println(message)
+			docIndexJson(tableName, podJsonFile)
 			currentPrompt = getCurrentPrompt()
 		default:
 			fmt.Println("Invalid doc coammand")

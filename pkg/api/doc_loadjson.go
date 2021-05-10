@@ -28,7 +28,7 @@ import (
 )
 
 func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	name := r.FormValue("table_name")
 	if name == "" {
 		h.logger.Errorf("doc loadjson: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "doc loadjson: \"name\" argument missing")

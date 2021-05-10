@@ -19,9 +19,10 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
 	"strconv"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"

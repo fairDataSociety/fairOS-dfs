@@ -21,13 +21,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/tinygrasshopper/bettercsv"
-	"net/http"
-	"os"
-	"strings"
 )
 
 func kvNew(tableName string) {
@@ -122,8 +123,8 @@ func kvCount(tableName string) {
 func kvPut(tableName, key, value string) {
 	kvPutReq := common.KVRequest{
 		TableName: tableName,
-		Key: key,
-		Value: value,
+		Key:       key,
+		Value:     value,
 	}
 	jsonData, err := json.Marshal(kvPutReq)
 	if err != nil {
@@ -171,7 +172,7 @@ func kvget(tableName, key string) {
 func kvDel(tableName, key string) {
 	kvDelReq := common.KVRequest{
 		TableName: tableName,
-		Key: key,
+		Key:       key,
 	}
 	jsonData, err := json.Marshal(kvDelReq)
 	if err != nil {
@@ -217,10 +218,10 @@ func loadcsv(tableName, fileName, localCsvFile string) {
 
 func kvSeek(tableName, start, end, limit string) {
 	kvSeekReq := common.KVRequest{
-		TableName: tableName,
+		TableName:   tableName,
 		StartPrefix: start,
-		EndPrefix: end,
-		Limit: limit,
+		EndPrefix:   end,
+		Limit:       limit,
 	}
 	jsonData, err := json.Marshal(kvSeekReq)
 	if err != nil {
@@ -237,7 +238,7 @@ func kvSeek(tableName, start, end, limit string) {
 }
 
 func kvGetNext(tableName string) {
-	data, err := fdfsAPI.getReq(apiKVSeekNext, "table_name=" + tableName)
+	data, err := fdfsAPI.getReq(apiKVSeekNext, "table_name="+tableName)
 	if err != nil && !errors.Is(err, collection.ErrNoNextElement) {
 		fmt.Println("kv get_next: ", err)
 		return

@@ -17,9 +17,12 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -27,7 +30,23 @@ import (
 )
 
 func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("doc create: invalid request body type")
+		jsonhttp.BadRequest(w, "doc create: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var docReq common.DocRequest
+	err := decoder.Decode(&docReq)
+	if err != nil {
+		h.logger.Errorf("doc create: could not decode arguments")
+		jsonhttp.BadRequest(w, "doc create: could not decode arguments")
+		return
+	}
+
+	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc create: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "doc  create: \"name\" argument missing")

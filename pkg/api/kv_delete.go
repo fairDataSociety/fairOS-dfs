@@ -18,8 +18,9 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
@@ -42,7 +43,7 @@ func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name :=kvReq.TableName
+	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv delete: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "kv delete: \"name\" argument missing")

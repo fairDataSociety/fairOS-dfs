@@ -174,7 +174,6 @@ func startHttpService(logger logging.Logger) {
 	// user account related handlers which require login middleware
 	userRouter := baseRouter.PathPrefix("/user/").Subrouter()
 	userRouter.Use(handler.LoginMiddleware)
-	//userRouter.Use(handler.LogMiddleware)
 	userRouter.HandleFunc("/logout", handler.UserLogoutHandler).Methods("POST")
 	userRouter.HandleFunc("/export", handler.ExportUserHandler).Methods("POST")
 	userRouter.HandleFunc("/delete", handler.UserDeleteHandler).Methods("DELETE")
@@ -185,7 +184,6 @@ func startHttpService(logger logging.Logger) {
 	baseRouter.HandleFunc("/pod/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
 	podRouter := baseRouter.PathPrefix("/pod/").Subrouter()
 	podRouter.Use(handler.LoginMiddleware)
-	//podRouter.Use(handler.LogMiddleware)
 	podRouter.HandleFunc("/new", handler.PodCreateHandler).Methods("POST")
 	podRouter.HandleFunc("/open", handler.PodOpenHandler).Methods("POST")
 	podRouter.HandleFunc("/close", handler.PodCloseHandler).Methods("POST")
@@ -198,7 +196,6 @@ func startHttpService(logger logging.Logger) {
 	// directory related handlers
 	dirRouter := baseRouter.PathPrefix("/dir/").Subrouter()
 	dirRouter.Use(handler.LoginMiddleware)
-	//dirRouter.Use(handler.LogMiddleware)
 	dirRouter.HandleFunc("/mkdir", handler.DirectoryMkdirHandler).Methods("POST")
 	dirRouter.HandleFunc("/rmdir", handler.DirectoryRmdirHandler).Methods("DELETE")
 	dirRouter.HandleFunc("/ls", handler.DirectoryLsHandler).Methods("GET")
@@ -208,7 +205,6 @@ func startHttpService(logger logging.Logger) {
 	// file related handlers
 	fileRouter := baseRouter.PathPrefix("/file/").Subrouter()
 	fileRouter.Use(handler.LoginMiddleware)
-	//fileRouter.Use(handler.LogMiddleware)
 	fileRouter.HandleFunc("/download", handler.FileDownloadHandler).Methods("POST")
 	fileRouter.HandleFunc("/upload", handler.FileUploadHandler).Methods("POST")
 	fileRouter.HandleFunc("/share", handler.FileShareHandler).Methods("POST")
@@ -217,11 +213,9 @@ func startHttpService(logger logging.Logger) {
 	fileRouter.HandleFunc("/delete", handler.FileDeleteHandler).Methods("DELETE")
 	fileRouter.HandleFunc("/stat", handler.FileStatHandler).Methods("GET")
 
-	baseRouter.HandleFunc("/kv/entry/newget/{name}/{key}", handler.KVNewGetHandler).Methods("GET").Queries("fairOS-dfs", "{fairOS-dfs}")
 	kvRouter := baseRouter.PathPrefix("/kv/").Subrouter()
 	kvRouter.Use(handler.LoginMiddleware)
 
-	//kvRouter.Use(handler.LogMiddleware)
 	kvRouter.HandleFunc("/new", handler.KVCreateHandler).Methods("POST")
 	kvRouter.HandleFunc("/ls", handler.KVListHandler).Methods("GET")
 	kvRouter.HandleFunc("/open", handler.KVOpenHandler).Methods("POST")
@@ -237,7 +231,6 @@ func startHttpService(logger logging.Logger) {
 	baseRouter.HandleFunc("/doc/entry/newget/{name}/{id}", handler.DocNewGetHandler).Methods("GET").Queries("fairOS-dfs", "{fairOS-dfs}")
 	docRouter := baseRouter.PathPrefix("/doc/").Subrouter()
 	docRouter.Use(handler.LoginMiddleware)
-	//docRouter.Use(handler.LogMiddleware)
 	docRouter.HandleFunc("/new", handler.DocCreateHandler).Methods("POST")
 	docRouter.HandleFunc("/ls", handler.DocListHandler).Methods("GET")
 	docRouter.HandleFunc("/open", handler.DocOpenHandler).Methods("POST")

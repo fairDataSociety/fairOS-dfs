@@ -17,7 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
@@ -25,14 +28,30 @@ import (
 )
 
 func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("doc indexjson: invalid request body type")
+		jsonhttp.BadRequest(w, "doc indexjson: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var docReq common.DocRequest
+	err := decoder.Decode(&docReq)
+	if err != nil {
+		h.logger.Errorf("doc indexjson: could not decode arguments")
+		jsonhttp.BadRequest(w, "doc indexjson: could not decode arguments")
+		return
+	}
+
+	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc indexjson: \"name\" argument missing")
 		jsonhttp.BadRequest(w, "doc indexjson: \"name\" argument missing")
 		return
 	}
 
-	podFile := r.FormValue("file")
+	podFile := docReq.FileName
 	if podFile == "" {
 		h.logger.Errorf("doc indexjson: \"file\" argument missing")
 		jsonhttp.BadRequest(w, "doc indexjson: \"file\" argument missing")

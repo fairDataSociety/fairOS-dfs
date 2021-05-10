@@ -50,7 +50,6 @@ func TestClose(t *testing.T) {
 		// create some dir and files
 		addFilesAndDirectories(t, info, pod1, podName1)
 
-
 		// verify if the pod is closed
 		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err == nil {
