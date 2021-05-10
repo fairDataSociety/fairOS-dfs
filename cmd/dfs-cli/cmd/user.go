@@ -58,7 +58,6 @@ func userNew(userName string) {
 	fmt.Println("=============== Mnemonic ==========================")
 	fmt.Println(resp.Mnemonic)
 	fmt.Println("=============== Mnemonic ==========================")
-	return
 }
 
 func userImportUsingAddress(userName, address string) {

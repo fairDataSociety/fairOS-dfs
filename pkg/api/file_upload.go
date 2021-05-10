@@ -126,7 +126,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
-		responses = append(responses, Response{FileName: file.Filename, Message: "uploaded succesfully"})
+		responses = append(responses, Response{FileName: file.Filename, Message: "uploaded successfully"})
 	}
 
 	w.Header().Set("Content-Type", " application/json")
