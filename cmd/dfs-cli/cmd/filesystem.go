@@ -148,8 +148,6 @@ func statFileOrDirectory(statElement string) {
 			fmt.Println("stat failed: ", err)
 			return
 		}
-		fmt.Println("Account 	   	: ", resp.Account)
-		fmt.Println("PodAddress    		: ", resp.PodAddress)
 		fmt.Println("PodName 	   	: ", resp.PodName)
 		fmt.Println("Dir Path	   	: ", resp.DirPath)
 		fmt.Println("Dir Name	   	: ", resp.DirName)

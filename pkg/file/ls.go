@@ -38,6 +38,9 @@ func (f *File) ListFiles(files []string) ([]Entry, error) {
 	for _, filePath := range files {
 		fileTopic := utils.HashString(filePath)
 		_, data, err := f.fd.GetFeedData(fileTopic, f.userAddress)
+		if err != nil {
+			continue
+		}
 		var meta *MetaData
 		err = json.Unmarshal(data, &meta)
 		if err != nil {

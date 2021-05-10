@@ -40,7 +40,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
-			fileName := strings.TrimLeft(fileOrDirName, "_F_")
+			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
 			err := d.file.LoadFileMeta(filePath)
 			if err != nil {
@@ -48,7 +48,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 			}
 
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
-			dirName := strings.TrimLeft(fileOrDirName, "_D_")
+			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
 			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			d.logger.Infof(dirNameWithPath)
 

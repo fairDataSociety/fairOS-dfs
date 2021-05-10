@@ -52,6 +52,9 @@ func TestClose(t *testing.T) {
 
 		// verify if the pod is closed
 		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName1)
+		if err != nil {
+			t.Fatal(err)
+		}
 		if gotPodInfo != nil {
 			t.Fatalf("pod not closed")
 		}

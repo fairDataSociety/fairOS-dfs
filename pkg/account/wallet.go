@@ -74,7 +74,7 @@ func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Acc
 
 }
 
-func (w *Wallet) CreateAccount(walletPath string, plainMnemonic string) (accounts.Account, error) {
+func (w *Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Account, error) {
 	wallet, err := hdwallet.NewFromMnemonic(plainMnemonic)
 	if err != nil {
 		return accounts.Account{}, err
@@ -102,7 +102,7 @@ func (w *Wallet) decryptMnemonic(password string) (string, error) {
 
 	err = w.IsValidMnemonic(mnemonic)
 	if err != nil {
-		return "", fmt.Errorf("Invalid password")
+		return "", fmt.Errorf("invalid password")
 	}
 	return mnemonic, nil
 }

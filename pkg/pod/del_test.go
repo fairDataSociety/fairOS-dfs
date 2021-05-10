@@ -18,6 +18,7 @@ package pod_test
 
 import (
 	"io/ioutil"
+	"sort"
 	"strings"
 	"testing"
 
@@ -42,6 +43,7 @@ func TestDelete(t *testing.T) {
 
 	podName1 := "test1"
 	podName2 := "test2"
+
 	t.Run("create-one-pod-and-del", func(t *testing.T) {
 		_, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
@@ -95,12 +97,13 @@ func TestDelete(t *testing.T) {
 			t.Fatalf("error getting pods")
 		}
 
+		sort.Strings(pods)
 		if strings.Trim(pods[0], "\n") != podName1 {
-			t.Fatalf("podName is not %s", podName1)
+			t.Fatalf("podName is not %s, got %s", podName1, pods[0])
 		}
 
 		if strings.Trim(pods[1], "\n") != podName2 {
-			t.Fatalf("podName is not %s", podName2)
+			t.Fatalf("podName is not %s, got %s", podName2, pods[1])
 		}
 
 		err = pod1.DeletePod(podName1)

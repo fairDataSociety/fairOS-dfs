@@ -182,7 +182,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 	return []byte(resp.Message), nil
 }
 
-func (s *FdfsClient) getReq(urlPath string, argsString string) ([]byte, error) {
+func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
 	var err error

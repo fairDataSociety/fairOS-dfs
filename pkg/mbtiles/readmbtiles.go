@@ -77,7 +77,6 @@ func (t TileFormat) ContentType() string {
 type DB struct {
 	filename           string     // name of tile mbtiles file
 	db                 *sql.DB    // database connection for mbtiles file
-	id                 string     // unique ID of mbtiles file
 	tileformat         TileFormat // tile format: PNG, JPG, PBF, WEBP
 	timestamp          time.Time  // timestamp of file, for cache control headers
 	hasUTFGrid         bool       // true if mbtiles file contains additional tables with UTFGrid data
@@ -113,7 +112,7 @@ func NewDB(filename string) (*DB, error) {
 	}
 
 	if tableCount < 2 {
-		return nil, fmt.Errorf("Missing required table: 'tiles' or 'metadata'")
+		return nil, fmt.Errorf("missing required table: 'tiles' or 'metadata'")
 	}
 
 	//query a sample tile to determine format
@@ -175,7 +174,7 @@ func NewDB(filename string) (*DB, error) {
 
 // ReadTile reads a tile with tile identifiers z, x, y into provided *[]byte.
 // data will be nil if the tile does not exist in the database
-func (tileset *DB) ReadTile(z uint8, x uint64, y uint64, data *[]byte) error {
+func (tileset *DB) ReadTile(z uint8, x, y uint64, data *[]byte) error {
 	err := tileset.db.QueryRow("select tile_data from tiles where zoom_level = ? and tile_column = ? and tile_row = ?", z, x, y).Scan(data)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -196,9 +195,9 @@ func (tileset *DB) Filename() string {
 // will be nil if the grid does not exist in the database, and an error will be
 // raised. This merges in grid key data.  The data is returned in
 // the original compression encoding (zlib or gzip)
-func (tileset *DB) ReadGrid(z uint8, x uint64, y uint64, data *[]byte) error {
+func (tileset *DB) ReadGrid(z uint8, x, y uint64, data *[]byte) error {
 	if !tileset.hasUTFGrid {
-		return errors.New("Tileset does not contain UTFgrids")
+		return errors.New("tileset does not contain UTFgrids")
 	}
 
 	err := tileset.db.QueryRow("select grid from grids where zoom_level = ? and tile_column = ? and tile_row = ?", z, x, y).Scan(data)
@@ -420,7 +419,7 @@ func detectTileFormat(data *[]byte) (TileFormat, error) {
 		}
 	}
 
-	return UNKNOWN, errors.New("Could not detect tile format")
+	return UNKNOWN, errors.New("could not detect tile format")
 }
 
 // stringToFloats converts a commma-delimited string of floats to a slice of

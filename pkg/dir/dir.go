@@ -51,16 +51,8 @@ func NewDirectory(podName string, client blockstore.Client, fd *feed.API, user u
 	}
 }
 
-func (d *Directory) getFeed() *feed.API {
-	return d.fd
-}
-
 func (d *Directory) getAddress() utils.Address {
 	return d.userAddress
-}
-
-func (d *Directory) getClient() blockstore.Client {
-	return d.client
 }
 
 func (d *Directory) AddToDirectoryMap(path string, dirInode *Inode) {

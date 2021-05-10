@@ -23,8 +23,5 @@ import (
 func (d *Directory) IsDirectoryPresent(directoryNameWithPath string) bool {
 	topic := utils.HashString(directoryNameWithPath)
 	_, _, err := d.fd.GetFeedData(topic, d.userAddress)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }

@@ -50,7 +50,7 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) 
 	}
 
 	if dirInode.Meta == nil || dirInode.FileOrDirNames == nil {
-		return nil, fmt.Errorf("dir stat: directory not found" )
+		return nil, fmt.Errorf("dir stat: directory not found")
 	}
 
 	files := 0

@@ -18,14 +18,11 @@ package mock
 
 import (
 	"io"
-	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 )
 
 type MockFile struct {
-	fileMap map[string]string
-	fileMu  *sync.RWMutex
 }
 
 func NewMockFile() *MockFile {

@@ -95,7 +95,7 @@ func (d *Directory) MkDir(parentPath, dirName string) error {
 				FileOrDirNames: []string{dirName},
 			}
 
-			err = json.Unmarshal(parentData, &parentDirInode)
+			parentData, err = json.Marshal(&parentDirInode)
 			if err != nil {
 				return err
 			}
