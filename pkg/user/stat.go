@@ -19,7 +19,7 @@ package user
 import "github.com/fairdatasociety/fairOS-dfs/pkg/account"
 
 type Stat struct {
-	Name      string `json:"name"`
+	Name      string `json:"user_name"`
 	Reference string `json:"reference"`
 }
 

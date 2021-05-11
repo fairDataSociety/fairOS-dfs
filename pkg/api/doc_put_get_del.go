@@ -88,21 +88,21 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["table_name"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("doc get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"pod_name\" argument missing")
+		h.logger.Errorf("doc get: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc get: \"table_name\" argument missing")
 		return
 	}
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("doc get: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"name\" argument missing")
+		h.logger.Errorf("doc get: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc get: \"table_name\" argument missing")
 		return
 	}
 
-	keys, ok = r.URL.Query()["table_name"]
+	keys, ok = r.URL.Query()["id"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("doc get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"pod_name\" argument missing")
+		h.logger.Errorf("doc get: \"id\" argument missing")
+		jsonhttp.BadRequest(w, "doc get: \"id\" argument missing")
 		return
 	}
 	id := keys[0]

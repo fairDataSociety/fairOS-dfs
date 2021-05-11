@@ -27,7 +27,7 @@ type Collections struct {
 	Tables []Collection
 }
 type Collection struct {
-	Name           string   `json:"name"`
+	Name           string   `json:"table_name"`
 	IndexedColumns []string `json:"indexes"`
 	CollectionType string   `json:"type"`
 }

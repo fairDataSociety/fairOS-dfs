@@ -28,9 +28,11 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 )
 
-func docNew(tableName, SimpleIndex, mutable string) {
+func docNew(tableName, simpleIndex, mutable string) {
 	docNewReq := common.DocRequest{
-		TableName: tableName,
+		TableName:   tableName,
+		SimpleIndex: simpleIndex,
+		Mutable:     mutable,
 	}
 	jsonData, err := json.Marshal(docNewReq)
 	if err != nil {

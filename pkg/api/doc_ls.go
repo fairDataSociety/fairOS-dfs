@@ -28,7 +28,7 @@ type DocumentDBs struct {
 	Tables []DocumentDB
 }
 type DocumentDB struct {
-	Name           string              `json:"name"`
+	Name           string              `json:"table_name"`
 	IndexedColumns []collection.SIndex `json:"indexes"`
 	CollectionType string              `json:"type"`
 }

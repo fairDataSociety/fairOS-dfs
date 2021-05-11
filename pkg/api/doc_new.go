@@ -55,7 +55,7 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// by default, add the index type "id" as stringIndex
 	indexes := make(map[string]collection.IndexType)
-	si := r.FormValue("si")
+	si := docReq.SimpleIndex
 	if si != "" {
 		idxs := strings.Split(si, ",")
 		for _, idx := range idxs {
@@ -84,7 +84,7 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mutable := true
-	mutableStr := r.FormValue("mutable")
+	mutableStr := docReq.Mutable
 	if mutableStr != "" {
 		mut, err := strconv.ParseBool(mutableStr)
 		if err != nil {

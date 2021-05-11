@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 info:
-  version: 0.2.0
+  version: 0.6.0
   title: FairOS-dfs API
   description: 'A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store'
 
@@ -10,13 +10,13 @@ externalDocs:
   url: 'https://fairos.io'
 
 servers:
-  - url: 'http://{apiRoot}:{port}/v0'
+  - url: 'http://{apiRoot}:{port}/v1'
     variables:
       apiRoot:
         default: 'localhost'
         description: Base address of the local dfs node API
       port:
-        default: 9090
+        default: '9090'
         description: Base port of the local dfs node which exposes the REST APIs
 
 paths:
@@ -30,18 +30,18 @@ paths:
         - User
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                user:
-                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
+                user_name:
+                  $ref: '#/components/schemas/UserName'
                 password:
-                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+                  $ref: '#/components/schemas/Password'
                 mnemonic:
-                  $ref: 'dfs-common.yaml#/components/schemas/Mnemonic'
+                  $ref: '#/components/schemas/Mnemonic'
               required:
-                - user
+                - user_name
                 - password
       responses:
         '201':
@@ -55,12 +55,12 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: 'dfs-common.yaml#/components/schemas/UserSignupResponse'
-                  - $ref: 'dfs-common.yaml#/components/schemas/UserSignupResponseWithMenonic'
+                  - $ref: '#/components/schemas/UserSignupResponse'
+                  - $ref: '#/components/schemas/UserSignupResponseWithMenonic'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/user/login':
     post:
@@ -72,16 +72,16 @@ paths:
         - User
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                user:
-                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
+                user_name:
+                  $ref: '#/components/schemas/UserName'
                 password:
-                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+                  $ref: '#/components/schemas/Password'
               required:
-                - user
+                - user_name
                 - password
       responses:
         '200':
@@ -97,9 +97,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/user/import':
     post:
@@ -113,22 +113,11 @@ paths:
         - User
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
-              type: object
-              properties:
-                user:
-                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
-                password:
-                  $ref: 'dfs-common.yaml#/components/schemas/Password'
-                address:
-                  $ref: 'dfs-common.yaml#/components/schemas/EthereumAddress'
-                mnemonic:
-                  $ref: 'dfs-common.yaml#/components/schemas/Mnemonic'
-              required:
-                - user
-                - address
-                - password
+              oneOf:
+                - $ref: '#/components/schemas/UserImportArg1'
+                - $ref: '#/components/schemas/UserImportArg2'
       responses:
         '201':
           description: 'Created'
@@ -140,11 +129,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/UserSignupResponse'
+                $ref: '#/components/schemas/UserSignupResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/user/present':
     get:
@@ -153,25 +142,25 @@ paths:
       Input contains form object containing the user name to check if it is present in the dfs server.'
       tags:
         - User
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                user:
-                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
-              required:
-                - user
+      parameters:
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              user_name:
+                type: string
+            required:
+              - user_name
       responses:
         '200':
           description: 'OK'
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/UserPresentResponse'
+                $ref: '#/components/schemas/UserPresentResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
 
   '/user/isloggedin':
     get:
@@ -180,25 +169,25 @@ paths:
       Input contains a form object containing the user name to check if it is logged-in in the dfs server.'
       tags:
         - User
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                user:
-                  $ref: 'dfs-common.yaml#/components/schemas/UserName'
-              required:
-                - user
+      parameters:
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              user_name:
+                type: string
+            required:
+              - user_name
       responses:
         '200':
           description: 'OK'
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/UserLoggedInResponse'
+                $ref: '#/components/schemas/UserLoggedInResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
 
   '/user/logout':
     post:
@@ -211,7 +200,6 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
       responses:
         '200':
           description: 'OK'
@@ -221,214 +209,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-
-  '/user/avatar':
-    post:
-      summary: 'Set user avatar'
-      description: 'Set avatar for user'
-      tags:
-        - User
-      parameters:
-        - in: cookie
-          name: fairOS-dfs
-          schema:
-            type: string
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                avatar:
-                  type: string
-                  format: binary
-      responses:
-        '200':
-          description: 'OK'
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
-        '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-    get:
-      summary: 'Get user avatar'
-      description: 'Get user avatar'
-      tags:
-        - User
-      parameters:
-        - in: cookie
-          name: fairOS-dfs
-          schema:
-            type: string
-      requestBody:
-      responses:
-        '200':
-          description: 'OK'
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
-        '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-
-  '/user/name':
-    post:
-      summary: 'Set user name'
-      description: 'Set user name information'
-      tags:
-        - User
-      parameters:
-        - in: cookie
-          name: fairOS-dfs
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                first_name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
-                last_name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
-                middle_name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
-                surname:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
-      responses:
-        '200':
-          description: 'OK'
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
-        '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-    get:
-      summary: 'Get user name'
-      description: 'Get user name'
-      tags:
-        - User
-      parameters:
-        - in: cookie
-          name: fairOS-dfs
-          schema:
-            type: string
-      requestBody:
-      responses:
-        '200':
-          description: 'OK'
-          content:
-            application/json:
-              schema:
-                properties:
-                  first_name:
-                    $ref: 'dfs-common.yaml#/components/schemas/Name'
-                  last_name:
-                    $ref: 'dfs-common.yaml#/components/schemas/Name'
-                  middle_name:
-                    $ref: 'dfs-common.yaml#/components/schemas/Name'
-                  surname:
-                    $ref: 'dfs-common.yaml#/components/schemas/Name'
-        '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
-        '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-
-
-  '/user/contact':
-    post:
-      summary: 'Set user contact'
-      description: 'Set user contact details like phone and address'
-      tags:
-        - User
-      parameters:
-        - in: cookie
-          name: fairOS-dfs
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                phone:
-                  $ref: 'dfs-common.yaml#/components/schemas/Phone'
-                mobile:
-                  $ref: 'dfs-common.yaml#/components/schemas/Mobile'
-                address_line_1:
-                  $ref: 'dfs-common.yaml#/components/schemas/AddressLine1'
-                address_line_2:
-                  $ref: 'dfs-common.yaml#/components/schemas/AddressLine2'
-                state_province_region:
-                  $ref: 'dfs-common.yaml#/components/schemas/StateProvinceRegion'
-                zipcode:
-                  $ref: 'dfs-common.yaml#/components/schemas/Zipcode'
-              required:
-                - phone
-                - mobile
-                - address_line_1
-      responses:
-        '200':
-          description: 'OK'
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
-        '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-    get:
-      summary: 'Get user contact'
-      description: 'Get user contact'
-      tags:
-        - User
-      parameters:
-        - in: cookie
-          name: fairOS-dfs
-          schema:
-            type: string
-      requestBody:
-      responses:
-        '200':
-          description: 'OK'
-          content:
-            application/json:
-              schema:
-                properties:
-                  phone:
-                    $ref: 'dfs-common.yaml#/components/schemas/Phone'
-                  mobile:
-                    $ref: 'dfs-common.yaml#/components/schemas/Mobile'
-                  address_line_1:
-                    $ref: 'dfs-common.yaml#/components/schemas/AddressLine1'
-                  address_line_2:
-                    $ref: 'dfs-common.yaml#/components/schemas/AddressLine2'
-                  state_province_region:
-                    $ref: 'dfs-common.yaml#/components/schemas/StateProvinceRegion'
-                  zipcode:
-                    $ref: 'dfs-common.yaml#/components/schemas/Zipcode'
-        '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
-        '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/user/export':
     post:
@@ -441,18 +224,17 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
       responses:
         '200':
           description: 'OK'
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/UserExportResponse'
+                $ref: '#/components/schemas/UserExportResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/user/delete':
     delete:
@@ -467,12 +249,12 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
                 password:
-                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+                  $ref: '#/components/schemas/Password'
               required:
                 - password
       responses:
@@ -484,9 +266,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/user/stat':
     get:
@@ -499,67 +281,17 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
       responses:
         '200':
           description: 'OK'
           content:
             application/octet-stream:
               schema:
-                type: string
-                format: binary
+                $ref: '#/components/schemas/UserStatResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-
-  '/user/share/inbox':
-    get:
-      summary: 'User share inbox'
-      description: 'shows all the files that are shared with the user'
-      tags:
-        - User
-      parameters:
-        - in: cookie
-          name: fairOS-dfs
-          schema:
-            type: string
-      requestBody:
-      responses:
-        '200':
-          description: 'OK'
-          content:
-            application/json:
-              schema:
-                $ref: 'dfs-common.yaml#/components/schemas/UserSharingInbox'
-        '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
-        '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-
-  '/user/share/outbox':
-    get:
-      summary: 'User share outbox'
-      description: 'shows all the files that the user has shared with others'
-      tags:
-        - User
-      parameters:
-        - in: cookie
-          name: fairOS-dfs
-          schema:
-            type: string
-      requestBody:
-      responses:
-        '200':
-          description: 'OK'
-          content:
-            application/json:
-              schema:
-                $ref: 'dfs-common.yaml#/components/schemas/UserSharingOutbox'
-        '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
-        '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/receiveinfo':
     get:
@@ -572,27 +304,26 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                ref:
-                  $ref: 'dfs-common.yaml#/components/schemas/FileReferenceEncrypted'
-              required:
-                - ref
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              reference:
+                $ref: '#/components/schemas/FileSharingReference'
+            required:
+              - reference
       responses:
         '200':
           description: 'OK'
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/PodReceiveInfo'
+                $ref: '#/components/schemas/PodReceiveInfo'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/receive':
     get:
@@ -605,16 +336,15 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                ref:
-                  $ref: 'dfs-common.yaml#/components/schemas/FileReferenceEncrypted'
-              required:
-                - ref
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              reference:
+                $ref: '#/components/schemas/FileSharingReference'
+            required:
+              - reference
       responses:
         '200':
           description: 'OK'
@@ -624,9 +354,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/new':
     post:
@@ -641,16 +371,16 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                pod:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 password:
-                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+                  $ref: '#/components/schemas/Password'
               required:
-                - pod
+                - pod_name
                 - password
       responses:
         '201':
@@ -666,9 +396,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/open':
     post:
@@ -683,16 +413,16 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                pod:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 password:
-                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+                  $ref: '#/components/schemas/Password'
               required:
-                - pod
+                - pod_name
                 - password
       responses:
         '200':
@@ -708,9 +438,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/close':
     post:
@@ -723,7 +453,6 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
       responses:
         '200':
           description: 'Ok'
@@ -733,9 +462,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/sync':
     post:
@@ -748,7 +477,6 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
       responses:
         '200':
           description: 'Synced'
@@ -758,9 +486,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/share':
     post:
@@ -775,29 +503,31 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                pod:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 password:
-                  $ref: 'dfs-common.yaml#/components/schemas/Password'
+                  $ref: '#/components/schemas/Password'
               required:
-                - pod
+                - pod_name
                 - password
       responses:
         '200':
           description: 'Ok'
           content:
-            application/octet-stream:
+            application/json:
               schema:
-                type: string
-                format: binary
+                type: object
+                properties:
+                  pod_sharing_reference:
+                    $ref: '#/components/schemas/FileSharingReference'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/delete':
     delete:
@@ -812,14 +542,14 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                pod:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
               required:
-                - pod
+                - pod_name
       responses:
         '200':
           description: 'Ok'
@@ -829,9 +559,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/ls':
     get:
@@ -844,19 +574,22 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
       responses:
         '200':
           description: 'Ok'
           content:
             application/json:
               schema:
-                - 'dfs-common.yaml#/components/schemas/PodList'
-                - 'dfs-common.yaml#/components/schemas/SharedPodList'
+                type: object
+                properties:
+                  pod_name:
+                    $ref: '#/components/schemas/PodList'
+                  shared_pod_name:
+                    $ref: '#/components/schemas/SharedPodList'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/pod/stat':
     get:
@@ -871,26 +604,30 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                pod:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodName'
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
               required:
-                - pod
+                - pod_name
       responses:
         '200':
           description: 'Ok'
           content:
-            application/octet-stream:
+            application/json:
               schema:
-                type: string
-                format: binary
+                type: object
+                properties:
+                  pod_name:
+                    $ref: '#/components/schemas/PodName'
+                  address:
+                    $ref: '#/components/schemas/EthereumAddress'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/dir/mkdir':
     get:
@@ -905,14 +642,17 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                dir:
-                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+                dir_path:
+                  $ref: '#/components/schemas/DirPath'
+                dir_name:
+                  $ref: '#/components/schemas/DirName'
               required:
-                - dir
+                - dir_path
+                - dir_name
       responses:
         '200':
           description: 'Ok'
@@ -922,9 +662,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/dir/rmdir':
     get:
@@ -939,14 +679,17 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                dir:
-                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+                dir_path:
+                  $ref: '#/components/schemas/DirPath'
+                dir_name:
+                    $ref: '#/components/schemas/DirName'
               required:
-                - dir
+                - dir_path
+                - dir_name
       responses:
         '200':
           description: 'Ok'
@@ -956,9 +699,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/dir/ls':
     get:
@@ -973,12 +716,12 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                dir:
-                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+                dir_path:
+                  $ref: '#/components/schemas/DirPath'
               required:
                 - dir
       responses:
@@ -987,11 +730,16 @@ paths:
           content:
             application/json:
               schema:
-                - 'dfs-common.yaml#/components/schemas/ListDirectory'
+                type: object
+                properties:
+                  dirs:
+                    $ref: '#/components/schemas/ListDirectory'
+                  files:
+                    $ref: '#/components/schemas/ListFiles'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/dir/stat':
     get:
@@ -1004,27 +752,26 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                dir:
-                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
-              required:
-                - dir
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              dir_path:
+                $ref: '#/components/schemas/DirPath'
+            required:
+              - dir_path
       responses:
         '200':
           description: 'Ok'
           content:
             application/json:
               schema:
-                - 'dfs-common.yaml#/components/schemas/DirectoryStat'
+                $ref : '#/components/schemas/DirectoryStat'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/dir/present':
     get:
@@ -1037,27 +784,26 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                dir:
-                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
-              required:
-                - dir
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              dir_path:
+                $ref: '#/components/schemas/DirPath'
+            required:
+              - dir_path
       responses:
         '200':
           description: 'Ok'
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/DirPresentResponse'
+                $ref: '#/components/schemas/DirPresentResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/file/upload':
     get:
@@ -1082,7 +828,7 @@ paths:
               type: object
               properties:
                 pod_dir:
-                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
+                  $ref: '#/components/schemas/DirName'
                 block_size:
                   type: string
                   example: 10M
@@ -1102,11 +848,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/FileUploadResponse'
+                $ref: '#/components/schemas/FileUploadResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/file/download':
     get:
@@ -1126,7 +872,7 @@ paths:
               type: object
               properties:
                 file:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
+                  $ref: '#/components/schemas/PodFileName'
               required:
                 - file
       responses:
@@ -1138,9 +884,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/file/share':
     get:
@@ -1155,28 +901,27 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                file:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
-                to:
-                  $ref: 'dfs-common.yaml#/components/schemas/EthereumAddress'
+                file_path:
+                  $ref: '#/components/schemas/FileNameWithPath'
+                dest_user:
+                  $ref: '#/components/schemas/EthereumAddress'
               required:
                 - file
-                - to
       responses:
         '200':
           description: 'Ok'
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/FileSharingResponse'
+                $ref: '#/components/schemas/FileSharingResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/file/receive':
     get:
@@ -1189,34 +934,32 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                ref:
-                  $ref: 'dfs-common.yaml#/components/schemas/FileSharingReference'
-                dir:
-                  $ref: 'dfs-common.yaml#/components/schemas/DirName'
-              required:
-                - ref
-                - dir
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              sharing_ref:
+                $ref: '#/components/schemas/FileSharingReference'
+              dir_path:
+                $ref: '#/components/schemas/DirName'
+            required:
+              - sharing_ref
+              - dir_path
       responses:
         '200':
           description: 'Ok'
           content:
             application/json:
-              type: object
-              properties:
+              schema:
+               type: object
+               properties:
                 file_name:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
-                reference:
-                  $ref: 'dfs-common.yaml#/components/schemas/FileSharingReference'
+                  $ref: '#/components/schemas/FileNameWithPath'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/file/receiveinfo':
     get:
@@ -1229,27 +972,26 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                ref:
-                  $ref: 'dfs-common.yaml#/components/schemas/FileSharingReference'
-              required:
-                - ref
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              sharing_ref:
+                $ref: '#/components/schemas/FileSharingReference'
+            required:
+              - sharing_ref
       responses:
         '200':
           description: 'Ok'
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/ReceiveFileInfo'
+                $ref: '#/components/schemas/ReceiveFileInfo'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/file/delete':
     delete:
@@ -1264,14 +1006,14 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                file:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
+                file_path:
+                  $ref: '#/components/schemas/FileNameWithPath'
               required:
-                - file
+                - file_path
       responses:
         '200':
           description: 'Ok'
@@ -1281,9 +1023,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/file/stat':
     get:
@@ -1296,28 +1038,26 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                file:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
-              required:
-                - file
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              file_path:
+                $ref: '#/components/schemas/FileNameWithPath'
+            required:
+              - file_path
       responses:
         '200':
           description: 'Ok'
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/FileStatInfo'
+                $ref: '#/components/schemas/FileStatInfo'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-
+          $ref: '#/components/responses/500'
 
   '/kv/new':
     post:
@@ -1332,14 +1072,14 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                table_name:
+                  $ref: '#/components/schemas/KVTableName'
                 indexType:
-                  $ref: 'dfs-common.yaml#/components/schemas/KVIndexType'
+                  $ref: '#/components/schemas/KVIndexType'
               required:
                 - name
       responses:
@@ -1351,9 +1091,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/ls':
     get:
@@ -1366,18 +1106,17 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
       responses:
         '200':
           description: 'Ok'
           content:
             application/json:
               schema:
-                $ref: 'dfs-common.yaml#/components/schemas/KVList'
+                $ref: '#/components/schemas/KVList'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/open':
     post:
@@ -1392,12 +1131,12 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                table_name:
+                  $ref: '#/components/schemas/KVTableName'
               required:
                 - name
       responses:
@@ -1409,9 +1148,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/count':
     post:
@@ -1426,12 +1165,12 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                table_name:
+                  $ref: '#/components/schemas/KVTableName'
               required:
                 - name
       responses:
@@ -1443,9 +1182,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/delete':
     delete:
@@ -1460,12 +1199,12 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                table_name:
+                  $ref: '#/components/schemas/KVTableName'
               required:
                 - name
       responses:
@@ -1477,9 +1216,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/entry/put':
     post:
@@ -1494,16 +1233,16 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                table_name:
+                  $ref: '#/components/schemas/KVTableName'
                 key:
-                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
+                  $ref: '#/components/schemas/KVKey'
                 value:
-                  $ref: 'dfs-common.yaml#/components/schemas/KVValue'
+                  $ref: '#/components/schemas/KVValue'
               required:
                 - name
                 - key
@@ -1517,9 +1256,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/entry/get':
     get:
@@ -1532,19 +1271,18 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
-                key:
-                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
-              required:
-                - name
-                - key
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              table_name:
+                $ref: '#/components/schemas/KVTableName'
+              key:
+                $ref: '#/components/schemas/KVKey'
+            required:
+              - table_name
+              - key
       responses:
         '200':
           description: 'Ok'
@@ -1553,13 +1291,13 @@ paths:
               schema:
                 properties:
                   keys:
-                    $ref: 'dfs-common.yaml#/components/schemas/KVgetResponseKeys'
+                    $ref: '#/components/schemas/KVgetResponseKeys'
                   values:
-                    $ref: 'dfs-common.yaml#/components/schemas/KVgetResponseValues'
+                    $ref: '#/components/schemas/KVgetResponseValues'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/entry/del':
     delete:
@@ -1574,14 +1312,14 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
                 name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                  $ref: '#/components/schemas/KVTableName'
                 key:
-                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
+                  $ref: '#/components/schemas/KVKey'
               required:
                 - name
                 - key
@@ -1594,9 +1332,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/seek':
     post:
@@ -1609,25 +1347,22 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
-                start:
-                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
-                end:
-                  $ref: 'dfs-common.yaml#/components/schemas/KVKey'
-                limit:
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              table_name:
+                $ref: '#/components/schemas/KVTableName'
+              start:
+                  $ref: '#/components/schemas/KVKey'
+              end:
+                  $ref: '#/components/schemas/KVKey'
+              limit:
                   type: integer
-              required:
-                - name
+            required:
+                - table_name
                 - start
-                - end
-                - limit
       responses:
         '200':
           description: 'Ok'
@@ -1637,9 +1372,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/seek/next':
     get:
@@ -1658,8 +1393,8 @@ paths:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                table_name:
+                  $ref: '#/components/schemas/KVTableName'
               required:
                 - name
       responses:
@@ -1670,13 +1405,13 @@ paths:
               schema:
                 properties:
                   keys:
-                    $ref: 'dfs-common.yaml#/components/schemas/KVgetResponseKeys'
+                    $ref: '#/components/schemas/KVgetResponseKeys'
                   values:
-                    $ref: 'dfs-common.yaml#/components/schemas/KVgetResponseValues'
+                    $ref: '#/components/schemas/KVgetResponseValues'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/kv/loadcsv':
     post:
@@ -1695,10 +1430,10 @@ paths:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/Name'
+                table_ame:
+                  $ref: '#/components/schemas/KVTableName'
               required:
-                - name
+                - table_ame
           multipart/form-data:
             schema:
               type: object
@@ -1715,10 +1450,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-
+          $ref: '#/components/responses/500'
 
   '/doc/new':
     post:
@@ -1733,16 +1467,19 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                table_name:
+                  $ref: '#/components/schemas/DocTableName'
                 si:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocFieldIndex'
+                  $ref: '#/components/schemas/DocFieldIndex'
+                mutable:
+                  $ref: '#/components/schemas/DocMutable'
               required:
-                - name
+                - table_name
+                - si
       responses:
         '200':
           description: 'Ok'
@@ -1752,9 +1489,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/doc/ls':
     get:
@@ -1767,7 +1504,6 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
       responses:
         '200':
           description: 'Ok'
@@ -1776,11 +1512,11 @@ paths:
               schema:
                 properties:
                   keys:
-                    $ref: 'dfs-common.yaml#/components/schemas/DocListResponse'
+                    $ref: '#/components/schemas/DocListResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/doc/open':
     post:
@@ -1795,12 +1531,12 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
                 name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                  $ref: '#/components/schemas/DocTableName'
               required:
                 - name
       responses:
@@ -1812,9 +1548,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/doc/count':
     post:
@@ -1829,17 +1565,17 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                table_name:
+                  $ref: '#/components/schemas/DocTableName'
                 expr:
                   type: string
                   example: "age>45"
               required:
-                - name
+                - table_name
       responses:
         '200':
           description: 'Ok'
@@ -1849,9 +1585,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/doc/delete':
     delete:
@@ -1866,14 +1602,14 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                table_name:
+                  $ref: '#/components/schemas/DocTableName'
               required:
-                - name
+                - table_name
       responses:
         '200':
           description: 'Ok'
@@ -1883,9 +1619,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/doc/find':
     get:
@@ -1898,22 +1634,22 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
-                expr:
-                  type: string
-                  example: "age>45"
-                limit:
-                  type integer
-              required:
-                - name
-                - expr
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              table_name:
+                $ref: '#/components/schemas/DocTableName'
+              expr:
+                type: string
+                example: "age>45"
+              limit:
+                type: integer
+                example: 20
+            required:
+              - table_name
+              - expr
       responses:
         '200':
           description: 'Ok'
@@ -1922,11 +1658,11 @@ paths:
               schema:
                 properties:
                   keys:
-                    $ref: 'dfs-common.yaml#/components/schemas/DocFindResponse'
+                    $ref: '#/components/schemas/DocFindResponse'
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/doc/loadjson':
     post:
@@ -1945,8 +1681,8 @@ paths:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                table_name:
+                  $ref: '#/components/schemas/DocTableName'
               required:
                 - name
           multipart/form-data:
@@ -1965,9 +1701,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/doc/indexjson':
     post:
@@ -1987,9 +1723,9 @@ paths:
               type: object
               properties:
                 name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                  $ref: '#/components/schemas/DocTableName'
                 file:
-                  $ref: 'dfs-common.yaml#/components/schemas/PodFileName'
+                  $ref: '#/components/schemas/PodFileName'
               required:
                 - name
                 - file
@@ -2002,9 +1738,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/doc/entry/put':
     post:
@@ -2019,17 +1755,16 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                table_name:
+                  $ref: '#/components/schemas/DocTableName'
                 doc:
-                  type: string
-                  format: byte
+                  $ref: '#/components/schemas/FileNameWithPath'
               required:
-                - name
+                - table_name
                 - doc
       responses:
         '200':
@@ -2040,9 +1775,9 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
   '/doc/entry/get':
     get:
@@ -2055,33 +1790,30 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
-                id:
-                  type: string
-              required:
-                - name
-                - id
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              table_name:
+                $ref: '#/components/schemas/DocTableName'
+              id:
+                $ref: '#/components/schemas/DocId'
+            required:
+              - table_name    
+              - id
       responses:
         '200':
           description: 'Ok'
           content:
             application/octet-stream:
               schema:
-                properties:
-                  doc: string
+                  type: string
                   format: byte
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
-
+          $ref: '#/components/responses/500'
 
   '/doc/entry/del':
     delete:
@@ -2096,16 +1828,16 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                name:
-                  $ref: 'dfs-common.yaml#/components/schemas/DocTableName'
+                table_name:
+                  $ref: '#/components/schemas/DocTableName'
                 id:
-                  type: string
+                  $ref: '#/components/schemas/DocId'
               required:
-                - name
+                - table_name
                 - id
       responses:
         '200':
@@ -2116,7 +1848,492 @@ paths:
                 type: string
                 format: binary
         '400':
-          $ref: 'dfs-common.yaml#/components/responses/400'
+          $ref: '#/components/responses/400'
         '500':
-          $ref: 'dfs-common.yaml#/components/responses/500'
+          $ref: '#/components/responses/500'
 
+components:
+  schemas:
+    UserSignupResponse:
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/EthereumAddress'
+
+    UserSignupResponseWithMenonic:
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/EthereumAddress'
+        mnemonic:
+          $ref: '#/components/schemas/Mnemonic'
+
+    UserPresentResponse:
+      type: object
+      properties:
+        present:
+          type: boolean
+          example: true
+
+    UserLoggedInResponse:
+      type: object
+      properties:
+        loggedin:
+          type: boolean
+          example: true
+
+#    OkResponse:
+#      type: object
+#      properties:
+#        message:
+#          type: string
+#          example: "done"
+
+    UserExportResponse:
+      type: object
+      properties:
+        user_name:
+          $ref: '#/components/schemas/UserName'
+        address:
+          $ref: '#/components/schemas/EthereumAddress'
+
+    UserStatResponse:
+      type: object
+      properties:
+        user_name:
+          $ref: '#/components/schemas/UserName'
+        reference:
+          $ref: '#/components/schemas/EthereumAddress'
+
+    UserImportArg1:
+      type: object
+      properties:
+        user_name:
+          $ref: '#/components/schemas/UserName'
+        password:
+          $ref: '#/components/schemas/Password'
+        address:
+          $ref: '#/components/schemas/EthereumAddress'
+
+    UserImportArg2:
+      type: object
+      properties:
+        user_name:
+          $ref: '#/components/schemas/UserName'
+        password:
+          $ref: '#/components/schemas/Password'
+        address:
+          $ref: '#/components/schemas/Mnemonic'
+
+
+    PodReceiveInfo:
+      type: object
+      properties:
+        pod_name:
+          $ref: '#/components/schemas/PodName'
+        pod_address:
+          $ref: '#/components/schemas/EthereumAddress'
+        user_name:
+          $ref: '#/components/schemas/UserName'
+        user_address:
+          $ref: '#/components/schemas/EthereumAddressAnotherOne'
+        shared_time:
+          $ref: '#/components/schemas/Time'
+
+    PodList:
+      type: array
+      items:
+        $ref: '#/components/schemas/PodName'
+
+    SharedPodList:
+      type: array
+      items:
+        $ref: '#/components/schemas/SharedPodName'
+
+    DirEntryType:
+      type: string
+      pattern: 'File/Dir'
+      example: "File"
+
+    ListDirectory:
+      type: object
+      properties:
+        entries:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              properties:
+                name:
+                  $ref: '#/components/schemas/DirName'
+                type:
+                  $ref: '#/components/schemas/DirEntryType'
+                size:
+                  type: integer
+                creation_time:
+                  $ref: '#/components/schemas/Time'
+                modification_time:
+                  $ref: '#/components/schemas/Time'
+                access_time:
+                  $ref: '#/components/schemas/Time'
+
+    ListFiles:
+      type: object
+      properties:
+        entries:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              properties:
+                name:
+                  $ref: '#/components/schemas/FileNameWithPath'
+                type:
+                  $ref: '#/components/schemas/DirEntryType'
+                size:
+                  type: integer
+                block_size:
+                  type: integer
+                creation_time:
+                  $ref: '#/components/schemas/Time'
+                modification_time:
+                  $ref: '#/components/schemas/Time'
+                access_time:
+                  $ref: '#/components/schemas/Time'
+
+    DirectoryStat:
+      type: object
+      properties:
+        pod_name:
+          $ref: '#/components/schemas/PodName'
+        dir_path:
+          type: string
+        dir_name:
+          type: string
+        creation_time:
+          $ref: '#/components/schemas/Time'
+        modification_time:
+          $ref: '#/components/schemas/Time'
+        access_time:
+          $ref: '#/components/schemas/Time'
+        no_of_directories:
+          type: integer
+        no_of_files:
+          type: integer
+
+    DirPresentResponse:
+      type: object
+      properties:
+        present:
+          type: boolean
+          example: true
+        error:
+          type: string
+      required:
+        - present
+
+    FileUploadResponse:
+      type: object
+      properties:
+        file_name:
+          type: string
+        reference:
+          oneOf:
+            - $ref: '#/components/schemas/FileReference'
+            - $ref: '#/components/schemas/FileReferenceEncrypted'
+        error:
+          type: string
+      required:
+        - file_name
+        - reference
+
+    FileSharingResponse:
+      type: object
+      properties:
+        file_sharing_reference:
+          $ref: '#/components/schemas/FileSharingReference'
+
+    ReceiveFileInfo:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/PodFileName'
+        size:
+          type: integer
+        block_size:
+          type: string
+          example: 10M
+        number_of_blocks:
+          type: integer
+        content_type:
+          type: string
+        compression:
+          enum: [ gzip, snappy ]
+        pod_name:
+          $ref: '#/components/schemas/PodName'
+        meta_ref:
+          oneOf:
+            - $ref: '#/components/schemas/FileReference'
+            - $ref: '#/components/schemas/FileReferenceEncrypted'
+        source_address:
+          $ref: '#/components/schemas/EthereumAddress'
+        dest_address:
+          $ref: '#/components/schemas/EthereumAddressAnotherOne'
+        shared_time:
+          $ref: '#/components/schemas/Time'
+
+    FileStatInfo:
+      type: object
+      properties:
+        pod_name:
+          $ref: '#/components/schemas/PodName'
+        file_path:
+          $ref: '#/components/schemas/PodPath'
+        file_name:
+          $ref: '#/components/schemas/PodFileName'
+        file_size:
+          type: integer
+        block_size:
+          type: string
+          example: 10M
+        compression:
+          enum: [ gzip, snappy ]
+        content_type:
+          type: string
+        creation_time:
+          $ref: '#/components/schemas/Time'
+        modification_time:
+          $ref: '#/components/schemas/Time'
+        access_time:
+          $ref: '#/components/schemas/Time'
+        properties:
+          type: array
+          items:
+            properties:
+              name:
+                $ref: '#/components/schemas/BlockName'
+              reference:
+                oneOf:
+                  - $ref: '#/components/schemas/FileReference'
+                  - $ref: '#/components/schemas/FileReferenceEncrypted'
+              size:
+                type: integer
+              compressed_size:
+                type: integer
+
+    KVList:
+      type: array
+      items:
+        properties:
+          table_name:
+            $ref: '#/components/schemas/KVTableName'
+          indexes:
+            enum: [ id ]
+          type:
+            $ref: '#/components/schemas/KVIndexType'
+
+    KVgetResponseKeys:
+      type: array
+      items:
+        properties:
+          key:
+            type: string
+
+    KVgetResponseValues:
+      type: array
+      items:
+        properties:
+          value:
+            type: string
+
+    DocListResponse:
+      type: object
+      properties:
+        table_name:
+          $ref: '#/components/schemas/DocTableName'
+        properties:
+          type: array
+          items:
+            properties:
+              name:
+                $ref: '#/components/schemas/DocFieldName'
+              type:
+                $ref: '#/components/schemas/DocIndexType'
+
+    DocFindResponse:
+      type: object
+      properties:
+        docs:
+          $ref: '#/components/schemas/DocTableName'
+        properties:
+          type: array
+          items:
+            properties:
+              doc:
+                type: string
+                format: byte
+
+    Time:
+      type: string
+      format: date-time
+      pattern: '^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}\+\d{2}:\d{2})$'
+      example: "2020-06-11T11:26:42.6969797+02:00"
+
+    UserName:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "alice"
+
+    PodName:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "cdrive"
+
+    SharedPodName:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "Bobs-drive"
+
+    DirPath:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "/Documents/pdf"
+
+    DirName:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "dir1"
+
+    FileNameWithPath:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "/Documents/pdf/swarm-paper.pdf"
+
+    PodPath:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "/home/"
+
+    PodFileName:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "/dir1/switzerland.osm"
+
+    BlockName:
+      type: string
+      example: "block00001"
+
+    KVIndexType:
+      type: string
+      enum: [ string, number]
+
+    KVTableName:
+      type: string
+      example: "kv_table1"
+
+    KVKey:
+      type: string
+      example: "key1"
+
+    KVValue:
+      type: string
+      format: byte
+
+    DocFieldName:
+      type: string
+      example: first_name
+
+    DocIndexType:
+      type: string
+      enum: [ string, number, map, list ]
+
+    DocMutable:
+      type: boolean
+      example: true
+
+    DocId:
+      type: string
+      example: "doc1"
+
+    DocFieldIndex:
+      description: string of field=indexType pairs seperated with comma (first_name=string,age=number,tags=map)
+      type: string
+      example: first_name=string,age=number,tags=map
+
+
+    DocTableName:
+      type: string
+      example: "doc_table1"
+
+    Password:
+      type: string
+      example: "DifficultPassword@%&149"
+
+    Mnemonic:
+      description: any combination of 12 words from BIP-39 mnemonic word list from https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
+      type: string
+      example: "alert record income curve mercy tree heavy loan hen recycle mean devote"
+
+    FileReference:
+      type: string
+      pattern: '^[A-Fa-f0-9]{64}$'
+      example: "dbd81832565d3396a01ecb003512a63b78c02e343a722a2f6a8f9328652280f8"
+
+    FileReferenceEncrypted:
+      type: string
+      pattern: '^[A-Fa-f0-9]{128}$'
+      example: "dbd81832565d3396a01ecb003512a63b78c02e343a722a2f6a8f9328652280f89e7acb1f7c2c5ceafc10119581b3ac4dc1e42fa6b2db9fdad8997fc52c4714f8"
+
+    FileSharingReference:
+      type: string
+      pattern: '^[A-Fa-f0-9]$'
+      example: "801bb9d4ab5ff66ddf73b16f9043c3742d661b53ac51254908db450e2f0eb969abf50e96612c46bcdb6bb863764d7638bac746a3a916d72fcb0d3a2308842f091612534189"
+
+    EthereumAddress:
+      type: string
+      pattern: '^[A-Fa-f0-9]{40}$'
+      example: "36b7efd913ca4cf880b8eeac5093fa27b0825906"
+
+    EthereumAddressAnotherOne:
+      type: string
+      pattern: '^[A-Fa-f0-9]{40}$'
+      example: "1dB7eD7bD48B770593075278ca6cDf5841436CB8"
+
+    ProblemDetails:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+
+    ErrorString:
+      type: string
+
+  responses:
+    '204':
+      description: The resource was deleted successfully.
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    '404':
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'

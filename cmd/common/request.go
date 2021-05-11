@@ -39,6 +39,7 @@ type FileSystemRequest struct {
 
 type KVRequest struct {
 	TableName   string `json:"table_name,omitempty"`
+	IndexType   string `json:"index_type,omitempty"`
 	Key         string `json:"key,omitempty"`
 	Value       string `json:"value,omitempty"`
 	StartPrefix string `json:"start_prefix,omitempty"`

@@ -144,9 +144,9 @@ func (h *Handler) KVGetNextHandler(w http.ResponseWriter, r *http.Request) {
 
 	var resp KVResponse
 	if columns != nil {
-		resp.Names = columns
+		resp.Keys = columns
 	} else {
-		resp.Names = []string{key}
+		resp.Keys = []string{key}
 	}
 	resp.Values = data
 

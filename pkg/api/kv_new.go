@@ -53,7 +53,7 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// by default the index type in string
-	idxType := r.FormValue("indexType")
+	idxType := kvReq.IndexType
 	if idxType == "" {
 		idxType = "string"
 	}

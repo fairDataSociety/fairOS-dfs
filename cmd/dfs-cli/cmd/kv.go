@@ -31,9 +31,10 @@ import (
 	"github.com/tinygrasshopper/bettercsv"
 )
 
-func kvNew(tableName string) {
+func kvNew(tableName, indexType string) {
 	kvNewReq := common.KVRequest{
 		TableName: tableName,
+		IndexType: indexType,
 	}
 	jsonData, err := json.Marshal(kvNewReq)
 	if err != nil {
@@ -164,7 +165,7 @@ func kvget(tableName, key string) {
 		return
 	}
 	values := content[0]
-	for i, name := range resp.Names {
+	for i, name := range resp.Keys {
 		fmt.Println(name + " : " + values[i])
 	}
 }
@@ -264,7 +265,7 @@ func kvGetNext(tableName string) {
 			return
 		}
 		values := content[0]
-		for i, name := range resp.Names {
+		for i, name := range resp.Keys {
 			fmt.Println(name + " : " + values[i])
 		}
 	}

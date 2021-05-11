@@ -430,7 +430,12 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			kvNew(tableName)
+			indexType := ""
+			if len(blocks) > 3 {
+				indexType = blocks[3]
+			}
+			kvNew(tableName, indexType)
+
 			currentPrompt = getCurrentPrompt()
 		case "delete":
 			if len(blocks) < 3 {

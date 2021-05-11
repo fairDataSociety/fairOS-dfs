@@ -56,7 +56,7 @@ func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	limit := ""
-	keys, ok = r.URL.Query()["expr"]
+	keys, ok = r.URL.Query()["limit"]
 	if ok && len(keys[0]) >= 1 {
 		limit = keys[0]
 	}

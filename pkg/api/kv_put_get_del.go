@@ -27,7 +27,7 @@ import (
 )
 
 type KVResponse struct {
-	Names  []string `json:"names,omitempty"`
+	Keys   []string `json:"keys,omitempty"`
 	Values []byte   `json:"values"`
 }
 
@@ -55,14 +55,14 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := r.FormValue("key")
+	key := kvReq.Key
 	if name == "" {
 		h.logger.Errorf("kv put: \"key\" argument missing")
 		jsonhttp.BadRequest(w, "kv put: \"key\" argument missing")
 		return
 	}
 
-	value := r.FormValue("value")
+	value := kvReq.Value
 	if value == "" {
 		h.logger.Errorf("kv put: \"value\" argument missing")
 		jsonhttp.BadRequest(w, "kv put: \"value\" argument missing")
@@ -140,9 +140,9 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	var resp KVResponse
 	if columns != nil {
-		resp.Names = columns
+		resp.Keys = columns
 	} else {
-		resp.Names = []string{key}
+		resp.Keys = []string{key}
 	}
 	resp.Values = data
 
