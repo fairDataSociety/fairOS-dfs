@@ -2,7 +2,7 @@
 
 Latest documentation is available  @ ![https://fairos.io](https://fairos.io)
 
-![FairOS-dfs](https://github.com/fairDataSociety/fairOS-dfs/blob/master/docs/images/FairOS-dfs.png)
+![FairOS-dfs Architecture Diagram](https://github.com/fairDataSociety/fairOS-dfs/blob/master/docs/images/FairOS-dfs.png)
 
 The Decentralised File System (dfs) is a file system built for the ![FairOS](https://github.com/fairDataSociety/fairOS/blob/master/README.md).
 It is a stateless thin layer which uses the building blocks provided by Swarm to provide high level functionalities like
