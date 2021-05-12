@@ -66,3 +66,7 @@ func (i *Info) RemovePodName() {
 func (i *Info) GetPodName() string {
 	return i.podName
 }
+
+func (i *Info) GetDirectory() *d.Directory {
+	return i.dir
+}

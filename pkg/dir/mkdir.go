@@ -71,47 +71,16 @@ func (d *Directory) MkDir(parentPath, dirName string) error {
 	}
 	d.AddToDirectoryMap(totalPath, dirInode)
 
-	// if parent is root, then create the root entry
+	// get the parent directory entry and add this new directory to its list of children
 	parentHash := utils.HashString(parentPath)
-	var parentData []byte
-	var parentDirInode *Inode
 	dirName = "_D_" + dirName
-
-	// get the parent directory entry
-	_, parentData, err = d.fd.GetFeedData(parentHash, d.userAddress)
+	_, parentData, err := d.fd.GetFeedData(parentHash, d.userAddress)
 	if err != nil {
-		if parentPath == utils.PathSeperator {
-			// if the missing parent directory is root dir, then create it
-			meta := MetaData{
-				Version:          MetaVersion,
-				Path:             "",
-				Name:             parentPath,
-				CreationTime:     now,
-				ModificationTime: now,
-				AccessTime:       now,
-			}
-			parentDirInode = &Inode{
-				Meta:           &meta,
-				FileOrDirNames: []string{dirName},
-			}
-
-			parentData, err = json.Marshal(&parentDirInode)
-			if err != nil {
-				return err
-			}
-
-			_, err = d.fd.CreateFeed(parentHash, d.userAddress, parentData)
-			if err != nil {
-				return err
-			}
-			d.AddToDirectoryMap(parentPath, parentDirInode)
-			return nil
-		} else {
-			return err
-		}
+		return err
 	}
 
 	// unmarshall the data and add the directory entry to the parent
+	var parentDirInode *Inode
 	err = json.Unmarshal(parentData, &parentDirInode)
 	if err != nil {
 		return err
@@ -128,5 +97,34 @@ func (d *Directory) MkDir(parentPath, dirName string) error {
 		return err
 	}
 	d.AddToDirectoryMap(parentPath, parentDirInode)
+	return nil
+}
+
+func (d *Directory) MkRootDir() error {
+	// create the root parent dir
+	now := time.Now().Unix()
+	meta := MetaData{
+		Version:          MetaVersion,
+		Path:             "",
+		Name:             utils.PathSeperator,
+		CreationTime:     now,
+		ModificationTime: now,
+		AccessTime:       now,
+	}
+	parentDirInode := &Inode{
+		Meta: &meta,
+	}
+
+	parentData, err := json.Marshal(&parentDirInode)
+	if err != nil {
+		return err
+	}
+
+	parentHash := utils.HashString(utils.PathSeperator)
+	_, err = d.fd.CreateFeed(parentHash, d.userAddress, parentData)
+	if err != nil {
+		return err
+	}
+	d.AddToDirectoryMap(utils.PathSeperator, parentDirInode)
 	return nil
 }

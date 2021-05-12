@@ -201,7 +201,7 @@ func loadcsv(tableName, fileName, localCsvFile string) {
 		return
 	}
 	args := make(map[string]string)
-	args["tale_name"] = tableName
+	args["table_name"] = tableName
 	data, err := fdfsAPI.uploadMultipartFile(apiKVLoadCSV, fileName, fi.Size(), fd, args, "csv", "false")
 	if err != nil {
 		fmt.Println("loadcsv: ", err)

@@ -40,6 +40,12 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 		return nil, err
 	}
 
+	// create the root directory
+	err = ui.GetDirectory().MkRootDir()
+	if err != nil {
+		return nil, err
+	}
+
 	// Add podName in the login user session
 	ui.SetPodName(podName)
 	return pi, nil

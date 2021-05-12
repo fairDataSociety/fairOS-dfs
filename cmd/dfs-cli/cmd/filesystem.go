@@ -64,6 +64,9 @@ func listFileAndDirectories(dirNameWithpath string) {
 		fmt.Println("dir ls: ", err)
 		return
 	}
+	if resp.Directories == nil && resp.Files == nil {
+		fmt.Println("empty directory")
+	}
 	for _, entry := range resp.Directories {
 		fmt.Println("<Dir>: ", entry.Name)
 	}
