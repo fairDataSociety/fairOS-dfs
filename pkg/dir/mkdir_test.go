@@ -46,6 +46,12 @@ func TestMkdir(t *testing.T) {
 	t.Run("simple-mkdir", func(t *testing.T) {
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
 
+		// make root dir so that other directories can be added
+		err = dirObject.MkRootDir()
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		// create a new dir
 		err := dirObject.MkDir("/", "baseDir")
 		if err != nil {

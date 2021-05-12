@@ -50,6 +50,12 @@ func TestOpen(t *testing.T) {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
+		// make root dir so that other directories can be added
+		err = info.GetDirectory().MkRootDir()
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		// create some dir and files
 		addFilesAndDirectories(t, info, pod1, podName1)
 
