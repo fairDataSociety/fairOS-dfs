@@ -18,6 +18,7 @@ package dir
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -28,7 +29,10 @@ const (
 	nameLength = 100
 )
 
-func (d *Directory) MkDir(parentPath, dirName string) error {
+func (d *Directory) MkDir(dirToCreateWithPath string) error {
+	parentPath := filepath.Dir(dirToCreateWithPath)
+	dirName := filepath.Base(dirToCreateWithPath)
+
 	// validation checks of the arguments
 	if dirName == "" || strings.HasPrefix(dirName, utils.PathSeperator) {
 		return ErrInvalidDirectoryName

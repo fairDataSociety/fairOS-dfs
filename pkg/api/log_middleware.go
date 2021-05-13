@@ -24,6 +24,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// LogMiddleware the server middleware which gets called when a api handler is executed.
+// it is used to collect certain information about the api call and log it.
 func (h *Handler) LogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()

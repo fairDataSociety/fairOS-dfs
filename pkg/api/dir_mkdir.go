@@ -29,6 +29,10 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// DirectoryMkdirHandler is the api handler to create a new directory.
+// it takes one argument
+// - dir-path: the new directory to create along with its absolute path
+
 func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -46,17 +50,10 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	dirToCreate := fsReq.DirectoryName
-	if dirToCreate == "" {
-		h.logger.Errorf("mkdir: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "mkdir: \"dir\" argument missing")
-		return
-	}
-
-	path := fsReq.DirectoryPath
-	if path == "" {
-		h.logger.Errorf("mkdir: \"path\" argument missing")
-		jsonhttp.BadRequest(w, "mkdir: \"path\" argument missing")
+	dirToCreateWithPath := fsReq.DirectoryPath
+	if dirToCreateWithPath == "" {
+		h.logger.Errorf("mkdir: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "mkdir: \"dir_path\" argument missing")
 		return
 	}
 
@@ -74,7 +71,7 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// make directory
-	err = h.dfsAPI.Mkdir(path, dirToCreate, sessionId)
+	err = h.dfsAPI.Mkdir(dirToCreateWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidDirectory ||

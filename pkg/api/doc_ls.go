@@ -33,6 +33,8 @@ type DocumentDB struct {
 	CollectionType string              `json:"type"`
 }
 
+// DocListHandler is the api handler which lists all the document database in a pod
+// it takes no arguments
 func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

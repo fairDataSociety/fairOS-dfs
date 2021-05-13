@@ -26,6 +26,9 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// KVOpenHandler is the api handler to open a key value table
+// it takes only one argument
+// - table_name: the name of the kv table
 func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

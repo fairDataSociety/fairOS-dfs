@@ -26,6 +26,9 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocOpenHandler is the api handler to open a document database
+// it has only one argument
+// table_name: the name of the document database to open
 func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

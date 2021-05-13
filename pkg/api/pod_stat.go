@@ -31,6 +31,9 @@ type PodStatResponse struct {
 	PodAddress string `json:"address"`
 }
 
+// PodStatHandler is the api handler to get information about a pod
+// it takes only one argument
+// - pod_name: the name of the pod to get the info
 func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {

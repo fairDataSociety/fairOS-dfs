@@ -22,8 +22,6 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
-	"github.com/gorilla/mux"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
@@ -32,6 +30,10 @@ type DocGetResponse struct {
 	Doc []byte `json:"doc"`
 }
 
+// DocPutHandler is the api handler to add a document in to a document database
+// it has two arguments
+// table_name: the name of the document database
+// doc: the document to add
 func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -85,6 +87,10 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, "added document to db")
 }
 
+// DocGetHandler is the api handler to get a document from a document database
+// it has two arguments
+// table_name: the name of the document database
+// id: the document id to get
 func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["table_name"]
 	if !ok || len(keys[0]) < 1 {
@@ -139,49 +145,10 @@ func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &getResponse)
 }
 
-func (h *Handler) DocNewGetHandler(w http.ResponseWriter, r *http.Request) {
-	name := mux.Vars(r)["name"]
-	if name == "" {
-		h.logger.Errorf("doc get: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"name\" argument missing")
-		return
-	}
-
-	id := mux.Vars(r)["id"]
-	if id == "" {
-		h.logger.Errorf("doc get: \"id\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"id\" argument missing")
-		return
-	}
-
-	// get values from cookie
-	cookieStr := r.FormValue("fairOS-dfs")
-	sessionId, err := cookie.GetSessionIdFromRawCookie(cookieStr)
-	if err != nil {
-		h.logger.Errorf("doc get: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
-		return
-	}
-	if sessionId == "" {
-		h.logger.Errorf("doc get: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc get: \"cookie-id\" parameter missing in cookie")
-		return
-	}
-
-	data, err := h.dfsAPI.DocGet(sessionId, name, id)
-	if err != nil {
-		h.logger.Errorf("doc get: %v", err)
-		jsonhttp.InternalServerError(w, "doc get: "+err.Error())
-		return
-	}
-
-	//var getResponse DocGetResponse
-	//getResponse.Doc = data
-
-	//w.Header().Set("Content-Type", "application/json")
-	jsonhttp.OK(w, data)
-}
-
+// DocDelHandler is the api handler to delete a document from a document database
+// it has two arguments
+// table_name: the name of the document database
+// id: the document id to delete
 func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

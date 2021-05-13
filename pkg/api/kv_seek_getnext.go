@@ -29,6 +29,12 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// KVSeekHandler is the api handler to seek to a particular key with the given prefix
+// it takes four arguments, 2 mandatory and two optional
+// - table_name: the name of the kv table
+// - start_prefix: the prefix of the key to seek
+// * end_prefix: the prefix of the end key
+// * limit: the threshold for the number of keys to go when get_next is called
 func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -102,6 +108,9 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, "seeked closest to the start key")
 }
 
+// KVGetNextHandler is the api handler to get the key and value from the current seek position
+// it takes only oneargument
+// - table_name: the name of the kv table
 func (h *Handler) KVGetNextHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["table_name"]
 	if !ok || len(keys[0]) < 1 {

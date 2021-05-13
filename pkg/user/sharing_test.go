@@ -92,7 +92,7 @@ func TestSharing(t *testing.T) {
 
 		// create dir and file
 		dirObject1 := info1.GetDirectory()
-		err = dirObject1.MkDir("/", "parentDir1")
+		err = dirObject1.MkDir("/parentDir1")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -136,7 +136,7 @@ func TestSharing(t *testing.T) {
 
 		// create dir and file
 		dirObject2 := info2.GetDirectory()
-		err = dirObject2.MkDir("/", "parentDir2")
+		err = dirObject2.MkDir("/parentDir2")
 		if err != nil {
 			t.Fatal(err)
 		}

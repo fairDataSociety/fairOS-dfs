@@ -42,6 +42,8 @@ func NewWallet(mnemonic string) *Wallet {
 	return wallet
 }
 
+// LoadMnemonicAndCreateRootAccount is used create a new user account when a user ic created. If a valid
+// mnemonic is supplied, it is used, otherwise a bip-0039 based 12 word mnemonic is generated as used.
 func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Account, string, error) {
 	// Generate a mnemonic for memorization or user-friendly seeds
 	entropy, err := bip39.NewEntropy(128)
@@ -74,6 +76,7 @@ func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Acc
 
 }
 
+// CreateAccount is used to create a new hd wallet using the given mnemonic and the walletPath.
 func (w *Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Account, error) {
 	wallet, err := hdwallet.NewFromMnemonic(plainMnemonic)
 	if err != nil {
@@ -85,6 +88,19 @@ func (w *Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Accou
 		return accounts.Account{}, err
 	}
 	return acc, nil
+}
+
+// IsValidMnemonic is used to validate a mnemonic to see if it is valid 12 word bip-0039 compliant.
+func (w *Wallet) IsValidMnemonic(mnemonic string) error {
+	// test the mnemonic for validity
+	words := strings.Split(mnemonic, " ")
+	if len(words) != 12 {
+		return fmt.Errorf("number of word in mnemonic is not 12")
+	}
+	if !bip39.IsMnemonicValid(mnemonic) {
+		return fmt.Errorf("one or more of the mnemonic words is not in bip39 word list")
+	}
+	return nil
 }
 
 func (w *Wallet) decryptMnemonic(password string) (string, error) {
@@ -105,16 +121,4 @@ func (w *Wallet) decryptMnemonic(password string) (string, error) {
 		return "", fmt.Errorf("invalid password")
 	}
 	return mnemonic, nil
-}
-
-func (w *Wallet) IsValidMnemonic(mnemonic string) error {
-	// test the mnemonic for validity
-	words := strings.Split(mnemonic, " ")
-	if len(words) != 12 {
-		return fmt.Errorf("number of word in mnemonic is not 12")
-	}
-	if !bip39.IsMnemonicValid(mnemonic) {
-		return fmt.Errorf("one or more of the mnemonic words is not in bip39 word list")
-	}
-	return nil
 }

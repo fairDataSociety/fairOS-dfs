@@ -27,6 +27,9 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// KVCountHandler is the api handler to count the number of rows in a key value table
+// it has ony one argument
+// - table_name: the name of the key value table
 func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

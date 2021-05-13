@@ -25,6 +25,9 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 )
 
+// FileStatHandler is the api handler to get the information of a file
+// it takes only one argument
+// file_path: the absolute path of the file in the pod
 func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["file_path"]
 	if !ok || len(keys[0]) < 1 {

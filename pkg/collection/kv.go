@@ -55,6 +55,7 @@ type KVTable struct {
 	columns   []string
 }
 
+// NewKeyValueStore is the main object used to do all operation on the key value tables.
 func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) *KeyValue {
 	return &KeyValue{
 		fd:           fd,
@@ -66,6 +67,7 @@ func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client
 	}
 }
 
+// CreateKVTable creates the key value table  with a given index type.
 func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
 	if kv.fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -91,6 +93,7 @@ func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
 	return kv.storeKVTables(kvtables)
 }
 
+// DeleteKVTable deletes a given key value table with all it index and data entries.
 func (kv *KeyValue) DeleteKVTable(name string) error {
 	if kv.fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -128,6 +131,7 @@ func (kv *KeyValue) DeleteKVTable(name string) error {
 
 }
 
+// OpenKVTable open a given key value table and loads the index.
 func (kv *KeyValue) OpenKVTable(name string) error {
 	kvtables, err := kv.LoadKVTables()
 	if err != nil {
@@ -162,6 +166,7 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 	return nil
 }
 
+// KVCount counts the number of entries in the given key value table.
 func (kv *KeyValue) KVCount(name string) (uint64, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
@@ -176,6 +181,7 @@ func (kv *KeyValue) KVCount(name string) (uint64, error) {
 	}
 }
 
+// KVPut inserts a given key and value in to the KV table.
 func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	if kv.fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -206,6 +212,7 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	return ErrKVTableNotOpened
 }
 
+// KVGet retrieves a value from the KV table given a key.
 func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
@@ -226,6 +233,7 @@ func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 	return nil, nil, ErrKVTableNotOpened
 }
 
+// KVDelete removed a key value entry from the KV table given a key.
 func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
 	if kv.fd.IsReadOnlyFeed() {
 		return nil, ErrReadOnlyIndex
@@ -243,6 +251,7 @@ func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
 	return nil, ErrKVTableNotOpened
 }
 
+// KVBatch prepares the index to do a batch insert if keys and values.
 func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
 	if kv.fd.IsReadOnlyFeed() {
 		return nil, ErrReadOnlyIndex
@@ -256,6 +265,7 @@ func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
 	return nil, ErrKVTableNotOpened
 }
 
+// KVBatchPut inserts a key and value in to the memory for batch.
 func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 	if kv.fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -271,6 +281,7 @@ func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 	return batch.Put(key, value, false, false)
 }
 
+// KVBatchWrite commits all the batch entries in to the key value table.
 func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
 	if kv.fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -279,6 +290,7 @@ func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
 	return err
 }
 
+// KVSeek seek to given key with start prefix and prepare for iterating the table.
 func (kv *KeyValue) KVSeek(name, start, end string, limit int64) (*Iterator, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
@@ -316,6 +328,7 @@ func (kv *KeyValue) KVSeek(name, start, end string, limit int64) (*Iterator, err
 	return nil, ErrKVTableNotOpened
 }
 
+// KVGetNext retrieve the next key value pair in the iteration.
 func (kv *KeyValue) KVGetNext(name string) ([]string, string, []byte, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
@@ -331,6 +344,7 @@ func (kv *KeyValue) KVGetNext(name string) ([]string, string, []byte, error) {
 	return nil, "", nil, ErrKVTableNotOpened
 }
 
+// LoadKVTables Loads the list of KV tables.
 func (kv *KeyValue) LoadKVTables() (map[string][]string, error) {
 	collections := make(map[string][]string)
 	topic := utils.HashString(kvFile)

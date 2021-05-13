@@ -28,6 +28,10 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// KVCreateHandler is the api handler to create a key value table
+// it takes two arguments
+// - table_name: the name of the kv table
+// - index_type: the name of the index (ex: string, number)
 func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

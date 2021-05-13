@@ -28,6 +28,9 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 )
 
+// PodDeleteHandler is the api handler to delete a pod
+// it takes only one argument
+// - pod_name: the name of the pod to delete
 func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

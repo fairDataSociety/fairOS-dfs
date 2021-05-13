@@ -648,11 +648,8 @@ paths:
               properties:
                 dir_path:
                   $ref: '#/components/schemas/DirPath'
-                dir_name:
-                  $ref: '#/components/schemas/DirName'
               required:
                 - dir_path
-                - dir_name
       responses:
         '200':
           description: 'Ok'
@@ -685,11 +682,8 @@ paths:
               properties:
                 dir_path:
                   $ref: '#/components/schemas/DirPath'
-                dir_name:
-                    $ref: '#/components/schemas/DirName'
               required:
                 - dir_path
-                - dir_name
       responses:
         '200':
           description: 'Ok'

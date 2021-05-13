@@ -33,6 +33,9 @@ type ListFileResponse struct {
 	Files       []file.Entry `json:"files,omitempty"`
 }
 
+// DirectoryLsHandler is the api handler for listing the contents of a directory.
+// it takes only one argument
+// - dir_path: the path of the directory to list it contents
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["dir_path"]
 	if !ok || len(keys[0]) < 1 {

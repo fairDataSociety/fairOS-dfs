@@ -27,6 +27,11 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocLoadJsonHandler is the api handler that indexes a json file that is present
+// in the local file system
+// it takes two arguments
+// table_name: the document database in which to insert the data
+// file: the json file as a multi part file
 func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("table_name")
 	if name == "" {

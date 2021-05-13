@@ -28,6 +28,10 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// KVLoadCSVHandler is the api handler to load a csv file as key and value in a KV table
+// it has two arguments
+// - table_name: the name of the key value table
+// - csv: the name of the parameter which contains the file to upload in a multipart upload
 func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("table_name")
 	if name == "" {

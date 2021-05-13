@@ -29,6 +29,9 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 )
 
+// FileDeleteHandler is the api handler to delete a file from a given pod
+//  it takes only one argument
+// file_path: the absolute path of the file in the pod
 func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

@@ -117,16 +117,16 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1 string) {
 	t.Helper()
 	dirObject := info.GetDirectory()
-	err := dirObject.MkDir("/", "parentDir")
+	err := dirObject.MkDir("/parentDir")
 	if err != nil {
 		t.Fatal(err)
 	}
 	// populate the directory with few directory and files
-	err = dirObject.MkDir("/parentDir", "subDir1")
+	err = dirObject.MkDir("/parentDir/subDir1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dirObject.MkDir("/parentDir", "subDir2")
+	err = dirObject.MkDir("/parentDir/subDir2")
 	if err != nil {
 		t.Fatal(err)
 	}

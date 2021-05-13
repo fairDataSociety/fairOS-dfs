@@ -27,6 +27,11 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocIndexJsonHandler is the api handler to index a json file that is present
+// in a pod, in to the given document database
+// it takes two arguments
+// table_name: the document database in which to insert the data
+// file_name: the file name of the index json with absolute path
 func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -53,8 +58,8 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 
 	podFile := docReq.FileName
 	if podFile == "" {
-		h.logger.Errorf("doc indexjson: \"file\" argument missing")
-		jsonhttp.BadRequest(w, "doc indexjson: \"file\" argument missing")
+		h.logger.Errorf("doc indexjson: \"file_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc indexjson: \"file_name\" argument missing")
 		return
 	}
 

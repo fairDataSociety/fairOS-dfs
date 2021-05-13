@@ -54,15 +54,15 @@ func TestSync(t *testing.T) {
 		}
 
 		// populate the directory with few directory and files
-		err := dirObject.MkDir("/", "dirToStat")
+		err := dirObject.MkDir("/dirToStat")
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/dirToStat", "subDir1")
+		err = dirObject.MkDir("/dirToStat/subDir1")
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/dirToStat", "subDir2")
+		err = dirObject.MkDir("/dirToStat/subDir2")
 		if err != nil {
 			t.Fatal(err)
 		}

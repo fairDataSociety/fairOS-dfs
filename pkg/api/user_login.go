@@ -25,6 +25,10 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// UserLoginHandler is the api handler to login a user
+// it takes two arguments
+// - user_name: the name of the user to login
+// - password: the password of the user
 func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

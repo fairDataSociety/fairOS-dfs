@@ -29,6 +29,9 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// DirectoryRmdirHandler is the api handler to remove a directory
+// it takes one argument
+// - dir-path: the directory to remove along with its absolute path
 func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -46,17 +49,10 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	dir := fsReq.DirectoryName
+	dir := fsReq.DirectoryPath
 	if dir == "" {
-		h.logger.Errorf("rmdir: \"dir\" argument missing")
-		jsonhttp.BadRequest(w, "rmdir: \"dir\" argument missing")
-		return
-	}
-
-	path := fsReq.DirectoryPath
-	if path == "" {
-		h.logger.Errorf("rmdir: \"path\" argument missing")
-		jsonhttp.BadRequest(w, "rmdir: \"path\" argument missing")
+		h.logger.Errorf("rmdir: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, "rmdir: \"dir_path\" argument missing")
 		return
 	}
 
@@ -74,7 +70,7 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// remove directory
-	err = h.dfsAPI.RmDir(path, dir, sessionId)
+	err = h.dfsAPI.RmDir(dir, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {

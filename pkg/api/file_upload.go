@@ -39,6 +39,13 @@ const (
 	CompressionHeader = "fairOS-dfs-Compression"
 )
 
+// FileUploadHandler is the api handler to upload a file from a local file system to the dfs
+// it takes three argument
+// - dir_path: the directory in the pod where the file should be uploaded
+// - block_size: the block size of the file
+// - files: the argument name iwhere the file to upload is attached n the multipart file upload
+// Header:
+// - fairOS-dfs-Compression: gzip/snappy
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	podPath := r.FormValue("dir_path")
 	if podPath == "" {

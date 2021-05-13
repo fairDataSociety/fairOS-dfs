@@ -32,6 +32,8 @@ type Collection struct {
 	CollectionType string   `json:"type"`
 }
 
+// KVListHandler is the api handler to list all the key value tables in a pod
+// it has no arguments
 func (h *Handler) KVListHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

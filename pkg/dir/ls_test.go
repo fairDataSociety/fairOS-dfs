@@ -54,16 +54,16 @@ func TestListDirectory(t *testing.T) {
 		}
 
 		// create some dir and files
-		err := dirObject.MkDir("/", "parentDir")
+		err := dirObject.MkDir("/parentDir")
 		if err != nil {
 			t.Fatal(err)
 		}
 		// populate the directory with few directory and files
-		err = dirObject.MkDir("/parentDir", "subDir1")
+		err = dirObject.MkDir("/parentDir/subDir1")
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/parentDir", "subDir2")
+		err = dirObject.MkDir("/parentDir/subDir2")
 		if err != nil {
 			t.Fatal(err)
 		}

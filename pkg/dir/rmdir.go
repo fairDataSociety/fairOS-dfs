@@ -17,10 +17,14 @@ limitations under the License.
 package dir
 
 import (
+	"path/filepath"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) RmDir(parentPath, dirToDelete string) error {
+func (d *Directory) RmDir(directoryNameWithPath string) error {
+	parentPath := filepath.Dir(directoryNameWithPath)
+	dirToDelete := filepath.Base(directoryNameWithPath)
 	// validation checks of the arguments
 	if parentPath == "" {
 		return ErrInvalidDirectoryName

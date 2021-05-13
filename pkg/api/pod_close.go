@@ -26,6 +26,8 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// PodCloseHandler is the api handler to close a open pod
+// it takes no arguments
 func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

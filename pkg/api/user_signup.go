@@ -34,6 +34,11 @@ type UserSignupResponse struct {
 	Mnemonic string `json:"mnemonic,omitempty"`
 }
 
+// UserSignupHandler is the api handler to creata new user
+// it takes two mandatory arguments and one optional argument
+// - user_name: the name of the user to create
+// - password: the password of the user
+// * mnemonic: a 12 word mnemonic to use to create the hd wallet of the user
 func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

@@ -33,6 +33,10 @@ type PodOpenResponse struct {
 	Reference string `json:"reference"`
 }
 
+// PodOpenHandler is the api handler to close a open pod
+// it takes two arguments
+// - pod_name: the name of the pod to open
+// - password: the password of the user
 func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

@@ -72,6 +72,7 @@ type bytesPostResponse struct {
 	Reference swarm.Address `json:"reference"`
 }
 
+// NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
 func NewBeeClient(host, port string, logger logging.Logger) *BeeClient {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache, err := lru.New(chunkCacheSize)
@@ -108,6 +109,7 @@ func socResource(owner, id, sig string) string {
 	return fmt.Sprintf("/soc/%s/%s?sig=%s", owner, id, sig)
 }
 
+// CheckConnection is used to check if the nbe client is up and running.
 func (s *BeeClient) CheckConnection() bool {
 	req, err := http.NewRequest(http.MethodGet, s.url, nil)
 	if err != nil {
@@ -139,7 +141,7 @@ func (s *BeeClient) CheckConnection() bool {
 	return true
 }
 
-// upload a chunk in bee
+// UploadSOC is used construct and send a Single Owner Chunk to the Swarm bee client.
 func (s *BeeClient) UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error) {
 	to := time.Now()
 	socResStr := socResource(owner, id, signature)
@@ -186,7 +188,7 @@ func (s *BeeClient) UploadSOC(owner string, id string, signature string, data []
 	return addrResp.Reference.Bytes(), nil
 }
 
-// upload a chunk in bee
+// UploadChunk uploads a chunk to Swarm network.
 func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error) {
 	to := time.Now()
 	fullUrl := fmt.Sprintf(s.url + ChunkUploadDownloadUrl)
@@ -235,7 +237,7 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 	return addrResp.Reference.Bytes(), nil
 }
 
-// download a chunk from bee
+// DownloadChunk downloads a chunk with given address from the Swarm network
 func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []byte, err error) {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
@@ -280,7 +282,7 @@ func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []b
 	return data, nil
 }
 
-// upload a chunk in bee
+// UploadBlob uploads a binary blob of data to Swarm network. It also optionally pins and encrypts the data.
 func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err error) {
 	to := time.Now()
 
@@ -341,6 +343,7 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 	return resp.Reference.Bytes(), nil
 }
 
+// DownloadBlob downloads a blob of binary data from the Swarm network.
 func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	to := time.Now()
 
@@ -389,6 +392,7 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	return respData, response.StatusCode, nil
 }
 
+// DeleteChunk unpins a check so that it will be garbasge collected by the Swarm network.
 func (s *BeeClient) DeleteChunk(address []byte) error {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
@@ -420,6 +424,7 @@ func (s *BeeClient) DeleteChunk(address []byte) error {
 	return nil
 }
 
+// DeleteBlob unpins a blob so that it can be garbage collected in the Swarm network.
 func (s *BeeClient) DeleteBlob(address []byte) error {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()

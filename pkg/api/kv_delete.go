@@ -26,6 +26,9 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// KVDeleteHandler is the api handler to delete a key value table
+// it has ony one argument
+// - table_name: the name of the key value table
 func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

@@ -31,6 +31,11 @@ type KVResponse struct {
 	Values []byte   `json:"values"`
 }
 
+// KVPutHandler is the api handler to insert a key and value in to the kv table
+// it takes three arguments
+// - table_name: the name of the kv table
+// - key: the key string
+// - value: the value to insert in bytes
 func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -91,6 +96,10 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, "key added")
 }
 
+// KVGetHandler is the api handler to get a value from the kv table
+// it takes two arguments
+// - table_name: the name of the kv table
+// - key: the key string
 func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["table_name"]
 	if !ok || len(keys[0]) < 1 {
@@ -150,6 +159,10 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &resp)
 }
 
+// KVDelHandler is the api handler to delete a key and value from the kv table
+// it takes two arguments
+// - table_name: the name of the kv table
+// - key: the key string
 func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

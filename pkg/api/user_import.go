@@ -25,6 +25,13 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// ImportUserHandler is the api handler to import a exported user in to anew machine
+// it takes four arguments, to mandatory and one of the other two is optional
+// - user_name: the name of the user to import
+// - password: the password of the user
+//  one of the below is optional
+// - address: address of the user
+// - mnemonic: 12 word mnemonic
 func (h *Handler) ImportUserHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

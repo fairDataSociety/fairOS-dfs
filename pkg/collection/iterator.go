@@ -42,6 +42,7 @@ type ManifestState struct {
 	currentIndex    int
 }
 
+// NewStringIterator creates a new iterator object which is used to create new index iterators.
 func (idx *Index) NewStringIterator(start, end string, limit int64) (*Iterator, error) {
 	var manifest *Manifest
 	if idx.mutable {
@@ -83,6 +84,7 @@ func (idx *Index) NewStringIterator(start, end string, limit int64) (*Iterator, 
 	return itr, nil
 }
 
+// NewIntIterator reates a new index iterator with start prefix, endPrefix and the limit to iterate.
 func (idx *Index) NewIntIterator(start, end, limit int64) (*Iterator, error) {
 	var manifest *Manifest
 	if idx.mutable {
@@ -134,6 +136,7 @@ func (idx *Index) NewIntIterator(start, end, limit int64) (*Iterator, error) {
 	return itr, nil
 }
 
+// Seek seeks to the given key prefix.
 func (itr *Iterator) Seek(key string) error {
 	var manifest *Manifest
 	if itr.index.mutable {
@@ -157,6 +160,7 @@ func (itr *Iterator) Seek(key string) error {
 	return nil
 }
 
+// Next moves the seek pointer one step ahead.
 func (itr *Iterator) Next() bool {
 	return itr.nextStringKey()
 }

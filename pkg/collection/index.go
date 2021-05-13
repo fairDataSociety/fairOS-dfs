@@ -95,6 +95,7 @@ var (
 	NoOfParallelWorkers = runtime.NumCPU() * 4
 )
 
+// CreateIndex creates a common index file to be used in kv or document tables.
 func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client, mutable bool) error {
 	if fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -127,6 +128,7 @@ func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed
 	return nil
 }
 
+// OpenIndex open the index and loas any index in to the memory.
 func OpenIndex(collectionName, indexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
 	actualIndexName := collectionName + indexName
 	manifest := getRootManifestOfIndex(actualIndexName, fd, user, client) // this will load the entire Manifest for immutable indexes
@@ -150,6 +152,7 @@ func OpenIndex(collectionName, indexName string, fd *feed.API, ai *account.Info,
 	return idx, nil
 }
 
+// DeleteIndex delete the index from file and all its entries.
 func (idx *Index) DeleteIndex() error {
 	if idx.isReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -168,6 +171,7 @@ func (idx *Index) DeleteIndex() error {
 	return nil
 }
 
+// CountIndex counts the entries in an index.
 func (idx *Index) CountIndex() (uint64, error) {
 	if idx.memDB == nil || idx.memDB.Entries == nil {
 		manifest, err := idx.loadManifest(idx.name)

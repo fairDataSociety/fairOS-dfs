@@ -34,6 +34,10 @@ type PodSharingReference struct {
 	Reference string `json:"pod_sharing_reference"`
 }
 
+// PodShareHandler is the api handler to share a pod to the public
+// it takes two arguments
+// - pod_name: the name of the pod to share
+// - password: the password of the user
 func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

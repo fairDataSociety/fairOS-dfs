@@ -84,6 +84,7 @@ type DocBatch struct {
 	batches map[string]*Batch
 }
 
+// NewDocumentStore instantiates a document DB object through which all document DB are spawned.
 func NewDocumentStore(fd *feed.API, ai *account.Info, user utils.Address, file *file.File, client blockstore.Client, logger logging.Logger) *Document {
 	return &Document{
 		fd:         fd,
@@ -96,6 +97,7 @@ func NewDocumentStore(fd *feed.API, ai *account.Info, user utils.Address, file *
 	}
 }
 
+// CreateDocumentDB creates a new document database and its related indexes.
 func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType, mutable bool) error {
 	d.logger.Info("creating document db: ", dbName)
 	if d.fd.IsReadOnlyFeed() {
@@ -178,6 +180,7 @@ func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType,
 	return nil
 }
 
+// OpenDocumentDB open a document database and its related indexes.
 func (d *Document) OpenDocumentDB(dbName string) error {
 	d.logger.Info("opening document db: ", dbName)
 	// check if the db is already present and opened
@@ -249,6 +252,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 	return nil
 }
 
+// DeleteDocumentDB a document DB, all its data and its related indxes.
 func (d *Document) DeleteDocumentDB(dbName string) error {
 	d.logger.Info("deleting document db: ", dbName)
 	if d.fd.IsReadOnlyFeed() {
@@ -318,6 +322,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	return nil
 }
 
+// Count counts the number of document in a document DB which matches a given expression
 func (d *Document) Count(dbName, expr string) (uint64, error) {
 	d.logger.Info("counting document db: ", dbName, expr)
 	db := d.getOpenedDb(dbName)
@@ -438,6 +443,7 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 	return 0, nil
 }
 
+// Put inserts a document in to a document database.
 func (d *Document) Put(dbName string, doc []byte) error {
 	d.logger.Info("inserting in to document db: ", dbName, len(doc))
 	if d.fd.IsReadOnlyFeed() {
@@ -575,6 +581,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	return nil
 }
 
+// Get retrieves a specific document from a document database matching the dcument id.
 func (d *Document) Get(dbName, id string) ([]byte, error) {
 	d.logger.Info("getting from document db: ", dbName, id)
 	db := d.getOpenedDb(dbName)
@@ -622,6 +629,7 @@ func (d *Document) Get(dbName, id string) ([]byte, error) {
 
 }
 
+// Del deletes a specific document from a document database matching a document id.
 func (d *Document) Del(dbName, id string) error {
 	d.logger.Info("deleting from document db: ", dbName, id)
 	if d.fd.IsReadOnlyFeed() {
@@ -729,6 +737,7 @@ func (d *Document) Del(dbName, id string) error {
 	return nil
 }
 
+// Find selects a number of rows from a document database matching an expression.
 func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 	d.logger.Info("finding from document db: ", dbName, expr, limit)
 	db := d.getOpenedDb(dbName)
@@ -882,6 +891,7 @@ func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 	}
 }
 
+// LoadDocumentDBSchemas loads the schema of all documents belonging to a pod.
 func (d *Document) LoadDocumentDBSchemas() (map[string]DBSchema, error) {
 	collections := make(map[string]DBSchema)
 	topic := utils.HashString(DocumentFile)
@@ -914,6 +924,16 @@ func (d *Document) LoadDocumentDBSchemas() (map[string]DBSchema, error) {
 	return collections, nil
 }
 
+// IsDBOpened is used to check if a document DB is opened or not.
+func (d *Document) IsDBOpened(dbName string) bool {
+	d.openDOcDBMu.Lock()
+	defer d.openDOcDBMu.Unlock()
+	if _, found := d.openDocDBs[dbName]; found {
+		return true
+	}
+	return false
+}
+
 func (d *Document) storeDocumentDBSchemas(collections map[string]DBSchema) error {
 	buf := bytes.NewBuffer(nil)
 	collectionLen := len(collections)
@@ -932,15 +952,6 @@ func (d *Document) storeDocumentDBSchemas(collections map[string]DBSchema) error
 		return err
 	}
 	return nil
-}
-
-func (d *Document) IsDBOpened(dbName string) bool {
-	d.openDOcDBMu.Lock()
-	defer d.openDOcDBMu.Unlock()
-	if _, found := d.openDocDBs[dbName]; found {
-		return true
-	}
-	return false
 }
 
 func (d *Document) getOpenedDb(dbName string) *DocumentDB {
@@ -980,6 +991,7 @@ func (d *Document) resolveExpression(expr string) (string, string, string, error
 	return fieldName, operator, fieldValue, nil
 }
 
+// CreateDocBatch creates a batch index instead of normal index. This is used when doing a bulk insert.
 func (d *Document) CreateDocBatch(dbName string) (*DocBatch, error) {
 	d.logger.Info("creeating batch for inserting in document db: ", dbName)
 	if d.fd.IsReadOnlyFeed() {
@@ -1042,6 +1054,7 @@ func (d *Document) CreateDocBatch(dbName string) (*DocBatch, error) {
 	return nil, ErrDocumentDBNotOpened
 }
 
+// DocBatchPut is used to insert a single document to the batch index.
 func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) error {
 	if d.fd.IsReadOnlyFeed() {
 		d.logger.Errorf("inserting in batch: ", ErrReadOnlyIndex)
@@ -1254,6 +1267,7 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 	return nil
 }
 
+// DocBatchWrite commits the batch index into the Swarm network.
 func (d *Document) DocBatchWrite(docBatch *DocBatch, podFile string) error {
 	d.logger.Info("writing batch: ", docBatch.db.name)
 	if d.fd.IsReadOnlyFeed() {
@@ -1274,6 +1288,7 @@ func (d *Document) DocBatchWrite(docBatch *DocBatch, podFile string) error {
 	return nil
 }
 
+// DocFileIndex indexes a existing json file in the pod with the document DB.
 func (d *Document) DocFileIndex(dbName, podFile string) error {
 	d.logger.Info("Indexing file to db: ", podFile, dbName)
 	reader, err := d.file.OpenFileForIndex(podFile)

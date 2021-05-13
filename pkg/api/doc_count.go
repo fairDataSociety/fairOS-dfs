@@ -27,6 +27,11 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocCountHandler is the api handler to count the number of documents in
+// a given document database
+// it takes two arguments
+// - table_name: the name of the table to count the rows
+// - expr: the expression for selecting certain rows
 func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

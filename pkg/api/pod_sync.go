@@ -26,6 +26,8 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// PodSyncHandler is the api handler to sync a pod's contents from the Swarm network
+// it takes no arguments
 func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

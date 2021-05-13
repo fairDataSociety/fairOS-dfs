@@ -26,6 +26,9 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocDeleteHandler is the api handler to delete the given document database
+// it takes only one argument
+// table_name: the document database to delete
 func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

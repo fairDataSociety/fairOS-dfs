@@ -31,6 +31,8 @@ type PodListResponse struct {
 	SharedPods []string `json:"shared_pod_name"`
 }
 
+// PodListHandler is the api handler to list all pods
+// it takes no arguments
 func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

@@ -29,6 +29,11 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocCreateHandler is the api handler to create a new document database
+// it takes 2 mandatory arguments and one optional argument
+// - table_name: thename of the document database
+// - si: the fields and their type for crating simple indexes (ex: name=string,age=integer)
+// * mutable: make the table mutable / immutable (default is true, means mutable)
 func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

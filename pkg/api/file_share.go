@@ -36,6 +36,10 @@ type FileSharingReference struct {
 	Reference string `json:"file_sharing_reference"`
 }
 
+// FileShareHandler is the api handler to share a file from a given pod
+// it takes towe arguments
+// file_path: the absolute path of the file in the pod
+// dest_user: the address of the destination user (this is not used now)
 func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

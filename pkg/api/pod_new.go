@@ -33,6 +33,10 @@ type PodCreateResponse struct {
 	Reference string `json:"reference"`
 }
 
+// PodCreateHandler is the api handler to create a new pod
+// it takes two arguments
+// - pod_name: the name of the pod to create
+// - password: the password of the user
 func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

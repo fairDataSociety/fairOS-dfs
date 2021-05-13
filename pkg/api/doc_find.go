@@ -28,6 +28,11 @@ type DocFindResponse struct {
 	Docs [][]byte `json:"docs"`
 }
 
+// DocFindHandler is the api handler to select rows from a given document database
+// it takes three arguments
+// table_name: the daument database from which to select the rows
+// expr: the expression which helps in selection particular rows
+// limit: the threshold of documents to return in the result
 func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["table_name"]
 	if !ok || len(keys[0]) < 1 {

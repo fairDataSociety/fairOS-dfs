@@ -105,6 +105,7 @@ type Message struct {
 	Code    int
 }
 
+// NewPrompt spawns dfs-client and checks if the it is connected to it.
 func NewPrompt() {
 	var err error
 	fdfsAPI, err = NewFdfsClient(fdfsHost, fdfsPort)

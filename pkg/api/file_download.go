@@ -28,6 +28,9 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 )
 
+// FileDownloadHandler is the api handler to download a file from a given pod
+//  it takes only one argument
+// file_path: the absolute path of the file in the pod
 func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	podFileWithPath := r.FormValue("file_path")
 	if podFileWithPath == "" {

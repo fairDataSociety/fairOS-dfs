@@ -26,6 +26,9 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// DirectoryStatHandler is the api handler which gives the information about a directory
+// it takes one argument
+// dir_path: the directory to give info about along with its absolute path
 func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["dir_path"]
 	if !ok || len(keys[0]) < 1 {

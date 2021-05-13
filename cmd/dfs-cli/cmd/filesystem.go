@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -163,11 +162,8 @@ func statFileOrDirectory(statElement string) {
 }
 
 func mkdir(dirNameWithpath string) {
-	dirPath := filepath.Dir(dirNameWithpath)
-	dirName := filepath.Base(dirNameWithpath)
 	mkdirReq := common.FileSystemRequest{
-		DirectoryName: dirName,
-		DirectoryPath: dirPath,
+		DirectoryPath: dirNameWithpath,
 	}
 	jsonData, err := json.Marshal(mkdirReq)
 	if err != nil {
@@ -184,11 +180,8 @@ func mkdir(dirNameWithpath string) {
 }
 
 func rmDir(dirNameWithpath string) {
-	dirPath := filepath.Dir(dirNameWithpath)
-	dirName := filepath.Base(dirNameWithpath)
 	rmdirReq := common.FileSystemRequest{
-		DirectoryName: dirName,
-		DirectoryPath: dirPath,
+		DirectoryPath: dirNameWithpath,
 	}
 	jsonData, err := json.Marshal(rmdirReq)
 	if err != nil {

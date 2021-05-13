@@ -27,7 +27,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *DfsAPI) Mkdir(path, directoryName, sessionId string) error {
+func (d *DfsAPI) Mkdir(dirToCreateWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -45,7 +45,7 @@ func (d *DfsAPI) Mkdir(path, directoryName, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	err = directory.MkDir(path, directoryName)
+	err = directory.MkDir(dirToCreateWithPath)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (d *DfsAPI) IsDirPresent(directoryNameWithPath, sessionId string) (bool, er
 	return dirPresent, nil
 }
 
-func (d *DfsAPI) RmDir(path, directoryName, sessionId string) error {
+func (d *DfsAPI) RmDir(directoryNameWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -93,7 +93,7 @@ func (d *DfsAPI) RmDir(path, directoryName, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	err = directory.RmDir(path, directoryName)
+	err = directory.RmDir(directoryNameWithPath)
 	if err != nil {
 		return err
 	}

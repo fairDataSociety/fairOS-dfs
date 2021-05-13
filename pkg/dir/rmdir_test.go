@@ -54,7 +54,7 @@ func TestRmdir(t *testing.T) {
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/", "dirToRemove")
+		err := dirObject.MkDir("/dirToRemove")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -66,7 +66,7 @@ func TestRmdir(t *testing.T) {
 		}
 
 		// now delete the directory
-		err = dirObject.RmDir("/", "dirToRemove")
+		err = dirObject.RmDir("/dirToRemove")
 		if err != nil {
 			t.Fatal(err)
 		}

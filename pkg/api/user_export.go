@@ -28,6 +28,8 @@ type UserExportResponse struct {
 	Address string `json:"address"`
 }
 
+// ExportUserHandler is the api handler to export a user information
+// it takes no arguments
 func (h *Handler) ExportUserHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

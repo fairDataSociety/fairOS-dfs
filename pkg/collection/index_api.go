@@ -31,11 +31,13 @@ const (
 	IntermediateEntry = "I"
 )
 
+// PutNumber inserts an entry in to index with a number as key.
 func (idx *Index) PutNumber(key float64, refValue []byte, idxType IndexType, apnd bool) error {
 	stringKey := fmt.Sprintf("%020.20g", key)
 	return idx.Put(stringKey, refValue, idxType, apnd)
 }
 
+// Put inserts an entry in to index with a string as key.
 func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool) error {
 	if idx.isReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -55,11 +57,13 @@ func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool)
 	return idx.addOrUpdateStringEntry(ctx, manifest, key, idxType, refValue, false, apnd)
 }
 
+// GetNumber retrieves an element from the index where the key is of type number.
 func (idx *Index) GetNumber(key float64) ([][]byte, error) {
 	stringKey := fmt.Sprintf("%020.20g", key)
 	return idx.Get(stringKey)
 }
 
+// Get retrieves an element from the index where the key is of type string.
 func (idx *Index) Get(key string) ([][]byte, error) {
 	_, manifest, i, err := idx.seekManifestAndEntry(key)
 	if err != nil {
@@ -69,11 +73,13 @@ func (idx *Index) Get(key string) ([][]byte, error) {
 	return manifest.Entries[i].Ref, nil
 }
 
+// DeleteNumber removes an entry from index where the key is of type number.
 func (idx *Index) DeleteNumber(key float64) ([][]byte, error) {
 	stringKey := fmt.Sprintf("%020.20g", key)
 	return idx.Delete(stringKey)
 }
 
+// Delete removes an entry from index where the key is of type string.
 func (idx *Index) Delete(key string) ([][]byte, error) {
 	if idx.isReadOnlyFeed() {
 		return nil, ErrReadOnlyIndex

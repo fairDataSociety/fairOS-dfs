@@ -37,17 +37,20 @@ type Batch struct {
 	storageCount  uint64
 }
 
+// NewBatch creates a new batch index to be used in a KV table or a Document database.
 func NewBatch(idx *Index) (*Batch, error) {
 	return &Batch{
 		idx: idx,
 	}, nil
 }
 
+// PutNumber inserts index as a number.
 func (b *Batch) PutNumber(key float64, refValue []byte, apnd, memory bool) error {
 	stringKey := fmt.Sprintf("%020.20g", key)
 	return b.Put(stringKey, refValue, apnd, memory)
 }
 
+// Put creates a index entry given a key string and value.
 func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 	if b.idx.isReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -75,6 +78,7 @@ func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, refValue, memory, apnd)
 }
 
+// Get extracts a index value from an index givena key.
 func (b *Batch) Get(key string) ([][]byte, error) {
 	if b.memDb == nil {
 		return nil, ErrEntryNotFound
@@ -98,11 +102,13 @@ func (b *Batch) Get(key string) ([][]byte, error) {
 	return nil, ErrEntryNotFound
 }
 
+// DelNumber deletes a number index key and value.
 func (b *Batch) DelNumber(key float64) ([][]byte, error) {
 	stringKey := fmt.Sprintf("%020.20g", key)
 	return b.Del(stringKey)
 }
 
+// Del deletes a index entry.
 func (b *Batch) Del(key string) ([][]byte, error) {
 	if b.idx.isReadOnlyFeed() {
 		return nil, ErrReadOnlyIndex
@@ -150,6 +156,7 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 	return nil, ErrEntryNotFound
 }
 
+// Write commits the raw index file in to the Swarm network.
 func (b *Batch) Write(podFile string) (*Manifest, error) {
 	if b.idx.isReadOnlyFeed() {
 		return nil, ErrReadOnlyIndex

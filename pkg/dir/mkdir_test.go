@@ -53,7 +53,7 @@ func TestMkdir(t *testing.T) {
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/", "baseDir")
+		err := dirObject.MkDir("/baseDir")
 		if err != nil {
 			t.Fatal(err)
 		}

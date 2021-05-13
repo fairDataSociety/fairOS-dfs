@@ -26,6 +26,9 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// UserDeleteHandler is the api handler to delete a user
+// it takes only one argument
+// - password: the password of the user
 func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
