@@ -63,6 +63,7 @@ type Request struct {
 	binaryData []byte     // cached serialized data (does not get serialized again!, for efficiency/internal use)
 }
 
+// New create the main feed object which is used to create/update/delete feeds.
 func New(accountInfo *account.Info, client blockstore.Client, logger logging.Logger) *API {
 	bmtPool := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	return &API{
@@ -72,7 +73,9 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 	}
 }
 
-// create feed
+// CreateFeed creates a feed by constructing a single owner chunk. This chunk
+// can only be accessed if the pod address is known. Also no one else can spoof this
+// chunk since this is signed by the pod.
 func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
 	var req Request
 
@@ -178,6 +181,7 @@ func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, err
 
 }
 
+// UpdateFeed updates the contents of an already created feed.
 func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
 	if a.accountInfo.GetPrivateKey() == nil {
 		return nil, ErrReadOnlyFeed
@@ -256,6 +260,7 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	return address, nil
 }
 
+// DeleteFeed deleted the feed by updating with no data inside the SOC chunk.
 func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 	if a.accountInfo.GetPrivateKey() == nil {
 		return ErrReadOnlyFeed
@@ -274,6 +279,8 @@ func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 	return nil
 }
 
+// IsReadOnlyFeed if a public pod is imported, the feed can only be read.
+// this function check the feed is read only.
 func (a *API) IsReadOnlyFeed() bool {
 	return a.accountInfo.GetPrivateKey() == nil
 }

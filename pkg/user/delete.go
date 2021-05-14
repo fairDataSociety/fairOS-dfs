@@ -20,6 +20,8 @@ import (
 	"net/http"
 )
 
+// DeleteUser deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
+// data structures.
 func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, response http.ResponseWriter, ui *Info) error {
 	// check if session id and user address present in map
 	if !u.IsUserLoggedIn(sessionId) {

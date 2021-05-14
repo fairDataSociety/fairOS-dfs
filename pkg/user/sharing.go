@@ -50,7 +50,8 @@ type ReceiveFileInfo struct {
 	SharedTime     string `json:"shared_time"`
 }
 
-func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
+// ShareFileWithUser exports a file to another user by creating and uploading a new encrypted sharing file entry.
+func (u *Users) ShareFileWithUser(podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
 	meta, err := userInfo.file.GetMetaFromFileNameAndAddress(podFileWithPath, userAddress)
 	if err != nil {
 		return "", err
@@ -88,6 +89,7 @@ func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef strin
 	return sharingRef.String(), nil
 }
 
+// ReceiveFileFromUser imports a exported file in to the current user and pod by reading the sharing file entry.
 func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingReference, userInfo *Info, pod *pod.Pod, podDir string) (string, error) {
 	metaRef := sharingRef.GetRef()
 	unixTime := sharingRef.GetNonce()
@@ -176,6 +178,8 @@ func decryptData(data []byte, now int64) ([]byte, error) {
 	return btcec.Decrypt(&privateKey, data)
 }
 
+// ReceiveFileInfo displays the information of the exported file. This is used to decide whether
+// to import the file or not.
 func (u *Users) ReceiveFileInfo(sharingRef utils.SharingReference) (*ReceiveFileInfo, error) {
 	metaRef := sharingRef.GetRef()
 	unixTime := sharingRef.GetNonce()

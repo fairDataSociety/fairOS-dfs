@@ -39,6 +39,9 @@ type Entry struct {
 	AccessTime       string `json:"access_time"`
 }
 
+// ListDir given a directory, this function lists all the children (directory) inside the given directory.
+// it also creates a list of files inside the directory and gives it back, so that the file listing
+// function can give information about those files.
 func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())

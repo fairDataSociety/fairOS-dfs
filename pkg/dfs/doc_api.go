@@ -18,6 +18,7 @@ package dfs
 
 import "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
+// DocCreate is a controller function which does all the checks before creating a documentDB.
 func (d *DfsAPI) DocCreate(sessionId, name string, indexes map[string]collection.IndexType, mutable bool) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -38,6 +39,7 @@ func (d *DfsAPI) DocCreate(sessionId, name string, indexes map[string]collection
 	return podInfo.GetDocStore().CreateDocumentDB(name, indexes, mutable)
 }
 
+// DocOpen is a controller function which does all the checks before opening a documentDB.
 func (d *DfsAPI) DocOpen(sessionId, name string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -58,6 +60,7 @@ func (d *DfsAPI) DocOpen(sessionId, name string) error {
 	return podInfo.GetDocStore().OpenDocumentDB(name)
 }
 
+// DocDelete is a controller function which does all the checks before deleting a documentDB.
 func (d *DfsAPI) DocDelete(sessionId, name string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -78,6 +81,8 @@ func (d *DfsAPI) DocDelete(sessionId, name string) error {
 	return podInfo.GetDocStore().DeleteDocumentDB(name)
 }
 
+// DocList is a controller function which does all the checks before listing all the
+// documentDB available in the pod.
 func (d *DfsAPI) DocList(sessionId string) (map[string]collection.DBSchema, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -98,6 +103,8 @@ func (d *DfsAPI) DocList(sessionId string) (map[string]collection.DBSchema, erro
 	return podInfo.GetDocStore().LoadDocumentDBSchemas()
 }
 
+// DocCount is a controller function which does all the checks before counting
+// all the documents ina documentDB.
 func (d *DfsAPI) DocCount(sessionId, name, expr string) (uint64, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -118,6 +125,8 @@ func (d *DfsAPI) DocCount(sessionId, name, expr string) (uint64, error) {
 	return podInfo.GetDocStore().Count(name, expr)
 }
 
+// DocPut is a controller function which does all the checks before inserting
+// a document in the documentDB.
 func (d *DfsAPI) DocPut(sessionId, name string, value []byte) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -138,6 +147,8 @@ func (d *DfsAPI) DocPut(sessionId, name string, value []byte) error {
 	return podInfo.GetDocStore().Put(name, value)
 }
 
+// DocGet is a controller function which does all the checks before retrieving
+//// a document in the documentDB.
 func (d *DfsAPI) DocGet(sessionId, name, id string) ([]byte, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -158,6 +169,8 @@ func (d *DfsAPI) DocGet(sessionId, name, id string) ([]byte, error) {
 	return podInfo.GetDocStore().Get(name, id)
 }
 
+// DocDel is a controller function which does all the checks before deleting
+// a documentDB.
 func (d *DfsAPI) DocDel(sessionId, name, id string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -178,6 +191,8 @@ func (d *DfsAPI) DocDel(sessionId, name, id string) error {
 	return podInfo.GetDocStore().Del(name, id)
 }
 
+// DocFind is a controller function which does all the checks before finding
+// records from a documentDB.
 func (d *DfsAPI) DocFind(sessionId, name, expr string, limit int) ([][]byte, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -198,6 +213,7 @@ func (d *DfsAPI) DocFind(sessionId, name, expr string, limit int) ([][]byte, err
 	return podInfo.GetDocStore().Find(name, expr, limit)
 }
 
+// DocBatch initiates a batch inserting session.
 func (d *DfsAPI) DocBatch(sessionId, name string) (*collection.DocBatch, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -218,6 +234,7 @@ func (d *DfsAPI) DocBatch(sessionId, name string) (*collection.DocBatch, error) 
 	return podInfo.GetDocStore().CreateDocBatch(name)
 }
 
+// DocBatchPut inserts records in to a document batch.
 func (d *DfsAPI) DocBatchPut(sessionId string, doc []byte, docBatch *collection.DocBatch) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -238,6 +255,7 @@ func (d *DfsAPI) DocBatchPut(sessionId string, doc []byte, docBatch *collection.
 	return podInfo.GetDocStore().DocBatchPut(docBatch, doc, 0)
 }
 
+// DocBatchWrite commits the batch document insert.
 func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -258,6 +276,7 @@ func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) 
 	return podInfo.GetDocStore().DocBatchWrite(docBatch, "")
 }
 
+// DocIndexJson indexes a json files in to the document DB.
 func (d *DfsAPI) DocIndexJson(sessionId, name, podFileWithPath string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)

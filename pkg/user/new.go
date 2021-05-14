@@ -27,6 +27,8 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
+// then it is used instead of creating a new one.
 func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, string, *Info, error) {
 	// username validation
 	if u.IsUsernameAvailable(userName, u.dataDir) {

@@ -24,6 +24,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// GetFileReference given a file name this funtion extracts the current
+// metadata from the Swarm network.
 func (f *File) GetFileReference(podFile string) (*MetaData, error) {
 	// Get the meta of the file to share
 	meta := f.GetFromFileMap(podFile)
@@ -39,6 +41,7 @@ func (f *File) GetFileReference(podFile string) (*MetaData, error) {
 	return meta, nil
 }
 
+// AddFileToPath adds a given files meta data to the main file data structure.
 func (f *File) AddFileToPath(filePath, metaHexRef string) error {
 	metaReferenace, err := utils.ParseHexReference(metaHexRef)
 	if err != nil {

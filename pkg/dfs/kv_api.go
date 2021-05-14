@@ -20,6 +20,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 )
 
+// KVCreate does validation checks and calls the create KVtable function.
 func (d *DfsAPI) KVCreate(sessionId, name string, indexType collection.IndexType) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -40,6 +41,7 @@ func (d *DfsAPI) KVCreate(sessionId, name string, indexType collection.IndexType
 	return podInfo.GetKVStore().CreateKVTable(name, indexType)
 }
 
+// KVDelete does validation checks and calls the delete KVtable function.
 func (d *DfsAPI) KVDelete(sessionId, name string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -60,6 +62,7 @@ func (d *DfsAPI) KVDelete(sessionId, name string) error {
 	return podInfo.GetKVStore().DeleteKVTable(name)
 }
 
+// KVOpen does validation checks and calls the open KVtable function.
 func (d *DfsAPI) KVOpen(sessionId, name string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -80,6 +83,7 @@ func (d *DfsAPI) KVOpen(sessionId, name string) error {
 	return podInfo.GetKVStore().OpenKVTable(name)
 }
 
+// KVList does validation checks and calls the list KVtable function.
 func (d *DfsAPI) KVList(sessionId string) (map[string][]string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -100,6 +104,7 @@ func (d *DfsAPI) KVList(sessionId string) (map[string][]string, error) {
 	return podInfo.GetKVStore().LoadKVTables()
 }
 
+// KVCount does validation checks and calls the count KVtable function.
 func (d *DfsAPI) KVCount(sessionId, name string) (uint64, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -120,6 +125,7 @@ func (d *DfsAPI) KVCount(sessionId, name string) (uint64, error) {
 	return podInfo.GetKVStore().KVCount(name)
 }
 
+// KVPut does validation checks and calls the put KVtable function.
 func (d *DfsAPI) KVPut(sessionId, name, key string, value []byte) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -140,6 +146,7 @@ func (d *DfsAPI) KVPut(sessionId, name, key string, value []byte) error {
 	return podInfo.GetKVStore().KVPut(name, key, value)
 }
 
+// KVGet does validation checks and calls the get KVtable function.
 func (d *DfsAPI) KVGet(sessionId, name, key string) ([]string, []byte, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -160,6 +167,7 @@ func (d *DfsAPI) KVGet(sessionId, name, key string) ([]string, []byte, error) {
 	return podInfo.GetKVStore().KVGet(name, key)
 }
 
+// KVDel does validation checks and calls the delete KVtable function.
 func (d *DfsAPI) KVDel(sessionId, name, key string) ([]byte, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -180,6 +188,7 @@ func (d *DfsAPI) KVDel(sessionId, name, key string) ([]byte, error) {
 	return podInfo.GetKVStore().KVDelete(name, key)
 }
 
+// KVBatch does validation checks and calls the batch KVtable function.
 func (d *DfsAPI) KVBatch(sessionId, name string, columns []string) (*collection.Batch, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -200,6 +209,7 @@ func (d *DfsAPI) KVBatch(sessionId, name string, columns []string) (*collection.
 	return podInfo.GetKVStore().KVBatch(name, columns)
 }
 
+// KVBatchPut does validation checks and calls the batch put KVtable function.
 func (d *DfsAPI) KVBatchPut(sessionId, key string, value []byte, batch *collection.Batch) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -215,6 +225,7 @@ func (d *DfsAPI) KVBatchPut(sessionId, key string, value []byte, batch *collecti
 	return batch.Put(key, value, false, false)
 }
 
+// KVBatchWrite does validation checks and calls the batch write KVtable function.
 func (d *DfsAPI) KVBatchWrite(sessionId string, batch *collection.Batch) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -231,6 +242,7 @@ func (d *DfsAPI) KVBatchWrite(sessionId string, batch *collection.Batch) error {
 	return err
 }
 
+// KVSeek does validation checks and calls the seek KVtable function.
 func (d *DfsAPI) KVSeek(sessionId, name, start, end string, limit int64) (*collection.Iterator, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -251,6 +263,7 @@ func (d *DfsAPI) KVSeek(sessionId, name, start, end string, limit int64) (*colle
 	return podInfo.GetKVStore().KVSeek(name, start, end, limit)
 }
 
+// KVGetNext does validation checks and calls the get next KVtable function.
 func (d *DfsAPI) KVGetNext(sessionId, name string) ([]string, string, []byte, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)

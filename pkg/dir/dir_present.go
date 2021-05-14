@@ -20,6 +20,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// IsDirectoryPresent this function check if a given directory is present inside the pod.
 func (d *Directory) IsDirectoryPresent(directoryNameWithPath string) bool {
 	topic := utils.HashString(directoryNameWithPath)
 	_, _, err := d.fd.GetFeedData(topic, d.userAddress)

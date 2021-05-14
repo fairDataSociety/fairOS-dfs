@@ -35,6 +35,7 @@ type File struct {
 	logger      logging.Logger
 }
 
+// NewFile creates the base file object which has all the methods related to file manipulation.
 func NewFile(podName string, client blockstore.Client, fd *feed.API, user utils.Address, logger logging.Logger) *File {
 	return &File{
 		podName:     podName,

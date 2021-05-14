@@ -64,6 +64,9 @@ func (d *DfsAPI) DeletePod(podName, sessionId string) error {
 		return err
 	}
 
+	// TODO: delete all the directory, files, and database tables under this pod from
+	// the Swarm network.
+
 	// close the pod and delete it from login user session, if the delete is for a opened pod
 	if ui.GetPodName() != "" && podName == ui.GetPodName() {
 		// remove from the login session

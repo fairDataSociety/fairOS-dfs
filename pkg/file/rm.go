@@ -25,6 +25,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// RmFile deletes all the blocks of a file and it related meta data from the Swarm network.
 func (f *File) RmFile(podFileWithPath string) error {
 	meta, err := f.GetMetaFromFileName(podFileWithPath)
 	if err != nil {

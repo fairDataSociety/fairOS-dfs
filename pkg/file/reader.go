@@ -78,6 +78,7 @@ func (f *File) OpenFileForIndex(podFile string) (*Reader, error) {
 	return reader, nil
 }
 
+// NewReader create a new reader object to read a file from the pod based on its configuration.
 func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string, cache bool) *Reader {
 	var blockCache *lru.Cache
 	if cache {
@@ -97,6 +98,8 @@ func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, block
 	return r
 }
 
+// Read reads a given segment of the file from the pod and returns it. it does all the
+// related function like block extraction, block un-compression etc.
 func (r *Reader) Read(b []byte) (n int, err error) {
 	if r.totalSize >= r.fileSize {
 		return 0, io.EOF

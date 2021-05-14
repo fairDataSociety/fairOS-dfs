@@ -30,6 +30,7 @@ type DfsAPI struct {
 	logger  logging.Logger
 }
 
+// NewDfsAPI is the main entry point for the df controller.
 func NewDfsAPI(dataDir, host, port, cookieDomain string, logger logging.Logger) (*DfsAPI, error) {
 	c := bee.NewBeeClient(host, port, logger)
 	if !c.CheckConnection() {

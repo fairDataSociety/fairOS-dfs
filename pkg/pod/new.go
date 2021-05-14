@@ -36,6 +36,7 @@ const (
 	podFile = "Pods"
 )
 
+// CreatePod creates a new pod for a given user.
 func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error) {
 	podName, err := CleanPodName(podName)
 	if err != nil {

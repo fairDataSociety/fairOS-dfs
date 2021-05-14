@@ -36,6 +36,7 @@ type DirStats struct {
 	NoOfFiles        string `json:"no_of_files"`
 }
 
+// DirStat returns all the information related to a given directory.
 func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) {
 	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())

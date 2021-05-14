@@ -34,12 +34,12 @@ type CacheEntry struct {
 	lastKey []byte
 }
 
-// implements storage.LazySectionReader
+// Size implements storage.LazySectionReader
 func (r *CacheEntry) Size(ctx context.Context, _ chan bool) (int64, error) {
 	return int64(len(r.Update.data)), nil
 }
 
-//returns the feed's topic
+// Topic returns the feed's topic
 func (r *CacheEntry) Topic() Topic {
 	return r.Feed.Topic
 }

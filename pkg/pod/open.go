@@ -29,6 +29,9 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// OpenPod opene a pod if it is not already opened. as part of opening the pod
+// it loads all the data structures related to the pod. Also it syncs all the
+// files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	// check if pods is present and get the index of the pod
 	pods, sharedPods, err := p.loadUserPods()

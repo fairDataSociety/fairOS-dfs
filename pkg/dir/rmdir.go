@@ -22,6 +22,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// RmDir removes a given directory and all the entries (file/directory) under that.
 func (d *Directory) RmDir(directoryNameWithPath string) error {
 	parentPath := filepath.Dir(directoryNameWithPath)
 	dirToDelete := filepath.Base(directoryNameWithPath)

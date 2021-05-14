@@ -24,6 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// SyncDirectory syncs all the latest entries under a given directory.
 func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.userAddress)

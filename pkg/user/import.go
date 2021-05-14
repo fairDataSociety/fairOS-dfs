@@ -29,6 +29,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// ImportUsingAddress imports a given user in to the new dfs server using the address of the user.
 func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) error {
 	// basic validation
 	if u.IsUsernameAvailable(userName, dataDir) {

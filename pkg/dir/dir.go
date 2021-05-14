@@ -38,6 +38,7 @@ type Directory struct {
 	logger      logging.Logger
 }
 
+// NewDirectory the main directory object that handles all the directory related functions.
 func NewDirectory(podName string, client blockstore.Client, fd *feed.API, user utils.Address, file f.IFile, logger logging.Logger) *Directory {
 	return &Directory{
 		podName:     podName,

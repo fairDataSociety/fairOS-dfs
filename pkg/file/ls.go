@@ -33,6 +33,7 @@ type Entry struct {
 	AccessTime       string `json:"access_time"`
 }
 
+// ListFiles given a list of files, list files gives back the information related to each file.
 func (f *File) ListFiles(files []string) ([]Entry, error) {
 	var fileEntries []Entry
 	for _, filePath := range files {

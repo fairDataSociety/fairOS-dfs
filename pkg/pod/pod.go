@@ -40,6 +40,7 @@ type Pod struct {
 	logger logging.Logger
 }
 
+// NewPod creates the main pod object which has all the methods related to the pods.
 func NewPod(client blockstore.Client, feed *feed.API, account *account.Account, logger logging.Logger) *Pod {
 	return &Pod{
 		fd:     feed,

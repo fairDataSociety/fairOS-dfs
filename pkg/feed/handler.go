@@ -58,6 +58,7 @@ func init() {
 	}
 }
 
+// NewHandler the main handler object that handles all the feed related functions.
 func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool *bmtlegacy.TreePool) *Handler {
 	fh := &Handler{
 		accountInfo: accountInfo,

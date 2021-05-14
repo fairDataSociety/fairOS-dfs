@@ -21,6 +21,7 @@ import (
 	"strings"
 )
 
+// DeletePod removed a pod and the list of pods belonging to a user.
 func (p *Pod) DeletePod(podName string) error {
 	pods, sharedPods, err := p.loadUserPods()
 	if err != nil {

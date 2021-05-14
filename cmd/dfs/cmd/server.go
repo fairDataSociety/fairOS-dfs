@@ -228,7 +228,6 @@ func startHttpService(logger logging.Logger) {
 	kvRouter.HandleFunc("/seek", handler.KVSeekHandler).Methods("POST")
 	kvRouter.HandleFunc("/seek/next", handler.KVGetNextHandler).Methods("GET")
 
-	baseRouter.HandleFunc("/doc/entry/newget/{name}/{id}", handler.DocNewGetHandler).Methods("GET").Queries("fairOS-dfs", "{fairOS-dfs}")
 	docRouter := baseRouter.PathPrefix("/doc/").Subrouter()
 	docRouter.Use(handler.LoginMiddleware)
 	docRouter.HandleFunc("/new", handler.DocCreateHandler).Methods("POST")

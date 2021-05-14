@@ -33,6 +33,9 @@ type ShareInfo struct {
 	SharedTime  string `json:"shared_time"`
 }
 
+// PodShare makes a pod public by exporting all the pod related information and its
+// address. it does this by creating a sharing reference which points to the information
+// required to import this pod.
 func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 	// check if pods is present and get the index of the pod
 	pods, _, err := p.loadUserPods()

@@ -28,6 +28,8 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// LoginUser checks if the user is present and logs in the user. It also creates the required information
+// to execute user function and stores it in memory.
 func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) error {
 	// check if username is available (user created)
 	if !u.IsUsernameAvailable(userName, dataDir) {
@@ -96,6 +98,7 @@ func (u *Users) addUserAndSessionToMap(ui *Info, response http.ResponseWriter) e
 	return nil
 }
 
+// Logout removes the user information from all the data structures and clears the cookie.
 func (u *Users) Logout(sessionId string, response http.ResponseWriter) error {
 	// check if session or user present in map
 	if !u.isUserPresentInMap(sessionId) {

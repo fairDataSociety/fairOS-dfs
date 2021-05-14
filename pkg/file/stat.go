@@ -44,6 +44,8 @@ type Blocks struct {
 	CompressedSize string `json:"compressed_size"`
 }
 
+// GetStats given a filename this function returns all the information about the file
+// including the block information.
 func (f *File) GetStats(podName, podFileWithPath string) (*Stats, error) {
 	meta := f.GetFromFileMap(podFileWithPath)
 	if meta == nil {

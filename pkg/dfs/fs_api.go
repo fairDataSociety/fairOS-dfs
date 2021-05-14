@@ -27,6 +27,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// Mkdir is a controller function which validates if the user is logged in,
+// pod is open and calls the make directory function in the dir object.
 func (d *DfsAPI) Mkdir(dirToCreateWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -52,6 +54,8 @@ func (d *DfsAPI) Mkdir(dirToCreateWithPath, sessionId string) error {
 	return nil
 }
 
+// IsDirPresent is acontroller function which validates if the user is logged in,
+// pod is open and calls the dir object to check if the directory is present.
 func (d *DfsAPI) IsDirPresent(directoryNameWithPath, sessionId string) (bool, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -75,6 +79,8 @@ func (d *DfsAPI) IsDirPresent(directoryNameWithPath, sessionId string) (bool, er
 	return dirPresent, nil
 }
 
+// RmDir is a controller function which validates if the user is logged in,
+// pod is open and calls the dir object to remove the supplied directory.
 func (d *DfsAPI) RmDir(directoryNameWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -100,6 +106,8 @@ func (d *DfsAPI) RmDir(directoryNameWithPath, sessionId string) error {
 	return nil
 }
 
+// ListDir is a controller function which validates if the user is logged in,
+// pod is open and calls the dir object to list the contents of the supplied directory.
 func (d *DfsAPI) ListDir(currentDir, sessionId string) ([]dir.Entry, []f.Entry, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -130,6 +138,8 @@ func (d *DfsAPI) ListDir(currentDir, sessionId string) ([]dir.Entry, []f.Entry, 
 	return dEntries, fEntries, nil
 }
 
+// DirectoryStat is a controller function which validates if the user is logged in,
+// pod is open and calls the dir object to get the information about the given directory.
 func (d *DfsAPI) DirectoryStat(directoryName, sessionId string) (*dir.DirStats, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -155,9 +165,9 @@ func (d *DfsAPI) DirectoryStat(directoryName, sessionId string) (*dir.DirStats, 
 	return ds, nil
 }
 
-//
-// File related API's
-//
+// DeleteFile is a controller function which validates if the user is logged in,
+// pod is open and delete the file. It also remove the file entry from the parent
+// directory.
 func (d *DfsAPI) DeleteFile(podFileWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -193,6 +203,8 @@ func (d *DfsAPI) DeleteFile(podFileWithPath, sessionId string) error {
 	return directory.RemoveEntryFromDir(fileDir, fileName, true)
 }
 
+// FileStat is a controller function which validates if the user is logged in,
+// pod is open and gets the information about the file.
 func (d *DfsAPI) FileStat(podFileWithPath, sessionId string) (*f.Stats, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -217,6 +229,8 @@ func (d *DfsAPI) FileStat(podFileWithPath, sessionId string) (*f.Stats, error) {
 	return ds, nil
 }
 
+// UploadFile is a controller function which validates if the user is logged in,
+//  pod is open and calls the upload function.
 func (d *DfsAPI) UploadFile(podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -244,6 +258,8 @@ func (d *DfsAPI) UploadFile(podFileName, sessionId string, fileSize int64, fd io
 	return directory.AddEntryToDir(podPath, podFileName, true)
 }
 
+// DownloadFile is a controller function which validates if the user is logged in,
+// pod is open and calls the download function.
 func (d *DfsAPI) DownloadFile(podFileWithPath, sessionId string) (io.ReadCloser, uint64, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -276,6 +292,8 @@ func (d *DfsAPI) DownloadFile(podFileWithPath, sessionId string) (io.ReadCloser,
 	return reader, size, nil
 }
 
+// ShareFile is a controller function which validates if the user is logged in,
+// pod is open and calls the sharefile function.
 func (d *DfsAPI) ShareFile(podFileWithPath, destinationUser, sessionId string) (string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -294,13 +312,16 @@ func (d *DfsAPI) ShareFile(podFileWithPath, destinationUser, sessionId string) (
 		return "", err
 	}
 
-	sharingRef, err := d.users.ShareFileWithUser(ui.GetPodName(), podFileWithPath, destinationUser, ui, ui.GetPod(), podInfo.GetAccountInfo().GetAddress())
+	sharingRef, err := d.users.ShareFileWithUser(podFileWithPath, destinationUser, ui, ui.GetPod(), podInfo.GetAccountInfo().GetAddress())
 	if err != nil {
 		return "", err
 	}
 	return sharingRef, nil
 }
 
+// ReceiveFile is a controller function which validates if the user is logged in,
+// pod is open and calls the ReceiveFile function to get the shared file in to the
+// given pod.
 func (d *DfsAPI) ReceiveFile(sessionId string, sharingRef utils.SharingReference, dir string) (string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
@@ -316,6 +337,9 @@ func (d *DfsAPI) ReceiveFile(sessionId string, sharingRef utils.SharingReference
 	return d.users.ReceiveFileFromUser(ui.GetPodName(), sharingRef, ui, ui.GetPod(), dir)
 }
 
+// ReceiveInfo is a controller function which validates if the user is logged in,
+// pod is open and calls the ReceiveInfo function to display the shared files
+// information.
 func (d *DfsAPI) ReceiveInfo(sessionId string, sharingRef utils.SharingReference) (*user.ReceiveFileInfo, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)

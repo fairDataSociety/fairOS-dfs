@@ -32,6 +32,8 @@ type Users struct {
 	logger       logging.Logger
 }
 
+// NewUsers creates the main user object which stores all the logged in users and there respective
+// other data structures.
 func NewUsers(dataDir string, client blockstore.Client, cookieDomain string, logger logging.Logger) *Users {
 	return &Users{
 		dataDir:      dataDir,

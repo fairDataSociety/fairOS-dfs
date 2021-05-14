@@ -16,6 +16,8 @@ limitations under the License.
 
 package user
 
+// ExportUser gives back the information required to export the user from one dfs server
+// import him in to another.
 func (u *Users) ExportUser(ui *Info) (string, string, error) {
 	addreess, err := u.getAddressFromUserName(ui.name, u.dataDir)
 	if err != nil {

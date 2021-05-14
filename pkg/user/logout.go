@@ -18,6 +18,7 @@ package user
 
 import "net/http"
 
+// LogoutUser logs out a giver user from the system and clean him from all the data structures.
 func (u *Users) LogoutUser(userName, dataDir, sessionId string, response http.ResponseWriter) error {
 	// basic validations
 	if !u.IsUsernameAvailable(userName, dataDir) {

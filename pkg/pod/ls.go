@@ -16,6 +16,7 @@ limitations under the License.
 
 package pod
 
+// ListPods List all the available pods belonging to a user.
 func (p *Pod) ListPods() ([]string, []string, error) {
 	pods, sharedPods, err := p.loadUserPods()
 	if err != nil {
