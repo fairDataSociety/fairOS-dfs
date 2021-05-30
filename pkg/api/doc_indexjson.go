@@ -49,10 +49,17 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := docReq.TableName
-	if name == "" {
-		h.logger.Errorf("doc indexjson: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc indexjson: \"name\" argument missing")
+	podName := docReq.TableName
+	if podName == "" {
+		h.logger.Errorf("doc indexjson: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc indexjson: \"pod_name\" argument missing")
+		return
+	}
+
+	tableName := docReq.TableName
+	if tableName == "" {
+		h.logger.Errorf("doc indexjson: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc indexjson: \"table_ame\" argument missing")
 		return
 	}
 
@@ -76,7 +83,7 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.DocIndexJson(sessionId, name, podFile)
+	err = h.dfsAPI.DocIndexJson(sessionId, podName, tableName, podFile)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrFileNotPresent {
 			h.logger.Errorf("doc indexjson: %v", err)

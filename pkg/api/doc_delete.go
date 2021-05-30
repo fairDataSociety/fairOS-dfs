@@ -53,6 +53,13 @@ func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := docReq.PodName
+	if podName == "" {
+		h.logger.Errorf("doc delete: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc delete: \"pod_name\" argument missing")
+		return
+	}
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -66,7 +73,7 @@ func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.DocDelete(sessionId, name)
+	err = h.dfsAPI.DocDelete(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("doc delete: %v", err)
 		jsonhttp.InternalServerError(w, "doc delete: "+err.Error())

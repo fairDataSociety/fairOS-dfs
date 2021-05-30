@@ -35,6 +35,14 @@ type Collection struct {
 // KVListHandler is the api handler to list all the key value tables in a pod
 // it has no arguments
 func (h *Handler) KVListHandler(w http.ResponseWriter, r *http.Request) {
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("kv ls: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv ls: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -48,7 +56,7 @@ func (h *Handler) KVListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	collections, err := h.dfsAPI.KVList(sessionId)
+	collections, err := h.dfsAPI.KVList(sessionId, podName)
 	if err != nil {
 		h.logger.Errorf("kv ls: %v", err)
 		jsonhttp.InternalServerError(w, "kv ls: "+err.Error())

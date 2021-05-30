@@ -34,23 +34,36 @@ type DocFindResponse struct {
 // expr: the expression which helps in selection particular rows
 // limit: the threshold of documents to return in the result
 func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["table_name"]
+	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc find: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, "doc find: \"pod_name\" argument missing")
 		return
 	}
+	podName := keys[0]
+	if podName == "" {
+		h.logger.Errorf("doc find: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc find: \"pod_name\" argument missing")
+		return
+	}
+
+	keys, ok = r.URL.Query()["table_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("doc find: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc find: \"table_name\" argument missing")
+		return
+	}
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("doc find: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc find: \"name\" argument missing")
+		h.logger.Errorf("doc find: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc find: \"table_name\" argument missing")
 		return
 	}
 
 	keys, ok = r.URL.Query()["expr"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("pod stat: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "pod stat: \"pod_name\" argument missing")
+		h.logger.Errorf("pod stat: \"expr\" argument missing")
+		jsonhttp.BadRequest(w, "pod stat: \"expr\" argument missing")
 		return
 	}
 	expr := keys[0]
@@ -92,7 +105,7 @@ func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.dfsAPI.DocFind(sessionId, name, expr, limitInt)
+	data, err := h.dfsAPI.DocFind(sessionId, podName, name, expr, limitInt)
 	if err != nil {
 		h.logger.Errorf("doc find: %v", err)
 		jsonhttp.InternalServerError(w, "doc find: "+err.Error())

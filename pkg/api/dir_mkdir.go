@@ -50,6 +50,13 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	podName := fsReq.PodName
+	if podName == "" {
+		h.logger.Errorf("mkdir: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "mkdir: \"pod_name\" argument missing")
+		return
+	}
+
 	dirToCreateWithPath := fsReq.DirectoryPath
 	if dirToCreateWithPath == "" {
 		h.logger.Errorf("mkdir: \"dir_path\" argument missing")
@@ -71,7 +78,7 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// make directory
-	err = h.dfsAPI.Mkdir(dirToCreateWithPath, sessionId)
+	err = h.dfsAPI.Mkdir(podName, dirToCreateWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidDirectory ||

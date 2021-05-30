@@ -18,6 +18,7 @@ package user
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -67,13 +68,15 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response ht
 
 	userAddressString := accountInfo.GetAddress().Hex()
 	ui := &Info{
-		name:      userName,
-		sessionId: sessionId,
-		feedApi:   fd,
-		account:   acc,
-		file:      file,
-		dir:       dir,
-		pod:       pod,
+		name:       userName,
+		sessionId:  sessionId,
+		feedApi:    fd,
+		account:    acc,
+		file:       file,
+		dir:        dir,
+		pod:        pod,
+		openPods:   make(map[string]string),
+		openPodsMu: &sync.RWMutex{},
 	}
 
 	// set cookie and add user to map

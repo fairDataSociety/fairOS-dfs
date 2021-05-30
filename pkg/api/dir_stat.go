@@ -30,7 +30,15 @@ import (
 // it takes one argument
 // dir_path: the directory to give info about along with its absolute path
 func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["dir_path"]
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("dir: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "dir: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+
+	keys, ok = r.URL.Query()["dir_path"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("dir present: \"dir_path\" argument missing")
 		jsonhttp.BadRequest(w, "dir present: \"dir_path\" argument missing")
@@ -52,7 +60,7 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// stat directory
-	ds, err := h.dfsAPI.DirectoryStat(dir, sessionId)
+	ds, err := h.dfsAPI.DirectoryStat(podName, dir, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {

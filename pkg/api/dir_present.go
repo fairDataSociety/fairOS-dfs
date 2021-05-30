@@ -32,7 +32,15 @@ type DirPresentResponse struct {
 // it takes only one argument
 // - dir-path: the directory to check along with its absolute path
 func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["dir_path"]
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("dir present: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "dir present: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+
+	keys, ok = r.URL.Query()["dir_path"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("dir present: \"dir_path\" argument missing")
 		jsonhttp.BadRequest(w, "dir present: \"dir_path\" argument missing")
@@ -54,7 +62,7 @@ func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// check if user is present
-	present, err := h.dfsAPI.IsDirPresent(dirToCheck, sessionId)
+	present, err := h.dfsAPI.IsDirPresent(podName, dirToCheck, sessionId)
 	if err != nil {
 		jsonhttp.OK(w, &DirPresentResponse{
 			Present: present,

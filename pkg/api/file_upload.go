@@ -47,6 +47,13 @@ const (
 // Header:
 // - fairOS-dfs-Compression: gzip/snappy
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
+	podName := r.FormValue("pod_name")
+	if podName == "" {
+		h.logger.Errorf("file upload: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "file upload: \"pod_name\" argument missing")
+		return
+	}
+
 	podPath := r.FormValue("dir_path")
 	if podPath == "" {
 		h.logger.Errorf("file upload: \"dir_path\" argument missing")
@@ -122,7 +129,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//upload file to bee
-		err = h.dfsAPI.UploadFile(file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
+		err = h.dfsAPI.UploadFile(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
 		if err != nil {
 			if err == dfs.ErrPodNotOpen {
 				h.logger.Errorf("file upload: %v", err)

@@ -46,6 +46,13 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := r.FormValue("pod_name")
+	if podName == "" {
+		h.logger.Errorf("kv open: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv open: \"pod_name\" argument missing")
+		return
+	}
+
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv open: \"name\" argument missing")
@@ -66,7 +73,7 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.KVOpen(sessionId, name)
+	err = h.dfsAPI.KVOpen(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("kv open: %v", err)
 		jsonhttp.InternalServerError(w, "kv open: "+err.Error())

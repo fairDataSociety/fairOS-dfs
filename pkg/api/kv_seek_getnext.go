@@ -52,10 +52,17 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := kvReq.PodName
+	if podName == "" {
+		h.logger.Errorf("kv seek: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv seek: \"pod_name\" argument missing")
+		return
+	}
+
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv seek: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv seek: \"name\" argument missing")
+		h.logger.Errorf("kv seek: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv seek: \"table_name\" argument missing")
 		return
 	}
 
@@ -99,7 +106,7 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.dfsAPI.KVSeek(sessionId, name, start, end, noOfRows)
+	_, err = h.dfsAPI.KVSeek(sessionId, podName, name, start, end, noOfRows)
 	if err != nil {
 		h.logger.Errorf("kv seek: %v", err)
 		jsonhttp.InternalServerError(w, "kv seek: "+err.Error())
@@ -112,17 +119,31 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 // it takes only oneargument
 // - table_name: the name of the kv table
 func (h *Handler) KVGetNextHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["table_name"]
+	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get_next: \"sharing_ref\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"sharing_ref\" argument missing")
+		h.logger.Errorf("kv get_next: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"pod_name\" argument missing")
+		return
+	}
+
+	podName := keys[0]
+	if podName == "" {
+		h.logger.Errorf("kv get_next: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"pod_name\" argument missing")
+		return
+	}
+
+	keys, ok = r.URL.Query()["table_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("kv get_next: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"table_name\" argument missing")
 		return
 	}
 
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("kv get_next: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"name\" argument missing")
+		h.logger.Errorf("kv get_next: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"table_name\" argument missing")
 		return
 	}
 
@@ -139,7 +160,7 @@ func (h *Handler) KVGetNextHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	columns, key, data, err := h.dfsAPI.KVGetNext(sessionId, name)
+	columns, key, data, err := h.dfsAPI.KVGetNext(sessionId, podName, name)
 	if err != nil && !errors.Is(err, collection.ErrNoNextElement) {
 		h.logger.Errorf("kv get_next: %v", err)
 		jsonhttp.InternalServerError(w, "kv get_next: "+err.Error())

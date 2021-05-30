@@ -29,7 +29,7 @@ import (
 
 // Mkdir is a controller function which validates if the user is logged in,
 // pod is open and calls the make directory function in the dir object.
-func (d *DfsAPI) Mkdir(dirToCreateWithPath, sessionId string) error {
+func (d *DfsAPI) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -37,12 +37,12 @@ func (d *DfsAPI) Mkdir(dirToCreateWithPath, sessionId string) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
 	// get the dir object and make directory
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (d *DfsAPI) Mkdir(dirToCreateWithPath, sessionId string) error {
 
 // IsDirPresent is acontroller function which validates if the user is logged in,
 // pod is open and calls the dir object to check if the directory is present.
-func (d *DfsAPI) IsDirPresent(directoryNameWithPath, sessionId string) (bool, error) {
+func (d *DfsAPI) IsDirPresent(podName, directoryNameWithPath, sessionId string) (bool, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -64,12 +64,12 @@ func (d *DfsAPI) IsDirPresent(directoryNameWithPath, sessionId string) (bool, er
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return false, ErrPodNotOpen
 	}
 
 	// get pod Info
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return false, err
 	}
@@ -81,7 +81,7 @@ func (d *DfsAPI) IsDirPresent(directoryNameWithPath, sessionId string) (bool, er
 
 // RmDir is a controller function which validates if the user is logged in,
 // pod is open and calls the dir object to remove the supplied directory.
-func (d *DfsAPI) RmDir(directoryNameWithPath, sessionId string) error {
+func (d *DfsAPI) RmDir(podName, directoryNameWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -89,12 +89,12 @@ func (d *DfsAPI) RmDir(directoryNameWithPath, sessionId string) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
 	// get the dir object and remove directory
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (d *DfsAPI) RmDir(directoryNameWithPath, sessionId string) error {
 
 // ListDir is a controller function which validates if the user is logged in,
 // pod is open and calls the dir object to list the contents of the supplied directory.
-func (d *DfsAPI) ListDir(currentDir, sessionId string) ([]dir.Entry, []f.Entry, error) {
+func (d *DfsAPI) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.Entry, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -116,12 +116,12 @@ func (d *DfsAPI) ListDir(currentDir, sessionId string) ([]dir.Entry, []f.Entry, 
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return nil, nil, ErrPodNotOpen
 	}
 
 	// get the dir object and list directory
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -140,7 +140,7 @@ func (d *DfsAPI) ListDir(currentDir, sessionId string) ([]dir.Entry, []f.Entry, 
 
 // DirectoryStat is a controller function which validates if the user is logged in,
 // pod is open and calls the dir object to get the information about the given directory.
-func (d *DfsAPI) DirectoryStat(directoryName, sessionId string) (*dir.DirStats, error) {
+func (d *DfsAPI) DirectoryStat(podName, directoryName, sessionId string) (*dir.DirStats, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -148,17 +148,17 @@ func (d *DfsAPI) DirectoryStat(directoryName, sessionId string) (*dir.DirStats, 
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
 
 	// get the dir object and stat directory
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 	directory := podInfo.GetDirectory()
-	ds, err := directory.DirStat(ui.GetPodName(), directoryName)
+	ds, err := directory.DirStat(podName, directoryName)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (d *DfsAPI) DirectoryStat(directoryName, sessionId string) (*dir.DirStats, 
 // DeleteFile is a controller function which validates if the user is logged in,
 // pod is open and delete the file. It also remove the file entry from the parent
 // directory.
-func (d *DfsAPI) DeleteFile(podFileWithPath, sessionId string) error {
+func (d *DfsAPI) DeleteFile(podName, podFileWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -176,11 +176,11 @@ func (d *DfsAPI) DeleteFile(podFileWithPath, sessionId string) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func (d *DfsAPI) DeleteFile(podFileWithPath, sessionId string) error {
 
 // FileStat is a controller function which validates if the user is logged in,
 // pod is open and gets the information about the file.
-func (d *DfsAPI) FileStat(podFileWithPath, sessionId string) (*f.Stats, error) {
+func (d *DfsAPI) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -213,16 +213,16 @@ func (d *DfsAPI) FileStat(podFileWithPath, sessionId string) (*f.Stats, error) {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 	file := podInfo.GetFile()
-	ds, err := file.GetStats(ui.GetPodName(), podFileWithPath)
+	ds, err := file.GetStats(podName, podFileWithPath)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +231,7 @@ func (d *DfsAPI) FileStat(podFileWithPath, sessionId string) (*f.Stats, error) {
 
 // UploadFile is a controller function which validates if the user is logged in,
 //  pod is open and calls the upload function.
-func (d *DfsAPI) UploadFile(podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32) error {
+func (d *DfsAPI) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -239,11 +239,11 @@ func (d *DfsAPI) UploadFile(podFileName, sessionId string, fileSize int64, fd io
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func (d *DfsAPI) UploadFile(podFileName, sessionId string, fileSize int64, fd io
 
 // DownloadFile is a controller function which validates if the user is logged in,
 // pod is open and calls the download function.
-func (d *DfsAPI) DownloadFile(podFileWithPath, sessionId string) (io.ReadCloser, uint64, error) {
+func (d *DfsAPI) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadCloser, uint64, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -268,17 +268,17 @@ func (d *DfsAPI) DownloadFile(podFileWithPath, sessionId string) (io.ReadCloser,
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return nil, 0, ErrPodNotOpen
 	}
 
 	// check if logged in to pod
-	if !ui.GetPod().IsPodOpened(ui.GetPodName()) {
+	if !ui.GetPod().IsPodOpened(podName) {
 		return nil, 0, fmt.Errorf("login to pod to do this operation")
 	}
 
 	// get podInfo and construct the path
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -294,7 +294,7 @@ func (d *DfsAPI) DownloadFile(podFileWithPath, sessionId string) (io.ReadCloser,
 
 // ShareFile is a controller function which validates if the user is logged in,
 // pod is open and calls the sharefile function.
-func (d *DfsAPI) ShareFile(podFileWithPath, destinationUser, sessionId string) (string, error) {
+func (d *DfsAPI) ShareFile(podName, podFileWithPath, destinationUser, sessionId string) (string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -302,12 +302,12 @@ func (d *DfsAPI) ShareFile(podFileWithPath, destinationUser, sessionId string) (
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return "", ErrPodNotOpen
 	}
 
 	// get podInfo and construct the path
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return "", err
 	}
@@ -322,7 +322,7 @@ func (d *DfsAPI) ShareFile(podFileWithPath, destinationUser, sessionId string) (
 // ReceiveFile is a controller function which validates if the user is logged in,
 // pod is open and calls the ReceiveFile function to get the shared file in to the
 // given pod.
-func (d *DfsAPI) ReceiveFile(sessionId string, sharingRef utils.SharingReference, dir string) (string, error) {
+func (d *DfsAPI) ReceiveFile(podName, sessionId string, sharingRef utils.SharingReference, dir string) (string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -330,17 +330,17 @@ func (d *DfsAPI) ReceiveFile(sessionId string, sharingRef utils.SharingReference
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return "", ErrPodNotOpen
 	}
 
-	return d.users.ReceiveFileFromUser(ui.GetPodName(), sharingRef, ui, ui.GetPod(), dir)
+	return d.users.ReceiveFileFromUser(podName, sharingRef, ui, ui.GetPod(), dir)
 }
 
 // ReceiveInfo is a controller function which validates if the user is logged in,
 // pod is open and calls the ReceiveInfo function to display the shared files
 // information.
-func (d *DfsAPI) ReceiveInfo(sessionId string, sharingRef utils.SharingReference) (*user.ReceiveFileInfo, error) {
+func (d *DfsAPI) ReceiveInfo(podName, sessionId string, sharingRef utils.SharingReference) (*user.ReceiveFileInfo, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -348,7 +348,7 @@ func (d *DfsAPI) ReceiveInfo(sessionId string, sharingRef utils.SharingReference
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
 

@@ -17,8 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"resenje.org/jsonhttp"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -29,6 +31,23 @@ import (
 // PodSyncHandler is the api handler to sync a pod's contents from the Swarm network
 // it takes no arguments
 func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("pod sync: invalid request body type")
+		jsonhttp.BadRequest(w, "pod sync: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var podReq common.PodRequest
+	err := decoder.Decode(&podReq)
+	if err != nil {
+		h.logger.Errorf("pod sync: could not decode arguments")
+		jsonhttp.BadRequest(w, "pod sync: could not decode arguments")
+		return
+	}
+	podName := podReq.PodName
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -43,7 +62,7 @@ func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch pods and list them
-	err = h.dfsAPI.SyncPod(sessionId)
+	err = h.dfsAPI.SyncPod(podName, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName ||

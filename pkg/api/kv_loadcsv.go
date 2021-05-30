@@ -33,10 +33,17 @@ import (
 // - table_name: the name of the key value table
 // - csv: the name of the parameter which contains the file to upload in a multipart upload
 func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
+	podName := r.FormValue("pod_name")
+	if podName == "" {
+		h.logger.Errorf("kv loadcsv: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv loadcsv: \"pod_name\" argument missing")
+		return
+	}
+
 	name := r.FormValue("table_name")
 	if name == "" {
-		h.logger.Errorf("kv loadcsv: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv loadcsv: \"name\" argument missing")
+		h.logger.Errorf("kv loadcsv: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv loadcsv: \"table_name\" argument missing")
 		return
 	}
 
@@ -98,7 +105,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		record = strings.TrimSuffix(record, "\r")
 		if !readHeader {
 			columns := strings.Split(record, ",")
-			batch, err = h.dfsAPI.KVBatch(sessionId, name, columns)
+			batch, err = h.dfsAPI.KVBatch(sessionId, podName, name, columns)
 			if err != nil {
 				h.logger.Errorf("kv loadcsv: %v", err)
 				jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())

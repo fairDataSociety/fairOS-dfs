@@ -47,7 +47,7 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 	}
 
 	// Add podName in the login user session
-	ui.SetPodName(podName)
+	ui.AddPodName(podName)
 	return pi, nil
 }
 
@@ -67,10 +67,10 @@ func (d *DfsAPI) DeletePod(podName, sessionId string) error {
 	// TODO: delete all the directory, files, and database tables under this pod from
 	// the Swarm network.
 
-	// close the pod and delete it from login user session, if the delete is for a opened pod
-	if ui.GetPodName() != "" && podName == ui.GetPodName() {
+	// close the pod if it is open
+	if ui.IsPodOpen(podName) {
 		// remove from the login session
-		ui.RemovePodName()
+		ui.RemovePodName(podName)
 	}
 
 	return nil
@@ -83,12 +83,9 @@ func (d *DfsAPI) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, erro
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// close the already open pod
-	if ui.GetPodName() != "" {
-		err := ui.GetPod().ClosePod(ui.GetPodName())
-		if err != nil {
-			return nil, err
-		}
+	// return if pod already open
+	if ui.IsPodOpen(podName) {
+		return nil, ErrPodAlreadyOpen
 	}
 
 	// open the pod
@@ -98,11 +95,11 @@ func (d *DfsAPI) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, erro
 	}
 
 	// Add podName in the login user session
-	ui.SetPodName(podName)
+	ui.AddPodName(podName)
 	return po, nil
 }
 
-func (d *DfsAPI) ClosePod(sessionId string) error {
+func (d *DfsAPI) ClosePod(podName, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -110,18 +107,18 @@ func (d *DfsAPI) ClosePod(sessionId string) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
 	// close the pod
-	err := ui.GetPod().ClosePod(ui.GetPodName())
+	err := ui.GetPod().ClosePod(podName)
 	if err != nil {
 		return err
 	}
 
 	// delete podName in the login user session
-	ui.RemovePodName()
+	ui.RemovePodName(podName)
 	return nil
 }
 
@@ -140,7 +137,7 @@ func (d *DfsAPI) PodStat(podName, sessionId string) (*pod.PodStat, error) {
 	return podStat, nil
 }
 
-func (d *DfsAPI) SyncPod(sessionId string) error {
+func (d *DfsAPI) SyncPod(podName, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -148,12 +145,12 @@ func (d *DfsAPI) SyncPod(sessionId string) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
 	// sync the pod
-	err := ui.GetPod().SyncPod(ui.GetPodName())
+	err := ui.GetPod().SyncPod(podName)
 	if err != nil {
 		return err
 	}

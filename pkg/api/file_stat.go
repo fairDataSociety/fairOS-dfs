@@ -29,7 +29,20 @@ import (
 // it takes only one argument
 // file_path: the absolute path of the file in the pod
 func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["file_path"]
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("file stat: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "file stat: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+	if podName == "" {
+		h.logger.Errorf("file stat: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "file stat: \"pod_name\" argument missing")
+		return
+	}
+
+	keys, ok = r.URL.Query()["file_path"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("file stat: \"file_path\" argument missing")
 		jsonhttp.BadRequest(w, "file stat: \"file_path\" argument missing")
@@ -37,7 +50,7 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	podFileWithPath := keys[0]
 	if podFileWithPath == "" {
-		h.logger.Errorf("file stat: \"pod_path_file\" argument missing")
+		h.logger.Errorf("file stat: \"file_path\" argument missing")
 		jsonhttp.BadRequest(w, "file stat: \"pod_path_file\" argument missing")
 		return
 	}
@@ -56,7 +69,7 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get file stat
-	stat, err := h.dfsAPI.FileStat(podFileWithPath, sessionId)
+	stat, err := h.dfsAPI.FileStat(podName, podFileWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file stat: %v", err)

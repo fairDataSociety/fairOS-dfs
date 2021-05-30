@@ -17,6 +17,8 @@ limitations under the License.
 package user
 
 import (
+	"sync"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -25,14 +27,15 @@ import (
 )
 
 type Info struct {
-	name      string
-	podName   string
-	sessionId string
-	feedApi   *feed.API
-	account   *account.Account
-	file      *f.File
-	dir       *d.Directory
-	pod       *pod.Pod
+	name       string
+	sessionId  string
+	feedApi    *feed.API
+	account    *account.Account
+	file       *f.File
+	dir        *d.Directory
+	pod        *pod.Pod
+	openPods   map[string]string
+	openPodsMu *sync.RWMutex
 }
 
 func (i *Info) GetUserName() string {
@@ -55,16 +58,25 @@ func (i *Info) GetFeed() *feed.API {
 	return i.feedApi
 }
 
-func (i *Info) SetPodName(podName string) {
-	i.podName = podName
+func (i *Info) AddPodName(podName string) {
+	i.openPodsMu.Lock()
+	defer i.openPodsMu.Unlock()
+	i.openPods[podName] = podName
 }
 
-func (i *Info) RemovePodName() {
-	i.podName = ""
+func (i *Info) RemovePodName(podName string) {
+	i.openPodsMu.Lock()
+	defer i.openPodsMu.Unlock()
+	delete(i.openPods, podName)
 }
 
-func (i *Info) GetPodName() string {
-	return i.podName
+func (i *Info) IsPodOpen(podName string) bool {
+	i.openPodsMu.RLock()
+	defer i.openPodsMu.RUnlock()
+	if _, ok := i.openPods[podName]; ok {
+		return true
+	}
+	return false
 }
 
 func (i *Info) GetDirectory() *d.Directory {

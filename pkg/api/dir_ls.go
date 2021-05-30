@@ -37,7 +37,15 @@ type ListFileResponse struct {
 // it takes only one argument
 // - dir_path: the path of the directory to list it contents
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["dir_path"]
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("ls: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "ls: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+
+	keys, ok = r.URL.Query()["dir_path"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("ls: \"dir_path\" argument missing")
 		jsonhttp.BadRequest(w, "ls: \"dir_path\" argument missing")
@@ -59,7 +67,7 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// list directory
-	dEntries, fEntries, err := h.dfsAPI.ListDir(directory, sessionId)
+	dEntries, fEntries, err := h.dfsAPI.ListDir(podName, directory, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {

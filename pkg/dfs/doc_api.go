@@ -19,7 +19,7 @@ package dfs
 import "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
 // DocCreate is a controller function which does all the checks before creating a documentDB.
-func (d *DfsAPI) DocCreate(sessionId, name string, indexes map[string]collection.IndexType, mutable bool) error {
+func (d *DfsAPI) DocCreate(sessionId, podName, name string, indexes map[string]collection.IndexType, mutable bool) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -27,11 +27,11 @@ func (d *DfsAPI) DocCreate(sessionId, name string, indexes map[string]collection
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (d *DfsAPI) DocCreate(sessionId, name string, indexes map[string]collection
 }
 
 // DocOpen is a controller function which does all the checks before opening a documentDB.
-func (d *DfsAPI) DocOpen(sessionId, name string) error {
+func (d *DfsAPI) DocOpen(sessionId, podName, name string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -48,11 +48,11 @@ func (d *DfsAPI) DocOpen(sessionId, name string) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
-		return ErrPodNotOpen
+	if !ui.IsPodOpen(podName) {
+		return ErrPodAlreadyOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (d *DfsAPI) DocOpen(sessionId, name string) error {
 }
 
 // DocDelete is a controller function which does all the checks before deleting a documentDB.
-func (d *DfsAPI) DocDelete(sessionId, name string) error {
+func (d *DfsAPI) DocDelete(sessionId, podName, name string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -69,11 +69,11 @@ func (d *DfsAPI) DocDelete(sessionId, name string) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (d *DfsAPI) DocDelete(sessionId, name string) error {
 
 // DocList is a controller function which does all the checks before listing all the
 // documentDB available in the pod.
-func (d *DfsAPI) DocList(sessionId string) (map[string]collection.DBSchema, error) {
+func (d *DfsAPI) DocList(sessionId, podName string) (map[string]collection.DBSchema, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -91,11 +91,11 @@ func (d *DfsAPI) DocList(sessionId string) (map[string]collection.DBSchema, erro
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (d *DfsAPI) DocList(sessionId string) (map[string]collection.DBSchema, erro
 
 // DocCount is a controller function which does all the checks before counting
 // all the documents ina documentDB.
-func (d *DfsAPI) DocCount(sessionId, name, expr string) (uint64, error) {
+func (d *DfsAPI) DocCount(sessionId, podName, name, expr string) (uint64, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -113,11 +113,11 @@ func (d *DfsAPI) DocCount(sessionId, name, expr string) (uint64, error) {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return 0, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return 0, err
 	}
@@ -127,7 +127,7 @@ func (d *DfsAPI) DocCount(sessionId, name, expr string) (uint64, error) {
 
 // DocPut is a controller function which does all the checks before inserting
 // a document in the documentDB.
-func (d *DfsAPI) DocPut(sessionId, name string, value []byte) error {
+func (d *DfsAPI) DocPut(sessionId, podName, name string, value []byte) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -135,11 +135,11 @@ func (d *DfsAPI) DocPut(sessionId, name string, value []byte) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func (d *DfsAPI) DocPut(sessionId, name string, value []byte) error {
 
 // DocGet is a controller function which does all the checks before retrieving
 //// a document in the documentDB.
-func (d *DfsAPI) DocGet(sessionId, name, id string) ([]byte, error) {
+func (d *DfsAPI) DocGet(sessionId, podName, name, id string) ([]byte, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -157,11 +157,11 @@ func (d *DfsAPI) DocGet(sessionId, name, id string) ([]byte, error) {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (d *DfsAPI) DocGet(sessionId, name, id string) ([]byte, error) {
 
 // DocDel is a controller function which does all the checks before deleting
 // a documentDB.
-func (d *DfsAPI) DocDel(sessionId, name, id string) error {
+func (d *DfsAPI) DocDel(sessionId, podName, name, id string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -179,11 +179,11 @@ func (d *DfsAPI) DocDel(sessionId, name, id string) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (d *DfsAPI) DocDel(sessionId, name, id string) error {
 
 // DocFind is a controller function which does all the checks before finding
 // records from a documentDB.
-func (d *DfsAPI) DocFind(sessionId, name, expr string, limit int) ([][]byte, error) {
+func (d *DfsAPI) DocFind(sessionId, podName, name, expr string, limit int) ([][]byte, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -201,11 +201,11 @@ func (d *DfsAPI) DocFind(sessionId, name, expr string, limit int) ([][]byte, err
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func (d *DfsAPI) DocFind(sessionId, name, expr string, limit int) ([][]byte, err
 }
 
 // DocBatch initiates a batch inserting session.
-func (d *DfsAPI) DocBatch(sessionId, name string) (*collection.DocBatch, error) {
+func (d *DfsAPI) DocBatch(sessionId, podName, name string) (*collection.DocBatch, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -222,11 +222,11 @@ func (d *DfsAPI) DocBatch(sessionId, name string) (*collection.DocBatch, error) 
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (d *DfsAPI) DocBatch(sessionId, name string) (*collection.DocBatch, error) 
 }
 
 // DocBatchPut inserts records in to a document batch.
-func (d *DfsAPI) DocBatchPut(sessionId string, doc []byte, docBatch *collection.DocBatch) error {
+func (d *DfsAPI) DocBatchPut(sessionId, podName string, doc []byte, docBatch *collection.DocBatch) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -243,11 +243,11 @@ func (d *DfsAPI) DocBatchPut(sessionId string, doc []byte, docBatch *collection.
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func (d *DfsAPI) DocBatchPut(sessionId string, doc []byte, docBatch *collection.
 }
 
 // DocBatchWrite commits the batch document insert.
-func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) error {
+func (d *DfsAPI) DocBatchWrite(sessionId, podName string, docBatch *collection.DocBatch) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -264,11 +264,11 @@ func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) 
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -277,7 +277,7 @@ func (d *DfsAPI) DocBatchWrite(sessionId string, docBatch *collection.DocBatch) 
 }
 
 // DocIndexJson indexes a json files in to the document DB.
-func (d *DfsAPI) DocIndexJson(sessionId, name, podFileWithPath string) error {
+func (d *DfsAPI) DocIndexJson(sessionId, podName, name, podFileWithPath string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -285,12 +285,12 @@ func (d *DfsAPI) DocIndexJson(sessionId, name, podFileWithPath string) error {
 	}
 
 	// check if pod open
-	if ui.GetPodName() == "" {
+	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
 
 	// check if file present
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(ui.GetPodName())
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}

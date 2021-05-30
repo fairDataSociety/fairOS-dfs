@@ -49,6 +49,13 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	podName := fsReq.PodName
+	if podName == "" {
+		h.logger.Errorf("rmdir: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "rmdir: \"pod_name\" argument missing")
+		return
+	}
+
 	dir := fsReq.DirectoryPath
 	if dir == "" {
 		h.logger.Errorf("rmdir: \"dir_path\" argument missing")
@@ -70,7 +77,7 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// remove directory
-	err = h.dfsAPI.RmDir(dir, sessionId)
+	err = h.dfsAPI.RmDir(podName, dir, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {

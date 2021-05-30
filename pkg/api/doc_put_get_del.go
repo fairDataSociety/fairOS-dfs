@@ -50,6 +50,12 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, "doc put: could not decode arguments")
 		return
 	}
+	podName := docReq.PodName
+	if podName == "" {
+		h.logger.Errorf("doc put: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc put: \"pod_name\" argument missing")
+		return
+	}
 
 	name := docReq.TableName
 	if name == "" {
@@ -78,7 +84,7 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.DocPut(sessionId, name, []byte(doc))
+	err = h.dfsAPI.DocPut(sessionId, podName, name, []byte(doc))
 	if err != nil {
 		h.logger.Errorf("doc put: %v", err)
 		jsonhttp.InternalServerError(w, "doc put: "+err.Error())
@@ -92,7 +98,20 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 // table_name: the name of the document database
 // id: the document id to get
 func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["table_name"]
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("doc get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc get: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+	if podName == "" {
+		h.logger.Errorf("doc get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc get: \"pod_name\" argument missing")
+		return
+	}
+
+	keys, ok = r.URL.Query()["table_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc get: \"table_name\" argument missing")
 		jsonhttp.BadRequest(w, "doc get: \"table_name\" argument missing")
@@ -131,7 +150,7 @@ func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.dfsAPI.DocGet(sessionId, name, id)
+	data, err := h.dfsAPI.DocGet(sessionId, podName, name, id)
 	if err != nil {
 		h.logger.Errorf("doc get: %v", err)
 		jsonhttp.InternalServerError(w, "doc get: "+err.Error())
@@ -166,6 +185,13 @@ func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := docReq.PodName
+	if podName == "" {
+		h.logger.Errorf("doc del: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc del: \"pod_name\" argument missing")
+		return
+	}
+
 	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc del: \"name\" argument missing")
@@ -193,7 +219,7 @@ func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.DocDel(sessionId, name, id)
+	err = h.dfsAPI.DocDel(sessionId, podName, name, id)
 	if err != nil {
 		h.logger.Errorf("doc del: %v", err)
 		jsonhttp.InternalServerError(w, "doc del: "+err.Error())

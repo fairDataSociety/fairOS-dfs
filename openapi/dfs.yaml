@@ -453,6 +453,16 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
+              required:
+                - pod_name
       responses:
         '200':
           description: 'Ok'
@@ -477,6 +487,16 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
+              required:
+                - pod_name
       responses:
         '200':
           description: 'Synced'
@@ -646,6 +666,8 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 dir_path:
                   $ref: '#/components/schemas/DirPath'
               required:
@@ -680,9 +702,12 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 dir_path:
                   $ref: '#/components/schemas/DirPath'
               required:
+                - pod_name
                 - dir_path
       responses:
         '200':
@@ -708,16 +733,18 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                dir_path:
-                  $ref: '#/components/schemas/DirPath'
-              required:
-                - dir
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
+              dir_path:
+                $ref: '#/components/schemas/DirPath'
+            required:
+              - pod_name
+              - dir_path
       responses:
         '200':
           description: 'Ok'
@@ -751,9 +778,12 @@ paths:
           schema:
             type: object
             properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
               dir_path:
                 $ref: '#/components/schemas/DirPath'
             required:
+              - pod_name
               - dir_path
       responses:
         '200':
@@ -783,9 +813,12 @@ paths:
           schema:
             type: object
             properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
               dir_path:
                 $ref: '#/components/schemas/DirPath'
             required:
+              - pod_name
               - dir_path
       responses:
         '200':
@@ -821,12 +854,15 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 pod_dir:
                   $ref: '#/components/schemas/DirName'
                 block_size:
                   type: string
                   example: 10M
               required:
+                - pod_name
                 - pod_dir
                 - block_size
           multipart/form-data:
@@ -861,14 +897,17 @@ paths:
             type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
-                file:
-                  $ref: '#/components/schemas/PodFileName'
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
+                file_path:
+                  $ref: '#/components/schemas/DirPath'
               required:
-                - file
+                - pod_name
+                - file_path
       responses:
         '200':
           description: 'Ok'
@@ -899,12 +938,16 @@ paths:
             schema:
               type: object
               properties:
-                file_path:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
+                pod_path_file:
                   $ref: '#/components/schemas/FileNameWithPath'
                 dest_user:
                   $ref: '#/components/schemas/EthereumAddress'
               required:
-                - file
+                - pod_name
+                - pod_path_file
+                - dest_user
       responses:
         '200':
           description: 'Ok'
@@ -933,11 +976,14 @@ paths:
           schema:
             type: object
             properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
               sharing_ref:
                 $ref: '#/components/schemas/FileSharingReference'
               dir_path:
                 $ref: '#/components/schemas/DirName'
             required:
+              - pod_name
               - sharing_ref
               - dir_path
       responses:
@@ -971,9 +1017,12 @@ paths:
           schema:
             type: object
             properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
               sharing_ref:
                 $ref: '#/components/schemas/FileSharingReference'
             required:
+              - pod_name
               - sharing_ref
       responses:
         '200':
@@ -1004,9 +1053,12 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 file_path:
                   $ref: '#/components/schemas/FileNameWithPath'
               required:
+                - pod_name
                 - file_path
       responses:
         '200':
@@ -1037,9 +1089,12 @@ paths:
           schema:
             type: object
             properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
               file_path:
                 $ref: '#/components/schemas/FileNameWithPath'
             required:
+              - pod_name
               - file_path
       responses:
         '200':
@@ -1070,12 +1125,15 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/KVTableName'
                 indexType:
                   $ref: '#/components/schemas/KVIndexType'
               required:
-                - name
+                - pod_name
+                - table_name
       responses:
         '200':
           description: 'Ok'
@@ -1100,6 +1158,15 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
+            required:
+              - pod_name
       responses:
         '200':
           description: 'Ok'
@@ -1129,10 +1196,13 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/KVTableName'
               required:
-                - name
+                - pod_name
+                - table_name
       responses:
         '200':
           description: 'Ok'
@@ -1163,10 +1233,13 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/KVTableName'
               required:
-                - name
+                - pod_name
+                - table_name
       responses:
         '200':
           description: 'Ok'
@@ -1197,10 +1270,13 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/KVTableName'
               required:
-                - name
+                - pod_name
+                - table_name
       responses:
         '200':
           description: 'Ok'
@@ -1231,6 +1307,8 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/KVTableName'
                 key:
@@ -1238,7 +1316,8 @@ paths:
                 value:
                   $ref: '#/components/schemas/KVValue'
               required:
-                - name
+                - pod_name
+                - table_name
                 - key
                 - value
       responses:
@@ -1270,11 +1349,14 @@ paths:
           schema:
             type: object
             properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
               table_name:
                 $ref: '#/components/schemas/KVTableName'
               key:
                 $ref: '#/components/schemas/KVKey'
             required:
+              - pod_name
               - table_name
               - key
       responses:
@@ -1310,12 +1392,15 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
+                table_name:
                   $ref: '#/components/schemas/KVTableName'
                 key:
                   $ref: '#/components/schemas/KVKey'
               required:
-                - name
+                - pod_name
+                - table_name
                 - key
       responses:
         '200':
@@ -1346,6 +1431,8 @@ paths:
           schema:
             type: object
             properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
               table_name:
                 $ref: '#/components/schemas/KVTableName'
               start:
@@ -1355,8 +1442,9 @@ paths:
               limit:
                   type: integer
             required:
-                - table_name
-                - start
+              - pod_name
+              - table_name
+              - start
       responses:
         '200':
           description: 'Ok'
@@ -1387,10 +1475,13 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/KVTableName'
               required:
-                - name
+                - pod_name
+                - table_name
       responses:
         '200':
           description: 'Ok'
@@ -1424,9 +1515,12 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_ame:
                   $ref: '#/components/schemas/KVTableName'
               required:
+                - pod_name
                 - table_ame
           multipart/form-data:
             schema:
@@ -1465,6 +1559,8 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/DocTableName'
                 si:
@@ -1472,6 +1568,7 @@ paths:
                 mutable:
                   $ref: '#/components/schemas/DocMutable'
               required:
+                - pod_name
                 - table_name
                 - si
       responses:
@@ -1498,6 +1595,15 @@ paths:
           name: fairOS-dfs
           schema:
             type: string
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
+            required:
+              - pod_name
       responses:
         '200':
           description: 'Ok'
@@ -1505,6 +1611,7 @@ paths:
             application/json:
               schema:
                 properties:
+
                   keys:
                     $ref: '#/components/schemas/DocListResponse'
         '400':
@@ -1529,10 +1636,13 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
+                table_name:
                   $ref: '#/components/schemas/DocTableName'
               required:
-                - name
+                - pod_name
+                - table_name
       responses:
         '200':
           description: 'Ok'
@@ -1563,12 +1673,15 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/DocTableName'
                 expr:
                   type: string
                   example: "age>45"
               required:
+                - pod_name
                 - table_name
       responses:
         '200':
@@ -1600,9 +1713,12 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/DocTableName'
               required:
+                - pod_name
                 - table_name
       responses:
         '200':
@@ -1633,6 +1749,8 @@ paths:
           schema:
             type: object
             properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
               table_name:
                 $ref: '#/components/schemas/DocTableName'
               expr:
@@ -1642,6 +1760,7 @@ paths:
                 type: integer
                 example: 20
             required:
+              - pod_name
               - table_name
               - expr
       responses:
@@ -1675,10 +1794,13 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/DocTableName'
               required:
-                - name
+                - pod_name
+                - table_name
           multipart/form-data:
             schema:
               type: object
@@ -1716,12 +1838,15 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
+                table_name:
                   $ref: '#/components/schemas/DocTableName'
                 file:
                   $ref: '#/components/schemas/PodFileName'
               required:
-                - name
+                - pod_name
+                - table_name
                 - file
       responses:
         '200':
@@ -1753,11 +1878,14 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/DocTableName'
                 doc:
                   $ref: '#/components/schemas/FileNameWithPath'
               required:
+                - pod_name
                 - table_name
                 - doc
       responses:
@@ -1789,11 +1917,14 @@ paths:
           schema:
             type: object
             properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
               table_name:
                 $ref: '#/components/schemas/DocTableName'
               id:
                 $ref: '#/components/schemas/DocId'
             required:
+              - pod_name
               - table_name    
               - id
       responses:
@@ -1826,11 +1957,14 @@ paths:
             schema:
               type: object
               properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
                 table_name:
                   $ref: '#/components/schemas/DocTableName'
                 id:
                   $ref: '#/components/schemas/DocId'
               required:
+                - pod_name
                 - table_name
                 - id
       responses:

@@ -82,7 +82,7 @@ func TestSharing(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
-		ui.SetPodName(podName1)
+		ui.AddPodName(podName1)
 
 		// make root dir so that other directories can be added
 		err = info1.GetDirectory().MkRootDir()

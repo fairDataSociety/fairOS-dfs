@@ -33,10 +33,17 @@ import (
 // table_name: the document database in which to insert the data
 // file: the json file as a multi part file
 func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
+	podName := r.FormValue("pod_name")
+	if podName == "" {
+		h.logger.Errorf("doc loadjson: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc loadjson: \"pod_name\" argument missing")
+		return
+	}
+
 	name := r.FormValue("table_name")
 	if name == "" {
-		h.logger.Errorf("doc loadjson: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc loadjson: \"name\" argument missing")
+		h.logger.Errorf("doc loadjson: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc loadjson: \"table_name\" argument missing")
 		return
 	}
 
@@ -79,7 +86,7 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	rowCount := 0
 	successCount := 0
 	failureCount := 0
-	docBatch, err := h.dfsAPI.DocBatch(sessionId, name)
+	docBatch, err := h.dfsAPI.DocBatch(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("doc loadjson: %v", err)
 		jsonhttp.InternalServerError(w, "doc loadjson: "+err.Error())
@@ -102,7 +109,7 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 		record = strings.TrimSuffix(record, "\n")
 		record = strings.TrimSuffix(record, "\r")
 
-		err = h.dfsAPI.DocBatchPut(sessionId, []byte(record), docBatch)
+		err = h.dfsAPI.DocBatchPut(sessionId, podName, []byte(record), docBatch)
 		if err != nil {
 			failureCount++
 			continue
@@ -113,7 +120,7 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 			h.logger.Info("uploaded ", rowCount)
 		}
 	}
-	err = h.dfsAPI.DocBatchWrite(sessionId, docBatch)
+	err = h.dfsAPI.DocBatchWrite(sessionId, podName, docBatch)
 	if err != nil {
 		h.logger.Errorf("doc loadjso: %v", err)
 		jsonhttp.InternalServerError(w, "doc loadjso: "+err.Error())

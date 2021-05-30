@@ -51,10 +51,17 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := docReq.PodName
+	if podName == "" {
+		h.logger.Errorf("doc create: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc create: \"pod_name\" argument missing")
+		return
+	}
+
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc create: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc  create: \"name\" argument missing")
+		h.logger.Errorf("doc create: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc  create: \"table_name\" argument missing")
 		return
 	}
 
@@ -113,7 +120,7 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.DocCreate(sessionId, name, indexes, mutable)
+	err = h.dfsAPI.DocCreate(sessionId, podName, name, indexes, mutable)
 	if err != nil {
 		h.logger.Errorf("doc create: %v", err)
 		jsonhttp.InternalServerError(w, "doc create: "+err.Error())

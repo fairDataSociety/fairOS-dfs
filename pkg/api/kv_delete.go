@@ -46,6 +46,13 @@ func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := kvReq.PodName
+	if podName == "" {
+		h.logger.Errorf("kv delete: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv delete: \"pod_name\" argument missing")
+		return
+	}
+
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv delete: \"name\" argument missing")
@@ -66,7 +73,7 @@ func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.KVDelete(sessionId, name)
+	err = h.dfsAPI.KVDelete(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("kv delete: %v", err)
 		jsonhttp.InternalServerError(w, "kv delete: "+err.Error())

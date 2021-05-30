@@ -48,6 +48,14 @@ func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, "doc count: could not decode arguments")
 		return
 	}
+
+	podName := docReq.PodName
+	if podName == "" {
+		h.logger.Errorf("doc count: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc count: \"pod_name\" argument missing")
+		return
+	}
+
 	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc count: \"name\" argument missing")
@@ -70,7 +78,7 @@ func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, err := h.dfsAPI.DocCount(sessionId, name, expr)
+	count, err := h.dfsAPI.DocCount(sessionId, podName, name, expr)
 	if err != nil {
 		h.logger.Errorf("doc count: %v", err)
 		jsonhttp.InternalServerError(w, "doc count: "+err.Error())

@@ -57,6 +57,13 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := fsReq.PodName
+	if podName == "" {
+		h.logger.Errorf("file share: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "file share: \"pod_name\" argument missing")
+		return
+	}
+
 	podFileWithPath := fsReq.FilePath
 	if podFileWithPath == "" {
 		h.logger.Errorf("file share: \"pod_path_file\" argument missing")
@@ -83,7 +90,7 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sharingRef, err := h.dfsAPI.ShareFile(podFileWithPath, destinationRef, sessionId)
+	sharingRef, err := h.dfsAPI.ShareFile(podName, podFileWithPath, destinationRef, sessionId)
 	if err != nil {
 		h.logger.Errorf("file share: %v", err)
 		jsonhttp.InternalServerError(w, "file share: "+err.Error())
@@ -97,7 +104,20 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["sharing_ref"]
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("file receive: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "file receive: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+	if podName == "" {
+		h.logger.Errorf("file receive: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "file receive: \"pod_name\" argument missing")
+		return
+	}
+
+	keys, ok = r.URL.Query()["sharing_ref"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("file receive: \"sharing_ref\" argument missing")
 		jsonhttp.BadRequest(w, "file receive: \"sharing_ref\" argument missing")
@@ -138,7 +158,7 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filePath, err := h.dfsAPI.ReceiveFile(sessionId, sharingRef, dir)
+	filePath, err := h.dfsAPI.ReceiveFile(podName, sessionId, sharingRef, dir)
 	if err != nil {
 		h.logger.Errorf("file receive: %v", err)
 		jsonhttp.InternalServerError(w, "file receive: "+err.Error())
@@ -152,7 +172,20 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["sharing_ref"]
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("file receive info: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "file receive info: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+	if podName == "" {
+		h.logger.Errorf("file receive info: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "file receive info: \"pod_name\" argument missing")
+		return
+	}
+
+	keys, ok = r.URL.Query()["sharing_ref"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("file receive info: \"sharing_ref\" argument missing")
 		jsonhttp.BadRequest(w, "file receive info: \"sharing_ref\" argument missing")
@@ -185,7 +218,7 @@ func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	receiveInfo, err := h.dfsAPI.ReceiveInfo(sessionId, sharingRef)
+	receiveInfo, err := h.dfsAPI.ReceiveInfo(podName, sessionId, sharingRef)
 	if err != nil {
 		h.logger.Errorf("file receive info: %v", err)
 		jsonhttp.InternalServerError(w, "file receive info: "+err.Error())

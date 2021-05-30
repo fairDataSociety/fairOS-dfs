@@ -53,6 +53,13 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := r.FormValue("pod_name")
+	if podName == "" {
+		h.logger.Errorf("kv put: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv put: \"pod_name\" argument missing")
+		return
+	}
+
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv put: \"name\" argument missing")
@@ -87,7 +94,7 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.KVPut(sessionId, name, key, []byte(value))
+	err = h.dfsAPI.KVPut(sessionId, podName, name, key, []byte(value))
 	if err != nil {
 		h.logger.Errorf("kv put: %v", err)
 		jsonhttp.InternalServerError(w, "kv put: "+err.Error())
@@ -101,16 +108,29 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 // - table_name: the name of the kv table
 // - key: the key string
 func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["table_name"]
+	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"sharing_ref\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"sharing_ref\" argument missing")
+		h.logger.Errorf("kv get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+	if podName == "" {
+		h.logger.Errorf("kv get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		return
+	}
+
+	keys, ok = r.URL.Query()["table_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("kv get: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
 		return
 	}
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("kv get: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"name\" argument missing")
+		h.logger.Errorf("kv get: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
 		return
 	}
 
@@ -140,7 +160,7 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	columns, data, err := h.dfsAPI.KVGet(sessionId, name, key)
+	columns, data, err := h.dfsAPI.KVGet(sessionId, podName, name, key)
 	if err != nil {
 		h.logger.Errorf("kv get: %v", err)
 		jsonhttp.InternalServerError(w, "kv get: "+err.Error())
@@ -180,10 +200,17 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := kvReq.PodName
+	if podName == "" {
+		h.logger.Errorf("kv del: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv del: \"pod_name\" argument missing")
+		return
+	}
+
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv del: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv del: \"name\" argument missing")
+		h.logger.Errorf("kv del: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv del: \"table_name\" argument missing")
 		return
 	}
 
@@ -207,7 +234,7 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.dfsAPI.KVDel(sessionId, name, key)
+	_, err = h.dfsAPI.KVDel(sessionId, podName, name, key)
 	if err != nil {
 		h.logger.Errorf("kv del: %v", err)
 		jsonhttp.InternalServerError(w, "kv del: "+err.Error())

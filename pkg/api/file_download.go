@@ -32,6 +32,13 @@ import (
 //  it takes only one argument
 // file_path: the absolute path of the file in the pod
 func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
+	podName := r.FormValue("pod_name")
+	if podName == "" {
+		h.logger.Errorf("download: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "download: \"pod_name\" argument missing")
+		return
+	}
+
 	podFileWithPath := r.FormValue("file_path")
 	if podFileWithPath == "" {
 		h.logger.Errorf("download: \"file_path\" argument missing")
@@ -53,7 +60,7 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// download file from bee
-	reader, size, err := h.dfsAPI.DownloadFile(podFileWithPath, sessionId)
+	reader, size, err := h.dfsAPI.DownloadFile(podName, podFileWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("download: %v", err)

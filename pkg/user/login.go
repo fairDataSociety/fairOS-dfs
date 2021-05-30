@@ -18,6 +18,7 @@ package user
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
@@ -74,13 +75,15 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	}
 
 	ui := &Info{
-		name:      userName,
-		sessionId: sessionId,
-		feedApi:   fd,
-		account:   acc,
-		file:      file,
-		dir:       dir,
-		pod:       pod,
+		name:       userName,
+		sessionId:  sessionId,
+		feedApi:    fd,
+		account:    acc,
+		file:       file,
+		dir:        dir,
+		pod:        pod,
+		openPods:   make(map[string]string),
+		openPodsMu: &sync.RWMutex{},
 	}
 
 	// set cookie and add user to map

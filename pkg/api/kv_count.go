@@ -47,6 +47,13 @@ func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := kvReq.PodName
+	if podName == "" {
+		h.logger.Errorf("kv count: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv count: \"pod_name\" argument missing")
+		return
+	}
+
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv count: \"name\" argument missing")
@@ -67,7 +74,7 @@ func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, err := h.dfsAPI.KVCount(sessionId, name)
+	count, err := h.dfsAPI.KVCount(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("kv count: %v", err)
 		jsonhttp.InternalServerError(w, "kv count: "+err.Error())

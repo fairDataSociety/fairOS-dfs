@@ -17,8 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"resenje.org/jsonhttp"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -29,6 +31,23 @@ import (
 // PodCloseHandler is the api handler to close a open pod
 // it takes no arguments
 func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("pod close: invalid request body type")
+		jsonhttp.BadRequest(w, "pod close: invalid request body type")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var podReq common.PodRequest
+	err := decoder.Decode(&podReq)
+	if err != nil {
+		h.logger.Errorf("pod close: could not decode arguments")
+		jsonhttp.BadRequest(w, "pod close: could not decode arguments")
+		return
+	}
+	podName := podReq.PodName
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -43,7 +62,7 @@ func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// close pod
-	err = h.dfsAPI.ClosePod(sessionId)
+	err = h.dfsAPI.ClosePod(podName, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {

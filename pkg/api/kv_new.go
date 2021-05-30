@@ -49,6 +49,13 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := r.FormValue("pod_name")
+	if podName == "" {
+		h.logger.Errorf("kv create: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv create: \"pod_name\" argument missing")
+		return
+	}
+
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv create: \"name\" argument missing")
@@ -88,7 +95,7 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.KVCreate(sessionId, name, indexType)
+	err = h.dfsAPI.KVCreate(sessionId, podName, name, indexType)
 	if err != nil {
 		h.logger.Errorf("kv create: %v", err)
 		jsonhttp.InternalServerError(w, "kv create: "+err.Error())

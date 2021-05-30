@@ -46,6 +46,13 @@ func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	podName := docReq.PodName
+	if podName == "" {
+		h.logger.Errorf("doc open: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc open: \"pod_name\" argument missing")
+		return
+	}
+
 	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc open: \"name\" argument missing")
@@ -66,7 +73,7 @@ func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.DocOpen(sessionId, name)
+	err = h.dfsAPI.DocOpen(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("doc open: %v", err)
 		jsonhttp.InternalServerError(w, "doc open: "+err.Error())

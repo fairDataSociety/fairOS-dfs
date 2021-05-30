@@ -30,6 +30,7 @@ type PodRequest struct {
 }
 
 type FileSystemRequest struct {
+	PodName       string `json:"pod_name,omitempty"`
 	DirectoryPath string `json:"dir_path,omitempty"`
 	DirectoryName string `json:"dir_name,omitempty"`
 	FilePath      string `json:"file_path,omitempty"`
@@ -38,6 +39,7 @@ type FileSystemRequest struct {
 }
 
 type KVRequest struct {
+	PodName     string `json:"pod_name,omitempty"`
 	TableName   string `json:"table_name,omitempty"`
 	IndexType   string `json:"index_type,omitempty"`
 	Key         string `json:"key,omitempty"`
@@ -48,6 +50,7 @@ type KVRequest struct {
 }
 
 type DocRequest struct {
+	PodName       string `json:"pod_name,omitempty"`
 	TableName     string `json:"table_name,omitempty"`
 	ID            string `json:"id,omitempty"`
 	Document      string `json:"doc,omitempty"`

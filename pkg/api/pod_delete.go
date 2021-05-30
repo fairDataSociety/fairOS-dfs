@@ -50,8 +50,8 @@ func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := podReq.PodName
 	if podName == "" {
-		h.logger.Errorf("pod delete: \"pod\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "pod delete: \"pod\" parameter missing in cookie")
+		h.logger.Errorf("pod delete: \"pod_name\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "pod delete: \"pod_name\" parameter missing in cookie")
 		return
 	}
 
