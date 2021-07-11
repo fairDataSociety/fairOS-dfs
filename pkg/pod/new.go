@@ -201,6 +201,10 @@ func (p *Pod) storeUserPods(pods map[int]string, sharedPods map[string]string) e
 func (p *Pod) getFreeId(pods map[int]string) (int, error) {
 	for i := 0; i < maxPodId; i++ {
 		if _, ok := pods[i]; !ok {
+			if i == 0 {
+				// this is the root account patch id
+				continue
+			}
 			return i, nil
 		}
 	}

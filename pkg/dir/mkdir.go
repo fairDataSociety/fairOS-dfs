@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -104,7 +105,7 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	return nil
 }
 
-func (d *Directory) MkRootDir() error {
+func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed.API) error {
 	// create the root parent dir
 	now := time.Now().Unix()
 	meta := MetaData{
@@ -123,8 +124,9 @@ func (d *Directory) MkRootDir() error {
 	if err != nil {
 		return err
 	}
-	parentHash := utils.HashString(utils.CombinePathAndFile(d.podName, utils.PathSeperator, ""))
-	_, err = d.fd.CreateFeed(parentHash, d.userAddress, parentData)
+	parentPath := utils.CombinePathAndFile(podName, utils.PathSeperator, "")
+	parentHash := utils.HashString(parentPath)
+	_, err = fd.CreateFeed(parentHash, podAddress, parentData)
 	if err != nil {
 		return err
 	}

@@ -34,7 +34,7 @@ type Info struct {
 	file       *f.File
 	dir        *d.Directory
 	pod        *pod.Pod
-	openPods   map[string]string
+	openPods   map[string]*pod.Info
 	openPodsMu *sync.RWMutex
 }
 
@@ -58,10 +58,10 @@ func (i *Info) GetFeed() *feed.API {
 	return i.feedApi
 }
 
-func (i *Info) AddPodName(podName string) {
+func (i *Info) AddPodName(podName string, podInfo *pod.Info) {
 	i.openPodsMu.Lock()
 	defer i.openPodsMu.Unlock()
-	i.openPods[podName] = podName
+	i.openPods[podName] = podInfo
 }
 
 func (i *Info) RemovePodName(podName string) {
@@ -79,6 +79,6 @@ func (i *Info) IsPodOpen(podName string) bool {
 	return false
 }
 
-func (i *Info) GetDirectory() *d.Directory {
+func (i *Info) GetUserDirectory() *d.Directory {
 	return i.dir
 }

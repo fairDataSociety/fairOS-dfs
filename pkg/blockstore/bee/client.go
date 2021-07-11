@@ -154,7 +154,6 @@ func (s *BeeClient) UploadSOC(owner string, id string, signature string, data []
 		return nil, err
 	}
 
-	fmt.Println(fullUrl)
 	// the postage block id to store the SOC chunk
 	req.Header.Set(SwarmPostageBatchId, s.postageBlockId)
 

@@ -41,13 +41,13 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 	}
 
 	// create the root directory
-	err = ui.GetDirectory().MkRootDir()
+	err = ui.GetUserDirectory().MkRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
 
 	// Add podName in the login user session
-	ui.AddPodName(podName)
+	ui.AddPodName(podName, pi)
 	return pi, nil
 }
 
@@ -89,14 +89,14 @@ func (d *DfsAPI) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, erro
 	}
 
 	// open the pod
-	po, err := ui.GetPod().OpenPod(podName, passPhrase)
+	pi, err := ui.GetPod().OpenPod(podName, passPhrase)
 	if err != nil {
 		return nil, err
 	}
 
 	// Add podName in the login user session
-	ui.AddPodName(podName)
-	return po, nil
+	ui.AddPodName(podName, pi)
+	return pi, nil
 }
 
 func (d *DfsAPI) ClosePod(podName, sessionId string) error {

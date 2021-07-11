@@ -82,7 +82,7 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 		file:       file,
 		dir:        dir,
 		pod:        pod,
-		openPods:   make(map[string]string),
+		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
 	}
 
