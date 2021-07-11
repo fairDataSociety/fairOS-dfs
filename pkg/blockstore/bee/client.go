@@ -44,12 +44,12 @@ const (
 	uploadBlockCacheSize   = 100
 	downloadBlockCacheSize = 100
 	ChunkUploadDownloadUrl = "/chunks"
-	SOCUploadDownloadUrl   = "/soc"
 	BytesUploadDownloadUrl = "/bytes"
-	pinChunksUrl           = "/pin/chunks/"
-	pinBlobsUrl            = "/pin/bytes/" // need to change this when bee supports it
+	pinsUrl                = "/pins/"
+	blobsUrl               = "/bytes/" // need to change this when bee supports it
 	SwarmPinHeader         = "Swarm-Pin"
-	SwarmEncryptHeader     = "Swarm-Encrypt"
+	SwarmEncryptHeader     = "SchunksUrlwarm-Encrypt"
+	SwarmPostageBatchId    = "Swarm-Postage-Batch-Id"
 )
 
 type BeeClient struct {
@@ -61,6 +61,7 @@ type BeeClient struct {
 	chunkCache         *lru.Cache
 	uploadBlockCache   *lru.Cache
 	downloadBlockCache *lru.Cache
+	postageBlockId     string
 	logger             logging.Logger
 }
 
@@ -73,7 +74,7 @@ type bytesPostResponse struct {
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
-func NewBeeClient(host, port string, logger logging.Logger) *BeeClient {
+func NewBeeClient(host, port, postageBlockId string, logger logging.Logger) *BeeClient {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache, err := lru.New(chunkCacheSize)
 	if err != nil {
@@ -97,6 +98,7 @@ func NewBeeClient(host, port string, logger logging.Logger) *BeeClient {
 		chunkCache:         cache,
 		uploadBlockCache:   uploadBlockCache,
 		downloadBlockCache: downloadBlockCache,
+		postageBlockId:     postageBlockId,
 		logger:             logger,
 	}
 }
@@ -152,6 +154,10 @@ func (s *BeeClient) UploadSOC(owner string, id string, signature string, data []
 		return nil, err
 	}
 
+	fmt.Println(fullUrl)
+	// the postage block id to store the SOC chunk
+	req.Header.Set(SwarmPostageBatchId, s.postageBlockId)
+
 	response, err := s.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -200,6 +206,9 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 	if pin {
 		req.Header.Set(SwarmPinHeader, "true")
 	}
+
+	// the postage block id to store the chunk
+	req.Header.Set(SwarmPostageBatchId, s.postageBlockId)
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -305,13 +314,16 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 		req.Header.Set(SwarmEncryptHeader, "true")
 	}
 
+	// the postage block id to store the blob
+	req.Header.Set(SwarmPostageBatchId, s.postageBlockId)
+
 	response, err := s.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		return nil, errors.New("error uploading blob")
 	}
 
@@ -396,7 +408,7 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 func (s *BeeClient) DeleteChunk(address []byte) error {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
-	path := filepath.Join(pinChunksUrl, addrString)
+	path := filepath.Join(pinsUrl, addrString)
 	fullUrl := fmt.Sprintf(s.url + path)
 	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
 	if err != nil {
@@ -428,7 +440,7 @@ func (s *BeeClient) DeleteChunk(address []byte) error {
 func (s *BeeClient) DeleteBlob(address []byte) error {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
-	path := filepath.Join(pinBlobsUrl, addrString)
+	path := filepath.Join(blobsUrl, addrString)
 	fullUrl := fmt.Sprintf(s.url + path)
 	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
 	if err != nil {

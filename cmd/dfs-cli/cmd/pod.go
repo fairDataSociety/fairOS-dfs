@@ -113,8 +113,16 @@ func openPod(podName string) {
 	fmt.Println(message)
 }
 
-func closePod() {
-	data, err := fdfsAPI.postReq(http.MethodPost, apiPodClose, nil)
+func closePod(podName string) {
+	newPod := common.PodRequest{
+		PodName: podName,
+	}
+	jsonData, err := json.Marshal(newPod)
+	if err != nil {
+		fmt.Println("create pod: error marshalling request")
+		return
+	}
+	data, err := fdfsAPI.postReq(http.MethodPost, apiPodClose, jsonData)
 	if err != nil {
 		fmt.Println("error closing pod: ", err)
 		return
@@ -123,8 +131,16 @@ func closePod() {
 	fmt.Println(message)
 }
 
-func syncPod() {
-	data, err := fdfsAPI.postReq(http.MethodPost, apiPodSync, nil)
+func syncPod(podName string) {
+	newPod := common.PodRequest{
+		PodName: podName,
+	}
+	jsonData, err := json.Marshal(newPod)
+	if err != nil {
+		fmt.Println("create pod: error marshalling request")
+		return
+	}
+	data, err := fdfsAPI.postReq(http.MethodPost, apiPodSync, jsonData)
 	if err != nil {
 		fmt.Println("could not sync pod: ", err)
 		return

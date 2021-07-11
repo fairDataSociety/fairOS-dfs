@@ -44,7 +44,7 @@ func TestKeyValueStore(t *testing.T) {
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-	kvStore := collection.NewKeyValueStore(fd, ai, user, mockClient, logger)
+	kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 
 	t.Run("create_kv_table_with_string_index", func(t *testing.T) {
 		err := kvStore.CreateKVTable("kv_table_0", collection.StringIndex)

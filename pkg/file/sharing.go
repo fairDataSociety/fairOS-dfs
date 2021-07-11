@@ -33,7 +33,8 @@ func (f *File) GetFileReference(podFile string) (*MetaData, error) {
 		return nil, fmt.Errorf("file not found in dfs")
 	}
 
-	meta, err := f.GetMetaFromFileName(podFile)
+	totalPodFile := utils.CombinePathAndFile(f.podName, podFile, "")
+	meta, err := f.GetMetaFromFileName(totalPodFile)
 	if err != nil {
 		return nil, fmt.Errorf("file not found in dfs")
 	}

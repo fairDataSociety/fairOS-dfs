@@ -42,7 +42,7 @@ func TestBatchIndex(t *testing.T) {
 
 	t.Run("batch-add-docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb_batch_0", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_batch_0", collection.StringIndex, fd, user, mockClient, ai, logger)
 		// batch load and delete
 
 		batch, err := collection.NewBatch(index)
@@ -79,7 +79,7 @@ func TestBatchIndex(t *testing.T) {
 
 	t.Run("batch-add-del-docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb_batch_1", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_batch_1", collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// batch load and delete
 		batch, err := collection.NewBatch(index)

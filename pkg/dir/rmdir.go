@@ -35,7 +35,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 	}
 
 	// check if directory present
-	totalPath := utils.CombinePathAndFile(parentPath, dirToDelete)
+	totalPath := utils.CombinePathAndFile(d.podName, parentPath, dirToDelete)
 	if d.GetDirFromDirectoryMap(totalPath) == nil {
 		return ErrDirectoryNotPresent
 	}

@@ -52,7 +52,7 @@ func TestDocumentStore(t *testing.T) {
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 	file := f.NewFile("pod1", mockClient, fd, user, logger)
-	docStore := collection.NewDocumentStore(fd, ai, user, file, mockClient, logger)
+	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, mockClient, logger)
 
 	t.Run("create_document_db", func(t *testing.T) {
 		// create a document DB

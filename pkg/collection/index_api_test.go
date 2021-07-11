@@ -44,7 +44,7 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-doc", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb_api_0", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_0", collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// get the expectedValue of keys and check against its actual expectedValue
@@ -63,7 +63,7 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-count", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb_api_1", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_1", collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// find the count
@@ -79,7 +79,7 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-doc-del-doc-get-doc", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb_api_2", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_2", collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// get the value of the key just to check
@@ -104,7 +104,7 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-multiple_docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "testdb_api_3", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_3", collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add multiple values for the same key
 		addDoc(t, "key1", []byte("value1"), index, mockClient, true)

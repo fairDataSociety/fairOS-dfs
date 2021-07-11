@@ -103,7 +103,7 @@ func TestSharing(t *testing.T) {
 		}
 
 		// share file with another user
-		sharingRefString, err := userObject1.ShareFileWithUser("/parentDir1/file1", "user2", ui, pod1, info1.GetPodAddress())
+		sharingRefString, err := userObject1.ShareFileWithUser("pod1", "/parentDir1/file1", "user2", ui, pod1, info1.GetPodAddress())
 		if err != nil {
 			t.Fatal(err)
 		}

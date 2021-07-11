@@ -39,6 +39,7 @@ const (
 )
 
 type KeyValue struct {
+	podName      string
 	fd           *feed.API
 	ai           *account.Info
 	user         utils.Address
@@ -56,8 +57,9 @@ type KVTable struct {
 }
 
 // NewKeyValueStore is the main object used to do all operation on the key value tables.
-func NewKeyValueStore(fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) *KeyValue {
+func NewKeyValueStore(podName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) *KeyValue {
 	return &KeyValue{
+		podName:      podName,
 		fd:           fd,
 		ai:           ai,
 		user:         user,
@@ -83,7 +85,7 @@ func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
 	}
 
 	//  since this tables is not present already, create the index required for this table
-	err = CreateIndex(defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client, true)
+	err = CreateIndex(kv.podName, defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client, true)
 	if err != nil {
 		return err
 	}
@@ -117,7 +119,7 @@ func (kv *KeyValue) DeleteKVTable(name string) error {
 		}
 		delete(kv.openKVTables, name)
 	} else {
-		idx, err := OpenIndex(defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+		idx, err := OpenIndex(kv.podName, defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
 		if err != nil {
 			return err
 		}
@@ -143,7 +145,7 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 	}
 	idxType := toIndexTypeEnum(values[0])
 
-	idx, err := OpenIndex(defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+	idx, err := OpenIndex(kv.podName, defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
 	if err != nil {
 		return err
 	}
@@ -173,7 +175,7 @@ func (kv *KeyValue) KVCount(name string) (uint64, error) {
 	if table, ok := kv.openKVTables[name]; ok {
 		return table.index.CountIndex()
 	} else {
-		idx, err := OpenIndex(defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+		idx, err := OpenIndex(kv.podName, defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
 		if err != nil {
 			return 0, err
 		}

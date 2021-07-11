@@ -43,6 +43,7 @@ const (
 )
 
 type Document struct {
+	podName     string
 	fd          *feed.API
 	ai          *account.Info
 	user        utils.Address
@@ -85,8 +86,9 @@ type DocBatch struct {
 }
 
 // NewDocumentStore instantiates a document DB object through which all document DB are spawned.
-func NewDocumentStore(fd *feed.API, ai *account.Info, user utils.Address, file *file.File, client blockstore.Client, logger logging.Logger) *Document {
+func NewDocumentStore(podName string, fd *feed.API, ai *account.Info, user utils.Address, file *file.File, client blockstore.Client, logger logging.Logger) *Document {
 	return &Document{
+		podName:    podName,
 		fd:         fd,
 		ai:         ai,
 		user:       user,
@@ -123,7 +125,7 @@ func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType,
 
 	// since this db is not present already, create the table
 	d.logger.Info("creating simple index: ", DefaultIndexFieldName)
-	err = CreateIndex(dbName, DefaultIndexFieldName, StringIndex, d.fd, d.user, d.client, mutable)
+	err = CreateIndex(d.podName, dbName, DefaultIndexFieldName, StringIndex, d.fd, d.user, d.client, mutable)
 	if err != nil {
 		return err
 	}
@@ -142,7 +144,7 @@ func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType,
 	// Now add the other indexes to simpleIndexes array
 	for fieldName, fieldType := range indexes {
 		// create the simple index
-		err = CreateIndex(dbName, fieldName, fieldType, d.fd, d.user, d.client, mutable)
+		err = CreateIndex(d.podName, dbName, fieldName, fieldType, d.fd, d.user, d.client, mutable)
 		if err != nil {
 			return err
 		}
@@ -205,7 +207,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 	simpleIndexs := make(map[string]*Index)
 	for _, si := range schema.SimpleIndexes {
 		d.logger.Info("opening simple index: ", si.FieldName)
-		idx, err := OpenIndex(dbName, si.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
+		idx, err := OpenIndex(d.podName, dbName, si.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
 		if err != nil {
 			d.logger.Errorf("opening simple index: %v", err.Error())
 			return err
@@ -217,7 +219,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 	mapIndexs := make(map[string]*Index)
 	for _, mi := range schema.MapIndexes {
 		d.logger.Info("opening map index: ", mi.FieldName)
-		idx, err := OpenIndex(dbName, mi.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
+		idx, err := OpenIndex(d.podName, dbName, mi.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
 		if err != nil {
 			d.logger.Errorf("opening map index: %v", err.Error())
 			return err
@@ -229,7 +231,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 	listIndexes := make(map[string]*Index)
 	for _, li := range schema.ListIndexes {
 		d.logger.Info("opening list index: ", li.FieldName)
-		idx, err := OpenIndex(dbName, li.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
+		idx, err := OpenIndex(d.podName, dbName, li.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
 		if err != nil {
 			d.logger.Errorf("opening list index: %v", err.Error())
 			return err

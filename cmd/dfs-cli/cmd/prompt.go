@@ -358,7 +358,7 @@ func executor(in string) {
 			if !isPodOpened() {
 				return
 			}
-			closePod()
+			closePod(currentPod)
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
@@ -377,7 +377,7 @@ func executor(in string) {
 			if !isPodOpened() {
 				return
 			}
-			syncPod()
+			syncPod(currentPod)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
 			listPod()
@@ -697,7 +697,7 @@ func executor(in string) {
 			}
 		}
 
-		present := isDirectoryPresent(dirTocd)
+		present := isDirectoryPresent(currentPod, dirTocd)
 		if present {
 			currentDirectory = dirTocd
 		}
@@ -706,7 +706,7 @@ func executor(in string) {
 		if !isPodOpened() {
 			return
 		}
-		listFileAndDirectories(currentDirectory)
+		listFileAndDirectories(currentPod, currentDirectory)
 		currentPrompt = getCurrentPrompt()
 	case "mkdir":
 		if !isPodOpened() {
@@ -725,7 +725,7 @@ func executor(in string) {
 			// then this path is not from root
 			dirToMk = currentDirectory + utils.PathSeperator + dirToMk
 		}
-		mkdir(dirToMk)
+		mkdir(currentPod, dirToMk)
 		currentPrompt = getCurrentPrompt()
 	case "rmdir":
 		if !isPodOpened() {
@@ -748,7 +748,7 @@ func executor(in string) {
 				dirToRm = currentDirectory + utils.PathSeperator + dirToRm
 			}
 		}
-		rmDir(dirToRm)
+		rmDir(currentPod, dirToRm)
 		currentPrompt = getCurrentPrompt()
 	case "upload":
 		if !isPodOpened() {
@@ -768,7 +768,7 @@ func executor(in string) {
 		if len(blocks) >= 5 {
 			compression = blocks[4]
 		}
-		uploadFile(fileName, blocks[1], podDir, blockSize, compression)
+		uploadFile(fileName, currentPod, blocks[1], podDir, blockSize, compression)
 		currentPrompt = getCurrentPrompt()
 	case "download":
 		if !isPodOpened() {
@@ -800,7 +800,7 @@ func executor(in string) {
 			}
 		}
 
-		downloadFile(loalFile, podFile)
+		downloadFile(currentPod, loalFile, podFile)
 		currentPrompt = getCurrentPrompt()
 	case "stat":
 		if !isPodOpened() {
@@ -821,7 +821,7 @@ func executor(in string) {
 				statElement = currentDirectory + utils.PathSeperator + statElement
 			}
 		}
-		statFileOrDirectory(statElement)
+		statFileOrDirectory(currentPod, statElement)
 		currentPrompt = getCurrentPrompt()
 	case "pwd":
 		if !isPodOpened() {
@@ -848,7 +848,7 @@ func executor(in string) {
 				rmFile = currentDirectory + utils.PathSeperator + rmFile
 			}
 		}
-		deleteFile(rmFile)
+		deleteFile(currentPod, rmFile)
 		currentPrompt = getCurrentPrompt()
 	case "share":
 		if len(blocks) < 2 {
@@ -867,7 +867,7 @@ func executor(in string) {
 				podFile = currentDirectory + utils.PathSeperator + podFile
 			}
 		}
-		fileShare(podFile, "TODO: add dest. user address")
+		fileShare(currentPod, podFile, "TODO: add dest. user address")
 		currentPrompt = getCurrentPrompt()
 	case "receive":
 		if len(blocks) < 3 {
@@ -876,7 +876,7 @@ func executor(in string) {
 		}
 		sharingRefString := blocks[1]
 		podDir := blocks[2]
-		fileReceive(sharingRefString, podDir)
+		fileReceive(currentPod, sharingRefString, podDir)
 		currentPrompt = getCurrentPrompt()
 	case "receiveinfo":
 		if len(blocks) < 2 {
@@ -884,7 +884,7 @@ func executor(in string) {
 			return
 		}
 		sharingRefString := blocks[1]
-		fileReceiveInfo(sharingRefString)
+		fileReceiveInfo(currentPod, sharingRefString)
 		currentPrompt = getCurrentPrompt()
 	default:
 		fmt.Println("invalid command")

@@ -37,7 +37,7 @@ type Entry struct {
 func (f *File) ListFiles(files []string) ([]Entry, error) {
 	var fileEntries []Entry
 	for _, filePath := range files {
-		fileTopic := utils.HashString(filePath)
+		fileTopic := utils.HashString(utils.CombinePathAndFile(f.podName, filePath, ""))
 		_, data, err := f.fd.GetFeedData(fileTopic, f.userAddress)
 		if err != nil {
 			continue

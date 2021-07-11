@@ -26,7 +26,7 @@ import (
 
 // SyncDirectory syncs all the latest entries under a given directory.
 func (d *Directory) SyncDirectory(dirNameWithPath string) error {
-	topic := utils.HashString(dirNameWithPath)
+	topic := utils.HashString(utils.CombinePathAndFile(d.podName, dirNameWithPath, ""))
 	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
 	if err != nil {
 		return nil // pod is empty
@@ -42,7 +42,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
-			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
+			filePath := utils.CombinePathAndFile(d.podName, dirNameWithPath, fileName)
 			err := d.file.LoadFileMeta(filePath)
 			if err != nil {
 				return err
@@ -50,7 +50,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
-			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
+			path := utils.CombinePathAndFile(d.podName, dirNameWithPath, dirName)
 			d.logger.Infof(dirNameWithPath)
 
 			err = d.SyncDirectory(path)

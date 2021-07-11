@@ -96,11 +96,11 @@ var (
 )
 
 // CreateIndex creates a common index file to be used in kv or document tables.
-func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client, mutable bool) error {
+func CreateIndex(podName, collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client, mutable bool) error {
 	if fd.IsReadOnlyFeed() {
 		return ErrReadOnlyIndex
 	}
-	actualIndexName := collectionName + indexName
+	actualIndexName := podName + collectionName + indexName
 	topic := utils.HashString(actualIndexName)
 	_, oldData, err := fd.GetFeedData(topic, user)
 	if err == nil && len(oldData) != 0 {
@@ -129,8 +129,8 @@ func CreateIndex(collectionName, indexName string, indexType IndexType, fd *feed
 }
 
 // OpenIndex open the index and loas any index in to the memory.
-func OpenIndex(collectionName, indexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
-	actualIndexName := collectionName + indexName
+func OpenIndex(podName, collectionName, indexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
+	actualIndexName := podName + collectionName + indexName
 	manifest := getRootManifestOfIndex(actualIndexName, fd, user, client) // this will load the entire Manifest for immutable indexes
 	if manifest == nil {
 		return nil, ErrIndexNotPresent

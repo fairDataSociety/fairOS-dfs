@@ -27,7 +27,8 @@ import (
 
 // RmFile deletes all the blocks of a file and it related meta data from the Swarm network.
 func (f *File) RmFile(podFileWithPath string) error {
-	meta, err := f.GetMetaFromFileName(podFileWithPath)
+	totalFilePath := utils.CombinePathAndFile(f.podName, podFileWithPath, "")
+	meta, err := f.GetMetaFromFileName(totalFilePath)
 	if err != nil {
 		return err
 	}
@@ -63,14 +64,14 @@ func (f *File) RmFile(podFileWithPath string) error {
 	}
 
 	// remove the meta
-	topic := utils.HashString(podFileWithPath)
+	topic := utils.HashString(totalFilePath)
 	_, err = f.fd.UpdateFeed(topic, f.userAddress, []byte{})
 	if err != nil {
 		return err
 	}
 
 	// remove the file from file map
-	f.RemoveFromFileMap(podFileWithPath)
+	f.RemoveFromFileMap(totalFilePath)
 
 	return nil
 }

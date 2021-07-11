@@ -18,6 +18,7 @@ package file
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -61,8 +62,9 @@ func (f *File) uploadMeta(meta *MetaData) error {
 	}
 
 	// put the file meta as a feed
-	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
+	totalPath := utils.CombinePathAndFile(f.podName, meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
+	fmt.Println("upload Meta = ", totalPath)
 	_, err = f.fd.CreateFeed(topic, meta.UserAddress, fileMetaBytes)
 	if err != nil {
 		return err
@@ -79,7 +81,7 @@ func (f *File) updateMeta(meta *MetaData) error {
 	}
 
 	// put the file meta as a feed
-	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
+	totalPath := utils.CombinePathAndFile(f.podName, meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	_, err = f.fd.UpdateFeed(topic, meta.UserAddress, fileMetaBytes)
 	if err != nil {
@@ -91,23 +93,8 @@ func (f *File) updateMeta(meta *MetaData) error {
 
 func (f *File) GetMetaFromFileName(fileNameWithPath string) (*MetaData, error) {
 	topic := utils.HashString(fileNameWithPath)
+	fmt.Println("GetMetaFromFileName = ", fileNameWithPath)
 	_, metaBytes, err := f.fd.GetFeedData(topic, f.userAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	var meta *MetaData
-	err = json.Unmarshal(metaBytes, &meta)
-	if err != nil {
-		return nil, err
-	}
-
-	return meta, nil
-}
-
-func (f *File) GetMetaFromFileNameAndAddress(fileNameWithPath string, userAddress utils.Address) (*MetaData, error) {
-	topic := utils.HashString(fileNameWithPath)
-	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress)
 	if err != nil {
 		return nil, err
 	}

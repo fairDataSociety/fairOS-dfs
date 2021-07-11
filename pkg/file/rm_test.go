@@ -65,13 +65,13 @@ func TestRemoveFile(t *testing.T) {
 		}
 
 		// validate file deletion
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file2"))
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("pod1", "/dir1", "file2"))
 		if meta != nil {
 			t.Fatalf("file is not removed")
 		}
 
 		// check if other file is present
-		meta = fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file1"))
+		meta = fileObject.GetFromFileMap(utils.CombinePathAndFile("pod1", "/dir1", "file1"))
 		if meta == nil {
 			t.Fatalf("file is not present")
 		}

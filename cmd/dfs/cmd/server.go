@@ -33,11 +33,12 @@ import (
 )
 
 var (
-	httpPort     string
-	pprofPort    string
-	cookieDomain string
-	corsOrigins  []string
-	handler      *api.Handler
+	httpPort       string
+	pprofPort      string
+	cookieDomain   string
+	postageBlockId string
+	corsOrigins    []string
+	handler        *api.Handler
 )
 
 // startCmd represents the start command
@@ -67,16 +68,17 @@ can consume it.`,
 		}
 
 		logger.Info("configuration values")
-		logger.Info("version      : ", dfs.Version)
-		logger.Info("dataDir      : ", dataDir)
-		logger.Info("beeHost      : ", beeHost)
-		logger.Info("beePort      : ", beePort)
-		logger.Info("verbosity    : ", verbosity)
-		logger.Info("httpPort     : ", httpPort)
-		logger.Info("pprofPort    : ", pprofPort)
-		logger.Info("cookieDomain : ", cookieDomain)
-		logger.Info("corsOrigins  : ", corsOrigins)
-		hdlr, err := api.NewHandler(dataDir, beeHost, beePort, cookieDomain, logger)
+		logger.Info("version        : ", dfs.Version)
+		logger.Info("dataDir        : ", dataDir)
+		logger.Info("beeHost        : ", beeHost)
+		logger.Info("beePort        : ", beePort)
+		logger.Info("verbosity      : ", verbosity)
+		logger.Info("httpPort       : ", httpPort)
+		logger.Info("pprofPort      : ", pprofPort)
+		logger.Info("cookieDomain   : ", cookieDomain)
+		logger.Info("postageBlockId : ", postageBlockId)
+		logger.Info("corsOrigins    : ", corsOrigins)
+		hdlr, err := api.NewHandler(dataDir, beeHost, beePort, cookieDomain, postageBlockId, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return
@@ -90,6 +92,7 @@ func init() {
 	serverCmd.Flags().StringVar(&httpPort, "httpPort", "9090", "http port")
 	serverCmd.Flags().StringVar(&pprofPort, "pprofPort", "9091", "pprof port")
 	serverCmd.Flags().StringVar(&cookieDomain, "cookieDomain", "api.fairos.io", "the domain to use in the cookie")
+	serverCmd.Flags().StringVar(&postageBlockId, "postageBlockId", "", "the postage block used to store the data in bee")
 	serverCmd.Flags().StringSliceVar(&corsOrigins, "cors-origins", []string{}, "allow CORS headers for the given origins")
 	rootCmd.AddCommand(serverCmd)
 }

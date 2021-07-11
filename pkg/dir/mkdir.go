@@ -43,7 +43,7 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	}
 
 	// check if directory already present
-	totalPath := utils.CombinePathAndFile(parentPath, dirName)
+	totalPath := utils.CombinePathAndFile(d.podName, parentPath, dirName)
 	topic := utils.HashString(totalPath)
 	addr, data, err := d.fd.GetFeedData(topic, d.userAddress)
 	if err == nil && addr != nil && data != nil {
@@ -76,7 +76,7 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	d.AddToDirectoryMap(totalPath, dirInode)
 
 	// get the parent directory entry and add this new directory to its list of children
-	parentHash := utils.HashString(parentPath)
+	parentHash := utils.HashString(utils.CombinePathAndFile(d.podName, parentPath, ""))
 	dirName = "_D_" + dirName
 	_, parentData, err := d.fd.GetFeedData(parentHash, d.userAddress)
 	if err != nil {
@@ -123,8 +123,7 @@ func (d *Directory) MkRootDir() error {
 	if err != nil {
 		return err
 	}
-
-	parentHash := utils.HashString(utils.PathSeperator)
+	parentHash := utils.HashString(utils.CombinePathAndFile(d.podName, utils.PathSeperator, ""))
 	_, err = d.fd.CreateFeed(parentHash, d.userAddress, parentData)
 	if err != nil {
 		return err

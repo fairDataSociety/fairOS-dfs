@@ -88,8 +88,8 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		user = p.acc.GetAddress(index)
 	}
 
-	kvStore := c.NewKeyValueStore(fd, accountInfo, user, p.client, p.logger)
-	docStore := c.NewDocumentStore(fd, accountInfo, user, file, p.client, p.logger)
+	kvStore := c.NewKeyValueStore(podName, fd, accountInfo, user, p.client, p.logger)
+	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.client, p.logger)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{

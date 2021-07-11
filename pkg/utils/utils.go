@@ -24,6 +24,7 @@ import (
 	"hash"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/ethersphere/bee/pkg/bmtpool"
 
@@ -163,12 +164,33 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 	return swarm.NewChunk(address, data), nil
 }
 
-func CombinePathAndFile(path, fileName string) string {
+func CombinePathAndFile(podName, path, fileName string) string {
 	var totalPath string
+
 	if path == PathSeperator || path == "" {
 		totalPath = path + fileName
 	} else {
-		totalPath = path + PathSeperator + fileName
+		if fileName == "" {
+			totalPath = path
+		} else {
+			fileName = strings.TrimPrefix(fileName, PathSeperator)
+			path = strings.TrimPrefix(path, PathSeperator)
+			totalPath = PathSeperator + path + PathSeperator + fileName
+		}
 	}
 	return totalPath
 }
+
+//func CombinePathAndFile(podName, path, fileName string) string {
+//	var totalPath string
+//	if path == PathSeperator || path == "" {
+//		totalPath = PathSeperator + podName + path + fileName
+//	} else {
+//		if fileName != "" {
+//			totalPath = PathSeperator + podName + PathSeperator + path + PathSeperator + fileName
+//		} else {
+//			totalPath = PathSeperator + podName + PathSeperator + path
+//		}
+//	}
+//	return totalPath
+//}

@@ -129,15 +129,15 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//upload file to bee
-		err = h.dfsAPI.UploadFile(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
-		if err != nil {
+		uploadErr := h.dfsAPI.UploadFile(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
+		if uploadErr != nil {
 			if err == dfs.ErrPodNotOpen {
-				h.logger.Errorf("file upload: %v", err)
-				jsonhttp.BadRequest(w, "file upload: "+err.Error())
+				h.logger.Errorf("file upload: %v", uploadErr)
+				jsonhttp.BadRequest(w, "file upload: "+uploadErr.Error())
 				return
 			}
-			h.logger.Errorf("file upload: %v", err)
-			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
+			h.logger.Errorf("file upload: %v", uploadErr)
+			responses = append(responses, Response{FileName: file.Filename, Message: uploadErr.Error()})
 			continue
 		}
 		responses = append(responses, Response{FileName: file.Filename, Message: "uploaded successfully"})
