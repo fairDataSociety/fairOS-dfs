@@ -94,8 +94,14 @@ func (d *DfsAPI) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, erro
 		return nil, err
 	}
 
+	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	if err != nil {
+		return nil, err
+	}
+
 	// Add podName in the login user session
 	ui.AddPodName(podName, pi)
+
 	return pi, nil
 }
 

@@ -81,10 +81,8 @@ func statFileOrDirectory(podName, statElement string) {
 	data, err := fdfsAPI.getReq(apiDirStat, args)
 	if err != nil {
 		if strings.Contains(err.Error(), "directory not found") {
-			args := make(map[string]string)
-			args["pod_name"] = podName
-			args["file"] = statElement
-			data, err := fdfsAPI.getReq(apiFileStat, "file_path="+statElement)
+			args := fmt.Sprintf("pod_name=%s&file_path=%s", podName, statElement)
+			data, err := fdfsAPI.getReq(apiFileStat, args)
 			if err != nil {
 				fmt.Println("stat failed: ", err)
 				return
@@ -114,16 +112,16 @@ func statFileOrDirectory(podName, statElement string) {
 			if compression == "" {
 				compression = "None"
 			}
-			fmt.Println("PodName 	   	: ", resp.PodName)
-			fmt.Println("File Path	   	: ", resp.FilePath)
-			fmt.Println("File Name	   	: ", resp.FileName)
-			fmt.Println("File Size	   	: ", resp.FileSize)
-			fmt.Println("Block Size	   	: ", resp.BlockSize)
-			fmt.Println("Compression   		: ", compression)
-			fmt.Println("Content Type  		: ", resp.ContentType)
-			fmt.Println("Cr. Time	   	: ", time.Unix(crTime, 0).String())
-			fmt.Println("Mo. Time	   	: ", time.Unix(accTime, 0).String())
-			fmt.Println("Ac. Time	   	: ", time.Unix(modTime, 0).String())
+			fmt.Println("PodName 	  : ", resp.PodName)
+			fmt.Println("File Path	  : ", resp.FilePath)
+			fmt.Println("File Name	  : ", resp.FileName)
+			fmt.Println("File Size	  : ", resp.FileSize)
+			fmt.Println("Block Size	  : ", resp.BlockSize)
+			fmt.Println("Compression  	  : ", compression)
+			fmt.Println("Content Type 	  : ", resp.ContentType)
+			fmt.Println("Cr. Time	  : ", time.Unix(crTime, 0).String())
+			fmt.Println("Mo. Time	  : ", time.Unix(accTime, 0).String())
+			fmt.Println("Ac. Time	  : ", time.Unix(modTime, 0).String())
 			for _, b := range resp.Blocks {
 				blkStr := fmt.Sprintf("%s, 0x%s, %s bytes, %s bytes", b.Name, b.Reference, b.Size, b.CompressedSize)
 				fmt.Println(blkStr)
@@ -154,14 +152,14 @@ func statFileOrDirectory(podName, statElement string) {
 			fmt.Println("stat failed: ", err)
 			return
 		}
-		fmt.Println("PodName 	   	: ", resp.PodName)
-		fmt.Println("Dir Path	   	: ", resp.DirPath)
-		fmt.Println("Dir Name	   	: ", resp.DirName)
-		fmt.Println("Cr. Time	   	: ", time.Unix(crTime, 0).String())
-		fmt.Println("Mo. Time	   	: ", time.Unix(accTime, 0).String())
-		fmt.Println("Ac. Time	   	: ", time.Unix(modTime, 0).String())
-		fmt.Println("No of Dir.	   	: ", resp.NoOfDirectories)
-		fmt.Println("No of Files   		: ", resp.NoOfFiles)
+		fmt.Println("PodName     	 : ", resp.PodName)
+		fmt.Println("Dir Path    	 : ", resp.DirPath)
+		fmt.Println("Dir Name	 : ", resp.DirName)
+		fmt.Println("Cr. Time	 : ", time.Unix(crTime, 0).String())
+		fmt.Println("Mo. Time	 : ", time.Unix(accTime, 0).String())
+		fmt.Println("Ac. Time	 : ", time.Unix(modTime, 0).String())
+		fmt.Println("No of Dir.	 : ", resp.NoOfDirectories)
+		fmt.Println("No of Files      : ", resp.NoOfFiles)
 	}
 }
 

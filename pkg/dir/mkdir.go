@@ -133,3 +133,19 @@ func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed
 	d.AddToDirectoryMap(utils.PathSeperator, parentDirInode)
 	return nil
 }
+
+func (d *Directory) AddRootDir(podName string, podAddress utils.Address, fd *feed.API) error {
+	parentPath := utils.CombinePathAndFile(podName, utils.PathSeperator, "")
+	parentHash := utils.HashString(parentPath)
+	_, parentDataBytes, err := fd.GetFeedData(parentHash, podAddress)
+	if err != nil {
+		return err
+	}
+	var parentDirInode *Inode
+	err = json.Unmarshal(parentDataBytes, &parentDirInode)
+	if err != nil {
+		return err
+	}
+	d.AddToDirectoryMap(utils.PathSeperator, parentDirInode)
+	return nil
+}

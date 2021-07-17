@@ -18,7 +18,6 @@ package file
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -64,9 +63,6 @@ func (f *File) uploadMeta(meta *MetaData) error {
 	// put the file meta as a feed
 	totalPath := utils.CombinePathAndFile(f.podName, meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
-	fmt.Println("uploadMeta: topic       = ", topic)
-	fmt.Println("uploadMeta: totalPath   = ", totalPath)
-	fmt.Println("uploadMeta: userAddress = ", meta.UserAddress)
 	_, err = f.fd.CreateFeed(topic, meta.UserAddress, fileMetaBytes)
 	if err != nil {
 		return err
