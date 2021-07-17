@@ -28,7 +28,7 @@ import (
 // RmFile deletes all the blocks of a file and it related meta data from the Swarm network.
 func (f *File) RmFile(podFileWithPath string) error {
 	totalFilePath := utils.CombinePathAndFile(f.podName, podFileWithPath, "")
-	meta, err := f.GetMetaFromFileName(totalFilePath)
+	meta, err := f.GetMetaFromFileName(totalFilePath, f.userAddress)
 	if err != nil {
 		return err
 	}

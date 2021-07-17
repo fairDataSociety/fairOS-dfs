@@ -53,7 +53,7 @@ type ReceiveFileInfo struct {
 // ShareFileWithUser exports a file to another user by creating and uploading a new encrypted sharing file entry.
 func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
 	totalFilePath := utils.CombinePathAndFile(podName, podFileWithPath, "")
-	meta, err := userInfo.file.GetMetaFromFileName(totalFilePath)
+	meta, err := userInfo.file.GetMetaFromFileName(totalFilePath, userAddress)
 	if err != nil {
 		return "", err
 	}
@@ -153,6 +153,10 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	}
 
 	file.AddToFileMap(totalPath, &newMeta)
+	err = file.PutMetaForFile(&newMeta)
+	if err != nil {
+		return "", err
+	}
 	err = dir.AddEntryToDir(podDir, fileNameToAdd, true)
 	if err != nil {
 		return "", err

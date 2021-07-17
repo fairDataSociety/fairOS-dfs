@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// GetFileReference given a file name this funtion extracts the current
+// GetFileReference given a file name this function extracts the current
 // metadata from the Swarm network.
 func (f *File) GetFileReference(podFile string) (*MetaData, error) {
 	// Get the meta of the file to share
@@ -34,7 +34,7 @@ func (f *File) GetFileReference(podFile string) (*MetaData, error) {
 	}
 
 	totalPodFile := utils.CombinePathAndFile(f.podName, podFile, "")
-	meta, err := f.GetMetaFromFileName(totalPodFile)
+	meta, err := f.GetMetaFromFileName(totalPodFile, f.userAddress)
 	if err != nil {
 		return nil, fmt.Errorf("file not found in dfs")
 	}

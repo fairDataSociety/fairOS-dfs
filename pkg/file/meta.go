@@ -45,7 +45,7 @@ type MetaData struct {
 
 // used in syncing
 func (f *File) LoadFileMeta(fileNameWithPath string) error {
-	meta, err := f.GetMetaFromFileName(fileNameWithPath)
+	meta, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
 	if err != nil {
 		return err
 	}
@@ -93,9 +93,9 @@ func (f *File) updateMeta(meta *MetaData) error {
 	return nil
 }
 
-func (f *File) GetMetaFromFileName(fileNameWithPath string) (*MetaData, error) {
+func (f *File) GetMetaFromFileName(fileNameWithPath string, userAddress utils.Address) (*MetaData, error) {
 	topic := utils.HashString(fileNameWithPath)
-	_, metaBytes, err := f.fd.GetFeedData(topic, f.userAddress)
+	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -107,4 +107,8 @@ func (f *File) GetMetaFromFileName(fileNameWithPath string) (*MetaData, error) {
 	}
 
 	return meta, nil
+}
+
+func (f *File) PutMetaForFile(meta *MetaData) error {
+	return f.updateMeta(meta)
 }
