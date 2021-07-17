@@ -47,6 +47,12 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	mem := r.FormValue("memory")
+	memory := true
+	if mem == "" {
+		memory = false
+	}
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -112,10 +118,11 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			err = batch.Put(collection.CSVHeaderKey, []byte(record), false, false)
+			err = batch.Put(collection.CSVHeaderKey, []byte(record), false, memory)
 			if err != nil {
 				h.logger.Errorf("kv loadcsv: error adding header %d: %v", rowCount, err)
 				failureCount++
+				readHeader = true
 				continue
 			}
 			readHeader = true
@@ -124,7 +131,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		key := strings.Split(record, ",")[0]
-		err = batch.Put(key, []byte(record), false, false)
+		err = batch.Put(key, []byte(record), false, memory)
 		if err != nil {
 			h.logger.Errorf("kv loadcsv: error adding row %d: %v", rowCount, err)
 			failureCount++

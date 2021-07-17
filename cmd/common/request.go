@@ -47,6 +47,7 @@ type KVRequest struct {
 	StartPrefix string `json:"start_prefix,omitempty"`
 	EndPrefix   string `json:"end_prefix,omitempty"`
 	Limit       string `json:"limit,omitempty"`
+	Memory      string `json:"memory,omitempty"`
 }
 
 type DocRequest struct {

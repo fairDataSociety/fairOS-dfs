@@ -29,6 +29,10 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+const (
+	DefaultSeekLimit = "10"
+)
+
 // KVSeekHandler is the api handler to seek to a particular key with the given prefix
 // it takes four arguments, 2 mandatory and two optional
 // - table_name: the name of the kv table
@@ -74,17 +78,9 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	end := kvReq.EndPrefix
-	if end == "" {
-		h.logger.Errorf("kv seek: \"end\" argument missing")
-		jsonhttp.BadRequest(w, "kv seek: \"end\" argument missing")
-		return
-	}
-
 	limit := kvReq.Limit
 	if limit == "" {
-		h.logger.Errorf("kv seek: \"limit\" argument missing")
-		jsonhttp.BadRequest(w, "kv limit: \"start\" argument missing")
-		return
+		limit = DefaultSeekLimit
 	}
 	noOfRows, err := strconv.ParseInt(limit, 10, 64)
 	if err != nil {

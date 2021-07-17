@@ -53,7 +53,7 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	podName := r.FormValue("pod_name")
+	podName := kvReq.PodName
 	if podName == "" {
 		h.logger.Errorf("kv put: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, "kv put: \"pod_name\" argument missing")

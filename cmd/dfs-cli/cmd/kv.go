@@ -31,8 +31,9 @@ import (
 	"github.com/tinygrasshopper/bettercsv"
 )
 
-func kvNew(tableName, indexType string) {
+func kvNew(podName, tableName, indexType string) {
 	kvNewReq := common.KVRequest{
+		PodName:   podName,
 		TableName: tableName,
 		IndexType: indexType,
 	}
@@ -50,8 +51,9 @@ func kvNew(tableName, indexType string) {
 	fmt.Println(message)
 }
 
-func kvDelete(tableName string) {
+func kvDelete(podName, tableName string) {
 	kvDelReq := common.KVRequest{
+		PodName:   podName,
 		TableName: tableName,
 	}
 	jsonData, err := json.Marshal(kvDelReq)
@@ -68,8 +70,9 @@ func kvDelete(tableName string) {
 	fmt.Println(message)
 }
 
-func kvList() {
-	data, err := fdfsAPI.getReq(apiKVList, "")
+func kvList(podName string) {
+	argString := fmt.Sprintf("pod_name=%s", podName)
+	data, err := fdfsAPI.getReq(apiKVList, argString)
 	if err != nil {
 		fmt.Println("kv ls: ", err)
 		return
@@ -85,8 +88,9 @@ func kvList() {
 	}
 }
 
-func kvOpen(tableName string) {
+func kvOpen(podName, tableName string) {
 	kvOpenReq := common.KVRequest{
+		PodName:   podName,
 		TableName: tableName,
 	}
 	jsonData, err := json.Marshal(kvOpenReq)
@@ -103,8 +107,9 @@ func kvOpen(tableName string) {
 	fmt.Println(message)
 }
 
-func kvCount(tableName string) {
+func kvCount(podName, tableName string) {
 	kvCountReq := common.KVRequest{
+		PodName:   podName,
 		TableName: tableName,
 	}
 	jsonData, err := json.Marshal(kvCountReq)
@@ -121,8 +126,9 @@ func kvCount(tableName string) {
 	fmt.Println(message)
 }
 
-func kvPut(tableName, key, value string) {
+func kvPut(podName, tableName, key, value string) {
 	kvPutReq := common.KVRequest{
+		PodName:   podName,
 		TableName: tableName,
 		Key:       key,
 		Value:     value,
@@ -141,8 +147,8 @@ func kvPut(tableName, key, value string) {
 	fmt.Println(message)
 }
 
-func kvget(tableName, key string) {
-	argString := fmt.Sprintf("table_name=%s&key=%s", tableName, key)
+func kvget(podName, tableName, key string) {
+	argString := fmt.Sprintf("pod_name=%s&table_name=%s&key=%s", podName, tableName, key)
 	data, err := fdfsAPI.getReq(apiKVEntryGet, argString)
 	if err != nil {
 		fmt.Println("kv get: ", err)
@@ -170,8 +176,9 @@ func kvget(tableName, key string) {
 	}
 }
 
-func kvDel(tableName, key string) {
+func kvDel(podName, tableName, key string) {
 	kvDelReq := common.KVRequest{
+		PodName:   podName,
 		TableName: tableName,
 		Key:       key,
 	}
@@ -189,7 +196,7 @@ func kvDel(tableName, key string) {
 	fmt.Println(message)
 }
 
-func loadcsv(tableName, fileName, localCsvFile string) {
+func loadcsv(podName, tableName, fileName, localCsvFile, memory string) {
 	fd, err := os.Open(localCsvFile)
 	if err != nil {
 		fmt.Println("loadcsv failed: ", err)
@@ -201,7 +208,11 @@ func loadcsv(tableName, fileName, localCsvFile string) {
 		return
 	}
 	args := make(map[string]string)
+	args["pod_name"] = podName
 	args["table_name"] = tableName
+	if memory == "true" {
+		args["memory"] = tableName
+	}
 	data, err := fdfsAPI.uploadMultipartFile(apiKVLoadCSV, fileName, fi.Size(), fd, args, "csv", "false")
 	if err != nil {
 		fmt.Println("loadcsv: ", err)
@@ -217,8 +228,9 @@ func loadcsv(tableName, fileName, localCsvFile string) {
 	fmt.Println(message)
 }
 
-func kvSeek(tableName, start, end, limit string) {
+func kvSeek(podName, tableName, start, end, limit string) {
 	kvSeekReq := common.KVRequest{
+		PodName:     podName,
 		TableName:   tableName,
 		StartPrefix: start,
 		EndPrefix:   end,
@@ -231,15 +243,16 @@ func kvSeek(tableName, start, end, limit string) {
 	}
 	data, err := fdfsAPI.postReq(http.MethodPost, apiKVSeek, jsonData)
 	if err != nil {
-		fmt.Println("kv seek: ", err)
+		fmt.Println(err)
 		return
 	}
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }
 
-func kvGetNext(tableName string) {
-	data, err := fdfsAPI.getReq(apiKVSeekNext, "table_name="+tableName)
+func kvGetNext(podName, tableName string) {
+	argString := fmt.Sprintf("pod_name=%s&table_name=%s", podName, tableName)
+	data, err := fdfsAPI.getReq(apiKVSeekNext, argString)
 	if err != nil && !errors.Is(err, collection.ErrNoNextElement) {
 		fmt.Println("kv get_next: ", err)
 		return

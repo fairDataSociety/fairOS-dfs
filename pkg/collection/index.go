@@ -164,7 +164,7 @@ func (idx *Index) DeleteIndex() error {
 
 	// erase the top Manifest
 	topic := utils.HashString(idx.name)
-	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(""))
+	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(utils.DeletedFeedMagicWord))
 	if err != nil {
 		return ErrDeleteingIndex
 	}
@@ -282,7 +282,7 @@ func (idx *Index) storeManifest(manifest *Manifest) error {
 	if err != nil {
 		return ErrManifestUnmarshall
 	}
-	logStr := fmt.Sprintf("storing Manifest: %s, %d", manifest.Name, len(data))
+	logStr := fmt.Sprintf("storing Manifest: %s, data len = %d", manifest.Name, len(data))
 	idx.logger.Debug(logStr)
 	ref, err := idx.client.UploadBlob(data, true, true)
 	//TODO: once the tags issue is fixed i bytes..

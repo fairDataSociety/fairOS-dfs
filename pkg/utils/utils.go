@@ -34,10 +34,11 @@ import (
 )
 
 const (
-	MaxChunkLength   = 4096
-	PathSeperator    = string(os.PathSeparator)
-	MaxPodNameLength = 25
-	SpanLength       = 8
+	MaxChunkLength       = 4096
+	PathSeperator        = string(os.PathSeparator)
+	MaxPodNameLength     = 25
+	SpanLength           = 8
+	DeletedFeedMagicWord = "__Fair__"
 )
 
 type decError struct{ msg string }

@@ -435,7 +435,7 @@ func executor(in string) {
 			if len(blocks) > 3 {
 				indexType = blocks[3]
 			}
-			kvNew(tableName, indexType)
+			kvNew(currentPod, tableName, indexType)
 
 			currentPrompt = getCurrentPrompt()
 		case "delete":
@@ -444,10 +444,10 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			kvDelete(tableName)
+			kvDelete(currentPod, tableName)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
-			kvList()
+			kvList(currentPod)
 			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
@@ -455,7 +455,7 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			kvOpen(tableName)
+			kvOpen(currentPod, tableName)
 			currentPrompt = getCurrentPrompt()
 		case "count":
 			if len(blocks) < 3 {
@@ -463,7 +463,7 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			kvCount(tableName)
+			kvCount(currentPod, tableName)
 			currentPrompt = getCurrentPrompt()
 		case "put":
 			if len(blocks) < 5 {
@@ -473,7 +473,7 @@ func executor(in string) {
 			tableName := blocks[2]
 			key := blocks[3]
 			value := blocks[4]
-			kvPut(tableName, key, value)
+			kvPut(currentPod, tableName, key, value)
 			currentPrompt = getCurrentPrompt()
 		case "get":
 			if len(blocks) < 4 {
@@ -482,7 +482,7 @@ func executor(in string) {
 			}
 			tableName := blocks[2]
 			key := blocks[3]
-			kvget(tableName, key)
+			kvget(currentPod, tableName, key)
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 4 {
@@ -491,7 +491,7 @@ func executor(in string) {
 			}
 			tableName := blocks[2]
 			key := blocks[3]
-			kvDel(tableName, key)
+			kvDel(currentPod, tableName, key)
 			currentPrompt = getCurrentPrompt()
 		case "loadcsv":
 			if len(blocks) < 4 {
@@ -501,7 +501,11 @@ func executor(in string) {
 			tableName := blocks[2]
 			fileName := filepath.Base(blocks[3])
 			localCsvFile := blocks[3]
-			loadcsv(tableName, fileName, localCsvFile)
+			memory := ""
+			if len(blocks) > 4 {
+				memory = blocks[4]
+			}
+			loadcsv(currentPod, tableName, fileName, localCsvFile, memory)
 			currentPrompt = getCurrentPrompt()
 		case "seek":
 			if len(blocks) < 3 {
@@ -522,7 +526,7 @@ func executor(in string) {
 			if len(blocks) >= 6 {
 				limit = blocks[5]
 			}
-			kvSeek(tableName, start, end, limit)
+			kvSeek(currentPod, tableName, start, end, limit)
 			currentPrompt = getCurrentPrompt()
 		case "getnext":
 			if len(blocks) < 3 {
@@ -530,7 +534,7 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			kvGetNext(tableName)
+			kvGetNext(currentPod, tableName)
 			currentPrompt = getCurrentPrompt()
 		default:
 			fmt.Println("invalid kv command!!")

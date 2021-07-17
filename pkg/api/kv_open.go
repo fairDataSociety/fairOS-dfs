@@ -46,7 +46,7 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	podName := r.FormValue("pod_name")
+	podName := kvReq.PodName
 	if podName == "" {
 		h.logger.Errorf("kv open: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, "kv open: \"pod_name\" argument missing")

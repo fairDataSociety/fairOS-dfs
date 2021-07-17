@@ -49,7 +49,7 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	podName := r.FormValue("pod_name")
+	podName := kvReq.PodName
 	if podName == "" {
 		h.logger.Errorf("kv create: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, "kv create: \"pod_name\" argument missing")

@@ -17,7 +17,6 @@ limitations under the License.
 package user
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -46,8 +45,6 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response ht
 	if err != nil {
 		return "", "", nil, err
 	}
-
-	fmt.Println("new account address = ", accountInfo.GetAddress())
 
 	// store the ecnrypted mnemonic in Swarm
 	err = u.uploadEncryptedMnemonic(userName, accountInfo.GetAddress(), encryptedMnemonic, fd)

@@ -79,5 +79,5 @@ func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "kv delete: "+err.Error())
 		return
 	}
-	jsonhttp.OK(w, "kv store created")
+	jsonhttp.OK(w, "kv store deleted")
 }

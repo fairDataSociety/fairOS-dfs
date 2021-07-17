@@ -65,7 +65,7 @@ func (f *File) RmFile(podFileWithPath string) error {
 
 	// remove the meta
 	topic := utils.HashString(totalFilePath)
-	_, err = f.fd.UpdateFeed(topic, f.userAddress, []byte("0"))  // empty byte array will fail, so some 1 byte
+	_, err = f.fd.UpdateFeed(topic, f.userAddress, []byte(utils.DeletedFeedMagicWord)) // empty byte array will fail, so some 1 byte
 	if err != nil {
 		return err
 	}
