@@ -727,7 +727,10 @@ func executor(in string) {
 		}
 		if !strings.HasPrefix(dirToMk, utils.PathSeperator) {
 			// then this path is not from root
-			dirToMk = currentDirectory + utils.PathSeperator + dirToMk
+			dirToMk = utils.PathSeperator + dirToMk
+			if currentDirectory != utils.PathSeperator {
+				dirToMk = currentDirectory + utils.PathSeperator + dirToMk
+			}
 		}
 		mkdir(currentPod, dirToMk)
 		currentPrompt = getCurrentPrompt()
