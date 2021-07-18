@@ -51,7 +51,7 @@ func TestOpen(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir()
+		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}

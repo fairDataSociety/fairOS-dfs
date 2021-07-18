@@ -82,10 +82,10 @@ func TestSharing(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
-		ui.AddPodName(podName1)
+		ui.AddPodName(podName1, info1)
 
 		// make root dir so that other directories can be added
-		err = info1.GetDirectory().MkRootDir()
+		err = info1.GetDirectory().MkRootDir("pod1", info1.GetPodAddress(), info1.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -129,7 +129,7 @@ func TestSharing(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = info2.GetDirectory().MkRootDir()
+		err = info2.GetDirectory().MkRootDir("pod1", info2.GetPodAddress(), info2.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}

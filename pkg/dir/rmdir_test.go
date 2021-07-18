@@ -48,7 +48,7 @@ func TestRmdir(t *testing.T) {
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir()
+		err = dirObject.MkRootDir("pod1", user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -60,7 +60,7 @@ func TestRmdir(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir()
+		err = dirObject.MkRootDir("pod1", user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}

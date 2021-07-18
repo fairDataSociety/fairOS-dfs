@@ -36,7 +36,6 @@ func TestShare(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	pod1 := pod.NewPod(mockClient, fd, acc, logger)
 	podName1 := "test1"
@@ -76,7 +75,7 @@ func TestShare(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir()
+		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -104,7 +103,7 @@ func TestShare(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir()
+		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -152,7 +151,7 @@ func TestShare(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir()
+		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
