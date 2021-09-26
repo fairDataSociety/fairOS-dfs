@@ -130,3 +130,7 @@ func (m *MockBeeClient) DeleteBlob(address []byte) error {
 	}
 	return errors.New("blob not found")
 }
+
+func (m *MockBeeClient) GetNewPostageBatch() error {
+	return nil
+}

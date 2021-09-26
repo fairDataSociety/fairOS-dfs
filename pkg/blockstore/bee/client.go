@@ -47,6 +47,7 @@ const (
 	BytesUploadDownloadUrl = "/bytes"
 	pinsUrl                = "/pins/"
 	blobsUrl               = "/bytes/" // need to change this when bee supports it
+	postageBatchUrl        = "/stamps/"
 	SwarmPinHeader         = "Swarm-Pin"
 	SwarmEncryptHeader     = "SchunksUrlwarm-Encrypt"
 	SwarmPostageBatchId    = "Swarm-Postage-Batch-Id"
@@ -105,6 +106,10 @@ func NewBeeClient(host, port, postageBlockId string, logger logging.Logger) *Bee
 
 type chunkAddressResponse struct {
 	Reference swarm.Address `json:"reference"`
+}
+
+type postageBatchResponse struct {
+	BatchId string `json:"batchID"`
 }
 
 func socResource(owner, id, sig string) string {
@@ -465,6 +470,50 @@ func (s *BeeClient) DeleteBlob(address []byte) error {
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete Blob: ")
+	return nil
+}
+
+func (s *BeeClient) GetNewPostageBatch() error {
+	to := time.Now()
+	s.logger.Infof("Trying to get new postage batch id")
+	path := filepath.Join(postageBatchUrl, "10000000/20")
+	fullUrl := fmt.Sprintf(s.url + path)
+	req, err := http.NewRequest(http.MethodPost, fullUrl, nil)
+	if err != nil {
+		return err
+	}
+
+	response, err := s.client.Do(req)
+	if err != nil {
+		return err
+	}
+	req.Close = true
+
+	if response.StatusCode != http.StatusCreated {
+		return errors.New("error getting postage stamp ")
+	}
+
+	respData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return errors.New("error getting postage stamp")
+	}
+	err = response.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	var batchResp *postageBatchResponse
+	err = json.Unmarshal(respData, &batchResp)
+	if err != nil {
+		return err
+	}
+
+	fields := logrus.Fields{
+		"BatchId":  batchResp.BatchId,
+		"duration": time.Since(to).String(),
+	}
+	s.postageBlockId = batchResp.BatchId
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "update batch: ")
 	return nil
 }
 

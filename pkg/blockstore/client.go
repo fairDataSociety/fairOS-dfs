@@ -31,4 +31,5 @@ type Client interface {
 	DownloadBlob(address []byte) (data []byte, respCode int, err error)
 	DeleteChunk(address []byte) error
 	DeleteBlob(address []byte) error
+	GetNewPostageBatch() error
 }

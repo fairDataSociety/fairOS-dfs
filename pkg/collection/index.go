@@ -284,11 +284,28 @@ func (idx *Index) storeManifest(manifest *Manifest) error {
 	}
 	logStr := fmt.Sprintf("storing Manifest: %s, data len = %d", manifest.Name, len(data))
 	idx.logger.Debug(logStr)
+
+retryUpload:
 	ref, err := idx.client.UploadBlob(data, true, true)
 	//TODO: once the tags issue is fixed i bytes..
 	// remove the error string check
 	if err != nil && err.Error() != "error uploading blob" {
 		return ErrManifestUnmarshall
+	}
+
+	// if ref is nil, the stamp might be exhausted.
+	// get a new stamp here and proceed.
+	// in the newer bee version HTTP Payment Required is sent if batch is over.
+	// we might have to use it if we upgrade to newer bee version.
+	if ref == nil {
+		// get new stamp here and set it as the new postage id
+		idx.logger.Warning("postage stamp exhausted")
+		err := idx.client.GetNewPostageBatch()
+		if err != nil {
+			return ErrCouldNotUpdatePostageBatch
+		}
+		idx.logger.Info("proceeding with new postage stamp")
+		goto retryUpload
 	}
 
 	topic := utils.HashString(manifest.Name)
