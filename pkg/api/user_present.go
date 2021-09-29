@@ -26,7 +26,7 @@ type UserPresentResponse struct {
 	Present bool `json:"present"`
 }
 
-// UserPresentHandler is the api handler to check if a gien user name is present
+// UserPresentHandler is the api handler to check if a given username is present
 // it takes only one argument
 // - user_name: the name of the user to check
 func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {

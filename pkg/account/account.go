@@ -52,7 +52,7 @@ type Info struct {
 	address    utils.Address
 }
 
-// New create a account object through which the entire account management is done.
+// New create an account object through which the entire account management is done.
 // it uses a 12 word BIP-0039 wordlist to create a 12 word mnemonic for every user
 // and spawns key pais whenever necessary.
 func New(logger logging.Logger) *Account {
@@ -65,7 +65,7 @@ func New(logger logging.Logger) *Account {
 	}
 }
 
-// CreateRandomKeyPair creates a ecdsa key pair by using the given int64 number
+// CreateRandomKeyPair creates an ecdsa key pair by using the given int64 number
 // as the random number.
 func CreateRandomKeyPair(now int64) (*ecdsa.PrivateKey, error) {
 	randBytes := make([]byte, 40)
@@ -74,7 +74,7 @@ func CreateRandomKeyPair(now int64) (*ecdsa.PrivateKey, error) {
 	return ecdsa.GenerateKey(btcec.S256(), randReader)
 }
 
-// CreateUserAccount reate a new master account for a user. if a valid mnemonic is
+// CreateUserAccount create a new master account for a user. if a valid mnemonic is
 // provided it is used, otherwise a new mnemonic is generated. The generated mnemonic is
 // AES encrypted using the password provided.
 func (a *Account) CreateUserAccount(passPhrase, mnemonic string) (string, string, error) {
@@ -155,7 +155,7 @@ func (a *Account) LoadUserAccount(passPhrase, encryptedMnemonic string) error {
 	return nil
 }
 
-// Authorise is used to check if the given password is valid for an user account.
+// Authorise is used to check if the given password is valid for a user account.
 // this is done by decrypting the mnemonic using the supplied password and checking
 // the validity of the mnemonic to see if it confirms to bip-0039 list of words.
 func (a *Account) Authorise(password string) bool {
@@ -288,7 +288,7 @@ func (a *Account) DeletePodAccount(accountId int) {
 	delete(a.podAccounts, accountId)
 }
 
-// GetUserPrivateKey retuens the private key of a given account index.
+// GetUserPrivateKey returns the private key of a given account index.
 // the index -1 belongs to user root account and other indexes belong to
 // the respective pods.
 func (a *Account) GetUserPrivateKey(index int) *ecdsa.PrivateKey {
@@ -330,8 +330,8 @@ func (a *Account) GetWallet() *Wallet {
 	return a.wallet
 }
 
-func (a *Info) IsReadOnlyPod() bool {
-	return a.privateKey == nil
+func (ai *Info) IsReadOnlyPod() bool {
+	return ai.privateKey == nil
 }
 
 func (ai *Info) GetAddress() utils.Address {

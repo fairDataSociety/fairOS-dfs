@@ -583,7 +583,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	return nil
 }
 
-// Get retrieves a specific document from a document database matching the dcument id.
+// Get retrieves a specific document from a document database matching the document id.
 func (d *Document) Get(dbName, id string) ([]byte, error) {
 	d.logger.Info("getting from document db: ", dbName, id)
 	db := d.getOpenedDb(dbName)
@@ -995,7 +995,7 @@ func (d *Document) resolveExpression(expr string) (string, string, string, error
 
 // CreateDocBatch creates a batch index instead of normal index. This is used when doing a bulk insert.
 func (d *Document) CreateDocBatch(dbName string) (*DocBatch, error) {
-	d.logger.Info("creeating batch for inserting in document db: ", dbName)
+	d.logger.Info("creating batch for inserting in document db: ", dbName)
 	if d.fd.IsReadOnlyFeed() {
 		d.logger.Errorf("creating batch: ", ErrReadOnlyIndex)
 		return nil, ErrReadOnlyIndex
@@ -1290,7 +1290,7 @@ func (d *Document) DocBatchWrite(docBatch *DocBatch, podFile string) error {
 	return nil
 }
 
-// DocFileIndex indexes a existing json file in the pod with the document DB.
+// DocFileIndex indexes an existing json file in the pod with the document DB.
 func (d *Document) DocFileIndex(dbName, podFile string) error {
 	d.logger.Info("Indexing file to db: ", podFile, dbName)
 	reader, err := d.file.OpenFileForIndex(podFile)

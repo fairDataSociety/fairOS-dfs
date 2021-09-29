@@ -19,9 +19,9 @@ package user
 // ExportUser gives back the information required to export the user from one dfs server
 // import him in to another.
 func (u *Users) ExportUser(ui *Info) (string, string, error) {
-	addreess, err := u.getAddressFromUserName(ui.name, u.dataDir)
+	address, err := u.getAddressFromUserName(ui.name, u.dataDir)
 	if err != nil {
 		return "", "", err
 	}
-	return ui.name, addreess.Hex(), nil
+	return ui.name, address.Hex(), nil
 }

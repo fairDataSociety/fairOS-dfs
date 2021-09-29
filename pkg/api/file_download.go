@@ -29,7 +29,7 @@ import (
 )
 
 // FileDownloadHandler is the api handler to download a file from a given pod
-//  it takes only one argument
+// it takes only one argument
 // file_path: the absolute path of the file in the pod
 func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("pod_name")

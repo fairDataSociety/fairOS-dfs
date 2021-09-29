@@ -31,7 +31,7 @@ import (
 // in the local file system
 // it takes two arguments
 // table_name: the document database in which to insert the data
-// file: the json file as a multi part file
+// file: the json file as a multipart file
 func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("pod_name")
 	if podName == "" {

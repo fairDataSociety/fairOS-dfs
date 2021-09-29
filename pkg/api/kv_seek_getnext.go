@@ -112,7 +112,7 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // KVGetNextHandler is the api handler to get the key and value from the current seek position
-// it takes only oneargument
+// it takes only one argument
 // - table_name: the name of the kv table
 func (h *Handler) KVGetNextHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]

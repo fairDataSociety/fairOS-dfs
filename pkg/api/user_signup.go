@@ -34,7 +34,7 @@ type UserSignupResponse struct {
 	Mnemonic string `json:"mnemonic,omitempty"`
 }
 
-// UserSignupHandler is the api handler to creata new user
+// UserSignupHandler is the api handler to create new user
 // it takes two mandatory arguments and one optional argument
 // - user_name: the name of the user to create
 // - password: the password of the user

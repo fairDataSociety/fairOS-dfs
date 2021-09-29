@@ -37,8 +37,8 @@ var (
 )
 
 // Upload uploads a given blob of bytes as a file in the pod. It also splits the file in to number of blocks. the
-// size of the block is preovided during upload. This function also des compression of the blocks gzip/snappy if it is
-// requsted during the upload.
+// size of the block is provided during upload. This function also des compression of the blocks gzip/snappy if it is
+// requested during the upload.
 func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error {
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()

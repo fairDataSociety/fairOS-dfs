@@ -35,7 +35,7 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	dirName := filepath.Base(dirToCreateWithPath)
 
 	// validation checks of the arguments
-	if dirName == "" || strings.HasPrefix(dirName, utils.PathSeperator) {
+	if dirName == "" || strings.HasPrefix(dirName, utils.PathSeparator) {
 		return ErrInvalidDirectoryName
 	}
 
@@ -111,7 +111,7 @@ func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed
 	meta := MetaData{
 		Version:          MetaVersion,
 		Path:             "",
-		Name:             utils.PathSeperator,
+		Name:             utils.PathSeparator,
 		CreationTime:     now,
 		ModificationTime: now,
 		AccessTime:       now,
@@ -124,18 +124,18 @@ func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed
 	if err != nil {
 		return err
 	}
-	parentPath := utils.CombinePathAndFile(podName, utils.PathSeperator, "")
+	parentPath := utils.CombinePathAndFile(podName, utils.PathSeparator, "")
 	parentHash := utils.HashString(parentPath)
 	_, err = fd.CreateFeed(parentHash, podAddress, parentData)
 	if err != nil {
 		return err
 	}
-	d.AddToDirectoryMap(utils.PathSeperator, parentDirInode)
+	d.AddToDirectoryMap(utils.PathSeparator, parentDirInode)
 	return nil
 }
 
 func (d *Directory) AddRootDir(podName string, podAddress utils.Address, fd *feed.API) error {
-	parentPath := utils.CombinePathAndFile(podName, utils.PathSeperator, "")
+	parentPath := utils.CombinePathAndFile(podName, utils.PathSeparator, "")
 	parentHash := utils.HashString(parentPath)
 	_, parentDataBytes, err := fd.GetFeedData(parentHash, podAddress)
 	if err != nil {
@@ -146,6 +146,6 @@ func (d *Directory) AddRootDir(podName string, podAddress utils.Address, fd *fee
 	if err != nil {
 		return err
 	}
-	d.AddToDirectoryMap(utils.PathSeperator, parentDirInode)
+	d.AddToDirectoryMap(utils.PathSeparator, parentDirInode)
 	return nil
 }

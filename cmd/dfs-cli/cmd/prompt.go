@@ -332,7 +332,7 @@ func executor(in string) {
 			podName := blocks[2]
 			podNew(podName)
 			currentPod = podName
-			currentDirectory = utils.PathSeperator
+			currentDirectory = utils.PathSeparator
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 3 {
@@ -352,7 +352,7 @@ func executor(in string) {
 			podName := blocks[2]
 			openPod(podName)
 			currentPod = podName
-			currentDirectory = utils.PathSeperator
+			currentDirectory = utils.PathSeparator
 			currentPrompt = getCurrentPrompt()
 		case "close":
 			if !isPodOpened() {
@@ -679,25 +679,25 @@ func executor(in string) {
 		dirTocd := blocks[1]
 
 		// if cd'ing to previous dir, just do it
-		if dirTocd == ".." && currentDirectory != utils.PathSeperator {
+		if dirTocd == ".." && currentDirectory != utils.PathSeparator {
 			currentDirectory = filepath.Dir(currentDirectory)
 			currentPrompt = getCurrentPrompt()
 			return
 		}
 
 		// if cd'ing to root dir, just do it
-		if dirTocd == utils.PathSeperator {
-			currentDirectory = utils.PathSeperator
+		if dirTocd == utils.PathSeparator {
+			currentDirectory = utils.PathSeparator
 			currentPrompt = getCurrentPrompt()
 			return
 		}
 
 		// if cd'ing forward, we have to check if that dir is present
-		if dirTocd != utils.PathSeperator {
-			if currentDirectory == utils.PathSeperator {
+		if dirTocd != utils.PathSeparator {
+			if currentDirectory == utils.PathSeparator {
 				dirTocd = currentDirectory + dirTocd
 			} else {
-				dirTocd = currentDirectory + utils.PathSeperator + dirTocd
+				dirTocd = currentDirectory + utils.PathSeparator + dirTocd
 			}
 		}
 
@@ -725,11 +725,11 @@ func executor(in string) {
 			fmt.Println("invalid dir")
 			return
 		}
-		if !strings.HasPrefix(dirToMk, utils.PathSeperator) {
+		if !strings.HasPrefix(dirToMk, utils.PathSeparator) {
 			// then this path is not from root
-			dirToMk = utils.PathSeperator + dirToMk
-			if currentDirectory != utils.PathSeperator {
-				dirToMk = currentDirectory + utils.PathSeperator + dirToMk
+			dirToMk = utils.PathSeparator + dirToMk
+			if currentDirectory != utils.PathSeparator {
+				dirToMk = currentDirectory + utils.PathSeparator + dirToMk
 			}
 		}
 		mkdir(currentPod, dirToMk)
@@ -747,12 +747,12 @@ func executor(in string) {
 			fmt.Println("invalid dir")
 			return
 		}
-		if !strings.HasPrefix(dirToRm, utils.PathSeperator) {
+		if !strings.HasPrefix(dirToRm, utils.PathSeparator) {
 			// then this path is not from root
-			if currentDirectory == utils.PathSeperator {
+			if currentDirectory == utils.PathSeparator {
 				dirToRm = currentDirectory + dirToRm
 			} else {
-				dirToRm = currentDirectory + utils.PathSeperator + dirToRm
+				dirToRm = currentDirectory + utils.PathSeparator + dirToRm
 			}
 		}
 		rmDir(currentPod, dirToRm)
@@ -797,13 +797,13 @@ func executor(in string) {
 			return
 		}
 
-		loalFile := filepath.Join(localDir + utils.PathSeperator + filepath.Base(blocks[2]))
+		loalFile := filepath.Join(localDir + utils.PathSeparator + filepath.Base(blocks[2]))
 		podFile := blocks[2]
-		if !strings.HasPrefix(podFile, utils.PathSeperator) {
-			if currentDirectory == utils.PathSeperator {
+		if !strings.HasPrefix(podFile, utils.PathSeparator) {
+			if currentDirectory == utils.PathSeparator {
 				podFile = currentDirectory + podFile
 			} else {
-				podFile = currentDirectory + utils.PathSeperator + podFile
+				podFile = currentDirectory + utils.PathSeparator + podFile
 			}
 		}
 
@@ -821,11 +821,11 @@ func executor(in string) {
 		if statElement == "" {
 			return
 		}
-		if !strings.HasPrefix(statElement, utils.PathSeperator) {
-			if currentDirectory == utils.PathSeperator {
+		if !strings.HasPrefix(statElement, utils.PathSeparator) {
+			if currentDirectory == utils.PathSeparator {
 				statElement = currentDirectory + statElement
 			} else {
-				statElement = currentDirectory + utils.PathSeperator + statElement
+				statElement = currentDirectory + utils.PathSeparator + statElement
 			}
 		}
 		statFileOrDirectory(currentPod, statElement)
@@ -848,11 +848,11 @@ func executor(in string) {
 		if rmFile == "" {
 			return
 		}
-		if !strings.HasPrefix(rmFile, utils.PathSeperator) {
-			if currentDirectory == utils.PathSeperator {
+		if !strings.HasPrefix(rmFile, utils.PathSeparator) {
+			if currentDirectory == utils.PathSeparator {
 				rmFile = currentDirectory + rmFile
 			} else {
-				rmFile = currentDirectory + utils.PathSeperator + rmFile
+				rmFile = currentDirectory + utils.PathSeparator + rmFile
 			}
 		}
 		deleteFile(currentPod, rmFile)
@@ -867,11 +867,11 @@ func executor(in string) {
 		if podFile == "" {
 			return
 		}
-		if !strings.HasPrefix(podFile, utils.PathSeperator) {
-			if currentDirectory == utils.PathSeperator {
+		if !strings.HasPrefix(podFile, utils.PathSeparator) {
+			if currentDirectory == utils.PathSeparator {
 				podFile = currentDirectory + podFile
 			} else {
-				podFile = currentDirectory + utils.PathSeperator + podFile
+				podFile = currentDirectory + utils.PathSeparator + podFile
 			}
 		}
 		fileShare(currentPod, podFile, "TODO: add dest. user address")

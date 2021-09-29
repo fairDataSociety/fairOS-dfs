@@ -58,7 +58,7 @@ func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef strin
 		return "", err
 	}
 
-	// Create a outbox entry
+	// Create an outbox entry
 	now := time.Now()
 	sharingEntry := SharingEntry{
 		Meta:       meta,
@@ -90,7 +90,7 @@ func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef strin
 	return sharingRef.String(), nil
 }
 
-// ReceiveFileFromUser imports a exported file in to the current user and pod by reading the sharing file entry.
+// ReceiveFileFromUser imports an exported file in to the current user and pod by reading the sharing file entry.
 func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingReference, userInfo *Info, pod *pod.Pod, podDir string) (string, error) {
 	metaRef := sharingRef.GetRef()
 	unixTime := sharingRef.GetNonce()

@@ -18,5 +18,5 @@ package feed
 
 const signatureLength = 65
 
-// Signature is an alias for a assets byte array with the size of a signature
+// Signature is an alias for an assets byte array with the size of a signature
 type Signature [signatureLength]byte

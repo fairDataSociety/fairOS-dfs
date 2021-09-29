@@ -28,7 +28,7 @@ type LoginStatus struct {
 
 // IsUserLoggedInHandler is the api handler to check if a user is logged in or not
 // it takes one argument
-// -user_name: the user name to check if it logged in or not
+// -user_name: the username to check if it logged in or not
 func (h *Handler) IsUserLoggedInHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["user_name"]
 	if !ok || len(keys[0]) < 1 {

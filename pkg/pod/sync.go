@@ -16,7 +16,7 @@ limitations under the License.
 
 package pod
 
-// SyncPod syncs the pod to the latest version by extracting the current meta information of
+// SyncPod syncs the pod to the latest version by extracting the current meta information
 // of files and directories of the pod.
 func (p *Pod) SyncPod(podName string) error {
 	podName, err := CleanPodName(podName)

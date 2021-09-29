@@ -37,7 +37,7 @@ type FileSharingReference struct {
 }
 
 // FileShareHandler is the api handler to share a file from a given pod
-// it takes towe arguments
+// it takes two arguments
 // file_path: the absolute path of the file in the pod
 // dest_user: the address of the destination user (this is not used now)
 func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {

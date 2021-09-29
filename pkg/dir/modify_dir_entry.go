@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// AddEntryToDir adds a new entry (diretory/file) do a given directory.
+// AddEntryToDir adds a new entry (directory/file) do a given directory.
 // This is typically called when a new directory is created under the given directory or
 // a new file is uploaded under the given directory.
 func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) error {
@@ -77,7 +77,7 @@ func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) erro
 	return nil
 }
 
-// RemoveEntryFromDir removes a entry (directory/file) under the given directory.
+// RemoveEntryFromDir removes an entry (directory/file) under the given directory.
 // This is typically called when a  directory is deleted under the given directory or
 // a file is removed under the given directory.
 func (d *Directory) RemoveEntryFromDir(parentDir, itemToDelete string, isFile bool) error {

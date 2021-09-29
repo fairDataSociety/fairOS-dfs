@@ -34,9 +34,9 @@ import (
 )
 
 const (
-	MaxChunkLength       = 4096
-	PathSeperator        = string(os.PathSeparator)
-	MaxPodNameLength     = 25
+	MaxChunkLength   = 4096
+	PathSeparator    = string(os.PathSeparator)
+	MaxPodNameLength = 25
 	SpanLength           = 8
 	DeletedFeedMagicWord = "__Fair__"
 )
@@ -168,15 +168,15 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 func CombinePathAndFile(podName, path, fileName string) string {
 	var totalPath string
 
-	if path == PathSeperator || path == "" {
+	if path == PathSeparator || path == "" {
 		totalPath = path + fileName
 	} else {
 		if fileName == "" {
 			totalPath = path
 		} else {
-			fileName = strings.TrimPrefix(fileName, PathSeperator)
-			path = strings.TrimPrefix(path, PathSeperator)
-			totalPath = PathSeperator + path + PathSeperator + fileName
+			fileName = strings.TrimPrefix(fileName, PathSeparator)
+			path = strings.TrimPrefix(path, PathSeparator)
+			totalPath = PathSeparator + path + PathSeparator + fileName
 		}
 	}
 	return totalPath
@@ -184,13 +184,13 @@ func CombinePathAndFile(podName, path, fileName string) string {
 
 //func CombinePathAndFile(podName, path, fileName string) string {
 //	var totalPath string
-//	if path == PathSeperator || path == "" {
-//		totalPath = PathSeperator + podName + path + fileName
+//	if path == PathSeparator || path == "" {
+//		totalPath = PathSeparator + podName + path + fileName
 //	} else {
 //		if fileName != "" {
-//			totalPath = PathSeperator + podName + PathSeperator + path + PathSeperator + fileName
+//			totalPath = PathSeparator + podName + PathSeparator + path + PathSeparator + fileName
 //		} else {
-//			totalPath = PathSeperator + podName + PathSeperator + path
+//			totalPath = PathSeparator + podName + PathSeparator + path
 //		}
 //	}
 //	return totalPath

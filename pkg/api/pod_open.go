@@ -33,7 +33,7 @@ type PodOpenResponse struct {
 	Reference string `json:"reference"`
 }
 
-// PodOpenHandler is the api handler to close a open pod
+// PodOpenHandler is the api handler to close an open pod
 // it takes two arguments
 // - pod_name: the name of the pod to open
 // - password: the password of the user

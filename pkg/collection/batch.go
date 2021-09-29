@@ -50,7 +50,7 @@ func (b *Batch) PutNumber(key float64, refValue []byte, apnd, memory bool) error
 	return b.Put(stringKey, refValue, apnd, memory)
 }
 
-// Put creates a index entry given a key string and value.
+// Put creates an index entry given a key string and value.
 func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 	if b.idx.isReadOnlyFeed() {
 		return ErrReadOnlyIndex
@@ -78,7 +78,7 @@ func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, refValue, memory, apnd)
 }
 
-// Get extracts a index value from an index givena key.
+// Get extracts an index value from an index given key.
 func (b *Batch) Get(key string) ([][]byte, error) {
 	if b.memDb == nil {
 		return nil, ErrEntryNotFound

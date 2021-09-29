@@ -44,12 +44,12 @@ func (f *File) GetFileReference(podFile string) (*MetaData, error) {
 
 // AddFileToPath adds a given files meta data to the main file data structure.
 func (f *File) AddFileToPath(filePath, metaHexRef string) error {
-	metaReferenace, err := utils.ParseHexReference(metaHexRef)
+	metaReference, err := utils.ParseHexReference(metaHexRef)
 	if err != nil {
 		return err
 	}
 
-	data, respCode, err := f.getClient().DownloadBlob(metaReferenace.Bytes())
+	data, respCode, err := f.getClient().DownloadBlob(metaReference.Bytes())
 	if err != nil || respCode != http.StatusOK {
 		return err
 	}

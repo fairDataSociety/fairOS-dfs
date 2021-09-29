@@ -25,7 +25,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// ImportUserHandler is the api handler to import a exported user in to anew machine
+// ImportUserHandler is the api handler to import an exported user in to a new machine
 // it takes four arguments, to mandatory and one of the other two is optional
 // - user_name: the name of the user to import
 // - password: the password of the user

@@ -337,7 +337,7 @@ func (idx *Index) addEntryToManifestSortedLexicographically(manifest *Manifest, 
 
 	entryAdded := false
 	for _, entry := range manifest.Entries {
-		// if the enty is already there, just return
+		// if the entry is already there, just return
 		if entry.Name == entryToAdd.Name &&
 			entry.EType == entryToAdd.EType {
 			if len(entry.Ref) == len(entryToAdd.Ref) {

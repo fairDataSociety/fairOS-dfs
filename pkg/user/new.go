@@ -46,7 +46,7 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response ht
 		return "", "", nil, err
 	}
 
-	// store the ecnrypted mnemonic in Swarm
+	// store the encrypted mnemonic in Swarm
 	err = u.uploadEncryptedMnemonic(userName, accountInfo.GetAddress(), encryptedMnemonic, fd)
 	if err != nil {
 		return "", "", nil, err

@@ -28,7 +28,7 @@ type DirPresentResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
-// DirectoryPresentHandler is the api handler which says if a a directory is present or not
+// DirectoryPresentHandler is the api handler which says if a directory is present or not
 // it takes only one argument
 // - dir-path: the directory to check along with its absolute path
 func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request) {

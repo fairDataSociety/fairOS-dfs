@@ -20,18 +20,18 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Inode) IsDirInodeRoot() bool {
-	return d.Meta.Path == utils.PathSeperator
+func (in *Inode) IsDirInodeRoot() bool {
+	return in.Meta.Path == utils.PathSeparator
 }
 
-func (d *Inode) GetDirInodePathAndNameForRoot() string {
-	return d.Meta.Path + d.Meta.Name
+func (in *Inode) GetDirInodePathAndNameForRoot() string {
+	return in.Meta.Path + in.Meta.Name
 }
 
-func (d *Inode) GetDirInodePathAndName() string {
-	return d.Meta.Path + utils.PathSeperator + d.Meta.Name
+func (in *Inode) GetDirInodePathAndName() string {
+	return in.Meta.Path + utils.PathSeparator + in.Meta.Name
 }
 
-func (d *Inode) GetDirInodePathOnly() string {
-	return d.Meta.Path
+func (in *Inode) GetDirInodePathOnly() string {
+	return in.Meta.Path
 }
