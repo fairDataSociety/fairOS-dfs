@@ -115,3 +115,9 @@ https://fairos.io/bzz/fairos.eth/docs/fairOS-dfs/api-reference/
 ##### management commands
 - help - display this help
 - exit - exits from the prompt
+
+### Make binaries for all platforms
+
+To make binaries for all platforms run this command
+
+`./generate-exe.sh`
