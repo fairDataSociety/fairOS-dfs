@@ -1,0 +1,73 @@
+version: '3'
+services:
+  bee-1:
+    image: ethersphere/bee:0.6.2
+    restart: on-failure
+    environment:
+      - BEE_API_ADDR
+      - BEE_BLOCK_TIME
+      - BEE_BOOTNODE=/dnsaddr/testnet.ethswarm.org
+      - BEE_BOOTNODE_MODE
+      - BEE_CLEF_SIGNER_ENABLE=false
+      - BEE_CLEF_SIGNER_ENDPOINT
+      - BEE_CONFIG
+      - BEE_CORS_ALLOWED_ORIGINS
+      - BEE_DATA_DIR
+      - BEE_CACHE_CAPACITY=30000000
+      - BEE_DB_OPEN_FILES_LIMIT
+      - BEE_DB_BLOCK_CACHE_CAPACITY
+      - BEE_DB_WRITE_BUFFER_SIZE
+      - BEE_DB_DISABLE_SEEKS_COMPACTION
+      - BEE_DEBUG_API_ADDR
+      - BEE_DEBUG_API_ENABLE=true
+      - BEE_GATEWAY_MODE
+      - BEE_GLOBAL_PINNING_ENABLE
+      - BEE_FULL_NODE
+      - BEE_NAT_ADDR
+      - BEE_NETWORK_ID
+      - BEE_P2P_ADDR
+      - BEE_P2P_QUIC_ENABLE
+      - BEE_P2P_WS_ENABLE
+      - BEE_PASSWORD=IKGV7tyf76F
+      - BEE_PASSWORD_FILE
+      - BEE_PAYMENT_EARLY
+      - BEE_PAYMENT_THRESHOLD
+      - BEE_PAYMENT_TOLERANCE
+      - BEE_POSTAGE_STAMP_ADDRESS
+      - BEE_RESOLVER_OPTIONS
+      - BEE_STANDALONE
+      - BEE_SWAP_ENABLE
+      - BEE_SWAP_ENDPOINT=https://goerli.infura.io/v3/YOUR_KEY_HERE
+      - BEE_SWAP_FACTORY_ADDRESS
+      - BEE_SWAP_LEGACY_FACTORY_ADDRESSES
+      - BEE_SWAP_INITIAL_DEPOSIT
+      - BEE_SWAP_DEPLOYMENT_GAS_PRICE
+      - BEE_TRACING_ENABLE
+      - BEE_TRACING_ENDPOINT
+      - BEE_TRACING_SERVICE_NAME
+      - BEE_TRANSACTION
+      - BEE_VERBOSITY
+      - BEE_WELCOME_MESSAGE
+      - BEE_MAINNET
+    ports:
+      - "${API_ADDR:-1633}${BEE_API_ADDR:-:1633}"
+      - "${P2P_ADDR:-1634}${BEE_P2P_ADDR:-:1634}"
+      - "${DEBUG_API_ADDR:-127.0.0.1:1635}${BEE_DEBUG_API_ADDR:-:1635}"
+    volumes:
+      #- bee-1:/home/bee/.bee
+      - /home/ubuntu/bee-docker-data:/home/bee/.bee
+    command: start
+
+  fairos:
+    image: fairdatasociety/fairos-dfs:latest
+    restart: unless-stopped
+    ports:
+      - '9090:9090'
+    volumes:
+      - /home/ubuntu/dfs-docker-data:/root/.fairOS/dfs
+    command: server --postageBlockId "24659c815f7b17d23781c854776dbfde01aaee758545d3d77d8f93d1ca67ce96" --cors-origins "https://fds.mittudomen.hu,https://*.pds.mydataasia.org,https://dixonsiu.pds.mydataasia.org,https://app.galileo.fairdatasociety.org,https://fairmaps.fairdatasociety.org,https://galileo.fairdatasociety.org,https://app.fairdrive.fairdatasociety.org,https://fairdrive.fairdatasociety.org,https://osm.testeron.pro,http://localhost:3000,http://localhost:1633,http://localhost:1635,https://app.photo.fairdatasociety.org,https://app.dracula.fairdatasociety.org" --beeHost "bee-1" --cookieDomain "fairos.fairdatasociety.org"
+
+    depends_on:
+      - bee-1
+#volumes:
+#  bee-1:
