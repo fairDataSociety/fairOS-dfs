@@ -37,23 +37,12 @@ Or use Docker to run the project https://docs.fairos.fairdatasociety.org/docs/fa
 
 Or build the latest version with the instruction https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/manual-installation.
 
-### Demo 1: FairOS-dfs Introduction
-[![](https://j.gifs.com/lx3x0l.gif)](https://gateway.ethswarm.org/access/541f55413e02774c9446525d0cf3a92984cc541e4d9e73cb70c1dabe2e870bc5)
-### Demo 2: FairOS-dfs File Sharing
-[![](https://j.gifs.com/vl3l5g.gif)](https://gateway.ethswarm.org/access/834191ac103224cd2c665a34f2eb5113926e6624adbdddfc7a86f314eb7cfeeb)
-### Demo 3: FairOS-dfs Adding a new Device
-[![](https://j.gifs.com/D1g1rY.gif)](https://gateway.ethswarm.org/access/7a8964194ffb923b98cc60711ff1925d2411537fc9f2dc80ee9219a49d0e4949)
-### Demo 4: Introdution to Key Value Store over Swarm
+### Introduction to Key Value Store over Swarm
 [![](https://j.gifs.com/6XZwvl.gif)](https://gateway.ethswarm.org/access/130dcf7d01442836bc14c8c38db32ebfc4d5771c28677438b6a2a2a078bd1414)
-### Demo 5: Adding large datasets in KV store in Swarm
-[![](https://j.gifs.com/jZDwkl.gif)](https://gateway.ethswarm.org/access/2688969c020cb736afae9b2f6d65c834414f83f8b4fdced077eb3e5f9a7266af)
-
-
 
 ### HTTP APIs
 
 https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/api-reference
-
 
 ### REPL Commands in dfs-cli
 
