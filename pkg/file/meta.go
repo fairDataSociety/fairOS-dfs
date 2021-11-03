@@ -19,8 +19,6 @@ package file
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
