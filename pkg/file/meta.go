@@ -18,12 +18,15 @@ package file
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 var (
 	MetaVersion uint8 = 1
+
+	ErrDeletedFeed = errors.New("deleted feed")
 )
 
 type MetaData struct {
@@ -94,6 +97,10 @@ func (f *File) GetMetaFromFileName(fileNameWithPath string, userAddress utils.Ad
 	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress)
 	if err != nil {
 		return nil, err
+	}
+
+	if string(metaBytes) == utils.DeletedFeedMagicWord {
+		return nil, ErrDeletedFeed
 	}
 
 	var meta *MetaData

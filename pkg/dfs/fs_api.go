@@ -23,6 +23,7 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -194,6 +195,9 @@ func (d *DfsAPI) DeleteFile(podName, podFileWithPath, sessionId string) error {
 	file := podInfo.GetFile()
 	err = file.RmFile(podFileWithPath)
 	if err != nil {
+		if err == f.ErrDeletedFeed {
+			return pod.ErrInvalidFile
+		}
 		return err
 	}
 
