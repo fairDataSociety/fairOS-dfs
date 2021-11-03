@@ -19,7 +19,7 @@ package pod
 import "errors"
 
 var (
-	ErrInvalidPodName       = errors.New("invalid pod name")
+	ErrInvalidPodName       = errors.New("pod does not exist")
 	ErrTooLongPodName       = errors.New("pod name too long")
 	ErrPodAlreadyExists     = errors.New("pod already exists")
 	ErrMaxPodsReached       = errors.New("max number of pods reached")
@@ -27,5 +27,5 @@ var (
 	ErrInvalidDirectory     = errors.New("invalid directory name")
 	ErrTooLongDirectoryName = errors.New("directory name too long")
 	ErrReadOnlyPod          = errors.New("operation not permitted: read only pod")
-	ErrInvalidFile          = errors.New("invalid file name")
+	ErrInvalidFile          = errors.New("file dose not exist")
 )
