@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	dfs "github.com/fairdatasociety/fairOS-dfs"
@@ -48,6 +49,12 @@ var serverCmd = &cobra.Command{
 	Long: `Serves all the dfs commands through an HTTP server so that the upper layers
 can consume it.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if postageBlockId == "" {
+			cmd.Help()
+			fmt.Println("\npostageBlockId is required to run server")
+			os.Exit(1)
+		}
+
 		var logger logging.Logger
 		switch v := strings.ToLower(verbosity); v {
 		case "0", "silent":
