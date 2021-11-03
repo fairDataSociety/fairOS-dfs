@@ -127,6 +127,12 @@ func (d *DfsAPI) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []
 		return nil, nil, err
 	}
 	directory := podInfo.GetDirectory()
+
+	// check if directory present
+	totalPath := utils.CombinePathAndFile(podName, currentDir, "")
+	if directory.GetDirFromDirectoryMap(totalPath) == nil {
+		return nil, nil, dir.ErrDirectoryNotPresent
+	}
 	dEntries, fileList, err := directory.ListDir(currentDir)
 	if err != nil {
 		return nil, nil, err
