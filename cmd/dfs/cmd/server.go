@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	dfs "github.com/fairdatasociety/fairOS-dfs"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/gorilla/mux"
