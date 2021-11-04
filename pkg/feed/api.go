@@ -260,17 +260,6 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	return address, nil
 }
 
-func (a *API) CreateOrUpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
-	if a.accountInfo.GetPrivateKey() == nil {
-		return nil, ErrReadOnlyFeed
-	}
-	_, _, err := a.GetFeedData(topic, user)
-	if err != nil {
-		return a.CreateFeed(topic, user, data)
-	}
-	return a.UpdateFeed(topic, user, data)
-}
-
 // DeleteFeed deleted the feed by updating with no data inside the SOC chunk.
 func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 	if a.accountInfo.GetPrivateKey() == nil {
