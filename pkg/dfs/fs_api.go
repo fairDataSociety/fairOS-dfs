@@ -259,6 +259,24 @@ func (d *DfsAPI) UploadFile(podName, podFileName, sessionId string, fileSize int
 	}
 	file := podInfo.GetFile()
 	directory := podInfo.GetDirectory()
+
+	// check if file exists, then backup the file
+	totalPath := utils.CombinePathAndFile(podName, podPath, podFileName)
+	if file.IsFileAlreadyPresent(totalPath) {
+		m, err := file.BackupFromFileName(totalPath)
+		if err != nil {
+			return err
+		}
+		err = directory.AddEntryToDir(podPath, m.Name, true)
+		if err != nil {
+			return err
+		}
+		err = directory.RemoveEntryFromDir(podPath, podFileName, true)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = file.Upload(fd, podFileName, fileSize, blockSize, podPath, compression)
 	if err != nil {
 		return err
