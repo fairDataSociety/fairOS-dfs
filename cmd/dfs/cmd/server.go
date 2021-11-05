@@ -48,7 +48,7 @@ var serverCmd = &cobra.Command{
 can consume it.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if postageBlockId == "" {
-			cmd.Help()
+			_ = cmd.Help()
 			fmt.Println("\npostageBlockId is required to run server")
 			return
 		}
