@@ -167,7 +167,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	return nil
 }
 
-func (_ *File) getContentType(bufferReader *bufio.Reader) string {
+func (*File) getContentType(bufferReader *bufio.Reader) string {
 	buffer, err := bufferReader.Peek(512)
 	if err != nil && err != io.EOF {
 		return ""
