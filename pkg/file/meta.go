@@ -69,6 +69,7 @@ func (f *File) handleMeta(meta *MetaData) error {
 		if err != ErrDeletedFeed {
 			return f.uploadMeta(meta)
 		}
+		return err
 	}
 	return f.updateMeta(meta)
 }
