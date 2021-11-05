@@ -75,9 +75,8 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 					return fmt.Errorf("invalid file length of file data received")
 				}
 				break
-			} else {
-				return err
 			}
+			return err
 		}
 
 		// determine the content type from the first 512 bytes of the file
@@ -168,7 +167,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	return nil
 }
 
-func (f *File) getContentType(bufferReader *bufio.Reader) string {
+func (_ *File) getContentType(bufferReader *bufio.Reader) string {
 	buffer, err := bufferReader.Peek(512)
 	if err != nil && err != io.EOF {
 		return ""
