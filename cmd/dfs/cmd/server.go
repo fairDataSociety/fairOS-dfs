@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 
 	dfs "github.com/fairdatasociety/fairOS-dfs"
@@ -51,7 +50,7 @@ can consume it.`,
 		if postageBlockId == "" {
 			cmd.Help()
 			fmt.Println("\npostageBlockId is required to run server")
-			os.Exit(1)
+			return
 		}
 
 		var logger logging.Logger
