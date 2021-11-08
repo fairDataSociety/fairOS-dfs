@@ -51,6 +51,9 @@ type MetaData struct {
 func (f *File) LoadFileMeta(fileNameWithPath string) error {
 	meta, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
 	if err != nil {
+		if err == ErrDeletedFeed {
+			return nil
+		}
 		return err
 	}
 	f.AddToFileMap(fileNameWithPath, meta)

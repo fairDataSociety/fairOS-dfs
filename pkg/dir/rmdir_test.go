@@ -59,12 +59,6 @@ func TestRmdir(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
-		if err != nil {
-			t.Fatal(err)
-		}
-
 		// now delete the directory
 		err = dirObject.RmDir("/dirToRemove")
 		if err != nil {
@@ -73,6 +67,62 @@ func TestRmdir(t *testing.T) {
 
 		// verify if the directory is actually removed
 		dirEntry, _, err := dirObject.ListDir("/")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry != nil {
+			t.Fatalf("could not delete directory")
+		}
+	})
+	t.Run("nested-rmdir", func(t *testing.T) {
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+
+		// make root dir so that other directories can be added
+		err = dirObject.MkRootDir("pod1", user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create a new dir
+		err := dirObject.MkDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create a new dir
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create a new dir
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// make sure directories were created
+		dirEntry, _, err := dirObject.ListDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry == nil {
+			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2\" was not created")
+		}
+		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry == nil {
+			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2/dirToRemove\" was not created")
+		}
+
+		// now delete the directory
+		err = dirObject.RmDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// verify if the directory is actually removed
+		dirEntry, _, err = dirObject.ListDir("/")
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -27,21 +27,20 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-
 	// create the pod
-	pi, err := ui.GetPod().CreatePod(podName, passPhrase, "")
+	_, err := ui.GetPod().CreatePod(podName, passPhrase, "")
 	if err != nil {
 		return nil, err
 	}
 
 	// open the pod
-	_, err = ui.GetPod().OpenPod(podName, passPhrase)
+	pi, err := ui.GetPod().OpenPod(podName, passPhrase)
 	if err != nil {
 		return nil, err
 	}
 
 	// create the root directory
-	err = ui.GetUserDirectory().MkRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
@@ -58,14 +57,23 @@ func (d *DfsAPI) DeletePod(podName, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// delete the pod and close if it is opened
-	err := ui.GetPod().DeletePod(podName)
+	// delete all the directory, files, and database tables under this pod from
+	// the Swarm network.
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return err
+	}
+	directory := podInfo.GetDirectory()
+	err = directory.RmDir("/")
 	if err != nil {
 		return err
 	}
 
-	// TODO: delete all the directory, files, and database tables under this pod from
-	// the Swarm network.
+	// delete the pod and close if it is opened
+	err = ui.GetPod().DeletePod(podName)
+	if err != nil {
+		return err
+	}
 
 	// close the pod if it is open
 	if ui.IsPodOpen(podName) {
