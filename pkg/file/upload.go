@@ -36,9 +36,9 @@ var (
 	NoOfParallelWorkers = runtime.NumCPU()
 )
 
-// Upload uploads a given blob of bytes as a file in the pod. It also splits the file in to number of blocks. the
-// size of the block is preovided during upload. This function also des compression of the blocks gzip/snappy if it is
-// requsted during the upload.
+// Upload uploads a given blob of bytes as a file in the pod. It also splits the file into number of blocks. the
+// size of the block is provided during upload. This function also does compression of the blocks gzip/snappy if it is
+// requested during the upload.
 func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error {
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()
@@ -75,9 +75,8 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 					return fmt.Errorf("invalid file length of file data received")
 				}
 				break
-			} else {
-				return err
 			}
+			return err
 		}
 
 		// determine the content type from the first 512 bytes of the file
@@ -160,7 +159,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	}
 
 	meta.InodeAddress = addr
-	err = f.uploadMeta(&meta)
+	err = f.handleMeta(&meta)
 	if err != nil {
 		return err
 	}
@@ -168,7 +167,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	return nil
 }
 
-func (f *File) getContentType(bufferReader *bufio.Reader) string {
+func (*File) getContentType(bufferReader *bufio.Reader) string {
 	buffer, err := bufferReader.Peek(512)
 	if err != nil && err != io.EOF {
 		return ""

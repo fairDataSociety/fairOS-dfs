@@ -21,12 +21,10 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
-
-	"resenje.org/jsonhttp"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"resenje.org/jsonhttp"
 )
 
 // FileDeleteHandler is the api handler to delete a file from a given pod
@@ -75,13 +73,17 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, "file delete: \"cookie-id\" parameter missing in cookie")
 		return
 	}
-
 	// delete file
 	err = h.dfsAPI.DeleteFile(podName, podFileWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file delete: %v", err)
 			jsonhttp.BadRequest(w, "file delete: "+err.Error())
+			return
+		}
+		if err == pod.ErrInvalidFile {
+			h.logger.Errorf("file delete: %v", err)
+			jsonhttp.NotFound(w, "file delete: "+err.Error())
 			return
 		}
 		h.logger.Errorf("file delete: %v", err)

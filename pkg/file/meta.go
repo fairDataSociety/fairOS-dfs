@@ -18,12 +18,17 @@ package file
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 var (
 	MetaVersion uint8 = 1
+
+	ErrDeletedFeed = errors.New("deleted feed")
 )
 
 type MetaData struct {
@@ -46,11 +51,27 @@ type MetaData struct {
 func (f *File) LoadFileMeta(fileNameWithPath string) error {
 	meta, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
 	if err != nil {
+		if err == ErrDeletedFeed {
+			return nil
+		}
 		return err
 	}
 	f.AddToFileMap(fileNameWithPath, meta)
 	f.logger.Infof(fileNameWithPath)
 	return nil
+}
+
+func (f *File) handleMeta(meta *MetaData) error {
+	// check if meta is present.
+	totalPath := utils.CombinePathAndFile(f.podName, meta.Path, meta.Name)
+	_, err := f.GetMetaFromFileName(totalPath, meta.UserAddress)
+	if err != nil {
+		if err != ErrDeletedFeed {
+			return f.uploadMeta(meta)
+		}
+		return err
+	}
+	return f.updateMeta(meta)
 }
 
 func (f *File) uploadMeta(meta *MetaData) error {
@@ -71,6 +92,12 @@ func (f *File) uploadMeta(meta *MetaData) error {
 	return nil
 }
 
+func (f *File) deleteMeta(meta *MetaData) error {
+	totalPath := utils.CombinePathAndFile(f.podName, meta.Path, meta.Name)
+	topic := utils.HashString(totalPath)
+	return f.fd.DeleteFeed(topic, meta.UserAddress)
+}
+
 func (f *File) updateMeta(meta *MetaData) error {
 	// marshall the meta structure
 	fileMetaBytes, err := json.Marshal(meta)
@@ -89,11 +116,41 @@ func (f *File) updateMeta(meta *MetaData) error {
 	return nil
 }
 
+func (f *File) BackupFromFileName(fileNameWithPath string) (*MetaData, error) {
+	p, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	err = f.deleteMeta(p)
+	if err != nil {
+		return nil, err
+	}
+
+	// change previous meta.Name
+	p.Name = fmt.Sprintf("%d_%s", time.Now().Unix(), p.Name)
+	p.ModificationTime = time.Now().Unix()
+
+	// upload PreviousMeta
+	err = f.uploadMeta(p)
+	if err != nil {
+		return nil, err
+	}
+
+	// add file to map
+	f.AddToFileMap(utils.CombinePathAndFile(f.podName, p.Path, p.Name), p)
+	return p, nil
+}
+
 func (f *File) GetMetaFromFileName(fileNameWithPath string, userAddress utils.Address) (*MetaData, error) {
 	topic := utils.HashString(fileNameWithPath)
 	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress)
 	if err != nil {
 		return nil, err
+	}
+
+	if string(metaBytes) == utils.DeletedFeedMagicWord {
+		return nil, ErrDeletedFeed
 	}
 
 	var meta *MetaData

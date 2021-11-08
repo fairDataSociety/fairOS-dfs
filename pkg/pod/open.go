@@ -29,7 +29,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// OpenPod opene a pod if it is not already opened. as part of opening the pod
+// OpenPod opens a pod if it is not already opened. as part of opening the pod
 // it loads all the data structures related to the pod. Also it syncs all the
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
@@ -81,6 +81,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		fd = feed.New(accountInfo, p.client, p.logger)
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
@@ -110,7 +111,6 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return podInfo, nil
 }
 

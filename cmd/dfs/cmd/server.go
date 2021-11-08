@@ -48,6 +48,12 @@ var serverCmd = &cobra.Command{
 	Long: `Serves all the dfs commands through an HTTP server so that the upper layers
 can consume it.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if postageBlockId == "" {
+			_ = cmd.Help()
+			fmt.Println("\npostageBlockId is required to run server")
+			return
+		}
+
 		var logger logging.Logger
 		switch v := strings.ToLower(verbosity); v {
 		case "0", "silent":
