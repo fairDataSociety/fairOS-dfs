@@ -47,11 +47,6 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	totalPath := utils.CombinePathAndFile(d.podName, parentPath, dirName)
 	topic := utils.HashString(totalPath)
 
-	// check if parent path exists
-	if d.GetDirFromDirectoryMap(parentPath) == nil {
-		return ErrDirectoryNotPresent
-	}
-
 	if d.GetDirFromDirectoryMap(totalPath) != nil {
 		return ErrDirectoryAlreadyPresent
 	}
@@ -75,9 +70,9 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	}
 
 	// upload the metadata as blob
-	previousAddr, _, err := d.fd.GetFeedData(topic, d.userAddress)
-	if err == nil && previousAddr != nil {
-		_, err = d.fd.UpdateFeed(topic, d.userAddress, data)
+	previousAddr, previousData, err := d.fd.GetFeedData(topic, d.userAddress)
+	if err == nil && previousAddr != nil && previousData != nil {
+		_, err = d.fd.UpdateFeed(topic, d.userAddress, previousData)
 		if err != nil {
 			return err
 		}
