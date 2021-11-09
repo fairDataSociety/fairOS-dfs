@@ -105,8 +105,8 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["sharing_ref"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("pod receive info: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "pod receiv infoe: \"pod_name\" argument missing")
+		h.logger.Errorf("pod receive info: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "pod receive info: \"sharing_ref\" argument missing")
 		return
 	}
 
@@ -151,8 +151,8 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["sharing_ref"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("pod receive: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "pod receive: \"pod_name\" argument missing")
+		h.logger.Errorf("pod receive: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "pod receive: \"sharing_ref\" argument missing")
 		return
 	}
 
