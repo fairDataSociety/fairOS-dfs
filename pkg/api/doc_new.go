@@ -19,7 +19,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -95,17 +94,7 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	mutable := true
-	mutableStr := docReq.Mutable
-	if mutableStr != "" {
-		mut, err := strconv.ParseBool(mutableStr)
-		if err != nil {
-			h.logger.Errorf("doc create: \"mutable\" argument missing")
-			jsonhttp.BadRequest(w, "doc  create: \"mutable\" argument missing")
-			return
-		}
-		mutable = mut
-	}
+	mutable := docReq.Mutable
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

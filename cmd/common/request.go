@@ -58,7 +58,7 @@ type DocRequest struct {
 	SimpleIndex   string `json:"si,omitempty"`
 	CompoundIndex string `json:"ci,omitempty"`
 	Expression    string `json:"expr,omitempty"`
-	Mutable       string `json:"mutable,omitempty"`
+	Mutable       bool   `json:"mutable,omitempty"`
 	Limit         string `json:"limit,omitempty"`
 	FileName      string `json:"file_name,omitempty"`
 }
