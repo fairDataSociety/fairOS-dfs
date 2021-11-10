@@ -103,7 +103,7 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 	actualIndexName := podName + collectionName + indexName
 	topic := utils.HashString(actualIndexName)
 	_, oldData, err := fd.GetFeedData(topic, user)
-	if err == nil && len(oldData) != 0 {
+	if err == nil && len(oldData) != 0 && string(oldData) != utils.DeletedFeedMagicWord {
 		// if the feed is present and it has some data means there index is still valid
 		return ErrIndexAlreadyPresent
 	}
@@ -121,6 +121,13 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 		return ErrManifestUnmarshall
 	}
 
+	if string(oldData) == utils.DeletedFeedMagicWord {
+		_, err = fd.UpdateFeed(topic, user, ref)
+		if err != nil {
+			return ErrManifestCreate
+		}
+		return nil
+	}
 	_, err = fd.CreateFeed(topic, user, ref)
 	if err != nil {
 		return ErrManifestCreate
