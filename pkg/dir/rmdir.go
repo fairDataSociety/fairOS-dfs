@@ -77,7 +77,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 
 	// remove the feed and clear the data structure
 	topic := utils.HashString(totalPath)
-	err := d.fd.DeleteFeed(topic, d.userAddress)
+	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord))
 	if err != nil {
 		return err
 	}

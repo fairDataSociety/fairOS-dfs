@@ -70,9 +70,9 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	}
 
 	// upload the metadata as blob
-	previousAddr, previousData, err := d.fd.GetFeedData(topic, d.userAddress)
-	if err == nil && previousAddr != nil && previousData != nil {
-		_, err = d.fd.UpdateFeed(topic, d.userAddress, previousData)
+	previousAddr, _, err := d.fd.GetFeedData(topic, d.userAddress)
+	if err == nil && previousAddr != nil {
+		_, err = d.fd.UpdateFeed(topic, d.userAddress, data)
 		if err != nil {
 			return err
 		}
