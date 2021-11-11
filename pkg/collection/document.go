@@ -283,6 +283,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 			d.logger.Errorf("deleting document db: %v", err.Error())
 			return err
 		}
+		defer d.removeFromOpenedDB(dbName)
 	}
 	docDB := d.getOpenedDb(dbName)
 	//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
@@ -972,6 +973,12 @@ func (d *Document) addToOpenedDb(dbName string, docDB *DocumentDB) {
 	d.openDocDBs[dbName] = docDB
 }
 
+func (d *Document) removeFromOpenedDB(dbName string) {
+	d.openDOcDBMu.Lock()
+	defer d.openDOcDBMu.Unlock()
+	delete(d.openDocDBs, dbName)
+}
+
 func (d *Document) resolveExpression(expr string) (string, string, string, error) {
 	var operator string
 	if strings.Contains(expr, "=>") {
@@ -995,7 +1002,7 @@ func (d *Document) resolveExpression(expr string) (string, string, string, error
 
 // CreateDocBatch creates a batch index instead of normal index. This is used when doing a bulk insert.
 func (d *Document) CreateDocBatch(dbName string) (*DocBatch, error) {
-	d.logger.Info("creeating batch for inserting in document db: ", dbName)
+	d.logger.Info("creating batch for inserting in document db: ", dbName)
 	if d.fd.IsReadOnlyFeed() {
 		d.logger.Errorf("creating batch: ", ErrReadOnlyIndex)
 		return nil, ErrReadOnlyIndex

@@ -385,7 +385,11 @@ func (kv *KeyValue) storeKVTables(collections map[string][]string) error {
 		}
 	}
 	topic := utils.HashString(kvFile)
-	_, err := kv.fd.UpdateFeed(topic, kv.user, buf.Bytes())
+	data := buf.Bytes()
+	if buf.Len() == 0 {
+		data = []byte(utils.DeletedFeedMagicWord)
+	}
+	_, err := kv.fd.UpdateFeed(topic, kv.user, data)
 	if err != nil {
 		return err
 	}

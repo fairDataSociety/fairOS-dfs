@@ -43,6 +43,9 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) 
 	if err != nil {
 		return nil, fmt.Errorf("dir stat: %v", err)
 	}
+	if string(data) == utils.DeletedFeedMagicWord {
+		return nil, ErrDirectoryNotPresent
+	}
 
 	var dirInode Inode
 	err = json.Unmarshal(data, &dirInode)
@@ -50,8 +53,8 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) 
 		return nil, fmt.Errorf("dir stat: %v", err)
 	}
 
-	if dirInode.Meta == nil || dirInode.FileOrDirNames == nil {
-		return nil, fmt.Errorf("dir stat: directory not found")
+	if dirInode.Meta == nil && dirInode.FileOrDirNames == nil {
+		return nil, ErrDirectoryNotPresent
 	}
 
 	files := 0
