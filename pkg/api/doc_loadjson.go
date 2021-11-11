@@ -122,8 +122,8 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = h.dfsAPI.DocBatchWrite(sessionId, podName, docBatch)
 	if err != nil {
-		h.logger.Errorf("doc loadjso: %v", err)
-		jsonhttp.InternalServerError(w, "doc loadjso: "+err.Error())
+		h.logger.Errorf("doc loadjson: %v", err)
+		jsonhttp.InternalServerError(w, "doc loadjson: "+err.Error())
 		return
 	}
 
