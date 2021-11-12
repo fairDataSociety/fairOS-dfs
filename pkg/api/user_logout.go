@@ -52,5 +52,5 @@ func (h *Handler) UserLogoutHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "user logout: "+err.Error())
 		return
 	}
-	jsonhttp.OK(w, "used logged out successfully")
+	jsonhttp.OK(w, "user logged out successfully")
 }

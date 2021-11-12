@@ -224,6 +224,10 @@ func executor(in string) {
 				fmt.Println("invalid command. Missing \"name\" argument ")
 				return
 			}
+			if len(blocks) == 3 {
+				fmt.Println("invalid command. Missing \"address\" or \"mnemonic\" argument ")
+				return
+			}
 			userName := blocks[2]
 			if len(blocks) == 4 {
 				address := blocks[3]
