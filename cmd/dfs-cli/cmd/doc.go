@@ -28,7 +28,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 )
 
-func docNew(tableName, simpleIndex, mutableStr string) {
+func docNew(podName, tableName, simpleIndex, mutableStr string) {
 	mutable := true
 	if mutableStr != "" {
 		mut, err := strconv.ParseBool(mutableStr)
