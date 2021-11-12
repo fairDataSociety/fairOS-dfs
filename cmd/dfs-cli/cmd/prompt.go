@@ -576,7 +576,7 @@ func executor(in string) {
 			if len(blocks) == 5 {
 				mutable = blocks[4]
 			}
-			docNew(tableName, si, mutable)
+			docNew(currentPod, tableName, si, mutable)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
 			docList()
