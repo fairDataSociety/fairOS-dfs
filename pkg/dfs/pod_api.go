@@ -66,7 +66,7 @@ func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	err = directory.RmDir("/")
+	err = directory.RmRootDir()
 	if err != nil {
 		return err
 	}

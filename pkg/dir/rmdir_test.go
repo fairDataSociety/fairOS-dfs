@@ -205,4 +205,58 @@ func TestRmRootDir(t *testing.T) {
 			t.Fatalf("could not delete directory")
 		}
 	})
+
+		// make root dir so that other directories can be added
+		err = dirObject.MkRootDir("pod1", user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create a new dir
+		err := dirObject.MkDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create a new dir
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create a new dir
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// make sure directories were created
+		dirEntry, _, err := dirObject.ListDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry == nil {
+			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2\" was not created")
+		}
+		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry == nil {
+			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2/dirToRemove\" was not created")
+		}
+
+		// now delete the root directory
+		err = dirObject.RmRootDir()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// verify if the directory is actually removed
+		dirEntry, _, err = dirObject.ListDir("/")
+		if !strings.HasSuffix(err.Error(), dir.ErrResourceDeleted.Error()) {
+			t.Fatal("root directory was not deleted")
+		}
+		if dirEntry != nil {
+			t.Fatalf("could not delete directory")
+		}
+	})
 }
