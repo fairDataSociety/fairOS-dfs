@@ -17,8 +17,6 @@ limitations under the License.
 package dir
 
 import (
-	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -33,9 +31,10 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 	}
 
 	var dirInode *Inode
-	err = json.Unmarshal(data, &dirInode)
+	err = dirInode.Unmarshal(data)
 	if err != nil {
-		return fmt.Errorf("dir sync: %v", err)
+		d.logger.Errorf("dir sync: %v", err)
+		return err
 	}
 	d.AddToDirectoryMap(dirNameWithPath, dirInode)
 
