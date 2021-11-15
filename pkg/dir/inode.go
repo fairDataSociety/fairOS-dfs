@@ -48,7 +48,7 @@ func (in *Inode) Unmarshal(data []byte) error {
 	if string(data) == utils.DeletedFeedMagicWord {
 		return ErrResourceDeleted
 	}
-	err := json.Unmarshal(data, &in)
+	err := json.Unmarshal(data, in)
 	if err != nil {
 		return err
 	}

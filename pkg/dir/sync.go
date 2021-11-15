@@ -30,14 +30,13 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 		return nil // pod is empty
 	}
 
-	var dirInode *Inode
+	var dirInode Inode
 	err = dirInode.Unmarshal(data)
 	if err != nil {
 		d.logger.Errorf("dir sync: %v", err)
 		return err
 	}
-	d.AddToDirectoryMap(dirNameWithPath, dirInode)
-
+	d.AddToDirectoryMap(dirNameWithPath, &dirInode)
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")

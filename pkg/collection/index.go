@@ -244,7 +244,6 @@ func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 	if err != nil {
 		return nil, ErrNoManifestFound
 	}
-
 	data, respCode, err := idx.client.DownloadBlob(refData)
 	if err != nil {
 		return nil, ErrNoManifestFound
