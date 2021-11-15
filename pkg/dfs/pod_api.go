@@ -17,6 +17,8 @@ limitations under the License.
 package dfs
 
 import (
+	"fmt"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -50,11 +52,17 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 	return pi, nil
 }
 
-func (d *DfsAPI) DeletePod(podName, sessionId string) error {
+func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
+	}
+
+	// check for valid password
+	acc := ui.GetAccount()
+	if !acc.Authorise(passphrase) {
+		return fmt.Errorf("invalid password")
 	}
 
 	// delete all the directory, files, and database tables under this pod from

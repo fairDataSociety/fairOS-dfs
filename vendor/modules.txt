@@ -114,6 +114,9 @@ github.com/golang/protobuf/protoc-gen-go/descriptor
 # github.com/golang/snappy v0.0.2-0.20200707131729-196ae77b8a26
 ## explicit
 github.com/golang/snappy
+# github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+## explicit
+github.com/google/shlex
 # github.com/google/uuid v1.1.4
 github.com/google/uuid
 # github.com/gorilla/mux v1.7.4
@@ -175,7 +178,6 @@ github.com/mattn/go-isatty
 github.com/mattn/go-runewidth
 # github.com/mattn/go-sqlite3 v1.14.6
 ## explicit
-github.com/mattn/go-sqlite3
 # github.com/mattn/go-tty v0.0.3
 ## explicit
 github.com/mattn/go-tty
