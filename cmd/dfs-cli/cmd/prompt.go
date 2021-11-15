@@ -25,6 +25,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/google/shlex"
 	"golang.org/x/term"
 )
 
@@ -195,7 +196,11 @@ func completer(in prompt.Document) []prompt.Suggest {
 
 func executor(in string) {
 	in = strings.TrimSpace(in)
-	blocks := strings.Split(in, " ")
+	blocks, err := shlex.Split(in)
+	if err != nil {
+		fmt.Println("unable to parse command")
+		return
+	}
 	switch blocks[0] {
 	case "help":
 		help()
