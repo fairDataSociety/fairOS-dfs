@@ -59,6 +59,12 @@ func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
+	// check for valid password
+	acc := ui.GetAccount()
+	if !acc.Authorise(passphrase) {
+		return fmt.Errorf("invalid password")
+	}
+
 	// delete all the directory, files, and database tables under this pod from
 	// the Swarm network.
 	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
