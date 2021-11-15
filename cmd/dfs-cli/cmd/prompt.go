@@ -201,9 +201,6 @@ func executor(in string) {
 		fmt.Println("unable to parse command")
 		return
 	}
-	if len(blocks) == 0 {
-		return
-	}
 	switch blocks[0] {
 	case "help":
 		help()

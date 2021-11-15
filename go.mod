@@ -10,7 +10,7 @@ require (
 	github.com/ethersphere/bee v0.5.0
 	github.com/ethersphere/bmt v0.1.4
 	github.com/golang/snappy v0.0.2-0.20200707131729-196ae77b8a26
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/websocket v1.4.2
