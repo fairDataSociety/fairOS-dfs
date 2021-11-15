@@ -30,7 +30,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 		return nil // pod is empty
 	}
 
-	var dirInode *Inode
+	var dirInode Inode
 	err = dirInode.Unmarshal(data)
 	if err != nil {
 		d.logger.Errorf("dir sync: %v", err)
