@@ -47,6 +47,11 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	totalPath := utils.CombinePathAndFile(d.podName, parentPath, dirName)
 	topic := utils.HashString(totalPath)
 
+	// check if parent path exists
+	if d.GetDirFromDirectoryMap(parentPath) == nil {
+		return ErrDirectoryNotPresent
+	}
+
 	if d.GetDirFromDirectoryMap(totalPath) != nil {
 		return ErrDirectoryAlreadyPresent
 	}
