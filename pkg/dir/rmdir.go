@@ -96,8 +96,7 @@ func (d *Directory) RmRootDir() error {
 	dirToDelete := filepath.Base("/")
 
 	// check if directory present
-	var totalPath string
-	totalPath = utils.CombinePathAndFile(d.podName, dirToDelete, "")
+	var totalPath = utils.CombinePathAndFile(d.podName, dirToDelete, "")
 
 	if d.GetDirFromDirectoryMap(totalPath) == nil {
 		return ErrDirectoryNotPresent

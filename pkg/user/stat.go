@@ -20,7 +20,7 @@ import "github.com/fairdatasociety/fairOS-dfs/pkg/account"
 
 type Stat struct {
 	Name      string `json:"user_name"`
-	Reference string `json:"reference"`
+	Reference string `json:"address"`
 }
 
 // GetUserStat shows the user information like user name and his address.
