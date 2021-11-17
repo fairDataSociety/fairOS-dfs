@@ -15,8 +15,6 @@ require (
 	github.com/gorilla/securecookie v1.1.1
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/klauspost/pgzip v1.2.5
-	github.com/libp2p/go-libp2p-autonat-svc v0.1.0 // indirect
-	github.com/mattn/go-sqlite3 v1.14.6 // indirect
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/miguelmota/go-ethereum-hdwallet v0.0.0-20200123000308-a60dcd172b4c
 	github.com/mitchellh/go-homedir v1.1.0
