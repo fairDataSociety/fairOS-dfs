@@ -57,8 +57,7 @@ type KVTable struct {
 }
 
 type KVCount struct {
-	Count     uint64 `json:"count"`
-	TableName string `json:"table_name"`
+	Count uint64 `json:"count"`
 }
 
 // NewKeyValueStore is the main object used to do all operation on the key value tables.
@@ -183,8 +182,7 @@ func (kv *KeyValue) KVCount(name string) (*KVCount, error) {
 			return nil, err
 		}
 		return &KVCount{
-			Count:     count,
-			TableName: name,
+			Count: count,
 		}, nil
 	} else {
 		idx, err := OpenIndex(kv.podName, defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
@@ -196,8 +194,7 @@ func (kv *KeyValue) KVCount(name string) (*KVCount, error) {
 			return nil, err
 		}
 		return &KVCount{
-			Count:     count,
-			TableName: name,
+			Count: count,
 		}, nil
 	}
 }
