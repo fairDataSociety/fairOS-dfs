@@ -70,4 +70,57 @@ func TestMkdir(t *testing.T) {
 			t.Fatalf("invalid directory name")
 		}
 	})
+	t.Run("complicated-mkdir", func(t *testing.T) {
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+
+		// make root dir so that other directories can be added
+		err = dirObject.MkRootDir("pod1", user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// try to create a new dir without creating root
+		err := dirObject.MkDir("/baseDir/baseDir2/baseDir3/baseDir4")
+		if err == nil || err != dir.ErrDirectoryNotPresent {
+			t.Fatal(err)
+		}
+
+		err = dirObject.MkDir("/baseDir")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = dirObject.MkDir("/baseDir/baseDir2")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = dirObject.MkDir("/baseDir/baseDir2/baseDir3")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// validate dir
+		dirs, _, err := dirObject.ListDir("/baseDir")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(dirs) != 1 {
+			t.Fatalf("invalid directory count")
+		}
+		if dirs[0].Name != "baseDir2" {
+			t.Fatalf("invalid directory name")
+		}
+
+		dirs, _, err = dirObject.ListDir("/baseDir/baseDir2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(dirs) != 1 {
+			t.Fatalf("invalid directory count")
+		}
+		if dirs[0].Name != "baseDir3" {
+			t.Fatalf("invalid directory name")
+		}
+	})
 }

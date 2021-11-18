@@ -25,6 +25,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/google/shlex"
 	"golang.org/x/term"
 )
 
@@ -195,7 +196,14 @@ func completer(in prompt.Document) []prompt.Suggest {
 
 func executor(in string) {
 	in = strings.TrimSpace(in)
-	blocks := strings.Split(in, " ")
+	blocks, err := shlex.Split(in)
+	if err != nil {
+		fmt.Println("unable to parse command")
+		return
+	}
+	if len(blocks) == 0 {
+		return
+	}
 	switch blocks[0] {
 	case "help":
 		help()
@@ -222,6 +230,10 @@ func executor(in string) {
 		case "import":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"name\" argument ")
+				return
+			}
+			if len(blocks) == 3 {
+				fmt.Println("invalid command. Missing \"address\" or \"mnemonic\" argument ")
 				return
 			}
 			userName := blocks[2]
@@ -572,7 +584,7 @@ func executor(in string) {
 			if len(blocks) == 5 {
 				mutable = blocks[4]
 			}
-			docNew(tableName, si, mutable)
+			docNew(currentPod, tableName, si, mutable)
 			currentPrompt = getCurrentPrompt()
 		case "ls":
 			docList()

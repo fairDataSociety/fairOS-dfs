@@ -421,7 +421,6 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 					}
 				} else {
 					childManifest = entry.Manifest
-
 				}
 				return idx.findManifest(parentManifest, childManifest, childKey)
 

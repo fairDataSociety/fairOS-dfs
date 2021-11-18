@@ -53,7 +53,7 @@ func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 	}
 
 	var dirInode Inode
-	err = json.Unmarshal(data, &dirInode)
+	err = dirInode.Unmarshal(data)
 	if err != nil {
 		return nil, nil, fmt.Errorf("list dir : %v", err)
 	}

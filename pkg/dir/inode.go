@@ -16,10 +16,21 @@ limitations under the License.
 
 package dir
 
+import (
+	"encoding/json"
+	"errors"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+)
+
 type Inode struct {
 	Meta           *MetaData
 	FileOrDirNames []string
 }
+
+var (
+	ErrResourceDeleted = errors.New("resource was deleted")
+)
 
 func (in *Inode) GetMeta() *MetaData {
 	return in.Meta
@@ -31,4 +42,15 @@ func (in *Inode) GetFileOrDirNames() []string {
 
 func (in *Inode) SetFileOrDirNames(fileOrDirNames []string) {
 	in.FileOrDirNames = fileOrDirNames
+}
+
+func (in *Inode) Unmarshal(data []byte) error {
+	if string(data) == utils.DeletedFeedMagicWord {
+		return ErrResourceDeleted
+	}
+	err := json.Unmarshal(data, in)
+	if err != nil {
+		return err
+	}
+	return nil
 }

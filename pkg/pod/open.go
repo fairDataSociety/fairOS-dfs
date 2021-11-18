@@ -108,7 +108,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 
 	// sync the pod's files and directories
 	err = p.SyncPod(podName)
-	if err != nil {
+	if err != nil && err != d.ErrResourceDeleted {
 		return nil, err
 	}
 	return podInfo, nil

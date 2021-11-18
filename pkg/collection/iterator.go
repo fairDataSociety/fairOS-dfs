@@ -229,9 +229,8 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 					currentIndex:    i + 1,
 				}
 				itr.manifestStack = append(itr.manifestStack, manifestState)
-
 				var childManifest *Manifest
-				if itr.index.mutable {
+				if itr.index.mutable || entry.Manifest == nil {
 					// now load the child Manifest and re-seek
 					cf, err := itr.index.loadManifest(manifest.Name + entry.Name)
 					if err != nil {

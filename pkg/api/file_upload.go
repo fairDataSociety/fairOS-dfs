@@ -131,7 +131,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		//upload file to bee
 		uploadErr := h.dfsAPI.UploadFile(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
 		if uploadErr != nil {
-			if err == dfs.ErrPodNotOpen {
+			if uploadErr == dfs.ErrPodNotOpen {
 				h.logger.Errorf("file upload: %v", uploadErr)
 				jsonhttp.BadRequest(w, "file upload: "+uploadErr.Error())
 				return

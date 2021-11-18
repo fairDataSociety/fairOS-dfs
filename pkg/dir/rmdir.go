@@ -83,6 +83,60 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 	}
 	d.RemoveFromDirectoryMap(totalPath)
 
+	// return if root directory
+	if parentPath == "/" && dirToDelete == "/" {
+		return nil
+	}
 	// remove the directory entry from the parent dir
 	return d.RemoveEntryFromDir(parentPath, dirToDelete, false)
+}
+
+// RmRootDir removes root directory and all the entries (file/directory) under that.
+func (d *Directory) RmRootDir() error {
+	dirToDelete := filepath.Base("/")
+
+	// check if directory present
+	var totalPath = utils.CombinePathAndFile(d.podName, dirToDelete, "")
+
+	if d.GetDirFromDirectoryMap(totalPath) == nil {
+		return ErrDirectoryNotPresent
+	}
+
+	// recursive delete
+	dirInode := d.GetDirFromDirectoryMap(totalPath)
+	if dirInode.FileOrDirNames != nil && len(dirInode.FileOrDirNames) > 0 {
+		for _, fileOrDirName := range dirInode.FileOrDirNames {
+			if strings.HasPrefix(fileOrDirName, "_F_") {
+				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
+				filePath := utils.CombinePathAndFile(d.podName, dirToDelete, fileName)
+				err := d.file.RmFile(filePath)
+				if err != nil {
+					return err
+				}
+				err = d.RemoveEntryFromDir(dirToDelete, fileName, true)
+				if err != nil {
+					return err
+				}
+			} else if strings.HasPrefix(fileOrDirName, "_D_") {
+				dirName := strings.TrimPrefix(fileOrDirName, "_D_")
+				path := utils.CombinePathAndFile(d.podName, dirToDelete, dirName)
+				d.logger.Infof(dirToDelete)
+
+				err := d.RmDir(path)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	// remove the feed and clear the data structure
+	topic := utils.HashString(totalPath)
+	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord))
+	if err != nil {
+		return err
+	}
+	d.RemoveFromDirectoryMap(totalPath)
+
+	return nil
 }
