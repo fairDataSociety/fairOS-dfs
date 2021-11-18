@@ -163,11 +163,11 @@ func (d *Directory) AddRootDir(podName string, podAddress utils.Address, fd *fee
 	if err != nil {
 		return err
 	}
-	var parentDirInode *Inode
+	var parentDirInode Inode
 	err = parentDirInode.Unmarshal(parentDataBytes)
 	if err != nil {
 		return err
 	}
-	d.AddToDirectoryMap(utils.PathSeperator, parentDirInode)
+	d.AddToDirectoryMap(utils.PathSeperator, &parentDirInode)
 	return nil
 }
