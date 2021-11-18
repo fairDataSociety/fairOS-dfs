@@ -72,6 +72,24 @@ func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
+
+	// check if this is a shared pod
+	if podInfo.GetFeed().IsReadOnlyFeed() {
+		// delete the pod and close if it is opened
+		err = ui.GetPod().DeleteSharedPod(podName)
+		if err != nil {
+			return err
+		}
+
+		// close the pod if it is open
+		if ui.IsPodOpen(podName) {
+			// remove from the login session
+			ui.RemovePodName(podName)
+		}
+
+		return nil
+	}
+
 	err = directory.RmRootDir()
 	if err != nil {
 		return err
@@ -79,7 +97,7 @@ func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 	directory := podInfo.GetDirectory()
 
 	// delete the pod and close if it is opened
-	err = ui.GetPod().DeletePod(podName)
+	err = ui.GetPod().DeleteOwnPod(podName)
 	if err != nil {
 		return err
 	}
