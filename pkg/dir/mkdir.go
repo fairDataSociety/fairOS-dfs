@@ -164,7 +164,7 @@ func (d *Directory) AddRootDir(podName string, podAddress utils.Address, fd *fee
 		return err
 	}
 	var parentDirInode *Inode
-	err = json.Unmarshal(parentDataBytes, &parentDirInode)
+	err = parentDirInode.Unmarshal(parentDataBytes)
 	if err != nil {
 		return err
 	}
