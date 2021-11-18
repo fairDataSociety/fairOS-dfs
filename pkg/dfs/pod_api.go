@@ -72,7 +72,6 @@ func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-<<<<<<< HEAD
 
 	// check if this is a shared pod
 	if podInfo.GetFeed().IsReadOnlyFeed() {
@@ -91,8 +90,6 @@ func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 		return nil
 	}
 
-=======
->>>>>>> a1ee77a (fix #124, handle removed root directory)
 	err = directory.RmRootDir()
 	if err != nil {
 		return err
