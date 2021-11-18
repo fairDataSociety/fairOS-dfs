@@ -127,6 +127,8 @@ func (s *BeeClient) CheckConnection() bool {
 	if err != nil {
 		return false
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
@@ -134,10 +136,6 @@ func (s *BeeClient) CheckConnection() bool {
 	}
 
 	data, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return false
-	}
-	err = response.Body.Close()
 	if err != nil {
 		return false
 	}
@@ -166,6 +164,8 @@ func (s *BeeClient) UploadSOC(owner string, id string, signature string, data []
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusCreated {
@@ -175,10 +175,6 @@ func (s *BeeClient) UploadSOC(owner string, id string, signature string, data []
 	addrData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
-	}
-	err = response.Body.Close()
-	if err != nil {
-		return nil, err
 	}
 
 	var addrResp *chunkAddressResponse
@@ -218,6 +214,8 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
@@ -227,10 +225,6 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 	addrData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
-	}
-	err = response.Body.Close()
-	if err != nil {
-		return nil, err
 	}
 
 	var addrResp *chunkAddressResponse
@@ -271,6 +265,8 @@ func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []b
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
@@ -280,10 +276,6 @@ func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []b
 	data, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
-	}
-	err = response.Body.Close()
-	if err != nil {
-		return nil, err
 	}
 
 	s.addToChunkCache(addrString, data)
@@ -325,6 +317,8 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
@@ -334,10 +328,6 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 	respData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error uploading blob")
-	}
-	err = response.Body.Close()
-	if err != nil {
-		return nil, err
 	}
 
 	var resp bytesPostResponse
@@ -379,6 +369,8 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
@@ -388,10 +380,6 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	respData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, response.StatusCode, errors.New("error downloading blob")
-	}
-	err = response.Body.Close()
-	if err != nil {
-		return nil, http.StatusOK, err
 	}
 
 	fields := logrus.Fields{
@@ -423,15 +411,14 @@ func (s *BeeClient) DeleteChunk(address []byte) error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return err
 	}
-	err = response.Body.Close()
-	if err != nil {
-		return err
-	}
+
 	fields := logrus.Fields{
 		"reference": addrString,
 		"duration":  time.Since(to).String(),
@@ -455,13 +442,11 @@ func (s *BeeClient) DeleteBlob(address []byte) error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
-		return err
-	}
-	err = response.Body.Close()
-	if err != nil {
 		return err
 	}
 
@@ -487,6 +472,8 @@ func (s *BeeClient) GetNewPostageBatch() error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusCreated {
@@ -496,10 +483,6 @@ func (s *BeeClient) GetNewPostageBatch() error {
 	respData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return errors.New("error getting postage stamp")
-	}
-	err = response.Body.Close()
-	if err != nil {
-		return err
 	}
 
 	var batchResp *postageBatchResponse
