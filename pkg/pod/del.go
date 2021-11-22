@@ -21,8 +21,8 @@ import (
 	"strings"
 )
 
-// DeletePod removed a pod and the list of pods belonging to a user.
-func (p *Pod) DeletePod(podName string) error {
+// DeleteOwnPod removed a pod and the list of pods belonging to a user.
+func (p *Pod) DeleteOwnPod(podName string) error {
 	pods, sharedPods, err := p.loadUserPods()
 	if err != nil {
 		return err
@@ -48,6 +48,35 @@ func (p *Pod) DeletePod(podName string) error {
 	if pods == nil {
 		pods = make(map[int]string)
 		pods[0] = ""
+	}
+
+	// remove the pod finally
+	return p.storeUserPods(pods, sharedPods)
+}
+
+// DeleteSharedPod removed a pod and the list of pods shared by other users.
+func (p *Pod) DeleteSharedPod(podName string) error {
+	pods, sharedPods, err := p.loadUserPods()
+	if err != nil {
+		return err
+	}
+	found := false
+	for index, pod := range sharedPods {
+		if strings.Trim(pod, "\n") == podName {
+			delete(sharedPods, index)
+			found = true
+		}
+	}
+	if !found {
+		return fmt.Errorf("pod not found")
+	}
+
+	// remove it from other data structures
+	p.removePodFromPodMap(podName)
+
+	// if last sharedPods is deleted.. something should be there to update the feed
+	if sharedPods == nil {
+		sharedPods = make(map[string]string)
 	}
 
 	// remove the pod finally

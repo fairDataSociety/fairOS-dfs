@@ -79,4 +79,28 @@ func TestRemoveFile(t *testing.T) {
 			t.Fatalf("retrieved invalid file name")
 		}
 	})
+
+	t.Run("delete-file-in-loop", func(t *testing.T) {
+		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+
+		for i := 0; i < 80; i++ {
+			// upload file1
+			_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// remove file1
+			err = fileObject.RmFile("/dir1/file1")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// validate file deletion
+			meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("pod1", "/dir1", "file1"))
+			if meta != nil {
+				t.Fatalf("file is not removed")
+			}
+		}
+	})
 }
