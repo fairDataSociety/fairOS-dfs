@@ -17,6 +17,6 @@ limitations under the License.
 package user
 
 // IsUsernameAvailable checks if a supplied user name is present in this dfs server.
-func (u *Users) IsUsernameAvailable(userName string, dataDir string) bool {
+func (u *Users) IsUsernameAvailable(userName, dataDir string) bool {
 	return u.isUserMappingPresent(userName, dataDir)
 }

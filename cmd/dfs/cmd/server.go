@@ -186,7 +186,7 @@ func startHttpService(logger logging.Logger) {
 	userRouter.HandleFunc("/logout", handler.UserLogoutHandler).Methods("POST")
 	userRouter.HandleFunc("/export", handler.ExportUserHandler).Methods("POST")
 	userRouter.HandleFunc("/delete", handler.UserDeleteHandler).Methods("DELETE")
-	userRouter.HandleFunc("/stat", handler.GetUserStatHandler).Methods("GET")
+	userRouter.HandleFunc("/stat", handler.UserStatHandler).Methods("GET")
 
 	// pod related handlers
 	baseRouter.HandleFunc("/pod/receive", handler.PodReceiveHandler).Methods("GET")

@@ -62,7 +62,7 @@ func (e *Epoch) MarshalBinary() (data []byte, err error) {
 // UnmarshalBinary implements the encoding.BinaryUnmarshaller interface
 func (e *Epoch) UnmarshalBinary(data []byte) error {
 	if len(data) != EpochLength {
-		return errors.New("Invalid data unmarshalling Epoch")
+		return errors.New("invalid data unmarshalling Epoch")
 	}
 	b := make([]byte, 8)
 	copy(b, data)

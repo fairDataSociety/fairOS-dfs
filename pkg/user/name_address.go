@@ -28,7 +28,7 @@ const (
 	userDirectoryName = "user"
 )
 
-func (u *Users) isUserMappingPresent(userName, dataDir string) bool {
+func (*Users) isUserMappingPresent(userName, dataDir string) bool {
 	destDir := filepath.Join(dataDir, userDirectoryName)
 	err := os.MkdirAll(destDir, 0700)
 	if err != nil {
@@ -42,7 +42,7 @@ func (u *Users) isUserMappingPresent(userName, dataDir string) bool {
 	return !info.IsDir()
 }
 
-func (u *Users) storeUserNameToAddressFileMapping(userName, dataDir string, address utils.Address) error {
+func (*Users) storeUserNameToAddressFileMapping(userName, dataDir string, address utils.Address) error {
 	destDir := filepath.Join(dataDir, userDirectoryName)
 	err := os.MkdirAll(destDir, 0700)
 	if err != nil {
@@ -58,7 +58,7 @@ func (u *Users) deleteUserMapping(userName, dataDir string) error {
 	return os.Remove(userFileName)
 }
 
-func (u *Users) getAddressFromUserName(userName, dataDir string) (utils.Address, error) {
+func (*Users) getAddressFromUserName(userName, dataDir string) (utils.Address, error) {
 	destDir := filepath.Join(dataDir, userDirectoryName)
 	userFileName := filepath.Join(destDir, userName)
 	data, err := ioutil.ReadFile(userFileName)

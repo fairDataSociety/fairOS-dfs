@@ -147,7 +147,7 @@ func (s *BeeClient) CheckConnection() bool {
 }
 
 // UploadSOC is used construct and send a Single Owner Chunk to the Swarm bee client.
-func (s *BeeClient) UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error) {
+func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
 	to := time.Now()
 	socResStr := socResource(owner, id, signature)
 	fullUrl := fmt.Sprintf(s.url + socResStr)
@@ -536,19 +536,20 @@ func (s *BeeClient) getFromChunkCache(key string) []byte {
 	return nil
 }
 
-func (s *BeeClient) addToBlockCache(cache *lru.Cache, key string, value []byte) {
+func (*BeeClient) addToBlockCache(cache *lru.Cache, key string, value []byte) {
 	if cache != nil {
 		cache.Add(key, value)
 	}
 }
 
-func (s *BeeClient) inBlockCache(cache *lru.Cache, key string) bool {
+func (*BeeClient) inBlockCache(cache *lru.Cache, key string) bool {
 	if cache != nil {
 		return cache.Contains(key)
 	}
 	return false
 }
-func (s *BeeClient) getFromBlockCache(cache *lru.Cache, key string) []byte {
+
+func (*BeeClient) getFromBlockCache(cache *lru.Cache, key string) []byte {
 	if cache != nil {
 		value, ok := cache.Get(key)
 		if ok {

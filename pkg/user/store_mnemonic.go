@@ -22,14 +22,14 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (u *Users) uploadEncryptedMnemonic(userName string, address utils.Address, encryptedMnemonic string, fd *feed.API) error {
+func (*Users) uploadEncryptedMnemonic(userName string, address utils.Address, encryptedMnemonic string, fd *feed.API) error {
 	topic := utils.HashString(userName)
 	data := []byte(encryptedMnemonic)
 	_, err := fd.CreateFeed(topic, address, data)
 	return err
 }
 
-func (u *Users) getEncryptedMnemonic(userName string, address utils.Address, fd *feed.API) (string, error) {
+func (*Users) getEncryptedMnemonic(userName string, address utils.Address, fd *feed.API) (string, error) {
 	topic := utils.HashString(userName)
 	_, data, err := fd.GetFeedData(topic, address)
 	if err != nil {
@@ -38,7 +38,7 @@ func (u *Users) getEncryptedMnemonic(userName string, address utils.Address, fd 
 	return string(data), nil
 }
 
-func (u *Users) deleteMnemonic(userName string, address utils.Address, fd *feed.API, client blockstore.Client) error {
+func (*Users) deleteMnemonic(userName string, address utils.Address, fd *feed.API, client blockstore.Client) error {
 	topic := utils.HashString(userName)
 	feedAddress, _, err := fd.GetFeedData(topic, address)
 	if err != nil {

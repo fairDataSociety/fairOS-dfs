@@ -339,9 +339,8 @@ func longestCommonPrefix(str1, str2 string) (string, string, string) {
 	for i := 0; i < maxLen; i++ {
 		if str1[i] != str2[i] {
 			break
-		} else {
-			matchLen++
 		}
+		matchLen++
 	}
 	if matchLen == 0 {
 		return "", str1, str2

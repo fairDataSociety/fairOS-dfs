@@ -198,7 +198,7 @@ func (p *Pod) storeUserPods(pods map[int]string, sharedPods map[string]string) e
 	return nil
 }
 
-func (p *Pod) getFreeId(pods map[int]string) (int, error) {
+func (*Pod) getFreeId(pods map[int]string) (int, error) {
 	for i := 0; i < maxPodId; i++ {
 		if _, ok := pods[i]; !ok {
 			if i == 0 {
@@ -211,7 +211,7 @@ func (p *Pod) getFreeId(pods map[int]string) (int, error) {
 	return 0, ErrMaxPodsReached
 }
 
-func (p *Pod) checkIfPodPresent(pods map[int]string, podName string) bool {
+func (*Pod) checkIfPodPresent(pods map[int]string, podName string) bool {
 	for _, pod := range pods {
 		if strings.Trim(pod, "\n") == podName {
 			return true
