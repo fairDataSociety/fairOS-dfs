@@ -114,7 +114,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	return podInfo, nil
 }
 
-func (p *Pod) getIndex(pods map[int]string, podName string) int {
+func (*Pod) getIndex(pods map[int]string, podName string) int {
 	for index, pod := range pods {
 		if strings.Trim(pod, "\n") == podName {
 			return index
@@ -123,7 +123,7 @@ func (p *Pod) getIndex(pods map[int]string, podName string) int {
 	return -1
 }
 
-func (p *Pod) getAddress(sharedPods map[string]string, podName string) string {
+func (*Pod) getAddress(sharedPods map[string]string, podName string) string {
 	for address, pod := range sharedPods {
 		if strings.Trim(pod, "\n") == podName {
 			return address

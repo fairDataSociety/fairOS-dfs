@@ -979,7 +979,7 @@ func (d *Document) removeFromOpenedDB(dbName string) {
 	delete(d.openDocDBs, dbName)
 }
 
-func (d *Document) resolveExpression(expr string) (string, string, string, error) {
+func (*Document) resolveExpression(expr string) (string, string, string, error) {
 	var operator string
 	if strings.Contains(expr, "=>") {
 		operator = "=>"
