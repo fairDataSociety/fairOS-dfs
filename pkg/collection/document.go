@@ -1080,11 +1080,6 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 		return err
 	}
 	switch t.(type) {
-	case []interface{}:
-		// it's an array
-		// TODO: handle array of objects
-		d.logger.Errorf("inserting in batch: unknown json format")
-		return errors.New("unknown json format")
 	case map[string]interface{}:
 		// it's an object
 		docMap := t.(map[string]interface{})
@@ -1283,7 +1278,7 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 	default:
 		// it's something else
 		d.logger.Errorf("inserting in batch: unknown json format")
-		return errors.New("unknown json format")
+		return ErrUnknownJsonFormat
 	}
 
 	return nil
