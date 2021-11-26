@@ -55,23 +55,23 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 	go func() {
 		pingPeriod := (readDeadline * 9) / 10
 		ticker := time.NewTicker(pingPeriod)
-		for {
-			select {
-			case <-ticker.C:
-				conn.SetWriteDeadline(time.Now().Add(writeDeadline))
-				if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-					h.logger.Debugf("ws event handler: upload: failed to send ping: %v", err)
-					h.logger.Error("ws event handler: upload: failed to send ping")
-					return
-				}
+		defer ticker.Stop()
+
+		for range ticker.C {
+			if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
+				return
+			}
+			if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+				h.logger.Debugf("ws event handler: upload: failed to send ping: %v", err)
+				h.logger.Error("ws event handler: upload: failed to send ping")
+				return
 			}
 		}
 	}()
 
 	// add read deadline in pong
 	conn.SetPongHandler(func(message string) error {
-		err := conn.SetReadDeadline(time.Now().Add(readDeadline))
-		if err != nil {
+		if err := conn.SetReadDeadline(time.Now().Add(readDeadline)); err != nil {
 			h.logger.Debugf("ws event handler: set read deadline failed on connection : %v", err)
 			h.logger.Error("ws event handler: set read deadline failed on connection")
 			return err
@@ -111,14 +111,18 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		if err == nil {
 			return
 		}
-		conn.SetReadDeadline(time.Now().Add(readDeadline))
+		if err := conn.SetReadDeadline(time.Now().Add(readDeadline)); err != nil {
+			return
+		}
 
 		message := map[string]interface{}{}
 		message["message"] = err.Error()
 		response.Body = &message
 		response.StatusCode = http.StatusInternalServerError
 
-		conn.SetWriteDeadline(time.Now().Add(writeDeadline))
+		if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
+			return
+		}
 		err = conn.WriteMessage(websocket.TextMessage, response.Marshal())
 		if err != nil {
 			h.logger.Debugf("ws event handler: upload: failed to write error response: %v", err)
@@ -128,7 +132,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 	}
 
 	makeQueryParams := func(base string, params map[string]interface{}) string {
-		url := string(base) + "?"
+		url := base + "?"
 		for i, v := range params {
 			url = fmt.Sprintf("%s%s=%s&", url, i, v)
 		}
@@ -162,10 +166,15 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.logger.Debugf("ws event handler: failed to read request: %v", err)
 			h.logger.Error("ws event handler: failed to read request")
 			conn.SetWriteDeadline(time.Now().Add(writeDeadline))
+			if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
+				return err
+			}
 			return conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, err.Error()))
 		}
 		res.Event = req.Event
-		conn.SetReadDeadline(time.Time{})
+		if err := conn.SetReadDeadline(time.Time{}); err != nil {
+			continue
+		}
 		switch req.Event {
 		// user related events
 		case common.UserSignup:
@@ -277,14 +286,12 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.PodOpenHandler(res, httpReq)
 			logEventDescription(string(common.PodNew), to, res.StatusCode, h.logger)
 		case common.PodOpen:
-			conn.SetReadDeadline(time.Time{})
 			jsonBytes, _ := json.Marshal(req.Params)
 			httpReq, err := newRequest(http.MethodPost, string(common.PodOpen), jsonBytes)
 			if err != nil {
 				respondWithError(res, err)
 				continue
 			}
-			conn.SetReadDeadline(time.Now().Add(readDeadline))
 			h.PodOpenHandler(res, httpReq)
 			logEventDescription(string(common.PodOpen), to, res.StatusCode, h.logger)
 		case common.PodClose:
@@ -344,7 +351,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		case common.FileUpload:
 			jsonBytes, _ := json.Marshal(req.Params)
 			args := make(map[string]string)
-			err = json.Unmarshal(jsonBytes, &args)
+			err := json.Unmarshal(jsonBytes, &args)
 			if err != nil {
 				h.logger.Debugf("ws event handler: upload: failed to read params: %v", err)
 				h.logger.Error("ws event handler: upload: failed to read params")
