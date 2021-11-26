@@ -33,14 +33,14 @@ func (p *Pod) IsPodOpened(podName string) bool {
 	return false
 }
 
-func (p *Pod) GetPath(inode *d.Inode) string {
+func (*Pod) GetPath(inode *d.Inode) string {
 	if inode != nil {
 		return inode.Meta.Path
 	}
 	return ""
 }
 
-func (p *Pod) GetName(inode *d.Inode) string {
+func (*Pod) GetName(inode *d.Inode) string {
 	if inode != nil {
 		return inode.Meta.Name
 	}

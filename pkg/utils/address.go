@@ -33,10 +33,12 @@ func NewAddress(b []byte) Address {
 	a.SetBytes(b)
 	return a
 }
+
 func (a *Address) String() string {
 	return hex.EncodeToString(a[:])
 }
-func (a *Address) ParseAddress(s string) (Address, error) {
+
+func (*Address) ParseAddress(s string) (Address, error) {
 	b, err := hex.DecodeString(s)
 	if err != nil {
 		return ZeroAddress, err

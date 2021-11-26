@@ -77,7 +77,7 @@ func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Acc
 }
 
 // CreateAccount is used to create a new hd wallet using the given mnemonic and the walletPath.
-func (w *Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Account, error) {
+func (*Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Account, error) {
 	wallet, err := hdwallet.NewFromMnemonic(plainMnemonic)
 	if err != nil {
 		return accounts.Account{}, err
@@ -91,7 +91,7 @@ func (w *Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Accou
 }
 
 // IsValidMnemonic is used to validate a mnemonic to see if it is valid 12 word bip-0039 compliant.
-func (w *Wallet) IsValidMnemonic(mnemonic string) error {
+func (*Wallet) IsValidMnemonic(mnemonic string) error {
 	// test the mnemonic for validity
 	words := strings.Split(mnemonic, " ")
 	if len(words) != 12 {

@@ -322,7 +322,7 @@ func (a *Account) GetUserAccountInfo() *Info {
 	return a.userAcount
 }
 
-func (a *Account) GetEmptyAccountInfo() *Info {
+func (*Account) GetEmptyAccountInfo() *Info {
 	return &Info{}
 }
 
@@ -369,7 +369,7 @@ func (a *Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {
 	return encryptedMessage, nil
 }
 
-func (a *Account) getPassword() (password string) {
+func (*Account) getPassword() (password string) {
 	// read the pass phrase
 	bytePassword, err := term.ReadPassword(0)
 	if err != nil {

@@ -348,10 +348,9 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 					if !gotFirstNewLine {
 						gotFirstNewLine = true
 						continue
-					} else {
-						startIndex = k + 1
-						borderCrossingLineStartingPoint = (int(blockSize) * int(i)) + startIndex
 					}
+					startIndex = k + 1
+					borderCrossingLineStartingPoint = (int(blockSize) * int(i)) + startIndex
 				}
 			}
 			borderCrossingLine = append(borderCrossingLine, buf[startIndex:]...)
