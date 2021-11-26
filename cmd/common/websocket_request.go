@@ -1,0 +1,105 @@
+package common
+
+import (
+	"encoding/json"
+	"net/http"
+)
+
+type Event string
+
+var (
+	UserSignup      Event = "/user/signup"
+	UserLogin       Event = "/user/login"
+	UserImport      Event = "/user/import"
+	UserPresent     Event = "/user/present"
+	UserIsLoggedin  Event = "/user/isloggedin"
+	UserLogout      Event = "/user/logout"
+	UserExport      Event = "/user/export"
+	UserDelete      Event = "/user/delete"
+	UserStat        Event = "/user/stat"
+	PodNew          Event = "/pod/new"
+	PodOpen         Event = "/pod/open"
+	PodClose        Event = "/pod/close"
+	PodSync         Event = "/pod/sync"
+	PodDelete       Event = "/pod/delete"
+	PodLs           Event = "/pod/ls"
+	PodStat         Event = "/pod/stat"
+	PodShare        Event = "/pod/share"
+	PodReceive      Event = "/pod/receive"
+	PodReceiveInfo  Event = "/pod/receiveinfo"
+	DirIsPresent    Event = "/dir/present"
+	DirMkdir        Event = "/dir/mkdir"
+	DirRmdir        Event = "/dir/rmdir"
+	DirLs           Event = "/dir/ls"
+	DirStat         Event = "/dir/stat"
+	FileDownload    Event = "/file/download"
+	FileUpload      Event = "/file/upload"
+	FileShare       Event = "/file/share"
+	FileReceive     Event = "/file/receive"
+	FileReceiveInfo Event = "/file/receiveinfo"
+	FileDelete      Event = "/file/delete"
+	FileStat        Event = "/file/stat"
+	KVCreate        Event = "/kv/new"
+	KVList          Event = "/kv/ls"
+	KVOpen          Event = "/kv/open"
+	KVDelete        Event = "/kv/delete"
+	KVCount         Event = "/kv/count"
+	KVEntryPut      Event = "/kv/entry/put"
+	KVEntryGet      Event = "/kv/entry/get"
+	KVEntryDelete   Event = "/kv/entry/del"
+	KVLoadCSV       Event = "/kv/loadcsv"
+	KVSeek          Event = "/kv/seek"
+	KVSeekNext      Event = "/kv/seek/next"
+	DocCreate       Event = "/doc/new"
+	DocList         Event = "/doc/ls"
+	DocOpen         Event = "/doc/open"
+	DocCount        Event = "/doc/count"
+	DocDelete       Event = "/doc/delete"
+	DocFind         Event = "/doc/find"
+	DocEntryPut     Event = "/doc/entry/put"
+	DocEntryGet     Event = "/doc/entry/newget"
+	DocEntryDel     Event = "/doc/entry/del"
+	DocLoadJson     Event = "/doc/loadjson"
+	DocIndexJson    Event = "/doc/indexjson"
+)
+
+type WebsocketRequest struct {
+	Event  Event                  `json:"event"`
+	Params map[string]interface{} `json:"params,omitempty"`
+}
+
+type WebsocketResponse struct {
+	Event      Event       `json:"event"`
+	StatusCode int         `json:"code"`
+	Body       interface{} `json:"params,omitempty"`
+	header     http.Header
+}
+
+func NewWebsocketResponse() *WebsocketResponse {
+	return &WebsocketResponse{
+		header: map[string][]string{},
+	}
+}
+
+func (w *WebsocketResponse) Header() http.Header {
+	return w.header
+}
+
+func (w *WebsocketResponse) Write(bytes []byte) (int, error) {
+	body := map[string]interface{}{}
+	err := json.Unmarshal(bytes, &body)
+	if err != nil {
+		return 0, err
+	}
+	w.Body = body
+	return len(bytes), nil
+}
+
+func (w *WebsocketResponse) WriteHeader(statusCode int) {
+	w.StatusCode = statusCode
+}
+
+func (w *WebsocketResponse) Marshal() []byte {
+	data, _ := json.Marshal(w)
+	return data
+}
