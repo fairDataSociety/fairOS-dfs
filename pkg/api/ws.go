@@ -165,7 +165,6 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		if err != nil {
 			h.logger.Debugf("ws event handler: failed to read request: %v", err)
 			h.logger.Error("ws event handler: failed to read request")
-			conn.SetWriteDeadline(time.Now().Add(writeDeadline))
 			if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
 				return err
 			}
@@ -351,8 +350,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		case common.FileUpload:
 			jsonBytes, _ := json.Marshal(req.Params)
 			args := make(map[string]string)
-			err := json.Unmarshal(jsonBytes, &args)
-			if err != nil {
+			if err := json.Unmarshal(jsonBytes, &args); err != nil {
 				h.logger.Debugf("ws event handler: upload: failed to read params: %v", err)
 				h.logger.Error("ws event handler: upload: failed to read params")
 				respondWithError(res, err)
@@ -362,6 +360,10 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			if mt != websocket.BinaryMessage {
 				h.logger.Warning("non binary message in file upload")
 				respondWithError(res, errors.New("non binary message in file upload"))
+				continue
+			}
+			if err != nil {
+				respondWithError(res, err)
 				continue
 			}
 			compression := ""
@@ -418,9 +420,10 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.FileUploadHandler(res, httpReq)
 			logEventDescription(string(common.FileUpload), to, res.StatusCode, h.logger)
 		}
-		conn.SetReadDeadline(time.Now().Add(readDeadline))
-		err = conn.WriteMessage(messageType, res.Marshal())
-		if err != nil {
+		if err := conn.SetReadDeadline(time.Now().Add(readDeadline)); err != nil {
+			return err
+		}
+		if err := conn.WriteMessage(messageType, res.Marshal()); err != nil {
 			h.logger.Debugf("ws event handler: upload: failed to write in connection: %v", err)
 			h.logger.Error("ws event handler: upload: failed to write in connection")
 			return err
