@@ -12,11 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/sirupsen/logrus"
-
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -282,7 +281,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			h.PodOpenHandler(res, httpReq)
+			h.PodCreateHandler(res, httpReq)
 			logEventDescription(string(common.PodNew), to, res.StatusCode, h.logger)
 		case common.PodOpen:
 			jsonBytes, _ := json.Marshal(req.Params)
@@ -346,7 +345,87 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			h.PodStatHandler(res, httpReq)
 			logEventDescription(string(common.PodStat), to, res.StatusCode, h.logger)
+
 		// file related events
+		case common.DirMkdir:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.DirMkdir), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DirectoryMkdirHandler(res, httpReq)
+			logEventDescription(string(common.DirMkdir), to, res.StatusCode, h.logger)
+		case common.DirRmdir:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodDelete, string(common.DirRmdir), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DirectoryRmdirHandler(res, httpReq)
+			logEventDescription(string(common.DirRmdir), to, res.StatusCode, h.logger)
+		case common.DirLs:
+			url := makeQueryParams(string(common.DirLs), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DirectoryLsHandler(res, httpReq)
+			logEventDescription(string(common.DirLs), to, res.StatusCode, h.logger)
+		case common.DirStat:
+			url := makeQueryParams(string(common.DirStat), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DirectoryStatHandler(res, httpReq)
+			logEventDescription(string(common.DirStat), to, res.StatusCode, h.logger)
+		case common.DirIsPresent:
+			url := makeQueryParams(string(common.DirIsPresent), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DirectoryPresentHandler(res, httpReq)
+			logEventDescription(string(common.DirIsPresent), to, res.StatusCode, h.logger)
+		case common.FileDownload:
+			jsonBytes, _ := json.Marshal(req.Params)
+			args := make(map[string]string)
+			if err := json.Unmarshal(jsonBytes, &args); err != nil {
+				h.logger.Debugf("ws event handler: download: failed to read params: %v", err)
+				h.logger.Error("ws event handler: download: failed to read params")
+				respondWithError(res, err)
+				continue
+			}
+			body := new(bytes.Buffer)
+			writer := multipart.NewWriter(body)
+			for k, v := range args {
+				err := writer.WriteField(k, v)
+				if err != nil {
+					h.logger.Debugf("ws event handler: download: failed to write fields in form: %v", err)
+					h.logger.Error("ws event handler: download: failed to write fields in form")
+					respondWithError(res, err)
+					continue
+				}
+			}
+			err = writer.Close()
+			if err != nil {
+				h.logger.Debugf("ws event handler: download: failed to close writer: %v", err)
+				h.logger.Error("ws event handler: download: failed to close writer")
+				respondWithError(res, err)
+				continue
+			}
+			httpReq, err := newMultipartRequest(http.MethodPost, string(common.FileUpload), writer.Boundary(), body)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.FileDownloadHandler(res, httpReq)
+			logEventDescription(string(common.FileDownload), to, res.StatusCode, h.logger)
 		case common.FileUpload:
 			jsonBytes, _ := json.Marshal(req.Params)
 			args := make(map[string]string)
@@ -419,13 +498,58 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			h.FileUploadHandler(res, httpReq)
 			logEventDescription(string(common.FileUpload), to, res.StatusCode, h.logger)
+		case common.FileShare:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.FileShare), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.FileShareHandler(res, httpReq)
+			logEventDescription(string(common.FileShare), to, res.StatusCode, h.logger)
+		case common.FileReceive:
+			url := makeQueryParams(string(common.FileReceive), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.FileReceiveHandler(res, httpReq)
+			logEventDescription(string(common.FileReceive), to, res.StatusCode, h.logger)
+		case common.FileReceiveInfo:
+			url := makeQueryParams(string(common.FileReceiveInfo), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.FileReceiveInfoHandler(res, httpReq)
+			logEventDescription(string(common.FileReceiveInfo), to, res.StatusCode, h.logger)
+		case common.FileDelete:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodDelete, string(common.FileDelete), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.FileDeleteHandler(res, httpReq)
+			logEventDescription(string(common.FileDelete), to, res.StatusCode, h.logger)
+		case common.FileStat:
+			url := makeQueryParams(string(common.FileStat), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.FileStatHandler(res, httpReq)
+			logEventDescription(string(common.FileStat), to, res.StatusCode, h.logger)
 		}
 		if err := conn.SetReadDeadline(time.Now().Add(readDeadline)); err != nil {
 			return err
 		}
 		if err := conn.WriteMessage(messageType, res.Marshal()); err != nil {
-			h.logger.Debugf("ws event handler: upload: failed to write in connection: %v", err)
-			h.logger.Error("ws event handler: upload: failed to write in connection")
+			h.logger.Debugf("ws event handler: response: failed to write in connection: %v", err)
+			h.logger.Error("ws event handler: response: failed to write in connection")
 			return err
 		}
 	}
