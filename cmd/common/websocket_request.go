@@ -1,6 +1,7 @@
 package common
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 )
@@ -73,6 +74,7 @@ type WebsocketResponse struct {
 	StatusCode int         `json:"code"`
 	Body       interface{} `json:"params,omitempty"`
 	header     http.Header
+	buf        bytes.Buffer
 }
 
 func NewWebsocketResponse() *WebsocketResponse {
@@ -86,13 +88,20 @@ func (w *WebsocketResponse) Header() http.Header {
 }
 
 func (w *WebsocketResponse) Write(bytes []byte) (int, error) {
-	body := map[string]interface{}{}
-	err := json.Unmarshal(bytes, &body)
-	if err != nil {
-		return 0, err
+	if w.Header().Get("Content-Type") == "application/json; charset=utf-8" ||
+		w.Header().Get("Content-Type") == "application/json" {
+		body := map[string]interface{}{}
+		err := json.Unmarshal(bytes, &body)
+		if err != nil {
+			return 0, err
+		}
+		w.Body = body
+		return len(bytes), nil
 	}
-	w.Body = body
-	return len(bytes), nil
+	if w.Header().Get("Content-Length") != "" || w.Header().Get("Content-Length") != "0" {
+		return w.buf.Write(bytes)
+	}
+	return 0, nil
 }
 
 func (w *WebsocketResponse) WriteHeader(statusCode int) {
@@ -100,6 +109,13 @@ func (w *WebsocketResponse) WriteHeader(statusCode int) {
 }
 
 func (w *WebsocketResponse) Marshal() []byte {
-	data, _ := json.Marshal(w)
-	return data
+	if w.Header().Get("Content-Type") == "application/json; charset=utf-8" ||
+		w.Header().Get("Content-Type") == "application/json" {
+		data, _ := json.Marshal(w)
+		return data
+	}
+	if w.Header().Get("Content-Length") != "" {
+		return w.buf.Bytes()
+	}
+	return nil
 }

@@ -83,7 +83,7 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Errorf("download: %v", err)
 		w.Header().Set("Content-Type", " application/json")
-		jsonhttp.InternalServerError(w, "stat dir: "+err.Error())
+		jsonhttp.InternalServerError(w, "download: "+err.Error())
 	}
 	_ = reader.Close()
 }

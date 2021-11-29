@@ -425,6 +425,27 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			h.FileDownloadHandler(res, httpReq)
+			downloadConfirmResponse := common.NewWebsocketResponse()
+			downloadConfirmResponse.Event = common.FileDownload
+			downloadConfirmResponse.Header().Set("Content-Type", "application/json; charset=utf-8")
+			if res.Header().Get("Content-Length") != "" {
+				dlMessage := map[string]string{}
+				dlMessage["content_length"] = res.Header().Get("Content-Length")
+				data, _ := json.Marshal(dlMessage)
+				_, err = downloadConfirmResponse.Write(data)
+				if err != nil {
+					h.logger.Debugf("ws event handler: download: failed to send download confirm: %v", err)
+					h.logger.Error("ws event handler: download: failed to send download confirm")
+					continue
+				}
+			}
+			downloadConfirmResponse.WriteHeader(http.StatusOK)
+			if err := conn.WriteMessage(messageType, downloadConfirmResponse.Marshal()); err != nil {
+				h.logger.Debugf("ws event handler: download: failed to write in connection: %v", err)
+				h.logger.Error("ws event handler: download: failed to write in connection")
+				continue
+			}
+			messageType = websocket.BinaryMessage
 			logEventDescription(string(common.FileDownload), to, res.StatusCode, h.logger)
 		case common.FileUpload:
 			jsonBytes, _ := json.Marshal(req.Params)
