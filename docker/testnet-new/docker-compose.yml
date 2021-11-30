@@ -1,7 +1,7 @@
 version: '3'
 services:
   bee-1:
-    image: ethersphere/bee:1.4.0
+    image: ethersphere/bee:1.3.0
     restart: on-failure
     environment:
       - BEE_API_ADDR
