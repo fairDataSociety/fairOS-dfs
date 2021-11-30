@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -89,6 +88,78 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		httpReq.Header.Add("Content-Length", strconv.Itoa(len(buf)))
 		if cookie != nil {
 			httpReq.Header.Set("Cookie", cookie[0])
+		}
+		return httpReq, nil
+	}
+
+	newMultipartRequestWithBinaryMessage := func(params map[string]interface{}, formField, method, url string) (*http.Request, error) {
+		jsonBytes, _ := json.Marshal(params)
+		args := make(map[string]string)
+		if err := json.Unmarshal(jsonBytes, &args); err != nil {
+			h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to read params: %v", err)
+			h.logger.Error("ws event handler: multipart rqst w/ body: failed to read params")
+			return nil, err
+		}
+		mt, reader, err := conn.NextReader()
+		if mt != websocket.BinaryMessage {
+			h.logger.Warning("non binary message in loadcsv")
+			return nil, err
+		}
+		if err != nil {
+			return nil, err
+		}
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
+		fileName := ""
+		compression := ""
+		// Add parameters
+		for k, v := range args {
+			if k == "file_name" {
+				fileName = v
+			}
+			if k == "compression" {
+				compression = strings.ToLower(compression)
+			}
+			err := writer.WriteField(k, v)
+			if err != nil {
+				h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to write fields in form: %v", err)
+				h.logger.Error("ws event handler: multipart rqst w/ body: failed to write fields in form")
+				return nil, err
+			}
+		}
+
+		part, err := writer.CreateFormFile(formField, fileName)
+		if err != nil {
+			h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to create files field in form: %v", err)
+			h.logger.Error("ws event handler: multipart rqst w/ body: failed to create files field in form")
+			return nil, err
+		}
+		_, err = io.Copy(part, reader)
+		if err != nil {
+			h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to read file: %v", err)
+			h.logger.Error("ws event handler: multipart rqst w/ body: failed to read file")
+			return nil, err
+		}
+		err = writer.Close()
+		if err != nil {
+			h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to close writer: %v", err)
+			h.logger.Error("ws event handler: multipart rqst w/ body: failed to close writer")
+			return nil, err
+		}
+
+		httpReq, err := http.NewRequest(method, url, body)
+		if err != nil {
+			h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to create http request: %v", err)
+			h.logger.Error("ws event handler: multipart rqst w/ body: failed to create http request")
+			return nil, err
+		}
+		contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
+		httpReq.Header.Set("Content-Type", contentType)
+		if cookie != nil {
+			httpReq.Header.Set("Cookie", cookie[0])
+		}
+		if compression != "" {
+			httpReq.Header.Set(CompressionHeader, compression)
 		}
 		return httpReq, nil
 	}
@@ -448,74 +519,10 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			messageType = websocket.BinaryMessage
 			logEventDescription(string(common.FileDownload), to, res.StatusCode, h.logger)
 		case common.FileUpload:
-			jsonBytes, _ := json.Marshal(req.Params)
-			args := make(map[string]string)
-			if err := json.Unmarshal(jsonBytes, &args); err != nil {
-				h.logger.Debugf("ws event handler: upload: failed to read params: %v", err)
-				h.logger.Error("ws event handler: upload: failed to read params")
-				respondWithError(res, err)
-				continue
-			}
-			mt, reader, err := conn.NextReader()
-			if mt != websocket.BinaryMessage {
-				h.logger.Warning("non binary message in file upload")
-				respondWithError(res, errors.New("non binary message in file upload"))
-				continue
-			}
+			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "files", http.MethodPost, string(common.FileUpload))
 			if err != nil {
 				respondWithError(res, err)
 				continue
-			}
-			compression := ""
-			body := new(bytes.Buffer)
-			writer := multipart.NewWriter(body)
-			fileName := ""
-			// Add parameters
-			for k, v := range args {
-				if k == "file_name" {
-					fileName = v
-				}
-				if k == "compression" {
-					compression = strings.ToLower(compression)
-				}
-				err := writer.WriteField(k, v)
-				if err != nil {
-					h.logger.Debugf("ws event handler: upload: failed to write fields in form: %v", err)
-					h.logger.Error("ws event handler: upload: failed to write fields in form")
-					respondWithError(res, err)
-					continue
-				}
-			}
-
-			part, err := writer.CreateFormFile("files", fileName)
-			if err != nil {
-				h.logger.Debugf("ws event handler: upload: failed to create files field in form: %v", err)
-				h.logger.Error("ws event handler: upload: failed to create files field in form")
-				respondWithError(res, err)
-				continue
-			}
-			_, err = io.Copy(part, reader)
-			if err != nil {
-				h.logger.Debugf("ws event handler: upload: failed to read file: %v", err)
-				h.logger.Error("ws event handler: upload: failed to read file")
-				respondWithError(res, err)
-				continue
-			}
-			err = writer.Close()
-			if err != nil {
-				h.logger.Debugf("ws event handler: upload: failed to close writer: %v", err)
-				h.logger.Error("ws event handler: upload: failed to close writer")
-				respondWithError(res, err)
-				continue
-			}
-
-			httpReq, err := newMultipartRequest(http.MethodPost, string(common.FileUpload), writer.Boundary(), body)
-			if err != nil {
-				respondWithError(res, err)
-				continue
-			}
-			if compression != "" {
-				httpReq.Header.Set(CompressionHeader, compression)
 			}
 			h.FileUploadHandler(res, httpReq)
 			logEventDescription(string(common.FileUpload), to, res.StatusCode, h.logger)
@@ -639,7 +646,14 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.KVDelHandler(res, httpReq)
 			logEventDescription(string(common.KVEntryDelete), to, res.StatusCode, h.logger)
 		case common.KVLoadCSV:
-			// TODO:
+			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "csv", http.MethodPost, string(common.KVLoadCSV))
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+
+			h.KVLoadCSVHandler(res, httpReq)
+			logEventDescription(string(common.KVLoadCSV), to, res.StatusCode, h.logger)
 		case common.KVSeek:
 			jsonBytes, _ := json.Marshal(req.Params)
 			httpReq, err := newRequest(http.MethodPost, string(common.KVSeek), jsonBytes)
@@ -658,6 +672,8 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			h.KVGetNextHandler(res, httpReq)
 			logEventDescription(string(common.KVSeekNext), to, res.StatusCode, h.logger)
+
+		// doc related events
 		case common.DocCreate:
 			jsonBytes, _ := json.Marshal(req.Params)
 			httpReq, err := newRequest(http.MethodPost, string(common.DocCreate), jsonBytes)
@@ -740,9 +756,23 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.DocDelHandler(res, httpReq)
 			logEventDescription(string(common.DocEntryDel), to, res.StatusCode, h.logger)
 		case common.DocLoadJson:
-			// TODO:
+			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "json", http.MethodPost, string(common.DocLoadJson))
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+
+			h.DocLoadJsonHandler(res, httpReq)
+			logEventDescription(string(common.DocLoadJson), to, res.StatusCode, h.logger)
 		case common.DocIndexJson:
-			// TODO:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.DocIndexJson), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocIndexJsonHandler(res, httpReq)
+			logEventDescription(string(common.DocIndexJson), to, res.StatusCode, h.logger)
 		}
 		if err := conn.SetReadDeadline(time.Now().Add(readDeadline)); err != nil {
 			return err
