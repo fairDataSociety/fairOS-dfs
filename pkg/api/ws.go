@@ -564,6 +564,185 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			h.FileStatHandler(res, httpReq)
 			logEventDescription(string(common.FileStat), to, res.StatusCode, h.logger)
+
+		// kv related events
+		case common.KVCreate:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.KVCreate), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVCreateHandler(res, httpReq)
+			logEventDescription(string(common.KVCreate), to, res.StatusCode, h.logger)
+		case common.KVList:
+			url := makeQueryParams(string(common.KVList), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVListHandler(res, httpReq)
+			logEventDescription(string(common.KVList), to, res.StatusCode, h.logger)
+		case common.KVOpen:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.KVOpen), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVOpenHandler(res, httpReq)
+			logEventDescription(string(common.KVOpen), to, res.StatusCode, h.logger)
+		case common.KVCount:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.KVCount), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVCountHandler(res, httpReq)
+			logEventDescription(string(common.KVCount), to, res.StatusCode, h.logger)
+		case common.KVDelete:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodDelete, string(common.KVDelete), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVDeleteHandler(res, httpReq)
+			logEventDescription(string(common.KVDelete), to, res.StatusCode, h.logger)
+		case common.KVEntryPut:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.KVEntryPut), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVPutHandler(res, httpReq)
+			logEventDescription(string(common.KVEntryPut), to, res.StatusCode, h.logger)
+		case common.KVEntryGet:
+			url := makeQueryParams(string(common.KVEntryGet), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVGetHandler(res, httpReq)
+			logEventDescription(string(common.KVEntryGet), to, res.StatusCode, h.logger)
+		case common.KVEntryDelete:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodDelete, string(common.KVEntryDelete), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVDelHandler(res, httpReq)
+			logEventDescription(string(common.KVEntryDelete), to, res.StatusCode, h.logger)
+		case common.KVLoadCSV:
+			// TODO:
+		case common.KVSeek:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.KVSeek), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVSeekHandler(res, httpReq)
+			logEventDescription(string(common.KVSeek), to, res.StatusCode, h.logger)
+		case common.KVSeekNext:
+			url := makeQueryParams(string(common.KVSeekNext), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.KVGetNextHandler(res, httpReq)
+			logEventDescription(string(common.KVSeekNext), to, res.StatusCode, h.logger)
+		case common.DocCreate:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.DocCreate), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocCreateHandler(res, httpReq)
+			logEventDescription(string(common.DocCreate), to, res.StatusCode, h.logger)
+		case common.DocList:
+			url := makeQueryParams(string(common.DocList), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocListHandler(res, httpReq)
+			logEventDescription(string(common.DocList), to, res.StatusCode, h.logger)
+		case common.DocOpen:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.DocOpen), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocOpenHandler(res, httpReq)
+			logEventDescription(string(common.DocOpen), to, res.StatusCode, h.logger)
+		case common.DocCount:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.DocCount), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocCountHandler(res, httpReq)
+			logEventDescription(string(common.DocCount), to, res.StatusCode, h.logger)
+		case common.DocDelete:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodDelete, string(common.DocDelete), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocDeleteHandler(res, httpReq)
+			logEventDescription(string(common.DocDelete), to, res.StatusCode, h.logger)
+		case common.DocFind:
+			url := makeQueryParams(string(common.DocFind), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocFindHandler(res, httpReq)
+			logEventDescription(string(common.DocFind), to, res.StatusCode, h.logger)
+		case common.DocEntryPut:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodPost, string(common.DocEntryPut), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocPutHandler(res, httpReq)
+			logEventDescription(string(common.DocEntryPut), to, res.StatusCode, h.logger)
+		case common.DocEntryGet:
+			url := makeQueryParams(string(common.DocEntryGet), req.Params)
+			httpReq, err := newRequest(http.MethodGet, url, nil)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocGetHandler(res, httpReq)
+			logEventDescription(string(common.DocEntryGet), to, res.StatusCode, h.logger)
+		case common.DocEntryDel:
+			jsonBytes, _ := json.Marshal(req.Params)
+			httpReq, err := newRequest(http.MethodDelete, string(common.DocEntryDel), jsonBytes)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.DocDelHandler(res, httpReq)
+			logEventDescription(string(common.DocEntryDel), to, res.StatusCode, h.logger)
+		case common.DocLoadJson:
+			// TODO:
+		case common.DocIndexJson:
+			// TODO:
 		}
 		if err := conn.SetReadDeadline(time.Now().Add(readDeadline)); err != nil {
 			return err

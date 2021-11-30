@@ -101,5 +101,5 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "kv create: "+err.Error())
 		return
 	}
-	jsonhttp.OK(w, "kv store created")
+	jsonhttp.Created(w, "kv store created")
 }

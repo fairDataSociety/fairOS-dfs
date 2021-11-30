@@ -58,7 +58,7 @@ var (
 	DocDelete       Event = "/doc/delete"
 	DocFind         Event = "/doc/find"
 	DocEntryPut     Event = "/doc/entry/put"
-	DocEntryGet     Event = "/doc/entry/newget"
+	DocEntryGet     Event = "/doc/entry/get"
 	DocEntryDel     Event = "/doc/entry/del"
 	DocLoadJson     Event = "/doc/loadjson"
 	DocIndexJson    Event = "/doc/indexjson"
