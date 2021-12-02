@@ -21,11 +21,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
-
-	"resenje.org/jsonhttp"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"resenje.org/jsonhttp"
 )
 
 // FileDownloadHandler is the api handler to download a file from a given pod
@@ -65,6 +64,11 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("download: %v", err)
 			jsonhttp.BadRequest(w, "download: "+err.Error())
+			return
+		}
+		if err == file.ErrFileNotPresent || err == file.ErrFileNotFound {
+			h.logger.Errorf("download: %v", err)
+			jsonhttp.NotFound(w, "download: "+err.Error())
 			return
 		}
 		h.logger.Errorf("download: %v", err)

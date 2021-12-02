@@ -18,11 +18,16 @@ package file
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+)
+
+var (
+	ErrFileNotPresent = errors.New("file not present")
+	ErrFileNotFound   = errors.New("file not found in dfs")
 )
 
 // Download does all the validation for the existence of the file and creates a
@@ -31,12 +36,12 @@ func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
 	// check if file present
 	totalFilePath := utils.CombinePathAndFile(f.podName, podFileWithPath, "")
 	if !f.IsFileAlreadyPresent(totalFilePath) {
-		return nil, 0, fmt.Errorf("file not present")
+		return nil, 0, ErrFileNotPresent
 	}
 
 	meta := f.GetFromFileMap(totalFilePath)
 	if meta == nil {
-		return nil, 0, fmt.Errorf("file not found in dfs")
+		return nil, 0, ErrFileNotFound
 	}
 
 	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
