@@ -65,14 +65,27 @@ var (
 )
 
 type WebsocketRequest struct {
-	Event  Event                  `json:"event"`
-	Params map[string]interface{} `json:"params,omitempty"`
+	Event  Event       `json:"event"`
+	Params interface{} `json:"params,omitempty"`
+}
+
+type FileRequest struct {
+	PodName   string `json:"pod_name,omitempty"`
+	TableName string `json:"table_name,omitempty"`
+	DirPath   string `json:"dir_path,omitempty"`
+	BlockSize string `json:"block_size,omitempty"`
+	FileName  string `json:"file_name,omitempty"`
+}
+
+type FileDownloadRequest struct {
+	PodName  string `json:"pod_name,omitempty"`
+	Filepath string `json:"file_path,omitempty"`
 }
 
 type WebsocketResponse struct {
 	Event      Event       `json:"event"`
 	StatusCode int         `json:"code"`
-	Body       interface{} `json:"params,omitempty"`
+	Params     interface{} `json:"params,omitempty"`
 	header     http.Header
 	buf        bytes.Buffer
 }
@@ -95,7 +108,7 @@ func (w *WebsocketResponse) Write(bytes []byte) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		w.Body = body
+		w.Params = body
 		return len(bytes), nil
 	}
 	if w.Header().Get("Content-Length") != "" || w.Header().Get("Content-Length") != "0" {

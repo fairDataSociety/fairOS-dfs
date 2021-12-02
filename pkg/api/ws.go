@@ -92,7 +92,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		return httpReq, nil
 	}
 
-	newMultipartRequestWithBinaryMessage := func(params map[string]interface{}, formField, method, url string) (*http.Request, error) {
+	newMultipartRequestWithBinaryMessage := func(params interface{}, formField, method, url string) (*http.Request, error) {
 		jsonBytes, _ := json.Marshal(params)
 		args := make(map[string]string)
 		if err := json.Unmarshal(jsonBytes, &args); err != nil {
@@ -187,7 +187,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 
 		message := map[string]interface{}{}
 		message["message"] = err.Error()
-		response.Body = &message
+		response.Params = &message
 		response.StatusCode = http.StatusInternalServerError
 
 		if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
@@ -201,9 +201,10 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		}
 	}
 
-	makeQueryParams := func(base string, params map[string]interface{}) string {
+	makeQueryParams := func(base string, params interface{}) string {
+		paramsMap := params.(map[string]interface{})
 		url := base + "?"
-		for i, v := range params {
+		for i, v := range paramsMap {
 			url = fmt.Sprintf("%s%s=%s&", url, i, v)
 		}
 		return url
