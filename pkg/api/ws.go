@@ -21,10 +21,21 @@ var (
 	readDeadline = 4 * time.Second
 
 	writeDeadline = 4 * time.Second
+
+	originWhitelist = []string{"http://127.0.0.1:8080"}
 )
 
 func (h *Handler) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{} // use default options
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		for _, v := range originWhitelist {
+			if origin == v {
+				return true
+			}
+		}
+		return false
+	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		h.logger.Errorf("Error during connection upgradation:", err)
@@ -491,7 +502,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			httpReq, err := newMultipartRequest(http.MethodPost, string(common.FileUpload), writer.Boundary(), body)
+			httpReq, err := newMultipartRequest(http.MethodPost, string(common.FileDownload), writer.Boundary(), body)
 			if err != nil {
 				respondWithError(res, err)
 				continue
