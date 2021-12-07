@@ -3,10 +3,12 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -17,24 +19,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	wsChunkLimit = 1000000
+)
+
 var (
 	readDeadline = 4 * time.Second
 
 	writeDeadline = 4 * time.Second
-
-	originWhitelist = []string{"http://127.0.0.1:8080"}
 )
 
 func (h *Handler) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{} // use default options
 	upgrader.CheckOrigin = func(r *http.Request) bool {
-		origin := r.Header.Get("Origin")
-		for _, v := range originWhitelist {
-			if origin == v {
-				return true
-			}
-		}
-		return false
+		// TODO: whitelist origins
+		return true
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -111,11 +110,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.logger.Error("ws event handler: multipart rqst w/ body: failed to read params")
 			return nil, err
 		}
-		mt, reader, err := conn.NextReader()
-		if mt != websocket.BinaryMessage {
-			h.logger.Warning("non binary message in loadcsv")
-			return nil, err
-		}
+
 		if err != nil {
 			return nil, err
 		}
@@ -145,12 +140,20 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.logger.Error("ws event handler: multipart rqst w/ body: failed to create files field in form")
 			return nil, err
 		}
-		_, err = io.Copy(part, reader)
-		if err != nil {
-			h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to read file: %v", err)
-			h.logger.Error("ws event handler: multipart rqst w/ body: failed to read file")
-			return nil, err
+		for {
+			mt, reader, err := conn.NextReader()
+			if mt != websocket.BinaryMessage {
+				h.logger.Warning("non binary message", mt)
+				break
+			}
+			_, err = io.Copy(part, reader)
+			if err != nil {
+				h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to read file: %v", err)
+				h.logger.Error("ws event handler: multipart rqst w/ body: failed to read file")
+				return nil, err
+			}
 		}
+
 		err = writer.Close()
 		if err != nil {
 			h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to close writer: %v", err)
@@ -188,8 +191,8 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		return httpReq, nil
 	}
 
-	respondWithError := func(response *common.WebsocketResponse, err error) {
-		if err == nil {
+	respondWithError := func(response *common.WebsocketResponse, originalErr error) {
+		if originalErr == nil {
 			return
 		}
 		if err := conn.SetReadDeadline(time.Now().Add(readDeadline)); err != nil {
@@ -197,15 +200,14 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		}
 
 		message := map[string]interface{}{}
-		message["message"] = err.Error()
+		message["message"] = originalErr.Error()
 		response.Params = &message
 		response.StatusCode = http.StatusInternalServerError
 
 		if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
 			return
 		}
-		err = conn.WriteMessage(websocket.TextMessage, response.Marshal())
-		if err != nil {
+		if err := conn.WriteMessage(websocket.TextMessage, response.Marshal()); err != nil {
 			h.logger.Debugf("ws event handler: upload: failed to write error response: %v", err)
 			h.logger.Error("ws event handler: upload: failed to write error response")
 			return
@@ -475,6 +477,99 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			h.DirectoryPresentHandler(res, httpReq)
 			logEventDescription(string(common.DirIsPresent), to, res.StatusCode, h.logger)
+		case common.FileDownloadStream:
+			jsonBytes, _ := json.Marshal(req.Params)
+			args := make(map[string]string)
+			if err := json.Unmarshal(jsonBytes, &args); err != nil {
+				h.logger.Debugf("ws event handler: download: failed to read params: %v", err)
+				h.logger.Error("ws event handler: download: failed to read params")
+				respondWithError(res, err)
+				continue
+			}
+			body := new(bytes.Buffer)
+			writer := multipart.NewWriter(body)
+			for k, v := range args {
+				err := writer.WriteField(k, v)
+				if err != nil {
+					h.logger.Debugf("ws event handler: download: failed to write fields in form: %v", err)
+					h.logger.Error("ws event handler: download: failed to write fields in form")
+					respondWithError(res, err)
+					continue
+				}
+			}
+			err = writer.Close()
+			if err != nil {
+				h.logger.Debugf("ws event handler: download: failed to close writer: %v", err)
+				h.logger.Error("ws event handler: download: failed to close writer")
+				respondWithError(res, err)
+				continue
+			}
+			httpReq, err := newMultipartRequest(http.MethodPost, string(common.FileDownload), writer.Boundary(), body)
+			if err != nil {
+				respondWithError(res, err)
+				continue
+			}
+			h.FileDownloadHandler(res, httpReq)
+			if res.StatusCode != 0 {
+				errMessage := res.Params.(map[string]interface{})
+				respondWithError(res, errors.New(fmt.Sprintf("%s", errMessage["message"])))
+				continue
+			}
+			downloadConfirmResponse := common.NewWebsocketResponse()
+			downloadConfirmResponse.Event = common.FileDownloadStream
+			downloadConfirmResponse.Header().Set("Content-Type", "application/json; charset=utf-8")
+			if res.Header().Get("Content-Length") != "" {
+				dlMessage := map[string]string{}
+				dlMessage["content_length"] = res.Header().Get("Content-Length")
+				dlMessage["file_name"] = filepath.Base(args["file_path"])
+				data, _ := json.Marshal(dlMessage)
+				_, err = downloadConfirmResponse.Write(data)
+				if err != nil {
+					h.logger.Debugf("ws event handler: download: failed to send download confirm: %v", err)
+					h.logger.Error("ws event handler: download: failed to send download confirm")
+					continue
+				}
+			}
+			downloadConfirmResponse.WriteHeader(http.StatusOK)
+			if err := conn.WriteMessage(messageType, downloadConfirmResponse.Marshal()); err != nil {
+				h.logger.Debugf("ws event handler: download: failed to write in connection: %v", err)
+				h.logger.Error("ws event handler: download: failed to write in connection")
+				continue
+			}
+			if res.StatusCode == 0 {
+				messageType = websocket.BinaryMessage
+				data := res.Marshal()
+				head := 0
+				tail := len(data)
+				for head+wsChunkLimit < tail {
+					if err := conn.WriteMessage(messageType, data[head:(head+wsChunkLimit)]); err != nil {
+						h.logger.Debugf("ws event handler: response: failed to write in connection: %v", err)
+						h.logger.Error("ws event handler: response: failed to write in connection")
+						return err
+					}
+					head += wsChunkLimit
+				}
+				if err := conn.WriteMessage(messageType, data[head:tail]); err != nil {
+					h.logger.Debugf("ws event handler: response: failed to write in connection: %v", err)
+					h.logger.Error("ws event handler: response: failed to write in connection")
+					return err
+				}
+			}
+			messageType = websocket.TextMessage
+			res.Header().Set("Content-Type", "application/json; charset=utf-8")
+			if res.Header().Get("Content-Length") != "" {
+				dlFinishedMessage := map[string]string{}
+				dlFinishedMessage["message"] = "download finished"
+				data, _ := json.Marshal(dlFinishedMessage)
+				_, err = res.Write(data)
+				if err != nil {
+					h.logger.Debugf("ws event handler: download: failed to send download confirm: %v", err)
+					h.logger.Error("ws event handler: download: failed to send download confirm")
+					continue
+				}
+				res.WriteHeader(http.StatusOK)
+			}
+			logEventDescription(string(common.FileDownloadStream), to, res.StatusCode, h.logger)
 		case common.FileDownload:
 			jsonBytes, _ := json.Marshal(req.Params)
 			args := make(map[string]string)
@@ -508,12 +603,18 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			h.FileDownloadHandler(res, httpReq)
+			if res.StatusCode != 0 {
+				errMessage := res.Params.(map[string]interface{})
+				respondWithError(res, errors.New(fmt.Sprintf("%s", errMessage["message"])))
+				continue
+			}
 			downloadConfirmResponse := common.NewWebsocketResponse()
 			downloadConfirmResponse.Event = common.FileDownload
 			downloadConfirmResponse.Header().Set("Content-Type", "application/json; charset=utf-8")
 			if res.Header().Get("Content-Length") != "" {
 				dlMessage := map[string]string{}
 				dlMessage["content_length"] = res.Header().Get("Content-Length")
+				dlMessage["file_name"] = filepath.Base(args["file_path"])
 				data, _ := json.Marshal(dlMessage)
 				_, err = downloadConfirmResponse.Write(data)
 				if err != nil {
@@ -529,8 +630,27 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			messageType = websocket.BinaryMessage
+			if err := conn.WriteMessage(messageType, res.Marshal()); err != nil {
+				h.logger.Debugf("ws event handler: response: failed to write in connection: %v", err)
+				h.logger.Error("ws event handler: response: failed to write in connection")
+				return err
+			}
+			messageType = websocket.TextMessage
+			res.Header().Set("Content-Type", "application/json; charset=utf-8")
+			if res.Header().Get("Content-Length") != "" {
+				dlFinishedMessage := map[string]string{}
+				dlFinishedMessage["message"] = "download finished"
+				data, _ := json.Marshal(dlFinishedMessage)
+				_, err = res.Write(data)
+				if err != nil {
+					h.logger.Debugf("ws event handler: download: failed to send download confirm: %v", err)
+					h.logger.Error("ws event handler: download: failed to send download confirm")
+					continue
+				}
+				res.WriteHeader(http.StatusOK)
+			}
 			logEventDescription(string(common.FileDownload), to, res.StatusCode, h.logger)
-		case common.FileUpload:
+		case common.FileUpload, common.FileUploadStream:
 			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "files", http.MethodPost, string(common.FileUpload))
 			if err != nil {
 				respondWithError(res, err)
@@ -786,7 +906,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.DocIndexJsonHandler(res, httpReq)
 			logEventDescription(string(common.DocIndexJson), to, res.StatusCode, h.logger)
 		}
-		if err := conn.SetReadDeadline(time.Now().Add(readDeadline)); err != nil {
+		if err := conn.SetWriteDeadline(time.Now().Add(readDeadline)); err != nil {
 			return err
 		}
 		if err := conn.WriteMessage(messageType, res.Marshal()); err != nil {
