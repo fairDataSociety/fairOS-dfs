@@ -51,6 +51,7 @@ var (
 	KVEntryGet         Event = "/kv/entry/get"
 	KVEntryDelete      Event = "/kv/entry/del"
 	KVLoadCSV          Event = "/kv/loadcsv"
+	KVLoadCSVStream    Event = "/kv/loadcsv/stream"
 	KVSeek             Event = "/kv/seek"
 	KVSeekNext         Event = "/kv/seek/next"
 	DocCreate          Event = "/doc/new"
@@ -63,6 +64,7 @@ var (
 	DocEntryGet        Event = "/doc/entry/get"
 	DocEntryDel        Event = "/doc/entry/del"
 	DocLoadJson        Event = "/doc/loadjson"
+	DocLoadJsonStream  Event = "/doc/loadjson/stream"
 	DocIndexJson       Event = "/doc/indexjson"
 )
 

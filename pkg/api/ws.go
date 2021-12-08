@@ -102,7 +102,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		return httpReq, nil
 	}
 
-	newMultipartRequestWithBinaryMessage := func(params interface{}, formField, method, url string) (*http.Request, error) {
+	newMultipartRequestWithBinaryMessage := func(params interface{}, formField, method, url string, streaming bool) (*http.Request, error) {
 		jsonBytes, _ := json.Marshal(params)
 		args := make(map[string]string)
 		if err := json.Unmarshal(jsonBytes, &args); err != nil {
@@ -140,11 +140,25 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.logger.Error("ws event handler: multipart rqst w/ body: failed to create files field in form")
 			return nil, err
 		}
-		for {
+		if streaming {
+			for {
+				mt, reader, err := conn.NextReader()
+				if mt != websocket.BinaryMessage {
+					h.logger.Warning("non binary message", mt)
+					break
+				}
+				_, err = io.Copy(part, reader)
+				if err != nil {
+					h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to read file: %v", err)
+					h.logger.Error("ws event handler: multipart rqst w/ body: failed to read file")
+					return nil, err
+				}
+			}
+		} else {
 			mt, reader, err := conn.NextReader()
 			if mt != websocket.BinaryMessage {
 				h.logger.Warning("non binary message", mt)
-				break
+				return nil, errors.New("file content should be as binary message")
 			}
 			_, err = io.Copy(part, reader)
 			if err != nil {
@@ -651,7 +665,11 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			logEventDescription(string(common.FileDownload), to, res.StatusCode, h.logger)
 		case common.FileUpload, common.FileUploadStream:
-			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "files", http.MethodPost, string(common.FileUpload))
+			streaming := false
+			if req.Event == common.FileUploadStream {
+				streaming = true
+			}
+			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "files", http.MethodPost, string(req.Event), streaming)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -777,8 +795,12 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			h.KVDelHandler(res, httpReq)
 			logEventDescription(string(common.KVEntryDelete), to, res.StatusCode, h.logger)
-		case common.KVLoadCSV:
-			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "csv", http.MethodPost, string(common.KVLoadCSV))
+		case common.KVLoadCSV, common.KVLoadCSVStream:
+			streaming := false
+			if req.Event == common.KVLoadCSVStream {
+				streaming = true
+			}
+			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "csv", http.MethodPost, string(req.Event), streaming)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -887,8 +909,12 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			h.DocDelHandler(res, httpReq)
 			logEventDescription(string(common.DocEntryDel), to, res.StatusCode, h.logger)
-		case common.DocLoadJson:
-			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "json", http.MethodPost, string(common.DocLoadJson))
+		case common.DocLoadJson, common.DocLoadJsonStream:
+			streaming := false
+			if req.Event == common.DocLoadJsonStream {
+				streaming = true
+			}
+			httpReq, err := newMultipartRequestWithBinaryMessage(req.Params, "json", http.MethodPost, string(req.Event), streaming)
 			if err != nil {
 				respondWithError(res, err)
 				continue
