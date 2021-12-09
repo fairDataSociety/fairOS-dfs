@@ -84,10 +84,6 @@ func init() {
 	defaultConfig := filepath.Join(home, ".fairOS/dfs-cli.yml")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", defaultConfig, "config file")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 	rootCmd.PersistentFlags().StringVar(&fdfsHost, "fdfsHost", "127.0.0.1", "fdfs host")
 	rootCmd.PersistentFlags().StringVar(&fdfsPort, "fdfsPort", "9090", "fdfs port")
 }

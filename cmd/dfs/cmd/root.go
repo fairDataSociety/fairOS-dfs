@@ -21,30 +21,44 @@ import (
 	"os"
 	"path/filepath"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	cfgFile   string
-	beeHost   string
-	beePort   string
-	verbosity string
-	dataDir   string
+	defaultDir    = filepath.Join(".fairOS", "dfs")
+	defaultConfig = ".dfs.yaml"
+
+	cfgFile     string
+	beeApi      string
+	beeDebugApi string
+	verbosity   string
+	dataDir     string
+
+	dataDirPath string
+	config      = viper.New()
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "dfs",
 	Short: "Decentralised file system over Swarm(https://ethswarm.org/)",
-	Long: `dfs is the file system layer of internetOS. It is a thin layer over Swarm.  
-It adds features to Swarm that is required by the internetOS to parallelize computation of data. 
+	Long: `dfs is the file system layer of fairOS. It is a thin layer over Swarm.  
+It adds features to Swarm that is required by the fairOS to parallelize computation of data. 
 It manages the metadata of directories and files created and expose them to higher layers.
 It can also be used as a standalone personal, decentralised drive over the internet`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		config.BindPFlag(optionDFSDataDir, cmd.Flags().Lookup("dataDir"))
+		config.BindPFlag(optionBeeApi, cmd.Flags().Lookup("beeApi"))
+		config.BindPFlag(optionBeeDebugApi, cmd.Flags().Lookup("beeDebugApi"))
+		config.BindPFlag(optionVerbosity, cmd.Flags().Lookup("verbosity"))
 
-	//Run: func(cmd *cobra.Command, args []string) {
-	//},
+		dataDir = config.GetString(optionDFSDataDir)
+		beeApi = config.GetString(optionBeeApi)
+		beeDebugApi = config.GetString(optionBeeDebugApi)
+		verbosity = config.GetString(optionVerbosity)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -76,29 +90,33 @@ func init() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	defaultConfig := filepath.Join(home, ".fairOS/dfs.yml")
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", defaultConfig, "config file")
+	configPath := filepath.Join(home, defaultConfig)
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", configPath, "config file")
 
-	defaultDataDir := filepath.Join(home, ".fairOS/dfs")
-	rootCmd.PersistentFlags().StringVar(&dataDir, "dataDir", defaultDataDir, "store data in this dir")
-	rootCmd.PersistentFlags().StringVar(&beeHost, "beeHost", "127.0.0.1", "bee host")
-	rootCmd.PersistentFlags().StringVar(&beePort, "beePort", "1633", "bee port")
-	rootCmd.PersistentFlags().StringVar(&verbosity, "verbosity", "5", "verbosity level")
+	dataDirPath = filepath.Join(home, defaultDir)
+	rootCmd.PersistentFlags().String("dataDir", dataDirPath, "store data in this dir")
+	rootCmd.PersistentFlags().String("beeApi", "localhost:1633", "bee host")
+	rootCmd.PersistentFlags().String("beeDebugApi", "localhost:1635", "bee port")
+	rootCmd.PersistentFlags().String("verbosity", "5", "verbosity level")
+
+	rootCmd.PersistentFlags().MarkDeprecated("beeHost", "run help to check new flags")
+	rootCmd.PersistentFlags().MarkDeprecated("beePort", "run help to check new flags")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if cfgFile != "" {
+		// check file stat
+		if _, err := os.Stat(cfgFile); err != nil {
+			// if there is no configFile, write it
+			writeConfig(config)
+		}
 		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
+		config.SetConfigFile(cfgFile)
 	} else {
 		// Find home dir.
 		home, err := homedir.Dir()
@@ -106,16 +124,36 @@ func initConfig() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		// check file stat
+		cfgFile = filepath.Join(home, defaultConfig)
+		if _, err := os.Stat(cfgFile); err != nil {
+			// if there is no configFile, write it
+			writeConfig(config)
+		}
 
-		// Search config in home dir with name ".dfs" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".fairOS/dfs")
+		config.SetConfigFile(cfgFile)
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
-
+	config.AutomaticEnv() // read in environment variables that match
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if err := config.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", config.ConfigFileUsed())
+	}
+}
+
+func writeConfig(c *viper.Viper) {
+	c.Set(optionCORSAllowedOrigins, []string{})
+	c.Set(optionDFSDataDir, dataDirPath)
+	c.Set(optionDFSHttpPort, ":9090")
+	c.Set(optionDFSPprofPort, ":9091")
+	c.Set(optionVerbosity, "info")
+	c.Set(optionBeeApi, "http://localhost:1633")
+	c.Set(optionBeeDebugApi, "http://localhost:1635")
+	c.Set(optionBeePostageBatchId, "")
+	c.Set(optionCookieDomain, "api.fairos.io")
+
+	if err := c.WriteConfigAs(cfgFile); err != nil {
+		fmt.Println("failed to write config file")
+		os.Exit(1)
 	}
 }
