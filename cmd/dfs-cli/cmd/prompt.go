@@ -786,6 +786,10 @@ func executor(in string) {
 		compression := ""
 		if len(blocks) >= 5 {
 			compression = blocks[4]
+			if compression != "snappy" && compression != "gzip" {
+				fmt.Println("invalid value for \"compression\", should either be \"snappy\" or \"gzip\"")
+				return
+			}
 		}
 		uploadFile(fileName, currentPod, blocks[1], podDir, blockSize, compression)
 		currentPrompt = getCurrentPrompt()
@@ -957,7 +961,7 @@ func help() {
 	fmt.Println(" - cd <directory name>")
 	fmt.Println(" - ls ")
 	fmt.Println(" - download <destination dir in local fs, relative path of source file in pod>")
-	fmt.Println(" - upload <source file in local fs, destination directory in pod, block size (ex: 1Mb, 64Mb)>, compression true/false")
+	fmt.Println(" - upload <source file in local fs, destination directory in pod, block size (ex: 1Mb, 64Mb)>, compression snappy/gzip")
 	fmt.Println(" - share <file name> -  shares a file with another user")
 	fmt.Println(" - receive <sharing reference> <pod dir> - receives a file from another user")
 	fmt.Println(" - receiveinfo <sharing reference> - shows the received file info before accepting the receive")
