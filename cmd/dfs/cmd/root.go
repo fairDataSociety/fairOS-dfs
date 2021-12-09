@@ -108,15 +108,17 @@ func init() {
 
 	dataDirPath = filepath.Join(home, defaultDir)
 	rootCmd.PersistentFlags().String("dataDir", dataDirPath, "store data in this dir")
-	rootCmd.PersistentFlags().String("beeApi", "localhost:1633", "bee host")
-	rootCmd.PersistentFlags().String("beeDebugApi", "localhost:1635", "bee port")
+	rootCmd.PersistentFlags().String("beeApi", "localhost:1633", "full bee api endpoint")
+	rootCmd.PersistentFlags().String("beeDebugApi", "localhost:1635", "full bee debug api endpoint")
 	rootCmd.PersistentFlags().String("verbosity", "5", "verbosity level")
 
-	if err := rootCmd.PersistentFlags().MarkDeprecated("beeHost", "run help to check new flags"); err != nil {
+	rootCmd.PersistentFlags().String("beeHost", "127.0.0.1", "bee host")
+	rootCmd.PersistentFlags().String("beePort", "1633", "bee port")
+	if err := rootCmd.PersistentFlags().MarkDeprecated("beeHost", "run --beeApi, full bee api endpoint"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	if err := rootCmd.PersistentFlags().MarkDeprecated("beePort", "run help to check new flags"); err != nil {
+	if err := rootCmd.PersistentFlags().MarkDeprecated("beePort", "run --beeApi, full bee api endpoint"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -128,7 +130,7 @@ func initConfig() {
 		// check file stat
 		if _, err := os.Stat(cfgFile); err != nil {
 			// if there is no configFile, write it
-			writeConfig(config)
+			writeConfig()
 		}
 		// Use config file from the flag.
 		config.SetConfigFile(cfgFile)
@@ -143,7 +145,7 @@ func initConfig() {
 		cfgFile = filepath.Join(home, defaultConfig)
 		if _, err := os.Stat(cfgFile); err != nil {
 			// if there is no configFile, write it
-			writeConfig(config)
+			writeConfig()
 		}
 
 		config.SetConfigFile(cfgFile)
@@ -156,7 +158,8 @@ func initConfig() {
 	}
 }
 
-func writeConfig(c *viper.Viper) {
+func writeConfig() {
+	c := viper.New()
 	c.Set(optionCORSAllowedOrigins, []string{})
 	c.Set(optionDFSDataDir, dataDirPath)
 	c.Set(optionDFSHttpPort, ":9090")
