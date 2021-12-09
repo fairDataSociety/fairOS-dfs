@@ -46,12 +46,23 @@ var serverCmd = &cobra.Command{
 	Short: "starts a HTTP server for the dfs",
 	Long: `Serves all the dfs commands through an HTTP server so that the upper layers
 can consume it.`,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		config.BindPFlag(optionDFSHttpPort, cmd.Flags().Lookup("httpPort"))
-		config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort"))
-		config.BindPFlag(optionCookieDomain, cmd.Flags().Lookup("cookieDomain"))
-		config.BindPFlag(optionCORSAllowedOrigins, cmd.Flags().Lookup("cors-origins"))
-		config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId"))
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if err := config.BindPFlag(optionDFSHttpPort, cmd.Flags().Lookup("httpPort")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionCookieDomain, cmd.Flags().Lookup("cookieDomain")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionCORSAllowedOrigins, cmd.Flags().Lookup("cors-origins")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId")); err != nil {
+			return err
+		}
+		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		httpPort = config.GetString(optionDFSHttpPort)

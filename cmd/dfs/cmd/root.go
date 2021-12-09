@@ -48,16 +48,25 @@ var rootCmd = &cobra.Command{
 It adds features to Swarm that is required by the fairOS to parallelize computation of data. 
 It manages the metadata of directories and files created and expose them to higher layers.
 It can also be used as a standalone personal, decentralised drive over the internet`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		config.BindPFlag(optionDFSDataDir, cmd.Flags().Lookup("dataDir"))
-		config.BindPFlag(optionBeeApi, cmd.Flags().Lookup("beeApi"))
-		config.BindPFlag(optionBeeDebugApi, cmd.Flags().Lookup("beeDebugApi"))
-		config.BindPFlag(optionVerbosity, cmd.Flags().Lookup("verbosity"))
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if err := config.BindPFlag(optionDFSDataDir, cmd.Flags().Lookup("dataDir")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionBeeApi, cmd.Flags().Lookup("beeApi")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionBeeDebugApi, cmd.Flags().Lookup("beeDebugApi")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionVerbosity, cmd.Flags().Lookup("verbosity")); err != nil {
+			return err
+		}
 
 		dataDir = config.GetString(optionDFSDataDir)
 		beeApi = config.GetString(optionBeeApi)
 		beeDebugApi = config.GetString(optionBeeDebugApi)
 		verbosity = config.GetString(optionVerbosity)
+		return nil
 	},
 }
 
@@ -103,8 +112,14 @@ func init() {
 	rootCmd.PersistentFlags().String("beeDebugApi", "localhost:1635", "bee port")
 	rootCmd.PersistentFlags().String("verbosity", "5", "verbosity level")
 
-	rootCmd.PersistentFlags().MarkDeprecated("beeHost", "run help to check new flags")
-	rootCmd.PersistentFlags().MarkDeprecated("beePort", "run help to check new flags")
+	if err := rootCmd.PersistentFlags().MarkDeprecated("beeHost", "run help to check new flags"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if err := rootCmd.PersistentFlags().MarkDeprecated("beePort", "run help to check new flags"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.
