@@ -110,7 +110,7 @@ func init() {
 	rootCmd.PersistentFlags().String("dataDir", dataDirPath, "store data in this dir")
 	rootCmd.PersistentFlags().String("beeApi", "localhost:1633", "full bee api endpoint")
 	rootCmd.PersistentFlags().String("beeDebugApi", "localhost:1635", "full bee debug api endpoint")
-	rootCmd.PersistentFlags().String("verbosity", "5", "verbosity level")
+	rootCmd.PersistentFlags().String("verbosity", "trace", "verbosity level")
 
 	rootCmd.PersistentFlags().String("beeHost", "127.0.0.1", "bee host")
 	rootCmd.PersistentFlags().String("beePort", "1633", "bee port")
@@ -160,15 +160,15 @@ func initConfig() {
 
 func writeConfig() {
 	c := viper.New()
-	c.Set(optionCORSAllowedOrigins, []string{})
+	c.Set(optionCORSAllowedOrigins, defaultCORSAllowedOrigins)
 	c.Set(optionDFSDataDir, dataDirPath)
-	c.Set(optionDFSHttpPort, ":9090")
-	c.Set(optionDFSPprofPort, ":9091")
-	c.Set(optionVerbosity, "info")
-	c.Set(optionBeeApi, "http://localhost:1633")
-	c.Set(optionBeeDebugApi, "http://localhost:1635")
+	c.Set(optionDFSHttpPort, defaultDFSHttpPort)
+	c.Set(optionDFSPprofPort, defaultDFSPprofPort)
+	c.Set(optionVerbosity, defaultVerbosity)
+	c.Set(optionBeeApi, defaultBeeApi)
+	c.Set(optionBeeDebugApi, defaultBeeDebugApi)
 	c.Set(optionBeePostageBatchId, "")
-	c.Set(optionCookieDomain, "api.fairos.io")
+	c.Set(optionCookieDomain, defaultCookieDomain)
 
 	if err := c.WriteConfigAs(cfgFile); err != nil {
 		fmt.Println("failed to write config file")

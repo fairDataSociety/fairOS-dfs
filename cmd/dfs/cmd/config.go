@@ -15,6 +15,14 @@ var (
 	optionBeeDebugApi        = "bee.bee-debug-api-endpoint"
 	optionBeePostageBatchId  = "bee.postage-batch-id"
 	optionCookieDomain       = "cookie-domain"
+
+	defaultCORSAllowedOrigins = []string{}
+	defaultDFSHttpPort        = ":9090"
+	defaultDFSPprofPort       = ":9091"
+	defaultVerbosity          = "trace"
+	defaultBeeApi             = "http://localhost:1633"
+	defaultBeeDebugApi        = "http://localhost:1635"
+	defaultCookieDomain       = "api.fairos.io"
 )
 
 var configCmd = &cobra.Command{

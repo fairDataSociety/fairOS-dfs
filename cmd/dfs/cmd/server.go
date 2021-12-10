@@ -118,11 +118,11 @@ can consume it.`,
 }
 
 func init() {
-	serverCmd.Flags().String("httpPort", ":9090", "http port")
-	serverCmd.Flags().String("pprofPort", ":9091", "pprof port")
-	serverCmd.Flags().String("cookieDomain", "api.fairos.io", "the domain to use in the cookie")
+	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
+	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
+	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
 	serverCmd.Flags().String("postageBlockId", "", "the postage block used to store the data in bee")
-	serverCmd.Flags().StringSlice("cors-origins", []string{}, "allow CORS headers for the given origins")
+	serverCmd.Flags().StringSlice("cors-origins", defaultCORSAllowedOrigins, "allow CORS headers for the given origins")
 	rootCmd.AddCommand(serverCmd)
 }
 
