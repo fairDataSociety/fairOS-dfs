@@ -37,7 +37,7 @@ func (h *Handler) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		h.logger.Errorf("Error during connection upgradation:", err)
+		h.logger.Errorf("Error during connection upgrade:", err)
 		return
 	}
 	defer conn.Close()
@@ -89,6 +89,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 
 	var cookie []string
 
+	// create a http request for feeding the http handler
 	newRequest := func(method, url string, buf []byte) (*http.Request, error) {
 		httpReq, err := http.NewRequest(method, url, bytes.NewBuffer(buf))
 		if err != nil {
@@ -102,6 +103,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		return httpReq, nil
 	}
 
+	// create a file upload request for feeding the http handler
 	newMultipartRequestWithBinaryMessage := func(params interface{}, formField, method, url string, streaming bool) (*http.Request, error) {
 		jsonBytes, _ := json.Marshal(params)
 		args := make(map[string]string)
@@ -118,12 +120,14 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		writer := multipart.NewWriter(body)
 		fileName := ""
 		compression := ""
+		contentLength := "0"
 		// Add parameters
 		for k, v := range args {
 			if k == "file_name" {
 				fileName = v
-			}
-			if k == "compression" {
+			} else if k == "content_length" {
+				contentLength = v
+			} else if k == "compression" {
 				compression = strings.ToLower(compression)
 			}
 			err := writer.WriteField(k, v)
@@ -141,17 +145,27 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			return nil, err
 		}
 		if streaming {
+			if contentLength == "" || contentLength == "0" {
+				h.logger.Warning("streaming needs \"content_length\"")
+				return nil, errors.New("streaming needs \"content_length\"")
+			}
+			var totalRead int64 = 0
 			for {
 				mt, reader, err := conn.NextReader()
 				if mt != websocket.BinaryMessage {
 					h.logger.Warning("non binary message", mt)
-					break
+					return nil, errors.New("received non binary message inside upload stream aborting")
 				}
-				_, err = io.Copy(part, reader)
+				n, err := io.Copy(part, reader)
 				if err != nil {
 					h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to read file: %v", err)
 					h.logger.Error("ws event handler: multipart rqst w/ body: failed to read file")
 					return nil, err
+				}
+				totalRead += n
+				if fmt.Sprintf("%d", totalRead) == contentLength {
+					h.logger.Debug("streamed full content")
+					break
 				}
 			}
 		} else {
@@ -192,6 +206,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		return httpReq, nil
 	}
 
+	// create a http request for file download
 	newMultipartRequest := func(method, url, boundary string, r io.Reader) (*http.Request, error) {
 		httpReq, err := http.NewRequest(method, url, r)
 		if err != nil {
