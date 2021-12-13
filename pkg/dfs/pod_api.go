@@ -94,7 +94,6 @@ func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 	if err != nil {
 		return err
 	}
-	directory := podInfo.GetDirectory()
 
 	// delete the pod and close if it is opened
 	err = ui.GetPod().DeleteOwnPod(podName)
