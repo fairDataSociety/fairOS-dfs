@@ -49,7 +49,7 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	podName := docReq.TableName
+	podName := docReq.PodName
 	if podName == "" {
 		h.logger.Errorf("doc indexjson: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, "doc indexjson: \"pod_name\" argument missing")

@@ -205,5 +205,4 @@ func TestRmRootDir(t *testing.T) {
 			t.Fatalf("could not delete directory")
 		}
 	})
-
 }

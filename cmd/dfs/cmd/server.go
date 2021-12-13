@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	dfs "github.com/fairdatasociety/fairOS-dfs"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/gorilla/mux"
@@ -161,8 +160,11 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 	})
-
 	apiVersion := "v1"
+
+	wsRouter := router.PathPrefix("/ws/" + apiVersion).Subrouter()
+	wsRouter.HandleFunc("/", handler.WebsocketHandler)
+
 	baseRouter := router.PathPrefix("/" + apiVersion).Subrouter()
 	baseRouter.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintln(w, "User-agent: *\nDisallow: /")

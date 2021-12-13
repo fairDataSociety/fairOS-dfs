@@ -116,5 +116,5 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonhttp.OK(w, "document db created")
+	jsonhttp.Created(w, "document db created")
 }

@@ -126,6 +126,7 @@ github.com/gorilla/mux
 ## explicit
 github.com/gorilla/securecookie
 # github.com/gorilla/websocket v1.4.2
+## explicit
 github.com/gorilla/websocket
 # github.com/hashicorp/golang-lru v0.5.4
 ## explicit

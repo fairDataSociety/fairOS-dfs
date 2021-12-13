@@ -285,6 +285,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 		}
 		defer d.removeFromOpenedDB(dbName)
 	}
+
 	docDB := d.getOpenedDb(dbName)
 	//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
 	for _, si := range docDB.simpleIndexes {
@@ -315,12 +316,15 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	// delete the document db from the DB file
 	delete(docTables, dbName)
 
-	// store the rest of the document db
-	err = d.storeDocumentDBSchemas(docTables)
-	if err != nil {
-		d.logger.Errorf("deleting document db: ", err.Error())
-		return err
+	if len(docTables) > 0 {
+		// store the rest of the document db
+		err = d.storeDocumentDBSchemas(docTables)
+		if err != nil {
+			d.logger.Errorf("deleting document db: ", err.Error())
+			return err
+		}
 	}
+
 	d.logger.Info("deleted document db: ", dbName)
 	return nil
 }
