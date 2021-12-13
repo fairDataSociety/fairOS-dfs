@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -147,14 +146,19 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		if streaming {
 			if contentLength == "" || contentLength == "0" {
 				h.logger.Warning("streaming needs \"content_length\"")
-				return nil, errors.New("streaming needs \"content_length\"")
+				return nil, fmt.Errorf("streaming needs \"content_length\"")
 			}
 			var totalRead int64 = 0
 			for {
 				mt, reader, err := conn.NextReader()
+				if err != nil {
+					h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to read next message: %v", err)
+					h.logger.Error("ws event handler: multipart rqst w/ body: failed to read next message")
+					return nil, err
+				}
 				if mt != websocket.BinaryMessage {
 					h.logger.Warning("non binary message", mt)
-					return nil, errors.New("received non binary message inside upload stream aborting")
+					return nil, fmt.Errorf("received non binary message inside upload stream aborting")
 				}
 				n, err := io.Copy(part, reader)
 				if err != nil {
@@ -170,9 +174,14 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 		} else {
 			mt, reader, err := conn.NextReader()
+			if err != nil {
+				h.logger.Debugf("ws event handler: multipart rqst w/ body: failed to read next message: %v", err)
+				h.logger.Error("ws event handler: multipart rqst w/ body: failed to read next message")
+				return nil, err
+			}
 			if mt != websocket.BinaryMessage {
 				h.logger.Warning("non binary message", mt)
-				return nil, errors.New("file content should be as binary message")
+				return nil, fmt.Errorf("file content should be as binary message")
 			}
 			_, err = io.Copy(part, reader)
 			if err != nil {
@@ -541,7 +550,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.FileDownloadHandler(res, httpReq)
 			if res.StatusCode != 0 {
 				errMessage := res.Params.(map[string]interface{})
-				respondWithError(res, errors.New(fmt.Sprintf("%s", errMessage["message"])))
+				respondWithError(res, fmt.Errorf("%s", errMessage["message"]))
 				continue
 			}
 			downloadConfirmResponse := common.NewWebsocketResponse()
@@ -634,7 +643,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.FileDownloadHandler(res, httpReq)
 			if res.StatusCode != 0 {
 				errMessage := res.Params.(map[string]interface{})
-				respondWithError(res, errors.New(fmt.Sprintf("%s", errMessage["message"])))
+				respondWithError(res, fmt.Errorf("%s", errMessage["message"]))
 				continue
 			}
 			downloadConfirmResponse := common.NewWebsocketResponse()
