@@ -46,8 +46,13 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	// check if directory already present
 	totalPath := utils.CombinePathAndFile(d.podName, parentPath, dirName)
 	topic := utils.HashString(totalPath)
-	addr, data, err := d.fd.GetFeedData(topic, d.userAddress)
-	if err == nil && addr != nil && data != nil {
+
+	// check if parent path exists
+	if d.GetDirFromDirectoryMap(parentPath) == nil {
+		return ErrDirectoryNotPresent
+	}
+
+	if d.GetDirFromDirectoryMap(totalPath) != nil {
 		return ErrDirectoryAlreadyPresent
 	}
 
@@ -64,16 +69,25 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	dirInode := &Inode{
 		Meta: &meta,
 	}
-	data, err = json.Marshal(dirInode)
+	data, err := json.Marshal(dirInode)
 	if err != nil {
 		return err
 	}
 
 	// upload the metadata as blob
-	_, err = d.fd.CreateFeed(topic, d.userAddress, data)
-	if err != nil {
-		return err
+	previousAddr, _, err := d.fd.GetFeedData(topic, d.userAddress)
+	if err == nil && previousAddr != nil {
+		_, err = d.fd.UpdateFeed(topic, d.userAddress, data)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = d.fd.CreateFeed(topic, d.userAddress, data)
+		if err != nil {
+			return err
+		}
 	}
+
 	d.AddToDirectoryMap(totalPath, dirInode)
 
 	// get the parent directory entry and add this new directory to its list of children
@@ -126,9 +140,17 @@ func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed
 	}
 	parentPath := utils.CombinePathAndFile(podName, utils.PathSeperator, "")
 	parentHash := utils.HashString(parentPath)
-	_, err = fd.CreateFeed(parentHash, podAddress, parentData)
-	if err != nil {
-		return err
+	addr, data, err := d.fd.GetFeedData(parentHash, d.userAddress)
+	if err == nil && addr != nil && data != nil {
+		_, err = fd.UpdateFeed(parentHash, podAddress, parentData)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = fd.CreateFeed(parentHash, podAddress, parentData)
+		if err != nil {
+			return err
+		}
 	}
 	d.AddToDirectoryMap(utils.PathSeperator, parentDirInode)
 	return nil
@@ -141,11 +163,11 @@ func (d *Directory) AddRootDir(podName string, podAddress utils.Address, fd *fee
 	if err != nil {
 		return err
 	}
-	var parentDirInode *Inode
-	err = json.Unmarshal(parentDataBytes, &parentDirInode)
+	var parentDirInode Inode
+	err = parentDirInode.Unmarshal(parentDataBytes)
 	if err != nil {
 		return err
 	}
-	d.AddToDirectoryMap(utils.PathSeperator, parentDirInode)
+	d.AddToDirectoryMap(utils.PathSeperator, &parentDirInode)
 	return nil
 }

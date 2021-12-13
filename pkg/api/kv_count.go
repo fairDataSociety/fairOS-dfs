@@ -18,7 +18,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -81,6 +80,5 @@ func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cntStr := fmt.Sprintf("kv store %s has %d records", name, count)
-	jsonhttp.OK(w, cntStr)
+	jsonhttp.OK(w, count)
 }

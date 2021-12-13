@@ -103,7 +103,7 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 	actualIndexName := podName + collectionName + indexName
 	topic := utils.HashString(actualIndexName)
 	_, oldData, err := fd.GetFeedData(topic, user)
-	if err == nil && len(oldData) != 0 {
+	if err == nil && len(oldData) != 0 && string(oldData) != utils.DeletedFeedMagicWord {
 		// if the feed is present and it has some data means there index is still valid
 		return ErrIndexAlreadyPresent
 	}
@@ -121,6 +121,13 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 		return ErrManifestUnmarshall
 	}
 
+	if string(oldData) == utils.DeletedFeedMagicWord {
+		_, err = fd.UpdateFeed(topic, user, ref)
+		if err != nil {
+			return ErrManifestCreate
+		}
+		return nil
+	}
 	_, err = fd.CreateFeed(topic, user, ref)
 	if err != nil {
 		return ErrManifestCreate
@@ -237,7 +244,6 @@ func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 	if err != nil {
 		return nil, ErrNoManifestFound
 	}
-
 	data, respCode, err := idx.client.DownloadBlob(refData)
 	if err != nil {
 		return nil, ErrNoManifestFound
@@ -333,9 +339,8 @@ func longestCommonPrefix(str1, str2 string) (string, string, string) {
 	for i := 0; i < maxLen; i++ {
 		if str1[i] != str2[i] {
 			break
-		} else {
-			matchLen++
 		}
+		matchLen++
 	}
 	if matchLen == 0 {
 		return "", str1, str2

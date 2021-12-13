@@ -48,6 +48,12 @@ var serverCmd = &cobra.Command{
 	Long: `Serves all the dfs commands through an HTTP server so that the upper layers
 can consume it.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if postageBlockId == "" {
+			_ = cmd.Help()
+			fmt.Println("\npostageBlockId is required to run server")
+			return
+		}
+
 		var logger logging.Logger
 		switch v := strings.ToLower(verbosity); v {
 		case "0", "silent":
@@ -180,7 +186,7 @@ func startHttpService(logger logging.Logger) {
 	userRouter.HandleFunc("/logout", handler.UserLogoutHandler).Methods("POST")
 	userRouter.HandleFunc("/export", handler.ExportUserHandler).Methods("POST")
 	userRouter.HandleFunc("/delete", handler.UserDeleteHandler).Methods("DELETE")
-	userRouter.HandleFunc("/stat", handler.GetUserStatHandler).Methods("GET")
+	userRouter.HandleFunc("/stat", handler.UserStatHandler).Methods("GET")
 
 	// pod related handlers
 	baseRouter.HandleFunc("/pod/receive", handler.PodReceiveHandler).Methods("GET")
@@ -208,6 +214,7 @@ func startHttpService(logger logging.Logger) {
 	// file related handlers
 	fileRouter := baseRouter.PathPrefix("/file/").Subrouter()
 	fileRouter.Use(handler.LoginMiddleware)
+	fileRouter.HandleFunc("/download", handler.FileDownloadHandler).Methods("GET")
 	fileRouter.HandleFunc("/download", handler.FileDownloadHandler).Methods("POST")
 	fileRouter.HandleFunc("/upload", handler.FileUploadHandler).Methods("POST")
 	fileRouter.HandleFunc("/share", handler.FileShareHandler).Methods("POST")

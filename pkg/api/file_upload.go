@@ -43,7 +43,7 @@ const (
 // it takes three argument
 // - dir_path: the directory in the pod where the file should be uploaded
 // - block_size: the block size of the file
-// - files: the argument name iwhere the file to upload is attached n the multipart file upload
+// - files: the argument name of the file to upload is attached in the multipart file upload
 // Header:
 // - fairOS-dfs-Compression: gzip/snappy
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +131,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		//upload file to bee
 		uploadErr := h.dfsAPI.UploadFile(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
 		if uploadErr != nil {
-			if err == dfs.ErrPodNotOpen {
+			if uploadErr == dfs.ErrPodNotOpen {
 				h.logger.Errorf("file upload: %v", uploadErr)
 				jsonhttp.BadRequest(w, "file upload: "+uploadErr.Error())
 				return

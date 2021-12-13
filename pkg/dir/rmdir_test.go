@@ -18,6 +18,7 @@ package dir_test
 
 import (
 	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -59,12 +60,6 @@ func TestRmdir(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
-		if err != nil {
-			t.Fatal(err)
-		}
-
 		// now delete the directory
 		err = dirObject.RmDir("/dirToRemove")
 		if err != nil {
@@ -75,6 +70,136 @@ func TestRmdir(t *testing.T) {
 		dirEntry, _, err := dirObject.ListDir("/")
 		if err != nil {
 			t.Fatal(err)
+		}
+		if dirEntry != nil {
+			t.Fatalf("could not delete directory")
+		}
+	})
+	t.Run("nested-rmdir", func(t *testing.T) {
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+
+		// make root dir so that other directories can be added
+		err = dirObject.MkRootDir("pod1", user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create a new dir
+		err := dirObject.MkDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create a new dir
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create a new dir
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// make sure directories were created
+		dirEntry, _, err := dirObject.ListDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry == nil {
+			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2\" was not created")
+		}
+		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry == nil {
+			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2/dirToRemove\" was not created")
+		}
+
+		// now delete the directory
+		err = dirObject.RmDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// verify if the directory is actually removed
+		dirEntry, _, err = dirObject.ListDir("/")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry != nil {
+			t.Fatalf("could not delete directory")
+		}
+	})
+}
+
+func TestRmRootDir(t *testing.T) {
+	mockClient := bm.NewMockBeeClient()
+	logger := logging.New(ioutil.Discard, 0)
+	acc := account.New(logger)
+	_, _, err := acc.CreateUserAccount("password", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pod1AccountInfo, err := acc.CreatePodAccount(1, "password", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fd := feed.New(pod1AccountInfo, mockClient, logger)
+	user := acc.GetAddress(1)
+	mockFile := fm.NewMockFile()
+
+	t.Run("rmrootdir", func(t *testing.T) {
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+
+		// make root dir so that other directories can be added
+		err = dirObject.MkRootDir("pod1", user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create a new dir
+		err := dirObject.MkDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create a new dir
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create a new dir
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// make sure directories were created
+		dirEntry, _, err := dirObject.ListDir("/dirToRemove1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry == nil {
+			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2\" was not created")
+		}
+		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dirEntry == nil {
+			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2/dirToRemove\" was not created")
+		}
+
+		// now delete the root directory
+		err = dirObject.RmRootDir()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// verify if the directory is actually removed
+		dirEntry, _, err = dirObject.ListDir("/")
+		if !strings.HasSuffix(err.Error(), dir.ErrResourceDeleted.Error()) {
+			t.Fatal("root directory was not deleted")
 		}
 		if dirEntry != nil {
 			t.Fatalf("could not delete directory")

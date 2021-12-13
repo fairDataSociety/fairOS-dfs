@@ -87,7 +87,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
 		return
 	}
-
+	defer fd.Close()
 	reader := bufio.NewReader(fd)
 	readHeader := false
 	rowCount := 0
@@ -140,13 +140,6 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		successCount++
 	}
 	_, err = batch.Write("")
-	if err != nil {
-		h.logger.Errorf("kv loadcsv: %v", err)
-		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
-		return
-	}
-
-	err = fd.Close()
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)
 		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())

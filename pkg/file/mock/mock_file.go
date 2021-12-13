@@ -29,34 +29,34 @@ func NewMockFile() *MockFile {
 	return &MockFile{}
 }
 
-func (mf *MockFile) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error {
+func (*MockFile) Upload(_ io.Reader, _ string, _ int64, _ uint32, _, _ string) error {
 	return nil
 }
 
-func (mf *MockFile) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
+func (*MockFile) Download(_ string) (io.ReadCloser, uint64, error) {
 	return nil, 0, nil
 }
 
-func (mf *MockFile) ListFiles(files []string) ([]file.Entry, error) {
+func (*MockFile) ListFiles(_ []string) ([]file.Entry, error) {
 	return nil, nil
 }
 
-func (mf *MockFile) GetStats(podName, podFileWithPath string) (*file.Stats, error) {
+func (*MockFile) GetStats(_, _ string) (*file.Stats, error) {
 	return nil, nil
 }
 
-func (mf *MockFile) RmFile(podFileWithPath string) error {
+func (*MockFile) RmFile(_ string) error {
 	return nil
 }
 
-func (mf *MockFile) Read(b []byte) (n int, err error) {
+func (*MockFile) Read(_ []byte) (n int, err error) {
 	return 0, nil
 }
 
-func (mf *MockFile) AddFileToPath(filePath, metaHexRef string) error {
+func (*MockFile) AddFileToPath(_, _ string) error {
 	return nil
 }
 
-func (mf *MockFile) LoadFileMeta(fileNameWithPath string) error {
+func (*MockFile) LoadFileMeta(_ string) error {
 	return nil
 }

@@ -56,6 +56,11 @@ type KVTable struct {
 	columns   []string
 }
 
+type KVCount struct {
+	Count     uint64 `json:"count"`
+	TableName string `json:"table_name"`
+}
+
 // NewKeyValueStore is the main object used to do all operation on the key value tables.
 func NewKeyValueStore(podName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) *KeyValue {
 	return &KeyValue{
@@ -169,17 +174,31 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 }
 
 // KVCount counts the number of entries in the given key value table.
-func (kv *KeyValue) KVCount(name string) (uint64, error) {
+func (kv *KeyValue) KVCount(name string) (*KVCount, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
-		return table.index.CountIndex()
+		count, err := table.index.CountIndex()
+		if err != nil {
+			return nil, err
+		}
+		return &KVCount{
+			Count:     count,
+			TableName: name,
+		}, nil
 	} else {
 		idx, err := OpenIndex(kv.podName, defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
-		return idx.CountIndex()
+		count, err := idx.CountIndex()
+		if err != nil {
+			return nil, err
+		}
+		return &KVCount{
+			Count:     count,
+			TableName: name,
+		}, nil
 	}
 }
 
@@ -385,7 +404,11 @@ func (kv *KeyValue) storeKVTables(collections map[string][]string) error {
 		}
 	}
 	topic := utils.HashString(kvFile)
-	_, err := kv.fd.UpdateFeed(topic, kv.user, buf.Bytes())
+	data := buf.Bytes()
+	if buf.Len() == 0 {
+		data = []byte(utils.DeletedFeedMagicWord)
+	}
+	_, err := kv.fd.UpdateFeed(topic, kv.user, data)
 	if err != nil {
 		return err
 	}

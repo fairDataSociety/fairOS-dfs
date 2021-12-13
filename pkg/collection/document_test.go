@@ -863,25 +863,51 @@ func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname,
 
 func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *collection.DocBatch, id, fname, lname string, age float64, tagMap map[string]string, tagList []string) {
 	t.Helper()
-	// create the doc
-	doc := &TestDocument{
-		ID:        id,
-		FirstName: fname,
-		LastName:  lname,
-		Age:       age,
-		TagMap:    tagMap,
-		TagList:   tagList,
-	}
+	t.Run("valid-json", func(t *testing.T) {
+		// create the doc
+		doc := &TestDocument{
+			ID:        id,
+			FirstName: fname,
+			LastName:  lname,
+			Age:       age,
+			TagMap:    tagMap,
+			TagList:   tagList,
+		}
 
-	// marshall the doc
-	data, err := json.Marshal(doc)
-	if err != nil {
-		t.Fatal(err)
-	}
+		// marshall the doc
+		data, err := json.Marshal(doc)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	// insert the document in the batch
-	err = docStore.DocBatchPut(docBatch, data, 0)
-	if err != nil {
-		t.Fatal(err)
-	}
+		// insert the document in the batch
+		err = docStore.DocBatchPut(docBatch, data, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("invalid-json", func(t *testing.T) {
+		// create the doc
+		doc := TestDocument{
+			ID:        id,
+			FirstName: fname,
+			LastName:  lname,
+			Age:       age,
+			TagMap:    tagMap,
+			TagList:   tagList,
+		}
+
+		// marshall the doc
+		data, err := json.Marshal([]TestDocument{doc})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// insert the document in the batch
+		err = docStore.DocBatchPut(docBatch, data, 0)
+		if err != collection.ErrUnknownJsonFormat {
+			t.Fatal(err)
+		}
+	})
+
 }

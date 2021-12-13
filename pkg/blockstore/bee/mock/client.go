@@ -43,7 +43,7 @@ func NewMockBeeClient() *MockBeeClient {
 	}
 }
 
-func (m *MockBeeClient) CheckConnection() bool {
+func (*MockBeeClient) CheckConnection() bool {
 	return true
 }
 
@@ -131,6 +131,6 @@ func (m *MockBeeClient) DeleteBlob(address []byte) error {
 	return errors.New("blob not found")
 }
 
-func (m *MockBeeClient) GetNewPostageBatch() error {
+func (*MockBeeClient) GetNewPostageBatch() error {
 	return nil
 }

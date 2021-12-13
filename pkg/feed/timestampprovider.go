@@ -55,7 +55,7 @@ func NewDefaultTimestampProvider() *DefaultTimestampProvider {
 }
 
 // Now returns the current time according to this provider
-func (dtp *DefaultTimestampProvider) Now() Timestamp {
+func (*DefaultTimestampProvider) Now() Timestamp {
 	return Timestamp{
 		Time: uint64(time.Now().Unix()),
 	}

@@ -50,4 +50,5 @@ var (
 	ErrReadOnlyIndex                  = errors.New("read only index")
 	ErrCannotModifyImmutableIndex     = errors.New("trying to modify immutable index")
 	ErrCouldNotUpdatePostageBatch     = errors.New("could not procure new postage batch")
+	ErrUnknownJsonFormat              = errors.New("unknown json format")
 )

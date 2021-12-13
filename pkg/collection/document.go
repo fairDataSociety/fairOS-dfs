@@ -283,6 +283,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 			d.logger.Errorf("deleting document db: %v", err.Error())
 			return err
 		}
+		defer d.removeFromOpenedDB(dbName)
 	}
 	docDB := d.getOpenedDb(dbName)
 	//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
@@ -972,7 +973,13 @@ func (d *Document) addToOpenedDb(dbName string, docDB *DocumentDB) {
 	d.openDocDBs[dbName] = docDB
 }
 
-func (d *Document) resolveExpression(expr string) (string, string, string, error) {
+func (d *Document) removeFromOpenedDB(dbName string) {
+	d.openDOcDBMu.Lock()
+	defer d.openDOcDBMu.Unlock()
+	delete(d.openDocDBs, dbName)
+}
+
+func (*Document) resolveExpression(expr string) (string, string, string, error) {
 	var operator string
 	if strings.Contains(expr, "=>") {
 		operator = "=>"
@@ -995,7 +1002,7 @@ func (d *Document) resolveExpression(expr string) (string, string, string, error
 
 // CreateDocBatch creates a batch index instead of normal index. This is used when doing a bulk insert.
 func (d *Document) CreateDocBatch(dbName string) (*DocBatch, error) {
-	d.logger.Info("creeating batch for inserting in document db: ", dbName)
+	d.logger.Info("creating batch for inserting in document db: ", dbName)
 	if d.fd.IsReadOnlyFeed() {
 		d.logger.Errorf("creating batch: ", ErrReadOnlyIndex)
 		return nil, ErrReadOnlyIndex
@@ -1072,198 +1079,206 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 		d.logger.Errorf("inserting in batch: ", err.Error())
 		return err
 	}
-	docMap := t.(map[string]interface{})
+	switch t.(type) {
+	case map[string]interface{}:
+		// it's an object
+		docMap := t.(map[string]interface{})
 
-	// check if docMap has all the fields in the simpleIndex
-	for field := range docBatch.db.simpleIndexes {
-		if _, found := docMap[field]; !found {
-			d.logger.Errorf("inserting in batch: ", ErrDocumentDBIndexFieldNotPresent)
-			return ErrDocumentDBIndexFieldNotPresent
-		}
-	}
-
-	var ref []byte
-	if docBatch.db.mutable {
-
-		// check if the id is already present
-		// and remove it if it is present
-		var valStr string
-		idValue := docMap[DefaultIndexFieldName]
-		switch v := idValue.(type) {
-		case float64:
-			valStr = strconv.FormatFloat(v, 'f', 6, 64)
-		case string:
-			valStr = v
-		default:
-			return ErrInvalidIndexType
-		}
-
-		if valStr == "" {
-			d.logger.Errorf("inserting in batch: ", ErrInvalidDocumentId)
-			return ErrInvalidDocumentId
-		} else {
-			idBatchIndex := docBatch.batches[DefaultIndexFieldName]
-			refs, err := idBatchIndex.Get(valStr)
-			if err == nil {
-				// found a doc with the same id, so remove it and all the indexes
-				if len(refs) > 0 {
-					data, _, err := d.client.DownloadBlob(refs[0])
-					if err != nil {
-						d.logger.Errorf("inserting in batch: ", err.Error())
-						return err
-					}
-
-					var t interface{}
-					err = json.Unmarshal(data, &t)
-					if err != nil {
-						d.logger.Errorf("inserting in batch: ", err.Error())
-						return err
-					}
-					oldDocMap := t.(map[string]interface{})
-
-					for field, batchIndex := range docBatch.batches {
-						v1 := oldDocMap[field] // it is already checked to be present
-						switch batchIndex.idx.indexType {
-						case StringIndex:
-							_, err := batchIndex.Del(v1.(string))
-							if err != nil {
-								d.logger.Errorf("inserting in batch: ", err.Error())
-								return err
-							}
-						case MapIndex:
-							valMap := v1.(map[string]interface{})
-							for keyField, valueField := range valMap {
-								vf := valueField.(string)
-								mapField := keyField + vf
-								_, err := batchIndex.Del(mapField)
-								if err != nil {
-									d.logger.Errorf("inserting in batch: ", err.Error())
-									return err
-								}
-							}
-						case ListIndex:
-							valList := v1.([]interface{})
-							for _, listVal := range valList {
-								_, err := batchIndex.Del(listVal.(string))
-								if err != nil {
-									d.logger.Errorf("inserting in batch: ", err.Error())
-									return err
-								}
-							}
-						case NumberIndex:
-							val := v1.(float64)
-							//valStr = strconv.FormatFloat(val, 'f', 6, 64)
-							_, err := batchIndex.DelNumber(val)
-							if err != nil {
-								d.logger.Errorf("inserting in batch: ", err.Error())
-								return err
-							}
-						case BytesIndex:
-							d.logger.Errorf("inserting in batch: ", ErrIndexNotSupported)
-							return ErrIndexNotSupported
-						default:
-							d.logger.Errorf("inserting in batch: ", ErrInvalidIndexType)
-							return ErrInvalidIndexType
-						}
-					}
-
-					err = d.client.DeleteBlob(refs[0])
-					if err != nil {
-						d.logger.Errorf("inserting in batch: ", err.Error())
-						return err
-					}
-
-				}
+		// check if docMap has all the fields in the simpleIndex
+		for field := range docBatch.db.simpleIndexes {
+			if _, found := docMap[field]; !found {
+				d.logger.Errorf("inserting in batch: ", ErrDocumentDBIndexFieldNotPresent)
+				return ErrDocumentDBIndexFieldNotPresent
 			}
 		}
 
-		// upload the document
-		ref, err = d.client.UploadBlob(doc, true, true)
-		if err != nil {
-			d.logger.Errorf("inserting in batch: ", err.Error())
-			return err
-		}
-	} else {
-		// store the seek index of the document instead of its reference
-		b := make([]byte, binary.MaxVarintLen64)
-		n := binary.PutUvarint(b, uint64(index))
-		ref = b[:n]
-	}
+		var ref []byte
+		if docBatch.db.mutable {
 
-	// update the indexes
-	memory := !docBatch.db.mutable
-	for field, batchIndex := range docBatch.batches {
-		if v, found := docMap[field]; found { // it is already checked to be present
-			switch batchIndex.idx.indexType {
-			case StringIndex:
-				var valStr1 string
-				switch v := v.(type) {
-				case float64:
-					if field == DefaultIndexFieldName {
-						valStr1 = fmt.Sprintf("%d", int64(v))
-					} else {
-						valStr1 = fmt.Sprintf("%020.20g", v)
-					}
-				case string:
-					valStr1 = v
-				default:
-					return ErrInvalidIndexType
-				}
-
-				apnd := true
-				if field == DefaultIndexFieldName {
-					apnd = false
-				}
-				err := batchIndex.Put(valStr1, ref, apnd, memory)
-				if err != nil {
-					d.logger.Errorf("inserting in batch: ", err.Error())
-					return err
-				}
-			case MapIndex:
-				valMap := v.(map[string]interface{})
-				for keyField, valueField := range valMap {
-					vf := valueField.(string)
-					mapField := keyField + vf
-					err := batchIndex.Put(mapField, ref, true, memory)
-					if err != nil {
-						d.logger.Errorf("inserting in batch: ", err.Error())
-						return err
-					}
-				}
-			case ListIndex:
-				valList := v.([]interface{})
-				for _, listVal := range valList {
-					listField := listVal.(string)
-					err := batchIndex.Put(listField, ref, true, memory)
-					if err != nil {
-						d.logger.Errorf("inserting in batch: ", err.Error())
-						return err
-					}
-				}
-			case NumberIndex:
-				switch v1 := v.(type) {
-				case string:
-					err := batchIndex.Put(v1, ref, true, memory)
-					if err != nil {
-						d.logger.Errorf("inserting in batch: ", err.Error())
-						return err
-					}
-				case float64:
-					err := batchIndex.PutNumber(v1, ref, true, memory)
-					if err != nil {
-						d.logger.Errorf("inserting in batch: ", err.Error())
-						return err
-					}
-				default:
-					return ErrIndexNotSupported
-				}
-
-			case BytesIndex:
-				return ErrIndexNotSupported
+			// check if the id is already present
+			// and remove it if it is present
+			var valStr string
+			idValue := docMap[DefaultIndexFieldName]
+			switch v := idValue.(type) {
+			case float64:
+				valStr = strconv.FormatFloat(v, 'f', 6, 64)
+			case string:
+				valStr = v
 			default:
 				return ErrInvalidIndexType
 			}
+
+			if valStr == "" {
+				d.logger.Errorf("inserting in batch: ", ErrInvalidDocumentId)
+				return ErrInvalidDocumentId
+			} else {
+				idBatchIndex := docBatch.batches[DefaultIndexFieldName]
+				refs, err := idBatchIndex.Get(valStr)
+				if err == nil {
+					// found a doc with the same id, so remove it and all the indexes
+					if len(refs) > 0 {
+						data, _, err := d.client.DownloadBlob(refs[0])
+						if err != nil {
+							d.logger.Errorf("inserting in batch: ", err.Error())
+							return err
+						}
+
+						var t interface{}
+						err = json.Unmarshal(data, &t)
+						if err != nil {
+							d.logger.Errorf("inserting in batch: ", err.Error())
+							return err
+						}
+						oldDocMap := t.(map[string]interface{})
+
+						for field, batchIndex := range docBatch.batches {
+							v1 := oldDocMap[field] // it is already checked to be present
+							switch batchIndex.idx.indexType {
+							case StringIndex:
+								_, err := batchIndex.Del(v1.(string))
+								if err != nil {
+									d.logger.Errorf("inserting in batch: ", err.Error())
+									return err
+								}
+							case MapIndex:
+								valMap := v1.(map[string]interface{})
+								for keyField, valueField := range valMap {
+									vf := valueField.(string)
+									mapField := keyField + vf
+									_, err := batchIndex.Del(mapField)
+									if err != nil {
+										d.logger.Errorf("inserting in batch: ", err.Error())
+										return err
+									}
+								}
+							case ListIndex:
+								valList := v1.([]interface{})
+								for _, listVal := range valList {
+									_, err := batchIndex.Del(listVal.(string))
+									if err != nil {
+										d.logger.Errorf("inserting in batch: ", err.Error())
+										return err
+									}
+								}
+							case NumberIndex:
+								val := v1.(float64)
+								//valStr = strconv.FormatFloat(val, 'f', 6, 64)
+								_, err := batchIndex.DelNumber(val)
+								if err != nil {
+									d.logger.Errorf("inserting in batch: ", err.Error())
+									return err
+								}
+							case BytesIndex:
+								d.logger.Errorf("inserting in batch: ", ErrIndexNotSupported)
+								return ErrIndexNotSupported
+							default:
+								d.logger.Errorf("inserting in batch: ", ErrInvalidIndexType)
+								return ErrInvalidIndexType
+							}
+						}
+
+						err = d.client.DeleteBlob(refs[0])
+						if err != nil {
+							d.logger.Errorf("inserting in batch: ", err.Error())
+							return err
+						}
+
+					}
+				}
+			}
+
+			// upload the document
+			ref, err = d.client.UploadBlob(doc, true, true)
+			if err != nil {
+				d.logger.Errorf("inserting in batch: ", err.Error())
+				return err
+			}
+		} else {
+			// store the seek index of the document instead of its reference
+			b := make([]byte, binary.MaxVarintLen64)
+			n := binary.PutUvarint(b, uint64(index))
+			ref = b[:n]
 		}
+
+		// update the indexes
+		memory := !docBatch.db.mutable
+		for field, batchIndex := range docBatch.batches {
+			if v, found := docMap[field]; found { // it is already checked to be present
+				switch batchIndex.idx.indexType {
+				case StringIndex:
+					var valStr1 string
+					switch v := v.(type) {
+					case float64:
+						if field == DefaultIndexFieldName {
+							valStr1 = fmt.Sprintf("%d", int64(v))
+						} else {
+							valStr1 = fmt.Sprintf("%020.20g", v)
+						}
+					case string:
+						valStr1 = v
+					default:
+						return ErrInvalidIndexType
+					}
+
+					apnd := true
+					if field == DefaultIndexFieldName {
+						apnd = false
+					}
+					err := batchIndex.Put(valStr1, ref, apnd, memory)
+					if err != nil {
+						d.logger.Errorf("inserting in batch: ", err.Error())
+						return err
+					}
+				case MapIndex:
+					valMap := v.(map[string]interface{})
+					for keyField, valueField := range valMap {
+						vf := valueField.(string)
+						mapField := keyField + vf
+						err := batchIndex.Put(mapField, ref, true, memory)
+						if err != nil {
+							d.logger.Errorf("inserting in batch: ", err.Error())
+							return err
+						}
+					}
+				case ListIndex:
+					valList := v.([]interface{})
+					for _, listVal := range valList {
+						listField := listVal.(string)
+						err := batchIndex.Put(listField, ref, true, memory)
+						if err != nil {
+							d.logger.Errorf("inserting in batch: ", err.Error())
+							return err
+						}
+					}
+				case NumberIndex:
+					switch v1 := v.(type) {
+					case string:
+						err := batchIndex.Put(v1, ref, true, memory)
+						if err != nil {
+							d.logger.Errorf("inserting in batch: ", err.Error())
+							return err
+						}
+					case float64:
+						err := batchIndex.PutNumber(v1, ref, true, memory)
+						if err != nil {
+							d.logger.Errorf("inserting in batch: ", err.Error())
+							return err
+						}
+					default:
+						return ErrIndexNotSupported
+					}
+
+				case BytesIndex:
+					return ErrIndexNotSupported
+				default:
+					return ErrInvalidIndexType
+				}
+			}
+		}
+	default:
+		// it's something else
+		d.logger.Errorf("inserting in batch: unknown json format")
+		return ErrUnknownJsonFormat
 	}
 
 	return nil

@@ -28,11 +28,22 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 )
 
-func docNew(tableName, simpleIndex, mutable string) {
+func docNew(podName, tableName, simpleIndex, mutableStr string) {
+	mutable := true
+	if mutableStr != "" {
+		mut, err := strconv.ParseBool(mutableStr)
+		if err != nil {
+			fmt.Println("doc new: error parsing \"mutable\" string")
+			return
+		}
+		mutable = mut
+	}
+
 	docNewReq := common.DocRequest{
 		TableName:   tableName,
 		SimpleIndex: simpleIndex,
 		Mutable:     mutable,
+		PodName:     podName,
 	}
 	jsonData, err := json.Marshal(docNewReq)
 	if err != nil {

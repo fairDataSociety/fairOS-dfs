@@ -23,6 +23,7 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -126,6 +127,12 @@ func (d *DfsAPI) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []
 		return nil, nil, err
 	}
 	directory := podInfo.GetDirectory()
+
+	// check if directory present
+	totalPath := utils.CombinePathAndFile(podName, currentDir, "")
+	if directory.GetDirFromDirectoryMap(totalPath) == nil {
+		return nil, nil, dir.ErrDirectoryNotPresent
+	}
 	dEntries, fileList, err := directory.ListDir(currentDir)
 	if err != nil {
 		return nil, nil, err
@@ -194,6 +201,9 @@ func (d *DfsAPI) DeleteFile(podName, podFileWithPath, sessionId string) error {
 	file := podInfo.GetFile()
 	err = file.RmFile(podFileWithPath)
 	if err != nil {
+		if err == f.ErrDeletedFeed {
+			return pod.ErrInvalidFile
+		}
 		return err
 	}
 
@@ -249,6 +259,24 @@ func (d *DfsAPI) UploadFile(podName, podFileName, sessionId string, fileSize int
 	}
 	file := podInfo.GetFile()
 	directory := podInfo.GetDirectory()
+
+	// check if file exists, then backup the file
+	totalPath := utils.CombinePathAndFile(podName, podPath, podFileName)
+	if file.IsFileAlreadyPresent(totalPath) {
+		m, err := file.BackupFromFileName(totalPath)
+		if err != nil {
+			return err
+		}
+		err = directory.AddEntryToDir(podPath, m.Name, true)
+		if err != nil {
+			return err
+		}
+		err = directory.RemoveEntryFromDir(podPath, podFileName, true)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = file.Upload(fd, podFileName, fileSize, blockSize, podPath, compression)
 	if err != nil {
 		return err

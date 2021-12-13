@@ -17,10 +17,8 @@ limitations under the License.
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
@@ -38,23 +36,13 @@ type DocumentDB struct {
 // DocListHandler is the api handler which lists all the document database in a pod
 // it takes no arguments
 func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
-	contentType := r.Header.Get("Content-Type")
-	if contentType != jsonContentType {
-		h.logger.Errorf("doc ls: invalid request body type")
-		jsonhttp.BadRequest(w, "doc ls: invalid request body type")
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("doc ls: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc ls: \"pod_name\" argument missing")
 		return
 	}
-
-	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
-	err := decoder.Decode(&docReq)
-	if err != nil {
-		h.logger.Errorf("doc ls: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc ls: could not decode arguments")
-		return
-	}
-
-	podName := docReq.PodName
+	podName := keys[0]
 	if podName == "" {
 		h.logger.Errorf("doc ls: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, "doc ls: \"pod_name\" argument missing")

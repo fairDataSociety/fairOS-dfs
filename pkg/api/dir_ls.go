@@ -75,6 +75,11 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 			jsonhttp.BadRequest(w, "ls: "+err.Error())
 			return
 		}
+		if err == dir.ErrDirectoryNotPresent {
+			h.logger.Errorf("ls: %v", err)
+			jsonhttp.NotFound(w, "ls: "+err.Error())
+			return
+		}
 		h.logger.Errorf("ls: %v", err)
 		jsonhttp.InternalServerError(w, "ls: "+err.Error())
 		return

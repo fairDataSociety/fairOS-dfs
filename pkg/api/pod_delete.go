@@ -55,6 +55,13 @@ func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	password := podReq.Password
+	if password == "" {
+		h.logger.Errorf("user delete: \"password\" argument missing")
+		jsonhttp.BadRequest(w, "user delete: \"password\" argument missing")
+		return
+	}
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -69,7 +76,7 @@ func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete pod
-	err = h.dfsAPI.DeletePod(podName, sessionId)
+	err = h.dfsAPI.DeletePod(podName, password, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn {
 			h.logger.Errorf("delete pod: %v", err)

@@ -59,7 +59,7 @@ func TestDelete(t *testing.T) {
 			t.Fatalf("podName is not %s", podName1)
 		}
 
-		err = pod1.DeletePod(podName1)
+		err = pod1.DeleteOwnPod(podName1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -106,7 +106,7 @@ func TestDelete(t *testing.T) {
 			t.Fatalf("podName is not %s, got %s", podName2, pods[1])
 		}
 
-		err = pod1.DeletePod(podName1)
+		err = pod1.DeleteOwnPod(podName1)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -319,7 +319,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 	return nil
 }
 
-func (idx *Index) addEntryToManifestSortedLexicographically(manifest *Manifest, entryToAdd *Entry) {
+func (*Index) addEntryToManifestSortedLexicographically(manifest *Manifest, entryToAdd *Entry) {
 	var entries []*Entry
 
 	// this is the first element
@@ -356,17 +356,16 @@ func (idx *Index) addEntryToManifestSortedLexicographically(manifest *Manifest, 
 		if entry.Name == "" {
 			entries = append(entries, entry)
 			continue
-		} else {
-			if !entryAdded {
-				a := entry.Name[0]
-				b := entryToAdd.Name[0]
-				if a > b {
-					entries = append(entries, entryToAdd)
-					entryAdded = true
-				}
-			}
-			entries = append(entries, entry)
 		}
+		if !entryAdded {
+			a := entry.Name[0]
+			b := entryToAdd.Name[0]
+			if a > b {
+				entries = append(entries, entryToAdd)
+				entryAdded = true
+			}
+		}
+		entries = append(entries, entry)
 	}
 
 	if !entryAdded {
@@ -421,7 +420,6 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 					}
 				} else {
 					childManifest = entry.Manifest
-
 				}
 				return idx.findManifest(parentManifest, childManifest, childKey)
 

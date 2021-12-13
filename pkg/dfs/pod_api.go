@@ -17,6 +17,8 @@ limitations under the License.
 package dfs
 
 import (
+	"fmt"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -27,21 +29,20 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-
 	// create the pod
-	pi, err := ui.GetPod().CreatePod(podName, passPhrase, "")
+	_, err := ui.GetPod().CreatePod(podName, passPhrase, "")
 	if err != nil {
 		return nil, err
 	}
 
 	// open the pod
-	_, err = ui.GetPod().OpenPod(podName, passPhrase)
+	pi, err := ui.GetPod().OpenPod(podName, passPhrase)
 	if err != nil {
 		return nil, err
 	}
 
 	// create the root directory
-	err = ui.GetUserDirectory().MkRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
@@ -51,21 +52,54 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 	return pi, nil
 }
 
-func (d *DfsAPI) DeletePod(podName, sessionId string) error {
+func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
 
-	// delete the pod and close if it is opened
-	err := ui.GetPod().DeletePod(podName)
+	// check for valid password
+	acc := ui.GetAccount()
+	if !acc.Authorise(passphrase) {
+		return fmt.Errorf("invalid password")
+	}
+
+	// delete all the directory, files, and database tables under this pod from
+	// the Swarm network.
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return err
+	}
+	directory := podInfo.GetDirectory()
+
+	// check if this is a shared pod
+	if podInfo.GetFeed().IsReadOnlyFeed() {
+		// delete the pod and close if it is opened
+		err = ui.GetPod().DeleteSharedPod(podName)
+		if err != nil {
+			return err
+		}
+
+		// close the pod if it is open
+		if ui.IsPodOpen(podName) {
+			// remove from the login session
+			ui.RemovePodName(podName)
+		}
+
+		return nil
+	}
+
+	err = directory.RmRootDir()
 	if err != nil {
 		return err
 	}
 
-	// TODO: delete all the directory, files, and database tables under this pod from
-	// the Swarm network.
+	// delete the pod and close if it is opened
+	err = ui.GetPod().DeleteOwnPod(podName)
+	if err != nil {
+		return err
+	}
 
 	// close the pod if it is open
 	if ui.IsPodOpen(podName) {
@@ -82,7 +116,6 @@ func (d *DfsAPI) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, erro
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-
 	// return if pod already open
 	if ui.IsPodOpen(podName) {
 		return nil, ErrPodAlreadyOpen

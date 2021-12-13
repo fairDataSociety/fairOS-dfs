@@ -104,21 +104,21 @@ func (d *DfsAPI) KVList(sessionId, podName string) (map[string][]string, error) 
 }
 
 // KVCount does validation checks and calls the count KVtable function.
-func (d *DfsAPI) KVCount(sessionId, podName, name string) (uint64, error) {
+func (d *DfsAPI) KVCount(sessionId, podName, name string) (*collection.KVCount, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
-		return 0, ErrUserNotLoggedIn
+		return nil, ErrUserNotLoggedIn
 	}
 
 	// check if pod open
 	if !ui.IsPodOpen(podName) {
-		return 0, ErrPodNotOpen
+		return nil, ErrPodNotOpen
 	}
 
 	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	return podInfo.GetKVStore().KVCount(name)

@@ -78,7 +78,7 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName {
 			h.logger.Errorf("pod open: %v", err)
-			jsonhttp.BadRequest(w, "pod open: "+err.Error())
+			jsonhttp.NotFound(w, "pod open: "+err.Error())
 			return
 		}
 		h.logger.Errorf("pod open: %v", err)
