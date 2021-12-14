@@ -109,7 +109,7 @@ type Message struct {
 // NewPrompt spawns dfs-client and checks if the it is connected to it.
 func NewPrompt() {
 	var err error
-	fdfsAPI, err = NewFdfsClient(fdfsHost, fdfsPort)
+	fdfsAPI, err = NewFdfsClient(fdfsServer)
 	if err != nil {
 		fmt.Println("could not create fdfs client")
 		os.Exit(1)
