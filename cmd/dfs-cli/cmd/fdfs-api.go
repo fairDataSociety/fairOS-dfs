@@ -53,7 +53,7 @@ func NewFdfsClient(fdfsServer string) (*FdfsClient, error) {
 		return nil, err
 	}
 	return &FdfsClient{
-		url:    fmt.Sprintf(fdfsServer),
+		url:    fdfsServer,
 		client: client,
 	}, nil
 }
@@ -92,11 +92,7 @@ func (s *FdfsClient) CheckConnection() bool {
 	}
 
 	_, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, error) {
