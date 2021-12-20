@@ -231,7 +231,7 @@ func (r *Reader) ReadLine() ([]byte, error) {
 		n, err := r.Read(buf)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				if buf[n-1] != '\n' {
+				if n == 0 || buf[n-1] != '\n' {
 					return nil, err
 				} else {
 					goto SUCC

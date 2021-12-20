@@ -25,7 +25,7 @@ import (
 )
 
 // LoginMiddleware is a middleware that gets called before executing any of the protected handlers.
-// this check if a there is a valid session id the request and then alows the request handler to
+// this check if a there is a valid session id the request and then allows the request handler to
 // proceed for execution.
 func (h *Handler) LoginMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
