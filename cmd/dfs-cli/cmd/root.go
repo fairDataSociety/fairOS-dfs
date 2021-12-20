@@ -29,9 +29,8 @@ import (
 )
 
 var (
-	cfgFile  string
-	fdfsHost string
-	fdfsPort string
+	cfgFile    string
+	fdfsServer string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -42,8 +41,7 @@ var rootCmd = &cobra.Command{
 
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("version    : ", dfs.Version)
-		fmt.Println("fdfsHost   : ", fdfsHost)
-		fmt.Println("fdfsPort   : ", fdfsPort)
+		fmt.Println("fdfsServer   : ", fdfsServer)
 		NewPrompt()
 		initPrompt()
 	},
@@ -84,8 +82,20 @@ func init() {
 	defaultConfig := filepath.Join(home, ".fairOS/dfs-cli.yml")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", defaultConfig, "config file")
 
-	rootCmd.PersistentFlags().StringVar(&fdfsHost, "fdfsHost", "127.0.0.1", "fdfs host")
-	rootCmd.PersistentFlags().StringVar(&fdfsPort, "fdfsPort", "9090", "fdfs port")
+	rootCmd.PersistentFlags().String("fdfsHost", "127.0.0.1", "fdfs host")
+	rootCmd.PersistentFlags().String("fdfsPort", "9090", "fdfs port")
+
+	rootCmd.PersistentFlags().StringVar(&fdfsServer, "fdfsServer", "http://localhost:9090", "fdfs server api endpoint")
+
+	if err := rootCmd.PersistentFlags().MarkDeprecated("fdfsHost", "run --fdfsServer, fdfs server api endpoint"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if err := rootCmd.PersistentFlags().MarkDeprecated("fdfsPort", "run --fdfsServer, fdfs server api endpoint"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.

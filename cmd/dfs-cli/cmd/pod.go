@@ -48,8 +48,10 @@ func podNew(podName string) {
 }
 
 func deletePod(podName string) {
+	password := getPassword()
 	delPod := common.PodRequest{
-		PodName: podName,
+		PodName:  podName,
+		Password: password,
 	}
 	jsonData, err := json.Marshal(delPod)
 	if err != nil {
