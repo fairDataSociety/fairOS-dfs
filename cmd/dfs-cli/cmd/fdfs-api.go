@@ -119,12 +119,13 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 	if s.cookie != nil {
 		req.AddCookie(s.cookie)
 	}
-
 	// execute the request
 	response, err := s.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
@@ -134,10 +135,6 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		data, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			return nil, errors.New("error downloading data")
-		}
-		err = response.Body.Close()
-		if err != nil {
-			return nil, err
 		}
 		var resp jsonhttp.StatusResponse
 		err = json.Unmarshal(data, &resp)
@@ -155,10 +152,6 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
-	err = response.Body.Close()
-	if err != nil {
-		return nil, err
-	}
 
 	var resp jsonhttp.StatusResponse
 	err = json.Unmarshal(data, &resp)
@@ -166,6 +159,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		errStr := fmt.Sprintf("error unmarshalling response: %d", len(data))
 		return nil, errors.New(errStr)
 	}
+
 	if resp.Code == 0 {
 		return data, nil
 	}
@@ -199,6 +193,7 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
@@ -208,10 +203,6 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 		data, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			return nil, errors.New("error downloading data")
-		}
-		err = response.Body.Close()
-		if err != nil {
-			return nil, err
 		}
 		var resp jsonhttp.StatusResponse
 		err = json.Unmarshal(data, &resp)
@@ -228,10 +219,6 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
-	}
-	err = response.Body.Close()
-	if err != nil {
-		return nil, err
 	}
 
 	var resp jsonhttp.StatusResponse
@@ -298,6 +285,7 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
@@ -308,10 +296,6 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
-	}
-	err = response.Body.Close()
-	if err != nil {
-		return nil, err
 	}
 
 	return data, nil
@@ -355,6 +339,7 @@ func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 	if err != nil {
 		return 0, err
 	}
+	defer response.Body.Close()
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
@@ -364,10 +349,6 @@ func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 
 	// Write the body to file
 	n, err := io.Copy(out, response.Body)
-	if err != nil {
-		return 0, err
-	}
-	err = response.Body.Close()
 	if err != nil {
 		return 0, err
 	}

@@ -39,12 +39,12 @@ func userNew(userName string) {
 		fmt.Println("create user: error marshalling request")
 		return
 	}
-
 	data, err := fdfsAPI.postReq(http.MethodPost, apiUserSignup, jsonData)
 	if err != nil {
 		fmt.Println("create user: ", err)
 		return
 	}
+
 	var resp api.UserSignupResponse
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
