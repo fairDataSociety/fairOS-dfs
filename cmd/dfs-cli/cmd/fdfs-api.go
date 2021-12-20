@@ -47,13 +47,13 @@ type FdfsClient struct {
 	cookie *http.Cookie
 }
 
-func NewFdfsClient(host, port string) (*FdfsClient, error) {
+func NewFdfsClient(fdfsServer string) (*FdfsClient, error) {
 	client, err := createHTTPClient()
 	if err != nil {
 		return nil, err
 	}
 	return &FdfsClient{
-		url:    fmt.Sprintf("http://" + host + ":" + port),
+		url:    fdfsServer,
 		client: client,
 	}, nil
 }
@@ -84,24 +84,15 @@ func (s *FdfsClient) CheckConnection() bool {
 	if err != nil {
 		return false
 	}
+	defer response.Body.Close()
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return false
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return false
-	}
-	err = response.Body.Close()
-	if err != nil {
-		return false
-	}
-	if !strings.HasPrefix(string(data), "FairOS-dfs") {
-		return false
-	}
-	return true
+	_, err = ioutil.ReadAll(response.Body)
+	return err == nil
 }
 
 func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, error) {
