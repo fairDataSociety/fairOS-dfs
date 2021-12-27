@@ -245,3 +245,11 @@ func (d *DfsAPI) PodReceive(sessionId string, ref utils.Reference) (*pod.Info, e
 
 	return ui.GetPod().ReceivePod(ref)
 }
+
+func (d *DfsAPI) IsPodExist(podName, sessionId string) bool {
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return false
+	}
+	return ui.GetPod().IsPodPresent(podName)
+}
