@@ -118,7 +118,8 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	sch, err := soc.NewChunk(id, ch, signer)
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +227,8 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	sch, err := soc.NewChunk(id, ch, signer)
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
 	if err != nil {
 		return nil, err
 	}

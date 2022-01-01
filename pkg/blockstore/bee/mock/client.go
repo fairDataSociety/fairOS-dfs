@@ -66,7 +66,11 @@ func (m *MockBeeClient) UploadSOC(owner, id, signature string, data []byte) (add
 	if err != nil {
 		return nil, err
 	}
-	signedChunk, err := soc.NewSignedChunk(idBytes, ch, ownerBytes, signatureBytes)
+	signed, err := soc.NewSigned(idBytes, ch, ownerBytes, signatureBytes)
+	if err != nil {
+		return nil, err
+	}
+	signedChunk, err := signed.Chunk()
 	if err != nil {
 		return nil, err
 	}

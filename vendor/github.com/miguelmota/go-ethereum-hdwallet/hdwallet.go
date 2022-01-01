@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
 	"sync"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -29,15 +30,18 @@ var DefaultRootDerivationPath = accounts.DefaultRootDerivationPath
 // at m/44'/60'/0'/1, etc
 var DefaultBaseDerivationPath = accounts.DefaultBaseDerivationPath
 
+const issue179FixEnvar = "GO_ETHEREUM_HDWALLET_FIX_ISSUE_179"
+
 // Wallet is the underlying wallet struct.
 type Wallet struct {
-	mnemonic  string
-	masterKey *hdkeychain.ExtendedKey
-	seed      []byte
-	url       accounts.URL
-	paths     map[common.Address]accounts.DerivationPath
-	accounts  []accounts.Account
-	stateLock sync.RWMutex
+	mnemonic    string
+	masterKey   *hdkeychain.ExtendedKey
+	seed        []byte
+	url         accounts.URL
+	paths       map[common.Address]accounts.DerivationPath
+	accounts    []accounts.Account
+	stateLock   sync.RWMutex
+	fixIssue172 bool
 }
 
 func newWallet(seed []byte) (*Wallet, error) {
@@ -47,10 +51,11 @@ func newWallet(seed []byte) (*Wallet, error) {
 	}
 
 	return &Wallet{
-		masterKey: masterKey,
-		seed:      seed,
-		accounts:  []accounts.Account{},
-		paths:     map[common.Address]accounts.DerivationPath{},
+		masterKey:   masterKey,
+		seed:        seed,
+		accounts:    []accounts.Account{},
+		paths:       map[common.Address]accounts.DerivationPath{},
+		fixIssue172: false || len(os.Getenv(issue179FixEnvar)) > 0,
 	}, nil
 }
 
@@ -152,6 +157,14 @@ func (w *Wallet) Unpin(account accounts.Account) error {
 	return errors.New("account not found")
 }
 
+// SetFixIssue172 determines whether the standard (correct) bip39
+// derivation path was used, or if derivation should be affected by
+// Issue172 [0] which was how this library was originally implemented.
+// [0] https://github.com/btcsuite/btcutil/pull/182/files
+func (w *Wallet) SetFixIssue172(fixIssue172 bool) {
+	w.fixIssue172 = fixIssue172
+}
+
 // Derive implements accounts.Wallet, deriving a new account at the specific
 // derivation path. If pin is set to true, the account will be added to the list
 // of tracked accounts.
@@ -232,18 +245,18 @@ func (w *Wallet) SignTxEIP155(account accounts.Account, tx *types.Transaction, c
 		return nil, err
 	}
 
+	signer := types.NewEIP155Signer(chainID)
 	// Sign the transaction and verify the sender to avoid hardware fault surprises
-	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
+	signedTx, err := types.SignTx(tx, signer, privateKey)
 	if err != nil {
 		return nil, err
 	}
 
-	msg, err := signedTx.AsMessage(types.NewEIP155Signer(chainID))
+	sender, err := types.Sender(signer, signedTx)
 	if err != nil {
 		return nil, err
 	}
 
-	sender := msg.From()
 	if sender != account.Address {
 		return nil, fmt.Errorf("signer mismatch: expected %s, got %s", account.Address.Hex(), sender.Hex())
 	}
@@ -267,18 +280,18 @@ func (w *Wallet) SignTx(account accounts.Account, tx *types.Transaction, chainID
 		return nil, err
 	}
 
+	signer := types.HomesteadSigner{}
 	// Sign the transaction and verify the sender to avoid hardware fault surprises
-	signedTx, err := types.SignTx(tx, types.HomesteadSigner{}, privateKey)
+	signedTx, err := types.SignTx(tx, signer, privateKey)
 	if err != nil {
 		return nil, err
 	}
 
-	msg, err := signedTx.AsMessage(types.HomesteadSigner{})
+	sender, err := types.Sender(signer, signedTx)
 	if err != nil {
 		return nil, err
 	}
 
-	sender := msg.From()
 	if sender != account.Address {
 		return nil, fmt.Errorf("signer mismatch: expected %s, got %s", account.Address.Hex(), sender.Hex())
 	}
@@ -491,7 +504,11 @@ func (w *Wallet) derivePrivateKey(path accounts.DerivationPath) (*ecdsa.PrivateK
 	var err error
 	key := w.masterKey
 	for _, n := range path {
-		key, err = key.Child(n)
+		if w.fixIssue172 && key.IsAffectedByIssue172() {
+			key, err = key.Derive(n)
+		} else {
+			key, err = key.DeriveNonStandard(n)
+		}
 		if err != nil {
 			return nil, err
 		}
