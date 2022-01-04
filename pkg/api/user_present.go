@@ -22,7 +22,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-type UserPresentResponse struct {
+type PresentResponse struct {
 	Present bool `json:"present"`
 }
 
@@ -47,11 +47,11 @@ func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", " application/json")
 	// check if user is present
 	if h.dfsAPI.IsUserNameAvailable(user) {
-		jsonhttp.OK(w, &UserPresentResponse{
+		jsonhttp.OK(w, &PresentResponse{
 			Present: true,
 		})
 	} else {
-		jsonhttp.OK(w, &UserPresentResponse{
+		jsonhttp.OK(w, &PresentResponse{
 			Present: false,
 		})
 	}

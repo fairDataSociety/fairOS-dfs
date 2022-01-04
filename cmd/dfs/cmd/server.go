@@ -224,6 +224,7 @@ func startHttpService(logger logging.Logger) {
 	baseRouter.HandleFunc("/pod/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
 	podRouter := baseRouter.PathPrefix("/pod/").Subrouter()
 	podRouter.Use(handler.LoginMiddleware)
+	podRouter.HandleFunc("/present", handler.PodPresentHandler).Methods("GET")
 	podRouter.HandleFunc("/new", handler.PodCreateHandler).Methods("POST")
 	podRouter.HandleFunc("/open", handler.PodOpenHandler).Methods("POST")
 	podRouter.HandleFunc("/close", handler.PodCloseHandler).Methods("POST")
