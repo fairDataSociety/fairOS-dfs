@@ -54,9 +54,8 @@ const (
 )
 
 type BeeClient struct {
-	host               string
-	port               string
 	url                string
+	debugUrl           string
 	client             *http.Client
 	hasher             *bmtlegacy.Hasher
 	chunkCache         *lru.Cache
@@ -75,7 +74,7 @@ type bytesPostResponse struct {
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
-func NewBeeClient(host, port, postageBlockId string, logger logging.Logger) *BeeClient {
+func NewBeeClient(apiUrl, debugApiUrl, postageBlockId string, logger logging.Logger) *BeeClient {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache, err := lru.New(chunkCacheSize)
 	if err != nil {
@@ -91,9 +90,8 @@ func NewBeeClient(host, port, postageBlockId string, logger logging.Logger) *Bee
 	}
 
 	return &BeeClient{
-		host:               host,
-		port:               port,
-		url:                fmt.Sprintf("http://" + host + ":" + port),
+		url:                apiUrl,
+		debugUrl:           debugApiUrl,
 		client:             createHTTPClient(),
 		hasher:             bmtlegacy.New(p),
 		chunkCache:         cache,
@@ -462,7 +460,7 @@ func (s *BeeClient) GetNewPostageBatch() error {
 	to := time.Now()
 	s.logger.Infof("Trying to get new postage batch id")
 	path := filepath.Join(postageBatchUrl, "10000000/20")
-	fullUrl := fmt.Sprintf(s.url + path)
+	fullUrl := fmt.Sprintf(s.debugUrl + path)
 	req, err := http.NewRequest(http.MethodPost, fullUrl, nil)
 	if err != nil {
 		return err
