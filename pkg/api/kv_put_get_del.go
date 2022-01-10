@@ -22,7 +22,7 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
@@ -170,6 +170,10 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 	columns, data, err := h.dfsAPI.KVGet(sessionId, podName, name, key)
 	if err != nil {
 		h.logger.Errorf("kv get: %v", err)
+		if err == collection.ErrEntryNotFound {
+			jsonhttp.NotFound(w, "kv get: "+err.Error())
+			return
+		}
 		jsonhttp.InternalServerError(w, "kv get: "+err.Error())
 		return
 	}
@@ -267,6 +271,10 @@ func (h *Handler) KVGetDataHandler(w http.ResponseWriter, r *http.Request) {
 	columns, data, err := h.dfsAPI.KVGet(sessionId, podName, name, key)
 	if err != nil {
 		h.logger.Errorf("kv get: %v", err)
+		if err == collection.ErrEntryNotFound {
+			jsonhttp.NotFound(w, "kv get: "+err.Error())
+			return
+		}
 		jsonhttp.InternalServerError(w, "kv get: "+err.Error())
 		return
 	}
@@ -350,4 +358,76 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jsonhttp.OK(w, "key deleted")
+}
+
+// KVPresentHandler is the api handler to check if a value exists in the kv table
+// it takes three arguments
+// - pod_name: the name of the pod
+// - table_name: the name of the kv table
+// - key: the key string
+func (h *Handler) KVPresentHandler(w http.ResponseWriter, r *http.Request) {
+	keys, ok := r.URL.Query()["pod_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("kv get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		return
+	}
+	podName := keys[0]
+	if podName == "" {
+		h.logger.Errorf("kv get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		return
+	}
+
+	keys, ok = r.URL.Query()["table_name"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("kv get: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
+		return
+	}
+	name := keys[0]
+	if name == "" {
+		h.logger.Errorf("kv get: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
+		return
+	}
+
+	keys, ok = r.URL.Query()["key"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("kv get: \"sharing_ref\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"sharing_ref\" argument missing")
+		return
+	}
+	key := keys[0]
+	if key == "" {
+		h.logger.Errorf("kv get: \"key\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"key\" argument missing")
+		return
+	}
+
+	// get values from cookie
+	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	if err != nil {
+		h.logger.Errorf("kv get: invalid cookie: %v", err)
+		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		return
+	}
+	if sessionId == "" {
+		h.logger.Errorf("kv get: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, "kv get: \"cookie-id\" parameter missing in cookie")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	_, _, err = h.dfsAPI.KVGet(sessionId, podName, name, key)
+	if err != nil {
+		jsonhttp.OK(w, &PresentResponse{
+			Present: false,
+		})
+		return
+	}
+
+	jsonhttp.OK(w, &PresentResponse{
+		Present: true,
+	})
 }
