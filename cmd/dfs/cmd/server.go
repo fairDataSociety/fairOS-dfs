@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -74,6 +75,14 @@ can consume it.`,
 		if postageBlockId == "" {
 			_ = cmd.Help()
 			fmt.Println("\npostageBlockId is required to run server")
+			return
+		} else if len(postageBlockId) != 64 {
+			fmt.Println("\npostageBlockId is invalid")
+			return
+		}
+		_, err := hex.DecodeString(postageBlockId)
+		if err != nil {
+			fmt.Println("\npostageBlockId is invalid")
 			return
 		}
 
