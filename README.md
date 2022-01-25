@@ -34,10 +34,10 @@ Pod creation is cheap. A user can create multiple pods and use it to organise hi
 Run the following command to download the latest release
 
 ```
-curl -o- https://raw.githubusercontent.com/fairDataSociety/fairOS-dfs/development.1/download.sh | bash
+curl -o- https://raw.githubusercontent.com/fairDataSociety/fairOS-dfs/master/download.sh | bash
 ```
 ```
-wget -qO- https://raw.githubusercontent.com/fairDataSociety/fairOS-dfs/development.1/download.sh | bash
+wget -qO- https://raw.githubusercontent.com/fairDataSociety/fairOS-dfs/master/download.sh | bash
 ```
 
 Or download the latest release from https://github.com/fairDataSociety/fairOS-dfs/releases.
