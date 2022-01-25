@@ -116,7 +116,7 @@ can consume it.`,
 		logger.Info("cookieDomain   : ", cookieDomain)
 		logger.Info("postageBlockId : ", postageBlockId)
 		logger.Info("corsOrigins    : ", corsOrigins)
-		hdlr, err := api.NewHandler(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId, logger)
+		hdlr, err := api.NewHandler(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId, corsOrigins, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return
