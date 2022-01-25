@@ -10,7 +10,7 @@ externalDocs:
   url: 'https://fairos.io'
 
 servers:
-  - url: 'https://{apiRoot}:{port}/v1'
+  - url: 'http://{apiRoot}:{port}/v1'
     variables:
       apiRoot:
         default: 'localhost'
