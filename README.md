@@ -31,11 +31,49 @@ The user can share files in his pod with any other user just like in other centr
 Pod creation is cheap. A user can create multiple pods and use it to organise his data. for ex: Personal-Pod, Applications-Pod etc.
 
 ### How to run FairOS-dfs?
-Download the latest release from https://github.com/fairDataSociety/fairOS-dfs/releases.
+Run the following command to download the latest release
+
+```
+curl -o- https://raw.githubusercontent.com/fairDataSociety/fairOS-dfs/master/download.sh | bash
+```
+```
+wget -qO- https://raw.githubusercontent.com/fairDataSociety/fairOS-dfs/master/download.sh | bash
+```
+
+Or download the latest release from https://github.com/fairDataSociety/fairOS-dfs/releases.
 
 Or use Docker to run the project https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/docker-installation.
 
 Or build the latest version with the instruction https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/manual-installation.
+
+### Configure FairOS-dfs
+To get the most out of your FairOS-dfs it is important that you configure FairOS-dfs for your specific use case!
+
+##### Configuration for Bee 
+```
+bee:
+  bee-api-endpoint: http://localhost:1633
+  bee-debug-api-endpoint: http://localhost:1635
+  postage-batch-id: ""
+```
+
+##### Configuration for FairOS-dfs
+```
+dfs:
+  data-dir: /Users/fairos/.fairOS/dfs
+  ports:
+    http-port: :9090
+    pprof-port: :9091
+```
+
+#### Other configuration
+```
+cookie-domain: api.fairos.io
+cors-allowed-origins: []
+verbosity: trace
+```
+
+Run `dfs config` to see all configurations
 
 ### Introduction to Key Value Store over Swarm
 [![](https://j.gifs.com/6XZwvl.gif)](https://gateway.ethswarm.org/access/130dcf7d01442836bc14c8c38db32ebfc4d5771c28677438b6a2a2a078bd1414)
@@ -53,3 +91,4 @@ https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/cli-reference
 To make binaries for all platforms run this command
 
 `./generate-exe.sh`
+

@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 info:
-  version: 0.6.0
+  version: 0.7.3
   title: FairOS-dfs API
   description: 'A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store'
 
@@ -10,7 +10,7 @@ externalDocs:
   url: 'https://fairos.io'
 
 servers:
-  - url: 'http://{apiRoot}:{port}/v1'
+  - url: 'https://{apiRoot}:{port}/v1'
     variables:
       apiRoot:
         default: 'localhost'
@@ -56,7 +56,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/UserSignupResponse'
-                  - $ref: '#/components/schemas/UserSignupResponseWithMenonic'
+                  - $ref: '#/components/schemas/UserSignupResponseWithMnemonic'
         '400':
           $ref: '#/components/responses/400'
         '500':
@@ -106,8 +106,8 @@ paths:
       summary: 'Import user'
       description: 'Import a user from one dfs server to another and subsequently logs in returning the authentication cookie `fairOS-dfs`.
       The cookie needs to be sent n the request header in all subsequent requests.
-      Importing is usefull when a user switches machines or lost a old machine which was running his dfs server.
-      Imput contains a form object containing the login, password, ethereum address and optionally mnemonic.
+      Importing is useful when a user switches machines or lost a old machine which was running his dfs server.
+      Input contains a form object containing the login, password, ethereum address and optionally mnemonic.
       If mnemonic is provided a user will be created while importing.'
       tags:
         - User
@@ -568,8 +568,12 @@ paths:
               properties:
                 pod_name:
                   $ref: '#/components/schemas/PodName'
+                password:
+                  $ref: '#/components/schemas/Password'
               required:
                 - pod_name
+                - password
+
       responses:
         '200':
           description: 'Ok'
@@ -586,7 +590,7 @@ paths:
   '/pod/ls':
     get:
       summary: 'List pod'
-      description: 'Lista all pods of a user'
+      description: 'Lists all pods of a user'
       tags:
         - Pod
       parameters:
@@ -649,8 +653,40 @@ paths:
         '500':
           $ref: '#/components/responses/500'
 
-  '/dir/mkdir':
+  '/pod/present':
     get:
+      summary: 'Pod Present'
+      description: 'Is Pod present'
+      tags:
+        - Pod
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
+            required:
+              - pod_name
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirPresentResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+
+  '/dir/mkdir':
+    post:
       summary: 'Make dir'
       description: 'make a new directory inside a pod'
       tags:
@@ -686,7 +722,7 @@ paths:
           $ref: '#/components/responses/500'
 
   '/dir/rmdir':
-    get:
+    delete:
       summary: 'Remove dir'
       description: 'remove a directory inside a pod'
       tags:
@@ -833,7 +869,7 @@ paths:
           $ref: '#/components/responses/500'
 
   '/file/upload':
-    get:
+    post:
       summary: 'Upload File'
       description: 'upload a file to dfs'
       tags:
@@ -921,8 +957,44 @@ paths:
         '500':
           $ref: '#/components/responses/500'
 
+    post:
+      summary: 'Download file'
+      description: 'Download a file from the pod tp the local dir'
+      tags:
+        - File System
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pod_name:
+                  $ref: '#/components/schemas/PodName'
+                file_path:
+                  $ref: '#/components/schemas/DirPath'
+              required:
+                - pod_name
+                - file_path
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+
   '/file/share':
-    get:
+    post:
       summary: 'Share file'
       description: 'Share a file with another user'
       tags:
@@ -1244,10 +1316,9 @@ paths:
         '200':
           description: 'Ok'
           content:
-            application/octet-stream:
+            application/json:
               schema:
-                type: string
-                format: binary
+                $ref: '#/components/schemas/KVCount'
         '400':
           $ref: '#/components/responses/400'
         '500':
@@ -1355,6 +1426,51 @@ paths:
                 $ref: '#/components/schemas/KVTableName'
               key:
                 $ref: '#/components/schemas/KVKey'
+            required:
+              - pod_name
+              - table_name
+              - key
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                properties:
+                  keys:
+                    $ref: '#/components/schemas/KVgetResponseKeys'
+                  values:
+                    $ref: '#/components/schemas/KVgetResponseValues'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+
+  '/kv/entry/get-data':
+    get:
+      summary: 'Get Value'
+      description: 'Get value given a key'
+      tags:
+        - Key Value Store
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
+              table_name:
+                $ref: '#/components/schemas/KVTableName'
+              key:
+                $ref: '#/components/schemas/KVKey'
+              format:
+                type: string
+                enum: [ string, byte-string ]
             required:
               - pod_name
               - table_name
@@ -1544,6 +1660,44 @@ paths:
         '500':
           $ref: '#/components/responses/500'
 
+  '/kv/present':
+    get:
+      summary: 'Key Present'
+      description: 'Is Key present'
+      tags:
+        - Key Value Store
+      parameters:
+        - in: cookie
+          name: fairOS-dfs
+          schema:
+            type: string
+        - in: query
+          name: fields
+          schema:
+            type: object
+            properties:
+              pod_name:
+                $ref: '#/components/schemas/PodName'
+              table_name:
+                $ref: '#/components/schemas/KVTableName'
+              key:
+                $ref: '#/components/schemas/KVKey'
+            required:
+              - pod_name
+              - table_name
+              - key
+      responses:
+        '200':
+          description: 'Ok'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirPresentResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+
   '/doc/new':
     post:
       summary: 'Create DocumentDB'
@@ -1701,7 +1855,7 @@ paths:
   '/doc/delete':
     delete:
       summary: 'Delete DocumentDB'
-      description: 'Delete the given ocument DB and all its documents and indexes'
+      description: 'Delete the given document DB and all its documents and indexes'
       tags:
         - Document DB
       parameters:
@@ -2052,7 +2206,7 @@ components:
           $ref: '#/components/schemas/UserName'
         password:
           $ref: '#/components/schemas/Password'
-        address:
+        mnemonic:
           $ref: '#/components/schemas/Mnemonic'
 
 
@@ -2361,6 +2515,17 @@ components:
       type: string
       example: "kv_table1"
 
+    KVCount:
+      type: object
+      properties:
+        count:
+          type: integer
+        table_name:
+          $ref: '#/components/schemas/KVTableName'
+      required:
+        - file_name
+        - reference
+
     KVMemoryTable:
       type: string
       example: "true"
@@ -2393,7 +2558,6 @@ components:
       description: string of field=indexType pairs seperated with comma (first_name=string,age=number,tags=map)
       type: string
       example: first_name=string,age=number,tags=map
-
 
     DocTableName:
       type: string

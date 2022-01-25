@@ -201,7 +201,7 @@ func presentUser(userName string) {
 		fmt.Println("user present: ", err)
 		return
 	}
-	var resp api.UserPresentResponse
+	var resp api.PresentResponse
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
 		fmt.Println("import user: ", err)

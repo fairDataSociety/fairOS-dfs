@@ -65,69 +65,86 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	refMap := make(map[int]*BlockInfo)
 	refMapMu := sync.RWMutex{}
 	var contentBytes []byte
-	for {
-		data := make([]byte, blockSize, blockSize+1024)
-		r, err := reader.Read(data)
-		totalLength += uint64(r)
-		if err != nil {
-			if err == io.EOF {
-				if totalLength < uint64(fileSize) {
-					return fmt.Errorf("invalid file length of file data received")
-				}
-				break
-			}
-			return err
-		}
-
-		// determine the content type from the first 512 bytes of the file
-		if len(contentBytes) < 512 {
-			contentBytes = append(contentBytes, data[:r]...)
-			if len(contentBytes) >= 512 {
-				cBytes := bytes.NewReader(contentBytes[:512])
-				cReader := bufio.NewReader(cBytes)
-				meta.ContentType = f.getContentType(cReader)
-			}
-		}
-
-		wg.Add(1)
-		worker <- true
-		go func(counter, size int) {
-			blockName := fmt.Sprintf("block-%05d", counter)
-			defer func() {
-				<-worker
+	wg.Add(1)
+	go func() {
+		var mainErr error
+		for {
+			if mainErr != nil {
+				errC <- mainErr
 				wg.Done()
-				f.logger.Info("done uploading block ", blockName)
-			}()
-
-			f.logger.Info("Uploading ", blockName)
-			// compress the data
-			uploadData := data[:size]
-			if compression != "" {
-				uploadData, err = compress(data[:size], compression, blockSize)
-				if err != nil {
-					errC <- err
-				}
-			}
-
-			addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
-			if uploadErr != nil {
-				errC <- uploadErr
 				return
 			}
-			fileBlock := &BlockInfo{
-				Name:           blockName,
-				Size:           uint32(size),
-				CompressedSize: uint32(len(uploadData)),
-				Reference:      utils.NewReference(addr),
+			data := make([]byte, blockSize, blockSize+1024)
+			r, err := reader.Read(data)
+			totalLength += uint64(r)
+			if err != nil {
+				if err == io.EOF {
+					if totalLength < uint64(fileSize) {
+						errC <- fmt.Errorf("invalid file length of file data received")
+						return
+					}
+					wg.Done()
+					break
+				}
+				errC <- err
+				return
 			}
 
-			refMapMu.Lock()
-			defer refMapMu.Unlock()
-			refMap[counter] = fileBlock
-		}(i, r)
+			// determine the content type from the first 512 bytes of the file
+			if len(contentBytes) < 512 {
+				contentBytes = append(contentBytes, data[:r]...)
+				if len(contentBytes) >= 512 {
+					cBytes := bytes.NewReader(contentBytes[:512])
+					cReader := bufio.NewReader(cBytes)
+					meta.ContentType = f.getContentType(cReader)
+				}
+			}
 
-		i++
-	}
+			wg.Add(1)
+			worker <- true
+			go func(counter, size int) {
+				blockName := fmt.Sprintf("block-%05d", counter)
+				defer func() {
+					<-worker
+					wg.Done()
+					if mainErr != nil {
+						f.logger.Error("failed uploading block ", blockName)
+						return
+					}
+					f.logger.Info("done uploading block ", blockName)
+				}()
+
+				f.logger.Info("Uploading ", blockName)
+				// compress the data
+				uploadData := data[:size]
+				if compression != "" {
+					uploadData, err = compress(data[:size], compression, blockSize)
+					if err != nil {
+						mainErr = err
+						return
+					}
+				}
+
+				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
+				if uploadErr != nil {
+					mainErr = uploadErr
+					return
+				}
+				fileBlock := &BlockInfo{
+					Name:           blockName,
+					Size:           uint32(size),
+					CompressedSize: uint32(len(uploadData)),
+					Reference:      utils.NewReference(addr),
+				}
+
+				refMapMu.Lock()
+				defer refMapMu.Unlock()
+				refMap[counter] = fileBlock
+			}(i, r)
+
+			i++
+		}
+	}()
 
 	go func() {
 		wg.Wait()

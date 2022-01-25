@@ -28,5 +28,6 @@ require (
 	github.com/tyler-smith/go-bip39 v1.0.2
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
+	gopkg.in/yaml.v2 v2.3.0
 	resenje.org/jsonhttp v0.2.0
 )
