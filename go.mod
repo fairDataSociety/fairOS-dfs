@@ -6,15 +6,15 @@ require (
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/dustin/go-humanize v1.0.0
-	github.com/ethereum/go-ethereum v1.9.22
+	github.com/ethereum/go-ethereum v1.10.10
 	github.com/ethersphere/bee v0.5.0
 	github.com/ethersphere/bmt v0.1.4
-	github.com/golang/snappy v0.0.2-0.20200707131729-196ae77b8a26
+	github.com/golang/snappy v0.0.4
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/gorilla/mux v1.7.4
+	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/websocket v1.4.2
-	github.com/hashicorp/golang-lru v0.5.4
+	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/klauspost/pgzip v1.2.5
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/miguelmota/go-ethereum-hdwallet v0.0.0-20200123000308-a60dcd172b4c
@@ -26,8 +26,8 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/tinygrasshopper/bettercsv v0.0.1
 	github.com/tyler-smith/go-bip39 v1.0.2
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.4.0
 	resenje.org/jsonhttp v0.2.0
 )
