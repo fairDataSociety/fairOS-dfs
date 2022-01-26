@@ -33,6 +33,25 @@ func (p *Pod) IsPodOpened(podName string) bool {
 	return false
 }
 
+func (p *Pod) IsPodPresent(podName string) bool {
+	podName, err := CleanPodName(podName)
+	if err != nil {
+		return false
+	}
+	// check if pods is present and get free index
+	pods, sharedPods, err := p.loadUserPods()
+	if err != nil {
+		return false
+	}
+	if p.checkIfPodPresent(pods, podName) {
+		return true
+	}
+	if p.checkIfSharedPodPresent(sharedPods, podName) {
+		return true
+	}
+	return false
+}
+
 func (*Pod) GetPath(inode *d.Inode) string {
 	if inode != nil {
 		return inode.Meta.Path

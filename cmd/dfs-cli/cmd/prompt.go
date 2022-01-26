@@ -136,6 +136,53 @@ func changeLivePrefix() (string, bool) {
 	return currentPrompt, true
 }
 
+var userSuggestions = []prompt.Suggest{
+	{Text: "new", Description: "create a new user"},
+	{Text: "del", Description: "delete a existing user"},
+	{Text: "login", Description: "login to a existing user"},
+	{Text: "logout", Description: "logout from a logged in user"},
+	{Text: "present", Description: "is user present"},
+	{Text: "export ", Description: "exports the user"},
+	{Text: "import ", Description: "imports the user"},
+	{Text: "stat ", Description: "shows information about a user"},
+}
+
+var podSuggestions = []prompt.Suggest{
+	{Text: "new", Description: "create a new pod for a user"},
+	{Text: "del", Description: "delete a existing pod of a user"},
+	{Text: "open", Description: "open to a existing pod of a user"},
+	{Text: "close", Description: "close a already opened pod of a user"},
+	{Text: "ls", Description: "list all the existing pods of a user"},
+	{Text: "stat", Description: "show the metadata of a pod of a user"},
+	{Text: "sync", Description: "sync the pod from swarm"},
+}
+
+var kvSuggestions = []prompt.Suggest{
+	{Text: "new", Description: "create new key value store"},
+	{Text: "delete", Description: "delete the  key value store"},
+	{Text: "ls", Description: "lists all the key value stores"},
+	{Text: "open", Description: "open already created key value store"},
+	{Text: "get", Description: "get value from key"},
+	{Text: "put", Description: "put key and value in kv store"},
+	{Text: "del", Description: "delete key and value from the store"},
+	{Text: "loadcsv", Description: "loads the csv file in to kv store"},
+	{Text: "seek", Description: "seek to the given start prefix"},
+	{Text: "getnext", Description: "get the next element"},
+}
+
+var docSuggestions = []prompt.Suggest{
+	{Text: "new", Description: "creates a new document store"},
+	{Text: "delete", Description: "deletes a document store"},
+	{Text: "open", Description: "open the document store"},
+	{Text: "ls", Description: "list all document dbs"},
+	{Text: "count", Description: "count the docs in the table satisfying the expression"},
+	{Text: "find", Description: "find the docs in the table satisfying the expression and limit"},
+	{Text: "put", Description: "insert a json document in to document store"},
+	{Text: "get", Description: "get the document having the id from the store"},
+	{Text: "del", Description: "delete the document having the id from the store"},
+	{Text: "loadjson", Description: "load the json file in to the newly created document db"},
+}
+
 var suggestions = []prompt.Suggest{
 	{Text: "user new", Description: "create a new user"},
 	{Text: "user del", Description: "delete a existing user"},
@@ -149,7 +196,7 @@ var suggestions = []prompt.Suggest{
 	{Text: "pod del", Description: "delete a existing pod of a user"},
 	{Text: "pod open", Description: "open to a existing pod of a user"},
 	{Text: "pod close", Description: "close a already opened pod of a user"},
-	{Text: "pod ls", Description: "list all the existing pods of  auser"},
+	{Text: "pod ls", Description: "list all the existing pods of a user"},
 	{Text: "pod stat", Description: "show the metadata of a pod of a user"},
 	{Text: "pod sync", Description: "sync the pod from swarm"},
 	{Text: "kv new", Description: "create new key value store"},
@@ -187,9 +234,19 @@ var suggestions = []prompt.Suggest{
 }
 
 func completer(in prompt.Document) []prompt.Suggest {
-	w := in.GetWordBeforeCursor()
-	if w == "" {
+	w := in.Text
+	if w == "" || len(strings.Split(w, " ")) >= 3 {
 		return []prompt.Suggest{}
+	}
+
+	if strings.HasPrefix(in.TextBeforeCursor(), "user") {
+		return prompt.FilterHasPrefix(userSuggestions, in.GetWordBeforeCursor(), true)
+	} else if strings.HasPrefix(in.TextBeforeCursor(), "pod") {
+		return prompt.FilterHasPrefix(podSuggestions, in.GetWordBeforeCursor(), true)
+	} else if strings.HasPrefix(in.TextBeforeCursor(), "kv") {
+		return prompt.FilterHasPrefix(kvSuggestions, in.GetWordBeforeCursor(), true)
+	} else if strings.HasPrefix(in.TextBeforeCursor(), "doc") {
+		return prompt.FilterHasPrefix(docSuggestions, in.GetWordBeforeCursor(), true)
 	}
 	return prompt.FilterHasPrefix(suggestions, w, true)
 }

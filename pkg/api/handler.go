@@ -24,15 +24,18 @@ import (
 type Handler struct {
 	dfsAPI *dfs.DfsAPI
 	logger logging.Logger
+
+	whitelistedOrigins []string
 }
 
-func NewHandler(dataDir, beeHost, beePort, cookieDomain, postageBlockId string, logger logging.Logger) (*Handler, error) {
-	api, err := dfs.NewDfsAPI(dataDir, beeHost, beePort, cookieDomain, postageBlockId, logger)
+func NewHandler(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, logger logging.Logger) (*Handler, error) {
+	api, err := dfs.NewDfsAPI(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId, logger)
 	if err != nil {
 		return nil, dfs.ErrBeeClient
 	}
 	return &Handler{
-		dfsAPI: api,
-		logger: logger,
+		dfsAPI:             api,
+		logger:             logger,
+		whitelistedOrigins: whitelistedOrigins,
 	}, nil
 }

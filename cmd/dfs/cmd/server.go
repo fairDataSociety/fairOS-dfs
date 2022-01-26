@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -46,10 +47,42 @@ var serverCmd = &cobra.Command{
 	Short: "starts a HTTP server for the dfs",
 	Long: `Serves all the dfs commands through an HTTP server so that the upper layers
 can consume it.`,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if err := config.BindPFlag(optionDFSHttpPort, cmd.Flags().Lookup("httpPort")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionCookieDomain, cmd.Flags().Lookup("cookieDomain")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionCORSAllowedOrigins, cmd.Flags().Lookup("cors-origins")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId")); err != nil {
+			return err
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
+		httpPort = config.GetString(optionDFSHttpPort)
+		pprofPort = config.GetString(optionDFSPprofPort)
+		cookieDomain = config.GetString(optionCookieDomain)
+		postageBlockId = config.GetString(optionBeePostageBatchId)
+		corsOrigins = config.GetStringSlice(optionCORSAllowedOrigins)
+		verbosity = config.GetString(optionVerbosity)
 		if postageBlockId == "" {
 			_ = cmd.Help()
 			fmt.Println("\npostageBlockId is required to run server")
+			return
+		} else if len(postageBlockId) != 64 {
+			fmt.Println("\npostageBlockId is invalid")
+			return
+		}
+		_, err := hex.DecodeString(postageBlockId)
+		if err != nil {
+			fmt.Println("\npostageBlockId is invalid")
 			return
 		}
 
@@ -75,15 +108,15 @@ can consume it.`,
 		logger.Info("configuration values")
 		logger.Info("version        : ", dfs.Version)
 		logger.Info("dataDir        : ", dataDir)
-		logger.Info("beeHost        : ", beeHost)
-		logger.Info("beePort        : ", beePort)
+		logger.Info("beeApi         : ", beeApi)
+		logger.Info("beeDebugApi    : ", beeDebugApi)
 		logger.Info("verbosity      : ", verbosity)
 		logger.Info("httpPort       : ", httpPort)
 		logger.Info("pprofPort      : ", pprofPort)
 		logger.Info("cookieDomain   : ", cookieDomain)
 		logger.Info("postageBlockId : ", postageBlockId)
 		logger.Info("corsOrigins    : ", corsOrigins)
-		hdlr, err := api.NewHandler(dataDir, beeHost, beePort, cookieDomain, postageBlockId, logger)
+		hdlr, err := api.NewHandler(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId, corsOrigins, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return
@@ -94,11 +127,11 @@ can consume it.`,
 }
 
 func init() {
-	serverCmd.Flags().StringVar(&httpPort, "httpPort", "9090", "http port")
-	serverCmd.Flags().StringVar(&pprofPort, "pprofPort", "9091", "pprof port")
-	serverCmd.Flags().StringVar(&cookieDomain, "cookieDomain", "api.fairos.io", "the domain to use in the cookie")
-	serverCmd.Flags().StringVar(&postageBlockId, "postageBlockId", "", "the postage block used to store the data in bee")
-	serverCmd.Flags().StringSliceVar(&corsOrigins, "cors-origins", []string{}, "allow CORS headers for the given origins")
+	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
+	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
+	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
+	serverCmd.Flags().String("postageBlockId", "", "the postage block used to store the data in bee")
+	serverCmd.Flags().StringSlice("cors-origins", defaultCORSAllowedOrigins, "allow CORS headers for the given origins")
 	rootCmd.AddCommand(serverCmd)
 }
 
@@ -122,7 +155,12 @@ func startHttpService(logger logging.Logger) {
 			logger.Errorf("error in API /: ", err)
 			return
 		}
-		_, err = fmt.Fprintln(w, beeHost+":"+beePort)
+		_, err = fmt.Fprintln(w, beeApi)
+		if err != nil {
+			logger.Errorf("error in API /: ", err)
+			return
+		}
+		_, err = fmt.Fprintln(w, beeDebugApi)
 		if err != nil {
 			logger.Errorf("error in API /: ", err)
 			return
@@ -195,6 +233,7 @@ func startHttpService(logger logging.Logger) {
 	baseRouter.HandleFunc("/pod/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
 	podRouter := baseRouter.PathPrefix("/pod/").Subrouter()
 	podRouter.Use(handler.LoginMiddleware)
+	podRouter.HandleFunc("/present", handler.PodPresentHandler).Methods("GET")
 	podRouter.HandleFunc("/new", handler.PodCreateHandler).Methods("POST")
 	podRouter.HandleFunc("/open", handler.PodOpenHandler).Methods("POST")
 	podRouter.HandleFunc("/close", handler.PodCloseHandler).Methods("POST")
@@ -233,8 +272,10 @@ func startHttpService(logger logging.Logger) {
 	kvRouter.HandleFunc("/open", handler.KVOpenHandler).Methods("POST")
 	kvRouter.HandleFunc("/count", handler.KVCountHandler).Methods("POST")
 	kvRouter.HandleFunc("/delete", handler.KVDeleteHandler).Methods("DELETE")
+	kvRouter.HandleFunc("/present", handler.KVPresentHandler).Methods("GET")
 	kvRouter.HandleFunc("/entry/put", handler.KVPutHandler).Methods("POST")
 	kvRouter.HandleFunc("/entry/get", handler.KVGetHandler).Methods("GET")
+	kvRouter.HandleFunc("/entry/get-data", handler.KVGetDataHandler).Methods("GET")
 	kvRouter.HandleFunc("/entry/del", handler.KVDelHandler).Methods("DELETE")
 	kvRouter.HandleFunc("/loadcsv", handler.KVLoadCSVHandler).Methods("POST")
 	kvRouter.HandleFunc("/seek", handler.KVSeekHandler).Methods("POST")
@@ -274,7 +315,7 @@ func startHttpService(logger logging.Logger) {
 	// starting the pprof server
 	go func() {
 		logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
-		err := http.ListenAndServe("localhost:"+pprofPort, nil)
+		err := http.ListenAndServe("localhost"+pprofPort, nil)
 		if err != nil {
 			logger.Errorf("pprof listenAndServe: %v ", err.Error())
 			return
@@ -282,7 +323,7 @@ func startHttpService(logger logging.Logger) {
 	}()
 
 	logger.Infof("fairOS-dfs API server listening on port: %v", httpPort)
-	err := http.ListenAndServe(":"+httpPort, handler)
+	err := http.ListenAndServe(httpPort, handler)
 	if err != nil {
 		logger.Errorf("http listenAndServe: %v ", err.Error())
 		return
