@@ -139,7 +139,7 @@ func (p *Pod) loadUserPods() (map[int]string, map[string]string, error) {
 	topic := utils.HashString(podFile)
 	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex))
 	if err != nil {
-		if err.Error() != "no feed updates found" {
+		if err.Error() != "feed does not exist or was not updated yet" {
 			return nil, nil, err
 		}
 	}

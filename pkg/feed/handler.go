@@ -169,7 +169,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 	}
 	request, _ := requestPtr.(*Request)
 	if request == nil {
-		return nil, NewError(ErrNotFound, "no feed updates found")
+		return nil, NewError(ErrNotFound, "feed does not exist or was not updated yet")
 	}
 	return h.updateCache(request)
 }

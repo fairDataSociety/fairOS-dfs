@@ -42,7 +42,7 @@ var (
 	ErrInvalidTopicSize = fmt.Errorf("Topic is not equal to %d", TopicLength)
 
 	// ErrInvalidPayloadSize is returned when the payload is greater than the chunk size
-	ErrInvalidPayloadSize = fmt.Errorf("payload is greater than %d", utils.MaxChunkLength)
+	ErrInvalidPayloadSize = fmt.Errorf("payload size is too large. maximum payload size is %d bytes", utils.MaxChunkLength)
 
 	ErrReadOnlyFeed = fmt.Errorf("read only feed")
 )
@@ -267,7 +267,7 @@ func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 	}
 
 	delRef, _, err := a.GetFeedData(topic, user)
-	if err != nil && err.Error() != "no feed updates found" {
+	if err != nil && err.Error() != "feed does not exist or was not updated yet" {
 		return err
 	}
 	if delRef != nil {

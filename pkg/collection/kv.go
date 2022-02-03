@@ -371,7 +371,7 @@ func (kv *KeyValue) LoadKVTables() (map[string][]string, error) {
 	topic := utils.HashString(kvFile)
 	_, data, err := kv.fd.GetFeedData(topic, kv.user)
 	if err != nil {
-		if err.Error() != "no feed updates found" {
+		if err.Error() != "feed does not exist or was not updated yet" {
 			return collections, err
 		}
 	}
