@@ -27,7 +27,7 @@ const (
 
 	// This is for testing with increased RetrieveTimeout
 	// TODO remove it after trail
-	tempRetrieveTimeout = 2 * time.Second
+	tempRetrieveTimeout = 10 * time.Second
 	// 	defaultRetrieveTimeout = 100 * time.Millisecond
 )
 
