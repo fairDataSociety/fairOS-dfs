@@ -101,7 +101,7 @@ func TestFeed(t *testing.T) {
 
 		// check if the data and address is present and is same as stored
 		_, _, err := fd.GetFeedData(topic, user1)
-		if err != nil && err.Error() != "no feed updates found" {
+		if err != nil && err.Error() != "feed does not exist or was not updated yet" {
 			t.Fatal(err)
 		}
 	})
@@ -128,7 +128,7 @@ func TestFeed(t *testing.T) {
 		// check if you can read the data from user2
 		fd2 := New(accountInfo2, client, logger)
 		rcvdAddr, rcvdData, err := fd2.GetFeedData(topic, user2)
-		if err != nil && err.Error() != "no feed updates found" {
+		if err != nil && err.Error() != "feed does not exist or was not updated yet" {
 			t.Fatal(err)
 		}
 		if rcvdAddr != nil || rcvdData != nil {

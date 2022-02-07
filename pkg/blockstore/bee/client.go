@@ -158,6 +158,10 @@ func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address
 	// the postage block id to store the SOC chunk
 	req.Header.Set(SwarmPostageBatchId, s.postageBlockId)
 
+	// TODO change this in the future when we have some alternative to pin SOC
+	// This is a temporary fix to force soc pinning
+	req.Header.Set(SwarmPinHeader, "true")
+
 	response, err := s.client.Do(req)
 	if err != nil {
 		return nil, err

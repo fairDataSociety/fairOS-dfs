@@ -84,7 +84,7 @@ func (idx *Index) NewStringIterator(start, end string, limit int64) (*Iterator, 
 	return itr, nil
 }
 
-// NewIntIterator reates a new index iterator with start prefix, endPrefix and the limit to iterate.
+// NewIntIterator creates a new index iterator with start prefix, endPrefix and the limit to iterate.
 func (idx *Index) NewIntIterator(start, end, limit int64) (*Iterator, error) {
 	var manifest *Manifest
 	if idx.mutable {

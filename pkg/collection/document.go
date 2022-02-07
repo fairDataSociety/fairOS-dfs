@@ -904,7 +904,7 @@ func (d *Document) LoadDocumentDBSchemas() (map[string]DBSchema, error) {
 	topic := utils.HashString(DocumentFile)
 	_, data, err := d.fd.GetFeedData(topic, d.user)
 	if err != nil {
-		if err.Error() != "no feed updates found" {
+		if err.Error() != "feed does not exist or was not updated yet" {
 			return collections, err
 		}
 	}

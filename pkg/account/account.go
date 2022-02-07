@@ -74,7 +74,7 @@ func CreateRandomKeyPair(now int64) (*ecdsa.PrivateKey, error) {
 	return ecdsa.GenerateKey(btcec.S256(), randReader)
 }
 
-// CreateUserAccount reate a new master account for a user. if a valid mnemonic is
+// CreateUserAccount create a new master account for a user. if a valid mnemonic is
 // provided it is used, otherwise a new mnemonic is generated. The generated mnemonic is
 // AES encrypted using the password provided.
 func (a *Account) CreateUserAccount(passPhrase, mnemonic string) (string, string, error) {

@@ -140,7 +140,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 			Feed:  query.Feed,
 			Epoch: epoch,
 		}
-		ctx, cancel := context.WithTimeout(ctx, defaultRetrieveTimeout)
+		ctx, cancel := context.WithTimeout(ctx, tempRetrieveTimeout)
 		defer cancel()
 
 		addr, err := h.getAddress(id.Topic, query.Feed.User, epoch)
@@ -169,7 +169,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 	}
 	request, _ := requestPtr.(*Request)
 	if request == nil {
-		return nil, NewError(ErrNotFound, "no feed updates found")
+		return nil, NewError(ErrNotFound, "feed does not exist or was not updated yet")
 	}
 	return h.updateCache(request)
 }
