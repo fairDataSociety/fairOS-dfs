@@ -140,7 +140,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 			Feed:  query.Feed,
 			Epoch: epoch,
 		}
-		ctx, cancel := context.WithTimeout(ctx, defaultRetrieveTimeout)
+		ctx, cancel := context.WithTimeout(ctx, tempRetrieveTimeout)
 		defer cancel()
 
 		addr, err := h.getAddress(id.Topic, query.Feed.User, epoch)
