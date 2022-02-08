@@ -17,7 +17,6 @@ limitations under the License.
 package user
 
 import (
-	"net/http"
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -30,7 +29,7 @@ import (
 
 // CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
-func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, string, *Info, error) {
+func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *Info, error) {
 	// username validation
 	if u.IsUsernameAvailable(userName, u.dataDir) {
 		return "", "", nil, ErrUserAlreadyPresent
@@ -80,7 +79,7 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response ht
 	}
 
 	// set cookie and add user to map
-	err = u.addUserAndSessionToMap(ui, response)
+	err = u.addUserAndSessionToMap(ui)
 	if err != nil {
 		return "", "", nil, err
 	}

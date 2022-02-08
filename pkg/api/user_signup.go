@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
@@ -71,13 +73,20 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create user
-	address, createdMnemonic, err := h.dfsAPI.CreateUser(user, password, mnemonic, w, "")
+	address, createdMnemonic, ui, err := h.dfsAPI.CreateUser(user, password, mnemonic, "")
 	if err != nil {
 		if err == u.ErrUserAlreadyPresent {
 			h.logger.Errorf("user signup: %v", err)
 			jsonhttp.BadRequest(w, "user signup: "+err.Error())
 			return
 		}
+		h.logger.Errorf("user signup: %v", err)
+		jsonhttp.InternalServerError(w, "user signup: "+err.Error())
+		return
+	}
+
+	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
+	if err != nil {
 		h.logger.Errorf("user signup: %v", err)
 		jsonhttp.InternalServerError(w, "user signup: "+err.Error())
 		return

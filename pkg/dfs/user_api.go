@@ -17,34 +17,28 @@ limitations under the License.
 package dfs
 
 import (
-	"net/http"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 // CreateUser is a controller function which calls the create user function from the user object.
-func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, string, error) {
-	reference, rcvdMnemonic, _, err := d.users.CreateNewUser(userName, passPhrase, mnemonic, response, sessionId)
-	if err != nil {
-		return reference, rcvdMnemonic, err
-	}
-	return reference, rcvdMnemonic, nil
+func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, sessionId string) (string, string, *user.Info, error) {
+	return d.users.CreateNewUser(userName, passPhrase, mnemonic, sessionId)
 }
 
 // ImportUserUsingMnemonic is a controller function which calls the create user using the mnemonic passed.
-func (d *DfsAPI) ImportUserUsingMnemonic(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, error) {
-	reference, _, err := d.CreateUser(userName, passPhrase, mnemonic, response, sessionId)
+func (d *DfsAPI) ImportUserUsingMnemonic(userName, passPhrase, mnemonic string, sessionId string) (string, error) {
+	reference, _, _, err := d.CreateUser(userName, passPhrase, mnemonic, sessionId)
 	return reference, err
 }
 
 // ImportUserUsingAddress is a controller function which calls the create user using the address passed.
-func (d *DfsAPI) ImportUserUsingAddress(userName, passPhrase, address string, response http.ResponseWriter, sessionId string) error {
-	return d.users.ImportUsingAddress(userName, passPhrase, address, d.dataDir, d.client, response, sessionId)
+func (d *DfsAPI) ImportUserUsingAddress(userName, passPhrase, address string, sessionId string) (*user.Info, error) {
+	return d.users.ImportUsingAddress(userName, passPhrase, address, d.dataDir, d.client, sessionId)
 }
 
-// LoginUser is a controller function which calles the users login function.
-func (d *DfsAPI) LoginUser(userName, passPhrase string, response http.ResponseWriter, sessionId string) error {
-	return d.users.LoginUser(userName, passPhrase, d.dataDir, d.client, response, sessionId)
+// LoginUser is a controller function which calls the users login function.
+func (d *DfsAPI) LoginUser(userName, passPhrase string, sessionId string) (*user.Info, error) {
+	return d.users.LoginUser(userName, passPhrase, d.dataDir, d.client, sessionId)
 }
 
 // LogoutUser is a controller function which gets the logged in user information and logs it out.

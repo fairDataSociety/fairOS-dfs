@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
@@ -60,7 +62,7 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// login user
-	err = h.dfsAPI.LoginUser(user, password, w, "")
+	ui, err := h.dfsAPI.LoginUser(user, password, "")
 	if err != nil {
 		if err == u.ErrUserAlreadyLoggedIn ||
 			err == u.ErrInvalidUserName ||
@@ -73,5 +75,13 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "user login: "+err.Error())
 		return
 	}
+
+	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
+	if err != nil {
+		h.logger.Errorf("user login: %v", err)
+		jsonhttp.InternalServerError(w, "user login: "+err.Error())
+		return
+	}
+
 	jsonhttp.OK(w, "user logged-in successfully")
 }

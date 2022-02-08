@@ -38,8 +38,8 @@ func TestImport(t *testing.T) {
 		defer os.RemoveAll(dataDir1)
 
 		//create user to export
-		userObject1 := user.NewUsers(dataDir1, mockClient, "", logger)
-		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", nil, "")
+		userObject1 := user.NewUsers(dataDir1, mockClient, logger)
+		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -56,8 +56,8 @@ func TestImport(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer os.RemoveAll(dataDir2)
-		userObject2 := user.NewUsers(dataDir2, mockClient, "", logger)
-		err = userObject2.ImportUsingAddress(userName, "password1", address, dataDir2, mockClient, nil, "")
+		userObject2 := user.NewUsers(dataDir2, mockClient, logger)
+		_, err = userObject2.ImportUsingAddress(userName, "password1", address, dataDir2, mockClient, "")
 		if err != nil {
 			t.Fatal(err)
 		}

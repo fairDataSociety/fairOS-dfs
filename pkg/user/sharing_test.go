@@ -71,8 +71,8 @@ func TestSharing(t *testing.T) {
 		defer os.RemoveAll(dataDir1)
 
 		//create source user
-		userObject1 := user.NewUsers(dataDir1, mockClient, "", logger)
-		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", nil, "")
+		userObject1 := user.NewUsers(dataDir1, mockClient, logger)
+		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -116,8 +116,8 @@ func TestSharing(t *testing.T) {
 		defer os.RemoveAll(dataDir2)
 
 		//create destination user
-		userObject2 := user.NewUsers(dataDir2, mockClient, "", logger)
-		_, _, ui, err = userObject2.CreateNewUser("user2", "password2", "", nil, "")
+		userObject2 := user.NewUsers(dataDir2, mockClient, logger)
+		_, _, ui, err = userObject2.CreateNewUser("user2", "password2", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}

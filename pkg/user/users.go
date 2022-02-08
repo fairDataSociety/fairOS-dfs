@@ -24,24 +24,22 @@ import (
 )
 
 type Users struct {
-	dataDir      string
-	client       blockstore.Client
-	userMap      map[string]*Info
-	userMu       *sync.RWMutex
-	cookieDomain string
-	logger       logging.Logger
+	dataDir string
+	client  blockstore.Client
+	userMap map[string]*Info
+	userMu  *sync.RWMutex
+	logger  logging.Logger
 }
 
 // NewUsers creates the main user object which stores all the logged in users and there respective
 // other data structures.
-func NewUsers(dataDir string, client blockstore.Client, cookieDomain string, logger logging.Logger) *Users {
+func NewUsers(dataDir string, client blockstore.Client, logger logging.Logger) *Users {
 	return &Users{
-		dataDir:      dataDir,
-		client:       client,
-		userMap:      make(map[string]*Info),
-		userMu:       &sync.RWMutex{},
-		cookieDomain: cookieDomain,
-		logger:       logger,
+		dataDir: dataDir,
+		client:  client,
+		userMap: make(map[string]*Info),
+		userMu:  &sync.RWMutex{},
+		logger:  logger,
 	}
 }
 

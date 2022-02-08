@@ -17,7 +17,6 @@ limitations under the License.
 package user
 
 import (
-	"net/http"
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -31,10 +30,10 @@ import (
 
 // LoginUser checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) error {
+func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, sessionId string) (*Info, error) {
 	// check if username is available (user created)
 	if !u.IsUsernameAvailable(userName, dataDir) {
-		return ErrInvalidUserName
+		return nil, ErrInvalidUserName
 	}
 
 	// create account
@@ -44,26 +43,26 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	// load address from userName
 	address, err := u.getAddressFromUserName(userName, dataDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// load encrypted mnemonic from Swarm
 	fd := feed.New(accountInfo, client, u.logger)
 	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, address, fd)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = acc.LoadUserAccount(passPhrase, encryptedMnemonic)
 	if err != nil {
 		if err.Error() == "mnemonic is invalid" {
-			return ErrInvalidPassword
+			return nil, ErrInvalidPassword
 		}
-		return err
+		return nil, err
 	}
 
 	if u.IsUserLoggedIn(sessionId) {
-		return ErrUserAlreadyLoggedIn
+		return nil, ErrUserAlreadyLoggedIn
 	}
 
 	// Instantiate pod, dir & file objects
@@ -87,16 +86,10 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	}
 
 	// set cookie and add user to map
-	return u.addUserAndSessionToMap(ui, response)
+	return ui, u.addUserAndSessionToMap(ui)
 }
 
-func (u *Users) addUserAndSessionToMap(ui *Info, response http.ResponseWriter) error {
-	if response != nil {
-		err := cookie.SetSession(ui.GetSessionId(), response, u.cookieDomain)
-		if err != nil {
-			return err
-		}
-	}
+func (u *Users) addUserAndSessionToMap(ui *Info) error {
 	u.addUserToMap(ui)
 	return nil
 }

@@ -38,8 +38,8 @@ func TestLogout(t *testing.T) {
 		defer os.RemoveAll(dataDir)
 
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", logger)
-		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
+		userObject := user.NewUsers(dataDir, mockClient, logger)
+		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}

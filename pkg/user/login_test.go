@@ -38,8 +38,8 @@ func TestLogin(t *testing.T) {
 		defer os.RemoveAll(dataDir)
 
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", logger)
-		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
+		userObject := user.NewUsers(dataDir, mockClient, logger)
+		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -51,7 +51,7 @@ func TestLogin(t *testing.T) {
 		}
 
 		// addUserAndSessionToMap user again
-		err = userObject.LoginUser("user1", "password1", dataDir, mockClient, nil, "")
+		_, err = userObject.LoginUser("user1", "password1", dataDir, mockClient, "")
 		if err != nil {
 			t.Fatal(err)
 		}

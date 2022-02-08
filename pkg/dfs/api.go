@@ -31,12 +31,12 @@ type DfsAPI struct {
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(dataDir, apiUrl, debugApiUrl, cookieDomain, postageBlockId string, logger logging.Logger) (*DfsAPI, error) {
+func NewDfsAPI(dataDir, apiUrl, debugApiUrl, postageBlockId string, logger logging.Logger) (*DfsAPI, error) {
 	c := bee.NewBeeClient(apiUrl, debugApiUrl, postageBlockId, logger)
 	if !c.CheckConnection() {
 		return nil, ErrBeeClient
 	}
-	users := user.NewUsers(dataDir, c, cookieDomain, logger)
+	users := user.NewUsers(dataDir, c, logger)
 	return &DfsAPI{
 		dataDir: dataDir,
 		client:  c,

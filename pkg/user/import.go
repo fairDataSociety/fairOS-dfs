@@ -17,8 +17,6 @@ limitations under the License.
 package user
 
 import (
-	"net/http"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -30,10 +28,10 @@ import (
 )
 
 // ImportUsingAddress imports a given user in to the new dfs server using the address of the user.
-func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir string, client blockstore.Client, response http.ResponseWriter, sessionId string) error {
+func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir string, client blockstore.Client, sessionId string) (*Info, error) {
 	// basic validation
 	if u.IsUsernameAvailable(userName, dataDir) {
-		return ErrUserAlreadyPresent
+		return nil, ErrUserAlreadyPresent
 	}
 
 	acc := account.New(u.logger)
@@ -44,20 +42,20 @@ func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir 
 	// load the encrypted mnemonic and see if it is valid
 	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, address, fd)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = acc.LoadUserAccount(passPhrase, encryptedMnemonic)
 	if err != nil {
 		if err.Error() == "mnemonic is invalid" {
-			return ErrInvalidPassword
+			return nil, ErrInvalidPassword
 		}
-		return err
+		return nil, err
 	}
 
 	// store the username -> address mapping locally
 	err = u.storeUserNameToAddressFileMapping(userName, dataDir, accountInfo.GetAddress())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Instantiate pod, dir & file objects
@@ -79,10 +77,10 @@ func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir 
 	}
 
 	// set cookie and add user to map
-	err = u.addUserAndSessionToMap(ui, response)
+	err = u.addUserAndSessionToMap(ui)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return ui, nil
 }

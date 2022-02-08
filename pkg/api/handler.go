@@ -26,10 +26,11 @@ type Handler struct {
 	logger logging.Logger
 
 	whitelistedOrigins []string
+	cookieDomain       string
 }
 
 func NewHandler(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, logger logging.Logger) (*Handler, error) {
-	api, err := dfs.NewDfsAPI(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId, logger)
+	api, err := dfs.NewDfsAPI(dataDir, beeApi, beeDebugApi, postageBlockId, logger)
 	if err != nil {
 		return nil, dfs.ErrBeeClient
 	}
@@ -37,5 +38,6 @@ func NewHandler(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId strin
 		dfsAPI:             api,
 		logger:             logger,
 		whitelistedOrigins: whitelistedOrigins,
+		cookieDomain:       cookieDomain,
 	}, nil
 }

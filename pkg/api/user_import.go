@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
@@ -72,7 +74,7 @@ func (h *Handler) ImportUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if mnemonic != "" && address == "" {
-		address, _, err := h.dfsAPI.CreateUser(user, password, mnemonic, w, "")
+		address, _, ui, err := h.dfsAPI.CreateUser(user, password, mnemonic, "")
 		if err != nil {
 			if err == u.ErrUserAlreadyPresent {
 				h.logger.Errorf("user import: %v", err)
@@ -84,6 +86,13 @@ func (h *Handler) ImportUserHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
+		if err != nil {
+			h.logger.Errorf("user login: %v", err)
+			jsonhttp.InternalServerError(w, "user login: "+err.Error())
+			return
+		}
+
 		// send the response
 		w.Header().Set("Content-Type", " application/json")
 		jsonhttp.Created(w, &UserSignupResponse{
@@ -92,10 +101,17 @@ func (h *Handler) ImportUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if address != "" {
-		err := h.dfsAPI.ImportUserUsingAddress(user, password, address, w, "")
+		ui, err := h.dfsAPI.ImportUserUsingAddress(user, password, address, "")
 		if err != nil {
 			h.logger.Errorf("user import: %v", err)
 			jsonhttp.InternalServerError(w, "user import: "+err.Error())
+			return
+		}
+
+		err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
+		if err != nil {
+			h.logger.Errorf("user login: %v", err)
+			jsonhttp.InternalServerError(w, "user login: "+err.Error())
 			return
 		}
 
