@@ -102,7 +102,7 @@ func (u *Users) addUserAndSessionToMap(ui *Info, response http.ResponseWriter) e
 }
 
 // Logout removes the user information from all the data structures and clears the cookie.
-func (u *Users) Logout(sessionId string, response http.ResponseWriter) error {
+func (u *Users) Logout(sessionId string) error {
 	// check if session or user present in map
 	if !u.isUserPresentInMap(sessionId) {
 		return ErrUserNotLoggedIn
@@ -111,10 +111,6 @@ func (u *Users) Logout(sessionId string, response http.ResponseWriter) error {
 	// remove from the user map
 	u.removeUserFromMap(sessionId)
 
-	// clear cookie
-	if response != nil {
-		cookie.ClearSession(response)
-	}
 	return nil
 }
 

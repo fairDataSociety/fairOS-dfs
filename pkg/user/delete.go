@@ -18,6 +18,8 @@ package user
 
 import (
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 )
 
 // DeleteUser deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
@@ -41,9 +43,14 @@ func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, respon
 	}
 
 	// Logout user
-	err := u.Logout(sessionId, response)
+	err := u.Logout(sessionId)
 	if err != nil {
 		return err
+	}
+
+	// clear cookie
+	if response != nil {
+		cookie.ClearSession(response)
 	}
 
 	// remove the user mnemonic file and the user-address mapping file

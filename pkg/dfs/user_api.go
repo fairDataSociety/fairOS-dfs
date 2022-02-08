@@ -48,14 +48,14 @@ func (d *DfsAPI) LoginUser(userName, passPhrase string, response http.ResponseWr
 }
 
 // LogoutUser is a controller function which gets the logged in user information and logs it out.
-func (d *DfsAPI) LogoutUser(sessionId string, response http.ResponseWriter) error {
+func (d *DfsAPI) LogoutUser(sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
 
-	return d.users.LogoutUser(ui.GetUserName(), d.dataDir, sessionId, response)
+	return d.users.LogoutUser(ui.GetUserName(), d.dataDir, sessionId)
 }
 
 // DeleteUser is a controller function which deletes a logged in user.

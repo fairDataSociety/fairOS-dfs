@@ -45,7 +45,7 @@ func TestLogout(t *testing.T) {
 		}
 
 		// Logout user
-		err = userObject.LogoutUser(ui.GetUserName(), dataDir, ui.GetSessionId(), nil)
+		err = userObject.LogoutUser(ui.GetUserName(), dataDir, ui.GetSessionId())
 		if err != nil {
 			t.Fatal(err)
 		}
