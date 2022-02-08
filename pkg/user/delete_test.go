@@ -45,7 +45,7 @@ func TestDelete(t *testing.T) {
 		}
 
 		// delete user
-		err = userObject.DeleteUser("user1", dataDir, "password1", ui.GetSessionId(), nil, ui)
+		err = userObject.DeleteUser("user1", dataDir, "password1", ui.GetSessionId(), ui)
 		if err != nil {
 			t.Fatal(err)
 		}

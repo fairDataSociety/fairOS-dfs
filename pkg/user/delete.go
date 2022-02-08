@@ -16,15 +16,9 @@ limitations under the License.
 
 package user
 
-import (
-	"net/http"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-)
-
 // DeleteUser deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
 // data structures.
-func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, response http.ResponseWriter, ui *Info) error {
+func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *Info) error {
 	// check if session id and user address present in map
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
@@ -46,11 +40,6 @@ func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, respon
 	err := u.Logout(sessionId)
 	if err != nil {
 		return err
-	}
-
-	// clear cookie
-	if response != nil {
-		cookie.ClearSession(response)
 	}
 
 	// remove the user mnemonic file and the user-address mapping file

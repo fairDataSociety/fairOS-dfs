@@ -59,14 +59,14 @@ func (d *DfsAPI) LogoutUser(sessionId string) error {
 }
 
 // DeleteUser is a controller function which deletes a logged in user.
-func (d *DfsAPI) DeleteUser(passPhrase, sessionId string, response http.ResponseWriter) error {
+func (d *DfsAPI) DeleteUser(passPhrase, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
 
-	return d.users.DeleteUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, response, ui)
+	return d.users.DeleteUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, ui)
 }
 
 // IsUserNameAvailable checks if a given user name is available in this dfs server.

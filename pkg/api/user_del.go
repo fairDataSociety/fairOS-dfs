@@ -67,7 +67,7 @@ func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete user
-	err = h.dfsAPI.DeleteUser(password, sessionId, w)
+	err = h.dfsAPI.DeleteUser(password, sessionId)
 	if err != nil {
 		if err == u.ErrInvalidUserName ||
 			err == u.ErrInvalidPassword ||
@@ -80,5 +80,9 @@ func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "user delete: "+err.Error())
 		return
 	}
+
+	// clear cookie
+	cookie.ClearSession(w)
+
 	jsonhttp.OK(w, "user deleted successfully")
 }
