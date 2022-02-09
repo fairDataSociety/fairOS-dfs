@@ -124,7 +124,7 @@ github.com/golang/snappy
 github.com/google/shlex
 # github.com/google/uuid v1.1.4
 github.com/google/uuid
-# github.com/gorilla/mux v1.8.0
+# github.com/gorilla/mux v1.7.4
 ## explicit
 github.com/gorilla/mux
 # github.com/gorilla/securecookie v1.1.1
@@ -133,7 +133,7 @@ github.com/gorilla/securecookie
 # github.com/gorilla/websocket v1.4.2
 ## explicit
 github.com/gorilla/websocket
-# github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
+# github.com/hashicorp/golang-lru v0.5.4
 ## explicit
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
@@ -179,7 +179,7 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.9
 github.com/mattn/go-runewidth
-# github.com/mattn/go-tty v0.0.4
+# github.com/mattn/go-tty v0.0.3
 ## explicit
 github.com/mattn/go-tty
 # github.com/miguelmota/go-ethereum-hdwallet v0.0.0-20200123000308-a60dcd172b4c
@@ -200,7 +200,7 @@ github.com/pelletier/go-toml
 github.com/peterh/liner
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/pkg/term v1.1.0
+# github.com/pkg/term v0.0.0-20200520122047-c3ffed290a03
 ## explicit
 github.com/pkg/term/termios
 # github.com/prometheus/tsdb v0.10.0
@@ -255,7 +255,7 @@ github.com/syndtr/goleveldb/leveldb/util
 # github.com/tinygrasshopper/bettercsv v0.0.1
 ## explicit
 github.com/tinygrasshopper/bettercsv
-# github.com/tyler-smith/go-bip39 v1.1.0
+# github.com/tyler-smith/go-bip39 v1.0.2
 ## explicit
 github.com/tyler-smith/go-bip39
 github.com/tyler-smith/go-bip39/wordlists
@@ -334,7 +334,7 @@ google.golang.org/protobuf/types/descriptorpb
 gopkg.in/ini.v1
 # gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
 gopkg.in/natefinch/npipe.v2
-# gopkg.in/yaml.v2 v2.4.0
+# gopkg.in/yaml.v2 v2.3.0
 ## explicit
 gopkg.in/yaml.v2
 # resenje.org/jsonhttp v0.2.0
