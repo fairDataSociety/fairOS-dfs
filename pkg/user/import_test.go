@@ -21,6 +21,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/spf13/afero"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
@@ -38,7 +40,7 @@ func TestImport(t *testing.T) {
 		defer os.RemoveAll(dataDir1)
 
 		//create user to export
-		userObject1 := user.NewUsers(dataDir1, mockClient, logger)
+		userObject1 := user.NewUsers(dataDir1, mockClient, logger, afero.NewMemMapFs())
 		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
@@ -56,7 +58,7 @@ func TestImport(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer os.RemoveAll(dataDir2)
-		userObject2 := user.NewUsers(dataDir2, mockClient, logger)
+		userObject2 := user.NewUsers(dataDir2, mockClient, logger, afero.NewMemMapFs())
 		_, err = userObject2.ImportUsingAddress(userName, "password1", address, dataDir2, mockClient, "")
 		if err != nil {
 			t.Fatal(err)
