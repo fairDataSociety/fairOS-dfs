@@ -94,3 +94,11 @@ func (d *DfsAPI) ExportUser(sessionId string) (string, string, error) {
 	}
 	return d.users.ExportUser(ui)
 }
+
+func (d *DfsAPI) Users() (map[string]string, error) {
+	return d.users.GetUserMap(d.dataDir)
+}
+
+func (d *DfsAPI) LoadUsers(users map[string]string) error {
+	return d.users.LoadUserMap(d.dataDir, users)
+}

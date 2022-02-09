@@ -1,5 +1,5 @@
-//go:build !js
-// +build !js
+//go:build js
+// +build js
 
 /*
 Copyright © 2020 FairOS Authors
@@ -42,13 +42,14 @@ func NewDfsAPI(dataDir, apiUrl, debugApiUrl, postageBlockId string, logger loggi
 	if !c.CheckConnection() {
 		return nil, ErrBeeClient
 	}
-	fs := afero.NewOsFs()
+	fs := afero.NewMemMapFs()
 	users := user.NewUsers(dataDir, c, logger, fs)
 	return &DfsAPI{
 		dataDir: dataDir,
 		client:  c,
 		users:   users,
 		logger:  logger,
-		os:      fs,
+
+		os: fs,
 	}, nil
 }

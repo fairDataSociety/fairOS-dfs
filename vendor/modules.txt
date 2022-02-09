@@ -217,6 +217,7 @@ github.com/shirou/gopsutil/internal/common
 ## explicit
 github.com/sirupsen/logrus
 # github.com/spf13/afero v1.3.1
+## explicit
 github.com/spf13/afero
 github.com/spf13/afero/mem
 # github.com/spf13/cast v1.3.1
