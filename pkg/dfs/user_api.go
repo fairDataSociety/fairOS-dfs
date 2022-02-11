@@ -26,9 +26,9 @@ func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, sessionId str
 }
 
 // ImportUserUsingMnemonic is a controller function which calls the create user using the mnemonic passed.
-func (d *DfsAPI) ImportUserUsingMnemonic(userName, passPhrase, mnemonic string, sessionId string) (string, error) {
-	reference, _, _, err := d.CreateUser(userName, passPhrase, mnemonic, sessionId)
-	return reference, err
+func (d *DfsAPI) ImportUserUsingMnemonic(userName, passPhrase, mnemonic string, sessionId string) (*user.Info, error) {
+	_, _, ui, err := d.CreateUser(userName, passPhrase, mnemonic, sessionId)
+	return ui, err
 }
 
 // ImportUserUsingAddress is a controller function which calls the create user using the address passed.

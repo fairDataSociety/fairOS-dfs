@@ -49,7 +49,7 @@ const (
 	blobsUrl               = "/bytes/" // need to change this when bee supports it
 	postageBatchUrl        = "/stamps/"
 	SwarmPinHeader         = "Swarm-Pin"
-	SwarmEncryptHeader     = "SchunksUrlwarm-Encrypt"
+	SwarmEncryptHeader     = "Swarm-Encrypt"
 	SwarmPostageBatchId    = "Swarm-Postage-Batch-Id"
 )
 
