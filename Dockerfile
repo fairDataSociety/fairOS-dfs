@@ -1,12 +1,13 @@
-FROM golang:1.16 AS build
+FROM golang:1.17-alpine AS build
 
 WORKDIR /usr/fairos
 COPY go.mod go.sum /usr/fairos/
 RUN go mod download
 COPY . /usr/fairos/
+RUN apk add --update make gcc git musl-dev libc-dev linux-headers
 RUN make binary
 
-FROM debian:10.9-slim
+FROM alpine:3.15
 
 EXPOSE 9090
 
