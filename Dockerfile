@@ -9,6 +9,9 @@ RUN make binary
 
 FROM alpine:3.15
 
+RUN addgroup -g 10000 fds
+RUN adduser -u 10000 -G fds -h /home/fds -D fds
+USER fds
 EXPOSE 9090
 
 COPY --from=build /usr/fairos/dist/dfs /usr/local/bin/dfs
