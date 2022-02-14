@@ -1,3 +1,6 @@
+//go:build !js
+// +build !js
+
 /*
 Copyright © 2020 FairOS Authors
 
@@ -21,6 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/spf13/afero"
 )
 
 type DfsAPI struct {
@@ -28,6 +32,8 @@ type DfsAPI struct {
 	client  blockstore.Client
 	users   *user.Users
 	logger  logging.Logger
+
+	os afero.Fs
 }
 
 // NewDfsAPI is the main entry point for the df controller.
@@ -36,11 +42,13 @@ func NewDfsAPI(dataDir, apiUrl, debugApiUrl, postageBlockId string, logger loggi
 	if !c.CheckConnection() {
 		return nil, ErrBeeClient
 	}
-	users := user.NewUsers(dataDir, c, logger)
+	fs := afero.NewOsFs()
+	users := user.NewUsers(dataDir, c, logger, fs)
 	return &DfsAPI{
 		dataDir: dataDir,
 		client:  c,
 		users:   users,
 		logger:  logger,
+		os:      fs,
 	}, nil
 }

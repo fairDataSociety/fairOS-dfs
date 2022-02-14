@@ -88,6 +88,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer fd.Close()
+
 	reader := bufio.NewReader(fd)
 	readHeader := false
 	rowCount := 0

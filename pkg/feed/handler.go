@@ -27,9 +27,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	beecrypto "github.com/ethersphere/bee/pkg/crypto"
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
+	utilsSigner "github.com/fairdatasociety/fairOS-dfs-utils/signer"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
@@ -140,7 +140,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 			Feed:  query.Feed,
 			Epoch: epoch,
 		}
-		ctx, cancel := context.WithTimeout(ctx, tempRetrieveTimeout)
+		ctx, cancel := context.WithTimeout(ctx, defaultRetrieveTimeout)
 		defer cancel()
 
 		addr, err := h.getAddress(id.Topic, query.Feed.User, epoch)
@@ -336,7 +336,7 @@ func (h *Handler) getSignature(id, payloadId []byte) ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	signer := beecrypto.NewDefaultSigner(h.accountInfo.GetPrivateKey())
+	signer := utilsSigner.NewDefaultSigner(h.accountInfo.GetPrivateKey())
 	signature, err := signer.Sign(toSignBytes)
 	if err != nil {
 		return nil, nil, err

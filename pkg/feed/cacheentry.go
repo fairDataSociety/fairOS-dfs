@@ -25,10 +25,7 @@ import (
 const (
 	hasherCount = 8
 
-	// This is for testing with increased RetrieveTimeout
-	// TODO remove it after trail
-	tempRetrieveTimeout = 10 * time.Second
-	// 	defaultRetrieveTimeout = 100 * time.Millisecond
+	defaultRetrieveTimeout = 100 * time.Millisecond
 )
 
 // CacheEntry caches the last known update of a specific Swarm feed.

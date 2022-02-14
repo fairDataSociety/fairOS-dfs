@@ -81,7 +81,7 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "doc loadjson: "+err.Error())
 		return
 	}
-
+	defer fd.Close()
 	reader := bufio.NewReader(fd)
 	rowCount := 0
 	successCount := 0
@@ -121,13 +121,6 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	err = h.dfsAPI.DocBatchWrite(sessionId, podName, docBatch)
-	if err != nil {
-		h.logger.Errorf("doc loadjson: %v", err)
-		jsonhttp.InternalServerError(w, "doc loadjson: "+err.Error())
-		return
-	}
-
-	err = fd.Close()
 	if err != nil {
 		h.logger.Errorf("doc loadjson: %v", err)
 		jsonhttp.InternalServerError(w, "doc loadjson: "+err.Error())
