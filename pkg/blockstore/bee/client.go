@@ -55,7 +55,6 @@ const (
 
 type BeeClient struct {
 	url                string
-	debugUrl           string
 	client             *http.Client
 	hasher             *bmtlegacy.Hasher
 	chunkCache         *lru.Cache
@@ -74,7 +73,7 @@ type bytesPostResponse struct {
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
-func NewBeeClient(apiUrl, debugApiUrl, postageBlockId string, logger logging.Logger) *BeeClient {
+func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *BeeClient {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache, err := lru.New(chunkCacheSize)
 	if err != nil {
@@ -91,7 +90,6 @@ func NewBeeClient(apiUrl, debugApiUrl, postageBlockId string, logger logging.Log
 
 	return &BeeClient{
 		url:                apiUrl,
-		debugUrl:           debugApiUrl,
 		client:             createHTTPClient(),
 		hasher:             bmtlegacy.New(p),
 		chunkCache:         cache,
@@ -457,48 +455,6 @@ func (s *BeeClient) DeleteBlob(address []byte) error {
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete Blob: ")
-	return nil
-}
-
-func (s *BeeClient) GetNewPostageBatch() error {
-	to := time.Now()
-	s.logger.Infof("Trying to get new postage batch id")
-	path := filepath.Join(postageBatchUrl, "10000000/20")
-	fullUrl := fmt.Sprintf(s.debugUrl + path)
-	req, err := http.NewRequest(http.MethodPost, fullUrl, nil)
-	if err != nil {
-		return err
-	}
-
-	response, err := s.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	req.Close = true
-
-	if response.StatusCode != http.StatusCreated {
-		return errors.New("error getting postage stamp ")
-	}
-
-	respData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return errors.New("error getting postage stamp")
-	}
-
-	var batchResp *postageBatchResponse
-	err = json.Unmarshal(respData, &batchResp)
-	if err != nil {
-		return err
-	}
-
-	fields := logrus.Fields{
-		"BatchId":  batchResp.BatchId,
-		"duration": time.Since(to).String(),
-	}
-	s.postageBlockId = batchResp.BatchId
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "update batch: ")
 	return nil
 }
 

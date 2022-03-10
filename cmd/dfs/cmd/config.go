@@ -12,7 +12,6 @@ var (
 	optionDFSPprofPort       = "dfs.ports.pprof-port"
 	optionVerbosity          = "verbosity"
 	optionBeeApi             = "bee.bee-api-endpoint"
-	optionBeeDebugApi        = "bee.bee-debug-api-endpoint"
 	optionBeePostageBatchId  = "bee.postage-batch-id"
 	optionCookieDomain       = "cookie-domain"
 
@@ -21,7 +20,6 @@ var (
 	defaultDFSPprofPort       = ":9091"
 	defaultVerbosity          = "trace"
 	defaultBeeApi             = "http://localhost:1633"
-	defaultBeeDebugApi        = "http://localhost:1635"
 	defaultCookieDomain       = "api.fairos.io"
 )
 

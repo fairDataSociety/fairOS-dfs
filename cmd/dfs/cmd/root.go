@@ -30,11 +30,10 @@ var (
 	defaultDir    = filepath.Join(".fairOS", "dfs")
 	defaultConfig = ".dfs.yaml"
 
-	cfgFile     string
-	beeApi      string
-	beeDebugApi string
-	verbosity   string
-	dataDir     string
+	cfgFile   string
+	beeApi    string
+	verbosity string
+	dataDir   string
 
 	dataDirPath string
 	config      = viper.New()
@@ -55,16 +54,12 @@ It can also be used as a standalone personal, decentralised drive over the inter
 		if err := config.BindPFlag(optionBeeApi, cmd.Flags().Lookup("beeApi")); err != nil {
 			return err
 		}
-		if err := config.BindPFlag(optionBeeDebugApi, cmd.Flags().Lookup("beeDebugApi")); err != nil {
-			return err
-		}
 		if err := config.BindPFlag(optionVerbosity, cmd.Flags().Lookup("verbosity")); err != nil {
 			return err
 		}
 
 		dataDir = config.GetString(optionDFSDataDir)
 		beeApi = config.GetString(optionBeeApi)
-		beeDebugApi = config.GetString(optionBeeDebugApi)
 		verbosity = config.GetString(optionVerbosity)
 		return nil
 	},
@@ -109,11 +104,15 @@ func init() {
 	dataDirPath = filepath.Join(home, defaultDir)
 	rootCmd.PersistentFlags().String("dataDir", dataDirPath, "store data in this dir")
 	rootCmd.PersistentFlags().String("beeApi", "localhost:1633", "full bee api endpoint")
-	rootCmd.PersistentFlags().String("beeDebugApi", "localhost:1635", "full bee debug api endpoint")
 	rootCmd.PersistentFlags().String("verbosity", "trace", "verbosity level")
 
+	rootCmd.PersistentFlags().String("beeDebugApi", "localhost:1635", "full bee debug api endpoint")
 	rootCmd.PersistentFlags().String("beeHost", "127.0.0.1", "bee host")
 	rootCmd.PersistentFlags().String("beePort", "1633", "bee port")
+	if err := rootCmd.PersistentFlags().MarkDeprecated("beeDebugApi", "using debugAPI is not supported in fairOS-dfs server anymore"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	if err := rootCmd.PersistentFlags().MarkDeprecated("beeHost", "run --beeApi, full bee api endpoint"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -166,7 +165,6 @@ func writeConfig() {
 	c.Set(optionDFSPprofPort, defaultDFSPprofPort)
 	c.Set(optionVerbosity, defaultVerbosity)
 	c.Set(optionBeeApi, defaultBeeApi)
-	c.Set(optionBeeDebugApi, defaultBeeDebugApi)
 	c.Set(optionBeePostageBatchId, "")
 	c.Set(optionCookieDomain, defaultCookieDomain)
 

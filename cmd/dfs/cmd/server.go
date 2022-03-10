@@ -109,14 +109,13 @@ can consume it.`,
 		logger.Info("version        : ", dfs.Version)
 		logger.Info("dataDir        : ", dataDir)
 		logger.Info("beeApi         : ", beeApi)
-		logger.Info("beeDebugApi    : ", beeDebugApi)
 		logger.Info("verbosity      : ", verbosity)
 		logger.Info("httpPort       : ", httpPort)
 		logger.Info("pprofPort      : ", pprofPort)
 		logger.Info("cookieDomain   : ", cookieDomain)
 		logger.Info("postageBlockId : ", postageBlockId)
 		logger.Info("corsOrigins    : ", corsOrigins)
-		hdlr, err := api.NewHandler(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId, corsOrigins, logger)
+		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return
@@ -156,11 +155,6 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 		_, err = fmt.Fprintln(w, beeApi)
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, beeDebugApi)
 		if err != nil {
 			logger.Errorf("error in API /: ", err)
 			return

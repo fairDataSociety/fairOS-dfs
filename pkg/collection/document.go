@@ -283,8 +283,8 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 			d.logger.Errorf("deleting document db: %v", err.Error())
 			return err
 		}
-		defer d.removeFromOpenedDB(dbName)
 	}
+	defer d.removeFromOpenedDB(dbName)
 
 	docDB := d.getOpenedDb(dbName)
 	//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
