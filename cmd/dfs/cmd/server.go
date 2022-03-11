@@ -72,6 +72,7 @@ can consume it.`,
 		postageBlockId = config.GetString(optionBeePostageBatchId)
 		corsOrigins = config.GetStringSlice(optionCORSAllowedOrigins)
 		verbosity = config.GetString(optionVerbosity)
+		isGatewayProxy := config.GetBool(optionIsGatewayProxy)
 		if postageBlockId == "" {
 			_ = cmd.Help()
 			fmt.Println("\npostageBlockId is required to run server")
@@ -109,13 +110,14 @@ can consume it.`,
 		logger.Info("version        : ", dfs.Version)
 		logger.Info("dataDir        : ", dataDir)
 		logger.Info("beeApi         : ", beeApi)
+		logger.Info("isGatewayProxy : ", isGatewayProxy)
 		logger.Info("verbosity      : ", verbosity)
 		logger.Info("httpPort       : ", httpPort)
 		logger.Info("pprofPort      : ", pprofPort)
 		logger.Info("cookieDomain   : ", cookieDomain)
 		logger.Info("postageBlockId : ", postageBlockId)
 		logger.Info("corsOrigins    : ", corsOrigins)
-		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, logger)
+		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return

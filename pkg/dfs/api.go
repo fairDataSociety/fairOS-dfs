@@ -37,9 +37,9 @@ type DfsAPI struct {
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(dataDir, apiUrl, postageBlockId string, logger logging.Logger) (*DfsAPI, error) {
+func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, logger logging.Logger) (*DfsAPI, error) {
 	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)
-	if !c.CheckConnection() {
+	if !c.CheckConnection(isGatewayProxy) {
 		return nil, ErrBeeClient
 	}
 	fs := afero.NewOsFs()

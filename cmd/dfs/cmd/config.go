@@ -13,6 +13,7 @@ var (
 	optionVerbosity          = "verbosity"
 	optionBeeApi             = "bee.bee-api-endpoint"
 	optionBeePostageBatchId  = "bee.postage-batch-id"
+	optionIsGatewayProxy     = "bee.is-gateway-proxy"
 	optionCookieDomain       = "cookie-domain"
 
 	defaultCORSAllowedOrigins = []string{}
@@ -21,6 +22,7 @@ var (
 	defaultVerbosity          = "trace"
 	defaultBeeApi             = "http://localhost:1633"
 	defaultCookieDomain       = "api.fairos.io"
+	defaultIsGatewayProxy     = false
 )
 
 var configCmd = &cobra.Command{

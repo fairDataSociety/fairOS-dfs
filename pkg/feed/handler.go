@@ -86,7 +86,7 @@ func (h *Handler) update(id, owner, signature, data []byte) ([]byte, error) {
 }
 
 func (h *Handler) deleteChunk(ref []byte) error {
-	return h.client.DeleteChunk(ref)
+	return h.client.DeleteReference(ref)
 }
 
 // GetContent retrieves the data payload of the last synced update of the feed

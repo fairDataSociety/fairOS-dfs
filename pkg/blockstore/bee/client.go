@@ -43,11 +43,10 @@ const (
 	chunkCacheSize         = 1024
 	uploadBlockCacheSize   = 100
 	downloadBlockCacheSize = 100
+	healthUrl              = "/health"
 	ChunkUploadDownloadUrl = "/chunks"
 	BytesUploadDownloadUrl = "/bytes"
 	pinsUrl                = "/pins/"
-	blobsUrl               = "/bytes/" // need to change this when bee supports it
-	postageBatchUrl        = "/stamps/"
 	SwarmPinHeader         = "Swarm-Pin"
 	SwarmEncryptHeader     = "Swarm-Encrypt"
 	SwarmPostageBatchId    = "Swarm-Postage-Batch-Id"
@@ -113,8 +112,14 @@ func socResource(owner, id, sig string) string {
 }
 
 // CheckConnection is used to check if the nbe client is up and running.
-func (s *BeeClient) CheckConnection() bool {
-	req, err := http.NewRequest(http.MethodGet, s.url, nil)
+func (s *BeeClient) CheckConnection(isProxy bool) bool {
+	url := s.url
+	matchString := "Ethereum Swarm Bee\n"
+	if isProxy {
+		url += healthUrl
+		matchString = "OK"
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return false
 	}
@@ -136,7 +141,7 @@ func (s *BeeClient) CheckConnection() bool {
 		return false
 	}
 
-	if string(data) != "Ethereum Swarm Bee\n" {
+	if string(data) != matchString {
 		return false
 	}
 	return true
@@ -144,6 +149,7 @@ func (s *BeeClient) CheckConnection() bool {
 
 // UploadSOC is used construct and send a Single Owner Chunk to the Swarm bee client.
 func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
+	fmt.Println("UploadSOC")
 	to := time.Now()
 	socResStr := socResource(owner, id, signature)
 	fullUrl := fmt.Sprintf(s.url + socResStr)
@@ -191,6 +197,7 @@ func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
+	fmt.Println("UploadSOC", addrResp.Reference.String())
 	return addrResp.Reference.Bytes(), nil
 }
 
@@ -241,6 +248,8 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
+	fmt.Println("UploadChunk", addrResp.Reference.String())
+
 	return addrResp.Reference.Bytes(), nil
 }
 
@@ -296,7 +305,7 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 		return s.getFromBlockCache(s.uploadBlockCache, string(data)), nil
 	}
 
-	fullUrl := fmt.Sprintf(s.url + BytesUploadDownloadUrl)
+	fullUrl := s.url + BytesUploadDownloadUrl
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
@@ -346,6 +355,8 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 	if !s.inBlockCache(s.uploadBlockCache, string(data)) {
 		s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
 	}
+	fmt.Println("UploadBlob", resp.Reference.String())
+
 	return resp.Reference.Bytes(), nil
 }
 
@@ -359,7 +370,7 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 		return s.getFromBlockCache(s.downloadBlockCache, addrString), 200, nil
 	}
 
-	fullUrl := fmt.Sprintf(s.url + BytesUploadDownloadUrl + "/" + addrString)
+	fullUrl := s.url + BytesUploadDownloadUrl + "/" + addrString
 	req, err := http.NewRequest(http.MethodGet, fullUrl, nil)
 	if err != nil {
 		return nil, http.StatusNotFound, err
@@ -396,12 +407,13 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	return respData, response.StatusCode, nil
 }
 
-// DeleteChunk unpins a check so that it will be garbasge collected by the Swarm network.
-func (s *BeeClient) DeleteChunk(address []byte) error {
+// DeleteReference unpins a reference so that it will be garbage collected by the Swarm network.
+func (s *BeeClient) DeleteReference(address []byte) error {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
-	path := filepath.Join(pinsUrl, addrString)
-	fullUrl := fmt.Sprintf(s.url + path)
+	fmt.Println("DeleteReference", addrString)
+
+	fullUrl := s.url + pinsUrl + addrString
 	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
 	if err != nil {
 		return err
@@ -416,7 +428,11 @@ func (s *BeeClient) DeleteChunk(address []byte) error {
 	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
-		return err
+		respData, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("failed to unpin reference : %s", respData)
 	}
 
 	fields := logrus.Fields{
@@ -424,37 +440,6 @@ func (s *BeeClient) DeleteChunk(address []byte) error {
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete chunk: ")
-	return nil
-}
-
-// DeleteBlob unpins a blob so that it can be garbage collected in the Swarm network.
-func (s *BeeClient) DeleteBlob(address []byte) error {
-	to := time.Now()
-	addrString := swarm.NewAddress(address).String()
-	path := filepath.Join(blobsUrl, addrString)
-	fullUrl := fmt.Sprintf(s.url + path)
-	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
-	if err != nil {
-		return err
-	}
-
-	response, err := s.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	req.Close = true
-
-	if response.StatusCode != http.StatusOK {
-		return err
-	}
-
-	fields := logrus.Fields{
-		"reference": addrString,
-		"duration":  time.Since(to).String(),
-	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete Blob: ")
 	return nil
 }
 

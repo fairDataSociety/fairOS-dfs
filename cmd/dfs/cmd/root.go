@@ -167,6 +167,7 @@ func writeConfig() {
 	c.Set(optionBeeApi, defaultBeeApi)
 	c.Set(optionBeePostageBatchId, "")
 	c.Set(optionCookieDomain, defaultCookieDomain)
+	c.Set(optionIsGatewayProxy, defaultIsGatewayProxy)
 
 	if err := c.WriteConfigAs(cfgFile); err != nil {
 		fmt.Println("failed to write config file")

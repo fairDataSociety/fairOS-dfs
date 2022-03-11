@@ -29,8 +29,8 @@ type Handler struct {
 	cookieDomain       string
 }
 
-func NewHandler(dataDir, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, logger logging.Logger) (*Handler, error) {
-	api, err := dfs.NewDfsAPI(dataDir, beeApi, postageBlockId, logger)
+func NewHandler(dataDir, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, isGatewayProxy bool, logger logging.Logger) (*Handler, error) {
+	api, err := dfs.NewDfsAPI(dataDir, beeApi, postageBlockId, isGatewayProxy, logger)
 	if err != nil {
 		return nil, dfs.ErrBeeClient
 	}
