@@ -1639,7 +1639,7 @@ paths:
                     $ref: '#/components/schemas/KVMemoryTable'
               required:
                 - pod_name
-                - table_ame
+                - table_name
           multipart/form-data:
             schema:
               type: object
@@ -2098,8 +2098,8 @@ paths:
 
   '/doc/entry/del':
     delete:
-      summary: 'Get Document'
-      description: 'Get the document from the documentDB given the id'
+      summary: 'Delete Document'
+      description: 'Delete the document from the documentDB given the id'
       tags:
         - Key Value Store
       parameters:

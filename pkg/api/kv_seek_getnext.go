@@ -42,8 +42,8 @@ const (
 func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
-		h.logger.Errorf("kv delete: invalid request body type")
-		jsonhttp.BadRequest(w, "kv delete: invalid request body type")
+		h.logger.Errorf("kv seek: invalid request body type")
+		jsonhttp.BadRequest(w, "kv seek: invalid request body type")
 		return
 	}
 
@@ -51,8 +51,8 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	var kvReq common.KVRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
-		h.logger.Errorf("kv delete: could not decode arguments")
-		jsonhttp.BadRequest(w, "kv delete: could not decode arguments")
+		h.logger.Errorf("kv seek: could not decode arguments")
+		jsonhttp.BadRequest(w, "kv seek: could not decode arguments")
 		return
 	}
 
