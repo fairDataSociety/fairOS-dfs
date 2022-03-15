@@ -43,7 +43,7 @@ func NewMockBeeClient() *MockBeeClient {
 	}
 }
 
-func (*MockBeeClient) CheckConnection() bool {
+func (*MockBeeClient) CheckConnection(_ bool) bool {
 	return true
 }
 
