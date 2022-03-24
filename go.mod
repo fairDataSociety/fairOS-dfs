@@ -28,6 +28,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/tinygrasshopper/bettercsv v0.0.1
 	github.com/tyler-smith/go-bip39 v1.0.2
+	github.com/wealdtech/go-ens/v3 v3.4.3
 	golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
 	gopkg.in/yaml.v2 v2.3.0

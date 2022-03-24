@@ -34,6 +34,8 @@ github.com/edsrzf/mmap-go
 github.com/ethereum/go-ethereum
 github.com/ethereum/go-ethereum/accounts
 github.com/ethereum/go-ethereum/accounts/abi
+github.com/ethereum/go-ethereum/accounts/abi/bind
+github.com/ethereum/go-ethereum/accounts/external
 github.com/ethereum/go-ethereum/accounts/keystore
 github.com/ethereum/go-ethereum/accounts/scwallet
 github.com/ethereum/go-ethereum/accounts/usbwallet
@@ -65,6 +67,7 @@ github.com/ethereum/go-ethereum/crypto/bn256/google
 github.com/ethereum/go-ethereum/crypto/ecies
 github.com/ethereum/go-ethereum/crypto/secp256k1
 github.com/ethereum/go-ethereum/eth/downloader
+github.com/ethereum/go-ethereum/ethclient
 github.com/ethereum/go-ethereum/ethdb
 github.com/ethereum/go-ethereum/ethdb/leveldb
 github.com/ethereum/go-ethereum/ethdb/memorydb
@@ -185,11 +188,21 @@ github.com/mattn/go-tty
 # github.com/miguelmota/go-ethereum-hdwallet v0.0.0-20200123000308-a60dcd172b4c
 ## explicit
 github.com/miguelmota/go-ethereum-hdwallet
+# github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
+github.com/minio/blake2b-simd
+# github.com/minio/sha256-simd v0.1.1
+github.com/minio/sha256-simd
 # github.com/mitchellh/go-homedir v1.1.0
 ## explicit
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.3.2
 github.com/mitchellh/mapstructure
+# github.com/mr-tron/base58 v1.2.0
+github.com/mr-tron/base58/base58
+# github.com/multiformats/go-multihash v0.0.14
+github.com/multiformats/go-multihash
+# github.com/multiformats/go-varint v0.0.6
+github.com/multiformats/go-varint
 # github.com/olekukonko/tablewriter v0.0.4
 github.com/olekukonko/tablewriter
 # github.com/pborman/uuid v1.2.0
@@ -216,6 +229,8 @@ github.com/shirou/gopsutil/internal/common
 # github.com/sirupsen/logrus v1.6.0
 ## explicit
 github.com/sirupsen/logrus
+# github.com/spaolacci/murmur3 v1.1.0
+github.com/spaolacci/murmur3
 # github.com/spf13/afero v1.3.1
 ## explicit
 github.com/spf13/afero
@@ -260,10 +275,28 @@ github.com/tinygrasshopper/bettercsv
 ## explicit
 github.com/tyler-smith/go-bip39
 github.com/tyler-smith/go-bip39/wordlists
+# github.com/wealdtech/go-ens/v3 v3.4.3
+## explicit
+github.com/wealdtech/go-ens/v3
+github.com/wealdtech/go-ens/v3/contracts/auctionregistrar
+github.com/wealdtech/go-ens/v3/contracts/baseregistrar
+github.com/wealdtech/go-ens/v3/contracts/deed
+github.com/wealdtech/go-ens/v3/contracts/dnsregistrar
+github.com/wealdtech/go-ens/v3/contracts/dnsresolver
+github.com/wealdtech/go-ens/v3/contracts/dnssecoracle
+github.com/wealdtech/go-ens/v3/contracts/ethcontroller
+github.com/wealdtech/go-ens/v3/contracts/registry
+github.com/wealdtech/go-ens/v3/contracts/resolver
+github.com/wealdtech/go-ens/v3/contracts/reverseregistrar
+github.com/wealdtech/go-ens/v3/contracts/reverseresolver
+github.com/wealdtech/go-ens/v3/util
+# github.com/wealdtech/go-multicodec v1.2.0
+github.com/wealdtech/go-multicodec
 # github.com/wsddn/go-ecdh v0.0.0-20161211032359-48726bab9208
 github.com/wsddn/go-ecdh
 # golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e
 ## explicit
+golang.org/x/crypto/blake2s
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/curve25519/internal/field
 golang.org/x/crypto/hkdf
@@ -275,6 +308,7 @@ golang.org/x/crypto/sha3
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/html/charset
+golang.org/x/net/idna
 # golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
@@ -301,7 +335,9 @@ golang.org/x/text/internal/tag
 golang.org/x/text/internal/utf8internal
 golang.org/x/text/language
 golang.org/x/text/runes
+golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # google.golang.org/protobuf v1.25.0
 google.golang.org/protobuf/encoding/prototext
