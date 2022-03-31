@@ -149,7 +149,6 @@ can consume it.`,
 
 		logger.Info("configuration values")
 		logger.Info("version        : ", dfs.Version)
-		logger.Info("dataDir        : ", dataDir)
 		logger.Info("beeApi         : ", beeApi)
 		logger.Info("isGatewayProxy : ", isGatewayProxy)
 		logger.Info("verbosity      : ", verbosity)
@@ -158,7 +157,7 @@ can consume it.`,
 		logger.Info("cookieDomain   : ", cookieDomain)
 		logger.Info("postageBlockId : ", postageBlockId)
 		logger.Info("corsOrigins    : ", corsOrigins)
-		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, ensConfig, logger)
+		hdlr, err := api.NewHandler(beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, ensConfig, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return
@@ -188,11 +187,6 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 		_, err = fmt.Fprintln(w, dfs.Version)
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, dataDir)
 		if err != nil {
 			logger.Errorf("error in API /: ", err)
 			return
@@ -253,7 +247,6 @@ func startHttpService(logger logging.Logger) {
 	baseRouter.Use(handler.LogMiddleware)
 	baseRouter.HandleFunc("/user/signup", handler.UserSignupHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/login", handler.UserLoginHandler).Methods("POST")
-	baseRouter.HandleFunc("/user/import", handler.ImportUserHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/present", handler.UserPresentHandler).Methods("GET")
 	baseRouter.HandleFunc("/user/isloggedin", handler.IsUserLoggedInHandler).Methods("GET")
 
@@ -261,7 +254,6 @@ func startHttpService(logger logging.Logger) {
 	userRouter := baseRouter.PathPrefix("/user/").Subrouter()
 	userRouter.Use(handler.LoginMiddleware)
 	userRouter.HandleFunc("/logout", handler.UserLogoutHandler).Methods("POST")
-	userRouter.HandleFunc("/export", handler.ExportUserHandler).Methods("POST")
 	userRouter.HandleFunc("/delete", handler.UserDeleteHandler).Methods("DELETE")
 	userRouter.HandleFunc("/stat", handler.UserStatHandler).Methods("GET")
 

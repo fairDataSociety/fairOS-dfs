@@ -16,9 +16,11 @@ limitations under the License.
 
 package user
 
+import "github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 // DeleteUser deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
 // data structures.
-func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *Info) error {
+func (u *Users) DeleteUser(userName, password, sessionId string, ui *Info) error {
 	// check if session id and user address present in map
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
@@ -42,16 +44,12 @@ func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *In
 		return err
 	}
 
-	// remove the user mnemonic file and the user-address mapping file
-	address, err := u.getAddressFromUserName(userName, dataDir)
+	// TODO remove the user if possible
+	addr, err := u.fnm.GetOwner(userName)
 	if err != nil {
 		return err
 	}
-	err = u.deleteMnemonic(userName, address, ui.GetFeed(), u.client)
-	if err != nil {
-		return err
-	}
-	err = u.deleteUserMapping(userName, dataDir)
+	err = u.deleteMnemonic(userName, utils.Address(addr), ui.GetFeed(), u.client)
 	if err != nil {
 		return err
 	}

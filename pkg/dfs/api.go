@@ -26,20 +26,16 @@ import (
 	fnmClient "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
-	"github.com/spf13/afero"
 )
 
 type DfsAPI struct {
-	dataDir string
-	client  blockstore.Client
-	users   *user.Users
-	logger  logging.Logger
-
-	os afero.Fs
+	client blockstore.Client
+	users  *user.Users
+	logger logging.Logger
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*DfsAPI, error) {
+func NewDfsAPI(apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*DfsAPI, error) {
 	fnm, err := fnmClient.New(ensConfig, logger)
 	if err != nil {
 		return nil, ErrEthClient
@@ -48,13 +44,10 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensC
 	if !c.CheckConnection(isGatewayProxy) {
 		return nil, ErrBeeClient
 	}
-	fs := afero.NewOsFs()
-	users := user.NewUsers(dataDir, c, fnm, logger, fs)
+	users := user.NewUsers(c, fnm, logger)
 	return &DfsAPI{
-		dataDir: dataDir,
-		client:  c,
-		users:   users,
-		logger:  logger,
-		os:      fs,
+		client: c,
+		users:  users,
+		logger: logger,
 	}, nil
 }

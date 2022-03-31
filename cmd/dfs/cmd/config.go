@@ -7,7 +7,6 @@ import (
 
 var (
 	optionCORSAllowedOrigins        = "cors-allowed-origins"
-	optionDFSDataDir                = "dfs.data-dir"
 	optionDFSHttpPort               = "dfs.ports.http-port"
 	optionDFSPprofPort              = "dfs.ports.pprof-port"
 	optionVerbosity                 = "verbosity"

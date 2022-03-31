@@ -17,7 +17,7 @@ limitations under the License.
 package user
 
 // LogoutUser logs out a giver user from the system and clean him from all the data structures.
-func (u *Users) LogoutUser(userName, dataDir, sessionId string) error {
+func (u *Users) LogoutUser(userName, sessionId string) error {
 	// basic validations
 	if !u.IsUsernameAvailable(userName) {
 		return ErrInvalidUserName

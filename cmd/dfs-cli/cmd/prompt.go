@@ -48,11 +48,9 @@ var (
 const (
 	apiUserSignup      = APIVersion + "/user/signup"
 	apiUserLogin       = APIVersion + "/user/login"
-	apiUserImport      = APIVersion + "/user/import"
 	apiUserPresent     = APIVersion + "/user/present"
 	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
 	apiUserLogout      = APIVersion + "/user/logout"
-	apiUserExport      = APIVersion + "/user/export"
 	apiUserDelete      = APIVersion + "/user/delete"
 	apiUserStat        = APIVersion + "/user/stat"
 	apiPodNew          = APIVersion + "/pod/new"
@@ -284,40 +282,6 @@ func executor(in string) {
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
-		case "import":
-			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
-				return
-			}
-			if len(blocks) == 3 {
-				fmt.Println("invalid command. Missing \"address\" or \"mnemonic\" argument ")
-				return
-			}
-			userName := blocks[2]
-			if len(blocks) == 4 {
-				address := blocks[3]
-				userImportUsingAddress(userName, address)
-				currentUser = userName
-				currentPod = ""
-				currentDirectory = ""
-				currentPrompt = getCurrentPrompt()
-				return
-			} else {
-				if len(blocks) > 4 && len(blocks) < 15 {
-					fmt.Println("invalid command. Missing arguments")
-					return
-				}
-				var mnemonic string
-				for i := 3; i < 15; i++ {
-					mnemonic = mnemonic + " " + blocks[i]
-				}
-				mnemonic = strings.TrimPrefix(mnemonic, " ")
-				userImportUsingMnemonic(userName, mnemonic)
-			}
-			currentUser = userName
-			currentPod = ""
-			currentDirectory = ""
-			currentPrompt = getCurrentPrompt()
 		case "login":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"name\" argument ")
@@ -356,13 +320,6 @@ func executor(in string) {
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
-			currentPrompt = getCurrentPrompt()
-		case "export":
-			if currentUser == "" {
-				fmt.Println("please login as  user to do the operation")
-				return
-			}
-			exportUser()
 			currentPrompt = getCurrentPrompt()
 		case "loggedin":
 			if len(blocks) < 3 {

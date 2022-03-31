@@ -103,10 +103,6 @@ type chunkAddressResponse struct {
 	Reference swarm.Address `json:"reference"`
 }
 
-type postageBatchResponse struct {
-	BatchId string `json:"batchID"`
-}
-
 func socResource(owner, id, sig string) string {
 	return fmt.Sprintf("/soc/%s/%s?sig=%s", owner, id, sig)
 }

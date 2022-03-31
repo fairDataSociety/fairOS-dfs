@@ -59,12 +59,6 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 		return "", "", nil, err
 	}
 
-	//// store the username -> address mapping locally
-	//err = u.storeUserNameToAddressFileMapping(userName, u.dataDir, accountInfo.GetAddress())
-	//if err != nil {
-	//	return "", "", nil, err
-	//}
-
 	// create ens subdomain and store mnemonic
 	err = u.fnm.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
 	if err != nil {

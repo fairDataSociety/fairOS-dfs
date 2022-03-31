@@ -32,7 +32,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-	"github.com/spf13/afero"
 )
 
 func TestSharing(t *testing.T) {
@@ -66,15 +65,9 @@ func TestSharing(t *testing.T) {
 	podName2 := "test2"
 
 	t.Run("sharing-user", func(t *testing.T) {
-		dataDir1, err := ioutil.TempDir("", "sharing")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dataDir1)
-
 		fnm := mock2.NewMockNamespaceManager()
 		//create source user
-		userObject1 := user.NewUsers(dataDir1, mockClient, fnm, logger, afero.NewMemMapFs())
+		userObject1 := user.NewUsers(mockClient, fnm, logger)
 		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
@@ -111,15 +104,8 @@ func TestSharing(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// create destination user
-		dataDir2, err := ioutil.TempDir("", "sharing")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dataDir2)
-
 		//create destination user
-		userObject2 := user.NewUsers(dataDir2, mockClient, fnm, logger, afero.NewMemMapFs())
+		userObject2 := user.NewUsers(mockClient, fnm, logger)
 		_, _, ui, err = userObject2.CreateNewUser("user2", "password2", "", "")
 		if err != nil {
 			t.Fatal(err)

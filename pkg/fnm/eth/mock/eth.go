@@ -8,25 +8,30 @@ import (
 )
 
 type MockNamespaceManager struct {
-	storer   map[string]*common.Address
+	storer   map[string]string
 	storerMu sync.RWMutex
 }
 
 func (c *MockNamespaceManager) RegisterSubdomain(username string, owner common.Address) error {
-	panic("implement me")
+	c.storerMu.Lock()
+	defer c.storerMu.Unlock()
+	c.storer[username] = owner.Hex()
+	return nil
 }
 
 func (c *MockNamespaceManager) SetResolver(username string) error {
-	panic("implement me")
+	// TODO do something
+	return nil
 }
 
 func (c *MockNamespaceManager) SetAll(username string, owner common.Address, publicKey *ecdsa.PublicKey) error {
-	panic("implement me")
+	// TODO do something
+	return nil
 }
 
 func NewMockNamespaceManager() *MockNamespaceManager {
 	return &MockNamespaceManager{
-		storer:   make(map[string]*common.Address),
+		storer:   make(map[string]string),
 		storerMu: sync.RWMutex{},
 	}
 }
@@ -35,8 +40,8 @@ func (c *MockNamespaceManager) GetOwner(username string) (common.Address, error)
 	c.storerMu.Lock()
 	defer c.storerMu.Unlock()
 	addr := c.storer[username]
-	if addr == nil {
+	if addr == "" {
 		return common.Address{}, nil
 	}
-	return *addr, nil
+	return common.HexToAddress(addr), nil
 }

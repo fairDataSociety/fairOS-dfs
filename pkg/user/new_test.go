@@ -18,14 +18,12 @@ package user_test
 
 import (
 	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
-	"github.com/spf13/afero"
 )
 
 func TestNew(t *testing.T) {
@@ -33,15 +31,10 @@ func TestNew(t *testing.T) {
 	logger := logging.New(ioutil.Discard, 0)
 
 	t.Run("new-user", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "new")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dataDir)
 		fnm := mock2.NewMockNamespaceManager()
 
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, fnm, logger, afero.NewMemMapFs())
+		userObject := user.NewUsers(mockClient, fnm, logger)
 		_, mnemonic, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)

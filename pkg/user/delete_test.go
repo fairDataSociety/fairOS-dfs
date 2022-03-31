@@ -18,14 +18,12 @@ package user_test
 
 import (
 	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
-	"github.com/spf13/afero"
 )
 
 func TestDelete(t *testing.T) {
@@ -33,22 +31,16 @@ func TestDelete(t *testing.T) {
 	logger := logging.New(ioutil.Discard, 0)
 
 	t.Run("delete-user", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "delete")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dataDir)
-
 		fnm := mock2.NewMockNamespaceManager()
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, fnm, logger, afero.NewMemMapFs())
+		userObject := user.NewUsers(mockClient, fnm, logger)
 		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// delete user
-		err = userObject.DeleteUser("user1", dataDir, "password1", ui.GetSessionId(), ui)
+		err = userObject.DeleteUser("user1", "password1", ui.GetSessionId(), ui)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -57,9 +49,6 @@ func TestDelete(t *testing.T) {
 		if userObject.IsUserNameLoggedIn("user1") {
 			t.Fatalf("user not deleted")
 		}
-		if userObject.IsUsernameAvailable("user1") {
-			t.Fatalf("user not deleted")
-		}
-
+		// TODO test if user is deleted
 	})
 }

@@ -25,17 +25,6 @@ func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, sessionId str
 	return d.users.CreateNewUser(userName, passPhrase, mnemonic, sessionId)
 }
 
-// ImportUserUsingMnemonic is a controller function which calls the create user using the mnemonic passed.
-func (d *DfsAPI) ImportUserUsingMnemonic(userName, passPhrase, mnemonic string, sessionId string) (*user.Info, error) {
-	_, _, ui, err := d.CreateUser(userName, passPhrase, mnemonic, sessionId)
-	return ui, err
-}
-
-// ImportUserUsingAddress is a controller function which calls the create user using the address passed.
-func (d *DfsAPI) ImportUserUsingAddress(userName, passPhrase, address string, sessionId string) (*user.Info, error) {
-	return d.users.ImportUsingAddress(userName, passPhrase, address, d.dataDir, d.client, sessionId)
-}
-
 // LoginUser is a controller function which calls the users login function.
 func (d *DfsAPI) LoginUser(userName, passPhrase string, sessionId string) (*user.Info, error) {
 	return d.users.LoginUser(userName, passPhrase, d.client, sessionId)
@@ -49,7 +38,7 @@ func (d *DfsAPI) LogoutUser(sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	return d.users.LogoutUser(ui.GetUserName(), d.dataDir, sessionId)
+	return d.users.LogoutUser(ui.GetUserName(), sessionId)
 }
 
 // DeleteUser is a controller function which deletes a logged in user.
@@ -60,7 +49,7 @@ func (d *DfsAPI) DeleteUser(passPhrase, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	return d.users.DeleteUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, ui)
+	return d.users.DeleteUser(ui.GetUserName(), passPhrase, sessionId, ui)
 }
 
 // IsUserNameAvailable checks if a given user name is available in this dfs server.
@@ -83,22 +72,4 @@ func (d *DfsAPI) GetUserStat(sessionId string) (*user.Stat, error) {
 	}
 
 	return d.users.GetUserStat(ui)
-}
-
-// ExportUser exports the currently logged in user.
-func (d *DfsAPI) ExportUser(sessionId string) (string, string, error) {
-	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return "", "", ErrUserNotLoggedIn
-	}
-	return d.users.ExportUser(ui)
-}
-
-func (d *DfsAPI) Users() (map[string]string, error) {
-	return d.users.GetUserMap(d.dataDir)
-}
-
-func (d *DfsAPI) LoadUsers(users map[string]string) error {
-	return d.users.LoadUserMap(d.dataDir, users)
 }
