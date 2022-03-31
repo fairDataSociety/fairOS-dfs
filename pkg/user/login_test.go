@@ -21,11 +21,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/spf13/afero"
 )
 
 func TestLogin(t *testing.T) {
@@ -39,8 +39,9 @@ func TestLogin(t *testing.T) {
 		}
 		defer os.RemoveAll(dataDir)
 
+		fnm := mock2.NewMockNamespaceManager()
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, logger, afero.NewMemMapFs())
+		userObject := user.NewUsers(dataDir, mockClient, fnm, logger, afero.NewMemMapFs())
 		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
@@ -53,7 +54,7 @@ func TestLogin(t *testing.T) {
 		}
 
 		// addUserAndSessionToMap user again
-		_, err = userObject.LoginUser("user1", "password1", dataDir, mockClient, "")
+		_, err = userObject.LoginUser("user1", "password1", mockClient, "")
 		if err != nil {
 			t.Fatal(err)
 		}

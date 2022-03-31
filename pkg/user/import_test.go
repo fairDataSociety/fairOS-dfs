@@ -21,11 +21,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/spf13/afero"
 )
 
 func TestImport(t *testing.T) {
@@ -39,8 +39,9 @@ func TestImport(t *testing.T) {
 		}
 		defer os.RemoveAll(dataDir1)
 
+		fnm := mock2.NewMockNamespaceManager()
 		//create user to export
-		userObject1 := user.NewUsers(dataDir1, mockClient, logger, afero.NewMemMapFs())
+		userObject1 := user.NewUsers(dataDir1, mockClient, fnm, logger, afero.NewMemMapFs())
 		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
@@ -57,15 +58,16 @@ func TestImport(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer os.RemoveAll(dataDir2)
-		userObject2 := user.NewUsers(dataDir2, mockClient, logger, afero.NewMemMapFs())
+		userObject2 := user.NewUsers(dataDir2, mockClient, fnm, logger, afero.NewMemMapFs())
 		_, err = userObject2.ImportUsingAddress(userName, "password1", address, dataDir2, mockClient, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// validate import
-		if !userObject2.IsUsernameAvailable("user1", dataDir2) {
+		if !userObject2.IsUsernameAvailable("user1") {
 			t.Fatalf("user not created")
 		}
 		if !userObject2.IsUserNameLoggedIn("user1") {

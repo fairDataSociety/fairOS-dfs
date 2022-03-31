@@ -16,7 +16,11 @@ limitations under the License.
 
 package user
 
-// IsUsernameAvailable checks if a supplied user name is present in this dfs server.
-func (u *Users) IsUsernameAvailable(userName, dataDir string) bool {
-	return u.isUserMappingPresent(userName, dataDir)
+// IsUsernameAvailable checks if a supplied user name is present in xDai chain
+func (u *Users) IsUsernameAvailable(userName string) bool {
+	addr, err := u.fnm.GetOwner(userName)
+	if err != nil {
+		return false
+	}
+	return addr.Hex() != "0x0000000000000000000000000000000000000000"
 }

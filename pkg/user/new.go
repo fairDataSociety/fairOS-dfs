@@ -17,7 +17,10 @@ limitations under the License.
 package user
 
 import (
+	"regexp"
 	"sync"
+
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -30,8 +33,13 @@ import (
 // CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
 func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *Info, error) {
+	// Check username validity
+	if !isUserNameValid(userName) {
+		return "", "", nil, ErrInvalidUserName
+	}
+
 	// username validation
-	if u.IsUsernameAvailable(userName, u.dataDir) {
+	if u.IsUsernameAvailable(userName) {
 		return "", "", nil, ErrUserAlreadyPresent
 	}
 
@@ -45,14 +53,30 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 		return "", "", nil, err
 	}
 
-	// store the ecnrypted mnemonic in Swarm
+	// store the encrypted mnemonic in Swarm
 	err = u.uploadEncryptedMnemonic(userName, accountInfo.GetAddress(), encryptedMnemonic, fd)
 	if err != nil {
 		return "", "", nil, err
 	}
 
-	// store the username -> address mapping locally
-	err = u.storeUserNameToAddressFileMapping(userName, u.dataDir, accountInfo.GetAddress())
+	//// store the username -> address mapping locally
+	//err = u.storeUserNameToAddressFileMapping(userName, u.dataDir, accountInfo.GetAddress())
+	//if err != nil {
+	//	return "", "", nil, err
+	//}
+
+	// create ens subdomain and store mnemonic
+	err = u.fnm.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	err = u.fnm.SetResolver(userName)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	err = u.fnm.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPublicKey())
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -85,4 +109,25 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 	}
 
 	return userAddressString, mnemonic, ui, nil
+}
+
+func isUserNameValid(username string) bool {
+	if username == "" {
+		return false
+	}
+	pattern := `^[a-z0-9_-]*$`
+	matches, err := regexp.MatchString(pattern, username)
+	if err != nil {
+		return false
+	}
+	pattern2 := `^[A-Z]*$`
+	matches2, err := regexp.MatchString(pattern2, username)
+	if err != nil {
+		return false
+	}
+	if matches && !matches2 {
+		return true
+	} else {
+		return false
+	}
 }

@@ -25,7 +25,7 @@ func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *In
 	}
 
 	// username validation
-	if !u.IsUsernameAvailable(userName, dataDir) {
+	if !u.IsUsernameAvailable(userName) {
 		return ErrInvalidUserName
 	}
 

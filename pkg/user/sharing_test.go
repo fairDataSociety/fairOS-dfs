@@ -23,16 +23,16 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/spf13/afero"
 )
 
 func TestSharing(t *testing.T) {
@@ -72,8 +72,9 @@ func TestSharing(t *testing.T) {
 		}
 		defer os.RemoveAll(dataDir1)
 
+		fnm := mock2.NewMockNamespaceManager()
 		//create source user
-		userObject1 := user.NewUsers(dataDir1, mockClient, logger, afero.NewMemMapFs())
+		userObject1 := user.NewUsers(dataDir1, mockClient, fnm, logger, afero.NewMemMapFs())
 		_, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
@@ -118,7 +119,7 @@ func TestSharing(t *testing.T) {
 		defer os.RemoveAll(dataDir2)
 
 		//create destination user
-		userObject2 := user.NewUsers(dataDir2, mockClient, logger, afero.NewMemMapFs())
+		userObject2 := user.NewUsers(dataDir2, mockClient, fnm, logger, afero.NewMemMapFs())
 		_, _, ui, err = userObject2.CreateNewUser("user2", "password2", "", "")
 		if err != nil {
 			t.Fatal(err)
@@ -176,7 +177,7 @@ func TestSharing(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// varify receive
+		// verify receive
 		if destinationFilePath != "/parentDir2/file1" {
 			t.Fatalf("invalid destination file name")
 		}

@@ -25,7 +25,7 @@ type Stat struct {
 
 // GetUserStat shows the user information like user name and his address.
 func (u *Users) GetUserStat(userInfo *Info) (*Stat, error) {
-	if !u.IsUsernameAvailable(userInfo.name, u.dataDir) {
+	if !u.IsUsernameAvailable(userInfo.name) {
 		return nil, ErrInvalidUserName
 	}
 

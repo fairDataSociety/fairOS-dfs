@@ -21,11 +21,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/spf13/afero"
 )
 
 func TestNew(t *testing.T) {
@@ -38,16 +38,17 @@ func TestNew(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer os.RemoveAll(dataDir)
+		fnm := mock2.NewMockNamespaceManager()
 
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, logger, afero.NewMemMapFs())
+		userObject := user.NewUsers(dataDir, mockClient, fnm, logger, afero.NewMemMapFs())
 		_, mnemonic, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// validate user
-		if !userObject.IsUsernameAvailable(ui.GetUserName(), dataDir) {
+		if !userObject.IsUsernameAvailable(ui.GetUserName()) {
 			t.Fatalf("user not created")
 		}
 		if !userObject.IsUserNameLoggedIn(ui.GetUserName()) {

@@ -19,6 +19,8 @@ package user
 import (
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -30,9 +32,9 @@ import (
 
 // LoginUser checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, sessionId string) (*Info, error) {
+func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client, sessionId string) (*Info, error) {
 	// check if username is available (user created)
-	if !u.IsUsernameAvailable(userName, dataDir) {
+	if !u.IsUsernameAvailable(userName) {
 		return nil, ErrInvalidUserName
 	}
 
@@ -41,14 +43,14 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	accountInfo := acc.GetUserAccountInfo()
 
 	// load address from userName
-	address, err := u.getAddressFromUserName(userName, dataDir)
+	address, err := u.fnm.GetOwner(userName)
 	if err != nil {
 		return nil, err
 	}
 
 	// load encrypted mnemonic from Swarm
 	fd := feed.New(accountInfo, client, u.logger)
-	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, address, fd)
+	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, utils.Address(address), fd)
 	if err != nil {
 		return nil, err
 	}

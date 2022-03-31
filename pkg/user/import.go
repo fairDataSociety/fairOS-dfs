@@ -30,7 +30,7 @@ import (
 // ImportUsingAddress imports a given user in to the new dfs server using the address of the user.
 func (u *Users) ImportUsingAddress(userName, passPhrase, addressString, dataDir string, client blockstore.Client, sessionId string) (*Info, error) {
 	// basic validation
-	if u.IsUsernameAvailable(userName, dataDir) {
+	if u.IsUsernameAvailable(userName) {
 		return nil, ErrUserAlreadyPresent
 	}
 

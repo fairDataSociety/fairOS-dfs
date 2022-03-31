@@ -38,7 +38,7 @@ func (d *DfsAPI) ImportUserUsingAddress(userName, passPhrase, address string, se
 
 // LoginUser is a controller function which calls the users login function.
 func (d *DfsAPI) LoginUser(userName, passPhrase string, sessionId string) (*user.Info, error) {
-	return d.users.LoginUser(userName, passPhrase, d.dataDir, d.client, sessionId)
+	return d.users.LoginUser(userName, passPhrase, d.client, sessionId)
 }
 
 // LogoutUser is a controller function which gets the logged in user information and logs it out.
@@ -65,7 +65,7 @@ func (d *DfsAPI) DeleteUser(passPhrase, sessionId string) error {
 
 // IsUserNameAvailable checks if a given user name is available in this dfs server.
 func (d *DfsAPI) IsUserNameAvailable(userName string) bool {
-	return d.users.IsUsernameAvailable(userName, d.dataDir)
+	return d.users.IsUsernameAvailable(userName)
 }
 
 // IsUserLoggedIn checks if the given user is logged in
