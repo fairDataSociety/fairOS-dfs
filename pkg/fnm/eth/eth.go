@@ -15,46 +15,69 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/ens"
 	publicresolver "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/public-resolver"
 	subdomainregistrar "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/subdomain-registrar"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	goens "github.com/wealdtech/go-ens/v3"
 	"golang.org/x/crypto/sha3"
 )
 
 type Client struct {
 	eth                *ethclient.Client
+	ensConfig          *contracts.Config
 	ensRegistry        *ens.Ens
 	subdomainRegistrar *subdomainregistrar.Subdomainregistrar
 	publicResolver     *publicresolver.Publicresolver
+
+	providerPrivateKey *ecdsa.PrivateKey
+	providerAddress    common.Address
+	logger             logging.Logger
 }
 
-func New(endpoint string) (*Client, error) {
-	rpcClient, err := rpc.DialContext(context.Background(), endpoint)
+func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
+	rpcClient, err := rpc.DialContext(context.Background(), ensConfig.ProviderBackend)
 	if err != nil {
 		return nil, fmt.Errorf("dial eth fnm: %w", err)
 	}
 	eth := ethclient.NewClient(rpcClient)
-	ensRegistry, err := ens.NewEns(common.HexToAddress(contracts.ENSRegistryAddress), eth)
+	ensRegistry, err := ens.NewEns(common.HexToAddress(ensConfig.ENSRegistryAddress), eth)
 	if err != nil {
 		return nil, err
 	}
-	subdomainRegistrar, err := subdomainregistrar.NewSubdomainregistrar(common.HexToAddress(contracts.SubdomainRegistrarAddress), eth)
+	subdomainRegistrar, err := subdomainregistrar.NewSubdomainregistrar(common.HexToAddress(ensConfig.SubdomainRegistrarAddress), eth)
 	if err != nil {
 		return nil, err
 	}
-	publicResolver, err := publicresolver.NewPublicresolver(common.HexToAddress(contracts.PublicResolverAddress), eth)
+	publicResolver, err := publicresolver.NewPublicresolver(common.HexToAddress(ensConfig.PublicResolverAddress), eth)
 	if err != nil {
 		return nil, err
 	}
+	privateKey, err := crypto.HexToECDSA(ensConfig.ProviderPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("error casting public key to ECDSA")
+	}
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	logger.Info("ensProviderBackend   : ", ensConfig.ProviderBackend)
+	logger.Info("ensProviderAddress   : ", fromAddress.Hex())
+	logger.Info("ensProviderDomain    : ", ensConfig.ProviderDomain)
 	c := &Client{
 		eth:                ethclient.NewClient(rpcClient),
+		ensConfig:          ensConfig,
 		ensRegistry:        ensRegistry,
 		subdomainRegistrar: subdomainRegistrar,
 		publicResolver:     publicResolver,
+		providerAddress:    fromAddress,
+		providerPrivateKey: privateKey,
+		logger:             logger,
 	}
 	return c, nil
 }
 
 func (c *Client) GetOwner(username string) (common.Address, error) {
-	node, err := goens.NameHash(username + "." + contracts.ProviderDomain)
+	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -63,92 +86,51 @@ func (c *Client) GetOwner(username string) (common.Address, error) {
 }
 
 func (c *Client) RegisterSubdomain(username string, owner common.Address) error {
-	privateKey, err := crypto.HexToECDSA("8de4ecbaa1804ac86b1cd10b61848133446a20d0b5fd5ab6b2c9bd9d11c34bfa")
+	opts, err := c.newTransactor()
 	if err != nil {
 		return err
 	}
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return fmt.Errorf("error casting public key to ECDSA")
-	}
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	nonce, err := c.eth.PendingNonceAt(context.Background(), fromAddress)
-	if err != nil {
-		return err
-	}
-
-	gasPrice, err := c.eth.SuggestGasPrice(context.Background())
-	if err != nil {
-		return err
-	}
-	opts := bind.NewKeyedTransactor(privateKey)
-	opts.Nonce = big.NewInt(int64(nonce))
-	opts.Value = big.NewInt(0)     // in wei
-	opts.GasLimit = uint64(300000) // in units
-	opts.GasPrice = gasPrice
-	opts.From = fromAddress
 
 	h := sha3.NewLegacyKeccak256()
 	h.Write([]byte(username))
 	hash := h.Sum(nil)
 	label := [32]byte{}
 	copy(label[:], hash)
+
 	tx, err := c.subdomainRegistrar.Register(opts, label, owner)
 	if err != nil {
-		fmt.Println("RegisterSubdomain err", err)
+		c.logger.Error("subdomain register failed :", err)
 		return err
 	}
-	fmt.Println("RegisterSubdomain", tx.Hash().Hex())
+	c.logger.Info("subdomain registered with hash :", tx.Hash().Hex())
 	return nil
 }
 
 func (c *Client) SetResolver(username string) error {
-	node, err := goens.NameHash(username + "." + contracts.ProviderDomain)
+	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
 		return err
 	}
-	privateKey, err := crypto.HexToECDSA("8de4ecbaa1804ac86b1cd10b61848133446a20d0b5fd5ab6b2c9bd9d11c34bfa")
+	opts, err := c.newTransactor()
 	if err != nil {
 		return err
 	}
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return fmt.Errorf("error casting public key to ECDSA")
-	}
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-
-	nonce, err := c.eth.PendingNonceAt(context.Background(), fromAddress)
+	tx, err := c.ensRegistry.SetResolver(opts, node, common.HexToAddress(c.ensConfig.PublicResolverAddress))
 	if err != nil {
+		c.logger.Error("ensRegistry SetResolver failed :", err)
 		return err
 	}
-
-	gasPrice, err := c.eth.SuggestGasPrice(context.Background())
-	if err != nil {
-		return err
-	}
-	opts := bind.NewKeyedTransactor(privateKey)
-	opts.Nonce = big.NewInt(int64(nonce))
-	opts.Value = big.NewInt(0)     // in wei
-	opts.GasLimit = uint64(300000) // in units
-	opts.GasPrice = gasPrice
-	opts.From = fromAddress
-	tx, err := c.ensRegistry.SetResolver(opts, node, common.HexToAddress(contracts.PublicResolverAddress))
-	if err != nil {
-		fmt.Println("SetResolver err", err)
-		return err
-	}
-	fmt.Println("SetResolver", tx.Hash().Hex())
+	c.logger.Info("set resolver called with hash :", tx.Hash().Hex())
 	return nil
 }
 
 func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.PublicKey) error {
-	node, err := goens.NameHash(username + "." + contracts.ProviderDomain)
+	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
 		return err
 	}
 
+	name := "subdomain-hidden"
 	contentStr := "0x0000000000000000000000000000000000000000000000000000000000000000"
 	content := [32]byte{}
 	copy(content[:], contentStr)
@@ -158,38 +140,33 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Public
 	y := [32]byte{}
 	copy(y[:], key.Y.Bytes())
 
-	name := "subdomain-hidden"
-	privateKey, err := crypto.HexToECDSA("8de4ecbaa1804ac86b1cd10b61848133446a20d0b5fd5ab6b2c9bd9d11c34bfa")
+	opts, err := c.newTransactor()
 	if err != nil {
 		return err
 	}
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return fmt.Errorf("error casting public key to ECDSA")
-	}
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-
-	nonce, err := c.eth.PendingNonceAt(context.Background(), fromAddress)
-	if err != nil {
-		return err
-	}
-
-	gasPrice, err := c.eth.SuggestGasPrice(context.Background())
-	if err != nil {
-		return err
-	}
-	opts := bind.NewKeyedTransactor(privateKey)
-	opts.Nonce = big.NewInt(int64(nonce))
-	opts.Value = big.NewInt(0)     // in wei
-	opts.GasLimit = uint64(300000) // in units
-	opts.GasPrice = gasPrice
-	opts.From = fromAddress
 	tx, err := c.publicResolver.SetAll(opts, node, owner, content, []byte{}, x, y, name)
 	if err != nil {
-		fmt.Println("SetAll err", err)
+		c.logger.Error("public resolver setall failed :", err)
 		return err
 	}
-	fmt.Println("SetAll", tx.Hash().Hex())
+	c.logger.Info("public resolver setall called with hash :", tx.Hash().Hex())
 	return err
+}
+
+func (c *Client) newTransactor() (*bind.TransactOpts, error) {
+	nonce, err := c.eth.PendingNonceAt(context.Background(), c.providerAddress)
+	if err != nil {
+		return nil, err
+	}
+	gasPrice, err := c.eth.SuggestGasPrice(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	opts := bind.NewKeyedTransactor(c.providerPrivateKey)
+	opts.Nonce = big.NewInt(int64(nonce))
+	opts.Value = big.NewInt(0)
+	opts.GasLimit = uint64(300000)
+	opts.GasPrice = gasPrice
+	opts.From = c.providerAddress
+	return opts, nil
 }

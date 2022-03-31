@@ -149,7 +149,6 @@ func (s *BeeClient) CheckConnection(isProxy bool) bool {
 
 // UploadSOC is used construct and send a Single Owner Chunk to the Swarm bee client.
 func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
-	fmt.Println("UploadSOC")
 	to := time.Now()
 	socResStr := socResource(owner, id, signature)
 	fullUrl := fmt.Sprintf(s.url + socResStr)
@@ -197,7 +196,6 @@ func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
-	fmt.Println("UploadSOC", addrResp.Reference.String())
 	return addrResp.Reference.Bytes(), nil
 }
 
@@ -248,7 +246,6 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
-	fmt.Println("UploadChunk", addrResp.Reference.String())
 
 	return addrResp.Reference.Bytes(), nil
 }
@@ -355,7 +352,6 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 	if !s.inBlockCache(s.uploadBlockCache, string(data)) {
 		s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
 	}
-	fmt.Println("UploadBlob", resp.Reference.String())
 
 	return resp.Reference.Bytes(), nil
 }
@@ -411,7 +407,6 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 func (s *BeeClient) DeleteReference(address []byte) error {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
-	fmt.Println("DeleteReference", addrString)
 
 	fullUrl := s.url + pinsUrl + addrString
 	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)

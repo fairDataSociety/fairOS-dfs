@@ -25,6 +25,7 @@ import (
 
 	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -86,6 +87,46 @@ can consume it.`,
 			fmt.Println("\npostageBlockId is invalid")
 			return
 		}
+		providerDomain := config.GetString(optionProviderDomain)
+		publicResolverAddress := config.GetString(optionPublicResolverAddress)
+		subdomainRegistrarAddress := config.GetString(optionSubdomainRegistrarAddress)
+		ensRegistryAddress := config.GetString(optionENSRegistryAddress)
+		ensProviderBackend := config.GetString(optionENSProviderBackend)
+		ensProviderPrivateKey := config.GetString(optionENSProviderPrivateKey)
+
+		if providerDomain == "" {
+			fmt.Println("\nens provider domain is missing")
+			return
+		}
+		if publicResolverAddress == "" {
+			fmt.Println("\npublicResolver contract address is missing")
+			return
+		}
+		if subdomainRegistrarAddress == "" {
+			fmt.Println("\nsubdomainRegistrar contract address is missing")
+			return
+		}
+		if ensRegistryAddress == "" {
+			fmt.Println("\nensRegistry contract address is missing")
+			return
+		}
+		if ensProviderBackend == "" {
+			fmt.Println("\nensProvideBackend endpoint is missing")
+			return
+		}
+		if ensProviderPrivateKey == "" {
+			fmt.Println("\nens provider private key is missing")
+			return
+		}
+
+		ensConfig := &contracts.Config{
+			ENSRegistryAddress:        ensRegistryAddress,
+			SubdomainRegistrarAddress: subdomainRegistrarAddress,
+			PublicResolverAddress:     publicResolverAddress,
+			ProviderDomain:            providerDomain,
+			ProviderBackend:           ensProviderBackend,
+			ProviderPrivateKey:        ensProviderPrivateKey,
+		}
 
 		var logger logging.Logger
 		switch v := strings.ToLower(verbosity); v {
@@ -117,7 +158,7 @@ can consume it.`,
 		logger.Info("cookieDomain   : ", cookieDomain)
 		logger.Info("postageBlockId : ", postageBlockId)
 		logger.Info("corsOrigins    : ", corsOrigins)
-		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, logger)
+		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, ensConfig, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return
