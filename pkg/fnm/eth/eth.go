@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -86,7 +87,7 @@ func (c *Client) GetOwner(username string) (common.Address, error) {
 }
 
 func (c *Client) RegisterSubdomain(username string, owner common.Address) error {
-	opts, err := c.newTransactor()
+	opts, err := c.newTransactor(c.providerPrivateKey, c.providerAddress)
 	if err != nil {
 		return err
 	}
@@ -106,12 +107,12 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address) error 
 	return nil
 }
 
-func (c *Client) SetResolver(username string) error {
+func (c *Client) SetResolver(username string, owner common.Address, key *ecdsa.PrivateKey) error {
 	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
 		return err
 	}
-	opts, err := c.newTransactor()
+	opts, err := c.newTransactor(key, owner)
 	if err != nil {
 		return err
 	}
@@ -124,7 +125,7 @@ func (c *Client) SetResolver(username string) error {
 	return nil
 }
 
-func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.PublicKey) error {
+func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error {
 	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
 		return err
@@ -134,13 +135,17 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Public
 	contentStr := "0x0000000000000000000000000000000000000000000000000000000000000000"
 	content := [32]byte{}
 	copy(content[:], contentStr)
-
+	publicKey := key.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return fmt.Errorf("error casting public key to ECDSA")
+	}
 	x := [32]byte{}
-	copy(x[:], key.X.Bytes())
+	copy(x[:], publicKeyECDSA.X.Bytes())
 	y := [32]byte{}
-	copy(y[:], key.Y.Bytes())
+	copy(y[:], publicKeyECDSA.Y.Bytes())
 
-	opts, err := c.newTransactor()
+	opts, err := c.newTransactor(key, owner)
 	if err != nil {
 		return err
 	}
@@ -153,8 +158,53 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Public
 	return err
 }
 
-func (c *Client) newTransactor() (*bind.TransactOpts, error) {
+func (c *Client) GetAll(username string) error {
+	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
+	if err != nil {
+		return err
+	}
+
+	opts := &bind.CallOpts{}
+	info, err := c.publicResolver.GetAll(opts, node)
+	if err != nil {
+		c.logger.Error("public resolver get all failed :", err)
+		return err
+	}
+	_ = info
+	return err
+}
+
+func (c *Client) Fund(owner common.Address) error {
 	nonce, err := c.eth.PendingNonceAt(context.Background(), c.providerAddress)
+	if err != nil {
+		return err
+	}
+	value := big.NewInt(1000000000000000000) // in wei (1 eth)
+	gasLimit := uint64(21000)                // in units
+	gasPrice, err := c.eth.SuggestGasPrice(context.Background())
+	if err != nil {
+		return err
+	}
+	tx := types.NewTransaction(nonce, owner, value, gasLimit, gasPrice, nil)
+	chainID, err := c.eth.NetworkID(context.Background())
+	if err != nil {
+		return err
+	}
+
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), c.providerPrivateKey)
+	if err != nil {
+		return err
+	}
+
+	err = c.eth.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*bind.TransactOpts, error) {
+	nonce, err := c.eth.PendingNonceAt(context.Background(), account)
 	if err != nil {
 		return nil, err
 	}
@@ -162,11 +212,11 @@ func (c *Client) newTransactor() (*bind.TransactOpts, error) {
 	if err != nil {
 		return nil, err
 	}
-	opts := bind.NewKeyedTransactor(c.providerPrivateKey)
+	opts := bind.NewKeyedTransactor(key)
 	opts.Nonce = big.NewInt(int64(nonce))
 	opts.Value = big.NewInt(0)
 	opts.GasLimit = uint64(300000)
 	opts.GasPrice = gasPrice
-	opts.From = c.providerAddress
+	opts.From = account
 	return opts, nil
 }

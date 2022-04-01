@@ -11,6 +11,8 @@ import (
 type FairOSNamespaceManager interface {
 	GetOwner(username string) (common.Address, error)
 	RegisterSubdomain(username string, owner common.Address) error
-	SetResolver(username string) error
-	SetAll(username string, owner common.Address, publicKey *ecdsa.PublicKey) error
+	SetResolver(username string, owner common.Address, key *ecdsa.PrivateKey) error
+	SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error
+	GetAll(username string) error
+	Fund(owner common.Address) error
 }

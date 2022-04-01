@@ -65,12 +65,17 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 		return "", "", nil, err
 	}
 
-	err = u.fnm.SetResolver(userName)
+	err = u.fnm.Fund(common.Address(accountInfo.GetAddress()))
 	if err != nil {
 		return "", "", nil, err
 	}
 
-	err = u.fnm.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPublicKey())
+	err = u.fnm.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	err = u.fnm.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
 	if err != nil {
 		return "", "", nil, err
 	}

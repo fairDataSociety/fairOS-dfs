@@ -48,6 +48,11 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 		return nil, err
 	}
 
+	err = u.fnm.GetAll(userName)
+	if err != nil {
+		return nil, err
+	}
+
 	// load encrypted mnemonic from Swarm
 	fd := feed.New(accountInfo, client, u.logger)
 	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, utils.Address(address), fd)
