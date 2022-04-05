@@ -27,11 +27,13 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
+	gethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs-utils/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 	"github.com/tyler-smith/go-bip39"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
 
@@ -348,6 +350,64 @@ func (ai *Info) GetPrivateKey() *ecdsa.PrivateKey {
 
 func (ai *Info) GetPublicKey() *ecdsa.PublicKey {
 	return ai.publicKey
+}
+
+func (ai *Info) GetEncryptedPublicKey(passPhrase string) (string, error) {
+	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(passPhrase), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	publicKeyBytes := gethCrypto.FromECDSAPub(ai.GetPublicKey())
+	hashedPublicKeyBytes, err := bcrypt.GenerateFromPassword(publicKeyBytes, bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPasswordBytes) + string(hashedPublicKeyBytes), nil
+}
+
+func (ai *Info) EncryptPublicKey(passPhrase string, pubKey *ecdsa.PublicKey) (string, error) {
+	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(passPhrase), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	publicKeyBytes := gethCrypto.FromECDSAPub(pubKey)
+	hashedPublicKeyBytes, err := bcrypt.GenerateFromPassword(publicKeyBytes, bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPasswordBytes) + string(hashedPublicKeyBytes), nil
+}
+
+func (*Info) EncryptContent(passphrase, data string) (string, error) {
+	password := passphrase
+	if password == "" {
+		return "", fmt.Errorf("passphrase cannot be blank")
+	}
+	aesKey := sha256.Sum256([]byte(password))
+	encryptedMessage, err := encrypt(aesKey[:], data)
+	if err != nil {
+		return "", fmt.Errorf("create user account: %w", err)
+	}
+	return encryptedMessage, nil
+}
+
+func (ai *Info) DecryptContent(passphrase, encryptedContent string) (string, error) {
+	password := passphrase
+	if password == "" {
+		return "", fmt.Errorf("passphrase cannot be blank")
+	}
+
+	if encryptedContent == "" {
+		return "", fmt.Errorf("invalid encrypted content")
+	}
+	aesKey := sha256.Sum256([]byte(password))
+
+	//decrypt the message
+	data, err := decrypt(aesKey[:], encryptedContent)
+	if err != nil {
+		return "", err
+	}
+	return data, nil
 }
 
 func (a *Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {

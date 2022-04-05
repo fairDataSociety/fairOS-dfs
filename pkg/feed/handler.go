@@ -199,6 +199,15 @@ func (h *Handler) fromChunk(chunk swarm.Chunk, r *Request, q *Query, id *ID) err
 	return nil
 }
 
+func (h *Handler) rawSignedChunkData(chunk swarm.Chunk) ([]byte, error) {
+	chunkdata := chunk.Data()
+	if len(chunkdata) < idLength+signatureLength+utils.SpanLength {
+		return nil, fmt.Errorf("invalid chunk data len")
+	}
+	cursor := idLength + signatureLength + utils.SpanLength
+	return chunkdata[cursor:], nil
+}
+
 // update feed updates cache with specified content
 func (h *Handler) updateCache(request *Request) (*CacheEntry, error) {
 	updateAddr := request.idAddr.Bytes()

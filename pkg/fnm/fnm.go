@@ -13,6 +13,6 @@ type FairOSNamespaceManager interface {
 	RegisterSubdomain(username string, owner common.Address) error
 	SetResolver(username string, owner common.Address, key *ecdsa.PrivateKey) error
 	SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error
-	GetAll(username string) error
+	GetPublicKey(username string) (*ecdsa.PublicKey, error)
 	Fund(owner common.Address) error
 }

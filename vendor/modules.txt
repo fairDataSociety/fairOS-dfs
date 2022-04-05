@@ -295,7 +295,9 @@ github.com/wealdtech/go-multicodec
 github.com/wsddn/go-ecdh
 # golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e
 ## explicit
+golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blake2s
+golang.org/x/crypto/blowfish
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/curve25519/internal/field
 golang.org/x/crypto/hkdf

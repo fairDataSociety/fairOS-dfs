@@ -17,10 +17,10 @@ limitations under the License.
 package user
 
 import (
+	"encoding/hex"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -28,6 +28,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 // LoginUser checks if the user is present and logs in the user. It also creates the required information
@@ -48,19 +49,32 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 		return nil, err
 	}
 
-	err = u.fnm.GetAll(userName)
+	publicKey, err := u.fnm.GetPublicKey(userName)
 	if err != nil {
 		return nil, err
 	}
-
+	pb := crypto.FromECDSAPub(publicKey)
 	// load encrypted mnemonic from Swarm
 	fd := feed.New(accountInfo, client, u.logger)
-	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, utils.Address(address), fd)
+
+	encryptedAddress, err := u.getSecondaryLocationInformation(utils.Address(address), hex.EncodeToString(pb)+passPhrase, fd)
+	if err != nil {
+		return nil, err
+	}
+	addrStr, err := accountInfo.DecryptContent(passPhrase, encryptedAddress)
+	if err != nil {
+		return nil, err
+	}
+	addr, err := hex.DecodeString(addrStr)
 	if err != nil {
 		return nil, err
 	}
 
-	err = acc.LoadUserAccount(passPhrase, encryptedMnemonic)
+	encryptedMnemonic, err := u.getEncryptedMnemonic(addr, fd)
+	if err != nil {
+		return nil, err
+	}
+	err = acc.LoadUserAccount(passPhrase, string(encryptedMnemonic))
 	if err != nil {
 		if err.Error() == "mnemonic is invalid" {
 			return nil, ErrInvalidPassword

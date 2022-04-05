@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -144,7 +145,6 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 	copy(x[:], publicKeyECDSA.X.Bytes())
 	y := [32]byte{}
 	copy(y[:], publicKeyECDSA.Y.Bytes())
-
 	opts, err := c.newTransactor(key, owner)
 	if err != nil {
 		return err
@@ -158,20 +158,29 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 	return err
 }
 
-func (c *Client) GetAll(username string) error {
+func (c *Client) GetPublicKey(username string) (*ecdsa.PublicKey, error) {
 	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	opts := &bind.CallOpts{}
 	info, err := c.publicResolver.GetAll(opts, node)
 	if err != nil {
 		c.logger.Error("public resolver get all failed :", err)
-		return err
+		return nil, err
 	}
-	_ = info
-	return err
+	x := new(big.Int)
+	x.SetBytes(info.X[:])
+
+	y := new(big.Int)
+	y.SetBytes(info.Y[:])
+	pub := new(ecdsa.PublicKey)
+	pub.X = x
+	pub.Y = y
+
+	pub.Curve = btcec.S256()
+	return pub, err
 }
 
 func (c *Client) Fund(owner common.Address) error {
@@ -179,8 +188,9 @@ func (c *Client) Fund(owner common.Address) error {
 	if err != nil {
 		return err
 	}
-	value := big.NewInt(1000000000000000000) // in wei (1 eth)
-	gasLimit := uint64(21000)                // in units
+	// TODO load it from config
+	value := big.NewInt(10000000000000000) // 0.01 eth
+	gasLimit := uint64(21000)
 	gasPrice, err := c.eth.SuggestGasPrice(context.Background())
 	if err != nil {
 		return err

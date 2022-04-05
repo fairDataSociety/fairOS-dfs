@@ -17,17 +17,19 @@ limitations under the License.
 package user
 
 import (
+	"encoding/hex"
 	"regexp"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
-
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 // CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
@@ -52,9 +54,18 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 	if err != nil {
 		return "", "", nil, err
 	}
-
+	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
 	// store the encrypted mnemonic in Swarm
-	err = u.uploadEncryptedMnemonic(userName, accountInfo.GetAddress(), encryptedMnemonic, fd)
+	addr, err := u.uploadEncryptedMnemonicSOC(accountInfo, encryptedMnemonic, fd)
+	if err != nil {
+		return "", "", nil, err
+	}
+	encryptedAddress, err := accountInfo.EncryptContent(passPhrase, utils.Encode(addr))
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	err = u.uploadSecondaryLocationInformation(accountInfo, encryptedAddress, hex.EncodeToString(pb)+passPhrase, fd)
 	if err != nil {
 		return "", "", nil, err
 	}
