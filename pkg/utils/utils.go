@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"hash"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -39,6 +40,7 @@ const (
 	MaxPodNameLength     = 25
 	SpanLength           = 8
 	DeletedFeedMagicWord = "__Fair__"
+	letterBytes          = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
 type decError struct{ msg string }
@@ -180,6 +182,14 @@ func CombinePathAndFile(podName, path, fileName string) string {
 		}
 	}
 	return totalPath
+}
+
+func GetRandString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
 
 //func CombinePathAndFile(podName, path, fileName string) string {

@@ -22,6 +22,10 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+const (
+	fundAmount = 10000000000000000 // 0.01 eth
+)
+
 type Client struct {
 	eth                *ethclient.Client
 	ensConfig          *contracts.Config
@@ -184,12 +188,19 @@ func (c *Client) GetPublicKey(username string) (*ecdsa.PublicKey, error) {
 }
 
 func (c *Client) Fund(owner common.Address) error {
+	value := big.NewInt(fundAmount)
+	balance, err := c.eth.BalanceAt(context.Background(), owner, nil)
+	if err != nil {
+		return err
+	}
+	if balance.Cmp(value) >= 0 {
+		c.logger.Info("Account has enough balance. No need to fund.")
+		return nil
+	}
 	nonce, err := c.eth.PendingNonceAt(context.Background(), c.providerAddress)
 	if err != nil {
 		return err
 	}
-	// TODO load it from config
-	value := big.NewInt(10000000000000000) // 0.01 eth
 	gasLimit := uint64(21000)
 	gasPrice, err := c.eth.SuggestGasPrice(context.Background())
 	if err != nil {
