@@ -38,25 +38,20 @@ func (u *Users) uploadSecondaryLocationInformation(accountInfo *account.Info, en
 	return err
 }
 
-func (u *Users) getSecondaryLocationInformation(address utils.Address, encryptedPublicKey string, fd *feed.API) (string, error) {
+func (u *Users) getSecondaryLocationInformation(address utils.Address, encryptedPublicKey string, fd *feed.API) ([]byte, string, error) {
 	topic := utils.HashString(encryptedPublicKey)
-	_, data, err := fd.GetFeedData(topic, address)
+	sliAddr, data, err := fd.GetFeedData(topic, address)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
-	return string(data), nil
+	return sliAddr, string(data), nil
 }
 
 func (*Users) getEncryptedMnemonic(address []byte, fd *feed.API) ([]byte, error) {
 	return fd.GetFeedDataFromAddress(address)
 }
 
-func (*Users) deleteMnemonic(userName string, address utils.Address, fd *feed.API, client blockstore.Client) error {
-	topic := utils.HashString(userName)
-	feedAddress, _, err := fd.GetFeedData(topic, address)
-	if err != nil {
-		return err
-	}
+func (*Users) deleteMnemonic(feedAddress []byte, client blockstore.Client) error {
 	return client.DeleteReference(feedAddress)
 }
 

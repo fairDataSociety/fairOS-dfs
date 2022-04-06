@@ -43,24 +43,27 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 
-	// load address from userName
+	// get owner address from Subdomain registrar
 	address, err := u.fnm.GetOwner(userName)
 	if err != nil {
 		return nil, err
 	}
 
+	// load public key from public resolver
 	publicKey, err := u.fnm.GetPublicKey(userName)
 	if err != nil {
 		return nil, err
 	}
 	pb := crypto.FromECDSAPub(publicKey)
-	// load encrypted mnemonic from Swarm
-	fd := feed.New(accountInfo, client, u.logger)
 
-	encryptedAddress, err := u.getSecondaryLocationInformation(utils.Address(address), hex.EncodeToString(pb)+passPhrase, fd)
+	// load encrypted soc address  from secondary location
+	fd := feed.New(accountInfo, client, u.logger)
+	_, encryptedAddress, err := u.getSecondaryLocationInformation(utils.Address(address), hex.EncodeToString(pb)+passPhrase, fd)
 	if err != nil {
 		return nil, err
 	}
+
+	// decrypt and remove pad the soc address
 	addrStr, err := accountInfo.DecryptContent(passPhrase, encryptedAddress)
 	if err != nil {
 		return nil, err
@@ -70,6 +73,7 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 		return nil, err
 	}
 
+	// load encrypted mnemonic
 	encryptedMnemonic, err := u.getEncryptedMnemonic(addr, fd)
 	if err != nil {
 		return nil, err

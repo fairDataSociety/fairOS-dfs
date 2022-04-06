@@ -40,7 +40,7 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 		return "", "", nil, ErrInvalidUserName
 	}
 
-	// username validation
+	// username availability
 	if u.IsUsernameAvailable(userName) {
 		return "", "", nil, ErrUserAlreadyPresent
 	}
@@ -54,17 +54,21 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 	if err != nil {
 		return "", "", nil, err
 	}
-	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
+
 	// store the encrypted mnemonic in Swarm
 	addr, err := u.uploadEncryptedMnemonicSOC(accountInfo, encryptedMnemonic, fd)
 	if err != nil {
 		return "", "", nil, err
 	}
+
+	// encrypt and pad the soc address
 	encryptedAddress, err := accountInfo.EncryptContent(passPhrase, utils.Encode(addr))
 	if err != nil {
 		return "", "", nil, err
 	}
 
+	// store encrypted soc address in secondary location
+	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
 	err = u.uploadSecondaryLocationInformation(accountInfo, encryptedAddress, hex.EncodeToString(pb)+passPhrase, fd)
 	if err != nil {
 		return "", "", nil, err
