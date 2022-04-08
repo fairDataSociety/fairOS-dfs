@@ -23,8 +23,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 	gethCrypto "github.com/ethereum/go-ethereum/crypto"
@@ -41,7 +43,8 @@ const (
 	UserAccountIndex = -1
 
 	addressLength = 64
-	paddingLength = 2992 // This generates a perfect 4096 bytes of encrypted string
+	paddingMin    = 300
+	paddingMax    = 500
 )
 
 type Account struct {
@@ -387,6 +390,8 @@ func (*Info) EncryptContent(passphrase, data string) (string, error) {
 		return "", fmt.Errorf("passphrase cannot be blank")
 	}
 	aesKey := sha256.Sum256([]byte(password))
+	rand.Seed(time.Now().UnixNano())
+	paddingLength := rand.Intn(paddingMax-paddingMin) + paddingMin
 	randomStr := utils.GetRandString(paddingLength)
 	encryptedMessage, err := encrypt(aesKey[:], data+randomStr)
 	if err != nil {

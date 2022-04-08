@@ -20,7 +20,7 @@ import (
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/fnm"
+	fnm2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
@@ -29,12 +29,12 @@ type Users struct {
 	userMap map[string]*Info
 	userMu  *sync.RWMutex
 	logger  logging.Logger
-	fnm     fnm.FairOSNamespaceManager
+	fnm     fnm2.FairOSNamespaceManager
 }
 
 // NewUsers creates the main user object which stores all the logged in users and there respective
 // other data structures.
-func NewUsers(client blockstore.Client, fnm fnm.FairOSNamespaceManager, logger logging.Logger) *Users {
+func NewUsers(client blockstore.Client, fnm fnm2.FairOSNamespaceManager, logger logging.Logger) *Users {
 	return &Users{
 		client:  client,
 		userMap: make(map[string]*Info),

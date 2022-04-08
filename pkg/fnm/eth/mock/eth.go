@@ -44,10 +44,6 @@ func (c *MockNamespaceManager) GetPublicKey(username string) (*ecdsa.PublicKey, 
 	return pub, nil
 }
 
-func (c *MockNamespaceManager) Fund(owner common.Address) error {
-	return nil
-}
-
 func (c *MockNamespaceManager) RegisterSubdomain(username string, owner common.Address) error {
 	c.storerMu.Lock()
 	defer c.storerMu.Unlock()

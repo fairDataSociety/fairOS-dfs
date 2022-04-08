@@ -28,6 +28,7 @@ import (
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -54,6 +55,24 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 	if err != nil {
 		return "", "", nil, err
 	}
+	// create ens subdomain and store mnemonic
+	err = u.fnm.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
+	if err != nil {
+		if err == eth.ErrInsufficientBalance {
+			return accountInfo.GetAddress().Hex(), mnemonic, nil, err
+		}
+		return "", "", nil, err
+	}
+
+	err = u.fnm.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	err = u.fnm.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	if err != nil {
+		return "", "", nil, err
+	}
 
 	// store the encrypted mnemonic in Swarm
 	addr, err := u.uploadEncryptedMnemonicSOC(accountInfo, encryptedMnemonic, fd)
@@ -70,27 +89,6 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 	// store encrypted soc address in secondary location
 	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
 	err = u.uploadSecondaryLocationInformation(accountInfo, encryptedAddress, hex.EncodeToString(pb)+passPhrase, fd)
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	// create ens subdomain and store mnemonic
-	err = u.fnm.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	err = u.fnm.Fund(common.Address(accountInfo.GetAddress()))
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	err = u.fnm.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	err = u.fnm.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
 	if err != nil {
 		return "", "", nil, err
 	}

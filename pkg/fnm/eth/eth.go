@@ -9,7 +9,6 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -22,8 +21,8 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-const (
-	fundAmount = 10000000000000000 // 0.01 eth
+var (
+	minRequiredBalance = big.NewInt(10000000000000000) // 0.01 eth
 )
 
 type Client struct {
@@ -92,6 +91,15 @@ func (c *Client) GetOwner(username string) (common.Address, error) {
 }
 
 func (c *Client) RegisterSubdomain(username string, owner common.Address) error {
+	balance, err := c.eth.BalanceAt(context.Background(), owner, nil)
+	if err != nil {
+		return err
+	}
+	if balance.Cmp(minRequiredBalance) < 0 {
+		c.logger.Error("account does not have enough balance")
+		return ErrInsufficientBalance
+	}
+
 	opts, err := c.newTransactor(c.providerPrivateKey, c.providerAddress)
 	if err != nil {
 		return err
@@ -159,7 +167,7 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 		return err
 	}
 	c.logger.Info("public resolver setall called with hash :", tx.Hash().Hex())
-	return err
+	return nil
 }
 
 func (c *Client) GetPublicKey(username string) (*ecdsa.PublicKey, error) {
@@ -184,44 +192,7 @@ func (c *Client) GetPublicKey(username string) (*ecdsa.PublicKey, error) {
 	pub.Y = y
 
 	pub.Curve = btcec.S256()
-	return pub, err
-}
-
-func (c *Client) Fund(owner common.Address) error {
-	value := big.NewInt(fundAmount)
-	balance, err := c.eth.BalanceAt(context.Background(), owner, nil)
-	if err != nil {
-		return err
-	}
-	if balance.Cmp(value) >= 0 {
-		c.logger.Info("Account has enough balance. No need to fund.")
-		return nil
-	}
-	nonce, err := c.eth.PendingNonceAt(context.Background(), c.providerAddress)
-	if err != nil {
-		return err
-	}
-	gasLimit := uint64(21000)
-	gasPrice, err := c.eth.SuggestGasPrice(context.Background())
-	if err != nil {
-		return err
-	}
-	tx := types.NewTransaction(nonce, owner, value, gasLimit, gasPrice, nil)
-	chainID, err := c.eth.NetworkID(context.Background())
-	if err != nil {
-		return err
-	}
-
-	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), c.providerPrivateKey)
-	if err != nil {
-		return err
-	}
-
-	err = c.eth.SendTransaction(context.Background(), signedTx)
-	if err != nil {
-		return err
-	}
-	return err
+	return pub, nil
 }
 
 func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*bind.TransactOpts, error) {

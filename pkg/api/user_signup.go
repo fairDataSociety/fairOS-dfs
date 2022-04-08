@@ -18,11 +18,12 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )
@@ -78,6 +79,13 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 		if err == u.ErrUserAlreadyPresent {
 			h.logger.Errorf("user signup: %v", err)
 			jsonhttp.BadRequest(w, "user signup: "+err.Error())
+			return
+		}
+		if err == eth.ErrInsufficientBalance {
+			h.logger.Errorf("user signup: %v", err)
+			jsonhttp.InternalServerError(w,
+				fmt.Sprintf("user signup: %s. account:\"%s\", mnemonic:\"%s\"",
+					err.Error(), address, createdMnemonic))
 			return
 		}
 		h.logger.Errorf("user signup: %v", err)

@@ -14,5 +14,4 @@ type FairOSNamespaceManager interface {
 	SetResolver(username string, owner common.Address, key *ecdsa.PrivateKey) error
 	SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error
 	GetPublicKey(username string) (*ecdsa.PublicKey, error)
-	Fund(owner common.Address) error
 }
