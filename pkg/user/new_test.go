@@ -35,7 +35,7 @@ func TestNew(t *testing.T) {
 
 		//create user
 		userObject := user.NewUsers(mockClient, fnm, logger)
-		_, mnemonic, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}

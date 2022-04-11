@@ -17,6 +17,7 @@ import (
 	publicresolver "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/public-resolver"
 	subdomainregistrar "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/subdomain-registrar"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	goens "github.com/wealdtech/go-ens/v3"
 	"golang.org/x/crypto/sha3"
 )
@@ -120,22 +121,23 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address) error 
 	return nil
 }
 
-func (c *Client) SetResolver(username string, owner common.Address, key *ecdsa.PrivateKey) error {
+func (c *Client) SetResolver(username string, owner common.Address, key *ecdsa.PrivateKey) (string, error) {
 	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
-		return err
+		return "", err
 	}
 	opts, err := c.newTransactor(key, owner)
 	if err != nil {
-		return err
+		return "", err
 	}
 	tx, err := c.ensRegistry.SetResolver(opts, node, common.HexToAddress(c.ensConfig.PublicResolverAddress))
 	if err != nil {
 		c.logger.Error("ensRegistry SetResolver failed :", err)
-		return err
+		return "", err
 	}
 	c.logger.Info("set resolver called with hash :", tx.Hash().Hex())
-	return nil
+	nameHash := node[:]
+	return utils.Encode(nameHash), nil
 }
 
 func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error {
@@ -170,17 +172,17 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 	return nil
 }
 
-func (c *Client) GetPublicKey(username string) (*ecdsa.PublicKey, error) {
+func (c *Client) GetInfo(username string) (*ecdsa.PublicKey, string, error) {
 	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	opts := &bind.CallOpts{}
 	info, err := c.publicResolver.GetAll(opts, node)
 	if err != nil {
 		c.logger.Error("public resolver get all failed :", err)
-		return nil, err
+		return nil, "", err
 	}
 	x := new(big.Int)
 	x.SetBytes(info.X[:])
@@ -192,7 +194,8 @@ func (c *Client) GetPublicKey(username string) (*ecdsa.PublicKey, error) {
 	pub.Y = y
 
 	pub.Curve = btcec.S256()
-	return pub, nil
+	nameHash := node[:]
+	return pub, utils.Encode(nameHash), nil
 }
 
 func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*bind.TransactOpts, error) {

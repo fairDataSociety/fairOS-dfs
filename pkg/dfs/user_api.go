@@ -21,12 +21,12 @@ import (
 )
 
 // CreateUser is a controller function which calls the create user function from the user object.
-func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, sessionId string) (string, string, *user.Info, error) {
+func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, sessionId string) (string, string, string, string, *user.Info, error) {
 	return d.users.CreateNewUser(userName, passPhrase, mnemonic, sessionId)
 }
 
 // LoginUser is a controller function which calls the users login function.
-func (d *DfsAPI) LoginUser(userName, passPhrase string, sessionId string) (*user.Info, error) {
+func (d *DfsAPI) LoginUser(userName, passPhrase string, sessionId string) (*user.Info, string, string, error) {
 	return d.users.LoginUser(userName, passPhrase, d.client, sessionId)
 }
 

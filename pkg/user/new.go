@@ -35,15 +35,15 @@ import (
 
 // CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
-func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *Info, error) {
+func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) (string, string, string, string, *Info, error) {
 	// Check username validity
 	if !isUserNameValid(userName) {
-		return "", "", nil, ErrInvalidUserName
+		return "", "", "", "", nil, ErrInvalidUserName
 	}
 
 	// username availability
 	if u.IsUsernameAvailable(userName) {
-		return "", "", nil, ErrUserAlreadyPresent
+		return "", "", "", "", nil, ErrUserAlreadyPresent
 	}
 
 	acc := account.New(u.logger)
@@ -53,44 +53,44 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 	//create a new base user account with the mnemonic
 	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", "", nil, err
 	}
 	// create ens subdomain and store mnemonic
 	err = u.fnm.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
 	if err != nil {
 		if err == eth.ErrInsufficientBalance {
-			return accountInfo.GetAddress().Hex(), mnemonic, nil, err
+			return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
 		}
-		return "", "", nil, err
+		return "", "", "", "", nil, err
 	}
 
-	err = u.fnm.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
+	nameHash, err := u.fnm.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", "", nil, err
 	}
 
 	err = u.fnm.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", "", nil, err
 	}
 
 	// store the encrypted mnemonic in Swarm
 	addr, err := u.uploadEncryptedMnemonicSOC(accountInfo, encryptedMnemonic, fd)
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", "", nil, err
 	}
 
 	// encrypt and pad the soc address
 	encryptedAddress, err := accountInfo.EncryptContent(passPhrase, utils.Encode(addr))
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", "", nil, err
 	}
 
 	// store encrypted soc address in secondary location
 	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
 	err = u.uploadSecondaryLocationInformation(accountInfo, encryptedAddress, hex.EncodeToString(pb)+passPhrase, fd)
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", "", nil, err
 	}
 
 	// Instantiate pod, dir & file objects
@@ -117,10 +117,10 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 	// set cookie and add user to map
 	err = u.addUserAndSessionToMap(ui)
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", "", nil, err
 	}
 
-	return userAddressString, mnemonic, ui, nil
+	return userAddressString, mnemonic, nameHash, utils.Encode(pb), ui, nil
 }
 
 func isUserNameValid(username string) bool {

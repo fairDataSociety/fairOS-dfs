@@ -55,7 +55,7 @@ func (u *Users) DeleteUser(userName, password, sessionId string, ui *Info) error
 		return err
 	}
 	// load public key from public resolver
-	publicKey, err := u.fnm.GetPublicKey(userName)
+	publicKey, _, err := u.fnm.GetInfo(userName)
 	if err != nil {
 		return err
 	}

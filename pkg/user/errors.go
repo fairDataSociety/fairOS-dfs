@@ -24,4 +24,5 @@ var (
 	ErrUserAlreadyPresent  = errors.New("user name already present")
 	ErrUserNotLoggedIn     = errors.New("user not logged in")
 	ErrInvalidPassword     = errors.New("invalid password")
+	ErrAccountNeedsFunding = "account needs funding, fund the account and try again with the mnemonic"
 )

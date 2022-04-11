@@ -62,7 +62,7 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// login user
-	ui, err := h.dfsAPI.LoginUser(user, password, "")
+	ui, nameHash, publicKey, err := h.dfsAPI.LoginUser(user, password, "")
 	if err != nil {
 		if err == u.ErrUserAlreadyLoggedIn ||
 			err == u.ErrInvalidUserName ||
@@ -75,7 +75,6 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "user login: "+err.Error())
 		return
 	}
-
 	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
 	if err != nil {
 		h.logger.Errorf("user login: %v", err)
@@ -83,5 +82,10 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonhttp.OK(w, "user logged-in successfully")
+	jsonhttp.OK(w, &UserSignupResponse{
+		Address:   ui.GetAccount().GetUserAccountInfo().GetAddress().Hex(),
+		NameHash:  "0x" + nameHash,
+		PublicKey: publicKey,
+		Message:   "user logged-in successfully",
+	})
 }

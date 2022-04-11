@@ -24,12 +24,12 @@ type MockNamespaceManager struct {
 	storerMu       sync.RWMutex
 }
 
-func (c *MockNamespaceManager) GetPublicKey(username string) (*ecdsa.PublicKey, error) {
+func (c *MockNamespaceManager) GetInfo(username string) (*ecdsa.PublicKey, string, error) {
 	c.storerMu.Lock()
 	defer c.storerMu.Unlock()
 	i, ok := c.publicResolver[username]
 	if !ok {
-		return nil, fmt.Errorf("no info available for user")
+		return nil, "", fmt.Errorf("no info available for user")
 	}
 	x := new(big.Int)
 	x.SetBytes(i.X[:])
@@ -41,7 +41,7 @@ func (c *MockNamespaceManager) GetPublicKey(username string) (*ecdsa.PublicKey, 
 	pub.Y = y
 
 	pub.Curve = btcec.S256()
-	return pub, nil
+	return pub, "", nil
 }
 
 func (c *MockNamespaceManager) RegisterSubdomain(username string, owner common.Address) error {
@@ -51,9 +51,9 @@ func (c *MockNamespaceManager) RegisterSubdomain(username string, owner common.A
 	return nil
 }
 
-func (c *MockNamespaceManager) SetResolver(string, common.Address, *ecdsa.PrivateKey) error {
+func (c *MockNamespaceManager) SetResolver(string, common.Address, *ecdsa.PrivateKey) (string, error) {
 	// TODO do something
-	return nil
+	return "", nil
 }
 
 func (c *MockNamespaceManager) SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error {

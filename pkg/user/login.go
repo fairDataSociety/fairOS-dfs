@@ -33,10 +33,10 @@ import (
 
 // LoginUser checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client, sessionId string) (*Info, error) {
+func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client, sessionId string) (*Info, string, string, error) {
 	// check if username is available (user created)
 	if !u.IsUsernameAvailable(userName) {
-		return nil, ErrInvalidUserName
+		return nil, "", "", ErrInvalidUserName
 	}
 
 	// create account
@@ -46,13 +46,13 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 	// get owner address from Subdomain registrar
 	address, err := u.fnm.GetOwner(userName)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 
 	// load public key from public resolver
-	publicKey, err := u.fnm.GetPublicKey(userName)
+	publicKey, nameHash, err := u.fnm.GetInfo(userName)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	pb := crypto.FromECDSAPub(publicKey)
 
@@ -60,34 +60,34 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 	fd := feed.New(accountInfo, client, u.logger)
 	_, encryptedAddress, err := u.getSecondaryLocationInformation(utils.Address(address), hex.EncodeToString(pb)+passPhrase, fd)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 
 	// decrypt and remove pad the soc address
 	addrStr, err := accountInfo.DecryptContent(passPhrase, encryptedAddress)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	addr, err := hex.DecodeString(addrStr)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 
 	// load encrypted mnemonic
 	encryptedMnemonic, err := u.getEncryptedMnemonic(addr, fd)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	err = acc.LoadUserAccount(passPhrase, string(encryptedMnemonic))
 	if err != nil {
 		if err.Error() == "mnemonic is invalid" {
-			return nil, ErrInvalidPassword
+			return nil, "", "", ErrInvalidPassword
 		}
-		return nil, err
+		return nil, "", "", err
 	}
 
 	if u.IsUserLoggedIn(sessionId) {
-		return nil, ErrUserAlreadyLoggedIn
+		return nil, "", "", ErrUserAlreadyLoggedIn
 	}
 
 	// Instantiate pod, dir & file objects
@@ -111,7 +111,7 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 	}
 
 	// set cookie and add user to map
-	return ui, u.addUserAndSessionToMap(ui)
+	return ui, nameHash, utils.Encode(pb), u.addUserAndSessionToMap(ui)
 }
 
 func (u *Users) addUserAndSessionToMap(ui *Info) error {

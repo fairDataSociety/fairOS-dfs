@@ -18,7 +18,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -33,8 +32,11 @@ var (
 )
 
 type UserSignupResponse struct {
-	Address  string `json:"address"`
-	Mnemonic string `json:"mnemonic,omitempty"`
+	Address   string `json:"address"`
+	Mnemonic  string `json:"mnemonic,omitempty"`
+	NameHash  string `json:"mameHash,omitempty"`
+	PublicKey string `json:"public_key,omitempty"`
+	Message   string `json:"message,omitempty"`
 }
 
 // UserSignupHandler is the api handler to creata new user
@@ -74,7 +76,7 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create user
-	address, createdMnemonic, ui, err := h.dfsAPI.CreateUser(user, password, mnemonic, "")
+	address, createdMnemonic, nameHash, publicKey, ui, err := h.dfsAPI.CreateUser(user, password, mnemonic, "")
 	if err != nil {
 		if err == u.ErrUserAlreadyPresent {
 			h.logger.Errorf("user signup: %v", err)
@@ -83,16 +85,17 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if err == eth.ErrInsufficientBalance {
 			h.logger.Errorf("user signup: %v", err)
-			jsonhttp.InternalServerError(w,
-				fmt.Sprintf("user signup: %s. account:\"%s\", mnemonic:\"%s\"",
-					err.Error(), address, createdMnemonic))
+			jsonhttp.PaymentRequired(w, &UserSignupResponse{
+				Address:  address,
+				Mnemonic: createdMnemonic,
+				Message:  u.ErrAccountNeedsFunding,
+			})
 			return
 		}
 		h.logger.Errorf("user signup: %v", err)
 		jsonhttp.InternalServerError(w, "user signup: "+err.Error())
 		return
 	}
-
 	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
 	if err != nil {
 		h.logger.Errorf("user signup: %v", err)
@@ -109,7 +112,10 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	// send the response
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.Created(w, &UserSignupResponse{
-		Address:  address,
-		Mnemonic: mnemonic,
+		Address:   address,
+		Mnemonic:  mnemonic,
+		NameHash:  "0x" + nameHash,
+		PublicKey: publicKey,
+		Message:   "user signed-up successfully",
 	})
 }
