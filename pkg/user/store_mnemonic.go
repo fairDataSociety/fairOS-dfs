@@ -17,7 +17,6 @@ limitations under the License.
 package user
 
 import (
-	"github.com/ethersphere/bee/pkg/swarm"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -53,18 +52,4 @@ func (*Users) getEncryptedMnemonic(address []byte, fd *feed.API) ([]byte, error)
 
 func (*Users) deleteMnemonic(feedAddress []byte, client blockstore.Client) error {
 	return client.DeleteReference(feedAddress)
-}
-
-// toSignDigest creates a digest suitable for signing to represent the soc.
-func toSignDigest(id, sum []byte) ([]byte, error) {
-	h := swarm.NewHasher()
-	_, err := h.Write(id)
-	if err != nil {
-		return nil, err
-	}
-	_, err = h.Write(sum)
-	if err != nil {
-		return nil, err
-	}
-	return h.Sum(nil), nil
 }

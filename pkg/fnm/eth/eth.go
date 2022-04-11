@@ -107,7 +107,10 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address) error 
 	}
 
 	h := sha3.NewLegacyKeccak256()
-	h.Write([]byte(username))
+	_, err = h.Write([]byte(username))
+	if err != nil {
+		return err
+	}
 	hash := h.Sum(nil)
 	label := [32]byte{}
 	copy(label[:], hash)
