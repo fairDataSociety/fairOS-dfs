@@ -34,7 +34,7 @@ var (
 type UserSignupResponse struct {
 	Address   string `json:"address"`
 	Mnemonic  string `json:"mnemonic,omitempty"`
-	NameHash  string `json:"mameHash,omitempty"`
+	NameHash  string `json:"nameHash,omitempty"`
 	PublicKey string `json:"public_key,omitempty"`
 	Message   string `json:"message,omitempty"`
 }
@@ -88,7 +88,7 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 			jsonhttp.PaymentRequired(w, &UserSignupResponse{
 				Address:  address,
 				Mnemonic: createdMnemonic,
-				Message:  u.ErrAccountNeedsFunding,
+				Message:  eth.ErrInsufficientBalance.Error(),
 			})
 			return
 		}
