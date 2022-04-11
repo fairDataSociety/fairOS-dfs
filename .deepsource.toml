@@ -5,7 +5,7 @@ name = "go"
 enabled = true
 
   [analyzers.meta]
-  import_paths = ["github.com/fairdatasociety/fairOS-dfs"]
+  import_root = "github.com/darkobas2/fairOS-dfs"
 
 [[analyzers]]
 name = "test-coverage"
@@ -13,4 +13,4 @@ enabled = true
 
 [[analyzers]]
 name = "docker"
-enabled = true  
+enabled = true
