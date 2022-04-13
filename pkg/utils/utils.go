@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	"github.com/ethersphere/bee/pkg/bmtpool"
-
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"golang.org/x/crypto/sha3"
@@ -130,11 +129,8 @@ func NewChunkWithSpan(data []byte) (swarm.Chunk, error) {
 	// execute hash, compare and return result
 	spanBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(spanBytes, uint64(span))
-	err := hasher.SetSpanBytes(spanBytes)
-	if err != nil {
-		return nil, err
-	}
-	_, err = hasher.Write(data)
+	hasher.SetHeader(spanBytes)
+	_, err := hasher.Write(data)
 	if err != nil {
 		return nil, err
 	}
@@ -153,11 +149,8 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 	defer bmtpool.Put(hasher)
 
 	// execute hash, compare and return result
-	err := hasher.SetSpanBytes(data[:swarm.SpanSize])
-	if err != nil {
-		return nil, err
-	}
-	_, err = hasher.Write(data[swarm.SpanSize:])
+	hasher.SetHeader(data[:swarm.SpanSize])
+	_, err := hasher.Write(data[swarm.SpanSize:])
 	if err != nil {
 		return nil, err
 	}
