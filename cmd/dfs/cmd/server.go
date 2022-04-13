@@ -264,7 +264,7 @@ func startHttpService(logger logging.Logger) {
 	userRouterV2.HandleFunc("/migrate", handler.UserMigrateHandler).Methods("POST")
 
 	baseRouter.Use(handler.LogMiddleware)
-	// TODO remove signup before v0.8.0 release
+	// TODO remove signup before merging into master. this is kept for testing purpose only
 	baseRouter.HandleFunc("/user/signup", handler.UserSignupHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/login", handler.UserLoginHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/present", handler.UserPresentHandler).Methods("GET")

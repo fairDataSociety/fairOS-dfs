@@ -418,13 +418,18 @@ func (s *BeeClient) DeleteReference(address []byte) error {
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
-		respData, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return err
+	// https://github.com/ethersphere/bee/issues/2713, unpin is failing
+	// we have commented it out for development purpose only.
+	// TODO follow up on the issue. uncomment it before merging into master
+	/*
+		if response.StatusCode != http.StatusOK {
+			respData, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("failed to unpin reference : %s", respData)
 		}
-		return fmt.Errorf("failed to unpin reference : %s", respData)
-	}
+	*/
 
 	fields := logrus.Fields{
 		"reference": addrString,
