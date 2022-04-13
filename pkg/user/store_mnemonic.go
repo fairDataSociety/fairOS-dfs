@@ -23,6 +23,13 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+func (*Users) uploadEncryptedMnemonic(userName string, address utils.Address, encryptedMnemonic string, fd *feed.API) error {
+	topic := utils.HashString(userName)
+	data := []byte(encryptedMnemonic)
+	_, err := fd.CreateFeed(topic, address, data)
+	return err
+}
+
 func (u *Users) uploadEncryptedMnemonicSOC(accountInfo *account.Info, encryptedMnemonic string, fd *feed.API) ([]byte, error) {
 	topic := utils.HashString(utils.GetRandString(16))
 	return fd.CreateFeed(topic, accountInfo.GetAddress(), []byte(encryptedMnemonic))
@@ -46,10 +53,28 @@ func (u *Users) getSecondaryLocationInformation(address utils.Address, encrypted
 	return sliAddr, string(data), nil
 }
 
-func (*Users) getEncryptedMnemonic(address []byte, fd *feed.API) ([]byte, error) {
+func (*Users) getEncryptedMnemonic(userName string, address utils.Address, fd *feed.API) (string, error) {
+	topic := utils.HashString(userName)
+	_, data, err := fd.GetFeedData(topic, address)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func (*Users) getEncryptedMnemonicV2(address []byte, fd *feed.API) ([]byte, error) {
 	return fd.GetFeedDataFromAddress(address)
 }
 
-func (*Users) deleteMnemonic(feedAddress []byte, client blockstore.Client) error {
+func (*Users) deleteMnemonic(userName string, address utils.Address, fd *feed.API, client blockstore.Client) error {
+	topic := utils.HashString(userName)
+	feedAddress, _, err := fd.GetFeedData(topic, address)
+	if err != nil {
+		return err
+	}
+	return client.DeleteReference(feedAddress)
+}
+
+func (*Users) deleteMnemonicV2(feedAddress []byte, client blockstore.Client) error {
 	return client.DeleteReference(feedAddress)
 }

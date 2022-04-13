@@ -25,14 +25,56 @@ import (
 
 // DeleteUser deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
 // data structures.
-func (u *Users) DeleteUser(userName, password, sessionId string, ui *Info) error {
+func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *Info) error {
 	// check if session id and user address present in map
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
 	}
 
 	// username validation
-	if !u.IsUsernameAvailable(userName) {
+	if !u.IsUsernameAvailable(userName, dataDir) {
+		return ErrInvalidUserName
+	}
+
+	// check for valid password
+	userInfo := u.getUserFromMap(sessionId)
+	acc := userInfo.account
+	if !acc.Authorise(password) {
+		return ErrInvalidPassword
+	}
+
+	// Logout user
+	err := u.Logout(sessionId)
+	if err != nil {
+		return err
+	}
+
+	// remove the user mnemonic file and the user-address mapping file
+	address, err := u.getAddressFromUserName(userName, dataDir)
+	if err != nil {
+		return err
+	}
+	err = u.deleteMnemonic(userName, address, ui.GetFeed(), u.client)
+	if err != nil {
+		return err
+	}
+	err = u.deleteUserMapping(userName, dataDir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteUserV2 deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
+// data structures.
+func (u *Users) DeleteUserV2(userName, password, sessionId string, ui *Info) error {
+	// check if session id and user address present in map
+	if !u.IsUserLoggedIn(sessionId) {
+		return ErrUserNotLoggedIn
+	}
+
+	// username validation
+	if !u.IsUsernameAvailableV2(userName) {
 		return ErrInvalidUserName
 	}
 
@@ -74,7 +116,7 @@ func (u *Users) DeleteUser(userName, password, sessionId string, ui *Info) error
 	if err != nil {
 		return err
 	}
-	err = u.deleteMnemonic(addr, u.client)
+	err = u.deleteMnemonicV2(addr, u.client)
 	if err != nil {
 		return err
 	}

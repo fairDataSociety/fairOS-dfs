@@ -29,13 +29,14 @@ import (
 )
 
 type DfsAPI struct {
-	client blockstore.Client
-	users  *user.Users
-	logger logging.Logger
+	client  blockstore.Client
+	users   *user.Users
+	logger  logging.Logger
+	dataDir string
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*DfsAPI, error) {
+func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*DfsAPI, error) {
 	fnm, err := fnmClient.New(ensConfig, logger)
 	if err != nil {
 		return nil, ErrEthClient
@@ -44,10 +45,11 @@ func NewDfsAPI(apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *co
 	if !c.CheckConnection(isGatewayProxy) {
 		return nil, ErrBeeClient
 	}
-	users := user.NewUsers(c, fnm, logger)
+	users := user.NewUsers(dataDir, c, fnm, logger)
 	return &DfsAPI{
-		client: c,
-		users:  users,
-		logger: logger,
+		client:  c,
+		users:   users,
+		logger:  logger,
+		dataDir: dataDir,
 	}, nil
 }

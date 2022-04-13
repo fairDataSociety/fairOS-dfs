@@ -157,7 +157,9 @@ can consume it.`,
 		logger.Info("cookieDomain   : ", cookieDomain)
 		logger.Info("postageBlockId : ", postageBlockId)
 		logger.Info("corsOrigins    : ", corsOrigins)
-		hdlr, err := api.NewHandler(beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, ensConfig, logger)
+
+		// datadir will be removed in some future version. it is kept for migration purpose only
+		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, ensConfig, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return
@@ -231,6 +233,9 @@ func startHttpService(logger logging.Logger) {
 	})
 	apiVersion := "v1"
 
+	// v2 introduces user credentials storage on secondary location and identity storage on ens registry
+	apiVersionV2 := "v2"
+
 	wsRouter := router.PathPrefix("/ws/" + apiVersion).Subrouter()
 	wsRouter.HandleFunc("/", handler.WebsocketHandler)
 
@@ -242,8 +247,25 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 	})
+	baseRouterV2 := router.PathPrefix("/" + apiVersionV2).Subrouter()
+	baseRouterV2.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		_, err := fmt.Fprintln(w, "User-agent: *\nDisallow: /")
+		if err != nil {
+			logger.Errorf("error in API /robots.txt: ", err)
+			return
+		}
+	})
 
 	// User account related handlers which does not login need middleware
+	baseRouterV2.Use(handler.LogMiddleware)
+	baseRouterV2.HandleFunc("/user/signup", handler.UserSignupV2Handler).Methods("POST")
+	baseRouterV2.HandleFunc("/user/login", handler.UserLoginV2Handler).Methods("POST")
+	baseRouterV2.HandleFunc("/user/present", handler.UserPresentV2Handler).Methods("GET")
+	userRouterV2 := baseRouterV2.PathPrefix("/user/").Subrouter()
+	userRouterV2.Use(handler.LoginMiddleware)
+	userRouterV2.HandleFunc("/delete", handler.UserDeleteV2Handler).Methods("DELETE")
+	userRouterV2.HandleFunc("/migrate", handler.UserMigrateHandler).Methods("POST")
+
 	baseRouter.Use(handler.LogMiddleware)
 	baseRouter.HandleFunc("/user/signup", handler.UserSignupHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/login", handler.UserLoginHandler).Methods("POST")
@@ -254,6 +276,7 @@ func startHttpService(logger logging.Logger) {
 	userRouter := baseRouter.PathPrefix("/user/").Subrouter()
 	userRouter.Use(handler.LoginMiddleware)
 	userRouter.HandleFunc("/logout", handler.UserLogoutHandler).Methods("POST")
+	userRouter.HandleFunc("/export", handler.ExportUserHandler).Methods("POST")
 	userRouter.HandleFunc("/delete", handler.UserDeleteHandler).Methods("DELETE")
 	userRouter.HandleFunc("/stat", handler.UserStatHandler).Methods("GET")
 

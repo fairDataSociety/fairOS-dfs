@@ -33,8 +33,8 @@ func TestLogin(t *testing.T) {
 	t.Run("login-user", func(t *testing.T) {
 		fnm := mock2.NewMockNamespaceManager()
 		//create user
-		userObject := user.NewUsers(mockClient, fnm, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
+		userObject := user.NewUsers("", mockClient, fnm, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -46,7 +46,7 @@ func TestLogin(t *testing.T) {
 		}
 
 		// addUserAndSessionToMap user again
-		_, _, _, err = userObject.LoginUser("user1", "password1", mockClient, "")
+		_, _, _, err = userObject.LoginUserV2("user1", "password1", mockClient, "")
 		if err != nil {
 			t.Fatal(err)
 		}

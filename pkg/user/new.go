@@ -35,14 +35,74 @@ import (
 
 // CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
-func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) (string, string, string, string, *Info, error) {
+func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *Info, error) {
+	// username validation
+	if u.IsUsernameAvailable(userName, u.dataDir) {
+		return "", "", nil, ErrUserAlreadyPresent
+	}
+
+	acc := account.New(u.logger)
+	accountInfo := acc.GetUserAccountInfo()
+	fd := feed.New(accountInfo, u.client, u.logger)
+
+	//create a new base user account with the mnemonic
+	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	// store the encrypted mnemonic in Swarm
+	err = u.uploadEncryptedMnemonic(userName, accountInfo.GetAddress(), encryptedMnemonic, fd)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	// store the username -> address mapping locally
+	err = u.storeUserNameToAddressFileMapping(userName, u.dataDir, accountInfo.GetAddress())
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	// Instantiate pod, dir & file objects
+	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), u.logger)
+	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, u.logger)
+	pod := p.NewPod(u.client, fd, acc, u.logger)
+	if sessionId == "" {
+		sessionId = cookie.GetUniqueSessionId()
+	}
+
+	userAddressString := accountInfo.GetAddress().Hex()
+	ui := &Info{
+		name:       userName,
+		sessionId:  sessionId,
+		feedApi:    fd,
+		account:    acc,
+		file:       file,
+		dir:        dir,
+		pod:        pod,
+		openPods:   make(map[string]*p.Info),
+		openPodsMu: &sync.RWMutex{},
+	}
+
+	// set cookie and add user to map
+	err = u.addUserAndSessionToMap(ui)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	return userAddressString, mnemonic, ui, nil
+}
+
+// CreateNewUserV2 creates a new user with the given user name and password. if a mnemonic is passed
+// then it is used instead of creating a new one.
+func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string) (string, string, string, string, *Info, error) {
 	// Check username validity
 	if !isUserNameValid(userName) {
 		return "", "", "", "", nil, ErrInvalidUserName
 	}
 
 	// username availability
-	if u.IsUsernameAvailable(userName) {
+	if u.IsUsernameAvailableV2(userName) {
 		return "", "", "", "", nil, ErrUserAlreadyPresent
 	}
 

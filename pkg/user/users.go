@@ -30,17 +30,19 @@ type Users struct {
 	userMu  *sync.RWMutex
 	logger  logging.Logger
 	fnm     fnm2.FairOSNamespaceManager
+	dataDir string
 }
 
 // NewUsers creates the main user object which stores all the logged in users and there respective
 // other data structures.
-func NewUsers(client blockstore.Client, fnm fnm2.FairOSNamespaceManager, logger logging.Logger) *Users {
+func NewUsers(dataDir string, client blockstore.Client, fnm fnm2.FairOSNamespaceManager, logger logging.Logger) *Users {
 	return &Users{
 		client:  client,
 		userMap: make(map[string]*Info),
 		userMu:  &sync.RWMutex{},
 		logger:  logger,
 		fnm:     fnm,
+		dataDir: dataDir,
 	}
 }
 
