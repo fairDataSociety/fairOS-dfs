@@ -61,10 +61,7 @@ can consume it.`,
 		if err := config.BindPFlag(optionCORSAllowedOrigins, cmd.Flags().Lookup("cors-origins")); err != nil {
 			return err
 		}
-		if err := config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId")); err != nil {
-			return err
-		}
-		return nil
+		return config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		httpPort = config.GetString(optionDFSHttpPort)
@@ -267,6 +264,7 @@ func startHttpService(logger logging.Logger) {
 	userRouterV2.HandleFunc("/migrate", handler.UserMigrateHandler).Methods("POST")
 
 	baseRouter.Use(handler.LogMiddleware)
+	// TODO remove signup before v0.8.0 release
 	baseRouter.HandleFunc("/user/signup", handler.UserSignupHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/login", handler.UserLoginHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/present", handler.UserPresentHandler).Methods("GET")

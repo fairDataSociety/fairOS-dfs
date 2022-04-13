@@ -20,9 +20,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )
