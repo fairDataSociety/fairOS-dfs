@@ -4,6 +4,7 @@
 package subdomainregistrar
 
 import (
+	"errors"
 	"math/big"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
+	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
@@ -26,8 +28,14 @@ var (
 	_ = event.NewSubscription
 )
 
+// SubdomainregistrarMetaData contains all meta data concerning the Subdomainregistrar contract.
+var SubdomainregistrarMetaData = &bind.MetaData{
+	ABI: "[{\"inputs\":[{\"internalType\":\"contractENS\",\"name\":\"ensAddr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"}],\"name\":\"Log\",\"type\":\"event\"},{\"constant\":true,\"inputs\":[],\"name\":\"ens\",\"outputs\":[{\"internalType\":\"contractENS\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"expiryTimes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"register\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"rootNode\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]",
+}
+
 // SubdomainregistrarABI is the input ABI used to generate the binding from.
-const SubdomainregistrarABI = "[{\"inputs\":[{\"internalType\":\"contractENS\",\"name\":\"ensAddr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"}],\"name\":\"Log\",\"type\":\"event\"},{\"constant\":true,\"inputs\":[],\"name\":\"ens\",\"outputs\":[{\"internalType\":\"contractENS\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"expiryTimes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"register\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"rootNode\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]"
+// Deprecated: Use SubdomainregistrarMetaData.ABI instead.
+var SubdomainregistrarABI = SubdomainregistrarMetaData.ABI
 
 // Subdomainregistrar is an auto generated Go binding around an Ethereum contract.
 type Subdomainregistrar struct {
@@ -137,7 +145,7 @@ func bindSubdomainregistrar(address common.Address, caller bind.ContractCaller, 
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Subdomainregistrar *SubdomainregistrarRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Subdomainregistrar *SubdomainregistrarRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Subdomainregistrar.Contract.SubdomainregistrarCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -156,7 +164,7 @@ func (_Subdomainregistrar *SubdomainregistrarRaw) Transact(opts *bind.TransactOp
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Subdomainregistrar *SubdomainregistrarCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Subdomainregistrar *SubdomainregistrarCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Subdomainregistrar.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -175,12 +183,17 @@ func (_Subdomainregistrar *SubdomainregistrarTransactorRaw) Transact(opts *bind.
 //
 // Solidity: function ens() view returns(address)
 func (_Subdomainregistrar *SubdomainregistrarCaller) Ens(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Subdomainregistrar.contract.Call(opts, out, "ens")
-	return *ret0, err
+	var out []interface{}
+	err := _Subdomainregistrar.contract.Call(opts, &out, "ens")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Ens is a free data retrieval call binding the contract method 0x3f15457f.
@@ -201,12 +214,17 @@ func (_Subdomainregistrar *SubdomainregistrarCallerSession) Ens() (common.Addres
 //
 // Solidity: function expiryTimes(bytes32 ) view returns(uint256)
 func (_Subdomainregistrar *SubdomainregistrarCaller) ExpiryTimes(opts *bind.CallOpts, arg0 [32]byte) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Subdomainregistrar.contract.Call(opts, out, "expiryTimes", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Subdomainregistrar.contract.Call(opts, &out, "expiryTimes", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // ExpiryTimes is a free data retrieval call binding the contract method 0xaf9f26e4.
@@ -227,12 +245,17 @@ func (_Subdomainregistrar *SubdomainregistrarCallerSession) ExpiryTimes(arg0 [32
 //
 // Solidity: function rootNode() view returns(bytes32)
 func (_Subdomainregistrar *SubdomainregistrarCaller) RootNode(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Subdomainregistrar.contract.Call(opts, out, "rootNode")
-	return *ret0, err
+	var out []interface{}
+	err := _Subdomainregistrar.contract.Call(opts, &out, "rootNode")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // RootNode is a free data retrieval call binding the contract method 0xfaff50a8.
@@ -401,5 +424,6 @@ func (_Subdomainregistrar *SubdomainregistrarFilterer) ParseLog(log types.Log) (
 	if err := _Subdomainregistrar.contract.UnpackLog(event, "Log", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

@@ -21,9 +21,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ethersphere/bee/pkg/crypto"
+	"github.com/ethersphere/bee/pkg/soc"
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
-	utilsSigner "github.com/fairdatasociety/fairOS-dfs-utils/signer"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
@@ -111,12 +112,13 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	}
 
 	// create the signer and the content addressed chunk
-	signer := utilsSigner.NewDefaultSigner(a.accountInfo.GetPrivateKey())
+	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
 	ch, err := utils.NewChunkWithSpan(data)
 	if err != nil {
 		return nil, err
 	}
-	sch, err := utilsSigner.NewChunk(id, ch, signer)
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
 	if err != nil {
 		return nil, err
 	}
@@ -231,12 +233,13 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	}
 
 	// create the signer and the content addressed chunk
-	signer := utilsSigner.NewDefaultSigner(a.accountInfo.GetPrivateKey())
+	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
 	ch, err := utils.NewChunkWithSpan(data)
 	if err != nil {
 		return nil, err
 	}
-	sch, err := utilsSigner.NewChunk(id, ch, signer)
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
 	if err != nil {
 		return nil, err
 	}
