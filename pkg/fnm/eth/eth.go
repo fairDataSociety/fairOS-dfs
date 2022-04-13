@@ -210,7 +210,14 @@ func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*
 	if err != nil {
 		return nil, err
 	}
-	opts := bind.NewKeyedTransactor(key)
+	chainID, err := c.eth.ChainID(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	opts, err := bind.NewKeyedTransactorWithChainID(key, chainID)
+	if err != nil {
+		return nil, err
+	}
 	opts.Nonce = big.NewInt(int64(nonce))
 	opts.Value = big.NewInt(0)
 	opts.GasLimit = uint64(300000)
