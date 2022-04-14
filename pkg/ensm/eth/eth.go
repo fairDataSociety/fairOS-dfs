@@ -41,7 +41,7 @@ type Client struct {
 func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
 	rpcClient, err := rpc.DialContext(context.Background(), ensConfig.ProviderBackend)
 	if err != nil {
-		return nil, fmt.Errorf("dial eth fnm: %w", err)
+		return nil, fmt.Errorf("dial eth ensm: %w", err)
 	}
 	eth := ethclient.NewClient(rpcClient)
 	ensRegistry, err := ens.NewEns(common.HexToAddress(ensConfig.ENSRegistryAddress), eth)

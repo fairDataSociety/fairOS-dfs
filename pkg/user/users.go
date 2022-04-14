@@ -35,13 +35,13 @@ type Users struct {
 
 // NewUsers creates the main user object which stores all the logged in users and there respective
 // other data structures.
-func NewUsers(dataDir string, client blockstore.Client, fnm ensm.ENSManager, logger logging.Logger) *Users {
+func NewUsers(dataDir string, client blockstore.Client, ens ensm.ENSManager, logger logging.Logger) *Users {
 	return &Users{
 		client:  client,
 		userMap: make(map[string]*Info),
 		userMu:  &sync.RWMutex{},
 		logger:  logger,
-		ens:     fnm,
+		ens:     ens,
 		dataDir: dataDir,
 	}
 }
