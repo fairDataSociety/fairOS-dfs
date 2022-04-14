@@ -86,7 +86,7 @@ func (h *Handler) update(id, owner, signature, data []byte) ([]byte, error) {
 }
 
 func (h *Handler) deleteChunk(ref []byte) error {
-	return h.client.DeleteChunk(ref)
+	return h.client.DeleteReference(ref)
 }
 
 // GetContent retrieves the data payload of the last synced update of the feed
@@ -197,6 +197,15 @@ func (h *Handler) fromChunk(chunk swarm.Chunk, r *Request, q *Query, id *ID) err
 	r.User = q.User
 	r.Epoch = id.Epoch
 	return nil
+}
+
+func (h *Handler) rawSignedChunkData(chunk swarm.Chunk) ([]byte, error) {
+	chunkdata := chunk.Data()
+	if len(chunkdata) < idLength+signatureLength+utils.SpanLength {
+		return nil, fmt.Errorf("invalid chunk data len")
+	}
+	cursor := idLength + signatureLength + utils.SpanLength
+	return chunkdata[cursor:], nil
 }
 
 // update feed updates cache with specified content

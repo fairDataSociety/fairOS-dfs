@@ -50,13 +50,13 @@ func (f *File) RmFile(podFileWithPath string) error {
 		f.logger.Warningf("could not unmarshall data in address %s", swarm.NewAddress(meta.InodeAddress).String())
 		return fmt.Errorf("could not unmarshall data in address %v", swarm.NewAddress(meta.InodeAddress).String())
 	}
-	err = f.client.DeleteBlob(meta.InodeAddress)
+	err = f.client.DeleteReference(meta.InodeAddress)
 	if err != nil {
 		f.logger.Errorf("could not delete file inode %s", swarm.NewAddress(meta.InodeAddress).String())
 		return fmt.Errorf("could not delete file inode %v", swarm.NewAddress(meta.InodeAddress).String())
 	}
 	for _, fblocks := range fInode.Blocks {
-		err = f.client.DeleteBlob(fblocks.Reference.Bytes())
+		err = f.client.DeleteReference(fblocks.Reference.Bytes())
 		if err != nil {
 			f.logger.Errorf("could not delete file block %s", swarm.NewAddress(fblocks.Reference.Bytes()).String())
 			return fmt.Errorf("could not delete file inode %v", swarm.NewAddress(fblocks.Reference.Bytes()).String())

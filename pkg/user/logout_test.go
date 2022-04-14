@@ -18,12 +18,10 @@ package user_test
 
 import (
 	"io/ioutil"
-	"os"
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
@@ -33,21 +31,16 @@ func TestLogout(t *testing.T) {
 	logger := logging.New(ioutil.Discard, 0)
 
 	t.Run("logout-user", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "logout")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dataDir)
-
+		ens := mock2.NewMockNamespaceManager()
 		//create user
-		userObject := user.NewUsers(dataDir, mockClient, logger, afero.NewMemMapFs())
-		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
+		userObject := user.NewUsers("", mockClient, ens, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Logout user
-		err = userObject.LogoutUser(ui.GetUserName(), dataDir, ui.GetSessionId())
+		err = userObject.LogoutUser(ui.GetUserName(), ui.GetSessionId())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -56,7 +49,7 @@ func TestLogout(t *testing.T) {
 		if userObject.IsUserNameLoggedIn(ui.GetUserName()) {
 			t.Fatalf("user still loggin in")
 		}
-		if !userObject.IsUsernameAvailable(ui.GetUserName(), dataDir) {
+		if !userObject.IsUsernameAvailableV2(ui.GetUserName()) {
 			t.Fatalf("user not created")
 		}
 	})

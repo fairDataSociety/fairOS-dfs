@@ -283,8 +283,8 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 			d.logger.Errorf("deleting document db: %v", err.Error())
 			return err
 		}
-		defer d.removeFromOpenedDB(dbName)
 	}
+	defer d.removeFromOpenedDB(dbName)
 
 	docDB := d.getOpenedDb(dbName)
 	//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
@@ -734,7 +734,7 @@ func (d *Document) Del(dbName, id string) error {
 	}
 
 	// delete the original data (unpin)
-	err = d.client.DeleteBlob(refs[0])
+	err = d.client.DeleteReference(refs[0])
 	if err != nil {
 		d.logger.Errorf("deleting from document db: ", err.Error())
 		return err
@@ -1181,7 +1181,7 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 							}
 						}
 
-						err = d.client.DeleteBlob(refs[0])
+						err = d.client.DeleteReference(refs[0])
 						if err != nil {
 							d.logger.Errorf("inserting in batch: ", err.Error())
 							return err

@@ -43,7 +43,7 @@ func NewMockBeeClient() *MockBeeClient {
 	}
 }
 
-func (*MockBeeClient) CheckConnection() bool {
+func (*MockBeeClient) CheckConnection(_ bool) bool {
 	return true
 }
 
@@ -66,7 +66,11 @@ func (m *MockBeeClient) UploadSOC(owner, id, signature string, data []byte) (add
 	if err != nil {
 		return nil, err
 	}
-	signedChunk, err := soc.NewSignedChunk(idBytes, ch, ownerBytes, signatureBytes)
+	signed, err := soc.NewSigned(idBytes, ch, ownerBytes, signatureBytes)
+	if err != nil {
+		return nil, err
+	}
+	signedChunk, err := signed.Chunk()
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +115,7 @@ func (m *MockBeeClient) DownloadBlob(address []byte) (data []byte, respCode int,
 	return nil, http.StatusInternalServerError, fmt.Errorf("error downloading data")
 }
 
-func (m *MockBeeClient) DeleteChunk(address []byte) error {
+func (m *MockBeeClient) DeleteReference(address []byte) error {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	if _, found := m.storer[swarm.NewAddress(address).String()]; found {
@@ -119,18 +123,4 @@ func (m *MockBeeClient) DeleteChunk(address []byte) error {
 		return nil
 	}
 	return errors.New("chunk not found")
-}
-
-func (m *MockBeeClient) DeleteBlob(address []byte) error {
-	m.storerMu.Lock()
-	defer m.storerMu.Unlock()
-	if _, found := m.storer[swarm.NewAddress(address).String()]; found {
-		delete(m.storer, swarm.NewAddress(address).String())
-		return nil
-	}
-	return errors.New("blob not found")
-}
-
-func (*MockBeeClient) GetNewPostageBatch() error {
-	return nil
 }

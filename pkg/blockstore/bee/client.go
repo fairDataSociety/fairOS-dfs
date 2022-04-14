@@ -43,11 +43,10 @@ const (
 	chunkCacheSize         = 1024
 	uploadBlockCacheSize   = 100
 	downloadBlockCacheSize = 100
+	healthUrl              = "/health"
 	ChunkUploadDownloadUrl = "/chunks"
 	BytesUploadDownloadUrl = "/bytes"
 	pinsUrl                = "/pins/"
-	blobsUrl               = "/bytes/" // need to change this when bee supports it
-	postageBatchUrl        = "/stamps/"
 	SwarmPinHeader         = "Swarm-Pin"
 	SwarmEncryptHeader     = "Swarm-Encrypt"
 	SwarmPostageBatchId    = "Swarm-Postage-Batch-Id"
@@ -55,7 +54,6 @@ const (
 
 type BeeClient struct {
 	url                string
-	debugUrl           string
 	client             *http.Client
 	hasher             *bmtlegacy.Hasher
 	chunkCache         *lru.Cache
@@ -74,7 +72,7 @@ type bytesPostResponse struct {
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
-func NewBeeClient(apiUrl, debugApiUrl, postageBlockId string, logger logging.Logger) *BeeClient {
+func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *BeeClient {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache, err := lru.New(chunkCacheSize)
 	if err != nil {
@@ -91,7 +89,6 @@ func NewBeeClient(apiUrl, debugApiUrl, postageBlockId string, logger logging.Log
 
 	return &BeeClient{
 		url:                apiUrl,
-		debugUrl:           debugApiUrl,
 		client:             createHTTPClient(),
 		hasher:             bmtlegacy.New(p),
 		chunkCache:         cache,
@@ -106,17 +103,19 @@ type chunkAddressResponse struct {
 	Reference swarm.Address `json:"reference"`
 }
 
-type postageBatchResponse struct {
-	BatchId string `json:"batchID"`
-}
-
 func socResource(owner, id, sig string) string {
 	return fmt.Sprintf("/soc/%s/%s?sig=%s", owner, id, sig)
 }
 
 // CheckConnection is used to check if the nbe client is up and running.
-func (s *BeeClient) CheckConnection() bool {
-	req, err := http.NewRequest(http.MethodGet, s.url, nil)
+func (s *BeeClient) CheckConnection(isProxy bool) bool {
+	url := s.url
+	matchString := "Ethereum Swarm Bee\n"
+	if isProxy {
+		url += healthUrl
+		matchString = "OK"
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return false
 	}
@@ -138,7 +137,7 @@ func (s *BeeClient) CheckConnection() bool {
 		return false
 	}
 
-	if string(data) != "Ethereum Swarm Bee\n" {
+	if string(data) != matchString {
 		return false
 	}
 	return true
@@ -243,6 +242,7 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
+
 	return addrResp.Reference.Bytes(), nil
 }
 
@@ -298,7 +298,7 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 		return s.getFromBlockCache(s.uploadBlockCache, string(data)), nil
 	}
 
-	fullUrl := fmt.Sprintf(s.url + BytesUploadDownloadUrl)
+	fullUrl := s.url + BytesUploadDownloadUrl
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
@@ -348,6 +348,7 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 	if !s.inBlockCache(s.uploadBlockCache, string(data)) {
 		s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
 	}
+
 	return resp.Reference.Bytes(), nil
 }
 
@@ -361,7 +362,7 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 		return s.getFromBlockCache(s.downloadBlockCache, addrString), 200, nil
 	}
 
-	fullUrl := fmt.Sprintf(s.url + BytesUploadDownloadUrl + "/" + addrString)
+	fullUrl := s.url + BytesUploadDownloadUrl + "/" + addrString
 	req, err := http.NewRequest(http.MethodGet, fullUrl, nil)
 	if err != nil {
 		return nil, http.StatusNotFound, err
@@ -398,12 +399,12 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	return respData, response.StatusCode, nil
 }
 
-// DeleteChunk unpins a check so that it will be garbasge collected by the Swarm network.
-func (s *BeeClient) DeleteChunk(address []byte) error {
+// DeleteReference unpins a reference so that it will be garbage collected by the Swarm network.
+func (s *BeeClient) DeleteReference(address []byte) error {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
-	path := filepath.Join(pinsUrl, addrString)
-	fullUrl := fmt.Sprintf(s.url + path)
+
+	fullUrl := s.url + pinsUrl + addrString
 	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
 	if err != nil {
 		return err
@@ -417,88 +418,24 @@ func (s *BeeClient) DeleteChunk(address []byte) error {
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
-		return err
-	}
+	// https://github.com/ethersphere/bee/issues/2713, unpin is failing
+	// we have commented it out for development purpose only.
+	// TODO follow up on the issue. uncomment it before merging into master
+	/*
+		if response.StatusCode != http.StatusOK {
+			respData, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("failed to unpin reference : %s", respData)
+		}
+	*/
 
 	fields := logrus.Fields{
 		"reference": addrString,
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete chunk: ")
-	return nil
-}
-
-// DeleteBlob unpins a blob so that it can be garbage collected in the Swarm network.
-func (s *BeeClient) DeleteBlob(address []byte) error {
-	to := time.Now()
-	addrString := swarm.NewAddress(address).String()
-	path := filepath.Join(blobsUrl, addrString)
-	fullUrl := fmt.Sprintf(s.url + path)
-	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
-	if err != nil {
-		return err
-	}
-
-	response, err := s.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	req.Close = true
-
-	if response.StatusCode != http.StatusOK {
-		return err
-	}
-
-	fields := logrus.Fields{
-		"reference": addrString,
-		"duration":  time.Since(to).String(),
-	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete Blob: ")
-	return nil
-}
-
-func (s *BeeClient) GetNewPostageBatch() error {
-	to := time.Now()
-	s.logger.Infof("Trying to get new postage batch id")
-	path := filepath.Join(postageBatchUrl, "10000000/20")
-	fullUrl := fmt.Sprintf(s.debugUrl + path)
-	req, err := http.NewRequest(http.MethodPost, fullUrl, nil)
-	if err != nil {
-		return err
-	}
-
-	response, err := s.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	req.Close = true
-
-	if response.StatusCode != http.StatusCreated {
-		return errors.New("error getting postage stamp ")
-	}
-
-	respData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return errors.New("error getting postage stamp")
-	}
-
-	var batchResp *postageBatchResponse
-	err = json.Unmarshal(respData, &batchResp)
-	if err != nil {
-		return err
-	}
-
-	fields := logrus.Fields{
-		"BatchId":  batchResp.BatchId,
-		"duration": time.Since(to).String(),
-	}
-	s.postageBlockId = batchResp.BatchId
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "update batch: ")
 	return nil
 }
 

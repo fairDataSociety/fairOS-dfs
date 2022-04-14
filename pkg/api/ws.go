@@ -323,15 +323,6 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			h.UserLoginHandler(res, httpReq)
 			cookie = res.Header()["Set-Cookie"]
 			logEventDescription(string(common.UserLogin), to, res.StatusCode, h.logger)
-		case common.UserImport:
-			jsonBytes, _ := json.Marshal(req.Params)
-			httpReq, err := newRequest(http.MethodPost, string(common.UserImport), jsonBytes)
-			if err != nil {
-				respondWithError(res, err)
-				continue
-			}
-			h.ImportUserHandler(res, httpReq)
-			logEventDescription(string(common.UserImport), to, res.StatusCode, h.logger)
 		case common.UserPresent:
 			url := makeQueryParams(string(common.UserPresent), req.Params)
 			httpReq, err := newRequest(http.MethodGet, url, nil)
@@ -358,14 +349,6 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			h.UserLogoutHandler(res, httpReq)
 			logEventDescription(string(common.UserLogout), to, res.StatusCode, h.logger)
-		case common.UserExport:
-			httpReq, err := newRequest(http.MethodPost, string(common.UserExport), nil)
-			if err != nil {
-				respondWithError(res, err)
-				continue
-			}
-			h.ExportUserHandler(res, httpReq)
-			logEventDescription(string(common.UserExport), to, res.StatusCode, h.logger)
 		case common.UserDelete:
 			jsonBytes, _ := json.Marshal(req.Params)
 			httpReq, err := newRequest(http.MethodDelete, string(common.UserDelete), jsonBytes)

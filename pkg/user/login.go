@@ -17,8 +17,10 @@ limitations under the License.
 package user
 
 import (
+	"encoding/hex"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -26,7 +28,91 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
+
+// LoginUserV2 checks if the user is present and logs in the user. It also creates the required information
+// to execute user function and stores it in memory.
+func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, sessionId string) (*Info, string, string, error) {
+	// check if username is available (user created)
+	if !u.IsUsernameAvailableV2(userName) {
+		return nil, "", "", ErrInvalidUserName
+	}
+
+	// create account
+	acc := account.New(u.logger)
+	accountInfo := acc.GetUserAccountInfo()
+
+	// get owner address from Subdomain registrar
+	address, err := u.ens.GetOwner(userName)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	// load public key from public resolver
+	publicKey, nameHash, err := u.ens.GetInfo(userName)
+	if err != nil {
+		return nil, "", "", err
+	}
+	pb := crypto.FromECDSAPub(publicKey)
+
+	// load encrypted soc address  from secondary location
+	fd := feed.New(accountInfo, client, u.logger)
+	_, encryptedAddress, err := u.getSecondaryLocationInformation(utils.Address(address), hex.EncodeToString(pb)+passPhrase, fd)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	// decrypt and remove pad the soc address
+	addrStr, err := accountInfo.DecryptContent(passPhrase, encryptedAddress)
+	if err != nil {
+		return nil, "", "", err
+	}
+	addr, err := hex.DecodeString(addrStr)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	// load encrypted mnemonic
+	encryptedMnemonic, err := u.getEncryptedMnemonicV2(addr, fd)
+	if err != nil {
+		return nil, "", "", err
+	}
+	err = acc.LoadUserAccount(passPhrase, string(encryptedMnemonic))
+	if err != nil {
+		if err.Error() == "mnemonic is invalid" {
+			return nil, "", "", ErrInvalidPassword
+		}
+		return nil, "", "", err
+	}
+
+	if u.IsUserLoggedIn(sessionId) {
+		return nil, "", "", ErrUserAlreadyLoggedIn
+	}
+
+	// Instantiate pod, dir & file objects
+	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
+	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
+	pod := p.NewPod(u.client, fd, acc, u.logger)
+	if sessionId == "" {
+		sessionId = cookie.GetUniqueSessionId()
+	}
+
+	ui := &Info{
+		name:       userName,
+		sessionId:  sessionId,
+		feedApi:    fd,
+		account:    acc,
+		file:       file,
+		dir:        dir,
+		pod:        pod,
+		openPods:   make(map[string]*p.Info),
+		openPodsMu: &sync.RWMutex{},
+	}
+
+	// set cookie and add user to map
+	return ui, nameHash, utils.Encode(pb), u.addUserAndSessionToMap(ui)
+}
 
 // LoginUser checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
