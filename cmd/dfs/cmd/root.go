@@ -27,6 +27,9 @@ import (
 )
 
 var (
+	// FOR MIGRATION PURPOSE ONLY
+	defaultDir = filepath.Join(".fairOS", "dfs")
+
 	defaultConfig = ".dfs.yaml"
 
 	cfgFile   string
@@ -34,6 +37,10 @@ var (
 	verbosity string
 
 	config = viper.New()
+
+	// FOR MIGRATION PURPOSE ONLY
+	dataDir     string
+	dataDirPath string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -54,6 +61,12 @@ It can also be used as a standalone personal, decentralised drive over the inter
 
 		beeApi = config.GetString(optionBeeApi)
 		verbosity = config.GetString(optionVerbosity)
+
+		// FOR MIGRATION PURPOSE ONLY
+		if err := config.BindPFlag(optionDFSDataDir, cmd.Flags().Lookup("dataDir")); err != nil {
+			return err
+		}
+		dataDir = config.GetString(optionDFSDataDir)
 		return nil
 	},
 }
@@ -113,11 +126,10 @@ func init() {
 		os.Exit(1)
 	}
 
+	// FOR MIGRATION PURPOSE ONLY
+	dataDirPath = filepath.Join(home, defaultDir)
 	rootCmd.PersistentFlags().String("dataDir", "dataDirPath", "store data in this dir")
-	if err := rootCmd.PersistentFlags().MarkDeprecated("dataDir", "storing user credentials in the blockchain"); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -164,6 +176,9 @@ func writeConfig() {
 	c.Set(optionBeePostageBatchId, "")
 	c.Set(optionCookieDomain, defaultCookieDomain)
 	c.Set(optionIsGatewayProxy, defaultIsGatewayProxy)
+
+	// FOR MIGRATION PURPOSE ONLY
+	c.Set(optionDFSDataDir, dataDirPath)
 
 	if err := c.WriteConfigAs(cfgFile); err != nil {
 		fmt.Println("failed to write config file")

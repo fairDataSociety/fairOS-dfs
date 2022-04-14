@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
@@ -33,14 +33,14 @@ func TestDelete(t *testing.T) {
 	t.Run("delete-user", func(t *testing.T) {
 		fnm := mock2.NewMockNamespaceManager()
 		//create user
-		userObject := user.NewUsers(mockClient, fnm, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
+		userObject := user.NewUsers("", mockClient, fnm, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// delete user
-		err = userObject.DeleteUser("user1", "password1", ui.GetSessionId(), ui)
+		err = userObject.DeleteUserV2("user1", "password1", ui.GetSessionId(), ui)
 		if err != nil {
 			t.Fatal(err)
 		}

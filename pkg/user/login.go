@@ -31,11 +31,11 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// LoginUser checks if the user is present and logs in the user. It also creates the required information
+// LoginUserV2 checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client, sessionId string) (*Info, string, string, error) {
+func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, sessionId string) (*Info, string, string, error) {
 	// check if username is available (user created)
-	if !u.IsUsernameAvailable(userName) {
+	if !u.IsUsernameAvailableV2(userName) {
 		return nil, "", "", ErrInvalidUserName
 	}
 
@@ -44,13 +44,13 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 	accountInfo := acc.GetUserAccountInfo()
 
 	// get owner address from Subdomain registrar
-	address, err := u.fnm.GetOwner(userName)
+	address, err := u.ens.GetOwner(userName)
 	if err != nil {
 		return nil, "", "", err
 	}
 
 	// load public key from public resolver
-	publicKey, nameHash, err := u.fnm.GetInfo(userName)
+	publicKey, nameHash, err := u.ens.GetInfo(userName)
 	if err != nil {
 		return nil, "", "", err
 	}
@@ -74,7 +74,7 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 	}
 
 	// load encrypted mnemonic
-	encryptedMnemonic, err := u.getEncryptedMnemonic(addr, fd)
+	encryptedMnemonic, err := u.getEncryptedMnemonicV2(addr, fd)
 	if err != nil {
 		return nil, "", "", err
 	}
@@ -112,6 +112,67 @@ func (u *Users) LoginUser(userName, passPhrase string, client blockstore.Client,
 
 	// set cookie and add user to map
 	return ui, nameHash, utils.Encode(pb), u.addUserAndSessionToMap(ui)
+}
+
+// LoginUser checks if the user is present and logs in the user. It also creates the required information
+// to execute user function and stores it in memory.
+func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, sessionId string) (*Info, error) {
+	// check if username is available (user created)
+	if !u.IsUsernameAvailable(userName, dataDir) {
+		return nil, ErrInvalidUserName
+	}
+
+	// create account
+	acc := account.New(u.logger)
+	accountInfo := acc.GetUserAccountInfo()
+
+	// load address from userName
+	address, err := u.getAddressFromUserName(userName, dataDir)
+	if err != nil {
+		return nil, err
+	}
+
+	// load encrypted mnemonic from Swarm
+	fd := feed.New(accountInfo, client, u.logger)
+	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, address, fd)
+	if err != nil {
+		return nil, err
+	}
+
+	err = acc.LoadUserAccount(passPhrase, encryptedMnemonic)
+	if err != nil {
+		if err.Error() == "mnemonic is invalid" {
+			return nil, ErrInvalidPassword
+		}
+		return nil, err
+	}
+
+	if u.IsUserLoggedIn(sessionId) {
+		return nil, ErrUserAlreadyLoggedIn
+	}
+
+	// Instantiate pod, dir & file objects
+	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
+	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
+	pod := p.NewPod(u.client, fd, acc, u.logger)
+	if sessionId == "" {
+		sessionId = cookie.GetUniqueSessionId()
+	}
+
+	ui := &Info{
+		name:       userName,
+		sessionId:  sessionId,
+		feedApi:    fd,
+		account:    acc,
+		file:       file,
+		dir:        dir,
+		pod:        pod,
+		openPods:   make(map[string]*p.Info),
+		openPodsMu: &sync.RWMutex{},
+	}
+
+	// set cookie and add user to map
+	return ui, u.addUserAndSessionToMap(ui)
 }
 
 func (u *Users) addUserAndSessionToMap(ui *Info) error {

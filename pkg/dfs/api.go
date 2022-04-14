@@ -23,19 +23,20 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
-	fnmClient "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth"
+	fnmClient "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 type DfsAPI struct {
-	client blockstore.Client
-	users  *user.Users
-	logger logging.Logger
+	client  blockstore.Client
+	users   *user.Users
+	logger  logging.Logger
+	dataDir string
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*DfsAPI, error) {
+func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*DfsAPI, error) {
 	fnm, err := fnmClient.New(ensConfig, logger)
 	if err != nil {
 		return nil, ErrEthClient
@@ -44,10 +45,11 @@ func NewDfsAPI(apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *co
 	if !c.CheckConnection(isGatewayProxy) {
 		return nil, ErrBeeClient
 	}
-	users := user.NewUsers(c, fnm, logger)
+	users := user.NewUsers(dataDir, c, fnm, logger)
 	return &DfsAPI{
-		client: c,
-		users:  users,
-		logger: logger,
+		client:  c,
+		users:   users,
+		logger:  logger,
+		dataDir: dataDir,
 	}, nil
 }

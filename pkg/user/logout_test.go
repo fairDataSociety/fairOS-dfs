@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
@@ -33,8 +33,8 @@ func TestLogout(t *testing.T) {
 	t.Run("logout-user", func(t *testing.T) {
 		fnm := mock2.NewMockNamespaceManager()
 		//create user
-		userObject := user.NewUsers(mockClient, fnm, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUser("user1", "password1", "", "")
+		userObject := user.NewUsers("", mockClient, fnm, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -49,7 +49,7 @@ func TestLogout(t *testing.T) {
 		if userObject.IsUserNameLoggedIn(ui.GetUserName()) {
 			t.Fatalf("user still loggin in")
 		}
-		if !userObject.IsUsernameAvailable(ui.GetUserName()) {
+		if !userObject.IsUsernameAvailableV2(ui.GetUserName()) {
 			t.Fatalf("user not created")
 		}
 	})

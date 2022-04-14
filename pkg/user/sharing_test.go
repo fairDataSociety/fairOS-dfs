@@ -25,9 +25,9 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
@@ -67,8 +67,8 @@ func TestSharing(t *testing.T) {
 	t.Run("sharing-user", func(t *testing.T) {
 		fnm := mock2.NewMockNamespaceManager()
 		//create source user
-		userObject1 := user.NewUsers(mockClient, fnm, logger)
-		_, _, _, _, ui, err := userObject1.CreateNewUser("user1", "password1", "", "")
+		userObject1 := user.NewUsers("", mockClient, fnm, logger)
+		_, _, _, _, ui, err := userObject1.CreateNewUserV2("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -105,8 +105,8 @@ func TestSharing(t *testing.T) {
 		}
 
 		//create destination user
-		userObject2 := user.NewUsers(mockClient, fnm, logger)
-		_, _, _, _, ui, err = userObject2.CreateNewUser("user2", "password2", "", "")
+		userObject2 := user.NewUsers("", mockClient, fnm, logger)
+		_, _, _, _, ui, err = userObject2.CreateNewUserV2("user2", "password2", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
