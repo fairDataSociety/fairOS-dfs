@@ -19,9 +19,9 @@ package user
 // LogoutUser logs out a giver user from the system and clean him from all the data structures.
 func (u *Users) LogoutUser(userName, sessionId string) error {
 	// basic validations
-	if !u.IsUsernameAvailableV2(userName) {
-		return ErrInvalidUserName
-	}
+	//if !u.IsUsernameAvailableV2(userName) {
+	//	return ErrInvalidUserName
+	//}
 
 	// unset cookie and remove user from map
 	if !u.IsUserLoggedIn(sessionId) {
