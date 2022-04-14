@@ -27,16 +27,20 @@ import (
 )
 
 var (
-	defaultDir    = filepath.Join(".fairOS", "dfs")
+	// FOR MIGRATION PURPOSE ONLY
+	defaultDir = filepath.Join(".fairOS", "dfs")
+
 	defaultConfig = ".dfs.yaml"
 
 	cfgFile   string
 	beeApi    string
 	verbosity string
-	dataDir   string
 
+	config = viper.New()
+
+	// FOR MIGRATION PURPOSE ONLY
+	dataDir     string
 	dataDirPath string
-	config      = viper.New()
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -48,9 +52,6 @@ It adds features to Swarm that is required by the fairOS to parallelize computat
 It manages the metadata of directories and files created and expose them to higher layers.
 It can also be used as a standalone personal, decentralised drive over the internet`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := config.BindPFlag(optionDFSDataDir, cmd.Flags().Lookup("dataDir")); err != nil {
-			return err
-		}
 		if err := config.BindPFlag(optionBeeApi, cmd.Flags().Lookup("beeApi")); err != nil {
 			return err
 		}
@@ -58,9 +59,14 @@ It can also be used as a standalone personal, decentralised drive over the inter
 			return err
 		}
 
-		dataDir = config.GetString(optionDFSDataDir)
 		beeApi = config.GetString(optionBeeApi)
 		verbosity = config.GetString(optionVerbosity)
+
+		// FOR MIGRATION PURPOSE ONLY
+		if err := config.BindPFlag(optionDFSDataDir, cmd.Flags().Lookup("dataDir")); err != nil {
+			return err
+		}
+		dataDir = config.GetString(optionDFSDataDir)
 		return nil
 	},
 }
@@ -101,8 +107,6 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", configPath, "config file")
 
-	dataDirPath = filepath.Join(home, defaultDir)
-	rootCmd.PersistentFlags().String("dataDir", dataDirPath, "store data in this dir")
 	rootCmd.PersistentFlags().String("beeApi", "localhost:1633", "full bee api endpoint")
 	rootCmd.PersistentFlags().String("verbosity", "trace", "verbosity level")
 
@@ -121,6 +125,11 @@ func init() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	// FOR MIGRATION PURPOSE ONLY
+	dataDirPath = filepath.Join(home, defaultDir)
+	rootCmd.PersistentFlags().String("dataDir", "dataDirPath", "store data in this dir")
+
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -160,7 +169,6 @@ func initConfig() {
 func writeConfig() {
 	c := viper.New()
 	c.Set(optionCORSAllowedOrigins, defaultCORSAllowedOrigins)
-	c.Set(optionDFSDataDir, dataDirPath)
 	c.Set(optionDFSHttpPort, defaultDFSHttpPort)
 	c.Set(optionDFSPprofPort, defaultDFSPprofPort)
 	c.Set(optionVerbosity, defaultVerbosity)
@@ -168,6 +176,9 @@ func writeConfig() {
 	c.Set(optionBeePostageBatchId, "")
 	c.Set(optionCookieDomain, defaultCookieDomain)
 	c.Set(optionIsGatewayProxy, defaultIsGatewayProxy)
+
+	// FOR MIGRATION PURPOSE ONLY
+	c.Set(optionDFSDataDir, dataDirPath)
 
 	if err := c.WriteConfigAs(cfgFile); err != nil {
 		fmt.Println("failed to write config file")

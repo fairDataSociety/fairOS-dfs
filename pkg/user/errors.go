@@ -19,9 +19,10 @@ package user
 import "errors"
 
 var (
-	ErrUserAlreadyLoggedIn = errors.New("user already logged in")
-	ErrInvalidUserName     = errors.New("invalid user name")
-	ErrUserAlreadyPresent  = errors.New("user name already present")
-	ErrUserNotLoggedIn     = errors.New("user not logged in")
-	ErrInvalidPassword     = errors.New("invalid password")
+	ErrUserAlreadyLoggedIn  = errors.New("user already logged in")
+	ErrInvalidUserName      = errors.New("invalid user name")
+	ErrInvalidUserNameForV2 = errors.New("cannot use this username with v2 standards")
+	ErrUserAlreadyPresent   = errors.New("user name already present")
+	ErrUserNotLoggedIn      = errors.New("user not logged in")
+	ErrInvalidPassword      = errors.New("invalid password")
 )

@@ -22,12 +22,12 @@ import (
 	"errors"
 	"fmt"
 	"hash"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/ethersphere/bee/pkg/bmtpool"
-
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"golang.org/x/crypto/sha3"
@@ -39,6 +39,7 @@ const (
 	MaxPodNameLength     = 25
 	SpanLength           = 8
 	DeletedFeedMagicWord = "__Fair__"
+	letterBytes          = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
 type decError struct{ msg string }
@@ -128,11 +129,8 @@ func NewChunkWithSpan(data []byte) (swarm.Chunk, error) {
 	// execute hash, compare and return result
 	spanBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(spanBytes, uint64(span))
-	err := hasher.SetSpanBytes(spanBytes)
-	if err != nil {
-		return nil, err
-	}
-	_, err = hasher.Write(data)
+	hasher.SetHeader(spanBytes)
+	_, err := hasher.Write(data)
 	if err != nil {
 		return nil, err
 	}
@@ -151,11 +149,8 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 	defer bmtpool.Put(hasher)
 
 	// execute hash, compare and return result
-	err := hasher.SetSpanBytes(data[:swarm.SpanSize])
-	if err != nil {
-		return nil, err
-	}
-	_, err = hasher.Write(data[swarm.SpanSize:])
+	hasher.SetHeader(data[:swarm.SpanSize])
+	_, err := hasher.Write(data[swarm.SpanSize:])
 	if err != nil {
 		return nil, err
 	}
@@ -180,6 +175,14 @@ func CombinePathAndFile(podName, path, fileName string) string {
 		}
 	}
 	return totalPath
+}
+
+func GetRandString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
 
 //func CombinePathAndFile(podName, path, fileName string) string {

@@ -54,7 +54,7 @@ func TestAccount_CreateRootAccount(t *testing.T) {
 		t.Fatal("mnemonic is not 12 words")
 	}
 
-	if acc.userAcount.GetPrivateKey() == nil || acc.userAcount.GetPublicKey() == nil || len(acc.userAcount.address[:]) != utils.AddressLength {
+	if acc.userAccount.GetPrivateKey() == nil || acc.userAccount.GetPublicKey() == nil || len(acc.userAccount.address[:]) != utils.AddressLength {
 		t.Fatalf("keys not intialised")
 	}
 

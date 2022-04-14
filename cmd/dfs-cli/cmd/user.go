@@ -60,60 +60,6 @@ func userNew(userName string) {
 	fmt.Println("=============== Mnemonic ==========================")
 }
 
-func userImportUsingAddress(userName, address string) {
-	password := getPassword()
-	importUser := common.UserRequest{
-		UserName: userName,
-		Password: password,
-		Address:  address,
-	}
-	jsonData, err := json.Marshal(importUser)
-	if err != nil {
-		log.Fatalf("import user: error marshalling request")
-		return
-	}
-	data, err := fdfsAPI.postReq(http.MethodPost, apiUserImport, jsonData)
-	if err != nil {
-		fmt.Println("import user: ", err)
-		return
-	}
-	var resp api.UserSignupResponse
-	err = json.Unmarshal(data, &resp)
-	if err != nil {
-		fmt.Println("import user: ", err)
-		return
-	}
-	fmt.Println("imported user name: ", userName)
-	fmt.Println("imported user address: ", resp.Address)
-}
-
-func userImportUsingMnemonic(userName, mnemonic string) {
-	password := getPassword()
-	importUser := common.UserRequest{
-		UserName: userName,
-		Password: password,
-		Mnemonic: mnemonic,
-	}
-	jsonData, err := json.Marshal(importUser)
-	if err != nil {
-		log.Fatalf("import user: error marshalling request")
-		return
-	}
-	data, err := fdfsAPI.postReq(http.MethodPost, apiUserImport, jsonData)
-	if err != nil {
-		fmt.Println("import user: ", err)
-		return
-	}
-	var resp api.UserSignupResponse
-	err = json.Unmarshal(data, &resp)
-	if err != nil {
-		fmt.Println("import user: ", err)
-		return
-	}
-	fmt.Println("imported user name: ", userName)
-	fmt.Println("imported user address: ", resp.Address)
-}
-
 func userLogin(userName string) {
 	password := getPassword()
 	loginUser := common.UserRequest{
@@ -161,22 +107,6 @@ func logoutUser() {
 	}
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
-}
-
-func exportUser() {
-	data, err := fdfsAPI.postReq(http.MethodPost, apiUserExport, nil)
-	if err != nil {
-		fmt.Println("export user: ", err)
-		return
-	}
-	var resp api.UserExportResponse
-	err = json.Unmarshal(data, &resp)
-	if err != nil {
-		fmt.Println("export user: ", err)
-		return
-	}
-	fmt.Println("user name:", resp.Name)
-	fmt.Println("address  :", resp.Address)
 }
 
 func StatUser() {

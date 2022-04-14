@@ -20,23 +20,24 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
+// CreateUserV2 is a controller function which calls the create user function from the user object.
+func (d *DfsAPI) CreateUserV2(userName, passPhrase, mnemonic string, sessionId string) (string, string, string, string, *user.Info, error) {
+	return d.users.CreateNewUserV2(userName, passPhrase, mnemonic, sessionId)
+}
+
+// LoginUserV2 is a controller function which calls the users login function.
+func (d *DfsAPI) LoginUserV2(userName, passPhrase string, sessionId string) (*user.Info, string, string, error) {
+	return d.users.LoginUserV2(userName, passPhrase, d.client, sessionId)
+}
+
 // CreateUser is a controller function which calls the create user function from the user object.
+// FOR MIGRATION PURPOSE ONLY
 func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, sessionId string) (string, string, *user.Info, error) {
 	return d.users.CreateNewUser(userName, passPhrase, mnemonic, sessionId)
 }
 
-// ImportUserUsingMnemonic is a controller function which calls the create user using the mnemonic passed.
-func (d *DfsAPI) ImportUserUsingMnemonic(userName, passPhrase, mnemonic string, sessionId string) (*user.Info, error) {
-	_, _, ui, err := d.CreateUser(userName, passPhrase, mnemonic, sessionId)
-	return ui, err
-}
-
-// ImportUserUsingAddress is a controller function which calls the create user using the address passed.
-func (d *DfsAPI) ImportUserUsingAddress(userName, passPhrase, address string, sessionId string) (*user.Info, error) {
-	return d.users.ImportUsingAddress(userName, passPhrase, address, d.dataDir, d.client, sessionId)
-}
-
 // LoginUser is a controller function which calls the users login function.
+// FOR MIGRATION PURPOSE ONLY
 func (d *DfsAPI) LoginUser(userName, passPhrase string, sessionId string) (*user.Info, error) {
 	return d.users.LoginUser(userName, passPhrase, d.dataDir, d.client, sessionId)
 }
@@ -49,7 +50,7 @@ func (d *DfsAPI) LogoutUser(sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	return d.users.LogoutUser(ui.GetUserName(), d.dataDir, sessionId)
+	return d.users.LogoutUser(ui.GetUserName(), sessionId)
 }
 
 // DeleteUser is a controller function which deletes a logged in user.
@@ -63,9 +64,25 @@ func (d *DfsAPI) DeleteUser(passPhrase, sessionId string) error {
 	return d.users.DeleteUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, ui)
 }
 
+// DeleteUserV2 is a controller function which deletes a logged in user.
+func (d *DfsAPI) DeleteUserV2(passPhrase, sessionId string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	return d.users.DeleteUserV2(ui.GetUserName(), passPhrase, sessionId, ui)
+}
+
 // IsUserNameAvailable checks if a given user name is available in this dfs server.
 func (d *DfsAPI) IsUserNameAvailable(userName string) bool {
 	return d.users.IsUsernameAvailable(userName, d.dataDir)
+}
+
+// IsUserNameAvailableV2 checks if a given user name is available in this dfs server.
+func (d *DfsAPI) IsUserNameAvailableV2(userName string) bool {
+	return d.users.IsUsernameAvailableV2(userName)
 }
 
 // IsUserLoggedIn checks if the given user is logged in
@@ -95,10 +112,13 @@ func (d *DfsAPI) ExportUser(sessionId string) (string, string, error) {
 	return d.users.ExportUser(ui)
 }
 
-func (d *DfsAPI) Users() (map[string]string, error) {
-	return d.users.GetUserMap(d.dataDir)
-}
+// MigrateUser is a controller function which migrates user credentials to swarm from local storage
+func (d *DfsAPI) MigrateUser(passPhrase, sessionId string) error {
+	// get the logged in user information
+	ui := d.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
 
-func (d *DfsAPI) LoadUsers(users map[string]string) error {
-	return d.users.LoadUserMap(d.dataDir, users)
+	return d.users.MigrateUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, ui)
 }

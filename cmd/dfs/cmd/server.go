@@ -25,6 +25,7 @@ import (
 
 	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -60,10 +61,7 @@ can consume it.`,
 		if err := config.BindPFlag(optionCORSAllowedOrigins, cmd.Flags().Lookup("cors-origins")); err != nil {
 			return err
 		}
-		if err := config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId")); err != nil {
-			return err
-		}
-		return nil
+		return config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		httpPort = config.GetString(optionDFSHttpPort)
@@ -85,6 +83,46 @@ can consume it.`,
 		if err != nil {
 			fmt.Println("\npostageBlockId is invalid")
 			return
+		}
+		providerDomain := config.GetString(optionProviderDomain)
+		publicResolverAddress := config.GetString(optionPublicResolverAddress)
+		subdomainRegistrarAddress := config.GetString(optionSubdomainRegistrarAddress)
+		ensRegistryAddress := config.GetString(optionENSRegistryAddress)
+		ensProviderBackend := config.GetString(optionENSProviderBackend)
+		ensProviderPrivateKey := config.GetString(optionENSProviderPrivateKey)
+
+		if providerDomain == "" {
+			fmt.Println("\nens provider domain is missing")
+			return
+		}
+		if publicResolverAddress == "" {
+			fmt.Println("\npublicResolver contract address is missing")
+			return
+		}
+		if subdomainRegistrarAddress == "" {
+			fmt.Println("\nsubdomainRegistrar contract address is missing")
+			return
+		}
+		if ensRegistryAddress == "" {
+			fmt.Println("\nensRegistry contract address is missing")
+			return
+		}
+		if ensProviderBackend == "" {
+			fmt.Println("\nensProvideBackend endpoint is missing")
+			return
+		}
+		if ensProviderPrivateKey == "" {
+			fmt.Println("\nens provider private key is missing")
+			return
+		}
+
+		ensConfig := &contracts.Config{
+			ENSRegistryAddress:        ensRegistryAddress,
+			SubdomainRegistrarAddress: subdomainRegistrarAddress,
+			PublicResolverAddress:     publicResolverAddress,
+			ProviderDomain:            providerDomain,
+			ProviderBackend:           ensProviderBackend,
+			ProviderPrivateKey:        ensProviderPrivateKey,
 		}
 
 		var logger logging.Logger
@@ -108,7 +146,6 @@ can consume it.`,
 
 		logger.Info("configuration values")
 		logger.Info("version        : ", dfs.Version)
-		logger.Info("dataDir        : ", dataDir)
 		logger.Info("beeApi         : ", beeApi)
 		logger.Info("isGatewayProxy : ", isGatewayProxy)
 		logger.Info("verbosity      : ", verbosity)
@@ -117,7 +154,9 @@ can consume it.`,
 		logger.Info("cookieDomain   : ", cookieDomain)
 		logger.Info("postageBlockId : ", postageBlockId)
 		logger.Info("corsOrigins    : ", corsOrigins)
-		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, logger)
+
+		// datadir will be removed in some future version. it is kept for migration purpose only
+		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, ensConfig, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return
@@ -147,11 +186,6 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 		_, err = fmt.Fprintln(w, dfs.Version)
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, dataDir)
 		if err != nil {
 			logger.Errorf("error in API /: ", err)
 			return
@@ -196,6 +230,9 @@ func startHttpService(logger logging.Logger) {
 	})
 	apiVersion := "v1"
 
+	// v2 introduces user credentials storage on secondary location and identity storage on ens registry
+	apiVersionV2 := "v2"
+
 	wsRouter := router.PathPrefix("/ws/" + apiVersion).Subrouter()
 	wsRouter.HandleFunc("/", handler.WebsocketHandler)
 
@@ -207,12 +244,29 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 	})
+	baseRouterV2 := router.PathPrefix("/" + apiVersionV2).Subrouter()
+	baseRouterV2.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		_, err := fmt.Fprintln(w, "User-agent: *\nDisallow: /")
+		if err != nil {
+			logger.Errorf("error in API /robots.txt: ", err)
+			return
+		}
+	})
 
 	// User account related handlers which does not login need middleware
+	baseRouterV2.Use(handler.LogMiddleware)
+	baseRouterV2.HandleFunc("/user/signup", handler.UserSignupV2Handler).Methods("POST")
+	baseRouterV2.HandleFunc("/user/login", handler.UserLoginV2Handler).Methods("POST")
+	baseRouterV2.HandleFunc("/user/present", handler.UserPresentV2Handler).Methods("GET")
+	userRouterV2 := baseRouterV2.PathPrefix("/user/").Subrouter()
+	userRouterV2.Use(handler.LoginMiddleware)
+	userRouterV2.HandleFunc("/delete", handler.UserDeleteV2Handler).Methods("DELETE")
+	userRouterV2.HandleFunc("/migrate", handler.UserMigrateHandler).Methods("POST")
+
 	baseRouter.Use(handler.LogMiddleware)
+	// TODO remove signup before merging into master. this is kept for testing purpose only
 	baseRouter.HandleFunc("/user/signup", handler.UserSignupHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/login", handler.UserLoginHandler).Methods("POST")
-	baseRouter.HandleFunc("/user/import", handler.ImportUserHandler).Methods("POST")
 	baseRouter.HandleFunc("/user/present", handler.UserPresentHandler).Methods("GET")
 	baseRouter.HandleFunc("/user/isloggedin", handler.IsUserLoggedInHandler).Methods("GET")
 
