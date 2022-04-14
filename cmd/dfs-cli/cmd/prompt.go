@@ -93,7 +93,7 @@ const (
 	apiDocDelete       = APIVersion + "/doc/delete"
 	apiDocFind         = APIVersion + "/doc/find"
 	apiDocEntryPut     = APIVersion + "/doc/entry/put"
-	apiDocEntryGet     = APIVersion + "/doc/entry/newget"
+	apiDocEntryGet     = APIVersion + "/doc/entry/get"
 	apiDocEntryDel     = APIVersion + "/doc/entry/del"
 	apiDocLoadJson     = APIVersion + "/doc/loadjson"
 	apiDocIndexJson    = APIVersion + "/doc/indexjson"
@@ -609,7 +609,7 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			docOpen(tableName)
+			docOpen(currentPod, tableName)
 			currentPrompt = getCurrentPrompt()
 		case "count":
 			if len(blocks) < 3 {
@@ -621,7 +621,7 @@ func executor(in string) {
 			if len(blocks) == 4 {
 				expr = blocks[3]
 			}
-			docCount(tableName, expr)
+			docCount(currentPod, tableName, expr)
 			currentPrompt = getCurrentPrompt()
 		case "delete":
 			if len(blocks) < 3 {
@@ -629,7 +629,7 @@ func executor(in string) {
 				return
 			}
 			tableName := blocks[2]
-			docDelete(tableName)
+			docDelete(currentPod, tableName)
 			currentPrompt = getCurrentPrompt()
 		case "find":
 			if len(blocks) < 4 {
@@ -642,53 +642,53 @@ func executor(in string) {
 			if len(blocks) == 5 {
 				limit = blocks[4]
 			}
-			docFind(tableName, expr, limit)
+			docFind(currentPod, tableName, expr, limit)
 			currentPrompt = getCurrentPrompt()
 		case "put":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			value := blocks[3]
-			docPut(tableName, value)
+			docPut(currentPod, tableName, value)
 			currentPrompt = getCurrentPrompt()
 		case "get":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			idValue := blocks[3]
-			docGet(tableName, idValue)
+			docGet(currentPod, tableName, idValue)
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			idValue := blocks[3]
-			docDel(tableName, idValue)
+			docDel(currentPod, tableName, idValue)
 			currentPrompt = getCurrentPrompt()
 		case "loadjson":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			fileName := filepath.Base(blocks[3])
 			localJsonFile := blocks[3]
-			docLoadJson(localJsonFile, tableName, fileName)
+			docLoadJson(currentPod, localJsonFile, tableName, fileName)
 			currentPrompt = getCurrentPrompt()
 		case "indexjson":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			podJsonFile := blocks[3]
-			docIndexJson(tableName, podJsonFile)
+			docIndexJson(currentPod, tableName, podJsonFile)
 			currentPrompt = getCurrentPrompt()
 		default:
 			fmt.Println("Invalid doc coammand")
