@@ -44,13 +44,13 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	accountInfo := acc.GetUserAccountInfo()
 
 	// get owner address from Subdomain registrar
-	address, err := u.fnm.GetOwner(userName)
+	address, err := u.ens.GetOwner(userName)
 	if err != nil {
 		return nil, "", "", err
 	}
 
 	// load public key from public resolver
-	publicKey, nameHash, err := u.fnm.GetInfo(userName)
+	publicKey, nameHash, err := u.ens.GetInfo(userName)
 	if err != nil {
 		return nil, "", "", err
 	}

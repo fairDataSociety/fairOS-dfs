@@ -21,9 +21,9 @@ func (u *Users) IsUsernameAvailable(userName, dataDir string) bool {
 	return u.isUserMappingPresent(userName, dataDir)
 }
 
-// IsUsernameAvailableV2 checks if a supplied user name is present in xDai chain
+// IsUsernameAvailableV2 checks if a supplied user name is present in blockchain
 func (u *Users) IsUsernameAvailableV2(userName string) bool {
-	addr, err := u.fnm.GetOwner(userName)
+	addr, err := u.ens.GetOwner(userName)
 	if err != nil {
 		return false
 	}

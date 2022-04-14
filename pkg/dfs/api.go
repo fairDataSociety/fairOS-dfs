@@ -23,7 +23,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
-	fnmClient "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth"
+	fnmClient "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )

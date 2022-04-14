@@ -22,7 +22,7 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )

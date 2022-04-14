@@ -38,17 +38,17 @@ func (u *Users) MigrateUser(userName, dataDir, password, sessionId string, ui *I
 		return err
 	}
 	// create ens subdomain and store mnemonic
-	err = u.fnm.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
+	err = u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
 	if err != nil {
 		return err
 	}
 
-	_, err = u.fnm.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
+	_, err = u.ens.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
 	if err != nil {
 		return err
 	}
 
-	err = u.fnm.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	err = u.ens.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
 	if err != nil {
 		return err
 	}

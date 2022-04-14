@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )

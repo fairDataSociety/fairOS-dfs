@@ -26,9 +26,9 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/fnm/eth"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -116,7 +116,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		return "", "", "", "", nil, err
 	}
 	// create ens subdomain and store mnemonic
-	err = u.fnm.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
+	err = u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
 	if err != nil {
 		if err == eth.ErrInsufficientBalance {
 			return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
@@ -124,12 +124,12 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		return "", "", "", "", nil, err
 	}
 
-	nameHash, err := u.fnm.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
+	nameHash, err := u.ens.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
 
-	err = u.fnm.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	err = u.ens.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
 	if err != nil {
 		return "", "", "", "", nil, err
 	}

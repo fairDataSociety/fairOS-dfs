@@ -92,12 +92,12 @@ func (u *Users) DeleteUserV2(userName, password, sessionId string, ui *Info) err
 	}
 
 	// get owner address from Subdomain registrar
-	owner, err := u.fnm.GetOwner(userName)
+	owner, err := u.ens.GetOwner(userName)
 	if err != nil {
 		return err
 	}
 	// load public key from public resolver
-	publicKey, _, err := u.fnm.GetInfo(userName)
+	publicKey, _, err := u.ens.GetInfo(userName)
 	if err != nil {
 		return err
 	}
