@@ -34,7 +34,7 @@ var (
 type UserSignupResponse struct {
 	Address   string `json:"address"`
 	Mnemonic  string `json:"mnemonic,omitempty"`
-	NameHash  string `json:"nameHash,omitempty"`
+	NameHash  string `json:"name_hash,omitempty"`
 	PublicKey string `json:"public_key,omitempty"`
 	Message   string `json:"message,omitempty"`
 }
