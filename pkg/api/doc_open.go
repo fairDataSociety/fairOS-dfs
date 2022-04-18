@@ -55,8 +55,8 @@ func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc open: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc open: \"name\" argument missing")
+		h.logger.Errorf("doc open: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc open: \"table_name\" argument missing")
 		return
 	}
 

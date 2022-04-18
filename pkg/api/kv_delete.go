@@ -55,8 +55,8 @@ func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv delete: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv delete: \"name\" argument missing")
+		h.logger.Errorf("kv delete: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv delete: \"table_name\" argument missing")
 		return
 	}
 

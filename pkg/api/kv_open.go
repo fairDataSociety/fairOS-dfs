@@ -55,8 +55,8 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv open: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv open: \"name\" argument missing")
+		h.logger.Errorf("kv open: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv open: \"table_name\" argument missing")
 		return
 	}
 

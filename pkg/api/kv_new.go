@@ -58,8 +58,8 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv create: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv create: \"name\" argument missing")
+		h.logger.Errorf("kv create: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv create: \"table_name\" argument missing")
 		return
 	}
 

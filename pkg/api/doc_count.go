@@ -58,8 +58,8 @@ func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc count: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc count: \"name\" argument missing")
+		h.logger.Errorf("doc count: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc count: \"table_name\" argument missing")
 		return
 	}
 

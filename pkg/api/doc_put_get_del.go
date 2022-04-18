@@ -59,8 +59,8 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc put: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc put: \"name\" argument missing")
+		h.logger.Errorf("doc put: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc put: \"table_name\" argument missing")
 		return
 	}
 
@@ -194,8 +194,8 @@ func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc del: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc del: \"name\" argument missing")
+		h.logger.Errorf("doc del: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc del: \"table_name\" argument missing")
 		return
 	}
 
