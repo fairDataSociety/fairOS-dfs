@@ -33,7 +33,7 @@ type Handler struct {
 func NewHandler(dataDir, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*Handler, error) {
 	api, err := dfs.NewDfsAPI(dataDir, beeApi, postageBlockId, isGatewayProxy, ensConfig, logger)
 	if err != nil {
-		return nil, dfs.ErrBeeClient
+		return nil, err
 	}
 	return &Handler{
 		dfsAPI:             api,

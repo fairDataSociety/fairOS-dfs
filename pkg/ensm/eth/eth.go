@@ -11,7 +11,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/ens"
 	publicresolver "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/public-resolver"
@@ -39,11 +38,16 @@ type Client struct {
 }
 
 func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
-	rpcClient, err := rpc.DialContext(context.Background(), ensConfig.ProviderBackend)
+	eth, err := ethclient.Dial(ensConfig.ProviderBackend)
 	if err != nil {
 		return nil, fmt.Errorf("dial eth ensm: %w", err)
 	}
-	eth := ethclient.NewClient(rpcClient)
+
+	// check connection
+	_, err = eth.ChainID(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("dial eth ensm: %w", err)
+	}
 	ensRegistry, err := ens.NewEns(common.HexToAddress(ensConfig.ENSRegistryAddress), eth)
 	if err != nil {
 		return nil, err
@@ -70,7 +74,7 @@ func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
 	logger.Info("ensProviderAddress   : ", fromAddress.Hex())
 	logger.Info("ensProviderDomain    : ", ensConfig.ProviderDomain)
 	c := &Client{
-		eth:                ethclient.NewClient(rpcClient),
+		eth:                eth,
 		ensConfig:          ensConfig,
 		ensRegistry:        ensRegistry,
 		subdomainRegistrar: subdomainRegistrar,
