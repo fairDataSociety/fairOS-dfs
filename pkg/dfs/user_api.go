@@ -113,12 +113,11 @@ func (d *DfsAPI) ExportUser(sessionId string) (string, string, error) {
 }
 
 // MigrateUser is a controller function which migrates user credentials to swarm from local storage
-func (d *DfsAPI) MigrateUser(passPhrase, sessionId string) error {
+func (d *DfsAPI) MigrateUser(username, passPhrase, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
-
-	return d.users.MigrateUser(ui.GetUserName(), d.dataDir, passPhrase, sessionId, ui)
+	return d.users.MigrateUser(ui.GetUserName(), username, d.dataDir, passPhrase, sessionId, ui)
 }
