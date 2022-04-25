@@ -3,12 +3,16 @@ package eth
 import (
 	"context"
 	"crypto/ecdsa"
+	"errors"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
@@ -19,6 +23,12 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	goens "github.com/wealdtech/go-ens/v3"
 	"golang.org/x/crypto/sha3"
+)
+
+const (
+	additionalConfirmations           = 1
+	transactionReceiptTimeout         = time.Minute * 2
+	transactionReceiptPollingInterval = time.Second * 10
 )
 
 var (
@@ -124,6 +134,11 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address) error 
 		c.logger.Error("subdomain register failed :", err)
 		return err
 	}
+	err = c.checkReceipt(tx)
+	if err != nil {
+		c.logger.Error("subdomain register failed :", err)
+		return err
+	}
 	c.logger.Info("subdomain registered with hash :", tx.Hash().Hex())
 	return nil
 }
@@ -138,6 +153,11 @@ func (c *Client) SetResolver(username string, owner common.Address, key *ecdsa.P
 		return "", err
 	}
 	tx, err := c.ensRegistry.SetResolver(opts, node, common.HexToAddress(c.ensConfig.PublicResolverAddress))
+	if err != nil {
+		c.logger.Error("ensRegistry SetResolver failed :", err)
+		return "", err
+	}
+	err = c.checkReceipt(tx)
 	if err != nil {
 		c.logger.Error("ensRegistry SetResolver failed :", err)
 		return "", err
@@ -172,7 +192,12 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 	}
 	tx, err := c.publicResolver.SetAll(opts, node, owner, content, []byte{}, x, y, name)
 	if err != nil {
-		c.logger.Error("public resolver setall failed :", err)
+		c.logger.Error("public resolver set all failed :", err)
+		return err
+	}
+	err = c.checkReceipt(tx)
+	if err != nil {
+		c.logger.Error("public resolver set all failed :", err)
 		return err
 	}
 	c.logger.Info("public resolver setall called with hash :", tx.Hash().Hex())
@@ -228,4 +253,48 @@ func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*
 	opts.GasPrice = gasPrice
 	opts.From = account
 	return opts, nil
+}
+
+func (c *Client) checkReceipt(tx *types.Transaction) error {
+	ctx, cancel := context.WithTimeout(context.Background(), transactionReceiptTimeout)
+	defer cancel()
+
+	pollingInterval := transactionReceiptPollingInterval
+	for {
+		receipt, err := c.eth.TransactionReceipt(ctx, tx.Hash())
+		if err != nil {
+			if !errors.Is(err, ethereum.NotFound) {
+				return err
+			}
+			select {
+			case <-time.After(pollingInterval):
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+			continue
+		}
+		bn, err := c.eth.BlockNumber(ctx)
+		if err != nil {
+			return err
+		}
+
+		nextBlock := receipt.BlockNumber.Uint64() + 1
+
+		if bn >= nextBlock+additionalConfirmations {
+			_, err = c.eth.HeaderByNumber(ctx, new(big.Int).SetUint64(nextBlock))
+			if err != nil {
+				if !errors.Is(err, ethereum.NotFound) {
+					return err
+				}
+			} else {
+				return nil
+			}
+		}
+
+		select {
+		case <-time.After(pollingInterval):
+		case <-ctx.Done():
+			return errors.New("context timeout")
+		}
+	}
 }

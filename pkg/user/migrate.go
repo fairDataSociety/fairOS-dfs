@@ -3,7 +3,6 @@ package user
 import (
 	"encoding/hex"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -45,17 +44,7 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 		return err
 	}
 	// create ens subdomain and store mnemonic
-	err = u.ens.RegisterSubdomain(newUsername, common.HexToAddress(accountInfo.GetAddress().Hex()))
-	if err != nil {
-		return err
-	}
-
-	_, err = u.ens.SetResolver(newUsername, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
-	if err != nil {
-		return err
-	}
-
-	err = u.ens.SetAll(newUsername, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	_, err = u.createENS(newUsername, accountInfo)
 	if err != nil {
 		return err
 	}

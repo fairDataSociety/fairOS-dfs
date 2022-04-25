@@ -115,22 +115,13 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
+
 	// create ens subdomain and store mnemonic
-	err = u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
+	nameHash, err := u.createENS(userName, accountInfo)
 	if err != nil {
 		if err == eth.ErrInsufficientBalance {
 			return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
 		}
-		return "", "", "", "", nil, err
-	}
-
-	nameHash, err := u.ens.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
-	if err != nil {
-		return "", "", "", "", nil, err
-	}
-
-	err = u.ens.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
-	if err != nil {
 		return "", "", "", "", nil, err
 	}
 
@@ -202,4 +193,22 @@ func isUserNameValid(username string) bool {
 	} else {
 		return false
 	}
+}
+
+func (u *Users) createENS(userName string, accountInfo *account.Info) (string, error) {
+	err := u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
+	if err != nil {
+		return "", err
+	}
+
+	nameHash, err := u.ens.SetResolver(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	if err != nil {
+		return "", err
+	}
+
+	err = u.ens.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	if err != nil {
+		return "", err
+	}
+	return nameHash, nil
 }
