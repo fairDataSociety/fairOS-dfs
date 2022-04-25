@@ -131,15 +131,15 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address) error 
 
 	tx, err := c.subdomainRegistrar.Register(opts, label, owner)
 	if err != nil {
-		c.logger.Error("subdomain register failed :", err)
+		c.logger.Error("subdomain register failed : ", err)
 		return err
 	}
 	err = c.checkReceipt(tx)
 	if err != nil {
-		c.logger.Error("subdomain register failed :", err)
+		c.logger.Error("subdomain register failed : ", err)
 		return err
 	}
-	c.logger.Info("subdomain registered with hash :", tx.Hash().Hex())
+	c.logger.Info("subdomain registered with hash : ", tx.Hash().Hex())
 	return nil
 }
 
@@ -154,15 +154,15 @@ func (c *Client) SetResolver(username string, owner common.Address, key *ecdsa.P
 	}
 	tx, err := c.ensRegistry.SetResolver(opts, node, common.HexToAddress(c.ensConfig.PublicResolverAddress))
 	if err != nil {
-		c.logger.Error("ensRegistry SetResolver failed :", err)
+		c.logger.Error("ensRegistry SetResolver failed : ", err)
 		return "", err
 	}
 	err = c.checkReceipt(tx)
 	if err != nil {
-		c.logger.Error("ensRegistry SetResolver failed :", err)
+		c.logger.Error("ensRegistry SetResolver failed : ", err)
 		return "", err
 	}
-	c.logger.Info("set resolver called with hash :", tx.Hash().Hex())
+	c.logger.Info("set resolver called with hash : ", tx.Hash().Hex())
 	nameHash := node[:]
 	return utils.Encode(nameHash), nil
 }
@@ -192,15 +192,15 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 	}
 	tx, err := c.publicResolver.SetAll(opts, node, owner, content, []byte{}, x, y, name)
 	if err != nil {
-		c.logger.Error("public resolver set all failed :", err)
+		c.logger.Error("public resolver set all failed : ", err)
 		return err
 	}
 	err = c.checkReceipt(tx)
 	if err != nil {
-		c.logger.Error("public resolver set all failed :", err)
+		c.logger.Error("public resolver set all failed : ", err)
 		return err
 	}
-	c.logger.Info("public resolver setall called with hash :", tx.Hash().Hex())
+	c.logger.Info("public resolver setall called with hash : ", tx.Hash().Hex())
 	return nil
 }
 
@@ -213,7 +213,7 @@ func (c *Client) GetInfo(username string) (*ecdsa.PublicKey, string, error) {
 	opts := &bind.CallOpts{}
 	info, err := c.publicResolver.GetAll(opts, node)
 	if err != nil {
-		c.logger.Error("public resolver get all failed :", err)
+		c.logger.Error("public resolver get all failed : ", err)
 		return nil, "", err
 	}
 	x := new(big.Int)

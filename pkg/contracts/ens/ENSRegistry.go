@@ -30,7 +30,7 @@ var (
 
 // EnsMetaData contains all meta data concerning the Ens contract.
 var EnsMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"Logger\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"NewOwner\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"NewResolver\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"ttl\",\"type\":\"uint64\"}],\"name\":\"NewTTL\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"name\":\"resolver\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"setOwner\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"setResolver\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"setSubnodeOwner\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"uint64\",\"name\":\"ttl\",\"type\":\"uint64\"}],\"name\":\"setTTL\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"name\":\"ttl\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"NewOwner\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"NewResolver\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"ttl\",\"type\":\"uint64\"}],\"name\":\"NewTTL\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"resolver\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"setOwner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_resolver\",\"type\":\"address\"}],\"name\":\"setResolver\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_label\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"setSubnodeOwner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"uint64\",\"name\":\"_ttl\",\"type\":\"uint64\"}],\"name\":\"setTTL\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"ttl\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // EnsABI is the input ABI used to generate the binding from.
@@ -181,10 +181,10 @@ func (_Ens *EnsTransactorRaw) Transact(opts *bind.TransactOpts, method string, p
 
 // Owner is a free data retrieval call binding the contract method 0x02571be3.
 //
-// Solidity: function owner(bytes32 node) view returns(address)
-func (_Ens *EnsCaller) Owner(opts *bind.CallOpts, node [32]byte) (common.Address, error) {
+// Solidity: function owner(bytes32 _node) view returns(address)
+func (_Ens *EnsCaller) Owner(opts *bind.CallOpts, _node [32]byte) (common.Address, error) {
 	var out []interface{}
-	err := _Ens.contract.Call(opts, &out, "owner", node)
+	err := _Ens.contract.Call(opts, &out, "owner", _node)
 
 	if err != nil {
 		return *new(common.Address), err
@@ -198,24 +198,24 @@ func (_Ens *EnsCaller) Owner(opts *bind.CallOpts, node [32]byte) (common.Address
 
 // Owner is a free data retrieval call binding the contract method 0x02571be3.
 //
-// Solidity: function owner(bytes32 node) view returns(address)
-func (_Ens *EnsSession) Owner(node [32]byte) (common.Address, error) {
-	return _Ens.Contract.Owner(&_Ens.CallOpts, node)
+// Solidity: function owner(bytes32 _node) view returns(address)
+func (_Ens *EnsSession) Owner(_node [32]byte) (common.Address, error) {
+	return _Ens.Contract.Owner(&_Ens.CallOpts, _node)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x02571be3.
 //
-// Solidity: function owner(bytes32 node) view returns(address)
-func (_Ens *EnsCallerSession) Owner(node [32]byte) (common.Address, error) {
-	return _Ens.Contract.Owner(&_Ens.CallOpts, node)
+// Solidity: function owner(bytes32 _node) view returns(address)
+func (_Ens *EnsCallerSession) Owner(_node [32]byte) (common.Address, error) {
+	return _Ens.Contract.Owner(&_Ens.CallOpts, _node)
 }
 
 // Resolver is a free data retrieval call binding the contract method 0x0178b8bf.
 //
-// Solidity: function resolver(bytes32 node) view returns(address)
-func (_Ens *EnsCaller) Resolver(opts *bind.CallOpts, node [32]byte) (common.Address, error) {
+// Solidity: function resolver(bytes32 _node) view returns(address)
+func (_Ens *EnsCaller) Resolver(opts *bind.CallOpts, _node [32]byte) (common.Address, error) {
 	var out []interface{}
-	err := _Ens.contract.Call(opts, &out, "resolver", node)
+	err := _Ens.contract.Call(opts, &out, "resolver", _node)
 
 	if err != nil {
 		return *new(common.Address), err
@@ -229,24 +229,24 @@ func (_Ens *EnsCaller) Resolver(opts *bind.CallOpts, node [32]byte) (common.Addr
 
 // Resolver is a free data retrieval call binding the contract method 0x0178b8bf.
 //
-// Solidity: function resolver(bytes32 node) view returns(address)
-func (_Ens *EnsSession) Resolver(node [32]byte) (common.Address, error) {
-	return _Ens.Contract.Resolver(&_Ens.CallOpts, node)
+// Solidity: function resolver(bytes32 _node) view returns(address)
+func (_Ens *EnsSession) Resolver(_node [32]byte) (common.Address, error) {
+	return _Ens.Contract.Resolver(&_Ens.CallOpts, _node)
 }
 
 // Resolver is a free data retrieval call binding the contract method 0x0178b8bf.
 //
-// Solidity: function resolver(bytes32 node) view returns(address)
-func (_Ens *EnsCallerSession) Resolver(node [32]byte) (common.Address, error) {
-	return _Ens.Contract.Resolver(&_Ens.CallOpts, node)
+// Solidity: function resolver(bytes32 _node) view returns(address)
+func (_Ens *EnsCallerSession) Resolver(_node [32]byte) (common.Address, error) {
+	return _Ens.Contract.Resolver(&_Ens.CallOpts, _node)
 }
 
 // Ttl is a free data retrieval call binding the contract method 0x16a25cbd.
 //
-// Solidity: function ttl(bytes32 node) view returns(uint64)
-func (_Ens *EnsCaller) Ttl(opts *bind.CallOpts, node [32]byte) (uint64, error) {
+// Solidity: function ttl(bytes32 _node) view returns(uint64)
+func (_Ens *EnsCaller) Ttl(opts *bind.CallOpts, _node [32]byte) (uint64, error) {
 	var out []interface{}
-	err := _Ens.contract.Call(opts, &out, "ttl", node)
+	err := _Ens.contract.Call(opts, &out, "ttl", _node)
 
 	if err != nil {
 		return *new(uint64), err
@@ -260,246 +260,100 @@ func (_Ens *EnsCaller) Ttl(opts *bind.CallOpts, node [32]byte) (uint64, error) {
 
 // Ttl is a free data retrieval call binding the contract method 0x16a25cbd.
 //
-// Solidity: function ttl(bytes32 node) view returns(uint64)
-func (_Ens *EnsSession) Ttl(node [32]byte) (uint64, error) {
-	return _Ens.Contract.Ttl(&_Ens.CallOpts, node)
+// Solidity: function ttl(bytes32 _node) view returns(uint64)
+func (_Ens *EnsSession) Ttl(_node [32]byte) (uint64, error) {
+	return _Ens.Contract.Ttl(&_Ens.CallOpts, _node)
 }
 
 // Ttl is a free data retrieval call binding the contract method 0x16a25cbd.
 //
-// Solidity: function ttl(bytes32 node) view returns(uint64)
-func (_Ens *EnsCallerSession) Ttl(node [32]byte) (uint64, error) {
-	return _Ens.Contract.Ttl(&_Ens.CallOpts, node)
+// Solidity: function ttl(bytes32 _node) view returns(uint64)
+func (_Ens *EnsCallerSession) Ttl(_node [32]byte) (uint64, error) {
+	return _Ens.Contract.Ttl(&_Ens.CallOpts, _node)
 }
 
 // SetOwner is a paid mutator transaction binding the contract method 0x5b0fc9c3.
 //
-// Solidity: function setOwner(bytes32 node, address owner) returns()
-func (_Ens *EnsTransactor) SetOwner(opts *bind.TransactOpts, node [32]byte, owner common.Address) (*types.Transaction, error) {
-	return _Ens.contract.Transact(opts, "setOwner", node, owner)
+// Solidity: function setOwner(bytes32 _node, address _owner) returns()
+func (_Ens *EnsTransactor) SetOwner(opts *bind.TransactOpts, _node [32]byte, _owner common.Address) (*types.Transaction, error) {
+	return _Ens.contract.Transact(opts, "setOwner", _node, _owner)
 }
 
 // SetOwner is a paid mutator transaction binding the contract method 0x5b0fc9c3.
 //
-// Solidity: function setOwner(bytes32 node, address owner) returns()
-func (_Ens *EnsSession) SetOwner(node [32]byte, owner common.Address) (*types.Transaction, error) {
-	return _Ens.Contract.SetOwner(&_Ens.TransactOpts, node, owner)
+// Solidity: function setOwner(bytes32 _node, address _owner) returns()
+func (_Ens *EnsSession) SetOwner(_node [32]byte, _owner common.Address) (*types.Transaction, error) {
+	return _Ens.Contract.SetOwner(&_Ens.TransactOpts, _node, _owner)
 }
 
 // SetOwner is a paid mutator transaction binding the contract method 0x5b0fc9c3.
 //
-// Solidity: function setOwner(bytes32 node, address owner) returns()
-func (_Ens *EnsTransactorSession) SetOwner(node [32]byte, owner common.Address) (*types.Transaction, error) {
-	return _Ens.Contract.SetOwner(&_Ens.TransactOpts, node, owner)
+// Solidity: function setOwner(bytes32 _node, address _owner) returns()
+func (_Ens *EnsTransactorSession) SetOwner(_node [32]byte, _owner common.Address) (*types.Transaction, error) {
+	return _Ens.Contract.SetOwner(&_Ens.TransactOpts, _node, _owner)
 }
 
 // SetResolver is a paid mutator transaction binding the contract method 0x1896f70a.
 //
-// Solidity: function setResolver(bytes32 node, address resolver) returns()
-func (_Ens *EnsTransactor) SetResolver(opts *bind.TransactOpts, node [32]byte, resolver common.Address) (*types.Transaction, error) {
-	return _Ens.contract.Transact(opts, "setResolver", node, resolver)
+// Solidity: function setResolver(bytes32 _node, address _resolver) returns()
+func (_Ens *EnsTransactor) SetResolver(opts *bind.TransactOpts, _node [32]byte, _resolver common.Address) (*types.Transaction, error) {
+	return _Ens.contract.Transact(opts, "setResolver", _node, _resolver)
 }
 
 // SetResolver is a paid mutator transaction binding the contract method 0x1896f70a.
 //
-// Solidity: function setResolver(bytes32 node, address resolver) returns()
-func (_Ens *EnsSession) SetResolver(node [32]byte, resolver common.Address) (*types.Transaction, error) {
-	return _Ens.Contract.SetResolver(&_Ens.TransactOpts, node, resolver)
+// Solidity: function setResolver(bytes32 _node, address _resolver) returns()
+func (_Ens *EnsSession) SetResolver(_node [32]byte, _resolver common.Address) (*types.Transaction, error) {
+	return _Ens.Contract.SetResolver(&_Ens.TransactOpts, _node, _resolver)
 }
 
 // SetResolver is a paid mutator transaction binding the contract method 0x1896f70a.
 //
-// Solidity: function setResolver(bytes32 node, address resolver) returns()
-func (_Ens *EnsTransactorSession) SetResolver(node [32]byte, resolver common.Address) (*types.Transaction, error) {
-	return _Ens.Contract.SetResolver(&_Ens.TransactOpts, node, resolver)
+// Solidity: function setResolver(bytes32 _node, address _resolver) returns()
+func (_Ens *EnsTransactorSession) SetResolver(_node [32]byte, _resolver common.Address) (*types.Transaction, error) {
+	return _Ens.Contract.SetResolver(&_Ens.TransactOpts, _node, _resolver)
 }
 
 // SetSubnodeOwner is a paid mutator transaction binding the contract method 0x06ab5923.
 //
-// Solidity: function setSubnodeOwner(bytes32 node, bytes32 label, address owner) returns()
-func (_Ens *EnsTransactor) SetSubnodeOwner(opts *bind.TransactOpts, node [32]byte, label [32]byte, owner common.Address) (*types.Transaction, error) {
-	return _Ens.contract.Transact(opts, "setSubnodeOwner", node, label, owner)
+// Solidity: function setSubnodeOwner(bytes32 _node, bytes32 _label, address _owner) returns()
+func (_Ens *EnsTransactor) SetSubnodeOwner(opts *bind.TransactOpts, _node [32]byte, _label [32]byte, _owner common.Address) (*types.Transaction, error) {
+	return _Ens.contract.Transact(opts, "setSubnodeOwner", _node, _label, _owner)
 }
 
 // SetSubnodeOwner is a paid mutator transaction binding the contract method 0x06ab5923.
 //
-// Solidity: function setSubnodeOwner(bytes32 node, bytes32 label, address owner) returns()
-func (_Ens *EnsSession) SetSubnodeOwner(node [32]byte, label [32]byte, owner common.Address) (*types.Transaction, error) {
-	return _Ens.Contract.SetSubnodeOwner(&_Ens.TransactOpts, node, label, owner)
+// Solidity: function setSubnodeOwner(bytes32 _node, bytes32 _label, address _owner) returns()
+func (_Ens *EnsSession) SetSubnodeOwner(_node [32]byte, _label [32]byte, _owner common.Address) (*types.Transaction, error) {
+	return _Ens.Contract.SetSubnodeOwner(&_Ens.TransactOpts, _node, _label, _owner)
 }
 
 // SetSubnodeOwner is a paid mutator transaction binding the contract method 0x06ab5923.
 //
-// Solidity: function setSubnodeOwner(bytes32 node, bytes32 label, address owner) returns()
-func (_Ens *EnsTransactorSession) SetSubnodeOwner(node [32]byte, label [32]byte, owner common.Address) (*types.Transaction, error) {
-	return _Ens.Contract.SetSubnodeOwner(&_Ens.TransactOpts, node, label, owner)
+// Solidity: function setSubnodeOwner(bytes32 _node, bytes32 _label, address _owner) returns()
+func (_Ens *EnsTransactorSession) SetSubnodeOwner(_node [32]byte, _label [32]byte, _owner common.Address) (*types.Transaction, error) {
+	return _Ens.Contract.SetSubnodeOwner(&_Ens.TransactOpts, _node, _label, _owner)
 }
 
 // SetTTL is a paid mutator transaction binding the contract method 0x14ab9038.
 //
-// Solidity: function setTTL(bytes32 node, uint64 ttl) returns()
-func (_Ens *EnsTransactor) SetTTL(opts *bind.TransactOpts, node [32]byte, ttl uint64) (*types.Transaction, error) {
-	return _Ens.contract.Transact(opts, "setTTL", node, ttl)
+// Solidity: function setTTL(bytes32 _node, uint64 _ttl) returns()
+func (_Ens *EnsTransactor) SetTTL(opts *bind.TransactOpts, _node [32]byte, _ttl uint64) (*types.Transaction, error) {
+	return _Ens.contract.Transact(opts, "setTTL", _node, _ttl)
 }
 
 // SetTTL is a paid mutator transaction binding the contract method 0x14ab9038.
 //
-// Solidity: function setTTL(bytes32 node, uint64 ttl) returns()
-func (_Ens *EnsSession) SetTTL(node [32]byte, ttl uint64) (*types.Transaction, error) {
-	return _Ens.Contract.SetTTL(&_Ens.TransactOpts, node, ttl)
+// Solidity: function setTTL(bytes32 _node, uint64 _ttl) returns()
+func (_Ens *EnsSession) SetTTL(_node [32]byte, _ttl uint64) (*types.Transaction, error) {
+	return _Ens.Contract.SetTTL(&_Ens.TransactOpts, _node, _ttl)
 }
 
 // SetTTL is a paid mutator transaction binding the contract method 0x14ab9038.
 //
-// Solidity: function setTTL(bytes32 node, uint64 ttl) returns()
-func (_Ens *EnsTransactorSession) SetTTL(node [32]byte, ttl uint64) (*types.Transaction, error) {
-	return _Ens.Contract.SetTTL(&_Ens.TransactOpts, node, ttl)
-}
-
-// EnsLoggerIterator is returned from FilterLogger and is used to iterate over the raw logs and unpacked data for Logger events raised by the Ens contract.
-type EnsLoggerIterator struct {
-	Event *EnsLogger // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *EnsLoggerIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(EnsLogger)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(EnsLogger)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *EnsLoggerIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *EnsLoggerIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// EnsLogger represents a Logger event raised by the Ens contract.
-type EnsLogger struct {
-	Node   [32]byte
-	Owner  common.Address
-	Sender common.Address
-	Raw    types.Log // Blockchain specific contextual infos
-}
-
-// FilterLogger is a free log retrieval operation binding the contract event 0xe0f79c151e4e758530615b6a06baac2ec926f1a082bbf482112c49db5de9c0c3.
-//
-// Solidity: event Logger(bytes32 indexed node, address owner, address sender)
-func (_Ens *EnsFilterer) FilterLogger(opts *bind.FilterOpts, node [][32]byte) (*EnsLoggerIterator, error) {
-
-	var nodeRule []interface{}
-	for _, nodeItem := range node {
-		nodeRule = append(nodeRule, nodeItem)
-	}
-
-	logs, sub, err := _Ens.contract.FilterLogs(opts, "Logger", nodeRule)
-	if err != nil {
-		return nil, err
-	}
-	return &EnsLoggerIterator{contract: _Ens.contract, event: "Logger", logs: logs, sub: sub}, nil
-}
-
-// WatchLogger is a free log subscription operation binding the contract event 0xe0f79c151e4e758530615b6a06baac2ec926f1a082bbf482112c49db5de9c0c3.
-//
-// Solidity: event Logger(bytes32 indexed node, address owner, address sender)
-func (_Ens *EnsFilterer) WatchLogger(opts *bind.WatchOpts, sink chan<- *EnsLogger, node [][32]byte) (event.Subscription, error) {
-
-	var nodeRule []interface{}
-	for _, nodeItem := range node {
-		nodeRule = append(nodeRule, nodeItem)
-	}
-
-	logs, sub, err := _Ens.contract.WatchLogs(opts, "Logger", nodeRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(EnsLogger)
-				if err := _Ens.contract.UnpackLog(event, "Logger", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseLogger is a log parse operation binding the contract event 0xe0f79c151e4e758530615b6a06baac2ec926f1a082bbf482112c49db5de9c0c3.
-//
-// Solidity: event Logger(bytes32 indexed node, address owner, address sender)
-func (_Ens *EnsFilterer) ParseLogger(log types.Log) (*EnsLogger, error) {
-	event := new(EnsLogger)
-	if err := _Ens.contract.UnpackLog(event, "Logger", log); err != nil {
-		return nil, err
-	}
-	event.Raw = log
-	return event, nil
+// Solidity: function setTTL(bytes32 _node, uint64 _ttl) returns()
+func (_Ens *EnsTransactorSession) SetTTL(_node [32]byte, _ttl uint64) (*types.Transaction, error) {
+	return _Ens.Contract.SetTTL(&_Ens.TransactOpts, _node, _ttl)
 }
 
 // EnsNewOwnerIterator is returned from FilterNewOwner and is used to iterate over the raw logs and unpacked data for NewOwner events raised by the Ens contract.

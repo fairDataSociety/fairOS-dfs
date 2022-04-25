@@ -150,7 +150,6 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 	if u.IsUserLoggedIn(sessionId) {
 		return nil, ErrUserAlreadyLoggedIn
 	}
-
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
 	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)

@@ -34,12 +34,8 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 	if !acc.Authorise(password) {
 		return ErrInvalidPassword
 	}
-	address, err := u.getAddressFromUserName(oldUsername, dataDir)
-	if err != nil {
-		return err
-	}
 	accountInfo := acc.GetUserAccountInfo()
-	encryptedMnemonic, err := u.getEncryptedMnemonic(oldUsername, address, userInfo.GetFeed())
+	encryptedMnemonic, err := u.getEncryptedMnemonic(oldUsername, accountInfo.GetAddress(), userInfo.GetFeed())
 	if err != nil {
 		return err
 	}
@@ -74,7 +70,7 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 		return err
 	}
 
-	err = u.deleteMnemonic(oldUsername, address, ui.GetFeed(), u.client)
+	err = u.deleteMnemonic(oldUsername, accountInfo.GetAddress(), ui.GetFeed(), u.client)
 	if err != nil {
 		return err
 	}
