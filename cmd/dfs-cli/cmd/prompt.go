@@ -47,7 +47,6 @@ var (
 )
 
 const (
-	apiUserSignup      = APIVersion + "/user/signup"
 	apiUserLogin       = APIVersion + "/user/login"
 	apiUserPresent     = APIVersion + "/user/present"
 	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
