@@ -35,6 +35,7 @@ const (
 	PodSeperator    = ">>"
 	PromptSeperator = "> "
 	APIVersion      = "/v1"
+	APIVersionV2    = "/v2"
 )
 
 var (
@@ -51,6 +52,7 @@ const (
 	apiUserPresent     = APIVersion + "/user/present"
 	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
 	apiUserLogout      = APIVersion + "/user/logout"
+	apiUserExport      = APIVersion + "/user/export"
 	apiUserDelete      = APIVersion + "/user/delete"
 	apiUserStat        = APIVersion + "/user/stat"
 	apiPodNew          = APIVersion + "/pod/new"
@@ -97,6 +99,12 @@ const (
 	apiDocEntryDel     = APIVersion + "/doc/entry/del"
 	apiDocLoadJson     = APIVersion + "/doc/loadjson"
 	apiDocIndexJson    = APIVersion + "/doc/indexjson"
+
+	apiUserSignupV2  = APIVersionV2 + "/user/signup"
+	apiUserLoginV2   = APIVersionV2 + "/user/login"
+	apiUserPresentV2 = APIVersionV2 + "/user/present"
+	apiUserDeleteV2  = APIVersionV2 + "/user/delete"
+	apiUserMigrateV2 = APIVersionV2 + "/user/migrate"
 )
 
 type Message struct {
@@ -135,14 +143,18 @@ func changeLivePrefix() (string, bool) {
 }
 
 var userSuggestions = []prompt.Suggest{
-	{Text: "new", Description: "create a new user"},
-	{Text: "del", Description: "delete a existing user"},
-	{Text: "login", Description: "login to a existing user"},
+	{Text: "new", Description: "create a new user (v2)"},
+	{Text: "del", Description: "delete a existing user (v2)"},
+	{Text: "delV1", Description: "delete a existing user (v1)"},
+	{Text: "login", Description: "login to a existing user (v2)"},
+	{Text: "loginV1", Description: "login to a existing user (v1)"},
 	{Text: "logout", Description: "logout from a logged in user"},
-	{Text: "present", Description: "is user present"},
+	{Text: "present", Description: "is user present (v2)"},
+	{Text: "presentV1", Description: "is user present (v1)"},
 	{Text: "export ", Description: "exports the user"},
 	{Text: "import ", Description: "imports the user"},
-	{Text: "stat ", Description: "shows information about a user"},
+	{Text: "stat", Description: "shows information about a user"},
+	{Text: "migrate", Description: "migrate user credentials from v1 to v2"},
 }
 
 var podSuggestions = []prompt.Suggest{
@@ -278,7 +290,18 @@ func executor(in string) {
 				return
 			}
 			userName := blocks[2]
-			userNew(userName)
+			mnemonic := ""
+			if len(blocks) > 4 {
+				if len(blocks) < 15 {
+					fmt.Println("invalid command. Missing arguments")
+					return
+				}
+				for i := 3; i < 15; i++ {
+					mnemonic = mnemonic + " " + blocks[i]
+				}
+				mnemonic = strings.TrimPrefix(mnemonic, " ")
+			}
+			userNew(userName, mnemonic)
 			currentUser = userName
 			currentPod = ""
 			currentDirectory = ""
@@ -289,7 +312,18 @@ func executor(in string) {
 				return
 			}
 			userName := blocks[2]
-			userLogin(userName)
+			userLogin(userName, apiUserLoginV2)
+			currentUser = userName
+			currentPod = ""
+			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
+		case "loginV1":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"user_name\" argument")
+				return
+			}
+			userName := blocks[2]
+			userLogin(userName, apiUserLogin)
 			currentUser = userName
 			currentPod = ""
 			currentDirectory = ""
@@ -300,14 +334,42 @@ func executor(in string) {
 				return
 			}
 			userName := blocks[2]
-			presentUser(userName)
+			presentUser(userName, apiUserPresentV2)
+			currentPrompt = getCurrentPrompt()
+		case "presentV1":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"user_name\" argument")
+				return
+			}
+			userName := blocks[2]
+			presentUser(userName, apiUserPresent)
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if currentUser == "" {
 				fmt.Println("please login as  user to do the operation")
 				return
 			}
-			deleteUser()
+			deleteUser(apiUserDeleteV2)
+			currentUser = ""
+			currentPod = ""
+			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
+		case "delV1":
+			if currentUser == "" {
+				fmt.Println("please login as  user to do the operation")
+				return
+			}
+			deleteUser(apiUserDelete)
+			currentUser = ""
+			currentPod = ""
+			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
+		case "migrate":
+			if currentUser == "" {
+				fmt.Println("please login as  user to do the operation")
+				return
+			}
+			migrateUser()
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
@@ -321,6 +383,13 @@ func executor(in string) {
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
+		case "export":
+			if currentUser == "" {
+				fmt.Println("please login as  user to do the operation")
+				return
+			}
+			exportUser()
 			currentPrompt = getCurrentPrompt()
 		case "loggedin":
 			if len(blocks) < 3 {
@@ -932,14 +1001,16 @@ func executor(in string) {
 func help() {
 	fmt.Println("Usage: <command> <sub-command> (args1) (args2) ...")
 	fmt.Println("commands:")
-	fmt.Println(" - user <new> (user-name) - create a new user and login as that user")
+	fmt.Println(" - user <new> (user-name) (mnemonic) - create a new user and login as that user")
 	fmt.Println(" - user <del> - deletes a logged in user")
+	fmt.Println(" - user <delV1> - deletes a logged in user")
+	fmt.Println(" - user <migrate> - migrates a logged in user from v1 to v2")
 	fmt.Println(" - user <login> (user-name) - login as a given user")
+	fmt.Println(" - user <loginV1> (user-name) - login as a given user")
 	fmt.Println(" - user <logout> - logout a logged in user")
 	fmt.Println(" - user <present> (user-name) - returns true if the user is present, false otherwise")
+	fmt.Println(" - user <presentV1> (user-name) - returns true if the user is present, false otherwise")
 	fmt.Println(" - user <export> - exports the given user")
-	fmt.Println(" - user <import> (user-name) (address) - imports the user to another device")
-	fmt.Println(" - user <import> (user-name) (12 word mnemonic) - imports the user if the device is lost")
 	fmt.Println(" - user <stat> - shows information about a user")
 
 	fmt.Println(" - pod <new> (pod-name) - create a new pod for the logged in user and opens the pod")
@@ -954,12 +1025,13 @@ func help() {
 	fmt.Println(" - kv <delete> (table-name) - deletes the key value store")
 	fmt.Println(" - kv <open> (table-name) - open the key value store")
 	fmt.Println(" - kv <ls>  - list all collections")
-	fmt.Println(" - kv <put> (table-name) (key) (value) - insertkey and value in to kv store")
+	fmt.Println(" - kv <put> (table-name) (key) (value) - insert key and value in to kv store")
 	fmt.Println(" - kv <get> (table-name) (key) - get the value of the given key from the store")
 	fmt.Println(" - kv <del> (table-name) (key) - remove the key and value from the store")
-	fmt.Println(" - kv <loadcsv> (table-name) (local csv file) - load the csv file in to the newy created table")
-	fmt.Println(" - kv <seek> (table-name) (start-key) (end-key) (limit) - seek nearst to start key")
+	fmt.Println(" - kv <loadcsv> (table-name) (local csv file) - load the csv file in to a newly created table")
+	fmt.Println(" - kv <seek> (table-name) (start-key) (end-key) (limit) - seek nearest to start key")
 	fmt.Println(" - kv <getnext> (table-name) - get the next element after seek")
+	fmt.Println(" - kv <count> (table-name) - number of records in the store")
 
 	fmt.Println(" - doc <new> (table-name) (si=indexes) - creates a new document store")
 	fmt.Println(" - doc <delete> (table-name) - deletes a document store")
