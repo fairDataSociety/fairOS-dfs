@@ -3,7 +3,6 @@ package user
 import (
 	"encoding/hex"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -11,15 +10,22 @@ import (
 // MigrateUser migrates an user credential from local storage to the Swarm network.
 // Deletes local information. It also deletes previous mnemonic and stores it in secondary location
 // Logs him out if he is logged in.
-func (u *Users) MigrateUser(userName, dataDir, password, sessionId string, ui *Info) error {
+func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, sessionId string, ui *Info) error {
 	// check if session id and user address present in map
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
 	}
-
+	if newUsername == "" {
+		newUsername = oldUsername
+	}
 	// username availability
-	if !u.IsUsernameAvailable(userName, dataDir) {
+	if !u.IsUsernameAvailable(oldUsername, dataDir) {
 		return ErrInvalidUserName
+	}
+
+	// username availability for v2
+	if u.IsUsernameAvailableV2(newUsername) {
+		return ErrUserAlreadyPresent
 	}
 
 	// check for valid password
@@ -28,27 +34,13 @@ func (u *Users) MigrateUser(userName, dataDir, password, sessionId string, ui *I
 	if !acc.Authorise(password) {
 		return ErrInvalidPassword
 	}
-	address, err := u.getAddressFromUserName(userName, dataDir)
-	if err != nil {
-		return err
-	}
 	accountInfo := acc.GetUserAccountInfo()
-	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, address, userInfo.GetFeed())
+	encryptedMnemonic, err := u.getEncryptedMnemonic(oldUsername, accountInfo.GetAddress(), userInfo.GetFeed())
 	if err != nil {
 		return err
 	}
 	// create ens subdomain and store mnemonic
-	err = u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
-	if err != nil {
-		return err
-	}
-
-	_, err = u.ens.SetResolver(userName, common.Address(accountInfo.GetAddress()), accountInfo.GetPrivateKey())
-	if err != nil {
-		return err
-	}
-
-	err = u.ens.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	_, err = u.createENS(newUsername, accountInfo)
 	if err != nil {
 		return err
 	}
@@ -78,14 +70,10 @@ func (u *Users) MigrateUser(userName, dataDir, password, sessionId string, ui *I
 		return err
 	}
 
-	err = u.deleteMnemonic(userName, address, ui.GetFeed(), u.client)
+	err = u.deleteMnemonic(oldUsername, accountInfo.GetAddress(), ui.GetFeed(), u.client)
 	if err != nil {
 		return err
 	}
 
-	err = u.deleteUserMapping(userName, dataDir)
-	if err != nil {
-		return err
-	}
-	return nil
+	return u.deleteUserMapping(oldUsername, dataDir)
 }

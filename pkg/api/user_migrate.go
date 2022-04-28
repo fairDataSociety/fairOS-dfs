@@ -51,7 +51,8 @@ func (h *Handler) UserMigrateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// migrate user
-	err = h.dfsAPI.MigrateUser(password, sessionId)
+	username := userReq.UserName
+	err = h.dfsAPI.MigrateUser(username, password, sessionId)
 	if err != nil {
 		if err == u.ErrInvalidUserName ||
 			err == u.ErrInvalidPassword ||

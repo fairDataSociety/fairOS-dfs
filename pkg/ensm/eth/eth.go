@@ -3,15 +3,18 @@ package eth
 import (
 	"context"
 	"crypto/ecdsa"
+	"errors"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/ens"
 	publicresolver "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/public-resolver"
@@ -20,6 +23,12 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	goens "github.com/wealdtech/go-ens/v3"
 	"golang.org/x/crypto/sha3"
+)
+
+const (
+	additionalConfirmations           = 1
+	transactionReceiptTimeout         = time.Minute * 2
+	transactionReceiptPollingInterval = time.Second * 10
 )
 
 var (
@@ -39,11 +48,16 @@ type Client struct {
 }
 
 func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
-	rpcClient, err := rpc.DialContext(context.Background(), ensConfig.ProviderBackend)
+	eth, err := ethclient.Dial(ensConfig.ProviderBackend)
 	if err != nil {
 		return nil, fmt.Errorf("dial eth ensm: %w", err)
 	}
-	eth := ethclient.NewClient(rpcClient)
+
+	// check connection
+	_, err = eth.ChainID(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("dial eth ensm: %w", err)
+	}
 	ensRegistry, err := ens.NewEns(common.HexToAddress(ensConfig.ENSRegistryAddress), eth)
 	if err != nil {
 		return nil, err
@@ -70,7 +84,7 @@ func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
 	logger.Info("ensProviderAddress   : ", fromAddress.Hex())
 	logger.Info("ensProviderDomain    : ", ensConfig.ProviderDomain)
 	c := &Client{
-		eth:                ethclient.NewClient(rpcClient),
+		eth:                eth,
 		ensConfig:          ensConfig,
 		ensRegistry:        ensRegistry,
 		subdomainRegistrar: subdomainRegistrar,
@@ -117,10 +131,15 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address) error 
 
 	tx, err := c.subdomainRegistrar.Register(opts, label, owner)
 	if err != nil {
-		c.logger.Error("subdomain register failed :", err)
+		c.logger.Error("subdomain register failed : ", err)
 		return err
 	}
-	c.logger.Info("subdomain registered with hash :", tx.Hash().Hex())
+	err = c.checkReceipt(tx)
+	if err != nil {
+		c.logger.Error("subdomain register failed : ", err)
+		return err
+	}
+	c.logger.Info("subdomain registered with hash : ", tx.Hash().Hex())
 	return nil
 }
 
@@ -135,10 +154,15 @@ func (c *Client) SetResolver(username string, owner common.Address, key *ecdsa.P
 	}
 	tx, err := c.ensRegistry.SetResolver(opts, node, common.HexToAddress(c.ensConfig.PublicResolverAddress))
 	if err != nil {
-		c.logger.Error("ensRegistry SetResolver failed :", err)
+		c.logger.Error("ensRegistry SetResolver failed : ", err)
 		return "", err
 	}
-	c.logger.Info("set resolver called with hash :", tx.Hash().Hex())
+	err = c.checkReceipt(tx)
+	if err != nil {
+		c.logger.Error("ensRegistry SetResolver failed : ", err)
+		return "", err
+	}
+	c.logger.Info("set resolver called with hash : ", tx.Hash().Hex())
 	nameHash := node[:]
 	return utils.Encode(nameHash), nil
 }
@@ -168,10 +192,15 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 	}
 	tx, err := c.publicResolver.SetAll(opts, node, owner, content, []byte{}, x, y, name)
 	if err != nil {
-		c.logger.Error("public resolver setall failed :", err)
+		c.logger.Error("public resolver set all failed : ", err)
 		return err
 	}
-	c.logger.Info("public resolver setall called with hash :", tx.Hash().Hex())
+	err = c.checkReceipt(tx)
+	if err != nil {
+		c.logger.Error("public resolver set all failed : ", err)
+		return err
+	}
+	c.logger.Info("public resolver setall called with hash : ", tx.Hash().Hex())
 	return nil
 }
 
@@ -184,7 +213,7 @@ func (c *Client) GetInfo(username string) (*ecdsa.PublicKey, string, error) {
 	opts := &bind.CallOpts{}
 	info, err := c.publicResolver.GetAll(opts, node)
 	if err != nil {
-		c.logger.Error("public resolver get all failed :", err)
+		c.logger.Error("public resolver get all failed : ", err)
 		return nil, "", err
 	}
 	x := new(big.Int)
@@ -224,4 +253,48 @@ func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*
 	opts.GasPrice = gasPrice
 	opts.From = account
 	return opts, nil
+}
+
+func (c *Client) checkReceipt(tx *types.Transaction) error {
+	ctx, cancel := context.WithTimeout(context.Background(), transactionReceiptTimeout)
+	defer cancel()
+
+	pollingInterval := transactionReceiptPollingInterval
+	for {
+		receipt, err := c.eth.TransactionReceipt(ctx, tx.Hash())
+		if err != nil {
+			if !errors.Is(err, ethereum.NotFound) {
+				return err
+			}
+			select {
+			case <-time.After(pollingInterval):
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+			continue
+		}
+		bn, err := c.eth.BlockNumber(ctx)
+		if err != nil {
+			return err
+		}
+
+		nextBlock := receipt.BlockNumber.Uint64() + 1
+
+		if bn >= nextBlock+additionalConfirmations {
+			_, err = c.eth.HeaderByNumber(ctx, new(big.Int).SetUint64(nextBlock))
+			if err != nil {
+				if !errors.Is(err, ethereum.NotFound) {
+					return err
+				}
+			} else {
+				return nil
+			}
+		}
+
+		select {
+		case <-time.After(pollingInterval):
+		case <-ctx.Done():
+			return errors.New("context timeout")
+		}
+	}
 }

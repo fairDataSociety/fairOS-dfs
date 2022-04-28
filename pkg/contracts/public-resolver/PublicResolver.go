@@ -30,7 +30,7 @@ var (
 
 // PublicresolverMetaData contains all meta data concerning the Publicresolver contract.
 var PublicresolverMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"contractENS\",\"name\":\"ensAddr\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"contentType\",\"type\":\"uint256\"}],\"name\":\"ABIChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"a\",\"type\":\"address\"}],\"name\":\"AddrChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"hash\",\"type\":\"bytes32\"}],\"name\":\"ContentChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"hash\",\"type\":\"bytes\"}],\"name\":\"MultihashChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"}],\"name\":\"NameChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"x\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"y\",\"type\":\"bytes32\"}],\"name\":\"PubkeyChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"indexedKey\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"}],\"name\":\"TextChanged\",\"type\":\"event\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"name\":\"addr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"name\":\"content\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"name\":\"getAll\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"content\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"multihash\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"y\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"name\":\"multihash\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"name\":\"pubkey\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"y\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"contentType\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"setABI\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setAddr\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"content\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"multihash\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"y\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"}],\"name\":\"setAll\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"hash\",\"type\":\"bytes32\"}],\"name\":\"setContent\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"hash\",\"type\":\"bytes\"}],\"name\":\"setMultihash\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"}],\"name\":\"setName\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"y\",\"type\":\"bytes32\"}],\"name\":\"setPubkey\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"name\":\"setText\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceID\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"pure\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"}],\"name\":\"text\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"contractENS\",\"name\":\"_ensAddr\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"contentType\",\"type\":\"uint256\"}],\"name\":\"ABIChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"a\",\"type\":\"address\"}],\"name\":\"AddrChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"hash\",\"type\":\"bytes32\"}],\"name\":\"ContentChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"hash\",\"type\":\"bytes\"}],\"name\":\"MultihashChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"}],\"name\":\"NameChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"x\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"y\",\"type\":\"bytes32\"}],\"name\":\"PubkeyChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"indexedKey\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"}],\"name\":\"TextChanged\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"addr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"content\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"getAll\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"_addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_content\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_multihash\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"_x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_y\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_name\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"multihash\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"pubkey\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"y\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_contentType\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"}],\"name\":\"setABI\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"setAddr\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_content\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_multihash\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"_x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_y\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_name\",\"type\":\"string\"}],\"name\":\"setAll\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_hash\",\"type\":\"bytes32\"}],\"name\":\"setContent\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_hash\",\"type\":\"bytes\"}],\"name\":\"setMultihash\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_name\",\"type\":\"string\"}],\"name\":\"setName\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_y\",\"type\":\"bytes32\"}],\"name\":\"setPubkey\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_value\",\"type\":\"string\"}],\"name\":\"setText\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_key\",\"type\":\"string\"}],\"name\":\"text\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // PublicresolverABI is the input ABI used to generate the binding from.
@@ -181,10 +181,10 @@ func (_Publicresolver *PublicresolverTransactorRaw) Transact(opts *bind.Transact
 
 // Addr is a free data retrieval call binding the contract method 0x3b3b57de.
 //
-// Solidity: function addr(bytes32 node) view returns(address)
-func (_Publicresolver *PublicresolverCaller) Addr(opts *bind.CallOpts, node [32]byte) (common.Address, error) {
+// Solidity: function addr(bytes32 _node) view returns(address)
+func (_Publicresolver *PublicresolverCaller) Addr(opts *bind.CallOpts, _node [32]byte) (common.Address, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "addr", node)
+	err := _Publicresolver.contract.Call(opts, &out, "addr", _node)
 
 	if err != nil {
 		return *new(common.Address), err
@@ -198,24 +198,24 @@ func (_Publicresolver *PublicresolverCaller) Addr(opts *bind.CallOpts, node [32]
 
 // Addr is a free data retrieval call binding the contract method 0x3b3b57de.
 //
-// Solidity: function addr(bytes32 node) view returns(address)
-func (_Publicresolver *PublicresolverSession) Addr(node [32]byte) (common.Address, error) {
-	return _Publicresolver.Contract.Addr(&_Publicresolver.CallOpts, node)
+// Solidity: function addr(bytes32 _node) view returns(address)
+func (_Publicresolver *PublicresolverSession) Addr(_node [32]byte) (common.Address, error) {
+	return _Publicresolver.Contract.Addr(&_Publicresolver.CallOpts, _node)
 }
 
 // Addr is a free data retrieval call binding the contract method 0x3b3b57de.
 //
-// Solidity: function addr(bytes32 node) view returns(address)
-func (_Publicresolver *PublicresolverCallerSession) Addr(node [32]byte) (common.Address, error) {
-	return _Publicresolver.Contract.Addr(&_Publicresolver.CallOpts, node)
+// Solidity: function addr(bytes32 _node) view returns(address)
+func (_Publicresolver *PublicresolverCallerSession) Addr(_node [32]byte) (common.Address, error) {
+	return _Publicresolver.Contract.Addr(&_Publicresolver.CallOpts, _node)
 }
 
 // Content is a free data retrieval call binding the contract method 0x2dff6941.
 //
-// Solidity: function content(bytes32 node) view returns(bytes32)
-func (_Publicresolver *PublicresolverCaller) Content(opts *bind.CallOpts, node [32]byte) ([32]byte, error) {
+// Solidity: function content(bytes32 _node) view returns(bytes32)
+func (_Publicresolver *PublicresolverCaller) Content(opts *bind.CallOpts, _node [32]byte) ([32]byte, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "content", node)
+	err := _Publicresolver.contract.Call(opts, &out, "content", _node)
 
 	if err != nil {
 		return *new([32]byte), err
@@ -229,22 +229,22 @@ func (_Publicresolver *PublicresolverCaller) Content(opts *bind.CallOpts, node [
 
 // Content is a free data retrieval call binding the contract method 0x2dff6941.
 //
-// Solidity: function content(bytes32 node) view returns(bytes32)
-func (_Publicresolver *PublicresolverSession) Content(node [32]byte) ([32]byte, error) {
-	return _Publicresolver.Contract.Content(&_Publicresolver.CallOpts, node)
+// Solidity: function content(bytes32 _node) view returns(bytes32)
+func (_Publicresolver *PublicresolverSession) Content(_node [32]byte) ([32]byte, error) {
+	return _Publicresolver.Contract.Content(&_Publicresolver.CallOpts, _node)
 }
 
 // Content is a free data retrieval call binding the contract method 0x2dff6941.
 //
-// Solidity: function content(bytes32 node) view returns(bytes32)
-func (_Publicresolver *PublicresolverCallerSession) Content(node [32]byte) ([32]byte, error) {
-	return _Publicresolver.Contract.Content(&_Publicresolver.CallOpts, node)
+// Solidity: function content(bytes32 _node) view returns(bytes32)
+func (_Publicresolver *PublicresolverCallerSession) Content(_node [32]byte) ([32]byte, error) {
+	return _Publicresolver.Contract.Content(&_Publicresolver.CallOpts, _node)
 }
 
 // GetAll is a free data retrieval call binding the contract method 0xed80e1f7.
 //
-// Solidity: function getAll(bytes32 node) view returns(address addr, bytes32 content, bytes multihash, bytes32 x, bytes32 y, string name)
-func (_Publicresolver *PublicresolverCaller) GetAll(opts *bind.CallOpts, node [32]byte) (struct {
+// Solidity: function getAll(bytes32 _node) view returns(address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name)
+func (_Publicresolver *PublicresolverCaller) GetAll(opts *bind.CallOpts, _node [32]byte) (struct {
 	Addr      common.Address
 	Content   [32]byte
 	Multihash []byte
@@ -253,7 +253,7 @@ func (_Publicresolver *PublicresolverCaller) GetAll(opts *bind.CallOpts, node [3
 	Name      string
 }, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "getAll", node)
+	err := _Publicresolver.contract.Call(opts, &out, "getAll", _node)
 
 	outstruct := new(struct {
 		Addr      common.Address
@@ -280,8 +280,8 @@ func (_Publicresolver *PublicresolverCaller) GetAll(opts *bind.CallOpts, node [3
 
 // GetAll is a free data retrieval call binding the contract method 0xed80e1f7.
 //
-// Solidity: function getAll(bytes32 node) view returns(address addr, bytes32 content, bytes multihash, bytes32 x, bytes32 y, string name)
-func (_Publicresolver *PublicresolverSession) GetAll(node [32]byte) (struct {
+// Solidity: function getAll(bytes32 _node) view returns(address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name)
+func (_Publicresolver *PublicresolverSession) GetAll(_node [32]byte) (struct {
 	Addr      common.Address
 	Content   [32]byte
 	Multihash []byte
@@ -289,13 +289,13 @@ func (_Publicresolver *PublicresolverSession) GetAll(node [32]byte) (struct {
 	Y         [32]byte
 	Name      string
 }, error) {
-	return _Publicresolver.Contract.GetAll(&_Publicresolver.CallOpts, node)
+	return _Publicresolver.Contract.GetAll(&_Publicresolver.CallOpts, _node)
 }
 
 // GetAll is a free data retrieval call binding the contract method 0xed80e1f7.
 //
-// Solidity: function getAll(bytes32 node) view returns(address addr, bytes32 content, bytes multihash, bytes32 x, bytes32 y, string name)
-func (_Publicresolver *PublicresolverCallerSession) GetAll(node [32]byte) (struct {
+// Solidity: function getAll(bytes32 _node) view returns(address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name)
+func (_Publicresolver *PublicresolverCallerSession) GetAll(_node [32]byte) (struct {
 	Addr      common.Address
 	Content   [32]byte
 	Multihash []byte
@@ -303,15 +303,15 @@ func (_Publicresolver *PublicresolverCallerSession) GetAll(node [32]byte) (struc
 	Y         [32]byte
 	Name      string
 }, error) {
-	return _Publicresolver.Contract.GetAll(&_Publicresolver.CallOpts, node)
+	return _Publicresolver.Contract.GetAll(&_Publicresolver.CallOpts, _node)
 }
 
 // Multihash is a free data retrieval call binding the contract method 0xe89401a1.
 //
-// Solidity: function multihash(bytes32 node) view returns(bytes)
-func (_Publicresolver *PublicresolverCaller) Multihash(opts *bind.CallOpts, node [32]byte) ([]byte, error) {
+// Solidity: function multihash(bytes32 _node) view returns(bytes)
+func (_Publicresolver *PublicresolverCaller) Multihash(opts *bind.CallOpts, _node [32]byte) ([]byte, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "multihash", node)
+	err := _Publicresolver.contract.Call(opts, &out, "multihash", _node)
 
 	if err != nil {
 		return *new([]byte), err
@@ -325,24 +325,24 @@ func (_Publicresolver *PublicresolverCaller) Multihash(opts *bind.CallOpts, node
 
 // Multihash is a free data retrieval call binding the contract method 0xe89401a1.
 //
-// Solidity: function multihash(bytes32 node) view returns(bytes)
-func (_Publicresolver *PublicresolverSession) Multihash(node [32]byte) ([]byte, error) {
-	return _Publicresolver.Contract.Multihash(&_Publicresolver.CallOpts, node)
+// Solidity: function multihash(bytes32 _node) view returns(bytes)
+func (_Publicresolver *PublicresolverSession) Multihash(_node [32]byte) ([]byte, error) {
+	return _Publicresolver.Contract.Multihash(&_Publicresolver.CallOpts, _node)
 }
 
 // Multihash is a free data retrieval call binding the contract method 0xe89401a1.
 //
-// Solidity: function multihash(bytes32 node) view returns(bytes)
-func (_Publicresolver *PublicresolverCallerSession) Multihash(node [32]byte) ([]byte, error) {
-	return _Publicresolver.Contract.Multihash(&_Publicresolver.CallOpts, node)
+// Solidity: function multihash(bytes32 _node) view returns(bytes)
+func (_Publicresolver *PublicresolverCallerSession) Multihash(_node [32]byte) ([]byte, error) {
+	return _Publicresolver.Contract.Multihash(&_Publicresolver.CallOpts, _node)
 }
 
 // Name is a free data retrieval call binding the contract method 0x691f3431.
 //
-// Solidity: function name(bytes32 node) view returns(string)
-func (_Publicresolver *PublicresolverCaller) Name(opts *bind.CallOpts, node [32]byte) (string, error) {
+// Solidity: function name(bytes32 _node) view returns(string)
+func (_Publicresolver *PublicresolverCaller) Name(opts *bind.CallOpts, _node [32]byte) (string, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "name", node)
+	err := _Publicresolver.contract.Call(opts, &out, "name", _node)
 
 	if err != nil {
 		return *new(string), err
@@ -356,27 +356,27 @@ func (_Publicresolver *PublicresolverCaller) Name(opts *bind.CallOpts, node [32]
 
 // Name is a free data retrieval call binding the contract method 0x691f3431.
 //
-// Solidity: function name(bytes32 node) view returns(string)
-func (_Publicresolver *PublicresolverSession) Name(node [32]byte) (string, error) {
-	return _Publicresolver.Contract.Name(&_Publicresolver.CallOpts, node)
+// Solidity: function name(bytes32 _node) view returns(string)
+func (_Publicresolver *PublicresolverSession) Name(_node [32]byte) (string, error) {
+	return _Publicresolver.Contract.Name(&_Publicresolver.CallOpts, _node)
 }
 
 // Name is a free data retrieval call binding the contract method 0x691f3431.
 //
-// Solidity: function name(bytes32 node) view returns(string)
-func (_Publicresolver *PublicresolverCallerSession) Name(node [32]byte) (string, error) {
-	return _Publicresolver.Contract.Name(&_Publicresolver.CallOpts, node)
+// Solidity: function name(bytes32 _node) view returns(string)
+func (_Publicresolver *PublicresolverCallerSession) Name(_node [32]byte) (string, error) {
+	return _Publicresolver.Contract.Name(&_Publicresolver.CallOpts, _node)
 }
 
 // Pubkey is a free data retrieval call binding the contract method 0xc8690233.
 //
-// Solidity: function pubkey(bytes32 node) view returns(bytes32 x, bytes32 y)
-func (_Publicresolver *PublicresolverCaller) Pubkey(opts *bind.CallOpts, node [32]byte) (struct {
+// Solidity: function pubkey(bytes32 _node) view returns(bytes32 x, bytes32 y)
+func (_Publicresolver *PublicresolverCaller) Pubkey(opts *bind.CallOpts, _node [32]byte) (struct {
 	X [32]byte
 	Y [32]byte
 }, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "pubkey", node)
+	err := _Publicresolver.contract.Call(opts, &out, "pubkey", _node)
 
 	outstruct := new(struct {
 		X [32]byte
@@ -395,61 +395,30 @@ func (_Publicresolver *PublicresolverCaller) Pubkey(opts *bind.CallOpts, node [3
 
 // Pubkey is a free data retrieval call binding the contract method 0xc8690233.
 //
-// Solidity: function pubkey(bytes32 node) view returns(bytes32 x, bytes32 y)
-func (_Publicresolver *PublicresolverSession) Pubkey(node [32]byte) (struct {
+// Solidity: function pubkey(bytes32 _node) view returns(bytes32 x, bytes32 y)
+func (_Publicresolver *PublicresolverSession) Pubkey(_node [32]byte) (struct {
 	X [32]byte
 	Y [32]byte
 }, error) {
-	return _Publicresolver.Contract.Pubkey(&_Publicresolver.CallOpts, node)
+	return _Publicresolver.Contract.Pubkey(&_Publicresolver.CallOpts, _node)
 }
 
 // Pubkey is a free data retrieval call binding the contract method 0xc8690233.
 //
-// Solidity: function pubkey(bytes32 node) view returns(bytes32 x, bytes32 y)
-func (_Publicresolver *PublicresolverCallerSession) Pubkey(node [32]byte) (struct {
+// Solidity: function pubkey(bytes32 _node) view returns(bytes32 x, bytes32 y)
+func (_Publicresolver *PublicresolverCallerSession) Pubkey(_node [32]byte) (struct {
 	X [32]byte
 	Y [32]byte
 }, error) {
-	return _Publicresolver.Contract.Pubkey(&_Publicresolver.CallOpts, node)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceID) pure returns(bool)
-func (_Publicresolver *PublicresolverCaller) SupportsInterface(opts *bind.CallOpts, interfaceID [4]byte) (bool, error) {
-	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "supportsInterface", interfaceID)
-
-	if err != nil {
-		return *new(bool), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-
-	return out0, err
-
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceID) pure returns(bool)
-func (_Publicresolver *PublicresolverSession) SupportsInterface(interfaceID [4]byte) (bool, error) {
-	return _Publicresolver.Contract.SupportsInterface(&_Publicresolver.CallOpts, interfaceID)
-}
-
-// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
-//
-// Solidity: function supportsInterface(bytes4 interfaceID) pure returns(bool)
-func (_Publicresolver *PublicresolverCallerSession) SupportsInterface(interfaceID [4]byte) (bool, error) {
-	return _Publicresolver.Contract.SupportsInterface(&_Publicresolver.CallOpts, interfaceID)
+	return _Publicresolver.Contract.Pubkey(&_Publicresolver.CallOpts, _node)
 }
 
 // Text is a free data retrieval call binding the contract method 0x59d1d43c.
 //
-// Solidity: function text(bytes32 node, string key) view returns(string)
-func (_Publicresolver *PublicresolverCaller) Text(opts *bind.CallOpts, node [32]byte, key string) (string, error) {
+// Solidity: function text(bytes32 _node, string _key) view returns(string)
+func (_Publicresolver *PublicresolverCaller) Text(opts *bind.CallOpts, _node [32]byte, _key string) (string, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "text", node, key)
+	err := _Publicresolver.contract.Call(opts, &out, "text", _node, _key)
 
 	if err != nil {
 		return *new(string), err
@@ -463,184 +432,184 @@ func (_Publicresolver *PublicresolverCaller) Text(opts *bind.CallOpts, node [32]
 
 // Text is a free data retrieval call binding the contract method 0x59d1d43c.
 //
-// Solidity: function text(bytes32 node, string key) view returns(string)
-func (_Publicresolver *PublicresolverSession) Text(node [32]byte, key string) (string, error) {
-	return _Publicresolver.Contract.Text(&_Publicresolver.CallOpts, node, key)
+// Solidity: function text(bytes32 _node, string _key) view returns(string)
+func (_Publicresolver *PublicresolverSession) Text(_node [32]byte, _key string) (string, error) {
+	return _Publicresolver.Contract.Text(&_Publicresolver.CallOpts, _node, _key)
 }
 
 // Text is a free data retrieval call binding the contract method 0x59d1d43c.
 //
-// Solidity: function text(bytes32 node, string key) view returns(string)
-func (_Publicresolver *PublicresolverCallerSession) Text(node [32]byte, key string) (string, error) {
-	return _Publicresolver.Contract.Text(&_Publicresolver.CallOpts, node, key)
+// Solidity: function text(bytes32 _node, string _key) view returns(string)
+func (_Publicresolver *PublicresolverCallerSession) Text(_node [32]byte, _key string) (string, error) {
+	return _Publicresolver.Contract.Text(&_Publicresolver.CallOpts, _node, _key)
 }
 
 // SetABI is a paid mutator transaction binding the contract method 0x623195b0.
 //
-// Solidity: function setABI(bytes32 node, uint256 contentType, bytes data) returns()
-func (_Publicresolver *PublicresolverTransactor) SetABI(opts *bind.TransactOpts, node [32]byte, contentType *big.Int, data []byte) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setABI", node, contentType, data)
+// Solidity: function setABI(bytes32 _node, uint256 _contentType, bytes _data) returns()
+func (_Publicresolver *PublicresolverTransactor) SetABI(opts *bind.TransactOpts, _node [32]byte, _contentType *big.Int, _data []byte) (*types.Transaction, error) {
+	return _Publicresolver.contract.Transact(opts, "setABI", _node, _contentType, _data)
 }
 
 // SetABI is a paid mutator transaction binding the contract method 0x623195b0.
 //
-// Solidity: function setABI(bytes32 node, uint256 contentType, bytes data) returns()
-func (_Publicresolver *PublicresolverSession) SetABI(node [32]byte, contentType *big.Int, data []byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetABI(&_Publicresolver.TransactOpts, node, contentType, data)
+// Solidity: function setABI(bytes32 _node, uint256 _contentType, bytes _data) returns()
+func (_Publicresolver *PublicresolverSession) SetABI(_node [32]byte, _contentType *big.Int, _data []byte) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetABI(&_Publicresolver.TransactOpts, _node, _contentType, _data)
 }
 
 // SetABI is a paid mutator transaction binding the contract method 0x623195b0.
 //
-// Solidity: function setABI(bytes32 node, uint256 contentType, bytes data) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetABI(node [32]byte, contentType *big.Int, data []byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetABI(&_Publicresolver.TransactOpts, node, contentType, data)
+// Solidity: function setABI(bytes32 _node, uint256 _contentType, bytes _data) returns()
+func (_Publicresolver *PublicresolverTransactorSession) SetABI(_node [32]byte, _contentType *big.Int, _data []byte) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetABI(&_Publicresolver.TransactOpts, _node, _contentType, _data)
 }
 
 // SetAddr is a paid mutator transaction binding the contract method 0xd5fa2b00.
 //
-// Solidity: function setAddr(bytes32 node, address addr) returns()
-func (_Publicresolver *PublicresolverTransactor) SetAddr(opts *bind.TransactOpts, node [32]byte, addr common.Address) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setAddr", node, addr)
+// Solidity: function setAddr(bytes32 _node, address _addr) returns()
+func (_Publicresolver *PublicresolverTransactor) SetAddr(opts *bind.TransactOpts, _node [32]byte, _addr common.Address) (*types.Transaction, error) {
+	return _Publicresolver.contract.Transact(opts, "setAddr", _node, _addr)
 }
 
 // SetAddr is a paid mutator transaction binding the contract method 0xd5fa2b00.
 //
-// Solidity: function setAddr(bytes32 node, address addr) returns()
-func (_Publicresolver *PublicresolverSession) SetAddr(node [32]byte, addr common.Address) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetAddr(&_Publicresolver.TransactOpts, node, addr)
+// Solidity: function setAddr(bytes32 _node, address _addr) returns()
+func (_Publicresolver *PublicresolverSession) SetAddr(_node [32]byte, _addr common.Address) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetAddr(&_Publicresolver.TransactOpts, _node, _addr)
 }
 
 // SetAddr is a paid mutator transaction binding the contract method 0xd5fa2b00.
 //
-// Solidity: function setAddr(bytes32 node, address addr) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetAddr(node [32]byte, addr common.Address) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetAddr(&_Publicresolver.TransactOpts, node, addr)
+// Solidity: function setAddr(bytes32 _node, address _addr) returns()
+func (_Publicresolver *PublicresolverTransactorSession) SetAddr(_node [32]byte, _addr common.Address) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetAddr(&_Publicresolver.TransactOpts, _node, _addr)
 }
 
 // SetAll is a paid mutator transaction binding the contract method 0x9f3a206d.
 //
-// Solidity: function setAll(bytes32 node, address addr, bytes32 content, bytes multihash, bytes32 x, bytes32 y, string name) returns()
-func (_Publicresolver *PublicresolverTransactor) SetAll(opts *bind.TransactOpts, node [32]byte, addr common.Address, content [32]byte, multihash []byte, x [32]byte, y [32]byte, name string) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setAll", node, addr, content, multihash, x, y, name)
+// Solidity: function setAll(bytes32 _node, address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name) returns()
+func (_Publicresolver *PublicresolverTransactor) SetAll(opts *bind.TransactOpts, _node [32]byte, _addr common.Address, _content [32]byte, _multihash []byte, _x [32]byte, _y [32]byte, _name string) (*types.Transaction, error) {
+	return _Publicresolver.contract.Transact(opts, "setAll", _node, _addr, _content, _multihash, _x, _y, _name)
 }
 
 // SetAll is a paid mutator transaction binding the contract method 0x9f3a206d.
 //
-// Solidity: function setAll(bytes32 node, address addr, bytes32 content, bytes multihash, bytes32 x, bytes32 y, string name) returns()
-func (_Publicresolver *PublicresolverSession) SetAll(node [32]byte, addr common.Address, content [32]byte, multihash []byte, x [32]byte, y [32]byte, name string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetAll(&_Publicresolver.TransactOpts, node, addr, content, multihash, x, y, name)
+// Solidity: function setAll(bytes32 _node, address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name) returns()
+func (_Publicresolver *PublicresolverSession) SetAll(_node [32]byte, _addr common.Address, _content [32]byte, _multihash []byte, _x [32]byte, _y [32]byte, _name string) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetAll(&_Publicresolver.TransactOpts, _node, _addr, _content, _multihash, _x, _y, _name)
 }
 
 // SetAll is a paid mutator transaction binding the contract method 0x9f3a206d.
 //
-// Solidity: function setAll(bytes32 node, address addr, bytes32 content, bytes multihash, bytes32 x, bytes32 y, string name) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetAll(node [32]byte, addr common.Address, content [32]byte, multihash []byte, x [32]byte, y [32]byte, name string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetAll(&_Publicresolver.TransactOpts, node, addr, content, multihash, x, y, name)
+// Solidity: function setAll(bytes32 _node, address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name) returns()
+func (_Publicresolver *PublicresolverTransactorSession) SetAll(_node [32]byte, _addr common.Address, _content [32]byte, _multihash []byte, _x [32]byte, _y [32]byte, _name string) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetAll(&_Publicresolver.TransactOpts, _node, _addr, _content, _multihash, _x, _y, _name)
 }
 
 // SetContent is a paid mutator transaction binding the contract method 0xc3d014d6.
 //
-// Solidity: function setContent(bytes32 node, bytes32 hash) returns()
-func (_Publicresolver *PublicresolverTransactor) SetContent(opts *bind.TransactOpts, node [32]byte, hash [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setContent", node, hash)
+// Solidity: function setContent(bytes32 _node, bytes32 _hash) returns()
+func (_Publicresolver *PublicresolverTransactor) SetContent(opts *bind.TransactOpts, _node [32]byte, _hash [32]byte) (*types.Transaction, error) {
+	return _Publicresolver.contract.Transact(opts, "setContent", _node, _hash)
 }
 
 // SetContent is a paid mutator transaction binding the contract method 0xc3d014d6.
 //
-// Solidity: function setContent(bytes32 node, bytes32 hash) returns()
-func (_Publicresolver *PublicresolverSession) SetContent(node [32]byte, hash [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetContent(&_Publicresolver.TransactOpts, node, hash)
+// Solidity: function setContent(bytes32 _node, bytes32 _hash) returns()
+func (_Publicresolver *PublicresolverSession) SetContent(_node [32]byte, _hash [32]byte) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetContent(&_Publicresolver.TransactOpts, _node, _hash)
 }
 
 // SetContent is a paid mutator transaction binding the contract method 0xc3d014d6.
 //
-// Solidity: function setContent(bytes32 node, bytes32 hash) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetContent(node [32]byte, hash [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetContent(&_Publicresolver.TransactOpts, node, hash)
+// Solidity: function setContent(bytes32 _node, bytes32 _hash) returns()
+func (_Publicresolver *PublicresolverTransactorSession) SetContent(_node [32]byte, _hash [32]byte) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetContent(&_Publicresolver.TransactOpts, _node, _hash)
 }
 
 // SetMultihash is a paid mutator transaction binding the contract method 0xaa4cb547.
 //
-// Solidity: function setMultihash(bytes32 node, bytes hash) returns()
-func (_Publicresolver *PublicresolverTransactor) SetMultihash(opts *bind.TransactOpts, node [32]byte, hash []byte) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setMultihash", node, hash)
+// Solidity: function setMultihash(bytes32 _node, bytes _hash) returns()
+func (_Publicresolver *PublicresolverTransactor) SetMultihash(opts *bind.TransactOpts, _node [32]byte, _hash []byte) (*types.Transaction, error) {
+	return _Publicresolver.contract.Transact(opts, "setMultihash", _node, _hash)
 }
 
 // SetMultihash is a paid mutator transaction binding the contract method 0xaa4cb547.
 //
-// Solidity: function setMultihash(bytes32 node, bytes hash) returns()
-func (_Publicresolver *PublicresolverSession) SetMultihash(node [32]byte, hash []byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetMultihash(&_Publicresolver.TransactOpts, node, hash)
+// Solidity: function setMultihash(bytes32 _node, bytes _hash) returns()
+func (_Publicresolver *PublicresolverSession) SetMultihash(_node [32]byte, _hash []byte) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetMultihash(&_Publicresolver.TransactOpts, _node, _hash)
 }
 
 // SetMultihash is a paid mutator transaction binding the contract method 0xaa4cb547.
 //
-// Solidity: function setMultihash(bytes32 node, bytes hash) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetMultihash(node [32]byte, hash []byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetMultihash(&_Publicresolver.TransactOpts, node, hash)
+// Solidity: function setMultihash(bytes32 _node, bytes _hash) returns()
+func (_Publicresolver *PublicresolverTransactorSession) SetMultihash(_node [32]byte, _hash []byte) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetMultihash(&_Publicresolver.TransactOpts, _node, _hash)
 }
 
 // SetName is a paid mutator transaction binding the contract method 0x77372213.
 //
-// Solidity: function setName(bytes32 node, string name) returns()
-func (_Publicresolver *PublicresolverTransactor) SetName(opts *bind.TransactOpts, node [32]byte, name string) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setName", node, name)
+// Solidity: function setName(bytes32 _node, string _name) returns()
+func (_Publicresolver *PublicresolverTransactor) SetName(opts *bind.TransactOpts, _node [32]byte, _name string) (*types.Transaction, error) {
+	return _Publicresolver.contract.Transact(opts, "setName", _node, _name)
 }
 
 // SetName is a paid mutator transaction binding the contract method 0x77372213.
 //
-// Solidity: function setName(bytes32 node, string name) returns()
-func (_Publicresolver *PublicresolverSession) SetName(node [32]byte, name string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetName(&_Publicresolver.TransactOpts, node, name)
+// Solidity: function setName(bytes32 _node, string _name) returns()
+func (_Publicresolver *PublicresolverSession) SetName(_node [32]byte, _name string) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetName(&_Publicresolver.TransactOpts, _node, _name)
 }
 
 // SetName is a paid mutator transaction binding the contract method 0x77372213.
 //
-// Solidity: function setName(bytes32 node, string name) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetName(node [32]byte, name string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetName(&_Publicresolver.TransactOpts, node, name)
+// Solidity: function setName(bytes32 _node, string _name) returns()
+func (_Publicresolver *PublicresolverTransactorSession) SetName(_node [32]byte, _name string) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetName(&_Publicresolver.TransactOpts, _node, _name)
 }
 
 // SetPubkey is a paid mutator transaction binding the contract method 0x29cd62ea.
 //
-// Solidity: function setPubkey(bytes32 node, bytes32 x, bytes32 y) returns()
-func (_Publicresolver *PublicresolverTransactor) SetPubkey(opts *bind.TransactOpts, node [32]byte, x [32]byte, y [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setPubkey", node, x, y)
+// Solidity: function setPubkey(bytes32 _node, bytes32 _x, bytes32 _y) returns()
+func (_Publicresolver *PublicresolverTransactor) SetPubkey(opts *bind.TransactOpts, _node [32]byte, _x [32]byte, _y [32]byte) (*types.Transaction, error) {
+	return _Publicresolver.contract.Transact(opts, "setPubkey", _node, _x, _y)
 }
 
 // SetPubkey is a paid mutator transaction binding the contract method 0x29cd62ea.
 //
-// Solidity: function setPubkey(bytes32 node, bytes32 x, bytes32 y) returns()
-func (_Publicresolver *PublicresolverSession) SetPubkey(node [32]byte, x [32]byte, y [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetPubkey(&_Publicresolver.TransactOpts, node, x, y)
+// Solidity: function setPubkey(bytes32 _node, bytes32 _x, bytes32 _y) returns()
+func (_Publicresolver *PublicresolverSession) SetPubkey(_node [32]byte, _x [32]byte, _y [32]byte) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetPubkey(&_Publicresolver.TransactOpts, _node, _x, _y)
 }
 
 // SetPubkey is a paid mutator transaction binding the contract method 0x29cd62ea.
 //
-// Solidity: function setPubkey(bytes32 node, bytes32 x, bytes32 y) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetPubkey(node [32]byte, x [32]byte, y [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetPubkey(&_Publicresolver.TransactOpts, node, x, y)
+// Solidity: function setPubkey(bytes32 _node, bytes32 _x, bytes32 _y) returns()
+func (_Publicresolver *PublicresolverTransactorSession) SetPubkey(_node [32]byte, _x [32]byte, _y [32]byte) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetPubkey(&_Publicresolver.TransactOpts, _node, _x, _y)
 }
 
 // SetText is a paid mutator transaction binding the contract method 0x10f13a8c.
 //
-// Solidity: function setText(bytes32 node, string key, string value) returns()
-func (_Publicresolver *PublicresolverTransactor) SetText(opts *bind.TransactOpts, node [32]byte, key string, value string) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setText", node, key, value)
+// Solidity: function setText(bytes32 _node, string _key, string _value) returns()
+func (_Publicresolver *PublicresolverTransactor) SetText(opts *bind.TransactOpts, _node [32]byte, _key string, _value string) (*types.Transaction, error) {
+	return _Publicresolver.contract.Transact(opts, "setText", _node, _key, _value)
 }
 
 // SetText is a paid mutator transaction binding the contract method 0x10f13a8c.
 //
-// Solidity: function setText(bytes32 node, string key, string value) returns()
-func (_Publicresolver *PublicresolverSession) SetText(node [32]byte, key string, value string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetText(&_Publicresolver.TransactOpts, node, key, value)
+// Solidity: function setText(bytes32 _node, string _key, string _value) returns()
+func (_Publicresolver *PublicresolverSession) SetText(_node [32]byte, _key string, _value string) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetText(&_Publicresolver.TransactOpts, _node, _key, _value)
 }
 
 // SetText is a paid mutator transaction binding the contract method 0x10f13a8c.
 //
-// Solidity: function setText(bytes32 node, string key, string value) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetText(node [32]byte, key string, value string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetText(&_Publicresolver.TransactOpts, node, key, value)
+// Solidity: function setText(bytes32 _node, string _key, string _value) returns()
+func (_Publicresolver *PublicresolverTransactorSession) SetText(_node [32]byte, _key string, _value string) (*types.Transaction, error) {
+	return _Publicresolver.Contract.SetText(&_Publicresolver.TransactOpts, _node, _key, _value)
 }
 
 // PublicresolverABIChangedIterator is returned from FilterABIChanged and is used to iterate over the raw logs and unpacked data for ABIChanged events raised by the Publicresolver contract.

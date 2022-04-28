@@ -48,12 +48,12 @@ Or build the latest version with the instruction https://docs.fairos.fairdatasoc
 ### Configure FairOS-dfs
 To get the most out of your FairOS-dfs it is important that you configure FairOS-dfs for your specific use case!
 
-##### Configuration for Bee 
+##### Configuration for Bee
 ```
 bee:
   bee-api-endpoint: http://localhost:1633
-  bee-debug-api-endpoint: http://localhost:1635
   postage-batch-id: ""
+  is-gateway-proxy: false
 ```
 
 ##### Configuration for FairOS-dfs
@@ -64,6 +64,19 @@ dfs:
     http-port: :9090
     pprof-port: :9091
 ```
+
+##### Configuration for ENS Registration
+```
+dfs:
+  ens:
+    ens-provider-backend: http://localhost:7545
+    ens-provider-private-key: <private key>
+    ens-registry-address: 0xc936e9a67467a192d8A17d787c6bFFE15D0d31C9
+    provider-domain: fairos.eth
+    public-resolver-address: 0xD914fAE6F4373140657Ad6c5871a063F0e7E54B1
+    subdomain-registrar-address: 0x208ba9332e05163a22Bc1cb98F24082548738085
+```
+
 
 #### Other configuration
 ```

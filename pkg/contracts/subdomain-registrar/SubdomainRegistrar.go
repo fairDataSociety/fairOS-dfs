@@ -30,7 +30,7 @@ var (
 
 // SubdomainregistrarMetaData contains all meta data concerning the Subdomainregistrar contract.
 var SubdomainregistrarMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"contractENS\",\"name\":\"ensAddr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"}],\"name\":\"Log\",\"type\":\"event\"},{\"constant\":true,\"inputs\":[],\"name\":\"ens\",\"outputs\":[{\"internalType\":\"contractENS\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"expiryTimes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"register\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"rootNode\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"contractENS\",\"name\":\"_ensAddr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"label\",\"type\":\"bytes32\"}],\"name\":\"Log\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ens\",\"outputs\":[{\"internalType\":\"contractENS\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"expiryTimes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_label\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"register\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"rootNode\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // SubdomainregistrarABI is the input ABI used to generate the binding from.
@@ -274,23 +274,23 @@ func (_Subdomainregistrar *SubdomainregistrarCallerSession) RootNode() ([32]byte
 
 // Register is a paid mutator transaction binding the contract method 0xd22057a9.
 //
-// Solidity: function register(bytes32 label, address owner) returns()
-func (_Subdomainregistrar *SubdomainregistrarTransactor) Register(opts *bind.TransactOpts, label [32]byte, owner common.Address) (*types.Transaction, error) {
-	return _Subdomainregistrar.contract.Transact(opts, "register", label, owner)
+// Solidity: function register(bytes32 _label, address _owner) returns()
+func (_Subdomainregistrar *SubdomainregistrarTransactor) Register(opts *bind.TransactOpts, _label [32]byte, _owner common.Address) (*types.Transaction, error) {
+	return _Subdomainregistrar.contract.Transact(opts, "register", _label, _owner)
 }
 
 // Register is a paid mutator transaction binding the contract method 0xd22057a9.
 //
-// Solidity: function register(bytes32 label, address owner) returns()
-func (_Subdomainregistrar *SubdomainregistrarSession) Register(label [32]byte, owner common.Address) (*types.Transaction, error) {
-	return _Subdomainregistrar.Contract.Register(&_Subdomainregistrar.TransactOpts, label, owner)
+// Solidity: function register(bytes32 _label, address _owner) returns()
+func (_Subdomainregistrar *SubdomainregistrarSession) Register(_label [32]byte, _owner common.Address) (*types.Transaction, error) {
+	return _Subdomainregistrar.Contract.Register(&_Subdomainregistrar.TransactOpts, _label, _owner)
 }
 
 // Register is a paid mutator transaction binding the contract method 0xd22057a9.
 //
-// Solidity: function register(bytes32 label, address owner) returns()
-func (_Subdomainregistrar *SubdomainregistrarTransactorSession) Register(label [32]byte, owner common.Address) (*types.Transaction, error) {
-	return _Subdomainregistrar.Contract.Register(&_Subdomainregistrar.TransactOpts, label, owner)
+// Solidity: function register(bytes32 _label, address _owner) returns()
+func (_Subdomainregistrar *SubdomainregistrarTransactorSession) Register(_label [32]byte, _owner common.Address) (*types.Transaction, error) {
+	return _Subdomainregistrar.Contract.Register(&_Subdomainregistrar.TransactOpts, _label, _owner)
 }
 
 // SubdomainregistrarLogIterator is returned from FilterLog and is used to iterate over the raw logs and unpacked data for Log events raised by the Subdomainregistrar contract.

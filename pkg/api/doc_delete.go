@@ -48,8 +48,8 @@ func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc delete: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc  delete: \"name\" argument missing")
+		h.logger.Errorf("doc delete: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "doc  delete: \"table_name\" argument missing")
 		return
 	}
 
