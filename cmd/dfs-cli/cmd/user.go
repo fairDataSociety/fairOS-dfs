@@ -56,15 +56,15 @@ func userNew(userName, mnemonic string) {
 	if resp.Message == eth.ErrInsufficientBalance.Error() {
 		fmt.Println(resp.Message)
 		fmt.Println("address :", resp.Address)
+		fmt.Println("=============== Mnemonic ==========================")
+		fmt.Println(resp.Mnemonic)
+		fmt.Println("=============== Mnemonic ==========================")
 	} else {
 		fmt.Println("user created with address ", resp.Address)
-		fmt.Println("Please store the following 12 words safely")
-		fmt.Println("if you loose this, you cannot recover the data in-case of an emergency.")
-		fmt.Println("you can also use this mnemonic to access the data in-case this device is lost")
+		fmt.Println("Please store the 12 words mnemonic safely")
+		fmt.Println("if you loose that, you cannot recover the data in-case of an emergency.")
+		fmt.Println("you can also use that mnemonic to access the data in-case this device is lost")
 	}
-	fmt.Println("=============== Mnemonic ==========================")
-	fmt.Println(resp.Mnemonic)
-	fmt.Println("=============== Mnemonic ==========================")
 }
 
 func userLogin(userName, apiEndpoint string) {
