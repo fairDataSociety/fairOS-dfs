@@ -41,7 +41,7 @@ func (h *Handler) UserLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// logout user
-	err = h.dfsAPI.LogoutUser(sessionId, w)
+	err = h.dfsAPI.LogoutUser(sessionId)
 	if err != nil {
 		if err == u.ErrUserNotLoggedIn || err == u.ErrInvalidUserName {
 			h.logger.Errorf("user logout: %v", err)
@@ -52,5 +52,7 @@ func (h *Handler) UserLogoutHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "user logout: "+err.Error())
 		return
 	}
+
+	cookie.ClearSession(w)
 	jsonhttp.OK(w, "user logged out successfully")
 }

@@ -25,23 +25,25 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
-func userNew(userName string) {
+func userNew(userName, mnemonic string) {
 	password := getPassword()
 	newUser := common.UserRequest{
 		UserName: userName,
 		Password: password,
+		Mnemonic: mnemonic,
 	}
 	jsonData, err := json.Marshal(newUser)
 	if err != nil {
 		fmt.Println("create user: error marshalling request")
 		return
 	}
-	data, err := fdfsAPI.postReq(http.MethodPost, apiUserSignup, jsonData)
+	data, err := fdfsAPI.postReq(http.MethodPost, apiUserSignupV2, jsonData)
 	if err != nil {
-		fmt.Println("create user: ", err)
+		fmt.Println("create user asdasd: ", err)
 		return
 	}
 
@@ -51,70 +53,21 @@ func userNew(userName string) {
 		fmt.Println("create user: ", err)
 		return
 	}
-	fmt.Println("user created with address ", resp.Address)
-	fmt.Println("Please store the following 12 words safely")
-	fmt.Println("if you loose this, you cannot recover the data in-case of an emergency.")
-	fmt.Println("you can also use this mnemonic to access the datain case this device is lost")
-	fmt.Println("=============== Mnemonic ==========================")
-	fmt.Println(resp.Mnemonic)
-	fmt.Println("=============== Mnemonic ==========================")
+	if resp.Message == eth.ErrInsufficientBalance.Error() {
+		fmt.Println(resp.Message)
+		fmt.Println("address :", resp.Address)
+		fmt.Println("=============== Mnemonic ==========================")
+		fmt.Println(resp.Mnemonic)
+		fmt.Println("=============== Mnemonic ==========================")
+	} else {
+		fmt.Println("user created with address ", resp.Address)
+		fmt.Println("Please store the 12 words mnemonic safely")
+		fmt.Println("if you loose that, you cannot recover the data in-case of an emergency.")
+		fmt.Println("you can also use that mnemonic to access the data in-case this device is lost")
+	}
 }
 
-func userImportUsingAddress(userName, address string) {
-	password := getPassword()
-	importUser := common.UserRequest{
-		UserName: userName,
-		Password: password,
-		Address:  address,
-	}
-	jsonData, err := json.Marshal(importUser)
-	if err != nil {
-		log.Fatalf("import user: error marshalling request")
-		return
-	}
-	data, err := fdfsAPI.postReq(http.MethodPost, apiUserImport, jsonData)
-	if err != nil {
-		fmt.Println("import user: ", err)
-		return
-	}
-	var resp api.UserSignupResponse
-	err = json.Unmarshal(data, &resp)
-	if err != nil {
-		fmt.Println("import user: ", err)
-		return
-	}
-	fmt.Println("imported user name: ", userName)
-	fmt.Println("imported user address: ", resp.Address)
-}
-
-func userImportUsingMnemonic(userName, mnemonic string) {
-	password := getPassword()
-	importUser := common.UserRequest{
-		UserName: userName,
-		Password: password,
-		Mnemonic: mnemonic,
-	}
-	jsonData, err := json.Marshal(importUser)
-	if err != nil {
-		log.Fatalf("import user: error marshalling request")
-		return
-	}
-	data, err := fdfsAPI.postReq(http.MethodPost, apiUserImport, jsonData)
-	if err != nil {
-		fmt.Println("import user: ", err)
-		return
-	}
-	var resp api.UserSignupResponse
-	err = json.Unmarshal(data, &resp)
-	if err != nil {
-		fmt.Println("import user: ", err)
-		return
-	}
-	fmt.Println("imported user name: ", userName)
-	fmt.Println("imported user address: ", resp.Address)
-}
-
-func userLogin(userName string) {
+func userLogin(userName, apiEndpoint string) {
 	password := getPassword()
 	loginUser := common.UserRequest{
 		UserName: userName,
@@ -125,7 +78,7 @@ func userLogin(userName string) {
 		log.Fatalf("login user: error marshalling request")
 		return
 	}
-	data, err := fdfsAPI.postReq(http.MethodPost, apiUserLogin, jsonData)
+	data, err := fdfsAPI.postReq(http.MethodPost, apiEndpoint, jsonData)
 	if err != nil {
 		fmt.Println("login user: ", err)
 		return
@@ -134,7 +87,7 @@ func userLogin(userName string) {
 	fmt.Println(message)
 }
 
-func deleteUser() {
+func deleteUser(apiEndpoint string) {
 	password := getPassword()
 	delUser := common.UserRequest{
 		Password: password,
@@ -144,9 +97,28 @@ func deleteUser() {
 		fmt.Println("delete user: error marshalling request")
 		return
 	}
-	data, err := fdfsAPI.postReq(http.MethodDelete, apiUserDelete, jsonData)
+	data, err := fdfsAPI.postReq(http.MethodDelete, apiEndpoint, jsonData)
 	if err != nil {
 		fmt.Println("delete user: ", err)
+		return
+	}
+	message := strings.ReplaceAll(string(data), "\n", "")
+	fmt.Println(message)
+}
+
+func migrateUser() {
+	password := getPassword()
+	migrateUsr := common.UserRequest{
+		Password: password,
+	}
+	jsonData, err := json.Marshal(migrateUsr)
+	if err != nil {
+		fmt.Println("migrate user: error marshalling request")
+		return
+	}
+	data, err := fdfsAPI.postReq(http.MethodPost, apiUserMigrateV2, jsonData)
+	if err != nil {
+		fmt.Println("migrate user: ", err)
 		return
 	}
 	message := strings.ReplaceAll(string(data), "\n", "")
@@ -195,8 +167,8 @@ func StatUser() {
 	fmt.Println("Reference: ", resp.Reference)
 }
 
-func presentUser(userName string) {
-	data, err := fdfsAPI.getReq(apiUserPresent, "user_name="+userName)
+func presentUser(userName, apiEndpoint string) {
+	data, err := fdfsAPI.getReq(apiEndpoint, "user_name="+userName)
 	if err != nil {
 		fmt.Println("user present: ", err)
 		return

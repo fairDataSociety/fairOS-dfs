@@ -49,7 +49,7 @@ func (d *DfsAPI) DocOpen(sessionId, podName, name string) error {
 
 	// check if pod open
 	if !ui.IsPodOpen(podName) {
-		return ErrPodAlreadyOpen
+		return ErrPodNotOpen
 	}
 
 	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)

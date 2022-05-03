@@ -1,3 +1,6 @@
+//go:build !js
+// +build !js
+
 /*
 Copyright © 2020 FairOS Authors
 
@@ -19,28 +22,34 @@ package dfs
 import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
+	ethClient "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 type DfsAPI struct {
-	dataDir string
 	client  blockstore.Client
 	users   *user.Users
 	logger  logging.Logger
+	dataDir string
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(dataDir, apiUrl, debugApiUrl, cookieDomain, postageBlockId string, logger logging.Logger) (*DfsAPI, error) {
-	c := bee.NewBeeClient(apiUrl, debugApiUrl, postageBlockId, logger)
-	if !c.CheckConnection() {
+func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*DfsAPI, error) {
+	ens, err := ethClient.New(ensConfig, logger)
+	if err != nil {
+		return nil, ErrEthClient
+	}
+	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)
+	if !c.CheckConnection(isGatewayProxy) {
 		return nil, ErrBeeClient
 	}
-	users := user.NewUsers(dataDir, c, cookieDomain, logger)
+	users := user.NewUsers(dataDir, c, ens, logger)
 	return &DfsAPI{
-		dataDir: dataDir,
 		client:  c,
 		users:   users,
 		logger:  logger,
+		dataDir: dataDir,
 	}, nil
 }

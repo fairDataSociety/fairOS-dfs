@@ -55,8 +55,8 @@ func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv count: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv count: \"name\" argument missing")
+		h.logger.Errorf("kv count: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv count: \"table_name\" argument missing")
 		return
 	}
 

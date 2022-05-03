@@ -31,6 +31,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestKeyValueStore(t *testing.T) {
@@ -772,7 +773,7 @@ func addRandomStrings(t *testing.T, kvStore *collection.KeyValue, count int, tab
 	for i := 0; i < count; i++ {
 	DUPLICATE:
 		randStrLen := rand.Intn(15)
-		key := getRandString(randStrLen)
+		key := utils.GetRandString(randStrLen)
 		for _, k := range keys {
 			if k == key {
 				goto DUPLICATE
@@ -833,14 +834,4 @@ func addRandomNumbers(t *testing.T, kvStore *collection.KeyValue, count int, tab
 		values = append(values, key)
 	}
 	return keys, values, nil
-}
-
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-func getRandString(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
 }

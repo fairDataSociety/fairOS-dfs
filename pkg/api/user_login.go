@@ -20,16 +20,18 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )
 
-// UserLoginHandler is the api handler to login a user
+// UserLoginV2Handler is the api handler to login a user
 // it takes two arguments
 // - user_name: the name of the user to login
 // - password: the password of the user
-func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("user login: invalid request body type")
@@ -60,7 +62,7 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// login user
-	err = h.dfsAPI.LoginUser(user, password, w, "")
+	ui, nameHash, publicKey, err := h.dfsAPI.LoginUserV2(user, password, "")
 	if err != nil {
 		if err == u.ErrUserAlreadyLoggedIn ||
 			err == u.ErrInvalidUserName ||
@@ -73,5 +75,17 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "user login: "+err.Error())
 		return
 	}
-	jsonhttp.OK(w, "user logged-in successfully")
+	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
+	if err != nil {
+		h.logger.Errorf("user login: %v", err)
+		jsonhttp.InternalServerError(w, "user login: "+err.Error())
+		return
+	}
+
+	jsonhttp.OK(w, &UserSignupResponse{
+		Address:   ui.GetAccount().GetUserAccountInfo().GetAddress().Hex(),
+		NameHash:  "0x" + nameHash,
+		PublicKey: publicKey,
+		Message:   "user logged-in successfully",
+	})
 }

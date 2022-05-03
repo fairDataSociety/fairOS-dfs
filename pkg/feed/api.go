@@ -90,7 +90,6 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	if len(data) > utils.MaxChunkLength {
 		return nil, ErrInvalidPayloadSize
 	}
-
 	// fill Feed and Epoc related details
 	copy(req.ID.Topic[:], topic)
 	req.ID.User = user
@@ -118,7 +117,8 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	sch, err := soc.NewChunk(id, ch, signer)
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
 	if err != nil {
 		return nil, err
 	}
@@ -154,11 +154,24 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	return address, nil
 }
 
+func (a *API) GetFeedDataFromAddress(address []byte) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	data, err := a.handler.client.DownloadChunk(ctx, address)
+	if err != nil {
+		return nil, err
+	}
+	ch, err := utils.NewChunkWithoutSpan(data)
+	if err != nil {
+		return nil, err
+	}
+	return a.handler.rawSignedChunkData(ch)
+}
+
 func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, error) {
 	if len(topic) != TopicLength {
 		return nil, nil, ErrInvalidTopicSize
 	}
-
 	ctx := context.Background()
 	f := new(Feed)
 	f.User = user
@@ -178,7 +191,6 @@ func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, err
 		return nil, nil, err
 	}
 	return addr.Bytes(), data, nil
-
 }
 
 // UpdateFeed updates the contents of an already created feed.
@@ -226,7 +238,8 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	sch, err := soc.NewChunk(id, ch, signer)
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
 	if err != nil {
 		return nil, err
 	}

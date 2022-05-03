@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
@@ -26,16 +27,18 @@ type Handler struct {
 	logger logging.Logger
 
 	whitelistedOrigins []string
+	cookieDomain       string
 }
 
-func NewHandler(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, logger logging.Logger) (*Handler, error) {
-	api, err := dfs.NewDfsAPI(dataDir, beeApi, beeDebugApi, cookieDomain, postageBlockId, logger)
+func NewHandler(dataDir, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*Handler, error) {
+	api, err := dfs.NewDfsAPI(dataDir, beeApi, postageBlockId, isGatewayProxy, ensConfig, logger)
 	if err != nil {
-		return nil, dfs.ErrBeeClient
+		return nil, err
 	}
 	return &Handler{
 		dfsAPI:             api,
 		logger:             logger,
 		whitelistedOrigins: whitelistedOrigins,
+		cookieDomain:       cookieDomain,
 	}, nil
 }

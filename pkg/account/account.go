@@ -23,25 +23,33 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/ethersphere/bee/pkg/crypto"
+	gethCrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/fairdatasociety/fairOS-dfs-utils/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 	"github.com/tyler-smith/go-bip39"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
 
 const (
 	UserAccountIndex = -1
+
+	addressLength = 64
+	paddingMin    = 300
+	paddingMax    = 500
 )
 
 type Account struct {
 	wallet      *Wallet
-	userAcount  *Info
+	userAccount *Info
 	podAccounts map[int]*Info
 	logger      logging.Logger
 }
@@ -59,7 +67,7 @@ func New(logger logging.Logger) *Account {
 	wal := NewWallet("")
 	return &Account{
 		wallet:      wal,
-		userAcount:  &Info{},
+		userAccount: &Info{},
 		podAccounts: make(map[int]*Info),
 		logger:      logger,
 	}
@@ -91,19 +99,19 @@ func (a *Account) CreateUserAccount(passPhrase, mnemonic string) (string, string
 	}
 
 	// store publicKey, private key and user
-	a.userAcount.privateKey, err = hdw.PrivateKey(acc)
+	a.userAccount.privateKey, err = hdw.PrivateKey(acc)
 	if err != nil {
 		return "", "", err
 	}
-	a.userAcount.publicKey, err = hdw.PublicKey(acc)
+	a.userAccount.publicKey, err = hdw.PublicKey(acc)
 	if err != nil {
 		return "", "", err
 	}
-	addrBytes, err := crypto.NewEthereumAddress(a.userAcount.privateKey.PublicKey)
+	addrBytes, err := crypto.NewEthereumAddress(a.userAccount.privateKey.PublicKey)
 	if err != nil {
 		return "", "", err
 	}
-	a.userAcount.address.SetBytes(addrBytes)
+	a.userAccount.address.SetBytes(addrBytes)
 
 	// store the mnemonic
 	encryptedMnemonic, err := a.encryptMnemonic(mnemonic, passPhrase)
@@ -139,19 +147,19 @@ func (a *Account) LoadUserAccount(passPhrase, encryptedMnemonic string) error {
 	if err != nil {
 		return err
 	}
-	a.userAcount.privateKey, err = hdw.PrivateKey(acc)
+	a.userAccount.privateKey, err = hdw.PrivateKey(acc)
 	if err != nil {
 		return err
 	}
-	a.userAcount.publicKey, err = hdw.PublicKey(acc)
+	a.userAccount.publicKey, err = hdw.PublicKey(acc)
 	if err != nil {
 		return err
 	}
-	addrBytes, err := crypto.NewEthereumAddress(a.userAcount.privateKey.PublicKey)
+	addrBytes, err := crypto.NewEthereumAddress(a.userAccount.privateKey.PublicKey)
 	if err != nil {
 		return err
 	}
-	a.userAcount.address.SetBytes(addrBytes)
+	a.userAccount.address.SetBytes(addrBytes)
 	return nil
 }
 
@@ -293,7 +301,7 @@ func (a *Account) DeletePodAccount(accountId int) {
 // the respective pods.
 func (a *Account) GetUserPrivateKey(index int) *ecdsa.PrivateKey {
 	if index == UserAccountIndex {
-		return a.userAcount.privateKey
+		return a.userAccount.privateKey
 	} else {
 		return a.podAccounts[index].privateKey
 	}
@@ -304,7 +312,7 @@ func (a *Account) GetUserPrivateKey(index int) *ecdsa.PrivateKey {
 // the respective pods.
 func (a *Account) GetAddress(index int) utils.Address {
 	if index == UserAccountIndex {
-		return a.userAcount.address
+		return a.userAccount.address
 	} else {
 		return a.podAccounts[index].address
 	}
@@ -319,7 +327,7 @@ func (a *Account) GetPodAccountInfo(index int) (*Info, error) {
 }
 
 func (a *Account) GetUserAccountInfo() *Info {
-	return a.userAcount
+	return a.userAccount
 }
 
 func (*Account) GetEmptyAccountInfo() *Info {
@@ -348,6 +356,67 @@ func (ai *Info) GetPrivateKey() *ecdsa.PrivateKey {
 
 func (ai *Info) GetPublicKey() *ecdsa.PublicKey {
 	return ai.publicKey
+}
+
+func (ai *Info) GetEncryptedPublicKey(passPhrase string) (string, error) {
+	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(passPhrase), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	publicKeyBytes := gethCrypto.FromECDSAPub(ai.GetPublicKey())
+	hashedPublicKeyBytes, err := bcrypt.GenerateFromPassword(publicKeyBytes, bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPasswordBytes) + string(hashedPublicKeyBytes), nil
+}
+
+func (ai *Info) EncryptPublicKey(passPhrase string, pubKey *ecdsa.PublicKey) (string, error) {
+	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(passPhrase), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	publicKeyBytes := gethCrypto.FromECDSAPub(pubKey)
+	hashedPublicKeyBytes, err := bcrypt.GenerateFromPassword(publicKeyBytes, bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPasswordBytes) + string(hashedPublicKeyBytes), nil
+}
+
+func (*Info) EncryptContent(passphrase, data string) (string, error) {
+	password := passphrase
+	if password == "" {
+		return "", fmt.Errorf("passphrase cannot be blank")
+	}
+	aesKey := sha256.Sum256([]byte(password))
+	rand.Seed(time.Now().UnixNano())
+	paddingLength := rand.Intn(paddingMax-paddingMin) + paddingMin
+	randomStr := utils.GetRandString(paddingLength)
+	encryptedMessage, err := encrypt(aesKey[:], data+randomStr)
+	if err != nil {
+		return "", fmt.Errorf("create user account: %w", err)
+	}
+	return encryptedMessage, nil
+}
+
+func (ai *Info) DecryptContent(passphrase, encryptedContent string) (string, error) {
+	password := passphrase
+	if password == "" {
+		return "", fmt.Errorf("passphrase cannot be blank")
+	}
+
+	if encryptedContent == "" {
+		return "", fmt.Errorf("invalid encrypted content")
+	}
+	aesKey := sha256.Sum256([]byte(password))
+
+	//decrypt the message
+	data, err := decrypt(aesKey[:], encryptedContent)
+	if err != nil {
+		return "", err
+	}
+	return data[:addressLength], nil
 }
 
 func (a *Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {

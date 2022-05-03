@@ -44,7 +44,7 @@ func (h *Handler) LoginMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		if loginTime.Before(time.Now()) {
-			err = h.dfsAPI.LogoutUser(sessionId, w)
+			err = h.dfsAPI.LogoutUser(sessionId)
 			if err == nil {
 				h.logger.Errorf("Logging out as cookie login timeout expired")
 				jsonhttp.BadRequest(w, "Logging out as cookie login timeout expired")

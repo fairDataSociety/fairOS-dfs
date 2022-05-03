@@ -68,8 +68,8 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv put: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv put: \"name\" argument missing")
+		h.logger.Errorf("kv put: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, "kv put: \"table_name\" argument missing")
 		return
 	}
 

@@ -164,6 +164,7 @@ func kvget(podName, tableName, key string) {
 	rdr := bytes.NewReader(resp.Values)
 	csvReader := bettercsv.NewReader(rdr)
 	csvReader.Comma = ','
+	csvReader.LazyQuotes = true
 	csvReader.Quote = '"'
 	content, err := csvReader.ReadAll()
 	if err != nil {

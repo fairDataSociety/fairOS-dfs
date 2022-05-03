@@ -141,6 +141,9 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		if err != nil {
 			return nil, errors.New("error unmarshalling error response")
 		}
+		if response.StatusCode == http.StatusPaymentRequired {
+			return data, nil
+		}
 		return nil, errors.New(resp.Message)
 	}
 

@@ -17,6 +17,7 @@ limitations under the License.
 package user
 
 import (
+	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -29,6 +30,29 @@ func (*Users) uploadEncryptedMnemonic(userName string, address utils.Address, en
 	return err
 }
 
+func (u *Users) uploadEncryptedMnemonicSOC(accountInfo *account.Info, encryptedMnemonic string, fd *feed.API) ([]byte, error) {
+	topic := utils.HashString(utils.GetRandString(16))
+	return fd.CreateFeed(topic, accountInfo.GetAddress(), []byte(encryptedMnemonic))
+}
+
+func (u *Users) uploadSecondaryLocationInformation(accountInfo *account.Info, encryptedAddress, encryptedPublicKey string, fd *feed.API) error {
+	topic := utils.HashString(encryptedPublicKey)
+	_, err := fd.CreateFeed(topic, accountInfo.GetAddress(), []byte(encryptedAddress))
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (u *Users) getSecondaryLocationInformation(address utils.Address, encryptedPublicKey string, fd *feed.API) ([]byte, string, error) {
+	topic := utils.HashString(encryptedPublicKey)
+	sliAddr, data, err := fd.GetFeedData(topic, address)
+	if err != nil {
+		return nil, "", err
+	}
+	return sliAddr, string(data), nil
+}
+
 func (*Users) getEncryptedMnemonic(userName string, address utils.Address, fd *feed.API) (string, error) {
 	topic := utils.HashString(userName)
 	_, data, err := fd.GetFeedData(topic, address)
@@ -38,11 +62,19 @@ func (*Users) getEncryptedMnemonic(userName string, address utils.Address, fd *f
 	return string(data), nil
 }
 
+func (*Users) getEncryptedMnemonicV2(address []byte, fd *feed.API) ([]byte, error) {
+	return fd.GetFeedDataFromAddress(address)
+}
+
 func (*Users) deleteMnemonic(userName string, address utils.Address, fd *feed.API, client blockstore.Client) error {
 	topic := utils.HashString(userName)
 	feedAddress, _, err := fd.GetFeedData(topic, address)
 	if err != nil {
 		return err
 	}
-	return client.DeleteChunk(feedAddress)
+	return client.DeleteReference(feedAddress)
+}
+
+func (*Users) deleteMnemonicV2(feedAddress []byte, client blockstore.Client) error {
+	return client.DeleteReference(feedAddress)
 }
