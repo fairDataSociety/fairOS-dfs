@@ -71,18 +71,20 @@ can consume it.`,
 		corsOrigins = config.GetStringSlice(optionCORSAllowedOrigins)
 		verbosity = config.GetString(optionVerbosity)
 		isGatewayProxy := config.GetBool(optionIsGatewayProxy)
-		if postageBlockId == "" {
-			_ = cmd.Help()
-			fmt.Println("\npostageBlockId is required to run server")
-			return
-		} else if len(postageBlockId) != 64 {
-			fmt.Println("\npostageBlockId is invalid")
-			return
-		}
-		_, err := hex.DecodeString(postageBlockId)
-		if err != nil {
-			fmt.Println("\npostageBlockId is invalid")
-			return
+		if !isGatewayProxy {
+			if postageBlockId == "" {
+				_ = cmd.Help()
+				fmt.Println("\npostageBlockId is required to run server")
+				return
+			} else if len(postageBlockId) != 64 {
+				fmt.Println("\npostageBlockId is invalid")
+				return
+			}
+			_, err := hex.DecodeString(postageBlockId)
+			if err != nil {
+				fmt.Println("\npostageBlockId is invalid")
+				return
+			}
 		}
 		providerDomain := config.GetString(optionProviderDomain)
 		publicResolverAddress := config.GetString(optionPublicResolverAddress)
