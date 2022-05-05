@@ -83,6 +83,7 @@ func userLogin(userName, apiEndpoint string) {
 		fmt.Println("login user: ", err)
 		return
 	}
+	currentUser = userName
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }

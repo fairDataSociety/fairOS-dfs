@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 info:
-  version: 0.7.3
+  version: 0.8.0
   title: FairOS-dfs API
   description: 'A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store'
 
@@ -22,7 +22,7 @@ servers:
 paths:
   '/v1/user/signup':
     post:
-      summary: 'Signup user'
+      summary: 'Signup user (v1)'
       description: 'Signs up a user and subsequently logs in returning the authentication cookie `fairOS-dfs`.
       The cookie needs to be sent n the request header in all subsequent requests.
       Input is a form object containing the login, password and optionally mnemonic. [Will be deprecated soon, use /v2/user/signup]'
@@ -64,7 +64,7 @@ paths:
 
   '/v2/user/signup':
     post:
-      summary: 'Signup user'
+      summary: 'Signup user (v2)'
       description: 'Signs up a user and subsequently logs in returning the authentication cookie `fairOS-dfs`.
         The cookie needs to be sent n the request header in all subsequent requests.
         Input is a form object containing the login, password and optionally mnemonic.'
@@ -104,7 +104,7 @@ paths:
 
   '/v1/user/login':
     post:
-      summary: 'Login user'
+      summary: 'Login user (v1)'
       description: 'Logs in user and returns the authentication cookie `fairOS-dfs in the header.
       The cookie needs to be sent n the request header in all subsequent requests.
       Input is a form object containing the login and password.'
@@ -143,7 +143,7 @@ paths:
 
   '/v2/user/login':
     post:
-      summary: 'Login user'
+      summary: 'Login user (v2)'
       description: 'Logs in user and returns the authentication cookie `fairOS-dfs in the header.
         The cookie needs to be sent n the request header in all subsequent requests.
         Input is a form object containing the login and password.'
@@ -181,7 +181,7 @@ paths:
 
   '/v1/user/present':
     get:
-      summary: 'User present'
+      summary: 'User present (v1)'
       description: 'Check if an user is present in a given dfs-server.
       Input contains form object containing the user name to check if it is present in the dfs server.'
       tags:
@@ -208,7 +208,7 @@ paths:
 
   '/v2/user/present':
     get:
-      summary: 'User present'
+      summary: 'User present (v2)'
       description: 'Check if an user is present in a given dfs-server.
       Input contains form object containing the user name to check if it is present in the dfs server.'
       tags:
@@ -343,7 +343,7 @@ paths:
 
   '/v1/user/delete':
     delete:
-      summary: 'Delete user'
+      summary: 'Delete user (v1)'
       description: 'Delete a logged-in user from the dfs server.'
       tags:
         - User
@@ -377,7 +377,7 @@ paths:
 
   '/v2/user/delete':
       delete:
-        summary: 'Delete user'
+        summary: 'Delete user (v2)'
         description: 'Delete a logged-in user from the dfs server.'
         tags:
           - User
