@@ -1,6 +1,3 @@
-//go:build !js
-// +build !js
-
 /*
 Copyright © 2020 FairOS Authors
 

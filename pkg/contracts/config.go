@@ -6,5 +6,4 @@ type Config struct {
 	PublicResolverAddress     string
 	ProviderDomain            string
 	ProviderBackend           string
-	ProviderPrivateKey        string
 }

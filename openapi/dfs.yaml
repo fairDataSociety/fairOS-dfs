@@ -2301,7 +2301,7 @@ components:
           type: string
           example: "user logged-in successfully"
 
-    UserSignupResponseWithMenonic:
+    UserSignupResponseWithMnemonic:
       type: object
       properties:
         address:

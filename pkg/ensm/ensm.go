@@ -10,7 +10,7 @@ import (
 
 type ENSManager interface {
 	GetOwner(username string) (common.Address, error)
-	RegisterSubdomain(username string, owner common.Address) error
+	RegisterSubdomain(username string, owner common.Address, key *ecdsa.PrivateKey) error
 	SetResolver(username string, owner common.Address, key *ecdsa.PrivateKey) (string, error)
 	SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error
 	GetInfo(username string) (*ecdsa.PublicKey, string, error)
