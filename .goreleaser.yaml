@@ -60,16 +60,14 @@ builds:
       - amd64
       - 386
 
-snapshot:
-  name_template: "{{.Tag}}-snapshot"
 archives:
   - replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
       386: i386
       amd64: x86_64
-    name_template: "{{ tolower .ProjectName }}-{{ tolower .Os }}-{{ tolower .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-    format: binary
-    builds:
-      - linux
-      - windows
-      - darwin-amd64
-      - darwin-arm64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
