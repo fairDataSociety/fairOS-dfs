@@ -22,7 +22,6 @@ var (
 	optionSubdomainRegistrarAddress = "ens.subdomain-registrar-address"
 	optionENSRegistryAddress        = "ens.ens-registry-address"
 	optionENSProviderBackend        = "ens.ens-provider-backend"
-	optionENSProviderPrivateKey     = "ens.ens-provider-private-key"
 
 	defaultCORSAllowedOrigins = []string{}
 	defaultDFSHttpPort        = ":9090"

@@ -312,7 +312,6 @@ func executor(in string) {
 			}
 			userName := blocks[2]
 			userLogin(userName, apiUserLoginV2)
-			currentUser = userName
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
@@ -426,8 +425,6 @@ func executor(in string) {
 			}
 			podName := blocks[2]
 			podNew(podName)
-			currentPod = podName
-			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 3 {
@@ -446,8 +443,6 @@ func executor(in string) {
 			}
 			podName := blocks[2]
 			openPod(podName)
-			currentPod = podName
-			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
 		case "close":
 			if !isPodOpened() {

@@ -196,7 +196,7 @@ func isUserNameValid(username string) bool {
 }
 
 func (u *Users) createENS(userName string, accountInfo *account.Info) (string, error) {
-	err := u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()))
+	err := u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
 	if err != nil {
 		return "", err
 	}

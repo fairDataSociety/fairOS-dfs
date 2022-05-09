@@ -91,7 +91,6 @@ can consume it.`,
 		subdomainRegistrarAddress := config.GetString(optionSubdomainRegistrarAddress)
 		ensRegistryAddress := config.GetString(optionENSRegistryAddress)
 		ensProviderBackend := config.GetString(optionENSProviderBackend)
-		ensProviderPrivateKey := config.GetString(optionENSProviderPrivateKey)
 
 		if providerDomain == "" {
 			fmt.Println("\nens provider domain is missing")
@@ -113,10 +112,6 @@ can consume it.`,
 			fmt.Println("\nensProvideBackend endpoint is missing")
 			return
 		}
-		if ensProviderPrivateKey == "" {
-			fmt.Println("\nens provider private key is missing")
-			return
-		}
 
 		ensConfig := &contracts.Config{
 			ENSRegistryAddress:        ensRegistryAddress,
@@ -124,7 +119,6 @@ can consume it.`,
 			PublicResolverAddress:     publicResolverAddress,
 			ProviderDomain:            providerDomain,
 			ProviderBackend:           ensProviderBackend,
-			ProviderPrivateKey:        ensProviderPrivateKey,
 		}
 
 		var logger logging.Logger

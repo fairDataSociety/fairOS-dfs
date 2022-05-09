@@ -25,6 +25,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func podNew(podName string) {
@@ -43,6 +44,8 @@ func podNew(podName string) {
 		fmt.Println("could not create pod: ", err)
 		return
 	}
+	currentPod = podName
+	currentDirectory = utils.PathSeperator
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }
@@ -111,6 +114,8 @@ func openPod(podName string) {
 		fmt.Println("pod open failed: ", err)
 		return
 	}
+	currentPod = podName
+	currentDirectory = utils.PathSeperator
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }

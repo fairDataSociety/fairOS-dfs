@@ -13,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/ens"
@@ -42,9 +41,7 @@ type Client struct {
 	subdomainRegistrar *subdomainregistrar.Subdomainregistrar
 	publicResolver     *publicresolver.Publicresolver
 
-	providerPrivateKey *ecdsa.PrivateKey
-	providerAddress    common.Address
-	logger             logging.Logger
+	logger logging.Logger
 }
 
 func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
@@ -70,18 +67,8 @@ func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	privateKey, err := crypto.HexToECDSA(ensConfig.ProviderPrivateKey)
-	if err != nil {
-		return nil, err
-	}
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return nil, fmt.Errorf("error casting public key to ECDSA")
-	}
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+
 	logger.Info("ensProviderBackend   : ", ensConfig.ProviderBackend)
-	logger.Info("ensProviderAddress   : ", fromAddress.Hex())
 	logger.Info("ensProviderDomain    : ", ensConfig.ProviderDomain)
 	c := &Client{
 		eth:                eth,
@@ -89,8 +76,6 @@ func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
 		ensRegistry:        ensRegistry,
 		subdomainRegistrar: subdomainRegistrar,
 		publicResolver:     publicResolver,
-		providerAddress:    fromAddress,
-		providerPrivateKey: privateKey,
 		logger:             logger,
 	}
 	return c, nil
@@ -105,7 +90,7 @@ func (c *Client) GetOwner(username string) (common.Address, error) {
 	return c.ensRegistry.Owner(opts, node)
 }
 
-func (c *Client) RegisterSubdomain(username string, owner common.Address) error {
+func (c *Client) RegisterSubdomain(username string, owner common.Address, key *ecdsa.PrivateKey) error {
 	balance, err := c.eth.BalanceAt(context.Background(), owner, nil)
 	if err != nil {
 		return err
@@ -115,7 +100,7 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address) error 
 		return ErrInsufficientBalance
 	}
 
-	opts, err := c.newTransactor(c.providerPrivateKey, c.providerAddress)
+	opts, err := c.newTransactor(key, owner)
 	if err != nil {
 		return err
 	}

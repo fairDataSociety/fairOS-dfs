@@ -44,7 +44,7 @@ func (c *MockNamespaceManager) GetInfo(username string) (*ecdsa.PublicKey, strin
 	return pub, "", nil
 }
 
-func (c *MockNamespaceManager) RegisterSubdomain(username string, owner common.Address) error {
+func (c *MockNamespaceManager) RegisterSubdomain(username string, owner common.Address, _ *ecdsa.PrivateKey) error {
 	c.storerMu.Lock()
 	defer c.storerMu.Unlock()
 	c.storer[username] = owner.Hex()
