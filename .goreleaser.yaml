@@ -64,8 +64,8 @@ snapshot:
   name_template: "{{.Tag}}-snapshot"
 archives:
   - replacements:
-        386: i386
-        amd64: x86_64
+      386: i386
+      amd64: x86_64
     name_template: "{{ tolower .ProjectName }}-{{ tolower .Os }}-{{ tolower .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     format: binary
     builds:
