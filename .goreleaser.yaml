@@ -122,7 +122,7 @@ archives:
     format: binary
   - id: zip
     name_template: '{{ .Binary }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}'
-    format: binary
+    format: zip
 checksum:
   name_template: 'checksums.txt'
 snapshot:
