@@ -1,12 +1,12 @@
-project_name: fairOS-dfs
+project_name: dfs
 
 release:
   prerelease: auto
 
 builds:
-  - id: linux-cli
+  - id: dfs-linux
     main: ./cmd/dfs
-    binary: fairOS-dfs
+    binary: dfs
     flags:
       - -v
       - -trimpath
@@ -25,9 +25,9 @@ builds:
       - arm
     goarm:
         - 7
-  - id: darwin-cli
+  - id: dfs-darwin
     main: ./cmd/dfs
-    binary: fairOS-dfs
+    binary: dfs
     flags:
       - -v
       - -trimpath
@@ -42,9 +42,65 @@ builds:
     goarch:
       - amd64
       - arm64
-  - id: windows-cli
+  - id: dfs-windows
     main: ./cmd/dfs
-    binary: fairOS-dfs
+    binary: dfs
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
+      - -X github.com/fairdatasociety/fairOS-dfs.versions={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - 386
+
+  - id: dfs-cli-linux
+    main: ./cmd/dfs-cli
+    binary: dfs-cli
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
+      - -X github.com/fairdatasociety/fairOS-dfs.versions={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - 386
+      - arm64
+      - arm
+    goarm:
+      - 7
+  - id: dfs-cli-darwin
+    main: ./cmd/dfs-cli
+    binary: dfs-cli
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
+      - -X github.com/fairdatasociety/fairOS-dfs.versions={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+  - id: dfs-cli-windows
+    main: ./cmd/dfs-cli
+    binary: dfs-cli
     flags:
       - -v
       - -trimpath
@@ -61,9 +117,10 @@ builds:
       - 386
 
 archives:
-  - files:
-      - README.md
-      - LICENSE
+  - id: binary
+    name_template: '{{ .Binary }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}'
+    format: binary
+  - id: zip
     name_template: '{{ .Binary }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}'
     format: binary
 checksum:
