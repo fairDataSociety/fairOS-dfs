@@ -24,7 +24,7 @@ builds:
       - arm64
       - arm
     goarm:
-        - 7
+      - 7
   - id: dfs-darwin
     main: ./cmd/dfs
     binary: dfs
@@ -143,7 +143,7 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
   - image_templates:
-      - "asabya/dfs:v{{ .Version }}-armv7"
+      - "fairdatasociety/fairos-dfs:v{{ .Version }}-armv7"
     use: buildx
     ids:
       - dfs-linux
