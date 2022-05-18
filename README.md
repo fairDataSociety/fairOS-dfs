@@ -70,7 +70,6 @@ dfs:
 dfs:
   ens:
     ens-provider-backend: http://localhost:7545
-    ens-provider-private-key: <private key>
     ens-registry-address: 0xc936e9a67467a192d8A17d787c6bFFE15D0d31C9
     provider-domain: fairos.eth
     public-resolver-address: 0xD914fAE6F4373140657Ad6c5871a063F0e7E54B1
