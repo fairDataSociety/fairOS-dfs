@@ -16,13 +16,6 @@ limitations under the License.
 
 package user
 
-import (
-	"encoding/hex"
-
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-)
-
 // DeleteUser deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
 // data structures.
 func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *Info) error {
@@ -91,38 +84,5 @@ func (u *Users) DeleteUserV2(userName, password, sessionId string, ui *Info) err
 		return err
 	}
 
-	// get owner address from Subdomain registrar
-	owner, err := u.ens.GetOwner(userName)
-	if err != nil {
-		return err
-	}
-	// load public key from public resolver
-	publicKey, _, err := u.ens.GetInfo(userName)
-	if err != nil {
-		return err
-	}
-	pb := crypto.FromECDSAPub(publicKey)
-	sliAddr, encryptedAddress, err := u.getSecondaryLocationInformation(utils.Address(owner), hex.EncodeToString(pb)+password, ui.GetFeed())
-	if err != nil {
-		return err
-	}
-	// decrypt and remove pad the soc address
-	accountInfo := acc.GetUserAccountInfo()
-	addrStr, err := accountInfo.DecryptContent(password, encryptedAddress)
-	if err != nil {
-		return err
-	}
-	addr, err := hex.DecodeString(addrStr)
-	if err != nil {
-		return err
-	}
-	err = u.deleteMnemonicV2(addr, u.client)
-	if err != nil {
-		return err
-	}
-	err = u.client.DeleteReference(sliAddr)
-	if err != nil {
-		return err
-	}
-	return nil
+	return u.deletePortableAccount(acc.GetUserAccountInfo().GetAddress(), userName, password, ui.GetFeed())
 }

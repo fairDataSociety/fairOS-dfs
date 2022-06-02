@@ -17,7 +17,6 @@ limitations under the License.
 package user
 
 import (
-	"encoding/hex"
 	"regexp"
 	"sync"
 
@@ -109,10 +108,17 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, u.client, u.logger)
-
 	//create a new base user account with the mnemonic
-	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
+	mnemonic, _, err := acc.CreateUserAccount(passPhrase, mnemonic)
 	if err != nil {
+		return "", "", "", "", nil, err
+	}
+
+	encryptedPrivateKey, err := accountInfo.EncryptPrivateKey(passPhrase)
+	if err != nil {
+		return "", "", "", "", nil, err
+	}
+	if err := u.uploadPortableAccount(accountInfo, userName, passPhrase, encryptedPrivateKey, fd); err != nil {
 		return "", "", "", "", nil, err
 	}
 
@@ -122,25 +128,6 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		if err == eth.ErrInsufficientBalance {
 			return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
 		}
-		return "", "", "", "", nil, err
-	}
-
-	// store the encrypted mnemonic in Swarm
-	addr, err := u.uploadEncryptedMnemonicSOC(accountInfo, encryptedMnemonic, fd)
-	if err != nil {
-		return "", "", "", "", nil, err
-	}
-
-	// encrypt and pad the soc address
-	encryptedAddress, err := accountInfo.EncryptContent(passPhrase, utils.Encode(addr))
-	if err != nil {
-		return "", "", "", "", nil, err
-	}
-
-	// store encrypted soc address in secondary location
-	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
-	err = u.uploadSecondaryLocationInformation(accountInfo, encryptedAddress, hex.EncodeToString(pb)+passPhrase, fd)
-	if err != nil {
 		return "", "", "", "", nil, err
 	}
 
@@ -170,7 +157,8 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
-
+	// store encrypted soc address in secondary location
+	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
 	return userAddressString, mnemonic, nameHash, utils.Encode(pb), ui, nil
 }
 

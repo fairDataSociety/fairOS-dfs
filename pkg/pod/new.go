@@ -134,6 +134,101 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 	return podInfo, nil
 }
 
+// CreatePodV2 creates a new pod for a given user.
+func (p *Pod) CreatePodV2(podName, addressString string, privateKey []byte) (*Info, error) {
+	podName, err := CleanPodName(podName)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if pods is present and get free index
+	pods, sharedPods, err := p.loadUserPods()
+	if err != nil {
+		return nil, err
+	}
+
+	var accountInfo *account.Info
+	var fd *feed.API
+	var file *f.File
+	var dir *d.Directory
+	var user utils.Address
+	if addressString != "" {
+		if p.checkIfPodPresent(pods, podName) {
+			return nil, ErrPodAlreadyExists
+		}
+		if p.checkIfSharedPodPresent(sharedPods, podName) {
+			return nil, ErrPodAlreadyExists
+		}
+
+		// shared pod, so add only address to the account info
+		accountInfo = p.acc.GetEmptyAccountInfo()
+		address := utils.HexToAddress(addressString)
+		accountInfo.SetAddress(address)
+
+		fd = feed.New(accountInfo, p.client, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
+
+		// store the pod file with shared pod
+		sharedPods[addressString] = podName
+		err = p.storeUserPods(pods, sharedPods)
+		if err != nil {
+			return nil, err
+		}
+
+		// set the userAddress as the pod address we got from shared pod
+		user = address
+
+	} else {
+		// your own pod, so create a new account with private key
+		if p.checkIfPodPresent(pods, podName) {
+			return nil, ErrPodAlreadyExists
+		}
+		if p.checkIfSharedPodPresent(sharedPods, podName) {
+			return nil, ErrPodAlreadyExists
+		}
+		freeId, err := p.getFreeId(pods)
+		if err != nil {
+			return nil, err
+		}
+		// create a child account for the userAddress and other data structures for the pod
+		accountInfo, err = p.acc.CreatePodAccountV2(freeId, privateKey)
+		if err != nil {
+			return nil, err
+		}
+
+		fd = feed.New(accountInfo, p.client, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
+
+		// store the pod file
+		pods[freeId] = podName
+		err = p.storeUserPods(pods, sharedPods)
+		if err != nil {
+			return nil, err
+		}
+
+		user = p.acc.GetAddress(freeId)
+	}
+
+	kvStore := c.NewKeyValueStore(podName, fd, accountInfo, user, p.client, p.logger)
+	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.client, p.logger)
+
+	// create the pod info and store it in the podMap
+	podInfo := &Info{
+		podName:     podName,
+		userAddress: user,
+		dir:         dir,
+		file:        file,
+		accountInfo: accountInfo,
+		feed:        fd,
+		kvStore:     kvStore,
+		docStore:    docStore,
+	}
+	p.addPodToPodMap(podName, podInfo)
+	return podInfo, nil
+}
+
 func (p *Pod) loadUserPods() (map[int]string, map[string]string, error) {
 	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)

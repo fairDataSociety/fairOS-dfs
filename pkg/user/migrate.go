@@ -1,13 +1,6 @@
 package user
 
-import (
-	"encoding/hex"
-
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-)
-
-// MigrateUser migrates an user credential from local storage to the Swarm network.
+// MigrateUser migrates a user credential from local storage to the Swarm network.
 // Deletes local information. It also deletes previous mnemonic and stores it in secondary location
 // Logs him out if he is logged in.
 func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, sessionId string, ui *Info) error {
@@ -35,31 +28,16 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 		return ErrInvalidPassword
 	}
 	accountInfo := acc.GetUserAccountInfo()
-	encryptedMnemonic, err := u.getEncryptedMnemonic(oldUsername, accountInfo.GetAddress(), userInfo.GetFeed())
+	encryptedPrivateKey, err := accountInfo.EncryptPrivateKey(password)
 	if err != nil {
 		return err
 	}
+	if err := u.uploadPortableAccount(accountInfo, newUsername, password, encryptedPrivateKey, userInfo.GetFeed()); err != nil {
+		return err
+	}
+
 	// create ens subdomain and store mnemonic
 	_, err = u.createENS(newUsername, accountInfo)
-	if err != nil {
-		return err
-	}
-
-	// store the encrypted mnemonic in Swarm
-	addr, err := u.uploadEncryptedMnemonicSOC(accountInfo, encryptedMnemonic, userInfo.GetFeed())
-	if err != nil {
-		return err
-	}
-
-	// encrypt and pad the soc address
-	encryptedAddress, err := accountInfo.EncryptContent(password, utils.Encode(addr))
-	if err != nil {
-		return err
-	}
-
-	// store encrypted soc address in secondary location
-	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
-	err = u.uploadSecondaryLocationInformation(accountInfo, encryptedAddress, hex.EncodeToString(pb)+password, userInfo.GetFeed())
 	if err != nil {
 		return err
 	}

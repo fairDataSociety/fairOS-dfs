@@ -42,7 +42,7 @@ func NewWallet(mnemonic string) *Wallet {
 	return wallet
 }
 
-// LoadMnemonicAndCreateRootAccount is used create a new user account when a user ic created. If a valid
+// LoadMnemonicAndCreateRootAccount is used create a new user account when a user is created. If a valid
 // mnemonic is supplied, it is used, otherwise a bip-0039 based 12 word mnemonic is generated as used.
 func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Account, string, error) {
 	// Generate a mnemonic for memorization or user-friendly seeds
@@ -79,6 +79,20 @@ func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Acc
 // CreateAccount is used to create a new hd wallet using the given mnemonic and the walletPath.
 func (*Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Account, error) {
 	wallet, err := hdwallet.NewFromMnemonic(plainMnemonic)
+	if err != nil {
+		return accounts.Account{}, err
+	}
+	path := hdwallet.MustParseDerivationPath(walletPath)
+	acc, err := wallet.Derive(path, false)
+	if err != nil {
+		return accounts.Account{}, err
+	}
+	return acc, nil
+}
+
+// CreateAccountFromSeed is used to create a new hd wallet using the given seed and the walletPath.
+func (*Wallet) CreateAccountFromSeed(walletPath string, seed []byte) (accounts.Account, error) {
+	wallet, err := hdwallet.NewFromSeed(seed)
 	if err != nil {
 		return accounts.Account{}, err
 	}

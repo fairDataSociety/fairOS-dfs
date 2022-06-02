@@ -20,6 +20,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -69,7 +71,7 @@ func TestShare(t *testing.T) {
 
 	t.Run("share-pod", func(t *testing.T) {
 		// create a pod
-		info, err := pod1.CreatePod(podName1, "password", "")
+		info, err := pod1.CreatePodV2(podName1, "", crypto.FromECDSA(acc.GetUserAccountInfo().GetPrivateKey()))
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -97,7 +99,7 @@ func TestShare(t *testing.T) {
 
 	t.Run("receive-pod-info", func(t *testing.T) {
 		// create a pod
-		info, err := pod2.CreatePod(podName2, "password2", "")
+		info, err := pod2.CreatePodV2(podName2, "", crypto.FromECDSA(acc.GetUserAccountInfo().GetPrivateKey()))
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName2)
 		}
@@ -141,11 +143,11 @@ func TestShare(t *testing.T) {
 
 	t.Run("receive-pod", func(t *testing.T) {
 		// create sending pod and receiving pod
-		info, err := pod3.CreatePod(podName3, "password3", "")
+		info, err := pod3.CreatePodV2(podName3, "", crypto.FromECDSA(acc.GetUserAccountInfo().GetPrivateKey()))
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName3)
 		}
-		_, err = pod4.CreatePod(podName4, "password4", "")
+		_, err = pod4.CreatePodV2(podName4, "", crypto.FromECDSA(acc.GetUserAccountInfo().GetPrivateKey()))
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName4)
 		}

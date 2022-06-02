@@ -185,6 +185,14 @@ func GetRandString(n int) string {
 	return string(b)
 }
 
+func GetRandBytes(n int) []byte {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return b
+}
+
 //func CombinePathAndFile(podName, path, fileName string) string {
 //	var totalPath string
 //	if path == PathSeperator || path == "" {

@@ -17,7 +17,6 @@ limitations under the License.
 package user
 
 import (
-	"encoding/hex"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -39,16 +38,15 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		return nil, "", "", ErrInvalidUserName
 	}
 
-	// create account
-	acc := account.New(u.logger)
-	accountInfo := acc.GetUserAccountInfo()
-
 	// get owner address from Subdomain registrar
 	address, err := u.ens.GetOwner(userName)
 	if err != nil {
 		return nil, "", "", err
 	}
 
+	// create account
+	acc := account.New(u.logger)
+	accountInfo := acc.GetUserAccountInfo()
 	// load public key from public resolver
 	publicKey, nameHash, err := u.ens.GetInfo(userName)
 	if err != nil {
@@ -58,27 +56,19 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 
 	// load encrypted soc address  from secondary location
 	fd := feed.New(accountInfo, client, u.logger)
-	_, encryptedAddress, err := u.getSecondaryLocationInformation(utils.Address(address), hex.EncodeToString(pb)+passPhrase, fd)
+	encryptedPrivateKey, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
 	if err != nil {
 		return nil, "", "", err
 	}
 
 	// decrypt and remove pad the soc address
-	addrStr, err := accountInfo.DecryptContent(passPhrase, encryptedAddress)
-	if err != nil {
-		return nil, "", "", err
-	}
-	addr, err := hex.DecodeString(addrStr)
+	privateKey, err := accountInfo.DecryptPrivateKey(passPhrase, encryptedPrivateKey)
 	if err != nil {
 		return nil, "", "", err
 	}
 
 	// load encrypted mnemonic
-	encryptedMnemonic, err := u.getEncryptedMnemonicV2(addr, fd)
-	if err != nil {
-		return nil, "", "", err
-	}
-	err = acc.LoadUserAccount(passPhrase, string(encryptedMnemonic))
+	err = acc.LoadUserAccountV2(privateKey)
 	if err != nil {
 		if err.Error() == "mnemonic is invalid" {
 			return nil, "", "", ErrInvalidPassword

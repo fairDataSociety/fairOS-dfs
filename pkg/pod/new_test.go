@@ -21,6 +21,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -42,7 +44,7 @@ func TestNew(t *testing.T) {
 	podName1 := "test1"
 	podName2 := "test2"
 	t.Run("create-first-pod", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password", "")
+		info, err := pod1.CreatePodV2(podName1, "", crypto.FromECDSA(acc.GetUserAccountInfo().GetPrivateKey()))
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}

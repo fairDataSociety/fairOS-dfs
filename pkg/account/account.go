@@ -18,6 +18,7 @@ package account
 
 import (
 	"bytes"
+	"crypto/aes"
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/binary"
@@ -163,6 +164,32 @@ func (a *Account) LoadUserAccount(passPhrase, encryptedMnemonic string) error {
 	return nil
 }
 
+// LoadUserAccountV2 loads the user account given the encrypted mnemonic and
+// password.
+func (a *Account) LoadUserAccountV2(privateKey []byte) error {
+	p, err := gethCrypto.ToECDSA(privateKey)
+	if err != nil {
+		return fmt.Errorf("invalid private key")
+	}
+	a.userAccount.privateKey = p
+	publicKey := p.Public()
+
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return fmt.Errorf("error casting public key to ECDSA")
+	}
+	a.userAccount.publicKey = publicKeyECDSA
+	if err != nil {
+		return err
+	}
+	addrBytes, err := crypto.NewEthereumAddress(a.userAccount.privateKey.PublicKey)
+	if err != nil {
+		return err
+	}
+	a.userAccount.address.SetBytes(addrBytes)
+	return nil
+}
+
 // Authorise is used to check if the given password is valid for an user account.
 // this is done by decrypting the mnemonic using the supplied password and checking
 // the validity of the mnemonic to see if it confirms to bip-0039 list of words.
@@ -220,7 +247,40 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 	if err != nil {
 		return nil, err
 	}
+	accountInfo := &Info{}
 
+	accountInfo.privateKey, err = hdw.PrivateKey(acc)
+	if err != nil {
+		return nil, err
+	}
+	accountInfo.publicKey, err = hdw.PublicKey(acc)
+	if err != nil {
+		return nil, err
+	}
+	addrBytes, err := crypto.NewEthereumAddress(accountInfo.privateKey.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+	accountInfo.address.SetBytes(addrBytes)
+	a.podAccounts[accountId] = accountInfo
+	return accountInfo, nil
+}
+
+// CreatePodAccountV2 is used to create a new key pair from the master mnemonic. this key pair is
+// used as the base key pair for a newly created pod.
+func (a *Account) CreatePodAccountV2(accountId int, privateKey []byte) (*Info, error) {
+	if acc, ok := a.podAccounts[accountId]; ok {
+		return acc, nil
+	}
+	hdw, err := hdwallet.NewFromSeed(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	path := genericPath + strconv.Itoa(accountId)
+	acc, err := a.wallet.CreateAccountFromSeed(path, privateKey)
+	if err != nil {
+		return nil, err
+	}
 	accountInfo := &Info{}
 
 	accountInfo.privateKey, err = hdw.PrivateKey(acc)
@@ -382,6 +442,33 @@ func (ai *Info) EncryptPublicKey(passPhrase string, pubKey *ecdsa.PublicKey) (st
 		return "", err
 	}
 	return string(hashedPasswordBytes) + string(hashedPublicKeyBytes), nil
+}
+
+const (
+	ChunkSize = 4096
+)
+
+func (ai *Info) EncryptPrivateKey(passphrase string) ([]byte, error) {
+	pvtK := gethCrypto.FromECDSA(ai.GetPrivateKey())
+	rand.Seed(time.Now().UnixNano())
+	paddingLength := ChunkSize - aes.BlockSize - len(pvtK)
+	randomBytes := utils.GetRandBytes(paddingLength)
+	chunkData := append(pvtK, randomBytes...)
+	aesKey := sha256.Sum256([]byte(passphrase))
+	encryptedBytes, err := encryptBytes(aesKey[:], chunkData)
+	if err != nil {
+		return nil, fmt.Errorf("private key encryption failed: %w", err)
+	}
+	return encryptedBytes, nil
+}
+
+func (ai *Info) DecryptPrivateKey(passphrase string, encryptedPrivateKey []byte) ([]byte, error) {
+	aesKey := sha256.Sum256([]byte(passphrase))
+	decryptedBytes, err := decryptBytes(aesKey[:], encryptedPrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("private key decryption failed: %w", err)
+	}
+	return decryptedBytes[:32], nil
 }
 
 func (*Info) EncryptContent(passphrase, data string) (string, error) {
