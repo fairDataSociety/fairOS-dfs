@@ -773,14 +773,17 @@ func addRandomStrings(t *testing.T, kvStore *collection.KeyValue, count int, tab
 	for i := 0; i < count; i++ {
 	DUPLICATE:
 		randStrLen := rand.Intn(15)
-		key := utils.GetRandString(randStrLen)
+		key, err := utils.GetRandString(randStrLen)
+		if err != nil {
+			return nil, nil, err
+		}
 		for _, k := range keys {
 			if k == key {
 				goto DUPLICATE
 			}
 		}
 
-		err := kvStore.KVPut(tableName, key, []byte(key))
+		err = kvStore.KVPut(tableName, key, []byte(key))
 		if err != nil {
 			return nil, nil, err
 		}

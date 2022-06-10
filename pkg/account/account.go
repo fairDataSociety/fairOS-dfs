@@ -452,7 +452,10 @@ func (ai *Info) EncryptPrivateKey(passphrase string) ([]byte, error) {
 	pvtK := gethCrypto.FromECDSA(ai.GetPrivateKey())
 	rand.Seed(time.Now().UnixNano())
 	paddingLength := ChunkSize - aes.BlockSize - len(pvtK)
-	randomBytes := utils.GetRandBytes(paddingLength)
+	randomBytes, err := utils.GetRandBytes(paddingLength)
+	if err != nil {
+		return nil, err
+	}
 	chunkData := append(pvtK, randomBytes...)
 	aesKey := sha256.Sum256([]byte(passphrase))
 	encryptedBytes, err := encryptBytes(aesKey[:], chunkData)
@@ -479,7 +482,10 @@ func (*Info) EncryptContent(passphrase, data string) (string, error) {
 	aesKey := sha256.Sum256([]byte(password))
 	rand.Seed(time.Now().UnixNano())
 	paddingLength := rand.Intn(paddingMax-paddingMin) + paddingMin
-	randomStr := utils.GetRandString(paddingLength)
+	randomStr, err := utils.GetRandString(paddingLength)
+	if err != nil {
+		return "", err
+	}
 	encryptedMessage, err := encrypt(aesKey[:], data+randomStr)
 	if err != nil {
 		return "", fmt.Errorf("create user account: %w", err)
