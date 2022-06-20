@@ -62,6 +62,11 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sharedPodName := podReq.SharedPodName
+	if sharedPodName == "" {
+		sharedPodName = pod
+	}
+
 	password := podReq.Password
 	if password == "" {
 		h.logger.Errorf("pod share: \"password\" argument missing")
@@ -83,7 +88,7 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch pod stat
-	sharingRef, err := h.dfsAPI.PodShare(pod, password, sessionId)
+	sharingRef, err := h.dfsAPI.PodShare(pod, sharedPodName, password, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName {
@@ -163,6 +168,12 @@ func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sharedPodName := ""
+	keys, ok = r.URL.Query()["shared_pod_name"]
+	if ok && len(keys[0]) == 1 {
+		sharedPodName = keys[0]
+	}
+
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -183,7 +194,7 @@ func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pi, err := h.dfsAPI.PodReceive(sessionId, ref)
+	pi, err := h.dfsAPI.PodReceive(sessionId, sharedPodName, ref)
 	if err != nil {
 		h.logger.Errorf("pod receive: %v", err)
 		jsonhttp.InternalServerError(w, "pod receive: "+err.Error())

@@ -69,6 +69,24 @@ func TestShare(t *testing.T) {
 	pod4 := pod.NewPod(mockClient, fd4, acc4, logger)
 	podName4 := "test4"
 
+	acc5 := account.New(logger)
+	_, _, err = acc5.CreateUserAccount("password5", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fd5 := feed.New(acc5.GetUserAccountInfo(), mockClient, logger)
+	pod5 := pod.NewPod(mockClient, fd5, acc5, logger)
+	podName5 := "test5"
+
+	acc6 := account.New(logger)
+	_, _, err = acc6.CreateUserAccount("password6", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fd6 := feed.New(acc6.GetUserAccountInfo(), mockClient, logger)
+	pod6 := pod.NewPod(mockClient, fd6, acc6, logger)
+	podName6 := "test6"
+
 	t.Run("share-pod", func(t *testing.T) {
 		// create a pod
 		info, err := pod1.CreatePodV2(podName1, "", crypto.FromECDSA(acc.GetUserAccountInfo().GetPrivateKey()))
@@ -86,7 +104,7 @@ func TestShare(t *testing.T) {
 		addFilesAndDirectories(t, info, pod1, podName1)
 
 		// share pod
-		sharingRef, err := pod1.PodShare(podName1, "password", "Alice")
+		sharingRef, err := pod1.PodShare(podName1, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -114,7 +132,7 @@ func TestShare(t *testing.T) {
 		addFilesAndDirectories(t, info, pod2, podName2)
 
 		// share pod
-		sharingRef, err := pod2.PodShare(podName2, "password2", "Alice")
+		sharingRef, err := pod2.PodShare(podName2, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -136,8 +154,47 @@ func TestShare(t *testing.T) {
 		if sharingInfo.PodName != podName2 {
 			t.Fatalf("invalid pod name received")
 		}
-		if sharingInfo.UserName != "Alice" {
-			t.Fatalf("invalid user address received")
+	})
+
+	t.Run("receive-pod-info-with-custom-pod-name", func(t *testing.T) {
+		// create a pod
+		info, err := pod5.CreatePodV2(podName5, "", crypto.FromECDSA(acc.GetUserAccountInfo().GetPrivateKey()))
+		if err != nil {
+			t.Fatalf("error creating pod %s", podName5)
+		}
+
+		// make root dir so that other directories can be added
+		err = info.GetDirectory().MkRootDir("pod5", info.GetPodAddress(), info.GetFeed())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create some dir and files
+		addFilesAndDirectories(t, info, pod5, podName5)
+
+		// share pod
+		sharedName := "shared-pod"
+		sharingRef, err := pod5.PodShare(podName5, sharedName)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// receive pod info
+		ref, err := utils.ParseHexReference(sharingRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sharingInfo, err := pod2.ReceivePodInfo(ref)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// verify the pod info
+		if sharingInfo == nil {
+			t.Fatalf("could not receive sharing info")
+		}
+		if sharingInfo.PodName != sharedName {
+			t.Fatalf("invalid pod name received")
 		}
 	})
 
@@ -162,7 +219,7 @@ func TestShare(t *testing.T) {
 		addFilesAndDirectories(t, info, pod3, podName3)
 
 		// share pod
-		sharingRef, err := pod3.PodShare(podName3, "password3", "Alice")
+		sharingRef, err := pod3.PodShare(podName3, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -172,7 +229,7 @@ func TestShare(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		podInfo, err := pod4.ReceivePod(ref)
+		podInfo, err := pod4.ReceivePod("", ref)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -199,6 +256,66 @@ func TestShare(t *testing.T) {
 			t.Fatalf("invalid shared pods")
 		}
 		if len(sharedPods) != 1 && sharedPods[0] != podName4 {
+			t.Fatalf("invalid pod name")
+		}
+	})
+
+	t.Run("receive-pod-with-custom-pod-name", func(t *testing.T) {
+		// create sending pod and receiving pod
+		info, err := pod6.CreatePodV2(podName6, "", crypto.FromECDSA(acc.GetUserAccountInfo().GetPrivateKey()))
+		if err != nil {
+			t.Fatalf("error creating pod %s", podName3)
+		}
+
+		// make root dir so that other directories can be added
+		err = info.GetDirectory().MkRootDir("pod6", info.GetPodAddress(), info.GetFeed())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create some dir and files
+		addFilesAndDirectories(t, info, pod6, podName6)
+
+		// share pod
+		sharedName := "shared-pod"
+		sharingRef, err := pod6.PodShare(podName6, sharedName)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// receive pod info
+		ref, err := utils.ParseHexReference(sharingRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sharedName1 := "shared-pod1"
+		podInfo, err := pod6.ReceivePod(sharedName1, ref)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// verify the pod info
+		if podInfo == nil {
+			t.Fatalf("could not receive sharing info")
+		}
+		if podInfo.GetPodName() != sharedName1 {
+			t.Fatalf("invalid pod name received")
+		}
+
+		pods, sharedPods, err := pod6.ListPods()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if pods == nil {
+			t.Fatalf("invalid pods")
+		}
+		if len(pods) != 1 && pods[0] != podName1 {
+			t.Fatalf("invalid pod name")
+		}
+		if sharedPods == nil {
+			t.Fatalf("invalid shared pods")
+		}
+		if len(sharedPods) != 1 && sharedPods[0] != sharedName1 {
 			t.Fatalf("invalid pod name")
 		}
 	})

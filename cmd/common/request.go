@@ -24,9 +24,10 @@ type UserRequest struct {
 }
 
 type PodRequest struct {
-	PodName   string `json:"pod_name,omitempty"`
-	Password  string `json:"password,omitempty"`
-	Reference string `json:"reference,omitempty"`
+	PodName       string `json:"pod_name,omitempty"`
+	Password      string `json:"password,omitempty"`
+	Reference     string `json:"reference,omitempty"`
+	SharedPodName string `json:"shared_pod_name,omitempty"`
 }
 
 type FileSystemRequest struct {
