@@ -99,7 +99,6 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	if !isUserNameValid(userName) {
 		return "", "", "", "", nil, ErrInvalidUserName
 	}
-
 	// username availability
 	if u.IsUsernameAvailableV2(userName) {
 		return "", "", "", "", nil, ErrUserAlreadyPresent
@@ -114,14 +113,6 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		return "", "", "", "", nil, err
 	}
 
-	encryptedPrivateKey, err := accountInfo.EncryptPrivateKey(passPhrase)
-	if err != nil {
-		return "", "", "", "", nil, err
-	}
-	if err := u.uploadPortableAccount(accountInfo, userName, passPhrase, encryptedPrivateKey, fd); err != nil {
-		return "", "", "", "", nil, err
-	}
-
 	// create ens subdomain and store mnemonic
 	nameHash, err := u.createENS(userName, accountInfo)
 	if err != nil {
@@ -131,6 +122,13 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		return "", "", "", "", nil, err
 	}
 
+	encryptedPrivateKey, err := accountInfo.EncryptPrivateKey(passPhrase)
+	if err != nil {
+		return "", "", "", "", nil, err
+	}
+	if err := u.uploadPortableAccount(accountInfo, userName, passPhrase, encryptedPrivateKey, fd); err != nil {
+		return "", "", "", "", nil, err
+	}
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), u.logger)
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, u.logger)

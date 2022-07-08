@@ -88,7 +88,7 @@ can consume it.`,
 		}
 		providerDomain := config.GetString(optionProviderDomain)
 		publicResolverAddress := config.GetString(optionPublicResolverAddress)
-		subdomainRegistrarAddress := config.GetString(optionSubdomainRegistrarAddress)
+		fdsRegistrarAddress := config.GetString(optionFDSRegistrarAddress)
 		ensRegistryAddress := config.GetString(optionENSRegistryAddress)
 		ensProviderBackend := config.GetString(optionENSProviderBackend)
 
@@ -100,8 +100,8 @@ can consume it.`,
 			fmt.Println("\npublicResolver contract address is missing")
 			return
 		}
-		if subdomainRegistrarAddress == "" {
-			fmt.Println("\nsubdomainRegistrar contract address is missing")
+		if fdsRegistrarAddress == "" {
+			fmt.Println("\nfdsRegistrar contract address is missing")
 			return
 		}
 		if ensRegistryAddress == "" {
@@ -114,11 +114,11 @@ can consume it.`,
 		}
 
 		ensConfig := &contracts.Config{
-			ENSRegistryAddress:        ensRegistryAddress,
-			SubdomainRegistrarAddress: subdomainRegistrarAddress,
-			PublicResolverAddress:     publicResolverAddress,
-			ProviderDomain:            providerDomain,
-			ProviderBackend:           ensProviderBackend,
+			ENSRegistryAddress:    ensRegistryAddress,
+			FDSRegistrarAddress:   fdsRegistrarAddress,
+			PublicResolverAddress: publicResolverAddress,
+			ProviderDomain:        providerDomain,
+			ProviderBackend:       ensProviderBackend,
 		}
 
 		var logger logging.Logger
