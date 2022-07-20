@@ -36,12 +36,12 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 	"github.com/tyler-smith/go-bip39"
-	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
 
 const (
 	UserAccountIndex = -1
+	ChunkSize        = 4096
 
 	addressLength = 64
 	paddingMin    = 300
@@ -266,40 +266,6 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 	return accountInfo, nil
 }
 
-// CreatePodAccountV2 is used to create a new key pair from the master mnemonic. this key pair is
-// used as the base key pair for a newly created pod.
-func (a *Account) CreatePodAccountV2(accountId int, privateKey []byte) (*Info, error) {
-	if acc, ok := a.podAccounts[accountId]; ok {
-		return acc, nil
-	}
-	hdw, err := hdwallet.NewFromSeed(privateKey)
-	if err != nil {
-		return nil, err
-	}
-	path := genericPath + strconv.Itoa(accountId)
-	acc, err := a.wallet.CreateAccountFromSeed(path, privateKey)
-	if err != nil {
-		return nil, err
-	}
-	accountInfo := &Info{}
-
-	accountInfo.privateKey, err = hdw.PrivateKey(acc)
-	if err != nil {
-		return nil, err
-	}
-	accountInfo.publicKey, err = hdw.PublicKey(acc)
-	if err != nil {
-		return nil, err
-	}
-	addrBytes, err := crypto.NewEthereumAddress(accountInfo.privateKey.PublicKey)
-	if err != nil {
-		return nil, err
-	}
-	accountInfo.address.SetBytes(addrBytes)
-	a.podAccounts[accountId] = accountInfo
-	return accountInfo, nil
-}
-
 // CreateCollectionAccount is used to create a new key pair for every collection (KV or Doc) created. This
 // key pair is again derived from the same master mnemonic of the user.
 func (a *Account) CreateCollectionAccount(accountId int, passPhrase string, createCollection bool) error {
@@ -418,98 +384,34 @@ func (ai *Info) GetPublicKey() *ecdsa.PublicKey {
 	return ai.publicKey
 }
 
-func (ai *Info) GetEncryptedPublicKey(passPhrase string) (string, error) {
-	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(passPhrase), bcrypt.MinCost)
-	if err != nil {
-		return "", err
-	}
-	publicKeyBytes := gethCrypto.FromECDSAPub(ai.GetPublicKey())
-	hashedPublicKeyBytes, err := bcrypt.GenerateFromPassword(publicKeyBytes, bcrypt.MinCost)
-	if err != nil {
-		return "", err
-	}
-	return string(hashedPasswordBytes) + string(hashedPublicKeyBytes), nil
-}
-
-func (ai *Info) EncryptPublicKey(passPhrase string, pubKey *ecdsa.PublicKey) (string, error) {
-	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(passPhrase), bcrypt.MinCost)
-	if err != nil {
-		return "", err
-	}
-	publicKeyBytes := gethCrypto.FromECDSAPub(pubKey)
-	hashedPublicKeyBytes, err := bcrypt.GenerateFromPassword(publicKeyBytes, bcrypt.MinCost)
-	if err != nil {
-		return "", err
-	}
-	return string(hashedPasswordBytes) + string(hashedPublicKeyBytes), nil
-}
-
-const (
-	ChunkSize = 4096
-)
-
-func (ai *Info) EncryptPrivateKey(passphrase string) ([]byte, error) {
-	pvtK := gethCrypto.FromECDSA(ai.GetPrivateKey())
+func (*Info) PadEncryptedMnemonic(encryptedMnemonicBytes []byte, passphrase string) ([]byte, error) {
 	rand.Seed(time.Now().UnixNano())
-	paddingLength := ChunkSize - aes.BlockSize - len(pvtK)
+	paddingLength := ChunkSize - aes.BlockSize - len(encryptedMnemonicBytes) - 1
 	randomBytes, err := utils.GetRandBytes(paddingLength)
 	if err != nil {
 		return nil, err
 	}
-	chunkData := append(pvtK, randomBytes...)
+	chunkData := make([]byte, 1, ChunkSize)
+	chunkData[0] = byte(len(encryptedMnemonicBytes))
+	chunkData = append(chunkData, encryptedMnemonicBytes...)
+	chunkData = append(chunkData, randomBytes...)
 	aesKey := sha256.Sum256([]byte(passphrase))
 	encryptedBytes, err := encryptBytes(aesKey[:], chunkData)
 	if err != nil {
-		return nil, fmt.Errorf("private key encryption failed: %w", err)
+		return nil, fmt.Errorf("mnemonic padding failed: %w", err)
 	}
 	return encryptedBytes, nil
 }
 
-func (ai *Info) DecryptPrivateKey(passphrase string, encryptedPrivateKey []byte) ([]byte, error) {
+func (*Info) RemovePadEncryptedMnemonic(paddedMnemonicBytes []byte, passphrase string) ([]byte, error) {
 	aesKey := sha256.Sum256([]byte(passphrase))
-	decryptedBytes, err := decryptBytes(aesKey[:], encryptedPrivateKey)
+	decryptedBytes, err := decryptBytes(aesKey[:], paddedMnemonicBytes)
 	if err != nil {
 		return nil, fmt.Errorf("private key decryption failed: %w", err)
 	}
-	return decryptedBytes[:32], nil
-}
-
-func (*Info) EncryptContent(passphrase, data string) (string, error) {
-	password := passphrase
-	if password == "" {
-		return "", fmt.Errorf("passphrase cannot be blank")
-	}
-	aesKey := sha256.Sum256([]byte(password))
-	rand.Seed(time.Now().UnixNano())
-	paddingLength := rand.Intn(paddingMax-paddingMin) + paddingMin
-	randomStr, err := utils.GetRandString(paddingLength)
-	if err != nil {
-		return "", err
-	}
-	encryptedMessage, err := encrypt(aesKey[:], data+randomStr)
-	if err != nil {
-		return "", fmt.Errorf("create user account: %w", err)
-	}
-	return encryptedMessage, nil
-}
-
-func (ai *Info) DecryptContent(passphrase, encryptedContent string) (string, error) {
-	password := passphrase
-	if password == "" {
-		return "", fmt.Errorf("passphrase cannot be blank")
-	}
-
-	if encryptedContent == "" {
-		return "", fmt.Errorf("invalid encrypted content")
-	}
-	aesKey := sha256.Sum256([]byte(password))
-
-	//decrypt the message
-	data, err := decrypt(aesKey[:], encryptedContent)
-	if err != nil {
-		return "", err
-	}
-	return data[:addressLength], nil
+	mnemonicLength := decryptedBytes[0]
+	x := decryptedBytes[1 : int(mnemonicLength)+1]
+	return x, nil
 }
 
 func (a *Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {

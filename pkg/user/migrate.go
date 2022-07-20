@@ -1,9 +1,14 @@
 package user
 
+import (
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+)
+
 // MigrateUser migrates a user credential from local storage to the Swarm network.
 // Deletes local information. It also deletes previous mnemonic and stores it in secondary location
 // Logs him out if he is logged in.
-func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, sessionId string, ui *Info) error {
+func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, sessionId string, client blockstore.Client, ui *Info) error {
 	// check if session id and user address present in map
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
@@ -28,17 +33,26 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 		return ErrInvalidPassword
 	}
 	accountInfo := acc.GetUserAccountInfo()
-	encryptedPrivateKey, err := accountInfo.EncryptPrivateKey(password)
+
+	// create ens subdomain and store mnemonic
+	_, err := u.createENS(newUsername, accountInfo)
 	if err != nil {
 		return err
 	}
-	if err := u.uploadPortableAccount(accountInfo, newUsername, password, encryptedPrivateKey, userInfo.GetFeed()); err != nil {
+	// load address from userName
+	address, err := u.getAddressFromUserName(oldUsername, dataDir)
+	if err != nil {
 		return err
 	}
 
-	// create ens subdomain and store mnemonic
-	_, err = u.createENS(newUsername, accountInfo)
+	fd := feed.New(accountInfo, client, u.logger)
+	encryptedMnemonic, err := u.getEncryptedMnemonic(oldUsername, address, fd)
+
+	key, err := accountInfo.PadEncryptedMnemonic([]byte(encryptedMnemonic), password)
 	if err != nil {
+		return err
+	}
+	if err := u.uploadPortableAccount(accountInfo, newUsername, password, key, fd); err != nil {
 		return err
 	}
 

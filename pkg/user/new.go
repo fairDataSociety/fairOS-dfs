@@ -108,7 +108,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, u.client, u.logger)
 	//create a new base user account with the mnemonic
-	mnemonic, _, err := acc.CreateUserAccount(passPhrase, mnemonic)
+	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
@@ -122,11 +122,11 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		return "", "", "", "", nil, err
 	}
 
-	encryptedPrivateKey, err := accountInfo.EncryptPrivateKey(passPhrase)
+	key, err := accountInfo.PadEncryptedMnemonic([]byte(encryptedMnemonic), passPhrase)
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
-	if err := u.uploadPortableAccount(accountInfo, userName, passPhrase, encryptedPrivateKey, fd); err != nil {
+	if err := u.uploadPortableAccount(accountInfo, userName, passPhrase, key, fd); err != nil {
 		return "", "", "", "", nil, err
 	}
 	// Instantiate pod, dir & file objects

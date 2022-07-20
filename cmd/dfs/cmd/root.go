@@ -113,6 +113,7 @@ func init() {
 	rootCmd.PersistentFlags().String("beeDebugApi", "localhost:1635", "full bee debug api endpoint")
 	rootCmd.PersistentFlags().String("beeHost", "127.0.0.1", "bee host")
 	rootCmd.PersistentFlags().String("beePort", "1633", "bee port")
+
 	if err := rootCmd.PersistentFlags().MarkDeprecated("beeDebugApi", "using debugAPI is not supported in fairOS-dfs server anymore"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

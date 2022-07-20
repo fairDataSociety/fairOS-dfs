@@ -22,8 +22,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ethereum/go-ethereum/crypto"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -54,7 +52,7 @@ func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 	}
 
 	// Create pod account  and get the address
-	accountInfo, err := p.acc.CreatePodAccountV2(index, crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey()))
+	accountInfo, err := p.acc.CreatePodAccount(index, passPhrase, false)
 	if err != nil {
 		return "", err
 	}

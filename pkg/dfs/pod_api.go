@@ -116,6 +116,7 @@ func (d *DfsAPI) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, erro
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
+
 	// return if pod already open
 	if ui.IsPodOpen(podName) {
 		return nil, ErrPodAlreadyOpen

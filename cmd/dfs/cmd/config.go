@@ -17,11 +17,12 @@ var (
 	optionBeePostageBatchId     = "bee.postage-batch-id"
 	optionIsGatewayProxy        = "bee.is-gateway-proxy"
 	optionCookieDomain          = "cookie-domain"
+	optionNetwork               = "network"
+	optionRPC                   = "rpc"
 	optionProviderDomain        = "ens.provider-domain"
 	optionPublicResolverAddress = "ens.public-resolver-address"
 	optionFDSRegistrarAddress   = "ens.fds-registrar-address"
 	optionENSRegistryAddress    = "ens.ens-registry-address"
-	optionENSProviderBackend    = "ens.ens-provider-backend"
 
 	defaultCORSAllowedOrigins = []string{}
 	defaultDFSHttpPort        = ":9090"
