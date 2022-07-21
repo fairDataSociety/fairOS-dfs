@@ -30,7 +30,7 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
-	gethCrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/fairdatasociety/fairOS-dfs-utils/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -42,10 +42,7 @@ import (
 const (
 	UserAccountIndex = -1
 	ChunkSize        = 4096
-
-	addressLength = 64
-	paddingMin    = 300
-	paddingMax    = 500
+	SeedSize         = 64
 )
 
 type Account struct {
@@ -65,7 +62,7 @@ type Info struct {
 // it uses a 12 word BIP-0039 wordlist to create a 12 word mnemonic for every user
 // and spawns key pais whenever necessary.
 func New(logger logging.Logger) *Account {
-	wal := NewWallet("")
+	wal := NewWalletFromMnemonic("")
 	return &Account{
 		wallet:      wal,
 		userAccount: &Info{},
@@ -87,7 +84,7 @@ func CreateRandomKeyPair(now int64) (*ecdsa.PrivateKey, error) {
 // provided it is used, otherwise a new mnemonic is generated. The generated mnemonic is
 // AES encrypted using the password provided.
 func (a *Account) CreateUserAccount(passPhrase, mnemonic string) (string, string, error) {
-	wal := NewWallet("")
+	wal := NewWalletFromMnemonic("")
 	a.wallet = wal
 	acc, mnemonic, err := wal.LoadMnemonicAndCreateRootAccount(mnemonic)
 	if err != nil {
@@ -164,21 +161,21 @@ func (a *Account) LoadUserAccount(passPhrase, encryptedMnemonic string) error {
 	return nil
 }
 
-// LoadUserAccountV2 loads the user account given the encrypted mnemonic and
-// password.
-func (a *Account) LoadUserAccountV2(privateKey []byte) error {
-	p, err := gethCrypto.ToECDSA(privateKey)
+// LoadUserAccountFromSeed loads the user account given the bip39 seed
+func (a *Account) LoadUserAccountFromSeed(seed []byte) error {
+	acc, err := a.wallet.CreateAccountFromSeed(rootPath, seed)
 	if err != nil {
-		return fmt.Errorf("invalid private key")
+		return err
 	}
-	a.userAccount.privateKey = p
-	publicKey := p.Public()
-
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return fmt.Errorf("error casting public key to ECDSA")
+	hdw, err := hdwallet.NewFromSeed(seed)
+	if err != nil {
+		return err
 	}
-	a.userAccount.publicKey = publicKeyECDSA
+	a.userAccount.privateKey, err = hdw.PrivateKey(acc)
+	if err != nil {
+		return err
+	}
+	a.userAccount.publicKey, err = hdw.PublicKey(acc)
 	if err != nil {
 		return err
 	}
@@ -222,32 +219,47 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 	if acc, ok := a.podAccounts[accountId]; ok {
 		return acc, nil
 	}
-
-	password := passPhrase
-	if password == "" {
-		if createPod {
-			fmt.Print("Enter user password to create a pod: ")
-		} else {
-			fmt.Print("Enter user password to open a pod: ")
-		}
-		password = a.getPassword()
-	}
-
-	plainMnemonic, err := a.wallet.decryptMnemonic(password)
-	if err != nil {
-		return nil, fmt.Errorf("invalid password")
-	}
-
+	var (
+		hdw         *hdwallet.Wallet
+		err         error
+		acc         accounts.Account
+		accountInfo = &Info{}
+	)
 	path := genericPath + strconv.Itoa(accountId)
-	acc, err := a.wallet.CreateAccount(path, plainMnemonic)
-	if err != nil {
-		return nil, err
+	if a.wallet.seed != nil {
+		acc, err = a.wallet.CreateAccountFromSeed(path, a.wallet.seed)
+		if err != nil {
+			return nil, err
+		}
+		hdw, err = hdwallet.NewFromSeed(a.wallet.seed)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		password := passPhrase
+		if password == "" {
+			if createPod {
+				fmt.Print("Enter user password to create a pod: ")
+			} else {
+				fmt.Print("Enter user password to open a pod: ")
+			}
+			password = a.getPassword()
+		}
+
+		plainMnemonic, err := a.wallet.decryptMnemonic(password)
+		if err != nil {
+			return nil, fmt.Errorf("invalid password")
+		}
+
+		acc, err = a.wallet.CreateAccount(path, plainMnemonic)
+		if err != nil {
+			return nil, err
+		}
+		hdw, err = hdwallet.NewFromMnemonic(plainMnemonic)
+		if err != nil {
+			return nil, err
+		}
 	}
-	hdw, err := hdwallet.NewFromMnemonic(plainMnemonic)
-	if err != nil {
-		return nil, err
-	}
-	accountInfo := &Info{}
 
 	accountInfo.privateKey, err = hdw.PrivateKey(acc)
 	if err != nil {
@@ -273,32 +285,47 @@ func (a *Account) CreateCollectionAccount(accountId int, passPhrase string, crea
 		return nil
 	}
 
-	password := passPhrase
-	if password == "" {
-		if createCollection {
-			fmt.Print("Enter user password to create a collection: ")
-		} else {
-			fmt.Print("Enter user password to open a collection: ")
-		}
-		password = a.getPassword()
-	}
-
-	plainMnemonic, err := a.wallet.decryptMnemonic(password)
-	if err != nil {
-		return fmt.Errorf("invalid password")
-	}
-
+	var (
+		hdw         *hdwallet.Wallet
+		err         error
+		acc         accounts.Account
+		accountInfo = &Info{}
+	)
 	path := genericPath + strconv.Itoa(accountId)
-	acc, err := a.wallet.CreateAccount(path, plainMnemonic)
-	if err != nil {
-		return err
-	}
-	hdw, err := hdwallet.NewFromMnemonic(plainMnemonic)
-	if err != nil {
-		return err
-	}
+	if a.wallet.seed != nil {
+		acc, err = a.wallet.CreateAccountFromSeed(path, a.wallet.seed)
+		if err != nil {
+			return err
+		}
+		hdw, err = hdwallet.NewFromSeed(a.wallet.seed)
+		if err != nil {
+			return err
+		}
+	} else {
+		password := passPhrase
+		if password == "" {
+			if createCollection {
+				fmt.Print("Enter user password to create a collection: ")
+			} else {
+				fmt.Print("Enter user password to open a collection: ")
+			}
+			password = a.getPassword()
+		}
 
-	accountInfo := &Info{}
+		plainMnemonic, err := a.wallet.decryptMnemonic(password)
+		if err != nil {
+			return fmt.Errorf("invalid password")
+		}
+
+		acc, err = a.wallet.CreateAccount(path, plainMnemonic)
+		if err != nil {
+			return err
+		}
+		hdw, err = hdwallet.NewFromMnemonic(plainMnemonic)
+		if err != nil {
+			return err
+		}
+	}
 
 	accountInfo.privateKey, err = hdw.PrivateKey(acc)
 	if err != nil {
@@ -384,16 +411,15 @@ func (ai *Info) GetPublicKey() *ecdsa.PublicKey {
 	return ai.publicKey
 }
 
-func (*Info) PadEncryptedMnemonic(encryptedMnemonicBytes []byte, passphrase string) ([]byte, error) {
+func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
 	rand.Seed(time.Now().UnixNano())
-	paddingLength := ChunkSize - aes.BlockSize - len(encryptedMnemonicBytes) - 1
+	paddingLength := ChunkSize - aes.BlockSize - SeedSize
 	randomBytes, err := utils.GetRandBytes(paddingLength)
 	if err != nil {
 		return nil, err
 	}
-	chunkData := make([]byte, 1, ChunkSize)
-	chunkData[0] = byte(len(encryptedMnemonicBytes))
-	chunkData = append(chunkData, encryptedMnemonicBytes...)
+	chunkData := make([]byte, 0, ChunkSize)
+	chunkData = append(chunkData, seed...)
 	chunkData = append(chunkData, randomBytes...)
 	aesKey := sha256.Sum256([]byte(passphrase))
 	encryptedBytes, err := encryptBytes(aesKey[:], chunkData)
@@ -403,15 +429,13 @@ func (*Info) PadEncryptedMnemonic(encryptedMnemonicBytes []byte, passphrase stri
 	return encryptedBytes, nil
 }
 
-func (*Info) RemovePadEncryptedMnemonic(paddedMnemonicBytes []byte, passphrase string) ([]byte, error) {
+func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, error) {
 	aesKey := sha256.Sum256([]byte(passphrase))
-	decryptedBytes, err := decryptBytes(aesKey[:], paddedMnemonicBytes)
+	decryptedBytes, err := decryptBytes(aesKey[:], paddedSeed)
 	if err != nil {
 		return nil, fmt.Errorf("private key decryption failed: %w", err)
 	}
-	mnemonicLength := decryptedBytes[0]
-	x := decryptedBytes[1 : int(mnemonicLength)+1]
-	return x, nil
+	return decryptedBytes[:SeedSize], nil
 }
 
 func (a *Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {

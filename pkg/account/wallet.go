@@ -33,9 +33,10 @@ const (
 
 type Wallet struct {
 	encryptedmnemonic string
+	seed              []byte
 }
 
-func NewWallet(mnemonic string) *Wallet {
+func NewWalletFromMnemonic(mnemonic string) *Wallet {
 	wallet := &Wallet{
 		encryptedmnemonic: mnemonic,
 	}
@@ -91,7 +92,7 @@ func (*Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Account
 }
 
 // CreateAccountFromSeed is used to create a new hd wallet using the given seed and the walletPath.
-func (*Wallet) CreateAccountFromSeed(walletPath string, seed []byte) (accounts.Account, error) {
+func (w *Wallet) CreateAccountFromSeed(walletPath string, seed []byte) (accounts.Account, error) {
 	wallet, err := hdwallet.NewFromSeed(seed)
 	if err != nil {
 		return accounts.Account{}, err
@@ -101,6 +102,7 @@ func (*Wallet) CreateAccountFromSeed(walletPath string, seed []byte) (accounts.A
 	if err != nil {
 		return accounts.Account{}, err
 	}
+	w.seed = seed
 	return acc, nil
 }
 
@@ -117,11 +119,23 @@ func (*Wallet) IsValidMnemonic(mnemonic string) error {
 	return nil
 }
 
+func (w *Wallet) LoadSeedFromMnemonic(password string) ([]byte, error) {
+	mnemonic, err := w.decryptMnemonic(password)
+	if err != nil {
+		return nil, err
+	}
+	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
+	if err != nil {
+		return nil, err
+	}
+	w.seed = seed
+	return w.seed, nil
+}
+
 func (w *Wallet) decryptMnemonic(password string) (string, error) {
 	if w.encryptedmnemonic == "" {
 		return "", fmt.Errorf("invalid encrypted mnemonic")
 	}
-
 	aesKey := sha256.Sum256([]byte(password))
 
 	//decrypt the message

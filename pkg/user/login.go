@@ -62,12 +62,12 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 
 	// decrypt and remove pad from private ley
-	mnemonicBytes, err := accountInfo.RemovePadEncryptedMnemonic(key, passPhrase)
+	seed, err := accountInfo.RemovePadFromSeed(key, passPhrase)
 	if err != nil {
 		return nil, "", "", err
 	}
 	// load user account
-	err = acc.LoadUserAccount(passPhrase, string(mnemonicBytes))
+	err = acc.LoadUserAccountFromSeed(seed)
 	if err != nil {
 		if err.Error() == "mnemonic is invalid" {
 			return nil, "", "", ErrInvalidPassword

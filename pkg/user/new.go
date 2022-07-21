@@ -30,6 +30,7 @@ import (
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
 
 // CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
@@ -108,7 +109,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, u.client, u.logger)
 	//create a new base user account with the mnemonic
-	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
+	mnemonic, _, err := acc.CreateUserAccount(passPhrase, mnemonic)
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
@@ -121,8 +122,11 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		}
 		return "", "", "", "", nil, err
 	}
-
-	key, err := accountInfo.PadEncryptedMnemonic([]byte(encryptedMnemonic), passPhrase)
+	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
+	if err != nil {
+		return "", "", "", "", nil, err
+	}
+	key, err := accountInfo.PadSeed(seed, passPhrase)
 	if err != nil {
 		return "", "", "", "", nil, err
 	}

@@ -47,8 +47,19 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 
 	fd := feed.New(accountInfo, client, u.logger)
 	encryptedMnemonic, err := u.getEncryptedMnemonic(oldUsername, address, fd)
+	if err != nil {
+		return err
+	}
+	err = acc.LoadUserAccount(password, encryptedMnemonic)
+	if err != nil {
+		return err
+	}
 
-	key, err := accountInfo.PadEncryptedMnemonic([]byte(encryptedMnemonic), password)
+	seed, err := acc.GetWallet().LoadSeedFromMnemonic(password)
+	if err != nil {
+		return err
+	}
+	key, err := accountInfo.PadSeed(seed, password)
 	if err != nil {
 		return err
 	}

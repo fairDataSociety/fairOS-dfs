@@ -74,7 +74,6 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		if index == -1 {
 			return nil, fmt.Errorf("pod does not exist")
 		}
-
 		// Create pod account and other data structures
 		// create a child account for the userAddress and other data structures for the pod
 		accountInfo, err = p.acc.CreatePodAccount(index, passPhrase, false)
