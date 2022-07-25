@@ -43,7 +43,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if err != nil {
 		return nil, "", "", err
 	}
-
 	// create account
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
@@ -54,25 +53,21 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 	pb := crypto.FromECDSAPub(publicKey)
 
-	// load encrypted soc address  from secondary location
+	// load encrypted private key
 	fd := feed.New(accountInfo, client, u.logger)
-	encryptedPrivateKey, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
+	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
 	if err != nil {
 		return nil, "", "", err
 	}
 
-	// decrypt and remove pad the soc address
-	privateKey, err := accountInfo.DecryptPrivateKey(passPhrase, encryptedPrivateKey)
+	// decrypt and remove pad from private ley
+	seed, err := accountInfo.RemovePadFromSeed(key, passPhrase)
 	if err != nil {
 		return nil, "", "", err
 	}
-
-	// load encrypted mnemonic
-	err = acc.LoadUserAccountV2(privateKey)
+	// load user account
+	err = acc.LoadUserAccountFromSeed(seed)
 	if err != nil {
-		if err.Error() == "mnemonic is invalid" {
-			return nil, "", "", ErrInvalidPassword
-		}
 		return nil, "", "", err
 	}
 
@@ -87,7 +82,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}
-
 	ui := &Info{
 		name:       userName,
 		sessionId:  sessionId,

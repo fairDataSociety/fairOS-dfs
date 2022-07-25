@@ -73,7 +73,7 @@ dfs:
     ens-registry-address: 0xc936e9a67467a192d8A17d787c6bFFE15D0d31C9
     provider-domain: fairos.eth
     public-resolver-address: 0xD914fAE6F4373140657Ad6c5871a063F0e7E54B1
-    subdomain-registrar-address: 0x208ba9332e05163a22Bc1cb98F24082548738085
+    fds-registrar-address: 0x208ba9332e05163a22Bc1cb98F24082548738085
 ```
 
 

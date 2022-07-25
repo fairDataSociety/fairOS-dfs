@@ -28,7 +28,7 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-// PodCloseHandler is the api handler to close a open pod
+// PodCloseHandler is the api handler to close an open pod
 // it takes no arguments
 func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")

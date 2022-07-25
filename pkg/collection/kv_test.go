@@ -518,15 +518,14 @@ func TestKeyValueStore(t *testing.T) {
 				break
 			}
 		}
-
 		// check the order of the keys
 		for i := startIndex; i < startIndex+10; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
-				t.Fatal(err)
+				t.Fatalf("key mismatch: %s : %s\n", itr.StringKey(), sortedKeys[i])
 			}
 			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
-				t.Fatal(err)
+				t.Fatalf("value mismatch: %s : %s\n", itr.StringKey(), sortedKeys[i])
 			}
 		}
 
@@ -593,7 +592,7 @@ func TestKeyValueStore(t *testing.T) {
 
 		// do a ite.Next() after end..to see that it should not return anything
 		if itr.Next() {
-			t.Fatalf("iterating beyond end")
+			t.Fatalf("iterating beyond end %s %v", itr.StringKey(), string(itr.Value()))
 		}
 
 	})

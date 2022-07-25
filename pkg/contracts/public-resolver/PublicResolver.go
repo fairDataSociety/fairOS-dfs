@@ -28,113 +28,113 @@ var (
 	_ = event.NewSubscription
 )
 
-// PublicresolverMetaData contains all meta data concerning the Publicresolver contract.
-var PublicresolverMetaData = &bind.MetaData{
+// PublicResolverMetaData contains all meta data concerning the PublicResolver contract.
+var PublicResolverMetaData = &bind.MetaData{
 	ABI: "[{\"inputs\":[{\"internalType\":\"contractENS\",\"name\":\"_ensAddr\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"contentType\",\"type\":\"uint256\"}],\"name\":\"ABIChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"a\",\"type\":\"address\"}],\"name\":\"AddrChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"hash\",\"type\":\"bytes32\"}],\"name\":\"ContentChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"hash\",\"type\":\"bytes\"}],\"name\":\"MultihashChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"}],\"name\":\"NameChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"x\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"y\",\"type\":\"bytes32\"}],\"name\":\"PubkeyChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"node\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"indexedKey\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"}],\"name\":\"TextChanged\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"addr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"content\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"getAll\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"_addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_content\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_multihash\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"_x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_y\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_name\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"multihash\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"}],\"name\":\"pubkey\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"y\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_contentType\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"}],\"name\":\"setABI\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"setAddr\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_content\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_multihash\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"_x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_y\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_name\",\"type\":\"string\"}],\"name\":\"setAll\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_hash\",\"type\":\"bytes32\"}],\"name\":\"setContent\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_hash\",\"type\":\"bytes\"}],\"name\":\"setMultihash\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_name\",\"type\":\"string\"}],\"name\":\"setName\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_x\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_y\",\"type\":\"bytes32\"}],\"name\":\"setPubkey\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_value\",\"type\":\"string\"}],\"name\":\"setText\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_node\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"_key\",\"type\":\"string\"}],\"name\":\"text\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
-// PublicresolverABI is the input ABI used to generate the binding from.
-// Deprecated: Use PublicresolverMetaData.ABI instead.
-var PublicresolverABI = PublicresolverMetaData.ABI
+// PublicResolverABI is the input ABI used to generate the binding from.
+// Deprecated: Use PublicResolverMetaData.ABI instead.
+var PublicResolverABI = PublicResolverMetaData.ABI
 
-// Publicresolver is an auto generated Go binding around an Ethereum contract.
-type Publicresolver struct {
-	PublicresolverCaller     // Read-only binding to the contract
-	PublicresolverTransactor // Write-only binding to the contract
-	PublicresolverFilterer   // Log filterer for contract events
+// PublicResolver is an auto generated Go binding around an Ethereum contract.
+type PublicResolver struct {
+	PublicResolverCaller     // Read-only binding to the contract
+	PublicResolverTransactor // Write-only binding to the contract
+	PublicResolverFilterer   // Log filterer for contract events
 }
 
-// PublicresolverCaller is an auto generated read-only Go binding around an Ethereum contract.
-type PublicresolverCaller struct {
+// PublicResolverCaller is an auto generated read-only Go binding around an Ethereum contract.
+type PublicResolverCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PublicresolverTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type PublicresolverTransactor struct {
+// PublicResolverTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type PublicResolverTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PublicresolverFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type PublicresolverFilterer struct {
+// PublicResolverFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+type PublicResolverFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PublicresolverSession is an auto generated Go binding around an Ethereum contract,
+// PublicResolverSession is an auto generated Go binding around an Ethereum contract,
 // with pre-set call and transact options.
-type PublicresolverSession struct {
-	Contract     *Publicresolver   // Generic contract binding to set the session for
+type PublicResolverSession struct {
+	Contract     *PublicResolver   // Generic contract binding to set the session for
 	CallOpts     bind.CallOpts     // Call options to use throughout this session
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// PublicresolverCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// PublicResolverCallerSession is an auto generated read-only Go binding around an Ethereum contract,
 // with pre-set call options.
-type PublicresolverCallerSession struct {
-	Contract *PublicresolverCaller // Generic contract caller binding to set the session for
+type PublicResolverCallerSession struct {
+	Contract *PublicResolverCaller // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts         // Call options to use throughout this session
 }
 
-// PublicresolverTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// PublicResolverTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
 // with pre-set transact options.
-type PublicresolverTransactorSession struct {
-	Contract     *PublicresolverTransactor // Generic contract transactor binding to set the session for
+type PublicResolverTransactorSession struct {
+	Contract     *PublicResolverTransactor // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts         // Transaction auth options to use throughout this session
 }
 
-// PublicresolverRaw is an auto generated low-level Go binding around an Ethereum contract.
-type PublicresolverRaw struct {
-	Contract *Publicresolver // Generic contract binding to access the raw methods on
+// PublicResolverRaw is an auto generated low-level Go binding around an Ethereum contract.
+type PublicResolverRaw struct {
+	Contract *PublicResolver // Generic contract binding to access the raw methods on
 }
 
-// PublicresolverCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type PublicresolverCallerRaw struct {
-	Contract *PublicresolverCaller // Generic read-only contract binding to access the raw methods on
+// PublicResolverCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type PublicResolverCallerRaw struct {
+	Contract *PublicResolverCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// PublicresolverTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type PublicresolverTransactorRaw struct {
-	Contract *PublicresolverTransactor // Generic write-only contract binding to access the raw methods on
+// PublicResolverTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type PublicResolverTransactorRaw struct {
+	Contract *PublicResolverTransactor // Generic write-only contract binding to access the raw methods on
 }
 
-// NewPublicresolver creates a new instance of Publicresolver, bound to a specific deployed contract.
-func NewPublicresolver(address common.Address, backend bind.ContractBackend) (*Publicresolver, error) {
-	contract, err := bindPublicresolver(address, backend, backend, backend)
+// NewPublicResolver creates a new instance of PublicResolver, bound to a specific deployed contract.
+func NewPublicResolver(address common.Address, backend bind.ContractBackend) (*PublicResolver, error) {
+	contract, err := bindPublicResolver(address, backend, backend, backend)
 	if err != nil {
 		return nil, err
 	}
-	return &Publicresolver{PublicresolverCaller: PublicresolverCaller{contract: contract}, PublicresolverTransactor: PublicresolverTransactor{contract: contract}, PublicresolverFilterer: PublicresolverFilterer{contract: contract}}, nil
+	return &PublicResolver{PublicResolverCaller: PublicResolverCaller{contract: contract}, PublicResolverTransactor: PublicResolverTransactor{contract: contract}, PublicResolverFilterer: PublicResolverFilterer{contract: contract}}, nil
 }
 
-// NewPublicresolverCaller creates a new read-only instance of Publicresolver, bound to a specific deployed contract.
-func NewPublicresolverCaller(address common.Address, caller bind.ContractCaller) (*PublicresolverCaller, error) {
-	contract, err := bindPublicresolver(address, caller, nil, nil)
+// NewPublicResolverCaller creates a new read-only instance of PublicResolver, bound to a specific deployed contract.
+func NewPublicResolverCaller(address common.Address, caller bind.ContractCaller) (*PublicResolverCaller, error) {
+	contract, err := bindPublicResolver(address, caller, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverCaller{contract: contract}, nil
+	return &PublicResolverCaller{contract: contract}, nil
 }
 
-// NewPublicresolverTransactor creates a new write-only instance of Publicresolver, bound to a specific deployed contract.
-func NewPublicresolverTransactor(address common.Address, transactor bind.ContractTransactor) (*PublicresolverTransactor, error) {
-	contract, err := bindPublicresolver(address, nil, transactor, nil)
+// NewPublicResolverTransactor creates a new write-only instance of PublicResolver, bound to a specific deployed contract.
+func NewPublicResolverTransactor(address common.Address, transactor bind.ContractTransactor) (*PublicResolverTransactor, error) {
+	contract, err := bindPublicResolver(address, nil, transactor, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverTransactor{contract: contract}, nil
+	return &PublicResolverTransactor{contract: contract}, nil
 }
 
-// NewPublicresolverFilterer creates a new log filterer instance of Publicresolver, bound to a specific deployed contract.
-func NewPublicresolverFilterer(address common.Address, filterer bind.ContractFilterer) (*PublicresolverFilterer, error) {
-	contract, err := bindPublicresolver(address, nil, nil, filterer)
+// NewPublicResolverFilterer creates a new log filterer instance of PublicResolver, bound to a specific deployed contract.
+func NewPublicResolverFilterer(address common.Address, filterer bind.ContractFilterer) (*PublicResolverFilterer, error) {
+	contract, err := bindPublicResolver(address, nil, nil, filterer)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverFilterer{contract: contract}, nil
+	return &PublicResolverFilterer{contract: contract}, nil
 }
 
-// bindPublicresolver binds a generic wrapper to an already deployed contract.
-func bindPublicresolver(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(PublicresolverABI))
+// bindPublicResolver binds a generic wrapper to an already deployed contract.
+func bindPublicResolver(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := abi.JSON(strings.NewReader(PublicResolverABI))
 	if err != nil {
 		return nil, err
 	}
@@ -145,46 +145,46 @@ func bindPublicresolver(address common.Address, caller bind.ContractCaller, tran
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Publicresolver *PublicresolverRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Publicresolver.Contract.PublicresolverCaller.contract.Call(opts, result, method, params...)
+func (_PublicResolver *PublicResolverRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _PublicResolver.Contract.PublicResolverCaller.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_Publicresolver *PublicresolverRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Publicresolver.Contract.PublicresolverTransactor.contract.Transfer(opts)
+func (_PublicResolver *PublicResolverRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _PublicResolver.Contract.PublicResolverTransactor.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Publicresolver *PublicresolverRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Publicresolver.Contract.PublicresolverTransactor.contract.Transact(opts, method, params...)
+func (_PublicResolver *PublicResolverRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _PublicResolver.Contract.PublicResolverTransactor.contract.Transact(opts, method, params...)
 }
 
 // Call invokes the (constant) contract method with params as input values and
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Publicresolver *PublicresolverCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Publicresolver.Contract.contract.Call(opts, result, method, params...)
+func (_PublicResolver *PublicResolverCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _PublicResolver.Contract.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_Publicresolver *PublicresolverTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Publicresolver.Contract.contract.Transfer(opts)
+func (_PublicResolver *PublicResolverTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _PublicResolver.Contract.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Publicresolver *PublicresolverTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Publicresolver.Contract.contract.Transact(opts, method, params...)
+func (_PublicResolver *PublicResolverTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _PublicResolver.Contract.contract.Transact(opts, method, params...)
 }
 
 // Addr is a free data retrieval call binding the contract method 0x3b3b57de.
 //
 // Solidity: function addr(bytes32 _node) view returns(address)
-func (_Publicresolver *PublicresolverCaller) Addr(opts *bind.CallOpts, _node [32]byte) (common.Address, error) {
+func (_PublicResolver *PublicResolverCaller) Addr(opts *bind.CallOpts, _node [32]byte) (common.Address, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "addr", _node)
+	err := _PublicResolver.contract.Call(opts, &out, "addr", _node)
 
 	if err != nil {
 		return *new(common.Address), err
@@ -199,23 +199,23 @@ func (_Publicresolver *PublicresolverCaller) Addr(opts *bind.CallOpts, _node [32
 // Addr is a free data retrieval call binding the contract method 0x3b3b57de.
 //
 // Solidity: function addr(bytes32 _node) view returns(address)
-func (_Publicresolver *PublicresolverSession) Addr(_node [32]byte) (common.Address, error) {
-	return _Publicresolver.Contract.Addr(&_Publicresolver.CallOpts, _node)
+func (_PublicResolver *PublicResolverSession) Addr(_node [32]byte) (common.Address, error) {
+	return _PublicResolver.Contract.Addr(&_PublicResolver.CallOpts, _node)
 }
 
 // Addr is a free data retrieval call binding the contract method 0x3b3b57de.
 //
 // Solidity: function addr(bytes32 _node) view returns(address)
-func (_Publicresolver *PublicresolverCallerSession) Addr(_node [32]byte) (common.Address, error) {
-	return _Publicresolver.Contract.Addr(&_Publicresolver.CallOpts, _node)
+func (_PublicResolver *PublicResolverCallerSession) Addr(_node [32]byte) (common.Address, error) {
+	return _PublicResolver.Contract.Addr(&_PublicResolver.CallOpts, _node)
 }
 
 // Content is a free data retrieval call binding the contract method 0x2dff6941.
 //
 // Solidity: function content(bytes32 _node) view returns(bytes32)
-func (_Publicresolver *PublicresolverCaller) Content(opts *bind.CallOpts, _node [32]byte) ([32]byte, error) {
+func (_PublicResolver *PublicResolverCaller) Content(opts *bind.CallOpts, _node [32]byte) ([32]byte, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "content", _node)
+	err := _PublicResolver.contract.Call(opts, &out, "content", _node)
 
 	if err != nil {
 		return *new([32]byte), err
@@ -230,21 +230,21 @@ func (_Publicresolver *PublicresolverCaller) Content(opts *bind.CallOpts, _node 
 // Content is a free data retrieval call binding the contract method 0x2dff6941.
 //
 // Solidity: function content(bytes32 _node) view returns(bytes32)
-func (_Publicresolver *PublicresolverSession) Content(_node [32]byte) ([32]byte, error) {
-	return _Publicresolver.Contract.Content(&_Publicresolver.CallOpts, _node)
+func (_PublicResolver *PublicResolverSession) Content(_node [32]byte) ([32]byte, error) {
+	return _PublicResolver.Contract.Content(&_PublicResolver.CallOpts, _node)
 }
 
 // Content is a free data retrieval call binding the contract method 0x2dff6941.
 //
 // Solidity: function content(bytes32 _node) view returns(bytes32)
-func (_Publicresolver *PublicresolverCallerSession) Content(_node [32]byte) ([32]byte, error) {
-	return _Publicresolver.Contract.Content(&_Publicresolver.CallOpts, _node)
+func (_PublicResolver *PublicResolverCallerSession) Content(_node [32]byte) ([32]byte, error) {
+	return _PublicResolver.Contract.Content(&_PublicResolver.CallOpts, _node)
 }
 
 // GetAll is a free data retrieval call binding the contract method 0xed80e1f7.
 //
 // Solidity: function getAll(bytes32 _node) view returns(address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name)
-func (_Publicresolver *PublicresolverCaller) GetAll(opts *bind.CallOpts, _node [32]byte) (struct {
+func (_PublicResolver *PublicResolverCaller) GetAll(opts *bind.CallOpts, _node [32]byte) (struct {
 	Addr      common.Address
 	Content   [32]byte
 	Multihash []byte
@@ -253,7 +253,7 @@ func (_Publicresolver *PublicresolverCaller) GetAll(opts *bind.CallOpts, _node [
 	Name      string
 }, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "getAll", _node)
+	err := _PublicResolver.contract.Call(opts, &out, "getAll", _node)
 
 	outstruct := new(struct {
 		Addr      common.Address
@@ -281,7 +281,7 @@ func (_Publicresolver *PublicresolverCaller) GetAll(opts *bind.CallOpts, _node [
 // GetAll is a free data retrieval call binding the contract method 0xed80e1f7.
 //
 // Solidity: function getAll(bytes32 _node) view returns(address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name)
-func (_Publicresolver *PublicresolverSession) GetAll(_node [32]byte) (struct {
+func (_PublicResolver *PublicResolverSession) GetAll(_node [32]byte) (struct {
 	Addr      common.Address
 	Content   [32]byte
 	Multihash []byte
@@ -289,13 +289,13 @@ func (_Publicresolver *PublicresolverSession) GetAll(_node [32]byte) (struct {
 	Y         [32]byte
 	Name      string
 }, error) {
-	return _Publicresolver.Contract.GetAll(&_Publicresolver.CallOpts, _node)
+	return _PublicResolver.Contract.GetAll(&_PublicResolver.CallOpts, _node)
 }
 
 // GetAll is a free data retrieval call binding the contract method 0xed80e1f7.
 //
 // Solidity: function getAll(bytes32 _node) view returns(address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name)
-func (_Publicresolver *PublicresolverCallerSession) GetAll(_node [32]byte) (struct {
+func (_PublicResolver *PublicResolverCallerSession) GetAll(_node [32]byte) (struct {
 	Addr      common.Address
 	Content   [32]byte
 	Multihash []byte
@@ -303,15 +303,15 @@ func (_Publicresolver *PublicresolverCallerSession) GetAll(_node [32]byte) (stru
 	Y         [32]byte
 	Name      string
 }, error) {
-	return _Publicresolver.Contract.GetAll(&_Publicresolver.CallOpts, _node)
+	return _PublicResolver.Contract.GetAll(&_PublicResolver.CallOpts, _node)
 }
 
 // Multihash is a free data retrieval call binding the contract method 0xe89401a1.
 //
 // Solidity: function multihash(bytes32 _node) view returns(bytes)
-func (_Publicresolver *PublicresolverCaller) Multihash(opts *bind.CallOpts, _node [32]byte) ([]byte, error) {
+func (_PublicResolver *PublicResolverCaller) Multihash(opts *bind.CallOpts, _node [32]byte) ([]byte, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "multihash", _node)
+	err := _PublicResolver.contract.Call(opts, &out, "multihash", _node)
 
 	if err != nil {
 		return *new([]byte), err
@@ -326,23 +326,23 @@ func (_Publicresolver *PublicresolverCaller) Multihash(opts *bind.CallOpts, _nod
 // Multihash is a free data retrieval call binding the contract method 0xe89401a1.
 //
 // Solidity: function multihash(bytes32 _node) view returns(bytes)
-func (_Publicresolver *PublicresolverSession) Multihash(_node [32]byte) ([]byte, error) {
-	return _Publicresolver.Contract.Multihash(&_Publicresolver.CallOpts, _node)
+func (_PublicResolver *PublicResolverSession) Multihash(_node [32]byte) ([]byte, error) {
+	return _PublicResolver.Contract.Multihash(&_PublicResolver.CallOpts, _node)
 }
 
 // Multihash is a free data retrieval call binding the contract method 0xe89401a1.
 //
 // Solidity: function multihash(bytes32 _node) view returns(bytes)
-func (_Publicresolver *PublicresolverCallerSession) Multihash(_node [32]byte) ([]byte, error) {
-	return _Publicresolver.Contract.Multihash(&_Publicresolver.CallOpts, _node)
+func (_PublicResolver *PublicResolverCallerSession) Multihash(_node [32]byte) ([]byte, error) {
+	return _PublicResolver.Contract.Multihash(&_PublicResolver.CallOpts, _node)
 }
 
 // Name is a free data retrieval call binding the contract method 0x691f3431.
 //
 // Solidity: function name(bytes32 _node) view returns(string)
-func (_Publicresolver *PublicresolverCaller) Name(opts *bind.CallOpts, _node [32]byte) (string, error) {
+func (_PublicResolver *PublicResolverCaller) Name(opts *bind.CallOpts, _node [32]byte) (string, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "name", _node)
+	err := _PublicResolver.contract.Call(opts, &out, "name", _node)
 
 	if err != nil {
 		return *new(string), err
@@ -357,26 +357,26 @@ func (_Publicresolver *PublicresolverCaller) Name(opts *bind.CallOpts, _node [32
 // Name is a free data retrieval call binding the contract method 0x691f3431.
 //
 // Solidity: function name(bytes32 _node) view returns(string)
-func (_Publicresolver *PublicresolverSession) Name(_node [32]byte) (string, error) {
-	return _Publicresolver.Contract.Name(&_Publicresolver.CallOpts, _node)
+func (_PublicResolver *PublicResolverSession) Name(_node [32]byte) (string, error) {
+	return _PublicResolver.Contract.Name(&_PublicResolver.CallOpts, _node)
 }
 
 // Name is a free data retrieval call binding the contract method 0x691f3431.
 //
 // Solidity: function name(bytes32 _node) view returns(string)
-func (_Publicresolver *PublicresolverCallerSession) Name(_node [32]byte) (string, error) {
-	return _Publicresolver.Contract.Name(&_Publicresolver.CallOpts, _node)
+func (_PublicResolver *PublicResolverCallerSession) Name(_node [32]byte) (string, error) {
+	return _PublicResolver.Contract.Name(&_PublicResolver.CallOpts, _node)
 }
 
 // Pubkey is a free data retrieval call binding the contract method 0xc8690233.
 //
 // Solidity: function pubkey(bytes32 _node) view returns(bytes32 x, bytes32 y)
-func (_Publicresolver *PublicresolverCaller) Pubkey(opts *bind.CallOpts, _node [32]byte) (struct {
+func (_PublicResolver *PublicResolverCaller) Pubkey(opts *bind.CallOpts, _node [32]byte) (struct {
 	X [32]byte
 	Y [32]byte
 }, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "pubkey", _node)
+	err := _PublicResolver.contract.Call(opts, &out, "pubkey", _node)
 
 	outstruct := new(struct {
 		X [32]byte
@@ -396,29 +396,29 @@ func (_Publicresolver *PublicresolverCaller) Pubkey(opts *bind.CallOpts, _node [
 // Pubkey is a free data retrieval call binding the contract method 0xc8690233.
 //
 // Solidity: function pubkey(bytes32 _node) view returns(bytes32 x, bytes32 y)
-func (_Publicresolver *PublicresolverSession) Pubkey(_node [32]byte) (struct {
+func (_PublicResolver *PublicResolverSession) Pubkey(_node [32]byte) (struct {
 	X [32]byte
 	Y [32]byte
 }, error) {
-	return _Publicresolver.Contract.Pubkey(&_Publicresolver.CallOpts, _node)
+	return _PublicResolver.Contract.Pubkey(&_PublicResolver.CallOpts, _node)
 }
 
 // Pubkey is a free data retrieval call binding the contract method 0xc8690233.
 //
 // Solidity: function pubkey(bytes32 _node) view returns(bytes32 x, bytes32 y)
-func (_Publicresolver *PublicresolverCallerSession) Pubkey(_node [32]byte) (struct {
+func (_PublicResolver *PublicResolverCallerSession) Pubkey(_node [32]byte) (struct {
 	X [32]byte
 	Y [32]byte
 }, error) {
-	return _Publicresolver.Contract.Pubkey(&_Publicresolver.CallOpts, _node)
+	return _PublicResolver.Contract.Pubkey(&_PublicResolver.CallOpts, _node)
 }
 
 // Text is a free data retrieval call binding the contract method 0x59d1d43c.
 //
 // Solidity: function text(bytes32 _node, string _key) view returns(string)
-func (_Publicresolver *PublicresolverCaller) Text(opts *bind.CallOpts, _node [32]byte, _key string) (string, error) {
+func (_PublicResolver *PublicResolverCaller) Text(opts *bind.CallOpts, _node [32]byte, _key string) (string, error) {
 	var out []interface{}
-	err := _Publicresolver.contract.Call(opts, &out, "text", _node, _key)
+	err := _PublicResolver.contract.Call(opts, &out, "text", _node, _key)
 
 	if err != nil {
 		return *new(string), err
@@ -433,188 +433,188 @@ func (_Publicresolver *PublicresolverCaller) Text(opts *bind.CallOpts, _node [32
 // Text is a free data retrieval call binding the contract method 0x59d1d43c.
 //
 // Solidity: function text(bytes32 _node, string _key) view returns(string)
-func (_Publicresolver *PublicresolverSession) Text(_node [32]byte, _key string) (string, error) {
-	return _Publicresolver.Contract.Text(&_Publicresolver.CallOpts, _node, _key)
+func (_PublicResolver *PublicResolverSession) Text(_node [32]byte, _key string) (string, error) {
+	return _PublicResolver.Contract.Text(&_PublicResolver.CallOpts, _node, _key)
 }
 
 // Text is a free data retrieval call binding the contract method 0x59d1d43c.
 //
 // Solidity: function text(bytes32 _node, string _key) view returns(string)
-func (_Publicresolver *PublicresolverCallerSession) Text(_node [32]byte, _key string) (string, error) {
-	return _Publicresolver.Contract.Text(&_Publicresolver.CallOpts, _node, _key)
+func (_PublicResolver *PublicResolverCallerSession) Text(_node [32]byte, _key string) (string, error) {
+	return _PublicResolver.Contract.Text(&_PublicResolver.CallOpts, _node, _key)
 }
 
 // SetABI is a paid mutator transaction binding the contract method 0x623195b0.
 //
 // Solidity: function setABI(bytes32 _node, uint256 _contentType, bytes _data) returns()
-func (_Publicresolver *PublicresolverTransactor) SetABI(opts *bind.TransactOpts, _node [32]byte, _contentType *big.Int, _data []byte) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setABI", _node, _contentType, _data)
+func (_PublicResolver *PublicResolverTransactor) SetABI(opts *bind.TransactOpts, _node [32]byte, _contentType *big.Int, _data []byte) (*types.Transaction, error) {
+	return _PublicResolver.contract.Transact(opts, "setABI", _node, _contentType, _data)
 }
 
 // SetABI is a paid mutator transaction binding the contract method 0x623195b0.
 //
 // Solidity: function setABI(bytes32 _node, uint256 _contentType, bytes _data) returns()
-func (_Publicresolver *PublicresolverSession) SetABI(_node [32]byte, _contentType *big.Int, _data []byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetABI(&_Publicresolver.TransactOpts, _node, _contentType, _data)
+func (_PublicResolver *PublicResolverSession) SetABI(_node [32]byte, _contentType *big.Int, _data []byte) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetABI(&_PublicResolver.TransactOpts, _node, _contentType, _data)
 }
 
 // SetABI is a paid mutator transaction binding the contract method 0x623195b0.
 //
 // Solidity: function setABI(bytes32 _node, uint256 _contentType, bytes _data) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetABI(_node [32]byte, _contentType *big.Int, _data []byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetABI(&_Publicresolver.TransactOpts, _node, _contentType, _data)
+func (_PublicResolver *PublicResolverTransactorSession) SetABI(_node [32]byte, _contentType *big.Int, _data []byte) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetABI(&_PublicResolver.TransactOpts, _node, _contentType, _data)
 }
 
 // SetAddr is a paid mutator transaction binding the contract method 0xd5fa2b00.
 //
 // Solidity: function setAddr(bytes32 _node, address _addr) returns()
-func (_Publicresolver *PublicresolverTransactor) SetAddr(opts *bind.TransactOpts, _node [32]byte, _addr common.Address) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setAddr", _node, _addr)
+func (_PublicResolver *PublicResolverTransactor) SetAddr(opts *bind.TransactOpts, _node [32]byte, _addr common.Address) (*types.Transaction, error) {
+	return _PublicResolver.contract.Transact(opts, "setAddr", _node, _addr)
 }
 
 // SetAddr is a paid mutator transaction binding the contract method 0xd5fa2b00.
 //
 // Solidity: function setAddr(bytes32 _node, address _addr) returns()
-func (_Publicresolver *PublicresolverSession) SetAddr(_node [32]byte, _addr common.Address) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetAddr(&_Publicresolver.TransactOpts, _node, _addr)
+func (_PublicResolver *PublicResolverSession) SetAddr(_node [32]byte, _addr common.Address) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetAddr(&_PublicResolver.TransactOpts, _node, _addr)
 }
 
 // SetAddr is a paid mutator transaction binding the contract method 0xd5fa2b00.
 //
 // Solidity: function setAddr(bytes32 _node, address _addr) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetAddr(_node [32]byte, _addr common.Address) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetAddr(&_Publicresolver.TransactOpts, _node, _addr)
+func (_PublicResolver *PublicResolverTransactorSession) SetAddr(_node [32]byte, _addr common.Address) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetAddr(&_PublicResolver.TransactOpts, _node, _addr)
 }
 
 // SetAll is a paid mutator transaction binding the contract method 0x9f3a206d.
 //
 // Solidity: function setAll(bytes32 _node, address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name) returns()
-func (_Publicresolver *PublicresolverTransactor) SetAll(opts *bind.TransactOpts, _node [32]byte, _addr common.Address, _content [32]byte, _multihash []byte, _x [32]byte, _y [32]byte, _name string) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setAll", _node, _addr, _content, _multihash, _x, _y, _name)
+func (_PublicResolver *PublicResolverTransactor) SetAll(opts *bind.TransactOpts, _node [32]byte, _addr common.Address, _content [32]byte, _multihash []byte, _x [32]byte, _y [32]byte, _name string) (*types.Transaction, error) {
+	return _PublicResolver.contract.Transact(opts, "setAll", _node, _addr, _content, _multihash, _x, _y, _name)
 }
 
 // SetAll is a paid mutator transaction binding the contract method 0x9f3a206d.
 //
 // Solidity: function setAll(bytes32 _node, address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name) returns()
-func (_Publicresolver *PublicresolverSession) SetAll(_node [32]byte, _addr common.Address, _content [32]byte, _multihash []byte, _x [32]byte, _y [32]byte, _name string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetAll(&_Publicresolver.TransactOpts, _node, _addr, _content, _multihash, _x, _y, _name)
+func (_PublicResolver *PublicResolverSession) SetAll(_node [32]byte, _addr common.Address, _content [32]byte, _multihash []byte, _x [32]byte, _y [32]byte, _name string) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetAll(&_PublicResolver.TransactOpts, _node, _addr, _content, _multihash, _x, _y, _name)
 }
 
 // SetAll is a paid mutator transaction binding the contract method 0x9f3a206d.
 //
 // Solidity: function setAll(bytes32 _node, address _addr, bytes32 _content, bytes _multihash, bytes32 _x, bytes32 _y, string _name) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetAll(_node [32]byte, _addr common.Address, _content [32]byte, _multihash []byte, _x [32]byte, _y [32]byte, _name string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetAll(&_Publicresolver.TransactOpts, _node, _addr, _content, _multihash, _x, _y, _name)
+func (_PublicResolver *PublicResolverTransactorSession) SetAll(_node [32]byte, _addr common.Address, _content [32]byte, _multihash []byte, _x [32]byte, _y [32]byte, _name string) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetAll(&_PublicResolver.TransactOpts, _node, _addr, _content, _multihash, _x, _y, _name)
 }
 
 // SetContent is a paid mutator transaction binding the contract method 0xc3d014d6.
 //
 // Solidity: function setContent(bytes32 _node, bytes32 _hash) returns()
-func (_Publicresolver *PublicresolverTransactor) SetContent(opts *bind.TransactOpts, _node [32]byte, _hash [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setContent", _node, _hash)
+func (_PublicResolver *PublicResolverTransactor) SetContent(opts *bind.TransactOpts, _node [32]byte, _hash [32]byte) (*types.Transaction, error) {
+	return _PublicResolver.contract.Transact(opts, "setContent", _node, _hash)
 }
 
 // SetContent is a paid mutator transaction binding the contract method 0xc3d014d6.
 //
 // Solidity: function setContent(bytes32 _node, bytes32 _hash) returns()
-func (_Publicresolver *PublicresolverSession) SetContent(_node [32]byte, _hash [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetContent(&_Publicresolver.TransactOpts, _node, _hash)
+func (_PublicResolver *PublicResolverSession) SetContent(_node [32]byte, _hash [32]byte) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetContent(&_PublicResolver.TransactOpts, _node, _hash)
 }
 
 // SetContent is a paid mutator transaction binding the contract method 0xc3d014d6.
 //
 // Solidity: function setContent(bytes32 _node, bytes32 _hash) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetContent(_node [32]byte, _hash [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetContent(&_Publicresolver.TransactOpts, _node, _hash)
+func (_PublicResolver *PublicResolverTransactorSession) SetContent(_node [32]byte, _hash [32]byte) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetContent(&_PublicResolver.TransactOpts, _node, _hash)
 }
 
 // SetMultihash is a paid mutator transaction binding the contract method 0xaa4cb547.
 //
 // Solidity: function setMultihash(bytes32 _node, bytes _hash) returns()
-func (_Publicresolver *PublicresolverTransactor) SetMultihash(opts *bind.TransactOpts, _node [32]byte, _hash []byte) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setMultihash", _node, _hash)
+func (_PublicResolver *PublicResolverTransactor) SetMultihash(opts *bind.TransactOpts, _node [32]byte, _hash []byte) (*types.Transaction, error) {
+	return _PublicResolver.contract.Transact(opts, "setMultihash", _node, _hash)
 }
 
 // SetMultihash is a paid mutator transaction binding the contract method 0xaa4cb547.
 //
 // Solidity: function setMultihash(bytes32 _node, bytes _hash) returns()
-func (_Publicresolver *PublicresolverSession) SetMultihash(_node [32]byte, _hash []byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetMultihash(&_Publicresolver.TransactOpts, _node, _hash)
+func (_PublicResolver *PublicResolverSession) SetMultihash(_node [32]byte, _hash []byte) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetMultihash(&_PublicResolver.TransactOpts, _node, _hash)
 }
 
 // SetMultihash is a paid mutator transaction binding the contract method 0xaa4cb547.
 //
 // Solidity: function setMultihash(bytes32 _node, bytes _hash) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetMultihash(_node [32]byte, _hash []byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetMultihash(&_Publicresolver.TransactOpts, _node, _hash)
+func (_PublicResolver *PublicResolverTransactorSession) SetMultihash(_node [32]byte, _hash []byte) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetMultihash(&_PublicResolver.TransactOpts, _node, _hash)
 }
 
 // SetName is a paid mutator transaction binding the contract method 0x77372213.
 //
 // Solidity: function setName(bytes32 _node, string _name) returns()
-func (_Publicresolver *PublicresolverTransactor) SetName(opts *bind.TransactOpts, _node [32]byte, _name string) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setName", _node, _name)
+func (_PublicResolver *PublicResolverTransactor) SetName(opts *bind.TransactOpts, _node [32]byte, _name string) (*types.Transaction, error) {
+	return _PublicResolver.contract.Transact(opts, "setName", _node, _name)
 }
 
 // SetName is a paid mutator transaction binding the contract method 0x77372213.
 //
 // Solidity: function setName(bytes32 _node, string _name) returns()
-func (_Publicresolver *PublicresolverSession) SetName(_node [32]byte, _name string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetName(&_Publicresolver.TransactOpts, _node, _name)
+func (_PublicResolver *PublicResolverSession) SetName(_node [32]byte, _name string) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetName(&_PublicResolver.TransactOpts, _node, _name)
 }
 
 // SetName is a paid mutator transaction binding the contract method 0x77372213.
 //
 // Solidity: function setName(bytes32 _node, string _name) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetName(_node [32]byte, _name string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetName(&_Publicresolver.TransactOpts, _node, _name)
+func (_PublicResolver *PublicResolverTransactorSession) SetName(_node [32]byte, _name string) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetName(&_PublicResolver.TransactOpts, _node, _name)
 }
 
 // SetPubkey is a paid mutator transaction binding the contract method 0x29cd62ea.
 //
 // Solidity: function setPubkey(bytes32 _node, bytes32 _x, bytes32 _y) returns()
-func (_Publicresolver *PublicresolverTransactor) SetPubkey(opts *bind.TransactOpts, _node [32]byte, _x [32]byte, _y [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setPubkey", _node, _x, _y)
+func (_PublicResolver *PublicResolverTransactor) SetPubkey(opts *bind.TransactOpts, _node [32]byte, _x [32]byte, _y [32]byte) (*types.Transaction, error) {
+	return _PublicResolver.contract.Transact(opts, "setPubkey", _node, _x, _y)
 }
 
 // SetPubkey is a paid mutator transaction binding the contract method 0x29cd62ea.
 //
 // Solidity: function setPubkey(bytes32 _node, bytes32 _x, bytes32 _y) returns()
-func (_Publicresolver *PublicresolverSession) SetPubkey(_node [32]byte, _x [32]byte, _y [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetPubkey(&_Publicresolver.TransactOpts, _node, _x, _y)
+func (_PublicResolver *PublicResolverSession) SetPubkey(_node [32]byte, _x [32]byte, _y [32]byte) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetPubkey(&_PublicResolver.TransactOpts, _node, _x, _y)
 }
 
 // SetPubkey is a paid mutator transaction binding the contract method 0x29cd62ea.
 //
 // Solidity: function setPubkey(bytes32 _node, bytes32 _x, bytes32 _y) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetPubkey(_node [32]byte, _x [32]byte, _y [32]byte) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetPubkey(&_Publicresolver.TransactOpts, _node, _x, _y)
+func (_PublicResolver *PublicResolverTransactorSession) SetPubkey(_node [32]byte, _x [32]byte, _y [32]byte) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetPubkey(&_PublicResolver.TransactOpts, _node, _x, _y)
 }
 
 // SetText is a paid mutator transaction binding the contract method 0x10f13a8c.
 //
 // Solidity: function setText(bytes32 _node, string _key, string _value) returns()
-func (_Publicresolver *PublicresolverTransactor) SetText(opts *bind.TransactOpts, _node [32]byte, _key string, _value string) (*types.Transaction, error) {
-	return _Publicresolver.contract.Transact(opts, "setText", _node, _key, _value)
+func (_PublicResolver *PublicResolverTransactor) SetText(opts *bind.TransactOpts, _node [32]byte, _key string, _value string) (*types.Transaction, error) {
+	return _PublicResolver.contract.Transact(opts, "setText", _node, _key, _value)
 }
 
 // SetText is a paid mutator transaction binding the contract method 0x10f13a8c.
 //
 // Solidity: function setText(bytes32 _node, string _key, string _value) returns()
-func (_Publicresolver *PublicresolverSession) SetText(_node [32]byte, _key string, _value string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetText(&_Publicresolver.TransactOpts, _node, _key, _value)
+func (_PublicResolver *PublicResolverSession) SetText(_node [32]byte, _key string, _value string) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetText(&_PublicResolver.TransactOpts, _node, _key, _value)
 }
 
 // SetText is a paid mutator transaction binding the contract method 0x10f13a8c.
 //
 // Solidity: function setText(bytes32 _node, string _key, string _value) returns()
-func (_Publicresolver *PublicresolverTransactorSession) SetText(_node [32]byte, _key string, _value string) (*types.Transaction, error) {
-	return _Publicresolver.Contract.SetText(&_Publicresolver.TransactOpts, _node, _key, _value)
+func (_PublicResolver *PublicResolverTransactorSession) SetText(_node [32]byte, _key string, _value string) (*types.Transaction, error) {
+	return _PublicResolver.Contract.SetText(&_PublicResolver.TransactOpts, _node, _key, _value)
 }
 
-// PublicresolverABIChangedIterator is returned from FilterABIChanged and is used to iterate over the raw logs and unpacked data for ABIChanged events raised by the Publicresolver contract.
-type PublicresolverABIChangedIterator struct {
-	Event *PublicresolverABIChanged // Event containing the contract specifics and raw log
+// PublicResolverABIChangedIterator is returned from FilterABIChanged and is used to iterate over the raw logs and unpacked data for ABIChanged events raised by the PublicResolver contract.
+type PublicResolverABIChangedIterator struct {
+	Event *PublicResolverABIChanged // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -628,7 +628,7 @@ type PublicresolverABIChangedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *PublicresolverABIChangedIterator) Next() bool {
+func (it *PublicResolverABIChangedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -637,7 +637,7 @@ func (it *PublicresolverABIChangedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(PublicresolverABIChanged)
+			it.Event = new(PublicResolverABIChanged)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -652,7 +652,7 @@ func (it *PublicresolverABIChangedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(PublicresolverABIChanged)
+		it.Event = new(PublicResolverABIChanged)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -668,19 +668,19 @@ func (it *PublicresolverABIChangedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicresolverABIChangedIterator) Error() error {
+func (it *PublicResolverABIChangedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *PublicresolverABIChangedIterator) Close() error {
+func (it *PublicResolverABIChangedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// PublicresolverABIChanged represents a ABIChanged event raised by the Publicresolver contract.
-type PublicresolverABIChanged struct {
+// PublicResolverABIChanged represents a ABIChanged event raised by the PublicResolver contract.
+type PublicResolverABIChanged struct {
 	Node        [32]byte
 	ContentType *big.Int
 	Raw         types.Log // Blockchain specific contextual infos
@@ -689,7 +689,7 @@ type PublicresolverABIChanged struct {
 // FilterABIChanged is a free log retrieval operation binding the contract event 0xaa121bbeef5f32f5961a2a28966e769023910fc9479059ee3495d4c1a696efe3.
 //
 // Solidity: event ABIChanged(bytes32 indexed node, uint256 indexed contentType)
-func (_Publicresolver *PublicresolverFilterer) FilterABIChanged(opts *bind.FilterOpts, node [][32]byte, contentType []*big.Int) (*PublicresolverABIChangedIterator, error) {
+func (_PublicResolver *PublicResolverFilterer) FilterABIChanged(opts *bind.FilterOpts, node [][32]byte, contentType []*big.Int) (*PublicResolverABIChangedIterator, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
@@ -700,17 +700,17 @@ func (_Publicresolver *PublicresolverFilterer) FilterABIChanged(opts *bind.Filte
 		contentTypeRule = append(contentTypeRule, contentTypeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.FilterLogs(opts, "ABIChanged", nodeRule, contentTypeRule)
+	logs, sub, err := _PublicResolver.contract.FilterLogs(opts, "ABIChanged", nodeRule, contentTypeRule)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverABIChangedIterator{contract: _Publicresolver.contract, event: "ABIChanged", logs: logs, sub: sub}, nil
+	return &PublicResolverABIChangedIterator{contract: _PublicResolver.contract, event: "ABIChanged", logs: logs, sub: sub}, nil
 }
 
 // WatchABIChanged is a free log subscription operation binding the contract event 0xaa121bbeef5f32f5961a2a28966e769023910fc9479059ee3495d4c1a696efe3.
 //
 // Solidity: event ABIChanged(bytes32 indexed node, uint256 indexed contentType)
-func (_Publicresolver *PublicresolverFilterer) WatchABIChanged(opts *bind.WatchOpts, sink chan<- *PublicresolverABIChanged, node [][32]byte, contentType []*big.Int) (event.Subscription, error) {
+func (_PublicResolver *PublicResolverFilterer) WatchABIChanged(opts *bind.WatchOpts, sink chan<- *PublicResolverABIChanged, node [][32]byte, contentType []*big.Int) (event.Subscription, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
@@ -721,7 +721,7 @@ func (_Publicresolver *PublicresolverFilterer) WatchABIChanged(opts *bind.WatchO
 		contentTypeRule = append(contentTypeRule, contentTypeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.WatchLogs(opts, "ABIChanged", nodeRule, contentTypeRule)
+	logs, sub, err := _PublicResolver.contract.WatchLogs(opts, "ABIChanged", nodeRule, contentTypeRule)
 	if err != nil {
 		return nil, err
 	}
@@ -731,8 +731,8 @@ func (_Publicresolver *PublicresolverFilterer) WatchABIChanged(opts *bind.WatchO
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(PublicresolverABIChanged)
-				if err := _Publicresolver.contract.UnpackLog(event, "ABIChanged", log); err != nil {
+				event := new(PublicResolverABIChanged)
+				if err := _PublicResolver.contract.UnpackLog(event, "ABIChanged", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -756,18 +756,18 @@ func (_Publicresolver *PublicresolverFilterer) WatchABIChanged(opts *bind.WatchO
 // ParseABIChanged is a log parse operation binding the contract event 0xaa121bbeef5f32f5961a2a28966e769023910fc9479059ee3495d4c1a696efe3.
 //
 // Solidity: event ABIChanged(bytes32 indexed node, uint256 indexed contentType)
-func (_Publicresolver *PublicresolverFilterer) ParseABIChanged(log types.Log) (*PublicresolverABIChanged, error) {
-	event := new(PublicresolverABIChanged)
-	if err := _Publicresolver.contract.UnpackLog(event, "ABIChanged", log); err != nil {
+func (_PublicResolver *PublicResolverFilterer) ParseABIChanged(log types.Log) (*PublicResolverABIChanged, error) {
+	event := new(PublicResolverABIChanged)
+	if err := _PublicResolver.contract.UnpackLog(event, "ABIChanged", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// PublicresolverAddrChangedIterator is returned from FilterAddrChanged and is used to iterate over the raw logs and unpacked data for AddrChanged events raised by the Publicresolver contract.
-type PublicresolverAddrChangedIterator struct {
-	Event *PublicresolverAddrChanged // Event containing the contract specifics and raw log
+// PublicResolverAddrChangedIterator is returned from FilterAddrChanged and is used to iterate over the raw logs and unpacked data for AddrChanged events raised by the PublicResolver contract.
+type PublicResolverAddrChangedIterator struct {
+	Event *PublicResolverAddrChanged // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -781,7 +781,7 @@ type PublicresolverAddrChangedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *PublicresolverAddrChangedIterator) Next() bool {
+func (it *PublicResolverAddrChangedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -790,7 +790,7 @@ func (it *PublicresolverAddrChangedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(PublicresolverAddrChanged)
+			it.Event = new(PublicResolverAddrChanged)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -805,7 +805,7 @@ func (it *PublicresolverAddrChangedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(PublicresolverAddrChanged)
+		it.Event = new(PublicResolverAddrChanged)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -821,19 +821,19 @@ func (it *PublicresolverAddrChangedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicresolverAddrChangedIterator) Error() error {
+func (it *PublicResolverAddrChangedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *PublicresolverAddrChangedIterator) Close() error {
+func (it *PublicResolverAddrChangedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// PublicresolverAddrChanged represents a AddrChanged event raised by the Publicresolver contract.
-type PublicresolverAddrChanged struct {
+// PublicResolverAddrChanged represents a AddrChanged event raised by the PublicResolver contract.
+type PublicResolverAddrChanged struct {
 	Node [32]byte
 	A    common.Address
 	Raw  types.Log // Blockchain specific contextual infos
@@ -842,31 +842,31 @@ type PublicresolverAddrChanged struct {
 // FilterAddrChanged is a free log retrieval operation binding the contract event 0x52d7d861f09ab3d26239d492e8968629f95e9e318cf0b73bfddc441522a15fd2.
 //
 // Solidity: event AddrChanged(bytes32 indexed node, address a)
-func (_Publicresolver *PublicresolverFilterer) FilterAddrChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicresolverAddrChangedIterator, error) {
+func (_PublicResolver *PublicResolverFilterer) FilterAddrChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicResolverAddrChangedIterator, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.FilterLogs(opts, "AddrChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.FilterLogs(opts, "AddrChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverAddrChangedIterator{contract: _Publicresolver.contract, event: "AddrChanged", logs: logs, sub: sub}, nil
+	return &PublicResolverAddrChangedIterator{contract: _PublicResolver.contract, event: "AddrChanged", logs: logs, sub: sub}, nil
 }
 
 // WatchAddrChanged is a free log subscription operation binding the contract event 0x52d7d861f09ab3d26239d492e8968629f95e9e318cf0b73bfddc441522a15fd2.
 //
 // Solidity: event AddrChanged(bytes32 indexed node, address a)
-func (_Publicresolver *PublicresolverFilterer) WatchAddrChanged(opts *bind.WatchOpts, sink chan<- *PublicresolverAddrChanged, node [][32]byte) (event.Subscription, error) {
+func (_PublicResolver *PublicResolverFilterer) WatchAddrChanged(opts *bind.WatchOpts, sink chan<- *PublicResolverAddrChanged, node [][32]byte) (event.Subscription, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.WatchLogs(opts, "AddrChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.WatchLogs(opts, "AddrChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
@@ -876,8 +876,8 @@ func (_Publicresolver *PublicresolverFilterer) WatchAddrChanged(opts *bind.Watch
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(PublicresolverAddrChanged)
-				if err := _Publicresolver.contract.UnpackLog(event, "AddrChanged", log); err != nil {
+				event := new(PublicResolverAddrChanged)
+				if err := _PublicResolver.contract.UnpackLog(event, "AddrChanged", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -901,18 +901,18 @@ func (_Publicresolver *PublicresolverFilterer) WatchAddrChanged(opts *bind.Watch
 // ParseAddrChanged is a log parse operation binding the contract event 0x52d7d861f09ab3d26239d492e8968629f95e9e318cf0b73bfddc441522a15fd2.
 //
 // Solidity: event AddrChanged(bytes32 indexed node, address a)
-func (_Publicresolver *PublicresolverFilterer) ParseAddrChanged(log types.Log) (*PublicresolverAddrChanged, error) {
-	event := new(PublicresolverAddrChanged)
-	if err := _Publicresolver.contract.UnpackLog(event, "AddrChanged", log); err != nil {
+func (_PublicResolver *PublicResolverFilterer) ParseAddrChanged(log types.Log) (*PublicResolverAddrChanged, error) {
+	event := new(PublicResolverAddrChanged)
+	if err := _PublicResolver.contract.UnpackLog(event, "AddrChanged", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// PublicresolverContentChangedIterator is returned from FilterContentChanged and is used to iterate over the raw logs and unpacked data for ContentChanged events raised by the Publicresolver contract.
-type PublicresolverContentChangedIterator struct {
-	Event *PublicresolverContentChanged // Event containing the contract specifics and raw log
+// PublicResolverContentChangedIterator is returned from FilterContentChanged and is used to iterate over the raw logs and unpacked data for ContentChanged events raised by the PublicResolver contract.
+type PublicResolverContentChangedIterator struct {
+	Event *PublicResolverContentChanged // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -926,7 +926,7 @@ type PublicresolverContentChangedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *PublicresolverContentChangedIterator) Next() bool {
+func (it *PublicResolverContentChangedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -935,7 +935,7 @@ func (it *PublicresolverContentChangedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(PublicresolverContentChanged)
+			it.Event = new(PublicResolverContentChanged)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -950,7 +950,7 @@ func (it *PublicresolverContentChangedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(PublicresolverContentChanged)
+		it.Event = new(PublicResolverContentChanged)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -966,19 +966,19 @@ func (it *PublicresolverContentChangedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicresolverContentChangedIterator) Error() error {
+func (it *PublicResolverContentChangedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *PublicresolverContentChangedIterator) Close() error {
+func (it *PublicResolverContentChangedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// PublicresolverContentChanged represents a ContentChanged event raised by the Publicresolver contract.
-type PublicresolverContentChanged struct {
+// PublicResolverContentChanged represents a ContentChanged event raised by the PublicResolver contract.
+type PublicResolverContentChanged struct {
 	Node [32]byte
 	Hash [32]byte
 	Raw  types.Log // Blockchain specific contextual infos
@@ -987,31 +987,31 @@ type PublicresolverContentChanged struct {
 // FilterContentChanged is a free log retrieval operation binding the contract event 0x0424b6fe0d9c3bdbece0e7879dc241bb0c22e900be8b6c168b4ee08bd9bf83bc.
 //
 // Solidity: event ContentChanged(bytes32 indexed node, bytes32 hash)
-func (_Publicresolver *PublicresolverFilterer) FilterContentChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicresolverContentChangedIterator, error) {
+func (_PublicResolver *PublicResolverFilterer) FilterContentChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicResolverContentChangedIterator, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.FilterLogs(opts, "ContentChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.FilterLogs(opts, "ContentChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverContentChangedIterator{contract: _Publicresolver.contract, event: "ContentChanged", logs: logs, sub: sub}, nil
+	return &PublicResolverContentChangedIterator{contract: _PublicResolver.contract, event: "ContentChanged", logs: logs, sub: sub}, nil
 }
 
 // WatchContentChanged is a free log subscription operation binding the contract event 0x0424b6fe0d9c3bdbece0e7879dc241bb0c22e900be8b6c168b4ee08bd9bf83bc.
 //
 // Solidity: event ContentChanged(bytes32 indexed node, bytes32 hash)
-func (_Publicresolver *PublicresolverFilterer) WatchContentChanged(opts *bind.WatchOpts, sink chan<- *PublicresolverContentChanged, node [][32]byte) (event.Subscription, error) {
+func (_PublicResolver *PublicResolverFilterer) WatchContentChanged(opts *bind.WatchOpts, sink chan<- *PublicResolverContentChanged, node [][32]byte) (event.Subscription, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.WatchLogs(opts, "ContentChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.WatchLogs(opts, "ContentChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1021,8 +1021,8 @@ func (_Publicresolver *PublicresolverFilterer) WatchContentChanged(opts *bind.Wa
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(PublicresolverContentChanged)
-				if err := _Publicresolver.contract.UnpackLog(event, "ContentChanged", log); err != nil {
+				event := new(PublicResolverContentChanged)
+				if err := _PublicResolver.contract.UnpackLog(event, "ContentChanged", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1046,18 +1046,18 @@ func (_Publicresolver *PublicresolverFilterer) WatchContentChanged(opts *bind.Wa
 // ParseContentChanged is a log parse operation binding the contract event 0x0424b6fe0d9c3bdbece0e7879dc241bb0c22e900be8b6c168b4ee08bd9bf83bc.
 //
 // Solidity: event ContentChanged(bytes32 indexed node, bytes32 hash)
-func (_Publicresolver *PublicresolverFilterer) ParseContentChanged(log types.Log) (*PublicresolverContentChanged, error) {
-	event := new(PublicresolverContentChanged)
-	if err := _Publicresolver.contract.UnpackLog(event, "ContentChanged", log); err != nil {
+func (_PublicResolver *PublicResolverFilterer) ParseContentChanged(log types.Log) (*PublicResolverContentChanged, error) {
+	event := new(PublicResolverContentChanged)
+	if err := _PublicResolver.contract.UnpackLog(event, "ContentChanged", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// PublicresolverMultihashChangedIterator is returned from FilterMultihashChanged and is used to iterate over the raw logs and unpacked data for MultihashChanged events raised by the Publicresolver contract.
-type PublicresolverMultihashChangedIterator struct {
-	Event *PublicresolverMultihashChanged // Event containing the contract specifics and raw log
+// PublicResolverMultihashChangedIterator is returned from FilterMultihashChanged and is used to iterate over the raw logs and unpacked data for MultihashChanged events raised by the PublicResolver contract.
+type PublicResolverMultihashChangedIterator struct {
+	Event *PublicResolverMultihashChanged // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1071,7 +1071,7 @@ type PublicresolverMultihashChangedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *PublicresolverMultihashChangedIterator) Next() bool {
+func (it *PublicResolverMultihashChangedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1080,7 +1080,7 @@ func (it *PublicresolverMultihashChangedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(PublicresolverMultihashChanged)
+			it.Event = new(PublicResolverMultihashChanged)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1095,7 +1095,7 @@ func (it *PublicresolverMultihashChangedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(PublicresolverMultihashChanged)
+		it.Event = new(PublicResolverMultihashChanged)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1111,19 +1111,19 @@ func (it *PublicresolverMultihashChangedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicresolverMultihashChangedIterator) Error() error {
+func (it *PublicResolverMultihashChangedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *PublicresolverMultihashChangedIterator) Close() error {
+func (it *PublicResolverMultihashChangedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// PublicresolverMultihashChanged represents a MultihashChanged event raised by the Publicresolver contract.
-type PublicresolverMultihashChanged struct {
+// PublicResolverMultihashChanged represents a MultihashChanged event raised by the PublicResolver contract.
+type PublicResolverMultihashChanged struct {
 	Node [32]byte
 	Hash []byte
 	Raw  types.Log // Blockchain specific contextual infos
@@ -1132,31 +1132,31 @@ type PublicresolverMultihashChanged struct {
 // FilterMultihashChanged is a free log retrieval operation binding the contract event 0xc0b0fc07269fc2749adada3221c095a1d2187b2d075b51c915857b520f3a5021.
 //
 // Solidity: event MultihashChanged(bytes32 indexed node, bytes hash)
-func (_Publicresolver *PublicresolverFilterer) FilterMultihashChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicresolverMultihashChangedIterator, error) {
+func (_PublicResolver *PublicResolverFilterer) FilterMultihashChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicResolverMultihashChangedIterator, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.FilterLogs(opts, "MultihashChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.FilterLogs(opts, "MultihashChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverMultihashChangedIterator{contract: _Publicresolver.contract, event: "MultihashChanged", logs: logs, sub: sub}, nil
+	return &PublicResolverMultihashChangedIterator{contract: _PublicResolver.contract, event: "MultihashChanged", logs: logs, sub: sub}, nil
 }
 
 // WatchMultihashChanged is a free log subscription operation binding the contract event 0xc0b0fc07269fc2749adada3221c095a1d2187b2d075b51c915857b520f3a5021.
 //
 // Solidity: event MultihashChanged(bytes32 indexed node, bytes hash)
-func (_Publicresolver *PublicresolverFilterer) WatchMultihashChanged(opts *bind.WatchOpts, sink chan<- *PublicresolverMultihashChanged, node [][32]byte) (event.Subscription, error) {
+func (_PublicResolver *PublicResolverFilterer) WatchMultihashChanged(opts *bind.WatchOpts, sink chan<- *PublicResolverMultihashChanged, node [][32]byte) (event.Subscription, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.WatchLogs(opts, "MultihashChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.WatchLogs(opts, "MultihashChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1166,8 +1166,8 @@ func (_Publicresolver *PublicresolverFilterer) WatchMultihashChanged(opts *bind.
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(PublicresolverMultihashChanged)
-				if err := _Publicresolver.contract.UnpackLog(event, "MultihashChanged", log); err != nil {
+				event := new(PublicResolverMultihashChanged)
+				if err := _PublicResolver.contract.UnpackLog(event, "MultihashChanged", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1191,18 +1191,18 @@ func (_Publicresolver *PublicresolverFilterer) WatchMultihashChanged(opts *bind.
 // ParseMultihashChanged is a log parse operation binding the contract event 0xc0b0fc07269fc2749adada3221c095a1d2187b2d075b51c915857b520f3a5021.
 //
 // Solidity: event MultihashChanged(bytes32 indexed node, bytes hash)
-func (_Publicresolver *PublicresolverFilterer) ParseMultihashChanged(log types.Log) (*PublicresolverMultihashChanged, error) {
-	event := new(PublicresolverMultihashChanged)
-	if err := _Publicresolver.contract.UnpackLog(event, "MultihashChanged", log); err != nil {
+func (_PublicResolver *PublicResolverFilterer) ParseMultihashChanged(log types.Log) (*PublicResolverMultihashChanged, error) {
+	event := new(PublicResolverMultihashChanged)
+	if err := _PublicResolver.contract.UnpackLog(event, "MultihashChanged", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// PublicresolverNameChangedIterator is returned from FilterNameChanged and is used to iterate over the raw logs and unpacked data for NameChanged events raised by the Publicresolver contract.
-type PublicresolverNameChangedIterator struct {
-	Event *PublicresolverNameChanged // Event containing the contract specifics and raw log
+// PublicResolverNameChangedIterator is returned from FilterNameChanged and is used to iterate over the raw logs and unpacked data for NameChanged events raised by the PublicResolver contract.
+type PublicResolverNameChangedIterator struct {
+	Event *PublicResolverNameChanged // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1216,7 +1216,7 @@ type PublicresolverNameChangedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *PublicresolverNameChangedIterator) Next() bool {
+func (it *PublicResolverNameChangedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1225,7 +1225,7 @@ func (it *PublicresolverNameChangedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(PublicresolverNameChanged)
+			it.Event = new(PublicResolverNameChanged)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1240,7 +1240,7 @@ func (it *PublicresolverNameChangedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(PublicresolverNameChanged)
+		it.Event = new(PublicResolverNameChanged)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1256,19 +1256,19 @@ func (it *PublicresolverNameChangedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicresolverNameChangedIterator) Error() error {
+func (it *PublicResolverNameChangedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *PublicresolverNameChangedIterator) Close() error {
+func (it *PublicResolverNameChangedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// PublicresolverNameChanged represents a NameChanged event raised by the Publicresolver contract.
-type PublicresolverNameChanged struct {
+// PublicResolverNameChanged represents a NameChanged event raised by the PublicResolver contract.
+type PublicResolverNameChanged struct {
 	Node [32]byte
 	Name string
 	Raw  types.Log // Blockchain specific contextual infos
@@ -1277,31 +1277,31 @@ type PublicresolverNameChanged struct {
 // FilterNameChanged is a free log retrieval operation binding the contract event 0xb7d29e911041e8d9b843369e890bcb72c9388692ba48b65ac54e7214c4c348f7.
 //
 // Solidity: event NameChanged(bytes32 indexed node, string name)
-func (_Publicresolver *PublicresolverFilterer) FilterNameChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicresolverNameChangedIterator, error) {
+func (_PublicResolver *PublicResolverFilterer) FilterNameChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicResolverNameChangedIterator, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.FilterLogs(opts, "NameChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.FilterLogs(opts, "NameChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverNameChangedIterator{contract: _Publicresolver.contract, event: "NameChanged", logs: logs, sub: sub}, nil
+	return &PublicResolverNameChangedIterator{contract: _PublicResolver.contract, event: "NameChanged", logs: logs, sub: sub}, nil
 }
 
 // WatchNameChanged is a free log subscription operation binding the contract event 0xb7d29e911041e8d9b843369e890bcb72c9388692ba48b65ac54e7214c4c348f7.
 //
 // Solidity: event NameChanged(bytes32 indexed node, string name)
-func (_Publicresolver *PublicresolverFilterer) WatchNameChanged(opts *bind.WatchOpts, sink chan<- *PublicresolverNameChanged, node [][32]byte) (event.Subscription, error) {
+func (_PublicResolver *PublicResolverFilterer) WatchNameChanged(opts *bind.WatchOpts, sink chan<- *PublicResolverNameChanged, node [][32]byte) (event.Subscription, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.WatchLogs(opts, "NameChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.WatchLogs(opts, "NameChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1311,8 +1311,8 @@ func (_Publicresolver *PublicresolverFilterer) WatchNameChanged(opts *bind.Watch
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(PublicresolverNameChanged)
-				if err := _Publicresolver.contract.UnpackLog(event, "NameChanged", log); err != nil {
+				event := new(PublicResolverNameChanged)
+				if err := _PublicResolver.contract.UnpackLog(event, "NameChanged", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1336,18 +1336,18 @@ func (_Publicresolver *PublicresolverFilterer) WatchNameChanged(opts *bind.Watch
 // ParseNameChanged is a log parse operation binding the contract event 0xb7d29e911041e8d9b843369e890bcb72c9388692ba48b65ac54e7214c4c348f7.
 //
 // Solidity: event NameChanged(bytes32 indexed node, string name)
-func (_Publicresolver *PublicresolverFilterer) ParseNameChanged(log types.Log) (*PublicresolverNameChanged, error) {
-	event := new(PublicresolverNameChanged)
-	if err := _Publicresolver.contract.UnpackLog(event, "NameChanged", log); err != nil {
+func (_PublicResolver *PublicResolverFilterer) ParseNameChanged(log types.Log) (*PublicResolverNameChanged, error) {
+	event := new(PublicResolverNameChanged)
+	if err := _PublicResolver.contract.UnpackLog(event, "NameChanged", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// PublicresolverPubkeyChangedIterator is returned from FilterPubkeyChanged and is used to iterate over the raw logs and unpacked data for PubkeyChanged events raised by the Publicresolver contract.
-type PublicresolverPubkeyChangedIterator struct {
-	Event *PublicresolverPubkeyChanged // Event containing the contract specifics and raw log
+// PublicResolverPubkeyChangedIterator is returned from FilterPubkeyChanged and is used to iterate over the raw logs and unpacked data for PubkeyChanged events raised by the PublicResolver contract.
+type PublicResolverPubkeyChangedIterator struct {
+	Event *PublicResolverPubkeyChanged // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1361,7 +1361,7 @@ type PublicresolverPubkeyChangedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *PublicresolverPubkeyChangedIterator) Next() bool {
+func (it *PublicResolverPubkeyChangedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1370,7 +1370,7 @@ func (it *PublicresolverPubkeyChangedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(PublicresolverPubkeyChanged)
+			it.Event = new(PublicResolverPubkeyChanged)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1385,7 +1385,7 @@ func (it *PublicresolverPubkeyChangedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(PublicresolverPubkeyChanged)
+		it.Event = new(PublicResolverPubkeyChanged)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1401,19 +1401,19 @@ func (it *PublicresolverPubkeyChangedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicresolverPubkeyChangedIterator) Error() error {
+func (it *PublicResolverPubkeyChangedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *PublicresolverPubkeyChangedIterator) Close() error {
+func (it *PublicResolverPubkeyChangedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// PublicresolverPubkeyChanged represents a PubkeyChanged event raised by the Publicresolver contract.
-type PublicresolverPubkeyChanged struct {
+// PublicResolverPubkeyChanged represents a PubkeyChanged event raised by the PublicResolver contract.
+type PublicResolverPubkeyChanged struct {
 	Node [32]byte
 	X    [32]byte
 	Y    [32]byte
@@ -1423,31 +1423,31 @@ type PublicresolverPubkeyChanged struct {
 // FilterPubkeyChanged is a free log retrieval operation binding the contract event 0x1d6f5e03d3f63eb58751986629a5439baee5079ff04f345becb66e23eb154e46.
 //
 // Solidity: event PubkeyChanged(bytes32 indexed node, bytes32 x, bytes32 y)
-func (_Publicresolver *PublicresolverFilterer) FilterPubkeyChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicresolverPubkeyChangedIterator, error) {
+func (_PublicResolver *PublicResolverFilterer) FilterPubkeyChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicResolverPubkeyChangedIterator, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.FilterLogs(opts, "PubkeyChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.FilterLogs(opts, "PubkeyChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverPubkeyChangedIterator{contract: _Publicresolver.contract, event: "PubkeyChanged", logs: logs, sub: sub}, nil
+	return &PublicResolverPubkeyChangedIterator{contract: _PublicResolver.contract, event: "PubkeyChanged", logs: logs, sub: sub}, nil
 }
 
 // WatchPubkeyChanged is a free log subscription operation binding the contract event 0x1d6f5e03d3f63eb58751986629a5439baee5079ff04f345becb66e23eb154e46.
 //
 // Solidity: event PubkeyChanged(bytes32 indexed node, bytes32 x, bytes32 y)
-func (_Publicresolver *PublicresolverFilterer) WatchPubkeyChanged(opts *bind.WatchOpts, sink chan<- *PublicresolverPubkeyChanged, node [][32]byte) (event.Subscription, error) {
+func (_PublicResolver *PublicResolverFilterer) WatchPubkeyChanged(opts *bind.WatchOpts, sink chan<- *PublicResolverPubkeyChanged, node [][32]byte) (event.Subscription, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.WatchLogs(opts, "PubkeyChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.WatchLogs(opts, "PubkeyChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1457,8 +1457,8 @@ func (_Publicresolver *PublicresolverFilterer) WatchPubkeyChanged(opts *bind.Wat
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(PublicresolverPubkeyChanged)
-				if err := _Publicresolver.contract.UnpackLog(event, "PubkeyChanged", log); err != nil {
+				event := new(PublicResolverPubkeyChanged)
+				if err := _PublicResolver.contract.UnpackLog(event, "PubkeyChanged", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1482,18 +1482,18 @@ func (_Publicresolver *PublicresolverFilterer) WatchPubkeyChanged(opts *bind.Wat
 // ParsePubkeyChanged is a log parse operation binding the contract event 0x1d6f5e03d3f63eb58751986629a5439baee5079ff04f345becb66e23eb154e46.
 //
 // Solidity: event PubkeyChanged(bytes32 indexed node, bytes32 x, bytes32 y)
-func (_Publicresolver *PublicresolverFilterer) ParsePubkeyChanged(log types.Log) (*PublicresolverPubkeyChanged, error) {
-	event := new(PublicresolverPubkeyChanged)
-	if err := _Publicresolver.contract.UnpackLog(event, "PubkeyChanged", log); err != nil {
+func (_PublicResolver *PublicResolverFilterer) ParsePubkeyChanged(log types.Log) (*PublicResolverPubkeyChanged, error) {
+	event := new(PublicResolverPubkeyChanged)
+	if err := _PublicResolver.contract.UnpackLog(event, "PubkeyChanged", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// PublicresolverTextChangedIterator is returned from FilterTextChanged and is used to iterate over the raw logs and unpacked data for TextChanged events raised by the Publicresolver contract.
-type PublicresolverTextChangedIterator struct {
-	Event *PublicresolverTextChanged // Event containing the contract specifics and raw log
+// PublicResolverTextChangedIterator is returned from FilterTextChanged and is used to iterate over the raw logs and unpacked data for TextChanged events raised by the PublicResolver contract.
+type PublicResolverTextChangedIterator struct {
+	Event *PublicResolverTextChanged // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1507,7 +1507,7 @@ type PublicresolverTextChangedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *PublicresolverTextChangedIterator) Next() bool {
+func (it *PublicResolverTextChangedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1516,7 +1516,7 @@ func (it *PublicresolverTextChangedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(PublicresolverTextChanged)
+			it.Event = new(PublicResolverTextChanged)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1531,7 +1531,7 @@ func (it *PublicresolverTextChangedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(PublicresolverTextChanged)
+		it.Event = new(PublicResolverTextChanged)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1547,19 +1547,19 @@ func (it *PublicresolverTextChangedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicresolverTextChangedIterator) Error() error {
+func (it *PublicResolverTextChangedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *PublicresolverTextChangedIterator) Close() error {
+func (it *PublicResolverTextChangedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// PublicresolverTextChanged represents a TextChanged event raised by the Publicresolver contract.
-type PublicresolverTextChanged struct {
+// PublicResolverTextChanged represents a TextChanged event raised by the PublicResolver contract.
+type PublicResolverTextChanged struct {
 	Node       [32]byte
 	IndexedKey string
 	Key        string
@@ -1569,31 +1569,31 @@ type PublicresolverTextChanged struct {
 // FilterTextChanged is a free log retrieval operation binding the contract event 0xd8c9334b1a9c2f9da342a0a2b32629c1a229b6445dad78947f674b44444a7550.
 //
 // Solidity: event TextChanged(bytes32 indexed node, string indexedKey, string key)
-func (_Publicresolver *PublicresolverFilterer) FilterTextChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicresolverTextChangedIterator, error) {
+func (_PublicResolver *PublicResolverFilterer) FilterTextChanged(opts *bind.FilterOpts, node [][32]byte) (*PublicResolverTextChangedIterator, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.FilterLogs(opts, "TextChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.FilterLogs(opts, "TextChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
-	return &PublicresolverTextChangedIterator{contract: _Publicresolver.contract, event: "TextChanged", logs: logs, sub: sub}, nil
+	return &PublicResolverTextChangedIterator{contract: _PublicResolver.contract, event: "TextChanged", logs: logs, sub: sub}, nil
 }
 
 // WatchTextChanged is a free log subscription operation binding the contract event 0xd8c9334b1a9c2f9da342a0a2b32629c1a229b6445dad78947f674b44444a7550.
 //
 // Solidity: event TextChanged(bytes32 indexed node, string indexedKey, string key)
-func (_Publicresolver *PublicresolverFilterer) WatchTextChanged(opts *bind.WatchOpts, sink chan<- *PublicresolverTextChanged, node [][32]byte) (event.Subscription, error) {
+func (_PublicResolver *PublicResolverFilterer) WatchTextChanged(opts *bind.WatchOpts, sink chan<- *PublicResolverTextChanged, node [][32]byte) (event.Subscription, error) {
 
 	var nodeRule []interface{}
 	for _, nodeItem := range node {
 		nodeRule = append(nodeRule, nodeItem)
 	}
 
-	logs, sub, err := _Publicresolver.contract.WatchLogs(opts, "TextChanged", nodeRule)
+	logs, sub, err := _PublicResolver.contract.WatchLogs(opts, "TextChanged", nodeRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1603,8 +1603,8 @@ func (_Publicresolver *PublicresolverFilterer) WatchTextChanged(opts *bind.Watch
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(PublicresolverTextChanged)
-				if err := _Publicresolver.contract.UnpackLog(event, "TextChanged", log); err != nil {
+				event := new(PublicResolverTextChanged)
+				if err := _PublicResolver.contract.UnpackLog(event, "TextChanged", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1628,9 +1628,9 @@ func (_Publicresolver *PublicresolverFilterer) WatchTextChanged(opts *bind.Watch
 // ParseTextChanged is a log parse operation binding the contract event 0xd8c9334b1a9c2f9da342a0a2b32629c1a229b6445dad78947f674b44444a7550.
 //
 // Solidity: event TextChanged(bytes32 indexed node, string indexedKey, string key)
-func (_Publicresolver *PublicresolverFilterer) ParseTextChanged(log types.Log) (*PublicresolverTextChanged, error) {
-	event := new(PublicresolverTextChanged)
-	if err := _Publicresolver.contract.UnpackLog(event, "TextChanged", log); err != nil {
+func (_PublicResolver *PublicResolverFilterer) ParseTextChanged(log types.Log) (*PublicResolverTextChanged, error) {
+	event := new(PublicResolverTextChanged)
+	if err := _PublicResolver.contract.UnpackLog(event, "TextChanged", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
