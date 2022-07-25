@@ -104,6 +104,7 @@ can consume it.`,
 				fmt.Println("\nunknown network")
 				return
 			}
+			network = "custom"
 			providerDomain := config.GetString(optionProviderDomain)
 			publicResolverAddress := config.GetString(optionPublicResolverAddress)
 			fdsRegistrarAddress := config.GetString(optionFDSRegistrarAddress)
@@ -165,6 +166,7 @@ can consume it.`,
 
 		logger.Info("configuration values")
 		logger.Info("version        : ", dfs.Version)
+		logger.Info("network        : ", network)
 		logger.Info("beeApi         : ", beeApi)
 		logger.Info("isGatewayProxy : ", isGatewayProxy)
 		logger.Info("verbosity      : ", verbosity)
