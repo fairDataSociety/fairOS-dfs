@@ -10,9 +10,9 @@ type Config struct {
 
 func TestnetConfig() *Config {
 	return &Config{
-		ENSRegistryAddress:    "0xE687f17858382C6FCbAe02b31B0aAB607D396059",
-		FDSRegistrarAddress:   "0x3adfB0D6B9662c9F711c2Ab18Cf5D7B0cc369C6B",
-		PublicResolverAddress: "0x200C9d891F5b480D6210a252539c473e3Ae4771a",
+		ENSRegistryAddress:    "0x42B22483e3c8dF794f351939620572d1a3193c12",
+		FDSRegistrarAddress:   "0xF4C9Cd25031E3BB8c5618299bf35b349c1aAb6A9",
+		PublicResolverAddress: "0xbfeCC6c32B224F7D0026ac86506Fe40A9607BD14",
 		ProviderDomain:        "fds",
 	}
 }
