@@ -19,6 +19,7 @@ package bee
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -447,7 +448,7 @@ func createHTTPClient() *http.Client {
 
 func (s *BeeClient) addToChunkCache(key string, value []byte) {
 	if s.chunkCache != nil {
-		s.chunkCache.Add(key, value)
+		s.chunkCache.Add(key, hex.EncodeToString(value))
 	}
 }
 
@@ -462,7 +463,11 @@ func (s *BeeClient) getFromChunkCache(key string) []byte {
 	if s.chunkCache != nil {
 		value, ok := s.chunkCache.Get(key)
 		if ok {
-			return value.([]byte)
+			data, err := hex.DecodeString(fmt.Sprintf("%v", value))
+			if err != nil {
+				return nil
+			}
+			return data
 		}
 		return nil
 	}

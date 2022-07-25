@@ -205,6 +205,7 @@ func (h *Handler) rawSignedChunkData(chunk swarm.Chunk) ([]byte, error) {
 		return nil, fmt.Errorf("invalid chunk data len")
 	}
 	cursor := idLength + signatureLength + utils.SpanLength
+
 	return chunkdata[cursor:], nil
 }
 

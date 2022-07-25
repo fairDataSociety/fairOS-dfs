@@ -43,7 +43,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if err != nil {
 		return nil, "", "", err
 	}
-
 	// create account
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
@@ -69,9 +68,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	// load user account
 	err = acc.LoadUserAccountFromSeed(seed)
 	if err != nil {
-		if err.Error() == "mnemonic is invalid" {
-			return nil, "", "", ErrInvalidPassword
-		}
 		return nil, "", "", err
 	}
 
@@ -86,7 +82,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}
-
 	ui := &Info{
 		name:       userName,
 		sessionId:  sessionId,

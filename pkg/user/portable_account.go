@@ -11,9 +11,8 @@ const (
 )
 
 func (u *Users) uploadPortableAccount(accountInfo *account.Info, username, password string, data []byte, fd *feed.API) error {
-	ts := AuthVersion + username + password
-	topic := utils.HashString(ts)
-	_, err := fd.CreateFeed(topic, accountInfo.GetAddress(), data)
+	topic := utils.HashString(AuthVersion + username + password)
+	_, err := fd.CreateFeedFromTopic(topic, accountInfo.GetAddress(), data)
 	if err != nil {
 		return err
 	}
@@ -22,7 +21,7 @@ func (u *Users) uploadPortableAccount(accountInfo *account.Info, username, passw
 
 func (u *Users) downloadPortableAccount(address utils.Address, username, password string, fd *feed.API) ([]byte, error) {
 	topic := utils.HashString(AuthVersion + username + password)
-	_, data, err := fd.GetFeedData(topic, address)
+	_, data, err := fd.GetFeedDataFromTopic(topic, address)
 	if err != nil {
 		return nil, err
 	}

@@ -433,8 +433,9 @@ func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, er
 	aesKey := sha256.Sum256([]byte(passphrase))
 	decryptedBytes, err := decryptBytes(aesKey[:], paddedSeed)
 	if err != nil {
-		return nil, fmt.Errorf("private key decryption failed: %w", err)
+		return nil, fmt.Errorf("seed decryption failed: %w", err)
 	}
+
 	return decryptedBytes[:SeedSize], nil
 }
 
