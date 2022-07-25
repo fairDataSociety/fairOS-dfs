@@ -19,6 +19,7 @@ package collection_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"sort"
@@ -491,33 +492,40 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_seek_limit_string_keys", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_Itr_1", collection.StringIndex)
+		tableNo := 0
+	research:
+		tableNo++
+		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_01%d", tableNo), collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_Itr_1")
+		err = kvStore.OpenKVTable(fmt.Sprintf("kv_table_Itr_01%d", tableNo))
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		keys, values, err := addRandomStrings(t, kvStore, 100, "kv_table_Itr_1")
+		keys, values, err := addRandomStrings(t, kvStore, 100, fmt.Sprintf("kv_table_Itr_01%d", tableNo))
 		if err != nil {
 			t.Fatal(err)
 		}
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
 
-		itr, err := kvStore.KVSeek("kv_table_Itr_1", "B", "", 10)
+		itr, err := kvStore.KVSeek(fmt.Sprintf("kv_table_Itr_01%d", tableNo), "B", "", 10)
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		matched := false
 		startIndex := 0
 		for i := 0; i < 100; i++ {
 			if strings.HasPrefix(keys[i], "B") {
+				matched = true
 				startIndex = i
 				break
 			}
 		}
+		if !matched {
+			goto research
+		}
+
 		// check the order of the keys
 		for i := startIndex; i < startIndex+10; i++ {
 			itr.Next()
@@ -537,21 +545,25 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_seek_start_end_string_keys", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_Itr_2", collection.StringIndex)
+		tableNo := 0
+	research:
+		tableNo++
+		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_Itr_2")
+		err = kvStore.OpenKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo))
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		keys, values, err := addRandomStrings(t, kvStore, 100, "kv_table_Itr_2")
+		keys, values, err := addRandomStrings(t, kvStore, 100, fmt.Sprintf("kv_table_Itr_1%d", tableNo))
 		if err != nil {
 			t.Fatal(err)
 		}
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
 
+		matched := false
 		startIndex := 0
 		endIndex := 0
 
@@ -559,9 +571,11 @@ func TestKeyValueStore(t *testing.T) {
 		endPrefix := "C"
 		for i := 0; i < 100; i++ {
 			if startIndex == 0 && strings.HasPrefix(keys[i], startPrefix) {
+				matched = true
 				startIndex = i
 			}
 			if strings.HasPrefix(keys[i], endPrefix) {
+				matched = true
 				if startIndex == 0 {
 					startIndex = i
 					startPrefix = endPrefix
@@ -573,12 +587,16 @@ func TestKeyValueStore(t *testing.T) {
 
 			}
 		}
-
-		itr, err := kvStore.KVSeek("kv_table_Itr_2", startPrefix, endPrefix, -1)
+		if !matched {
+			goto research
+		}
+		itr, err := kvStore.KVSeek(fmt.Sprintf("kv_table_Itr_1%d", tableNo), startPrefix, endPrefix, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		if startIndex > endIndex {
+			goto research
+		}
 		// check the order of the keys
 		for i := startIndex; i < endIndex; i++ {
 			itr.Next()
