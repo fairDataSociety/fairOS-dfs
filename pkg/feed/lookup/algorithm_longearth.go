@@ -11,10 +11,10 @@ import (
 type stepFunc func(ctx context.Context, t uint64, hint Epoch) interface{}
 
 // LongEarthLookaheadDelay is the headstart the lookahead gives R before it launches
-var LongEarthLookaheadDelay = 250 * time.Millisecond
+var LongEarthLookaheadDelay = 500 * time.Millisecond
 
 // LongEarthLookbackDelay is the headstart the lookback gives R before it launches
-var LongEarthLookbackDelay = 250 * time.Millisecond
+var LongEarthLookbackDelay = 500 * time.Millisecond
 
 // LongEarthAlgorithm explores possible lookup paths in parallel, pruning paths as soon
 // as a more promising lookup path is found. As a result, this lookup algorithm is an order

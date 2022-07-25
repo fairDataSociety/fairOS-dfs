@@ -119,5 +119,5 @@ func (d *DfsAPI) MigrateUser(username, passPhrase, sessionId string) error {
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
-	return d.users.MigrateUser(ui.GetUserName(), username, d.dataDir, passPhrase, sessionId, ui)
+	return d.users.MigrateUser(ui.GetUserName(), username, d.dataDir, passPhrase, sessionId, d.client, ui)
 }

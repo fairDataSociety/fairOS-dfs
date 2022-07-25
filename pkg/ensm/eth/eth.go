@@ -16,8 +16,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/ens"
+	fdsregistrar "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/fds-registrar"
 	publicresolver "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/public-resolver"
-	subdomainregistrar "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/subdomain-registrar"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	goens "github.com/wealdtech/go-ens/v3"
@@ -35,11 +35,11 @@ var (
 )
 
 type Client struct {
-	eth                *ethclient.Client
-	ensConfig          *contracts.Config
-	ensRegistry        *ens.Ens
-	subdomainRegistrar *subdomainregistrar.Subdomainregistrar
-	publicResolver     *publicresolver.Publicresolver
+	eth            *ethclient.Client
+	ensConfig      *contracts.Config
+	ensRegistry    *ens.ENSRegistry
+	fdsRegistrar   *fdsregistrar.FDSRegistrar
+	publicResolver *publicresolver.PublicResolver
 
 	logger logging.Logger
 }
@@ -55,28 +55,31 @@ func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("dial eth ensm: %w", err)
 	}
-	ensRegistry, err := ens.NewEns(common.HexToAddress(ensConfig.ENSRegistryAddress), eth)
+	ensRegistry, err := ens.NewENSRegistry(common.HexToAddress(ensConfig.ENSRegistryAddress), eth)
 	if err != nil {
 		return nil, err
 	}
-	subdomainRegistrar, err := subdomainregistrar.NewSubdomainregistrar(common.HexToAddress(ensConfig.SubdomainRegistrarAddress), eth)
+	fdsRegistrar, err := fdsregistrar.NewFDSRegistrar(common.HexToAddress(ensConfig.FDSRegistrarAddress), eth)
 	if err != nil {
 		return nil, err
 	}
-	publicResolver, err := publicresolver.NewPublicresolver(common.HexToAddress(ensConfig.PublicResolverAddress), eth)
+	publicResolver, err := publicresolver.NewPublicResolver(common.HexToAddress(ensConfig.PublicResolverAddress), eth)
 	if err != nil {
 		return nil, err
 	}
 
 	logger.Info("ensProviderBackend   : ", ensConfig.ProviderBackend)
 	logger.Info("ensProviderDomain    : ", ensConfig.ProviderDomain)
+	logger.Info("ENSRegistryAddress    : ", common.HexToAddress(ensConfig.ENSRegistryAddress).String())
+	logger.Info("FDSRegistrarAddress    : ", common.HexToAddress(ensConfig.FDSRegistrarAddress).String())
+	logger.Info("PublicResolverAddress    : ", common.HexToAddress(ensConfig.PublicResolverAddress).String())
 	c := &Client{
-		eth:                eth,
-		ensConfig:          ensConfig,
-		ensRegistry:        ensRegistry,
-		subdomainRegistrar: subdomainRegistrar,
-		publicResolver:     publicResolver,
-		logger:             logger,
+		eth:            eth,
+		ensConfig:      ensConfig,
+		ensRegistry:    ensRegistry,
+		fdsRegistrar:   fdsRegistrar,
+		publicResolver: publicResolver,
+		logger:         logger,
 	}
 	return c, nil
 }
@@ -99,7 +102,6 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address, key *e
 		c.logger.Error("account does not have enough balance")
 		return ErrInsufficientBalance
 	}
-
 	opts, err := c.newTransactor(key, owner)
 	if err != nil {
 		return err
@@ -111,20 +113,19 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address, key *e
 		return err
 	}
 	hash := h.Sum(nil)
-	label := [32]byte{}
-	copy(label[:], hash)
-
-	tx, err := c.subdomainRegistrar.Register(opts, label, owner)
+	label := big.NewInt(0).SetBytes(hash)
+	exp := big.NewInt(0).SetBytes([]byte("86400"))
+	tx, err := c.fdsRegistrar.Register(opts, label, owner, exp)
 	if err != nil {
-		c.logger.Error("subdomain register failed : ", err)
+		c.logger.Error("fds register failed : ", err)
 		return err
 	}
 	err = c.checkReceipt(tx)
 	if err != nil {
-		c.logger.Error("subdomain register failed : ", err)
+		c.logger.Error("fds register failed : ", err)
 		return err
 	}
-	c.logger.Info("subdomain registered with hash : ", tx.Hash().Hex())
+	c.logger.Info("fds registered with hash : ", tx.Hash().Hex())
 	return nil
 }
 
@@ -158,10 +159,6 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 		return err
 	}
 
-	name := "subdomain-hidden"
-	contentStr := "0x0000000000000000000000000000000000000000000000000000000000000000"
-	content := [32]byte{}
-	copy(content[:], contentStr)
 	publicKey := key.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
@@ -175,7 +172,7 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 	if err != nil {
 		return err
 	}
-	tx, err := c.publicResolver.SetAll(opts, node, owner, content, []byte{}, x, y, name)
+	tx, err := c.publicResolver.SetPubkey(opts, node, x, y)
 	if err != nil {
 		c.logger.Error("public resolver set all failed : ", err)
 		return err
@@ -234,7 +231,7 @@ func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*
 	}
 	opts.Nonce = big.NewInt(int64(nonce))
 	opts.Value = big.NewInt(0)
-	opts.GasLimit = uint64(300000)
+	opts.GasLimit = uint64(1000000)
 	opts.GasPrice = gasPrice
 	opts.From = account
 	return opts, nil
@@ -257,6 +254,9 @@ func (c *Client) checkReceipt(tx *types.Transaction) error {
 				return ctx.Err()
 			}
 			continue
+		}
+		if receipt.Status == types.ReceiptStatusFailed {
+			return fmt.Errorf("transaction %s failed", tx.Hash().Hex())
 		}
 		bn, err := c.eth.BlockNumber(ctx)
 		if err != nil {

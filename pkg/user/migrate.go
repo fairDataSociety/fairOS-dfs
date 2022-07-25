@@ -1,16 +1,14 @@
 package user
 
 import (
-	"encoding/hex"
-
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 )
 
-// MigrateUser migrates an user credential from local storage to the Swarm network.
+// MigrateUser migrates a user credential from local storage to the Swarm network.
 // Deletes local information. It also deletes previous mnemonic and stores it in secondary location
 // Logs him out if he is logged in.
-func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, sessionId string, ui *Info) error {
+func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, sessionId string, client blockstore.Client, ui *Info) error {
 	// check if session id and user address present in map
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
@@ -35,32 +33,37 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 		return ErrInvalidPassword
 	}
 	accountInfo := acc.GetUserAccountInfo()
-	encryptedMnemonic, err := u.getEncryptedMnemonic(oldUsername, accountInfo.GetAddress(), userInfo.GetFeed())
-	if err != nil {
-		return err
-	}
+
 	// create ens subdomain and store mnemonic
-	_, err = u.createENS(newUsername, accountInfo)
+	_, err := u.createENS(newUsername, accountInfo)
+	if err != nil {
+		return err
+	}
+	// load address from userName
+	address, err := u.getAddressFromUserName(oldUsername, dataDir)
 	if err != nil {
 		return err
 	}
 
-	// store the encrypted mnemonic in Swarm
-	addr, err := u.uploadEncryptedMnemonicSOC(accountInfo, encryptedMnemonic, userInfo.GetFeed())
+	fd := feed.New(accountInfo, client, u.logger)
+	encryptedMnemonic, err := u.getEncryptedMnemonic(oldUsername, address, fd)
+	if err != nil {
+		return err
+	}
+	err = acc.LoadUserAccount(password, encryptedMnemonic)
 	if err != nil {
 		return err
 	}
 
-	// encrypt and pad the soc address
-	encryptedAddress, err := accountInfo.EncryptContent(password, utils.Encode(addr))
+	seed, err := acc.GetWallet().LoadSeedFromMnemonic(password)
 	if err != nil {
 		return err
 	}
-
-	// store encrypted soc address in secondary location
-	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
-	err = u.uploadSecondaryLocationInformation(accountInfo, encryptedAddress, hex.EncodeToString(pb)+password, userInfo.GetFeed())
+	key, err := accountInfo.PadSeed(seed, password)
 	if err != nil {
+		return err
+	}
+	if err := u.uploadPortableAccount(accountInfo, newUsername, password, key, fd); err != nil {
 		return err
 	}
 

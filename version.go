@@ -5,13 +5,13 @@
 package dfs
 
 var (
-	version string
+	version = "dev"
 	commit  string
 
 	Version = func() string {
 		if commit != "" {
 			return version + "-" + commit
 		}
-		return version + "-dev"
+		return version
 	}()
 )

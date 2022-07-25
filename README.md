@@ -17,19 +17,19 @@ dfs can be used for the following use cases
 2) Application data store (for both Web 3.0 DApps and web 2.0 Apps)
 3) Data sharing with single user and on an organizational level
 
-### User
+## User
 The first step in dfs is to create a user. Every user is associated with a 12 
 word mnemonic based hd wallet. This wallet is password protected and stored in 
 the blockchain as ens record. whenever a user created a pod for himself, a new key pair 
 is created using this mnemonic.
 
-### What is a pod?
+## What is a pod?
 A pod is a personal drive created by a user in fairOS-dfs. It is used to store files and related metadata in a decentralised fashion. A pod is always under the control of the user who created it. A user can create and store any number of files or directories in a pod. 
 The user can share files in his pod with any other user just like in other centralised drives like dropbox. Not only users, a pod can be used by decentralised applications (DApp's) to store data related to that user.
 
 Pod creation is cheap. A user can create multiple pods and use it to organise his data. for ex: Personal-Pod, Applications-Pod etc.
 
-### How to run FairOS-dfs?
+## How to run FairOS-dfs?
 Run the following command to download the latest release
 
 ```
@@ -45,7 +45,7 @@ Or use Docker to run the project https://docs.fairos.fairdatasociety.org/docs/fa
 
 Or build the latest version with the instruction https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/manual-installation.
 
-### Configure FairOS-dfs
+## Configure FairOS-dfs
 To get the most out of your FairOS-dfs it is important that you configure FairOS-dfs for your specific use case!
 
 ##### Configuration for Bee
@@ -65,17 +65,29 @@ dfs:
     pprof-port: :9091
 ```
 
-##### Configuration for ENS Registration
+### ENS based Registration
+
+##### RPC endpoint
+Fairos depends on blockchain RPC to authenticate user accounts. Hence, it needs `rpc` to connect to
 ```
-dfs:
-  ens:
-    ens-provider-backend: http://localhost:7545
-    ens-registry-address: 0xc936e9a67467a192d8A17d787c6bFFE15D0d31C9
-    provider-domain: fairos.eth
-    public-resolver-address: 0xD914fAE6F4373140657Ad6c5871a063F0e7E54B1
-    subdomain-registrar-address: 0x208ba9332e05163a22Bc1cb98F24082548738085
+rpc: http://localhost:9545
 ```
 
+##### Custom configuration for ENS based Registration
+For ENS based authentication we can either use a `network` configuration in the config file 
+```
+// define network for ens authtication
+network: "testnet"
+```
+OR define custom configuration for ENS based Registration
+##### Custom configuration for ENS based Registration
+```
+ens:
+  ens-registry-address: 0x26b4AFb60d6C903165150C6F0AA14F8016bE4aec
+  provider-domain: fds
+  public-resolver-address: 0xA94B7f0465E98609391C623d0560C5720a3f2D33
+  fds-registrar-address: 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe
+```
 
 #### Other configuration
 ```
@@ -84,7 +96,62 @@ cors-allowed-origins: []
 verbosity: trace
 ```
 
+This is how a config file should look like
+``` .dfs.yaml
+bee:
+  bee-api-endpoint: http://localhost:1633
+  postage-batch-id: <BATCH>
+  is-gateway-proxy: false
+cookie-domain: localhost
+cors-allowed-origins: []
+dfs:
+  data-dir: /Users/username/.fairOS/dfs
+  ports:
+    http-port: :9090
+    pprof-port: :9091
+rpc: http://localhost:9545
+network: "testnet"
+verbosity: trace
+```
+
 Run `dfs config` to see all configurations
+
+### Help for dfs
+```
+$ dfs server -h                                                                                                                            
+
+  /$$$$$$          /$$            /$$$$$$   /$$$$$$                /$$  /$$$$$$         
+ /$$__  $$        |__/           /$$__  $$ /$$__  $$              | $$ /$$__  $$        
+| $$  \__//$$$$$$  /$$  /$$$$$$ | $$  \ $$| $$  \__/          /$$$$$$$| $$  \__//$$$$$$$
+| $$$$   |____  $$| $$ /$$__  $$| $$  | $$|  $$$$$$  /$$$$$$ /$$__  $$| $$$$   /$$_____/
+| $$_/    /$$$$$$$| $$| $$  \__/| $$  | $$ \____  $$|______/| $$  | $$| $$_/  |  $$$$$$ 
+| $$     /$$__  $$| $$| $$      | $$  | $$ /$$  \ $$        | $$  | $$| $$     \____  $$
+| $$    |  $$$$$$$| $$| $$      |  $$$$$$/|  $$$$$$/        |  $$$$$$$| $$     /$$$$$$$/
+|__/     \_______/|__/|__/       \______/  \______/          \_______/|__/    |_______/
+
+
+Serves all the dfs commands through an HTTP server so that the upper layers
+can consume it.
+
+Usage:
+  dfs server [flags]
+
+Flags:
+      --cookieDomain string     the domain to use in the cookie (default "api.fairos.io")
+      --cors-origins strings    allow CORS headers for the given origins
+  -h, --help                    help for server
+      --httpPort string         http port (default ":9090")
+      --network string          network to use for authentication (mainnet/testnet/play)
+      --postageBlockId string   the postage block used to store the data in bee
+      --pprofPort string        pprof port (default ":9091")
+      --rpc string              rpc endpoint for ens network. xDai for mainnet | Goerli for testnet | local fdp-play rpc endpoint for play
+
+Global Flags:
+      --beeApi string      full bee api endpoint (default "localhost:1633")
+      --config string      config file (default "/Users/sabyasachipatra/.dfs.yaml")
+      --dataDir string     store data in this dir (default "dataDirPath")
+      --verbosity string   verbosity level (default "trace")
+```
 
 ### Introduction to Key Value Store over Swarm
 [![](https://j.gifs.com/6XZwvl.gif)](https://gateway.ethswarm.org/access/130dcf7d01442836bc14c8c38db32ebfc4d5771c28677438b6a2a2a078bd1414)

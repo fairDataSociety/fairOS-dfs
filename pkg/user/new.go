@@ -17,7 +17,6 @@ limitations under the License.
 package user
 
 import (
-	"encoding/hex"
 	"regexp"
 	"sync"
 
@@ -31,6 +30,7 @@ import (
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
 
 // CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
@@ -100,7 +100,6 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	if !isUserNameValid(userName) {
 		return "", "", "", "", nil, ErrInvalidUserName
 	}
-
 	// username availability
 	if u.IsUsernameAvailableV2(userName) {
 		return "", "", "", "", nil, ErrUserAlreadyPresent
@@ -109,9 +108,8 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, u.client, u.logger)
-
 	//create a new base user account with the mnemonic
-	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
+	mnemonic, _, err := acc.CreateUserAccount(passPhrase, mnemonic)
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
@@ -124,26 +122,17 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		}
 		return "", "", "", "", nil, err
 	}
-
-	// store the encrypted mnemonic in Swarm
-	addr, err := u.uploadEncryptedMnemonicSOC(accountInfo, encryptedMnemonic, fd)
+	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
-
-	// encrypt and pad the soc address
-	encryptedAddress, err := accountInfo.EncryptContent(passPhrase, utils.Encode(addr))
+	key, err := accountInfo.PadSeed(seed, passPhrase)
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
-
-	// store encrypted soc address in secondary location
-	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
-	err = u.uploadSecondaryLocationInformation(accountInfo, encryptedAddress, hex.EncodeToString(pb)+passPhrase, fd)
-	if err != nil {
+	if err := u.uploadPortableAccount(accountInfo, userName, passPhrase, key, fd); err != nil {
 		return "", "", "", "", nil, err
 	}
-
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), u.logger)
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, u.logger)
@@ -170,7 +159,8 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
-
+	// store encrypted soc address in secondary location
+	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
 	return userAddressString, mnemonic, nameHash, utils.Encode(pb), ui, nil
 }
 

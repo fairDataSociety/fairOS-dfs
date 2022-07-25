@@ -34,7 +34,7 @@ func TestLogin(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		//create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "")
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -46,16 +46,19 @@ func TestLogin(t *testing.T) {
 		}
 
 		// addUserAndSessionToMap user again
-		_, _, _, err = userObject.LoginUserV2("user1", "password1", mockClient, "")
+		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", mockClient, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Validate login
-		if !userObject.IsUserNameLoggedIn("user1") {
+		if !userObject.IsUserNameLoggedIn("7e4567e7cb003804992eef11fd5c757275a4c") {
 			t.Fatalf("user not loggin in")
 		}
 
+		if ui.GetAccount().GetUserAccountInfo().GetAddress().Hex() != ui1.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+			t.Fatal("loaded with different account")
+		}
 	})
 
 }

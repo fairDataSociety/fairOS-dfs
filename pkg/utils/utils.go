@@ -17,12 +17,13 @@ limitations under the License.
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash"
-	"math/rand"
+	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -39,7 +40,7 @@ const (
 	MaxPodNameLength     = 25
 	SpanLength           = 8
 	DeletedFeedMagicWord = "__Fair__"
-	letterBytes          = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letterBytes          = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 type decError struct{ msg string }
@@ -177,12 +178,28 @@ func CombinePathAndFile(podName, path, fileName string) string {
 	return totalPath
 }
 
-func GetRandString(n int) string {
+func GetRandString(n int) (string, error) {
 	b := make([]byte, n)
 	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterBytes))))
+		if err != nil {
+			return "", err
+		}
+		b[i] = letterBytes[num.Int64()]
 	}
-	return string(b)
+	return string(b), nil
+}
+
+func GetRandBytes(n int) ([]byte, error) {
+	b := make([]byte, n)
+	for i := range b {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterBytes))))
+		if err != nil {
+			return nil, err
+		}
+		b[i] = letterBytes[num.Int64()]
+	}
+	return b, nil
 }
 
 //func CombinePathAndFile(podName, path, fileName string) string {

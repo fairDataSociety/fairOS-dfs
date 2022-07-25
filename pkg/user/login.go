@@ -17,7 +17,6 @@ limitations under the License.
 package user
 
 import (
-	"encoding/hex"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -39,16 +38,14 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		return nil, "", "", ErrInvalidUserName
 	}
 
-	// create account
-	acc := account.New(u.logger)
-	accountInfo := acc.GetUserAccountInfo()
-
 	// get owner address from Subdomain registrar
 	address, err := u.ens.GetOwner(userName)
 	if err != nil {
 		return nil, "", "", err
 	}
-
+	// create account
+	acc := account.New(u.logger)
+	accountInfo := acc.GetUserAccountInfo()
 	// load public key from public resolver
 	publicKey, nameHash, err := u.ens.GetInfo(userName)
 	if err != nil {
@@ -56,33 +53,21 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 	pb := crypto.FromECDSAPub(publicKey)
 
-	// load encrypted soc address  from secondary location
+	// load encrypted private key
 	fd := feed.New(accountInfo, client, u.logger)
-	_, encryptedAddress, err := u.getSecondaryLocationInformation(utils.Address(address), hex.EncodeToString(pb)+passPhrase, fd)
+	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
 	if err != nil {
 		return nil, "", "", err
 	}
 
-	// decrypt and remove pad the soc address
-	addrStr, err := accountInfo.DecryptContent(passPhrase, encryptedAddress)
+	// decrypt and remove pad from private ley
+	seed, err := accountInfo.RemovePadFromSeed(key, passPhrase)
 	if err != nil {
 		return nil, "", "", err
 	}
-	addr, err := hex.DecodeString(addrStr)
+	// load user account
+	err = acc.LoadUserAccountFromSeed(seed)
 	if err != nil {
-		return nil, "", "", err
-	}
-
-	// load encrypted mnemonic
-	encryptedMnemonic, err := u.getEncryptedMnemonicV2(addr, fd)
-	if err != nil {
-		return nil, "", "", err
-	}
-	err = acc.LoadUserAccount(passPhrase, string(encryptedMnemonic))
-	if err != nil {
-		if err.Error() == "mnemonic is invalid" {
-			return nil, "", "", ErrInvalidPassword
-		}
 		return nil, "", "", err
 	}
 
@@ -97,7 +82,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}
-
 	ui := &Info{
 		name:       userName,
 		sessionId:  sessionId,

@@ -30,6 +30,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"golang.org/x/crypto/sha3"
 )
 
 const (
@@ -90,6 +91,7 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	if len(data) > utils.MaxChunkLength {
 		return nil, ErrInvalidPayloadSize
 	}
+
 	// fill Feed and Epoc related details
 	copy(req.ID.Topic[:], topic)
 	req.ID.User = user
@@ -144,7 +146,6 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-
 	// send the updated soc chunk to bee
 	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
 	if err != nil {
@@ -154,17 +155,56 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	return address, nil
 }
 
-func (a *API) GetFeedDataFromAddress(address []byte) ([]byte, error) {
+func (a *API) CreateFeedFromTopic(topic []byte, user utils.Address, data []byte) ([]byte, error) {
+	if a.accountInfo.GetPrivateKey() == nil {
+		return nil, ErrReadOnlyFeed
+	}
+
+	if len(topic) != TopicLength {
+		return nil, ErrInvalidTopicSize
+	}
+
+	if len(data) > utils.MaxChunkLength {
+		return nil, ErrInvalidPayloadSize
+	}
+
+	// create the signer and the content addressed chunk
+	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
+	ch, err := utils.NewChunkWithSpan(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// generate the data to sign
+	toSignBytes, err := toSignDigest(topic, ch.Address().Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the chunk
+	signature, err := signer.Sign(toSignBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// send the updated soc chunk to bee
+	address, err := a.handler.update(topic, user.ToBytes(), signature, ch.Data())
+	if err != nil {
+		return nil, err
+	}
+
+	return address, nil
+}
+
+// GetSOCFromAddress will download the soc chunk for the given reference
+func (a *API) GetSOCFromAddress(address []byte) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	data, err := a.handler.client.DownloadChunk(ctx, address)
 	if err != nil {
 		return nil, err
 	}
-	ch, err := utils.NewChunkWithoutSpan(data)
-	if err != nil {
-		return nil, err
-	}
+	ch := swarm.NewChunk(swarm.NewAddress(address), data)
 	return a.handler.rawSignedChunkData(ch)
 }
 
@@ -191,6 +231,31 @@ func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, err
 		return nil, nil, err
 	}
 	return addr.Bytes(), data, nil
+}
+
+// GetFeedDataFromTopic will generate keccak256 reference of the topic+address and download soc
+func (a *API) GetFeedDataFromTopic(topic []byte, user utils.Address) ([]byte, []byte, error) {
+	if len(topic) != TopicLength {
+		return nil, nil, ErrInvalidTopicSize
+	}
+	// generate reference
+	h := sha3.NewLegacyKeccak256()
+	_, err := h.Write(topic)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = h.Write(user.ToBytes())
+	if err != nil {
+		return nil, nil, err
+	}
+	hash := h.Sum(nil)
+
+	// download soc from generated reference
+	data, err := a.GetSOCFromAddress(hash)
+	if err != nil {
+		return nil, nil, err
+	}
+	return hash, data, nil
 }
 
 // UpdateFeed updates the contents of an already created feed.
@@ -280,6 +345,25 @@ func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 	}
 
 	delRef, _, err := a.GetFeedData(topic, user)
+	if err != nil && err.Error() != "feed does not exist or was not updated yet" {
+		return err
+	}
+	if delRef != nil {
+		err = a.handler.deleteChunk(delRef)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DeleteFeedFromTopic deleted the feed by updating with no data inside the SOC chunk.
+func (a *API) DeleteFeedFromTopic(topic []byte, user utils.Address) error {
+	if a.accountInfo.GetPrivateKey() == nil {
+		return ErrReadOnlyFeed
+	}
+
+	delRef, _, err := a.GetFeedDataFromTopic(topic, user)
 	if err != nil && err.Error() != "feed does not exist or was not updated yet" {
 		return err
 	}

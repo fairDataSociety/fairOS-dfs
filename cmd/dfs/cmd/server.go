@@ -61,6 +61,12 @@ can consume it.`,
 		if err := config.BindPFlag(optionCORSAllowedOrigins, cmd.Flags().Lookup("cors-origins")); err != nil {
 			return err
 		}
+		if err := config.BindPFlag(optionNetwork, cmd.Flags().Lookup("network")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionRPC, cmd.Flags().Lookup("rpc")); err != nil {
+			return err
+		}
 		return config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -86,41 +92,59 @@ can consume it.`,
 				return
 			}
 		}
-		providerDomain := config.GetString(optionProviderDomain)
-		publicResolverAddress := config.GetString(optionPublicResolverAddress)
-		subdomainRegistrarAddress := config.GetString(optionSubdomainRegistrarAddress)
-		ensRegistryAddress := config.GetString(optionENSRegistryAddress)
-		ensProviderBackend := config.GetString(optionENSProviderBackend)
+		ensConfig := &contracts.Config{}
+		network := config.GetString("network")
+		rpc := config.GetString(optionRPC)
+		if rpc == "" {
+			fmt.Println("\nrpc endpoint is missing")
+			return
+		}
+		if network != "testnet" && network != "mainnet" && network != "play" {
+			if network != "" {
+				fmt.Println("\nunknown network")
+				return
+			}
+			network = "custom"
+			providerDomain := config.GetString(optionProviderDomain)
+			publicResolverAddress := config.GetString(optionPublicResolverAddress)
+			fdsRegistrarAddress := config.GetString(optionFDSRegistrarAddress)
+			ensRegistryAddress := config.GetString(optionENSRegistryAddress)
 
-		if providerDomain == "" {
-			fmt.Println("\nens provider domain is missing")
-			return
-		}
-		if publicResolverAddress == "" {
-			fmt.Println("\npublicResolver contract address is missing")
-			return
-		}
-		if subdomainRegistrarAddress == "" {
-			fmt.Println("\nsubdomainRegistrar contract address is missing")
-			return
-		}
-		if ensRegistryAddress == "" {
-			fmt.Println("\nensRegistry contract address is missing")
-			return
-		}
-		if ensProviderBackend == "" {
-			fmt.Println("\nensProvideBackend endpoint is missing")
-			return
-		}
+			if providerDomain == "" {
+				fmt.Println("\nens provider domain is missing")
+				return
+			}
+			if publicResolverAddress == "" {
+				fmt.Println("\npublicResolver contract address is missing")
+				return
+			}
+			if fdsRegistrarAddress == "" {
+				fmt.Println("\nfdsRegistrar contract address is missing")
+				return
+			}
+			if ensRegistryAddress == "" {
+				fmt.Println("\nensRegistry contract address is missing")
+				return
+			}
 
-		ensConfig := &contracts.Config{
-			ENSRegistryAddress:        ensRegistryAddress,
-			SubdomainRegistrarAddress: subdomainRegistrarAddress,
-			PublicResolverAddress:     publicResolverAddress,
-			ProviderDomain:            providerDomain,
-			ProviderBackend:           ensProviderBackend,
+			ensConfig = &contracts.Config{
+				ENSRegistryAddress:    ensRegistryAddress,
+				FDSRegistrarAddress:   fdsRegistrarAddress,
+				PublicResolverAddress: publicResolverAddress,
+				ProviderDomain:        providerDomain,
+			}
+		} else {
+			switch v := strings.ToLower(network); v {
+			case "mainnet":
+				fmt.Println("\nens is not available for mainnet yet")
+				return
+			case "testnet":
+				ensConfig = contracts.TestnetConfig()
+			case "play":
+				ensConfig = contracts.PlayConfig()
+			}
 		}
-
+		ensConfig.ProviderBackend = rpc
 		var logger logging.Logger
 		switch v := strings.ToLower(verbosity); v {
 		case "0", "silent":
@@ -142,6 +166,7 @@ can consume it.`,
 
 		logger.Info("configuration values")
 		logger.Info("version        : ", dfs.Version)
+		logger.Info("network        : ", network)
 		logger.Info("beeApi         : ", beeApi)
 		logger.Info("isGatewayProxy : ", isGatewayProxy)
 		logger.Info("verbosity      : ", verbosity)
@@ -168,6 +193,8 @@ func init() {
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
 	serverCmd.Flags().String("postageBlockId", "", "the postage block used to store the data in bee")
 	serverCmd.Flags().StringSlice("cors-origins", defaultCORSAllowedOrigins, "allow CORS headers for the given origins")
+	serverCmd.Flags().String("network", "", "network to use for authentication (mainnet/testnet/play)")
+	serverCmd.Flags().String("rpc", "", "rpc endpoint for ens network. xDai for mainnet | Goerli for testnet | local fdp-play rpc endpoint for play")
 	rootCmd.AddCommand(serverCmd)
 }
 
@@ -249,7 +276,7 @@ func startHttpService(logger logging.Logger) {
 		}
 	})
 
-	// User account related handlers which does not login need middleware
+	// User account related handlers which does not need login middleware
 	baseRouterV2.Use(handler.LogMiddleware)
 	baseRouterV2.HandleFunc("/user/signup", handler.UserSignupV2Handler).Methods("POST")
 	baseRouterV2.HandleFunc("/user/login", handler.UserLoginV2Handler).Methods("POST")
@@ -277,6 +304,7 @@ func startHttpService(logger logging.Logger) {
 	// pod related handlers
 	baseRouter.HandleFunc("/pod/receive", handler.PodReceiveHandler).Methods("GET")
 	baseRouter.HandleFunc("/pod/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
+
 	podRouter := baseRouter.PathPrefix("/pod/").Subrouter()
 	podRouter.Use(handler.LoginMiddleware)
 	podRouter.HandleFunc("/present", handler.PodPresentHandler).Methods("GET")
