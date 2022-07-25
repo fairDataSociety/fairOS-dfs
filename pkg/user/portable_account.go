@@ -30,5 +30,5 @@ func (u *Users) downloadPortableAccount(address utils.Address, username, passwor
 
 func (u *Users) deletePortableAccount(address utils.Address, username, password string, fd *feed.API) error {
 	topic := utils.HashString(AuthVersion + username + password)
-	return fd.DeleteFeed(topic, address)
+	return fd.DeleteFeedFromTopic(topic, address)
 }

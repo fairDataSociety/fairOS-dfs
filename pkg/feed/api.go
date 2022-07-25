@@ -357,6 +357,25 @@ func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 	return nil
 }
 
+// DeleteFeedFromTopic deleted the feed by updating with no data inside the SOC chunk.
+func (a *API) DeleteFeedFromTopic(topic []byte, user utils.Address) error {
+	if a.accountInfo.GetPrivateKey() == nil {
+		return ErrReadOnlyFeed
+	}
+
+	delRef, _, err := a.GetFeedDataFromTopic(topic, user)
+	if err != nil && err.Error() != "feed does not exist or was not updated yet" {
+		return err
+	}
+	if delRef != nil {
+		err = a.handler.deleteChunk(delRef)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // IsReadOnlyFeed if a public pod is imported, the feed can only be read.
 // this function check the feed is read only.
 func (a *API) IsReadOnlyFeed() bool {
