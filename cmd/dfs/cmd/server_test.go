@@ -56,6 +56,8 @@ func TestApis(t *testing.T) {
 	basev2 := "http://localhost:9090/v2"
 	go startHttpService(logger)
 
+	// wait 10 seconds for the server to start
+	<-time.After(time.Second * 10)
 	t.Run("login-fail-test", func(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserRequest{
