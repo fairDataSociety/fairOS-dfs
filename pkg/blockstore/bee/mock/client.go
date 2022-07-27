@@ -31,6 +31,7 @@ import (
 	"github.com/ethersphere/bee/pkg/swarm"
 )
 
+// MockBeeClient is a mock bee client
 type MockBeeClient struct {
 	storer   map[string][]byte
 	storerMu sync.RWMutex

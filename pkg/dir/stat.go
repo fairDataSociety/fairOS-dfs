@@ -25,7 +25,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-type DirStats struct {
+// Stats represents a given directory
+type Stats struct {
 	PodName          string `json:"pod_name"`
 	DirPath          string `json:"dir_path"`
 	DirName          string `json:"dir_name"`
@@ -37,7 +38,7 @@ type DirStats struct {
 }
 
 // DirStat returns all the information related to a given directory.
-func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) {
+func (d *Directory) DirStat(podName, dirNameWithPath string) (*Stats, error) {
 	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
 	if err != nil {
@@ -68,7 +69,7 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) 
 	}
 
 	meta := dirInode.Meta
-	return &DirStats{
+	return &Stats{
 		PodName:          podName,
 		DirPath:          meta.Path,
 		DirName:          meta.Name,

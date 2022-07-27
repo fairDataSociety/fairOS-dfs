@@ -1,5 +1,6 @@
 package contracts
 
+// Config handles the ENS configuration
 type Config struct {
 	ENSRegistryAddress    string
 	FDSRegistrarAddress   string
@@ -8,6 +9,7 @@ type Config struct {
 	ProviderBackend       string
 }
 
+// TestnetConfig defines the configuration for goerli testnet
 func TestnetConfig() *Config {
 	return &Config{
 		ENSRegistryAddress:    "0x42B22483e3c8dF794f351939620572d1a3193c12",
@@ -17,6 +19,7 @@ func TestnetConfig() *Config {
 	}
 }
 
+// PlayConfig defines the configuration for fdp-play
 func PlayConfig() *Config {
 	return &Config{
 		ENSRegistryAddress:    "0x26b4AFb60d6C903165150C6F0AA14F8016bE4aec",

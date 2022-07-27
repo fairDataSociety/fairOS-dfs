@@ -47,7 +47,7 @@ type MetaData struct {
 	InodeAddress     []byte        `json:"file_inode_reference"`
 }
 
-// used in syncing
+// LoadFileMeta is used in syncing
 func (f *File) LoadFileMeta(fileNameWithPath string) error {
 	meta, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
 	if err != nil {

@@ -40,11 +40,17 @@ import (
 )
 
 const (
+	// UserAccountIndex is user root account
 	UserAccountIndex = -1
-	ChunkSize        = 4096
-	SeedSize         = 64
+
+	// chunkSize is used to set chunk size of the portable account SOC
+	chunkSize = 4096
+
+	// seedSize is used to determine how much padding we need for portable account SOC
+	seedSize = 64
 )
 
+// Account is used for keeping authenticated logged-in user info in the session
 type Account struct {
 	wallet      *Wallet
 	userAccount *Info
@@ -52,6 +58,7 @@ type Account struct {
 	logger      logging.Logger
 }
 
+// Info is for keeping account info
 type Info struct {
 	privateKey *ecdsa.PrivateKey
 	publicKey  *ecdsa.PublicKey
@@ -379,46 +386,55 @@ func (a *Account) GetPodAccountInfo(index int) (*Info, error) {
 	return nil, fmt.Errorf("invalid index : %d", index)
 }
 
+// GetUserAccountInfo returns the user info
 func (a *Account) GetUserAccountInfo() *Info {
 	return a.userAccount
 }
 
+// GetEmptyAccountInfo returns blank user info
 func (*Account) GetEmptyAccountInfo() *Info {
 	return &Info{}
 }
 
+// GetWallet returns the account.Wallet which contains the encrypted mnemonic or seed
 func (a *Account) GetWallet() *Wallet {
 	return a.wallet
 }
 
-func (a *Info) IsReadOnlyPod() bool {
-	return a.privateKey == nil
+// IsReadOnlyPod checks if a pod account info is read only
+func (ai *Info) IsReadOnlyPod() bool {
+	return ai.privateKey == nil
 }
 
+// GetAddress returns the address of the account info
 func (ai *Info) GetAddress() utils.Address {
 	return ai.address
 }
 
+// SetAddress sets the address of the account info
 func (ai *Info) SetAddress(addr utils.Address) {
 	ai.address = addr
 }
 
+// GetPrivateKey returns the private key from the accoutn info
 func (ai *Info) GetPrivateKey() *ecdsa.PrivateKey {
 	return ai.privateKey
 }
 
+// GetPublicKey returns the public key from the accoutn info
 func (ai *Info) GetPublicKey() *ecdsa.PublicKey {
 	return ai.publicKey
 }
 
+// PadSeed pads the given seed with random elements to be a chunk of chunkSize
 func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
 	rand.Seed(time.Now().UnixNano())
-	paddingLength := ChunkSize - aes.BlockSize - SeedSize
+	paddingLength := chunkSize - aes.BlockSize - seedSize
 	randomBytes, err := utils.GetRandBytes(paddingLength)
 	if err != nil {
 		return nil, err
 	}
-	chunkData := make([]byte, 0, ChunkSize)
+	chunkData := make([]byte, 0, chunkSize)
 	chunkData = append(chunkData, seed...)
 	chunkData = append(chunkData, randomBytes...)
 	aesKey := sha256.Sum256([]byte(passphrase))
@@ -429,6 +445,7 @@ func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
 	return encryptedBytes, nil
 }
 
+// RemovePadFromSeed removes the padding of random elements from the given data and returns the seed
 func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, error) {
 	aesKey := sha256.Sum256([]byte(passphrase))
 	decryptedBytes, err := decryptBytes(aesKey[:], paddedSeed)
@@ -436,7 +453,7 @@ func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, er
 		return nil, fmt.Errorf("seed decryption failed: %w", err)
 	}
 
-	return decryptedBytes[:SeedSize], nil
+	return decryptedBytes[:seedSize], nil
 }
 
 func (a *Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {

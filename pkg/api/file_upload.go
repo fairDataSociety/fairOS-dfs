@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"mime/multipart"
 	"net/http"
 
 	"github.com/dustin/go-humanize"
@@ -116,28 +117,20 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	var responses []Response
 	for _, file := range files {
 		fd, err := file.Open()
-		defer func() {
-			err := fd.Close()
-			if err != nil {
-				h.logger.Errorf("file upload: error closing file: %v", err)
-			}
-		}()
 		if err != nil {
 			h.logger.Errorf("file upload: %v", err)
 			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
-
-		//upload file to bee
-		uploadErr := h.dfsAPI.UploadFile(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
-		if uploadErr != nil {
-			if uploadErr == dfs.ErrPodNotOpen {
-				h.logger.Errorf("file upload: %v", uploadErr)
-				jsonhttp.BadRequest(w, "file upload: "+uploadErr.Error())
+		err = h.handleFileUpload(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
+		if err != nil {
+			if err == dfs.ErrPodNotOpen {
+				h.logger.Errorf("file upload: %v", err)
+				jsonhttp.BadRequest(w, "file upload: "+err.Error())
 				return
 			}
-			h.logger.Errorf("file upload: %v", uploadErr)
-			responses = append(responses, Response{FileName: file.Filename, Message: uploadErr.Error()})
+			h.logger.Errorf("file upload: %v", err)
+			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
 		responses = append(responses, Response{FileName: file.Filename, Message: "uploaded successfully"})
@@ -147,4 +140,9 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &UploadFileResponse{
 		Responses: responses,
 	})
+}
+
+func (h *Handler) handleFileUpload(podName, podFileName, sessionId string, fileSize int64, f multipart.File, podPath, compression string, blockSize uint32) error {
+	defer f.Close()
+	return h.dfsAPI.UploadFile(podName, podFileName, sessionId, fileSize, f, podPath, compression, blockSize)
 }

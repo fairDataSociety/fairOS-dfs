@@ -22,8 +22,7 @@ import (
 	"path/filepath"
 
 	dfs "github.com/fairdatasociety/fairOS-dfs"
-
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -58,8 +57,7 @@ func Execute() {
 | $$  | $$| $$_/  |  $$$$$$|______/| $$      | $$| $$
 | $$  | $$| $$     \____  $$       | $$      | $$| $$
 |  $$$$$$$| $$     /$$$$$$$/       |  $$$$$$$| $$| $$
- \_______/|__/    |_______/         \_______/|__/|__/
-`
+ \_______/|__/    |_______/         \_______/|__/|__/`
 	fmt.Println(fdfsCli)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

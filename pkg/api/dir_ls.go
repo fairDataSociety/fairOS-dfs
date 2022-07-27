@@ -28,6 +28,7 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// ListFileResponse is used to list directories and files
 type ListFileResponse struct {
 	Directories []dir.Entry  `json:"dirs,omitempty"`
 	Files       []file.Entry `json:"files,omitempty"`

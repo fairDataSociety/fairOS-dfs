@@ -198,7 +198,7 @@ func TestRmRootDir(t *testing.T) {
 
 		// verify if the directory is actually removed
 		dirEntry, _, err = dirObject.ListDir("/")
-		if !strings.HasSuffix(err.Error(), dir.ErrResourceDeleted.Error()) {
+		if err != nil && !strings.HasSuffix(err.Error(), dir.ErrResourceDeleted.Error()) {
 			t.Fatal("root directory was not deleted")
 		}
 		if dirEntry != nil {
