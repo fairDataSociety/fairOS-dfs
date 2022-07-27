@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
+	"math/big"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -24,16 +25,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
 
 func randStringRunes(n int) string {
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterRunes))))
+		if err != nil {
+			return string(b)
+		}
+		b[i] = letterRunes[num.Int64()]
 	}
 	return string(b)
 }
@@ -289,7 +290,7 @@ func TestApis(t *testing.T) {
 			t.Fatal("user should be able to login")
 		}
 		cookie := userLoginResp.Header["Set-Cookie"]
-		userStatHttpReq, err := http.NewRequest(http.MethodGet, "http://localhost:9090/v1/user/stat", nil)
+		userStatHttpReq, err := http.NewRequest(http.MethodGet, "http://localhost:9090/v1/user/stat", http.NoBody)
 		if err != nil {
 			t.Fatal(err)
 
@@ -380,7 +381,7 @@ func TestApis(t *testing.T) {
 		}
 		cookie = userLoginResp.Header["Set-Cookie"]
 
-		userStatHttpReq, err = http.NewRequest(http.MethodGet, "http://localhost:9090/v1/user/stat", nil)
+		userStatHttpReq, err = http.NewRequest(http.MethodGet, "http://localhost:9090/v1/user/stat", http.NoBody)
 		if err != nil {
 			t.Fatal(err)
 

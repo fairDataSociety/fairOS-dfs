@@ -14,7 +14,6 @@ limitations under the License.
 package user
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -46,7 +45,7 @@ func (*Users) storeUserNameToAddressFileMapping(userName, dataDir string, addres
 		return err
 	}
 	userFileName := filepath.Join(destDir, userName)
-	return ioutil.WriteFile(userFileName, address.ToBytes(), 0700)
+	return os.WriteFile(userFileName, address.ToBytes(), 0700)
 }
 
 func (u *Users) deleteUserMapping(userName, dataDir string) error {
@@ -58,7 +57,7 @@ func (u *Users) deleteUserMapping(userName, dataDir string) error {
 func (*Users) getAddressFromUserName(userName, dataDir string) (utils.Address, error) {
 	destDir := filepath.Join(dataDir, userDirectoryName)
 	userFileName := filepath.Join(destDir, userName)
-	data, err := ioutil.ReadFile(userFileName)
+	data, err := os.ReadFile(userFileName)
 	if err != nil {
 		return utils.ZeroAddress, err
 	}

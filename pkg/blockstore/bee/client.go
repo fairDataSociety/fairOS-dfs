@@ -117,7 +117,7 @@ func (s *Client) CheckConnection(isProxy bool) bool {
 		url += healthUrl
 		matchString = "OK"
 	}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return false
 	}
@@ -365,7 +365,7 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 	}
 
 	fullUrl := s.url + bytesUploadDownloadUrl + "/" + addrString
-	req, err := http.NewRequest(http.MethodGet, fullUrl, nil)
+	req, err := http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
@@ -407,7 +407,7 @@ func (s *Client) DeleteReference(address []byte) error {
 	addrString := swarm.NewAddress(address).String()
 
 	fullUrl := s.url + pinsUrl + addrString
-	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
+	req, err := http.NewRequest(http.MethodDelete, fullUrl, http.NoBody)
 	if err != nil {
 		return err
 	}

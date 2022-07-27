@@ -17,21 +17,21 @@ limitations under the License.
 package collection_test
 
 import (
+	"crypto/rand"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
+	"math/big"
 	"sort"
 	"strconv"
 	"testing"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestIndexIterator(t *testing.T) {
@@ -374,9 +374,15 @@ func addDocsForNumberIteration(t *testing.T, idx *collection.Index, actualCount 
 func addDocsForRandomStringIteration(t *testing.T, idx *collection.Index, actualCount uint64) ([]string, []string) {
 	var keys []int
 	var values []int
+	var stringKeys []string
+	var stringValues []string
 	for i := 0; len(keys) < int(actualCount); i++ {
 	DUPLICATE:
-		a := rand.Intn(1000)
+		bi, err := rand.Int(rand.Reader, big.NewInt(10000))
+		if err != nil {
+			return stringKeys, stringValues
+		}
+		a := int(bi.Int64())
 		for _, k := range keys {
 			if k == a {
 				goto DUPLICATE
@@ -389,8 +395,6 @@ func addDocsForRandomStringIteration(t *testing.T, idx *collection.Index, actual
 		values = append(values, a)
 	}
 
-	var stringKeys []string
-	var stringValues []string
 	for _, k := range keys {
 		stringKeys = append(stringKeys, strconv.Itoa(k))
 	}
@@ -405,7 +409,11 @@ func addDocsForRandomNumberIteration(t *testing.T, idx *collection.Index, actual
 	var values []int
 	for i := 0; len(keys) < int(actualCount); i++ {
 	DUPLICATE:
-		a := rand.Intn(1000)
+		bi, err := rand.Int(rand.Reader, big.NewInt(10000))
+		if err != nil {
+			return keys, values
+		}
+		a := int(bi.Int64())
 		for _, k := range keys {
 			if k == a {
 				goto DUPLICATE

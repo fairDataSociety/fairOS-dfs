@@ -17,8 +17,8 @@ limitations under the License.
 package pod_test
 
 import (
+	"crypto/rand"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"testing"
 
@@ -92,7 +92,10 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 
 	// write contents to file
 	content := make([]byte, fileSize)
-	rand.Read(content)
+	_, err = rand.Read(content)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, err = fd.Write(content); err != nil {
 		t.Fatal(err)
 	}

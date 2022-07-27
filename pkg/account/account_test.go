@@ -17,6 +17,7 @@ limitations under the License.
 package account
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -33,7 +34,7 @@ func TestAccount_CreateRootAccount(t *testing.T) {
 	}
 
 	password := "letmein"
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
 	_, _, err = acc.CreateUserAccount(password, "")
 	if err != nil {
@@ -70,7 +71,7 @@ func TestLoadAndStoreMnemonic(t *testing.T) {
 		t.Fatal(err)
 	}
 	password := "letmein"
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
 	_, em, err := acc.CreateUserAccount(password, "")
 	if err != nil {

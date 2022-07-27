@@ -24,10 +24,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
-	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/ethereum/go-ethereum/accounts"
@@ -428,7 +426,6 @@ func (ai *Info) GetPublicKey() *ecdsa.PublicKey {
 
 // PadSeed pads the given seed with random elements to be a chunk of chunkSize
 func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
-	rand.Seed(time.Now().UnixNano())
 	paddingLength := chunkSize - aes.BlockSize - seedSize
 	randomBytes, err := utils.GetRandBytes(paddingLength)
 	if err != nil {

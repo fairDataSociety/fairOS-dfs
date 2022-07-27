@@ -75,7 +75,7 @@ func createHTTPClient() (*http.Client, error) {
 }
 
 func (s *FdfsClient) CheckConnection() bool {
-	req, err := http.NewRequest(http.MethodGet, s.url, nil)
+	req, err := http.NewRequest(http.MethodGet, s.url, http.NoBody)
 	if err != nil {
 		return false
 	}
@@ -110,7 +110,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("Content-Length", strconv.Itoa(len(jsonBytes)))
 	} else {
-		req, err = http.NewRequest(method, fullUrl, nil)
+		req, err = http.NewRequest(method, fullUrl, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
@@ -176,12 +176,12 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	var err error
 	if argsString != "" {
 		fullUrl = fullUrl + "?" + argsString
-		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
+		req, err = http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
+		req, err = http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 		if err != nil {
 			return nil, err
 		}

@@ -77,7 +77,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	defaultConfig := filepath.Join(home, ".fairOS/dfs-cli.yml")
+	defaultConfig := filepath.Join(home, ".fairOS", "dfs-cli.yml")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", defaultConfig, "config file")
 
 	rootCmd.PersistentFlags().String("fdfsHost", "127.0.0.1", "fdfs host")
