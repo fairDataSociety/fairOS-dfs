@@ -496,10 +496,22 @@ func TestApis(t *testing.T) {
 		fileName := fmt.Sprintf("file_%d", time.Now().Unix())
 		uploadWriter := multipart.NewWriter(uploadBuf)
 		dataBytes := []byte(fmt.Sprintf("Latest updates %d", time.Now().Unix()))
-		uploadWriter.WriteField("pod_name", podReq.PodName)
-		uploadWriter.WriteField("dir_path", "/")
-		uploadWriter.WriteField("block_size", "1Mb")
-		uploadWriter.WriteField("content_length", fmt.Sprintf("%d", len(dataBytes)))
+		err = uploadWriter.WriteField("pod_name", podReq.PodName)
+		if err != nil {
+			t.Fatal("pod new failed")
+		}
+		err = uploadWriter.WriteField("dir_path", "/")
+		if err != nil {
+			t.Fatal("pod new failed")
+		}
+		err = uploadWriter.WriteField("block_size", "1Mb")
+		if err != nil {
+			t.Fatal("pod new failed")
+		}
+		err = uploadWriter.WriteField("content_length", fmt.Sprintf("%d", len(dataBytes)))
+		if err != nil {
+			t.Fatal("pod new failed")
+		}
 		uploadPart, err := uploadWriter.CreateFormFile("files", fileName)
 		if err != nil {
 			t.Fatal(err)
@@ -598,8 +610,14 @@ func TestApis(t *testing.T) {
 
 		downloadBuf := new(bytes.Buffer)
 		downloadWriter := multipart.NewWriter(downloadBuf)
-		downloadWriter.WriteField("pod_name", podReq.PodName)
-		downloadWriter.WriteField("file_path", fmt.Sprintf("/%s", fileName))
+		err = downloadWriter.WriteField("pod_name", podReq.PodName)
+		if err != nil {
+			t.Fatal("pod new failed")
+		}
+		err = downloadWriter.WriteField("file_path", fmt.Sprintf("/%s", fileName))
+		if err != nil {
+			t.Fatal("pod new failed")
+		}
 
 		err = downloadWriter.Close()
 		if err != nil {
