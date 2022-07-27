@@ -50,3 +50,13 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensC
 		dataDir: dataDir,
 	}, nil
 }
+
+// NewMockDfsAPI is used for tests only
+func NewMockDfsAPI(client blockstore.Client, users *user.Users, logger logging.Logger, dataDir string) *DfsAPI {
+	return &DfsAPI{
+		client:  client,
+		users:   users,
+		logger:  logger,
+		dataDir: dataDir,
+	}
+}

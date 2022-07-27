@@ -42,3 +42,11 @@ func NewHandler(dataDir, beeApi, cookieDomain, postageBlockId string, whiteliste
 		cookieDomain:       cookieDomain,
 	}, nil
 }
+
+// NewMockHandler is used for tests only
+func NewMockHandler(dfsAPI *dfs.DfsAPI, logger logging.Logger) *Handler {
+	return &Handler{
+		dfsAPI: dfsAPI,
+		logger: logger,
+	}
+}
