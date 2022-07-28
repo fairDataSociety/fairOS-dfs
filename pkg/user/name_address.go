@@ -48,7 +48,7 @@ func (*Users) storeUserNameToAddressFileMapping(userName, dataDir string, addres
 	return os.WriteFile(userFileName, address.ToBytes(), 0700)
 }
 
-func (u *Users) deleteUserMapping(userName, dataDir string) error {
+func (*Users) deleteUserMapping(userName, dataDir string) error {
 	destDir := filepath.Join(dataDir, userDirectoryName)
 	userFileName := filepath.Join(destDir, userName)
 	return os.Remove(userFileName)

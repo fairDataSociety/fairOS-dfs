@@ -18,6 +18,7 @@ package user_test
 
 import (
 	"crypto/rand"
+	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -36,7 +37,7 @@ import (
 
 func TestSharing(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 
 	acc1 := account.New(logger)
 	_, _, err := acc1.CreateUserAccount("password", "")

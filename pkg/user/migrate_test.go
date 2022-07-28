@@ -1,6 +1,7 @@
 package user
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -12,7 +13,7 @@ import (
 
 func TestNew(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 
 	t.Run("new-user-migrate", func(t *testing.T) {
 		dataDir, err := ioutil.TempDir("", "new")

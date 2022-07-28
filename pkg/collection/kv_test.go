@@ -21,7 +21,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"sort"
 	"strconv"
@@ -38,7 +38,7 @@ import (
 
 func TestKeyValueStore(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
 	_, _, err := acc.CreateUserAccount("password", "")
