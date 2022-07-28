@@ -22,8 +22,8 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -34,7 +34,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 	"github.com/tyler-smith/go-bip39"
-	"golang.org/x/term"
 )
 
 const (
@@ -47,6 +46,8 @@ const (
 	// seedSize is used to determine how much padding we need for portable account SOC
 	seedSize = 64
 )
+
+var ErrBlankPassword = errors.New("password cannot be blank")
 
 // Account is used for keeping authenticated logged-in user info in the session
 type Account struct {
@@ -131,8 +132,7 @@ func (a *Account) CreateUserAccount(passPhrase, mnemonic string) (string, string
 func (a *Account) LoadUserAccount(passPhrase, encryptedMnemonic string) error {
 	password := passPhrase
 	if password == "" {
-		fmt.Print("Enter password to unlock user account: ")
-		password = a.getPassword()
+		return ErrBlankPassword
 	}
 
 	a.wallet.encryptedmnemonic = encryptedMnemonic
@@ -197,8 +197,8 @@ func (a *Account) LoadUserAccountFromSeed(seed []byte) error {
 // the validity of the mnemonic to see if it confirms to bip-0039 list of words.
 func (a *Account) Authorise(password string) bool {
 	if password == "" {
-		fmt.Print("Enter user password to delete a pod: ")
-		password = a.getPassword()
+		a.logger.Errorf(ErrBlankPassword.Error())
+		return false
 	}
 	plainMnemonic, err := a.wallet.decryptMnemonic(password)
 	if err != nil {
@@ -243,12 +243,7 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 	} else {
 		password := passPhrase
 		if password == "" {
-			if createPod {
-				fmt.Print("Enter user password to create a pod: ")
-			} else {
-				fmt.Print("Enter user password to open a pod: ")
-			}
-			password = a.getPassword()
+			return nil, ErrBlankPassword
 		}
 
 		plainMnemonic, err := a.wallet.decryptMnemonic(password)
@@ -309,12 +304,7 @@ func (a *Account) CreateCollectionAccount(accountId int, passPhrase string, crea
 	} else {
 		password := passPhrase
 		if password == "" {
-			if createCollection {
-				fmt.Print("Enter user password to create a collection: ")
-			} else {
-				fmt.Print("Enter user password to open a collection: ")
-			}
-			password = a.getPassword()
+			return ErrBlankPassword
 		}
 
 		plainMnemonic, err := a.wallet.decryptMnemonic(password)
@@ -457,9 +447,7 @@ func (a *Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {
 	// get the password and hash it to 256 bits
 	password := passPhrase
 	if password == "" {
-		fmt.Print("Enter password to unlock user account: ")
-		password = a.getPassword()
-		password = strings.Trim(password, "\n")
+		return "", ErrBlankPassword
 	}
 	aesKey := sha256.Sum256([]byte(password))
 
@@ -470,17 +458,4 @@ func (a *Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {
 	}
 
 	return encryptedMessage, nil
-}
-
-func (*Account) getPassword() (password string) {
-	// read the pass phrase
-	bytePassword, err := term.ReadPassword(0)
-	if err != nil {
-		log.Fatalf("error reading password")
-		return
-	}
-	fmt.Println("")
-	passwd := string(bytePassword)
-	password = strings.TrimSpace(passwd)
-	return password
 }

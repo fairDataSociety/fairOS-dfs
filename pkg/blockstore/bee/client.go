@@ -24,7 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -134,7 +134,7 @@ func (s *Client) CheckConnection(isProxy bool) bool {
 		return false
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return false
 	}
@@ -175,7 +175,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 		return nil, errors.New("error uploading data")
 	}
 
-	addrData, err := ioutil.ReadAll(response.Body)
+	addrData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -225,7 +225,7 @@ func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err erro
 		return nil, errors.New("error uploading data")
 	}
 
-	addrData, err := ioutil.ReadAll(response.Body)
+	addrData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -277,7 +277,7 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 		return nil, errors.New("error downloading data")
 	}
 
-	data, err = ioutil.ReadAll(response.Body)
+	data, err = io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -329,7 +329,7 @@ func (s *Client) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err
 		return nil, errors.New("error uploading blob")
 	}
 
-	respData, err := ioutil.ReadAll(response.Body)
+	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error uploading blob")
 	}
@@ -382,7 +382,7 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 		return nil, response.StatusCode, errors.New("error downloading blob ")
 	}
 
-	respData, err := ioutil.ReadAll(response.Body)
+	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, response.StatusCode, errors.New("error downloading blob")
 	}
@@ -420,7 +420,7 @@ func (s *Client) DeleteReference(address []byte) error {
 
 	req.Close = true
 	if response.StatusCode != http.StatusOK {
-		respData, err := ioutil.ReadAll(response.Body)
+		respData, err := io.ReadAll(response.Body)
 		if err != nil {
 			return err
 		}

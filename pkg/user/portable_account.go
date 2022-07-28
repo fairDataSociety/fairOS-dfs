@@ -10,7 +10,7 @@ const (
 	AuthVersion = "FDP-login-v1.0"
 )
 
-func (u *Users) uploadPortableAccount(accountInfo *account.Info, username, password string, data []byte, fd *feed.API) error {
+func (*Users) uploadPortableAccount(accountInfo *account.Info, username, password string, data []byte, fd *feed.API) error {
 	topic := utils.HashString(AuthVersion + username + password)
 	_, err := fd.CreateFeedFromTopic(topic, accountInfo.GetAddress(), data)
 	if err != nil {
@@ -19,7 +19,7 @@ func (u *Users) uploadPortableAccount(accountInfo *account.Info, username, passw
 	return nil
 }
 
-func (u *Users) downloadPortableAccount(address utils.Address, username, password string, fd *feed.API) ([]byte, error) {
+func (*Users) downloadPortableAccount(address utils.Address, username, password string, fd *feed.API) ([]byte, error) {
 	topic := utils.HashString(AuthVersion + username + password)
 	_, data, err := fd.GetFeedDataFromTopic(topic, address)
 	if err != nil {
@@ -28,7 +28,7 @@ func (u *Users) downloadPortableAccount(address utils.Address, username, passwor
 	return data, nil
 }
 
-func (u *Users) deletePortableAccount(address utils.Address, username, password string, fd *feed.API) error {
+func (*Users) deletePortableAccount(address utils.Address, username, password string, fd *feed.API) error {
 	topic := utils.HashString(AuthVersion + username + password)
 	return fd.DeleteFeedFromTopic(topic, address)
 }

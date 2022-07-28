@@ -175,7 +175,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 }
 
 // fromChunk populates this structure from chunk data. It does not verify the signature is valid.
-func (h *Handler) fromChunk(chunk swarm.Chunk, r *request, q *Query, id *ID) error {
+func (*Handler) fromChunk(chunk swarm.Chunk, r *request, q *Query, id *ID) error {
 	chunkdata := chunk.Data()
 
 	if len(chunkdata) < idLength+signatureLength+utils.SpanLength {
@@ -199,7 +199,7 @@ func (h *Handler) fromChunk(chunk swarm.Chunk, r *request, q *Query, id *ID) err
 	return nil
 }
 
-func (h *Handler) rawSignedChunkData(chunk swarm.Chunk) ([]byte, error) {
+func (*Handler) rawSignedChunkData(chunk swarm.Chunk) ([]byte, error) {
 	chunkdata := chunk.Data()
 	if len(chunkdata) < idLength+signatureLength+utils.SpanLength {
 		return nil, fmt.Errorf("invalid chunk data len")

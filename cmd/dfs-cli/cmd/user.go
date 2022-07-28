@@ -19,7 +19,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -75,7 +74,7 @@ func userLogin(userName, apiEndpoint string) {
 	}
 	jsonData, err := json.Marshal(loginUser)
 	if err != nil {
-		log.Fatalf("login user: error marshalling request")
+		fmt.Println("login user: error marshalling request")
 		return
 	}
 	data, err := fdfsAPI.postReq(http.MethodPost, apiEndpoint, jsonData)
