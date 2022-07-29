@@ -17,6 +17,8 @@ limitations under the License.
 package dfs
 
 import (
+	"errors"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
@@ -37,6 +39,9 @@ type API struct {
 func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*API, error) {
 	ens, err := ethClient.New(ensConfig, logger)
 	if err != nil {
+		if errors.Is(err, ethClient.ErrWrongChainID) {
+			return nil, err
+		}
 		return nil, ErrEthClient
 	}
 	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)

@@ -32,6 +32,8 @@ const (
 
 var (
 	minRequiredBalance = big.NewInt(10000000000000000) // 0.01 eth
+
+	ErrWrongChainID = fmt.Errorf("chainID does not match or not supported")
 )
 
 type Client struct {
@@ -51,9 +53,12 @@ func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
 	}
 
 	// check connection
-	_, err = eth.ChainID(context.Background())
+	chainID, err := eth.ChainID(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("dial eth ensm: %w", err)
+	}
+	if chainID.String() != ensConfig.ChainID {
+		return nil, ErrWrongChainID
 	}
 	ensRegistry, err := ens.NewENSRegistry(common.HexToAddress(ensConfig.ENSRegistryAddress), eth)
 	if err != nil {
