@@ -275,81 +275,9 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 	return accountInfo, nil
 }
 
-// createCollectionAccount is used to create a new key pair for every collection (KV or Doc) created. This
-// key pair is again derived from the same master mnemonic of the user.
-func (a *Account) createCollectionAccount(accountId int, passPhrase string, createCollection bool) error {
-	if _, ok := a.podAccounts[accountId]; ok {
-		return nil
-	}
-
-	var (
-		hdw         *hdwallet.Wallet
-		err         error
-		acc         accounts.Account
-		accountInfo = &Info{}
-	)
-	path := genericPath + strconv.Itoa(accountId)
-	if a.wallet.seed != nil {
-		acc, err = a.wallet.CreateAccountFromSeed(path, a.wallet.seed)
-		if err != nil {
-			return err
-		}
-		hdw, err = hdwallet.NewFromSeed(a.wallet.seed)
-		if err != nil {
-			return err
-		}
-	} else {
-		password := passPhrase
-		if password == "" {
-			return errBlankPassword
-		}
-
-		plainMnemonic, err := a.wallet.decryptMnemonic(password)
-		if err != nil {
-			return fmt.Errorf("invalid password")
-		}
-
-		acc, err = a.wallet.CreateAccount(path, plainMnemonic)
-		if err != nil {
-			return err
-		}
-		hdw, err = hdwallet.NewFromMnemonic(plainMnemonic)
-		if err != nil {
-			return err
-		}
-	}
-
-	accountInfo.privateKey, err = hdw.PrivateKey(acc)
-	if err != nil {
-		return err
-	}
-	accountInfo.publicKey, err = hdw.PublicKey(acc)
-	if err != nil {
-		return err
-	}
-	addrBytes, err := crypto.NewEthereumAddress(accountInfo.privateKey.PublicKey)
-	if err != nil {
-		return err
-	}
-	accountInfo.address.SetBytes(addrBytes)
-	a.podAccounts[accountId] = accountInfo
-	return nil
-}
-
 // DeletePodAccount unloads/forgets a particular pods key value pair from the memory.
 func (a *Account) DeletePodAccount(accountId int) {
 	delete(a.podAccounts, accountId)
-}
-
-// getUserPrivateKey retuens the private key of a given account index.
-// the index -1 belongs to user root account and other indexes belong to
-// the respective pods.
-func (a *Account) getUserPrivateKey(index int) *ecdsa.PrivateKey {
-	if index == UserAccountIndex {
-		return a.userAccount.privateKey
-	} else {
-		return a.podAccounts[index].privateKey
-	}
 }
 
 // GetAddress returns the address of a given account index.
@@ -361,14 +289,6 @@ func (a *Account) GetAddress(index int) utils.Address {
 	} else {
 		return a.podAccounts[index].address
 	}
-}
-
-// getPodAccountInfo returns the accountInfo for a given pod index.
-func (a *Account) getPodAccountInfo(index int) (*Info, error) {
-	if info, found := a.podAccounts[index]; found {
-		return info, nil
-	}
-	return nil, fmt.Errorf("invalid index : %d", index)
 }
 
 // GetUserAccountInfo returns the user info

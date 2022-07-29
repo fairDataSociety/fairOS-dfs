@@ -41,15 +41,6 @@ func (a *Address) String() string {
 	return hex.EncodeToString(a[:])
 }
 
-// parseAddress returns a new address from a hex string
-func (*Address) parseAddress(s string) (Address, error) {
-	b, err := hex.DecodeString(s)
-	if err != nil {
-		return ZeroAddress, err
-	}
-	return NewAddress(b), nil
-}
-
 // Hex returns the hex of the corresponding address
 func (a Address) Hex() string {
 	unchecksummed := hex.EncodeToString(a[:])
@@ -73,16 +64,6 @@ func (a Address) Hex() string {
 		}
 	}
 	return "0x" + string(result)
-}
-
-// stringToAddress sets the address from the given string
-func (a Address) stringToAddress(addr string) error {
-	addrByte, err := hex.DecodeString(addr)
-	if err != nil {
-		return err
-	}
-	copy(a[:], addrByte)
-	return nil
 }
 
 // ToBytes returns the address bytes
