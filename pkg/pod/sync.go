@@ -19,7 +19,7 @@ package pod
 // SyncPod syncs the pod to the latest version by extracting the current meta information
 // of files and directories of the pod.
 func (p *Pod) SyncPod(podName string) error {
-	podName, err := CleanPodName(podName)
+	podName, err := cleanPodName(podName)
 	if err != nil {
 		return err
 	}

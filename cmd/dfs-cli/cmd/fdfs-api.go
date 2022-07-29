@@ -35,23 +35,24 @@ import (
 )
 
 const (
-	MaxIdleConnections    = 20
-	MaxConnectionsPerHost = 256
-	RequestTimeout        = 6000
+	maxIdleConnections    = 20
+	maxConnectionsPerHost = 256
+	requestTimeout        = 6000
 )
 
-type FdfsClient struct {
+// fdfsClient is the http client for dfs
+type fdfsClient struct {
 	url    string
 	client *http.Client
 	cookie *http.Cookie
 }
 
-func NewFdfsClient(fdfsServer string) (*FdfsClient, error) {
+func newFdfsClient(fdfsServer string) (*fdfsClient, error) {
 	client, err := createHTTPClient()
 	if err != nil {
 		return nil, err
 	}
-	return &FdfsClient{
+	return &fdfsClient{
 		url:    fdfsServer,
 		client: client,
 	}, nil
@@ -63,17 +64,18 @@ func createHTTPClient() (*http.Client, error) {
 		return nil, err
 	}
 	client := &http.Client{
-		Timeout: time.Second * RequestTimeout,
+		Timeout: time.Second * requestTimeout,
 		Jar:     jar,
 		Transport: &http.Transport{
-			MaxIdleConnsPerHost: MaxIdleConnections,
-			MaxConnsPerHost:     MaxConnectionsPerHost,
+			MaxIdleConnsPerHost: maxIdleConnections,
+			MaxConnsPerHost:     maxConnectionsPerHost,
 		},
 	}
 	return client, nil
 }
 
-func (s *FdfsClient) CheckConnection() bool {
+// CheckConnection checks if it can connect to dfs server
+func (s *fdfsClient) CheckConnection() bool {
 	req, err := http.NewRequest(http.MethodGet, s.url, http.NoBody)
 	if err != nil {
 		return false
@@ -94,7 +96,7 @@ func (s *FdfsClient) CheckConnection() bool {
 	return err == nil
 }
 
-func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, error) {
+func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, error) {
 	// prepare the  request
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
@@ -169,7 +171,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 	return []byte(resp.Message), nil
 }
 
-func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
+func (s *fdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
 	var err error
@@ -236,7 +238,7 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	return []byte(resp.Message), nil
 }
 
-func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, arguments map[string]string, formFileArgument, compression string) ([]byte, error) {
+func (s *fdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, arguments map[string]string, formFileArgument, compression string) ([]byte, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 
@@ -304,7 +306,7 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 
 }
 
-func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map[string]string, out *os.File) (int64, error) {
+func (s *fdfsClient) downloadMultipartFile(method, urlPath string, arguments map[string]string, out *os.File) (int64, error) {
 	// prepare the  request
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request

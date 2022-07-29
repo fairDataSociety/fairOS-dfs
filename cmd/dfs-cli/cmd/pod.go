@@ -45,7 +45,7 @@ func podNew(podName string) {
 		return
 	}
 	currentPod = podName
-	currentDirectory = utils.PathSeperator
+	currentDirectory = utils.PathSeparator
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }
@@ -115,7 +115,7 @@ func openPod(podName string) {
 		return
 	}
 	currentPod = podName
-	currentDirectory = utils.PathSeperator
+	currentDirectory = utils.PathSeparator
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }

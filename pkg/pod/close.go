@@ -16,7 +16,7 @@ limitations under the License.
 
 package pod
 
-// ClosePod closed a already opened pod and removes its information from directory and file
+// ClosePod closed an already opened pod and removes its information from directory and file
 // data structures.
 func (p *Pod) ClosePod(podName string) error {
 	if !p.IsPodOpened(podName) {

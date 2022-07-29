@@ -24,6 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// IsPodOpened checks if a pod is open
 func (p *Pod) IsPodOpened(podName string) bool {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
@@ -33,8 +34,9 @@ func (p *Pod) IsPodOpened(podName string) bool {
 	return false
 }
 
+// IsPodPresent checks if a pod is already present for user
 func (p *Pod) IsPodPresent(podName string) bool {
-	podName, err := CleanPodName(podName)
+	podName, err := cleanPodName(podName)
 	if err != nil {
 		return false
 	}
@@ -52,6 +54,7 @@ func (p *Pod) IsPodPresent(podName string) bool {
 	return false
 }
 
+// GetPath returns the path of the node in a pod
 func (*Pod) GetPath(inode *d.Inode) string {
 	if inode != nil {
 		return inode.Meta.Path
@@ -59,6 +62,7 @@ func (*Pod) GetPath(inode *d.Inode) string {
 	return ""
 }
 
+// GetName returns the name of the node in a pod
 func (*Pod) GetName(inode *d.Inode) string {
 	if inode != nil {
 		return inode.Meta.Name
@@ -66,6 +70,7 @@ func (*Pod) GetName(inode *d.Inode) string {
 	return ""
 }
 
+// GetAccountInfo returns the pod account info
 func (p *Pod) GetAccountInfo(podName string) (*account.Info, error) {
 	podInfo, err := p.GetPodInfoFromPodMap(podName)
 	if err != nil {
@@ -74,7 +79,8 @@ func (p *Pod) GetAccountInfo(podName string) (*account.Info, error) {
 	return podInfo.GetAccountInfo(), nil
 }
 
-func CleanPodName(podName string) (string, error) {
+// cleanPodName trims spaces from a pod name
+func cleanPodName(podName string) (string, error) {
 	if podName == "" {
 		return "", ErrInvalidPodName
 	}
