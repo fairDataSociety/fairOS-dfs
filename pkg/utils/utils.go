@@ -161,11 +161,13 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 	return swarm.NewChunk(address, data), nil
 }
 
-func CombinePathAndFile(podName, path, fileName string) string {
+// CombinePathAndFile joins filename with provided path
+func CombinePathAndFile(path, fileName string) string {
 	var totalPath string
 
 	if path == PathSeperator || path == "" {
-		totalPath = path + fileName
+		fileName = strings.TrimPrefix(fileName, PathSeperator)
+		totalPath = PathSeperator + fileName
 	} else {
 		if fileName == "" {
 			totalPath = path
@@ -178,6 +180,7 @@ func CombinePathAndFile(podName, path, fileName string) string {
 	return totalPath
 }
 
+// GetRandString return random string of length n
 func GetRandString(n int) (string, error) {
 	b := make([]byte, n)
 	for i := range b {
@@ -190,6 +193,7 @@ func GetRandString(n int) (string, error) {
 	return string(b), nil
 }
 
+// GetRandBytes return random bytes array of length n
 func GetRandBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	for i := range b {
@@ -201,17 +205,3 @@ func GetRandBytes(n int) ([]byte, error) {
 	}
 	return b, nil
 }
-
-//func CombinePathAndFile(podName, path, fileName string) string {
-//	var totalPath string
-//	if path == PathSeperator || path == "" {
-//		totalPath = PathSeperator + podName + path + fileName
-//	} else {
-//		if fileName != "" {
-//			totalPath = PathSeperator + podName + PathSeperator + path + PathSeperator + fileName
-//		} else {
-//			totalPath = PathSeperator + podName + PathSeperator + path
-//		}
-//	}
-//	return totalPath
-//}

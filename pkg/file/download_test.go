@@ -59,7 +59,7 @@ func TestDownload(t *testing.T) {
 		}
 
 		// Download the file and read from reader
-		podFile := utils.CombinePathAndFile("pod1", filePath, fileName)
+		podFile := utils.CombinePathAndFile(filePath, fileName)
 		reader, rcvdSize, err := fileObject.Download(podFile)
 		if err != nil {
 			t.Fatal(err)

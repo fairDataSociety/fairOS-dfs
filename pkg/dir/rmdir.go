@@ -38,9 +38,9 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 	// check if directory present
 	var totalPath string
 	if parentPath == "/" && dirToDelete == "/" {
-		totalPath = utils.CombinePathAndFile(d.podName, parentPath, "")
+		totalPath = utils.CombinePathAndFile(parentPath, "")
 	} else {
-		totalPath = utils.CombinePathAndFile(d.podName, parentPath, dirToDelete)
+		totalPath = utils.CombinePathAndFile(parentPath, dirToDelete)
 
 	}
 	if d.GetDirFromDirectoryMap(totalPath) == nil {
@@ -53,7 +53,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 		for _, fileOrDirName := range dirInode.FileOrDirNames {
 			if strings.HasPrefix(fileOrDirName, "_F_") {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
-				filePath := utils.CombinePathAndFile(d.podName, directoryNameWithPath, fileName)
+				filePath := utils.CombinePathAndFile(directoryNameWithPath, fileName)
 				err := d.file.RmFile(filePath)
 				if err != nil {
 					return err
@@ -64,7 +64,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 				}
 			} else if strings.HasPrefix(fileOrDirName, "_D_") {
 				dirName := strings.TrimPrefix(fileOrDirName, "_D_")
-				path := utils.CombinePathAndFile(d.podName, directoryNameWithPath, dirName)
+				path := utils.CombinePathAndFile(directoryNameWithPath, dirName)
 				d.logger.Infof(directoryNameWithPath)
 
 				err := d.RmDir(path)
@@ -96,7 +96,7 @@ func (d *Directory) RmRootDir() error {
 	dirToDelete := filepath.Base("/")
 
 	// check if directory present
-	var totalPath = utils.CombinePathAndFile(d.podName, dirToDelete, "")
+	var totalPath = utils.CombinePathAndFile(dirToDelete, "")
 
 	if d.GetDirFromDirectoryMap(totalPath) == nil {
 		return ErrDirectoryNotPresent
@@ -108,7 +108,7 @@ func (d *Directory) RmRootDir() error {
 		for _, fileOrDirName := range dirInode.FileOrDirNames {
 			if strings.HasPrefix(fileOrDirName, "_F_") {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
-				filePath := utils.CombinePathAndFile(d.podName, dirToDelete, fileName)
+				filePath := utils.CombinePathAndFile(dirToDelete, fileName)
 				err := d.file.RmFile(filePath)
 				if err != nil {
 					return err
@@ -119,7 +119,7 @@ func (d *Directory) RmRootDir() error {
 				}
 			} else if strings.HasPrefix(fileOrDirName, "_D_") {
 				dirName := strings.TrimPrefix(fileOrDirName, "_D_")
-				path := utils.CombinePathAndFile(d.podName, dirToDelete, dirName)
+				path := utils.CombinePathAndFile(dirToDelete, dirName)
 				d.logger.Infof(dirToDelete)
 
 				err := d.RmDir(path)

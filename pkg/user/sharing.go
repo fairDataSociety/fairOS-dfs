@@ -52,7 +52,7 @@ type ReceiveFileInfo struct {
 
 // ShareFileWithUser exports a file to another user by creating and uploading a new encrypted sharing file entry.
 func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
-	totalFilePath := utils.CombinePathAndFile(podName, podFileWithPath, "")
+	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	meta, err := userInfo.file.GetMetaFromFileName(totalFilePath, userAddress)
 	if err != nil {
 		return "", err
@@ -127,7 +127,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	fileNameToAdd := sharingEntry.Meta.Name
 	dir := podInfo.GetDirectory()
 	file := podInfo.GetFile()
-	totalPath := utils.CombinePathAndFile(podName, podDir, fileNameToAdd)
+	totalPath := utils.CombinePathAndFile(podDir, fileNameToAdd)
 
 	// check if file is already present
 	if file.IsFileAlreadyPresent(totalPath) {
