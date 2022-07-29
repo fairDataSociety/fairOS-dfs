@@ -61,7 +61,7 @@ func decrypt(key []byte, securemess string) (decodedmess string, err error) {
 	}
 
 	if len(cipherText) < aes.BlockSize {
-		err = errors.New("ciphertext block size is too short!")
+		err = errors.New("ciphertext block size is too short")
 		return
 	}
 
@@ -104,7 +104,7 @@ func decryptBytes(key, cipherText []byte) ([]byte, error) {
 	}
 
 	if len(cipherText) < aes.BlockSize {
-		err = errors.New("ciphertext block size is too short!")
+		err = errors.New("ciphertext block size is too short")
 		return nil, err
 	}
 

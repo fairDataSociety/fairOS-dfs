@@ -17,7 +17,7 @@ limitations under the License.
 package user_test
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -28,7 +28,7 @@ import (
 
 func TestNew(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 
 	t.Run("new-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()

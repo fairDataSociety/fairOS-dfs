@@ -40,21 +40,24 @@ const (
 
 var (
 	// ErrInvalidTopicSize is returned when a topic is not equal to TopicLength
-	ErrInvalidTopicSize = fmt.Errorf("Topic is not equal to %d", TopicLength)
+	ErrInvalidTopicSize = fmt.Errorf("topic is not equal to %d", TopicLength)
 
 	// ErrInvalidPayloadSize is returned when the payload is greater than the chunk size
 	ErrInvalidPayloadSize = fmt.Errorf("payload size is too large. maximum payload size is %d bytes", utils.MaxChunkLength)
 
+	// ErrReadOnlyFeed is returned when a feed is read only for a user
 	ErrReadOnlyFeed = fmt.Errorf("read only feed")
 )
 
+// API handles feed operations
 type API struct {
 	handler     *Handler
 	accountInfo *account.Info
 	logger      logging.Logger
 }
 
-type Request struct {
+// request is a custom type that involves in the fairOS feed creation
+type request struct {
 	ID
 	//User   utils.Address
 	idAddr swarm.Address // cached chunk address for the update (not serialized, for internal use)
@@ -78,7 +81,7 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 // can only be accessed if the pod address is known. Also no one else can spoof this
 // chunk since this is signed by the pod.
 func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
-	var req Request
+	var req request
 
 	if a.accountInfo.GetPrivateKey() == nil {
 		return nil, ErrReadOnlyFeed
@@ -155,6 +158,7 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	return address, nil
 }
 
+// CreateFeedFromTopic creates a soc with the topic as identifier
 func (a *API) CreateFeedFromTopic(topic []byte, user utils.Address, data []byte) ([]byte, error) {
 	if a.accountInfo.GetPrivateKey() == nil {
 		return nil, ErrReadOnlyFeed
@@ -208,6 +212,7 @@ func (a *API) GetSOCFromAddress(address []byte) ([]byte, error) {
 	return a.handler.rawSignedChunkData(ch)
 }
 
+// GetFeedData looks up feed from swarm
 func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, error) {
 	if len(topic) != TopicLength {
 		return nil, nil, ErrInvalidTopicSize

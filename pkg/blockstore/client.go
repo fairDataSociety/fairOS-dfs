@@ -22,6 +22,7 @@ import (
 	"github.com/ethersphere/bee/pkg/swarm"
 )
 
+// Client is the interface for block store
 type Client interface {
 	CheckConnection(isProxy bool) bool
 	UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error)

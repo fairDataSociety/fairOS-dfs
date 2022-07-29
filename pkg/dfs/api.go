@@ -25,7 +25,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
-type DfsAPI struct {
+// API is the go api for fairOS
+type API struct {
 	client  blockstore.Client
 	users   *user.Users
 	logger  logging.Logger
@@ -33,7 +34,7 @@ type DfsAPI struct {
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*DfsAPI, error) {
+func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*API, error) {
 	ens, err := ethClient.New(ensConfig, logger)
 	if err != nil {
 		return nil, ErrEthClient
@@ -43,7 +44,7 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensC
 		return nil, ErrBeeClient
 	}
 	users := user.NewUsers(dataDir, c, ens, logger)
-	return &DfsAPI{
+	return &API{
 		client:  c,
 		users:   users,
 		logger:  logger,
@@ -52,8 +53,8 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensC
 }
 
 // NewMockDfsAPI is used for tests only
-func NewMockDfsAPI(client blockstore.Client, users *user.Users, logger logging.Logger, dataDir string) *DfsAPI {
-	return &DfsAPI{
+func NewMockDfsAPI(client blockstore.Client, users *user.Users, logger logging.Logger, dataDir string) *API {
+	return &API{
 		client:  client,
 		users:   users,
 		logger:  logger,

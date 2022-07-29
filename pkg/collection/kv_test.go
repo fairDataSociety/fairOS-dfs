@@ -18,10 +18,11 @@ package collection_test
 
 import (
 	"bytes"
+	"crypto/rand"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"math/rand"
+	"io"
+	"math/big"
 	"sort"
 	"strconv"
 	"strings"
@@ -37,7 +38,7 @@ import (
 
 func TestKeyValueStore(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
 	_, _, err := acc.CreateUserAccount("password", "")
@@ -789,7 +790,11 @@ func addRandomStrings(t *testing.T, kvStore *collection.KeyValue, count int, tab
 	var values []string
 	for i := 0; i < count; i++ {
 	DUPLICATE:
-		randStrLen := rand.Intn(15)
+		bi, err := rand.Int(rand.Reader, big.NewInt(15))
+		if err != nil {
+			return nil, nil, err
+		}
+		randStrLen := int(bi.Int64())
 		key, err := utils.GetRandString(randStrLen)
 		if err != nil {
 			return nil, nil, err
@@ -815,7 +820,11 @@ func addRandomNumbersAsString(t *testing.T, kvStore *collection.KeyValue, count 
 	var values []string
 	for i := 0; i < count; i++ {
 	DUPLICATE:
-		key := rand.Intn(10000)
+		bi, err := rand.Int(rand.Reader, big.NewInt(10000))
+		if err != nil {
+			return nil, nil, err
+		}
+		key := int(bi.Int64())
 		strKey := strconv.Itoa(key)
 		for _, k := range keys {
 			if k == strKey {
@@ -823,7 +832,7 @@ func addRandomNumbersAsString(t *testing.T, kvStore *collection.KeyValue, count 
 			}
 		}
 
-		err := kvStore.KVPut(tableName, strKey, []byte(strKey))
+		err = kvStore.KVPut(tableName, strKey, []byte(strKey))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -838,7 +847,11 @@ func addRandomNumbers(t *testing.T, kvStore *collection.KeyValue, count int, tab
 	var values []int
 	for i := 0; i < count; i++ {
 	DUPLICATE:
-		key := rand.Intn(10000)
+		bi, err := rand.Int(rand.Reader, big.NewInt(10000))
+		if err != nil {
+			return nil, nil, err
+		}
+		key := int(bi.Int64())
 		strKey := strconv.Itoa(key)
 		for _, k := range keys {
 			if k == key {
@@ -846,7 +859,7 @@ func addRandomNumbers(t *testing.T, kvStore *collection.KeyValue, count int, tab
 			}
 		}
 
-		err := kvStore.KVPut(tableName, strKey, []byte(strKey))
+		err = kvStore.KVPut(tableName, strKey, []byte(strKey))
 		if err != nil {
 			return nil, nil, err
 		}

@@ -21,29 +21,29 @@ import (
 )
 
 // CreateUserV2 is a controller function which calls the create user function from the user object.
-func (d *DfsAPI) CreateUserV2(userName, passPhrase, mnemonic string, sessionId string) (string, string, string, string, *user.Info, error) {
+func (d *API) CreateUserV2(userName, passPhrase, mnemonic string, sessionId string) (string, string, string, string, *user.Info, error) {
 	return d.users.CreateNewUserV2(userName, passPhrase, mnemonic, sessionId)
 }
 
 // LoginUserV2 is a controller function which calls the users login function.
-func (d *DfsAPI) LoginUserV2(userName, passPhrase string, sessionId string) (*user.Info, string, string, error) {
+func (d *API) LoginUserV2(userName, passPhrase string, sessionId string) (*user.Info, string, string, error) {
 	return d.users.LoginUserV2(userName, passPhrase, d.client, sessionId)
 }
 
 // CreateUser is a controller function which calls the create user function from the user object.
 // FOR MIGRATION PURPOSE ONLY
-func (d *DfsAPI) CreateUser(userName, passPhrase, mnemonic string, sessionId string) (string, string, *user.Info, error) {
+func (d *API) CreateUser(userName, passPhrase, mnemonic string, sessionId string) (string, string, *user.Info, error) {
 	return d.users.CreateNewUser(userName, passPhrase, mnemonic, sessionId)
 }
 
 // LoginUser is a controller function which calls the users login function.
 // FOR MIGRATION PURPOSE ONLY
-func (d *DfsAPI) LoginUser(userName, passPhrase string, sessionId string) (*user.Info, error) {
+func (d *API) LoginUser(userName, passPhrase string, sessionId string) (*user.Info, error) {
 	return d.users.LoginUser(userName, passPhrase, d.dataDir, d.client, sessionId)
 }
 
 // LogoutUser is a controller function which gets the logged in user information and logs it out.
-func (d *DfsAPI) LogoutUser(sessionId string) error {
+func (d *API) LogoutUser(sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -54,7 +54,7 @@ func (d *DfsAPI) LogoutUser(sessionId string) error {
 }
 
 // DeleteUser is a controller function which deletes a logged in user.
-func (d *DfsAPI) DeleteUser(passPhrase, sessionId string) error {
+func (d *API) DeleteUser(passPhrase, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -65,7 +65,7 @@ func (d *DfsAPI) DeleteUser(passPhrase, sessionId string) error {
 }
 
 // DeleteUserV2 is a controller function which deletes a logged in user.
-func (d *DfsAPI) DeleteUserV2(passPhrase, sessionId string) error {
+func (d *API) DeleteUserV2(passPhrase, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -76,23 +76,23 @@ func (d *DfsAPI) DeleteUserV2(passPhrase, sessionId string) error {
 }
 
 // IsUserNameAvailable checks if a given user name is available in this dfs server.
-func (d *DfsAPI) IsUserNameAvailable(userName string) bool {
+func (d *API) IsUserNameAvailable(userName string) bool {
 	return d.users.IsUsernameAvailable(userName, d.dataDir)
 }
 
 // IsUserNameAvailableV2 checks if a given user name is available in this dfs server.
-func (d *DfsAPI) IsUserNameAvailableV2(userName string) bool {
+func (d *API) IsUserNameAvailableV2(userName string) bool {
 	return d.users.IsUsernameAvailableV2(userName)
 }
 
 // IsUserLoggedIn checks if the given user is logged in
-func (d *DfsAPI) IsUserLoggedIn(userName string) bool {
+func (d *API) IsUserLoggedIn(userName string) bool {
 	// check if a given user is logged in
 	return d.users.IsUserNameLoggedIn(userName)
 }
 
 // GetUserStat gets the information related to the user.
-func (d *DfsAPI) GetUserStat(sessionId string) (*user.Stat, error) {
+func (d *API) GetUserStat(sessionId string) (*user.Stat, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -103,7 +103,7 @@ func (d *DfsAPI) GetUserStat(sessionId string) (*user.Stat, error) {
 }
 
 // ExportUser exports the currently logged in user.
-func (d *DfsAPI) ExportUser(sessionId string) (string, string, error) {
+func (d *API) ExportUser(sessionId string) (string, string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -113,7 +113,7 @@ func (d *DfsAPI) ExportUser(sessionId string) (string, string, error) {
 }
 
 // MigrateUser is a controller function which migrates user credentials to swarm from local storage
-func (d *DfsAPI) MigrateUser(username, passPhrase, sessionId string) error {
+func (d *API) MigrateUser(username, passPhrase, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {

@@ -51,7 +51,7 @@ func (c *MockNamespaceManager) RegisterSubdomain(username string, owner common.A
 	return nil
 }
 
-func (c *MockNamespaceManager) SetResolver(string, common.Address, *ecdsa.PrivateKey) (string, error) {
+func (*MockNamespaceManager) SetResolver(string, common.Address, *ecdsa.PrivateKey) (string, error) {
 	// TODO do something
 	return "", nil
 }

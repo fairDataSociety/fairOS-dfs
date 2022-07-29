@@ -38,7 +38,9 @@ import (
 )
 
 const (
-	DocumentFile          = "document_dbs"
+	documentFile = "document_dbs"
+
+	// DefaultIndexFieldName is the default index identifier
 	DefaultIndexFieldName = "id"
 )
 
@@ -901,7 +903,7 @@ func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 // LoadDocumentDBSchemas loads the schema of all documents belonging to a pod.
 func (d *Document) LoadDocumentDBSchemas() (map[string]DBSchema, error) {
 	collections := make(map[string]DBSchema)
-	topic := utils.HashString(DocumentFile)
+	topic := utils.HashString(documentFile)
 	_, data, err := d.fd.GetFeedData(topic, d.user)
 	if err != nil {
 		if err.Error() != "feed does not exist or was not updated yet" {
@@ -953,7 +955,7 @@ func (d *Document) storeDocumentDBSchemas(collections map[string]DBSchema) error
 			buf.WriteString(string(line) + "\n")
 		}
 	}
-	topic := utils.HashString(DocumentFile)
+	topic := utils.HashString(documentFile)
 	_, err := d.fd.UpdateFeed(topic, d.user, buf.Bytes())
 	if err != nil {
 		return err

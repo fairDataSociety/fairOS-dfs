@@ -23,7 +23,7 @@ import (
 )
 
 type Handler struct {
-	dfsAPI *dfs.DfsAPI
+	dfsAPI *dfs.API
 	logger logging.Logger
 
 	whitelistedOrigins []string
@@ -44,7 +44,7 @@ func NewHandler(dataDir, beeApi, cookieDomain, postageBlockId string, whiteliste
 }
 
 // NewMockHandler is used for tests only
-func NewMockHandler(dfsAPI *dfs.DfsAPI, logger logging.Logger) *Handler {
+func NewMockHandler(dfsAPI *dfs.API, logger logging.Logger) *Handler {
 	return &Handler{
 		dfsAPI: dfsAPI,
 		logger: logger,

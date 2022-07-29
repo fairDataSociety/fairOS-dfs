@@ -24,6 +24,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocFindResponse is used for listing rows from a document database
 type DocFindResponse struct {
 	Docs [][]byte `json:"docs"`
 }

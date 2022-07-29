@@ -24,10 +24,12 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocumentDBs represent a list of documentDB
 type DocumentDBs struct {
-	Tables []DocumentDB
+	Tables []documentDB
 }
-type DocumentDB struct {
+
+type documentDB struct {
 	Name           string              `json:"table_name"`
 	IndexedColumns []collection.SIndex `json:"indexes"`
 	CollectionType string              `json:"type"`
@@ -75,7 +77,7 @@ func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 		indexes = append(indexes, dbSchema.SimpleIndexes...)
 		indexes = append(indexes, dbSchema.MapIndexes...)
 		indexes = append(indexes, dbSchema.ListIndexes...)
-		m := DocumentDB{
+		m := documentDB{
 			Name:           name,
 			IndexedColumns: indexes,
 			CollectionType: "Document Store",

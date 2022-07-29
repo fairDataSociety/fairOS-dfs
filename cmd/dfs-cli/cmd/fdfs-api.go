@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
@@ -75,7 +74,7 @@ func createHTTPClient() (*http.Client, error) {
 }
 
 func (s *FdfsClient) CheckConnection() bool {
-	req, err := http.NewRequest(http.MethodGet, s.url, nil)
+	req, err := http.NewRequest(http.MethodGet, s.url, http.NoBody)
 	if err != nil {
 		return false
 	}
@@ -91,7 +90,7 @@ func (s *FdfsClient) CheckConnection() bool {
 		return false
 	}
 
-	_, err = ioutil.ReadAll(response.Body)
+	_, err = io.ReadAll(response.Body)
 	return err == nil
 }
 
@@ -110,7 +109,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("Content-Length", strconv.Itoa(len(jsonBytes)))
 	} else {
-		req, err = http.NewRequest(method, fullUrl, nil)
+		req, err = http.NewRequest(method, fullUrl, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +131,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		if response.StatusCode == http.StatusNoContent {
 			return nil, errors.New("no content")
 		}
-		data, err := ioutil.ReadAll(response.Body)
+		data, err := io.ReadAll(response.Body)
 		if err != nil {
 			return nil, errors.New("error downloading data")
 		}
@@ -151,7 +150,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		s.cookie = response.Cookies()[0]
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -176,12 +175,12 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	var err error
 	if argsString != "" {
 		fullUrl = fullUrl + "?" + argsString
-		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
+		req, err = http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
+		req, err = http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +202,7 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 		if response.StatusCode == http.StatusNoContent {
 			return nil, errors.New("no content")
 		}
-		data, err := ioutil.ReadAll(response.Body)
+		data, err := io.ReadAll(response.Body)
 		if err != nil {
 			return nil, errors.New("error downloading data")
 		}
@@ -219,7 +218,7 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 		s.cookie = response.Cookies()[0]
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -296,7 +295,7 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 		return nil, errors.New(errStr)
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}

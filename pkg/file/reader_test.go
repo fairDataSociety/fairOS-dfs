@@ -18,10 +18,11 @@ package file_test
 
 import (
 	"bytes"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/big"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -259,7 +260,10 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 			bytesToWrite = uint32(bytesRemaining)
 		}
 		buf := make([]byte, bytesToWrite)
-		rand.Read(buf)
+		_, err := rand.Read(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
 		if compression != "" {
 			compressedData, err := file.Compress(buf, compression, bytesToWrite)
 			if err != nil {
@@ -309,12 +313,22 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			bytesToWrite = uint32(bytesRemaining)
 		}
 		buf := make([]byte, bytesToWrite)
-		rand.Read(buf)
-
+		_, err := rand.Read(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
 		for j := uint32(0); j < linesPerBlock; j++ {
-			idx := rand.Intn(int(bytesToWrite))
+			bi, err := rand.Int(rand.Reader, big.NewInt(int64(bytesToWrite)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			idx := bi.Int64()
 			if buf[idx] == '\n' {
-				idx = rand.Intn(int(bytesToWrite))
+				bi, err = rand.Int(rand.Reader, big.NewInt(int64(bytesToWrite)))
+				if err != nil {
+					t.Fatal(err)
+				}
+				idx = bi.Int64()
 			}
 			buf[idx] = '\n'
 		}

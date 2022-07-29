@@ -17,7 +17,7 @@ limitations under the License.
 package dir_test
 
 import (
-	"io/ioutil"
+	"io"
 	"strconv"
 	"testing"
 
@@ -31,7 +31,7 @@ import (
 
 func TestStat(t *testing.T) {
 	mockClient := bm.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("password", "")
 	if err != nil {

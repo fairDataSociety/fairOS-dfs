@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	CookieName           = "fairOS-dfs"
+	cookieName           = "fairOS-dfs"
 	cookieSessionId      = "session-id"
 	cookieLoginTime      = "login-time"
 	cookieExpirationTime = 24 * time.Hour
@@ -38,6 +38,7 @@ var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
 
+// GetUniqueSessionId generates a sessionId for each logged-in user
 func GetUniqueSessionId() string {
 	b := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
@@ -46,6 +47,7 @@ func GetUniqueSessionId() string {
 	return base64.URLEncoding.EncodeToString(b)
 }
 
+// SetSession sets the cookie in the http.Response
 func SetSession(sessionId string, response http.ResponseWriter, cookieDomain string) error {
 	logoutTime := time.Now().Add(cookieLogoutTime)
 	logoutTimeStr := logoutTime.Format(time.RFC3339)
@@ -53,7 +55,7 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 		cookieSessionId: sessionId,
 		cookieLoginTime: logoutTimeStr,
 	}
-	encoded, err := cookieHandler.Encode(CookieName, value)
+	encoded, err := cookieHandler.Encode(cookieName, value)
 	if err != nil {
 		return err
 	}
@@ -62,7 +64,7 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 	var cookie *http.Cookie
 	if cookieDomain == "localhost" {
 		cookie = &http.Cookie{
-			Name:    CookieName,
+			Name:    cookieName,
 			Value:   encoded,
 			Path:    "/",
 			Expires: expire,
@@ -73,7 +75,7 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 		}
 	} else if cookieDomain == "" {
 		cookie = &http.Cookie{
-			Name:     CookieName,
+			Name:     cookieName,
 			Value:    encoded,
 			Path:     "/",
 			Expires:  expire,
@@ -84,7 +86,7 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 		}
 	} else {
 		cookie = &http.Cookie{
-			Name:     CookieName,
+			Name:     cookieName,
 			Value:    encoded,
 			Path:     "/",
 			Expires:  expire,
@@ -100,13 +102,14 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 	return nil
 }
 
+// GetSessionIdFromCookie extracts sessionId from http.Request
 func GetSessionIdFromCookie(request *http.Request) (sessionId string, err error) {
-	cookie, err := request.Cookie(CookieName)
+	cookie, err := request.Cookie(cookieName)
 	if err != nil {
 		return "", err
 	}
 	cookieValue := make(map[string]string)
-	err = cookieHandler.Decode(CookieName, cookie.Value, &cookieValue)
+	err = cookieHandler.Decode(cookieName, cookie.Value, &cookieValue)
 	if err != nil {
 		return "", err
 	}
@@ -114,9 +117,10 @@ func GetSessionIdFromCookie(request *http.Request) (sessionId string, err error)
 	return sessionId, nil
 }
 
+// GetSessionIdFromRawCookie extracts sessionId from a raw cookie string
 func GetSessionIdFromRawCookie(cookieStr string) (sessionId string, err error) {
 	cookieValue := make(map[string]string)
-	err = cookieHandler.Decode(CookieName, cookieStr, &cookieValue)
+	err = cookieHandler.Decode(cookieName, cookieStr, &cookieValue)
 	if err != nil {
 		return "", err
 	}
@@ -124,13 +128,14 @@ func GetSessionIdFromRawCookie(cookieStr string) (sessionId string, err error) {
 	return sessionId, nil
 }
 
+// GetSessionIdAndLoginTimeFromCookie extracts sessionId and logged-in time from http.Request
 func GetSessionIdAndLoginTimeFromCookie(request *http.Request) (sessionId, loginTime string, err error) {
-	cookie, err := request.Cookie(CookieName)
+	cookie, err := request.Cookie(cookieName)
 	if err != nil {
 		return "", "", err
 	}
 	cookieValue := make(map[string]string)
-	err = cookieHandler.Decode(CookieName, cookie.Value, &cookieValue)
+	err = cookieHandler.Decode(cookieName, cookie.Value, &cookieValue)
 	if err != nil {
 		return "", "", err
 	}
@@ -139,9 +144,10 @@ func GetSessionIdAndLoginTimeFromCookie(request *http.Request) (sessionId, login
 	return sessionId, loginTime, nil
 }
 
+// ClearSession clears the cookie from http.Request
 func ClearSession(response http.ResponseWriter) {
 	cookie := &http.Cookie{
-		Name:     CookieName,
+		Name:     cookieName,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,

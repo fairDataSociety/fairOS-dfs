@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// ENSManager interface takes care of the ens based account management
 type ENSManager interface {
 	GetOwner(username string) (common.Address, error)
 	RegisterSubdomain(username string, owner common.Address, key *ecdsa.PrivateKey) error

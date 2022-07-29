@@ -23,7 +23,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error) {
+func (d *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -52,7 +52,7 @@ func (d *DfsAPI) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, er
 	return pi, nil
 }
 
-func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
+func (d *API) DeletePod(podName, passphrase, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -110,7 +110,7 @@ func (d *DfsAPI) DeletePod(podName, passphrase, sessionId string) error {
 	return nil
 }
 
-func (d *DfsAPI) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) {
+func (d *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -139,7 +139,7 @@ func (d *DfsAPI) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, erro
 	return pi, nil
 }
 
-func (d *DfsAPI) ClosePod(podName, sessionId string) error {
+func (d *API) ClosePod(podName, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -162,7 +162,7 @@ func (d *DfsAPI) ClosePod(podName, sessionId string) error {
 	return nil
 }
 
-func (d *DfsAPI) PodStat(podName, sessionId string) (*pod.PodStat, error) {
+func (d *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -177,7 +177,7 @@ func (d *DfsAPI) PodStat(podName, sessionId string) (*pod.PodStat, error) {
 	return podStat, nil
 }
 
-func (d *DfsAPI) SyncPod(podName, sessionId string) error {
+func (d *API) SyncPod(podName, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -197,7 +197,7 @@ func (d *DfsAPI) SyncPod(podName, sessionId string) error {
 	return nil
 }
 
-func (d *DfsAPI) ListPods(sessionId string) ([]string, []string, error) {
+func (d *API) ListPods(sessionId string) ([]string, []string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -212,7 +212,7 @@ func (d *DfsAPI) ListPods(sessionId string) ([]string, []string, error) {
 	return pods, sharedPods, nil
 }
 
-func (d *DfsAPI) PodShare(podName, passPhrase, sessionId string) (string, error) {
+func (d *API) PodShare(podName, passPhrase, sessionId string) (string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -227,7 +227,7 @@ func (d *DfsAPI) PodShare(podName, passPhrase, sessionId string) (string, error)
 	return address, nil
 }
 
-func (d *DfsAPI) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareInfo, error) {
+func (d *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareInfo, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -237,7 +237,7 @@ func (d *DfsAPI) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.Sha
 	return ui.GetPod().ReceivePodInfo(ref)
 }
 
-func (d *DfsAPI) PodReceive(sessionId string, ref utils.Reference) (*pod.Info, error) {
+func (d *API) PodReceive(sessionId string, ref utils.Reference) (*pod.Info, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -247,7 +247,7 @@ func (d *DfsAPI) PodReceive(sessionId string, ref utils.Reference) (*pod.Info, e
 	return ui.GetPod().ReceivePod(ref)
 }
 
-func (d *DfsAPI) IsPodExist(podName, sessionId string) bool {
+func (d *API) IsPodExist(podName, sessionId string) bool {
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return false

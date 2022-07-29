@@ -30,6 +30,7 @@ const (
 	maxManifestDepth = 3
 )
 
+// Batch is to be used in KV table or a Document database
 type Batch struct {
 	idx           *Index
 	memDb         *Manifest

@@ -25,6 +25,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// File represents a file in a pod
 type File struct {
 	podName     string
 	userAddress utils.Address
@@ -52,18 +53,21 @@ func (f *File) getClient() blockstore.Client {
 	return f.client
 }
 
+// AddToFileMap adds a file metadata into fileMap
 func (f *File) AddToFileMap(filePath string, meta *MetaData) {
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()
 	f.fileMap[filePath] = meta
 }
 
+// RemoveFromFileMap removes a file metadata from fileMap
 func (f *File) RemoveFromFileMap(filePath string) {
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()
 	delete(f.fileMap, filePath)
 }
 
+// GetFromFileMap gets file metadata from the fileMap
 func (f *File) GetFromFileMap(filePath string) *MetaData {
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()
@@ -73,6 +77,7 @@ func (f *File) GetFromFileMap(filePath string) *MetaData {
 	return nil
 }
 
+// IsFileAlreadyPresent checks if a file is present in the fileMap
 func (f *File) IsFileAlreadyPresent(fileWithPath string) bool {
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()
@@ -82,6 +87,7 @@ func (f *File) IsFileAlreadyPresent(fileWithPath string) bool {
 	return false
 }
 
+// RemoveAllFromFileMap resets the fileMap
 func (f *File) RemoveAllFromFileMap() {
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()

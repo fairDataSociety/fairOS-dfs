@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
@@ -327,7 +326,7 @@ func Decompress(dataToDecompress []byte, compression string, blockSize uint32) (
 		if err != nil {
 			return nil, err
 		}
-		s, err := ioutil.ReadAll(r)
+		s, err := io.ReadAll(r)
 		if err != nil {
 			return nil, err
 		}

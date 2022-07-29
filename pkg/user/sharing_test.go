@@ -17,8 +17,9 @@ limitations under the License.
 package user_test
 
 import (
+	"crypto/rand"
+	"io"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"strconv"
 	"testing"
@@ -36,7 +37,7 @@ import (
 
 func TestSharing(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 
 	acc1 := account.New(logger)
 	_, _, err := acc1.CreateUserAccount("password", "")
@@ -194,7 +195,10 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 
 	// write contents to file
 	content := make([]byte, fileSize)
-	rand.Read(content)
+	_, err = rand.Read(content)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, err = fd.Write(content); err != nil {
 		t.Fatal(err)
 	}

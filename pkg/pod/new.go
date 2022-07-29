@@ -220,7 +220,7 @@ func (*Pod) checkIfPodPresent(pods map[int]string, podName string) bool {
 	return false
 }
 
-func (p *Pod) checkIfSharedPodPresent(sharedPods map[string]string, podName string) bool {
+func (*Pod) checkIfSharedPodPresent(sharedPods map[string]string, podName string) bool {
 	for _, pod := range sharedPods {
 		if strings.Trim(pod, "\n") == podName {
 			return true

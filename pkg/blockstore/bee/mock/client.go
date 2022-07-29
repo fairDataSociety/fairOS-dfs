@@ -31,6 +31,7 @@ import (
 	"github.com/ethersphere/bee/pkg/swarm"
 )
 
+// MockBeeClient is a mock bee client
 type MockBeeClient struct {
 	storer   map[string][]byte
 	storerMu sync.RWMutex
@@ -81,14 +82,14 @@ func (m *MockBeeClient) UploadSOC(owner, id, signature string, data []byte) (add
 	return signedChunk.Address().Bytes(), nil
 }
 
-func (m *MockBeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error) {
+func (m *MockBeeClient) UploadChunk(ch swarm.Chunk, _ bool) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	m.storer[ch.Address().String()] = ch.Data()
 	return ch.Address().Bytes(), nil
 }
 
-func (m *MockBeeClient) DownloadChunk(ctx context.Context, address []byte) (data []byte, err error) {
+func (m *MockBeeClient) DownloadChunk(_ context.Context, address []byte) (data []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	if data, ok := m.storer[swarm.NewAddress(address).String()]; ok {
@@ -97,7 +98,7 @@ func (m *MockBeeClient) DownloadChunk(ctx context.Context, address []byte) (data
 	return nil, fmt.Errorf("error downloading data")
 }
 
-func (m *MockBeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err error) {
+func (m *MockBeeClient) UploadBlob(data []byte, _, _ bool) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	address = make([]byte, 32)
