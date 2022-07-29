@@ -242,7 +242,5 @@ func receiveInfo(sharingRef string) {
 	}
 	fmt.Println("Pod Name  : ", podSharingInfo.PodName)
 	fmt.Println("Pod Ref.  : ", podSharingInfo.Address)
-	fmt.Println("User Name : ", podSharingInfo.UserName)
 	fmt.Println("User Ref. : ", podSharingInfo.UserAddress)
-	fmt.Println("Shared Time : ", podSharingInfo.SharedTime)
 }

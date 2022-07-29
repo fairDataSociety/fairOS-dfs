@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -28,15 +27,13 @@ import (
 type ShareInfo struct {
 	PodName     string `json:"pod_name"`
 	Address     string `json:"pod_address"`
-	UserName    string `json:"user_name"`
 	UserAddress string `json:"user_address"`
-	SharedTime  string `json:"shared_time"`
 }
 
 // PodShare makes a pod public by exporting all the pod related information and its
 // address. it does this by creating a sharing reference which points to the information
 // required to import this pod.
-func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
+func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error) {
 	// check if pods is present and get the index of the pod
 	pods, _, err := p.loadUserPods()
 	if err != nil {
@@ -59,12 +56,13 @@ func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 
 	address := accountInfo.GetAddress()
 	userAddress := p.acc.GetUserAccountInfo().GetAddress()
+	if sharedPodName == "" {
+		sharedPodName = podName
+	}
 	shareInfo := &ShareInfo{
-		PodName:     podName,
+		PodName:     sharedPodName,
 		Address:     address.String(),
-		UserName:    userName,
 		UserAddress: userAddress.String(),
-		SharedTime:  time.Now().String(),
 	}
 
 	data, err := json.Marshal(shareInfo)
@@ -101,7 +99,7 @@ func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 
 }
 
-func (p *Pod) ReceivePod(ref utils.Reference) (*Info, error) {
+func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
 	if err != nil {
 		return nil, err
@@ -116,5 +114,8 @@ func (p *Pod) ReceivePod(ref utils.Reference) (*Info, error) {
 		return nil, err
 	}
 
+	if sharedPodName != "" {
+		shareInfo.PodName = sharedPodName
+	}
 	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address)
 }
