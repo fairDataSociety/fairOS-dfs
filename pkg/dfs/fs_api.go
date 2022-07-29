@@ -129,7 +129,7 @@ func (d *API) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.E
 	directory := podInfo.GetDirectory()
 
 	// check if directory present
-	totalPath := utils.CombinePathAndFile(podName, currentDir, "")
+	totalPath := utils.CombinePathAndFile(currentDir, "")
 	if directory.GetDirFromDirectoryMap(totalPath) == nil {
 		return nil, nil, dir.ErrDirectoryNotPresent
 	}
@@ -261,7 +261,7 @@ func (d *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 	directory := podInfo.GetDirectory()
 
 	// check if file exists, then backup the file
-	totalPath := utils.CombinePathAndFile(podName, podPath, podFileName)
+	totalPath := utils.CombinePathAndFile(podPath, podFileName)
 	if file.IsFileAlreadyPresent(totalPath) {
 		m, err := file.BackupFromFileName(totalPath)
 		if err != nil {

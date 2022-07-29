@@ -34,7 +34,7 @@ var (
 // Reader to read the contents of the file from the pod.
 func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
 	// check if file present
-	totalFilePath := utils.CombinePathAndFile(f.podName, podFileWithPath, "")
+	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	if !f.IsFileAlreadyPresent(totalFilePath) {
 		return nil, 0, ErrFileNotPresent
 	}

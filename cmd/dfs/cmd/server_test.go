@@ -42,7 +42,7 @@ func randStringRunes(n int) string {
 func TestApis(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	ens := mock2.NewMockNamespaceManager()
-	logger := logging.New(os.Stdout, logrus.ErrorLevel)
+	logger := logging.New(io.Discard, logrus.ErrorLevel)
 	dataDir, err := ioutil.TempDir("", "new")
 	if err != nil {
 		t.Fatal(err)
@@ -195,7 +195,7 @@ func TestApis(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		userMigrateHttpReq, err := http.NewRequest(http.MethodPost, "http://localhost:9090/v2/user/migrate", bytes.NewBuffer(migrateRequestData))
+		userMigrateHttpReq, err := http.NewRequest(http.MethodPost, basev2+"/user/migrate", bytes.NewBuffer(migrateRequestData))
 		if err != nil {
 			t.Fatal(err)
 
@@ -290,7 +290,7 @@ func TestApis(t *testing.T) {
 			t.Fatal("user should be able to login")
 		}
 		cookie := userLoginResp.Header["Set-Cookie"]
-		userStatHttpReq, err := http.NewRequest(http.MethodGet, "http://localhost:9090/v1/user/stat", http.NoBody)
+		userStatHttpReq, err := http.NewRequest(http.MethodGet, basev1+"/user/stat", http.NoBody)
 		if err != nil {
 			t.Fatal(err)
 
@@ -314,7 +314,7 @@ func TestApis(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		userMigrateHttpReq, err := http.NewRequest(http.MethodPost, "http://localhost:9090/v2/user/migrate", bytes.NewBuffer(userBytes))
+		userMigrateHttpReq, err := http.NewRequest(http.MethodPost, basev2+"/user/migrate", bytes.NewBuffer(userBytes))
 		if err != nil {
 			t.Fatal(err)
 
@@ -340,7 +340,7 @@ func TestApis(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		userMigrateHttpReq, err = http.NewRequest(http.MethodPost, "http://localhost:9090/v2/user/migrate", bytes.NewBuffer(migrateRequestData))
+		userMigrateHttpReq, err = http.NewRequest(http.MethodPost, basev2+"/user/migrate", bytes.NewBuffer(migrateRequestData))
 		if err != nil {
 			t.Fatal(err)
 

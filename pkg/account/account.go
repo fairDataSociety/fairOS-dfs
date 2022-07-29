@@ -47,7 +47,7 @@ const (
 	seedSize = 64
 )
 
-var ErrBlankPassword = errors.New("password cannot be blank")
+var errBlankPassword = errors.New("password cannot be blank")
 
 // Account is used for keeping authenticated logged-in user info in the session
 type Account struct {
@@ -132,7 +132,7 @@ func (a *Account) CreateUserAccount(passPhrase, mnemonic string) (string, string
 func (a *Account) LoadUserAccount(passPhrase, encryptedMnemonic string) error {
 	password := passPhrase
 	if password == "" {
-		return ErrBlankPassword
+		return errBlankPassword
 	}
 
 	a.wallet.encryptedmnemonic = encryptedMnemonic
@@ -197,7 +197,7 @@ func (a *Account) LoadUserAccountFromSeed(seed []byte) error {
 // the validity of the mnemonic to see if it confirms to bip-0039 list of words.
 func (a *Account) Authorise(password string) bool {
 	if password == "" {
-		a.logger.Errorf(ErrBlankPassword.Error())
+		a.logger.Errorf(errBlankPassword.Error())
 		return false
 	}
 	plainMnemonic, err := a.wallet.decryptMnemonic(password)
@@ -243,7 +243,7 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 	} else {
 		password := passPhrase
 		if password == "" {
-			return nil, ErrBlankPassword
+			return nil, errBlankPassword
 		}
 
 		plainMnemonic, err := a.wallet.decryptMnemonic(password)
@@ -304,7 +304,7 @@ func (a *Account) CreateCollectionAccount(accountId int, passPhrase string, crea
 	} else {
 		password := passPhrase
 		if password == "" {
-			return ErrBlankPassword
+			return errBlankPassword
 		}
 
 		plainMnemonic, err := a.wallet.decryptMnemonic(password)
@@ -443,11 +443,11 @@ func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, er
 	return decryptedBytes[:seedSize], nil
 }
 
-func (a *Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {
+func (*Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {
 	// get the password and hash it to 256 bits
 	password := passPhrase
 	if password == "" {
-		return "", ErrBlankPassword
+		return "", errBlankPassword
 	}
 	aesKey := sha256.Sum256([]byte(password))
 

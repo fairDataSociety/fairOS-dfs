@@ -63,7 +63,7 @@ func (f *File) LoadFileMeta(fileNameWithPath string) error {
 
 func (f *File) handleMeta(meta *MetaData) error {
 	// check if meta is present.
-	totalPath := utils.CombinePathAndFile(f.podName, meta.Path, meta.Name)
+	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	_, err := f.GetMetaFromFileName(totalPath, meta.UserAddress)
 	if err != nil {
 		if err != ErrDeletedFeed {
@@ -81,7 +81,7 @@ func (f *File) uploadMeta(meta *MetaData) error {
 	}
 
 	// put the file meta as a feed
-	totalPath := utils.CombinePathAndFile(f.podName, meta.Path, meta.Name)
+	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	_, err = f.fd.CreateFeed(topic, meta.UserAddress, fileMetaBytes)
 	if err != nil {
@@ -92,7 +92,7 @@ func (f *File) uploadMeta(meta *MetaData) error {
 }
 
 func (f *File) deleteMeta(meta *MetaData) error {
-	totalPath := utils.CombinePathAndFile(f.podName, meta.Path, meta.Name)
+	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	return f.fd.DeleteFeed(topic, meta.UserAddress)
 }
@@ -105,7 +105,7 @@ func (f *File) updateMeta(meta *MetaData) error {
 	}
 
 	// put the file meta as a feed
-	totalPath := utils.CombinePathAndFile(f.podName, meta.Path, meta.Name)
+	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	_, err = f.fd.UpdateFeed(topic, meta.UserAddress, fileMetaBytes)
 	if err != nil {
@@ -137,7 +137,7 @@ func (f *File) BackupFromFileName(fileNameWithPath string) (*MetaData, error) {
 	}
 
 	// add file to map
-	f.AddToFileMap(utils.CombinePathAndFile(f.podName, p.Path, p.Name), p)
+	f.AddToFileMap(utils.CombinePathAndFile(p.Path, p.Name), p)
 	return p, nil
 }
 
