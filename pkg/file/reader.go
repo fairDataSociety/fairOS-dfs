@@ -141,7 +141,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 		noOfBlocks := int((bytesToRead / r.blockSize) + 1)
 		for i := 0; i < noOfBlocks; i++ {
 			if r.lastBlock == nil {
-				blockIndex := (r.readOffset / int64(r.blockSize))
+				blockIndex := r.readOffset / int64(r.blockSize)
 				if blockIndex > int64(len(r.fileInode.Blocks)) {
 					return bytesRead, io.EOF
 				}
