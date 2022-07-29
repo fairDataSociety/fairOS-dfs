@@ -212,7 +212,7 @@ func (d *API) ListPods(sessionId string) ([]string, []string, error) {
 	return pods, sharedPods, nil
 }
 
-func (d *API) PodShare(podName, passPhrase, sessionId string) (string, error) {
+func (d *API) PodShare(podName, sharedPodName, passPhrase, sessionId string) (string, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -220,7 +220,7 @@ func (d *API) PodShare(podName, passPhrase, sessionId string) (string, error) {
 	}
 
 	// get the pod stat
-	address, err := ui.GetPod().PodShare(podName, passPhrase, ui.GetUserName())
+	address, err := ui.GetPod().PodShare(podName, sharedPodName, passPhrase)
 	if err != nil {
 		return "", err
 	}
@@ -237,14 +237,14 @@ func (d *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareI
 	return ui.GetPod().ReceivePodInfo(ref)
 }
 
-func (d *API) PodReceive(sessionId string, ref utils.Reference) (*pod.Info, error) {
+func (d *API) PodReceive(sessionId, sharedPodName string, ref utils.Reference) (*pod.Info, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
 
-	return ui.GetPod().ReceivePod(ref)
+	return ui.GetPod().ReceivePod(sharedPodName, ref)
 }
 
 func (d *API) IsPodExist(podName, sessionId string) bool {
