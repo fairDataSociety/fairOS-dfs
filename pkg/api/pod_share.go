@@ -88,7 +88,7 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch pod stat
-	sharingRef, err := h.dfsAPI.PodShare(pod, password, sharedPodName, sessionId)
+	sharingRef, err := h.dfsAPI.PodShare(pod, sharedPodName, password, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName {
