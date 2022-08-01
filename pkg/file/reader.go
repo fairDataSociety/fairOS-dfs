@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
@@ -142,7 +141,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 		noOfBlocks := int((bytesToRead / r.blockSize) + 1)
 		for i := 0; i < noOfBlocks; i++ {
 			if r.lastBlock == nil {
-				blockIndex := (r.readOffset / int64(r.blockSize))
+				blockIndex := r.readOffset / int64(r.blockSize)
 				if blockIndex > int64(len(r.fileInode.Blocks)) {
 					return bytesRead, io.EOF
 				}
@@ -327,7 +326,7 @@ func Decompress(dataToDecompress []byte, compression string, blockSize uint32) (
 		if err != nil {
 			return nil, err
 		}
-		s, err := ioutil.ReadAll(r)
+		s, err := io.ReadAll(r)
 		if err != nil {
 			return nil, err
 		}

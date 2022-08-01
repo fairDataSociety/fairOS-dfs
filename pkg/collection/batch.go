@@ -30,6 +30,7 @@ const (
 	maxManifestDepth = 3
 )
 
+// Batch is to be used in KV table or a Document database
 type Batch struct {
 	idx           *Index
 	memDb         *Manifest
@@ -50,7 +51,7 @@ func (b *Batch) PutNumber(key float64, refValue []byte, apnd, memory bool) error
 	return b.Put(stringKey, refValue, apnd, memory)
 }
 
-// Put creates a index entry given a key string and value.
+// Put creates an index entry given a key string and value.
 func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 	if b.idx.isReadOnlyFeed() {
 		return ErrReadOnlyIndex

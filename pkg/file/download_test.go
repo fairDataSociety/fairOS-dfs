@@ -18,7 +18,7 @@ package file_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -31,7 +31,7 @@ import (
 
 func TestDownload(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("password", "")
 	if err != nil {
@@ -59,7 +59,7 @@ func TestDownload(t *testing.T) {
 		}
 
 		// Download the file and read from reader
-		podFile := utils.CombinePathAndFile("pod1", filePath, fileName)
+		podFile := utils.CombinePathAndFile(filePath, fileName)
 		reader, rcvdSize, err := fileObject.Download(podFile)
 		if err != nil {
 			t.Fatal(err)

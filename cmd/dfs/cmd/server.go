@@ -19,7 +19,7 @@ package cmd
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -148,7 +148,7 @@ can consume it.`,
 		var logger logging.Logger
 		switch v := strings.ToLower(verbosity); v {
 		case "0", "silent":
-			logger = logging.New(ioutil.Discard, 0)
+			logger = logging.New(io.Discard, 0)
 		case "1", "error":
 			logger = logging.New(cmd.OutOrStdout(), logrus.ErrorLevel)
 		case "2", "warn":

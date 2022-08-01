@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -30,7 +30,7 @@ import (
 )
 
 func TestFeed(t *testing.T) {
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 
 	acc1 := account.New(logger)
 	_, _, err := acc1.CreateUserAccount("password", "")

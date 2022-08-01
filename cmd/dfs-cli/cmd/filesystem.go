@@ -131,7 +131,7 @@ func statFileOrDirectory(podName, statElement string) {
 			return
 		}
 	} else {
-		var resp dir.DirStats
+		var resp dir.Stats
 		err = json.Unmarshal(data, &resp)
 		if err != nil {
 			fmt.Println("file stat: ", err)

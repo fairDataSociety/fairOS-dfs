@@ -24,7 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -38,22 +38,23 @@ import (
 )
 
 const (
-	MaxIdleConnections     = 20
-	MaxConnectionsPerHost  = 256
-	RequestTimeout         = 6000
+	maxIdleConnections     = 20
+	maxConnectionsPerHost  = 256
+	requestTimeout         = 6000
 	chunkCacheSize         = 1024
 	uploadBlockCacheSize   = 100
 	downloadBlockCacheSize = 100
 	healthUrl              = "/health"
-	ChunkUploadDownloadUrl = "/chunks"
-	BytesUploadDownloadUrl = "/bytes"
+	chunkUploadDownloadUrl = "/chunks"
+	bytesUploadDownloadUrl = "/bytes"
 	pinsUrl                = "/pins/"
-	SwarmPinHeader         = "Swarm-Pin"
-	SwarmEncryptHeader     = "Swarm-Encrypt"
-	SwarmPostageBatchId    = "Swarm-Postage-Batch-Id"
+	swarmPinHeader         = "Swarm-Pin"
+	swarmEncryptHeader     = "Swarm-Encrypt"
+	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
 )
 
-type BeeClient struct {
+// Client is a bee http client that satisfies blockstore.Client
+type Client struct {
 	url                string
 	client             *http.Client
 	hasher             *bmtlegacy.Hasher
@@ -73,7 +74,7 @@ type bytesPostResponse struct {
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
-func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *BeeClient {
+func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *Client {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache, err := lru.New(chunkCacheSize)
 	if err != nil {
@@ -88,7 +89,7 @@ func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *BeeClie
 		logger.Warningf("could not initialise blockCache. system will be slow")
 	}
 
-	return &BeeClient{
+	return &Client{
 		url:                apiUrl,
 		client:             createHTTPClient(),
 		hasher:             bmtlegacy.New(p),
@@ -109,14 +110,14 @@ func socResource(owner, id, sig string) string {
 }
 
 // CheckConnection is used to check if the nbe client is up and running.
-func (s *BeeClient) CheckConnection(isProxy bool) bool {
+func (s *Client) CheckConnection(isProxy bool) bool {
 	url := s.url
 	matchString := "Ethereum Swarm Bee\n"
 	if isProxy {
 		url += healthUrl
 		matchString = "OK"
 	}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return false
 	}
@@ -133,7 +134,7 @@ func (s *BeeClient) CheckConnection(isProxy bool) bool {
 		return false
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return false
 	}
@@ -145,7 +146,7 @@ func (s *BeeClient) CheckConnection(isProxy bool) bool {
 }
 
 // UploadSOC is used construct and send a Single Owner Chunk to the Swarm bee client.
-func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
+func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
 	to := time.Now()
 	socResStr := socResource(owner, id, signature)
 	fullUrl := fmt.Sprintf(s.url + socResStr)
@@ -156,11 +157,11 @@ func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address
 	}
 
 	// the postage block id to store the SOC chunk
-	req.Header.Set(SwarmPostageBatchId, s.postageBlockId)
+	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
 	// TODO change this in the future when we have some alternative to pin SOC
 	// This is a temporary fix to force soc pinning
-	req.Header.Set(SwarmPinHeader, "true")
+	req.Header.Set(swarmPinHeader, "true")
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -174,7 +175,7 @@ func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address
 		return nil, errors.New("error uploading data")
 	}
 
-	addrData, err := ioutil.ReadAll(response.Body)
+	addrData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -197,20 +198,20 @@ func (s *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address
 }
 
 // UploadChunk uploads a chunk to Swarm network.
-func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error) {
+func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error) {
 	to := time.Now()
-	fullUrl := fmt.Sprintf(s.url + ChunkUploadDownloadUrl)
+	fullUrl := fmt.Sprintf(s.url + chunkUploadDownloadUrl)
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(ch.Data()))
 	if err != nil {
 		return nil, err
 	}
 
 	if pin {
-		req.Header.Set(SwarmPinHeader, "true")
+		req.Header.Set(swarmPinHeader, "true")
 	}
 
 	// the postage block id to store the chunk
-	req.Header.Set(SwarmPostageBatchId, s.postageBlockId)
+	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -224,7 +225,7 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 		return nil, errors.New("error uploading data")
 	}
 
-	addrData, err := ioutil.ReadAll(response.Body)
+	addrData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -248,14 +249,14 @@ func (s *BeeClient) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err e
 }
 
 // DownloadChunk downloads a chunk with given address from the Swarm network
-func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []byte, err error) {
+func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte, err error) {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
 	if s.inChunkCache(addrString) {
 		return s.getFromChunkCache(swarm.NewAddress(address).String()), nil
 	}
 
-	path := filepath.Join(ChunkUploadDownloadUrl, addrString)
+	path := filepath.Join(chunkUploadDownloadUrl, addrString)
 	fullUrl := fmt.Sprintf(s.url + path)
 	req, err := http.NewRequest(http.MethodGet, fullUrl, bytes.NewBuffer(data))
 	if err != nil {
@@ -276,7 +277,7 @@ func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []b
 		return nil, errors.New("error downloading data")
 	}
 
-	data, err = ioutil.ReadAll(response.Body)
+	data, err = io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -291,7 +292,7 @@ func (s *BeeClient) DownloadChunk(ctx context.Context, address []byte) (data []b
 }
 
 // UploadBlob uploads a binary blob of data to Swarm network. It also optionally pins and encrypts the data.
-func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err error) {
+func (s *Client) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err error) {
 	to := time.Now()
 
 	// return the ref if this data is already in swarm
@@ -299,22 +300,22 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 		return s.getFromBlockCache(s.uploadBlockCache, string(data)), nil
 	}
 
-	fullUrl := s.url + BytesUploadDownloadUrl
+	fullUrl := s.url + bytesUploadDownloadUrl
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
 	}
 
 	if pin {
-		req.Header.Set(SwarmPinHeader, "true")
+		req.Header.Set(swarmPinHeader, "true")
 	}
 
 	if encrypt {
-		req.Header.Set(SwarmEncryptHeader, "true")
+		req.Header.Set(swarmEncryptHeader, "true")
 	}
 
 	// the postage block id to store the blob
-	req.Header.Set(SwarmPostageBatchId, s.postageBlockId)
+	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -328,7 +329,7 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 		return nil, errors.New("error uploading blob")
 	}
 
-	respData, err := ioutil.ReadAll(response.Body)
+	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error uploading blob")
 	}
@@ -354,7 +355,7 @@ func (s *BeeClient) UploadBlob(data []byte, pin, encrypt bool) (address []byte, 
 }
 
 // DownloadBlob downloads a blob of binary data from the Swarm network.
-func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
+func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 	to := time.Now()
 
 	// return the data if this address is already in cache
@@ -363,8 +364,8 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 		return s.getFromBlockCache(s.downloadBlockCache, addrString), 200, nil
 	}
 
-	fullUrl := s.url + BytesUploadDownloadUrl + "/" + addrString
-	req, err := http.NewRequest(http.MethodGet, fullUrl, nil)
+	fullUrl := s.url + bytesUploadDownloadUrl + "/" + addrString
+	req, err := http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
@@ -381,7 +382,7 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 		return nil, response.StatusCode, errors.New("error downloading blob ")
 	}
 
-	respData, err := ioutil.ReadAll(response.Body)
+	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, response.StatusCode, errors.New("error downloading blob")
 	}
@@ -401,12 +402,12 @@ func (s *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 }
 
 // DeleteReference unpins a reference so that it will be garbage collected by the Swarm network.
-func (s *BeeClient) DeleteReference(address []byte) error {
+func (s *Client) DeleteReference(address []byte) error {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
 
 	fullUrl := s.url + pinsUrl + addrString
-	req, err := http.NewRequest(http.MethodDelete, fullUrl, nil)
+	req, err := http.NewRequest(http.MethodDelete, fullUrl, http.NoBody)
 	if err != nil {
 		return err
 	}
@@ -419,7 +420,7 @@ func (s *BeeClient) DeleteReference(address []byte) error {
 
 	req.Close = true
 	if response.StatusCode != http.StatusOK {
-		respData, err := ioutil.ReadAll(response.Body)
+		respData, err := io.ReadAll(response.Body)
 		if err != nil {
 			return err
 		}
@@ -437,29 +438,29 @@ func (s *BeeClient) DeleteReference(address []byte) error {
 // createHTTPClient for connection re-use
 func createHTTPClient() *http.Client {
 	client := &http.Client{
-		Timeout: time.Second * RequestTimeout,
+		Timeout: time.Second * requestTimeout,
 		Transport: &http.Transport{
-			MaxIdleConnsPerHost: MaxIdleConnections,
-			MaxConnsPerHost:     MaxConnectionsPerHost,
+			MaxIdleConnsPerHost: maxIdleConnections,
+			MaxConnsPerHost:     maxConnectionsPerHost,
 		},
 	}
 	return client
 }
 
-func (s *BeeClient) addToChunkCache(key string, value []byte) {
+func (s *Client) addToChunkCache(key string, value []byte) {
 	if s.chunkCache != nil {
 		s.chunkCache.Add(key, hex.EncodeToString(value))
 	}
 }
 
-func (s *BeeClient) inChunkCache(key string) bool {
+func (s *Client) inChunkCache(key string) bool {
 	if s.chunkCache != nil {
 		return s.chunkCache.Contains(key)
 	}
 	return false
 }
 
-func (s *BeeClient) getFromChunkCache(key string) []byte {
+func (s *Client) getFromChunkCache(key string) []byte {
 	if s.chunkCache != nil {
 		value, ok := s.chunkCache.Get(key)
 		if ok {
@@ -474,20 +475,20 @@ func (s *BeeClient) getFromChunkCache(key string) []byte {
 	return nil
 }
 
-func (*BeeClient) addToBlockCache(cache *lru.Cache, key string, value []byte) {
+func (*Client) addToBlockCache(cache *lru.Cache, key string, value []byte) {
 	if cache != nil {
 		cache.Add(key, value)
 	}
 }
 
-func (*BeeClient) inBlockCache(cache *lru.Cache, key string) bool {
+func (*Client) inBlockCache(cache *lru.Cache, key string) bool {
 	if cache != nil {
 		return cache.Contains(key)
 	}
 	return false
 }
 
-func (*BeeClient) getFromBlockCache(cache *lru.Cache, key string) []byte {
+func (*Client) getFromBlockCache(cache *lru.Cache, key string) []byte {
 	if cache != nil {
 		value, ok := cache.Get(key)
 		if ok {

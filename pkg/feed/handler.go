@@ -92,14 +92,14 @@ func (h *Handler) deleteChunk(ref []byte) error {
 // GetContent retrieves the data payload of the last synced update of the feed
 func (h *Handler) GetContent(feed *Feed) (swarm.Address, []byte, error) {
 	if feed == nil {
-		return swarm.ZeroAddress, nil, NewError(ErrInvalidValue, "feed is nil")
+		return swarm.ZeroAddress, nil, NewError(errInvalidValue, "feed is nil")
 	}
 	feedUpdate, err := h.get(feed)
 	if err != nil {
 		return swarm.ZeroAddress, nil, err
 	}
 	if feedUpdate == nil {
-		return swarm.ZeroAddress, nil, NewError(ErrNotFound, "feed update not cached")
+		return swarm.ZeroAddress, nil, NewError(errNotFound, "feed update not cached")
 	}
 	return swarm.NewAddress(feedUpdate.lastKey), feedUpdate.data, nil
 }
@@ -127,7 +127,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 
 	// we can't look for anything without a store
 	if h.client == nil {
-		return nil, NewError(ErrInit, "invalid blockstore")
+		return nil, NewError(errInit, "invalid blockstore")
 	}
 
 	var readCount int32
@@ -155,7 +155,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 			return nil, err
 		}
 		ch := swarm.NewChunk(addr, data)
-		var request Request
+		var request request
 		if err := h.fromChunk(ch, &request, query, &id); err != nil {
 			return nil, nil
 		}
@@ -167,15 +167,15 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 	if err != nil {
 		return nil, err
 	}
-	request, _ := requestPtr.(*Request)
+	request, _ := requestPtr.(*request)
 	if request == nil {
-		return nil, NewError(ErrNotFound, "feed does not exist or was not updated yet")
+		return nil, NewError(errNotFound, "feed does not exist or was not updated yet")
 	}
 	return h.updateCache(request)
 }
 
 // fromChunk populates this structure from chunk data. It does not verify the signature is valid.
-func (h *Handler) fromChunk(chunk swarm.Chunk, r *Request, q *Query, id *ID) error {
+func (*Handler) fromChunk(chunk swarm.Chunk, r *request, q *Query, id *ID) error {
 	chunkdata := chunk.Data()
 
 	if len(chunkdata) < idLength+signatureLength+utils.SpanLength {
@@ -199,7 +199,7 @@ func (h *Handler) fromChunk(chunk swarm.Chunk, r *Request, q *Query, id *ID) err
 	return nil
 }
 
-func (h *Handler) rawSignedChunkData(chunk swarm.Chunk) ([]byte, error) {
+func (*Handler) rawSignedChunkData(chunk swarm.Chunk) ([]byte, error) {
 	chunkdata := chunk.Data()
 	if len(chunkdata) < idLength+signatureLength+utils.SpanLength {
 		return nil, fmt.Errorf("invalid chunk data len")
@@ -210,7 +210,7 @@ func (h *Handler) rawSignedChunkData(chunk swarm.Chunk) ([]byte, error) {
 }
 
 // update feed updates cache with specified content
-func (h *Handler) updateCache(request *Request) (*CacheEntry, error) {
+func (h *Handler) updateCache(request *request) (*CacheEntry, error) {
 	updateAddr := request.idAddr.Bytes()
 	entry, err := h.get(&request.Feed)
 	if err != nil {
@@ -248,7 +248,7 @@ func (h *Handler) getAddress(topic Topic, user utils.Address, epoch lookup.Epoch
 	return swarm.NewAddress(addr), nil
 }
 
-func (h *Handler) toChunkContent(req *Request, id, payloadId []byte) ([]byte, error) {
+func (h *Handler) toChunkContent(req *request, id, payloadId []byte) ([]byte, error) {
 	// get the signature, sign(ID, payloadId)
 	signaturebytes, _, err := h.getSignature(id, payloadId)
 	if err != nil {
@@ -272,38 +272,38 @@ func (h *Handler) toChunkContent(req *Request, id, payloadId []byte) ([]byte, er
 	return buf, nil
 }
 
-// NewRequest prepares a Request structure with all the necessary information to
+// NewRequest prepares a request structure with all the necessary information to
 // just add the desired data and sign it.
 // The resulting structure can then be signed and passed to Handler.Update to be verified and sent
-func (h *Handler) NewRequest(ctx context.Context, feed *Feed) (request *Request, err error) {
+func (h *Handler) NewRequest(ctx context.Context, feed *Feed) (request2 *request, err error) {
 	if feed == nil {
-		return nil, NewError(ErrInvalidValue, "feed cannot be nil")
+		return nil, NewError(errInvalidValue, "feed cannot be nil")
 	}
 
 	now := TimestampProvider.Now().Time
-	request = new(Request)
+	request2 = new(request)
 
 	query := NewQueryLatest(feed, lookup.NoClue)
 
 	feedUpdate, err := h.Lookup(ctx, query)
 	if err != nil {
-		if err.(*Error).code != ErrNotFound {
+		if err.(*Error).code != errNotFound {
 			return nil, err
 		}
 		// not finding updates means that there is a network error
 		// or that the feed really does not have updates
 	}
 
-	request.Feed = *feed
+	request2.Feed = *feed
 
 	// if we already have an update, then find next epoch
 	if feedUpdate != nil {
-		request.Epoch = lookup.GetNextEpoch(feedUpdate.Epoch, now)
+		request2.Epoch = lookup.GetNextEpoch(feedUpdate.Epoch, now)
 	} else {
-		request.Epoch = lookup.GetFirstEpoch(now)
+		request2.Epoch = lookup.GetFirstEpoch(now)
 	}
 
-	return request, nil
+	return request2, nil
 }
 
 func (h *Handler) getId(topic Topic, time uint64, level uint8) ([]byte, error) {

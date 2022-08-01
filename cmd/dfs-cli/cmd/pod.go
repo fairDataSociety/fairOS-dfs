@@ -45,7 +45,7 @@ func podNew(podName string) {
 		return
 	}
 	currentPod = podName
-	currentDirectory = utils.PathSeperator
+	currentDirectory = utils.PathSeparator
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }
@@ -84,14 +84,14 @@ func openPod(podName string) {
 	}
 	invalidPodName := true
 	password := ""
-	for _, pod := range resp.Pods {
-		if pod == podName {
+	for _, v := range resp.Pods {
+		if v == podName {
 			password = getPassword()
 			invalidPodName = false
 		}
 	}
-	for _, pod := range resp.SharedPods {
-		if pod == podName {
+	for _, v := range resp.SharedPods {
+		if v == podName {
 			invalidPodName = false
 		}
 	}
@@ -115,7 +115,7 @@ func openPod(podName string) {
 		return
 	}
 	currentPod = podName
-	currentDirectory = utils.PathSeperator
+	currentDirectory = utils.PathSeparator
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }
@@ -193,11 +193,11 @@ func listPod() {
 		fmt.Println("pod list: ", err)
 		return
 	}
-	for _, pod := range resp.Pods {
-		fmt.Println("<Pod>: ", pod)
+	for _, v := range resp.Pods {
+		fmt.Println("<Pod>: ", v)
 	}
-	for _, pod := range resp.SharedPods {
-		fmt.Println("<Shared Pod>: ", pod)
+	for _, v := range resp.SharedPods {
+		fmt.Println("<Shared Pod>: ", v)
 	}
 }
 
@@ -242,7 +242,5 @@ func receiveInfo(sharingRef string) {
 	}
 	fmt.Println("Pod Name  : ", podSharingInfo.PodName)
 	fmt.Println("Pod Ref.  : ", podSharingInfo.Address)
-	fmt.Println("User Name : ", podSharingInfo.UserName)
 	fmt.Println("User Ref. : ", podSharingInfo.UserAddress)
-	fmt.Println("Shared Time : ", podSharingInfo.SharedTime)
 }

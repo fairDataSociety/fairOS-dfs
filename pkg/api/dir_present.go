@@ -23,6 +23,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DirPresentResponse is used to represent if a directory is present
 type DirPresentResponse struct {
 	Present bool   `json:"present"`
 	Error   string `json:"error,omitempty"`

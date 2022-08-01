@@ -26,15 +26,18 @@ import (
 )
 
 var (
+	// ErrFileNotPresent denotes file is not present
 	ErrFileNotPresent = errors.New("file not present")
-	ErrFileNotFound   = errors.New("file not found in dfs")
+
+	// ErrFileNotFound denotes file is not found in dfs
+	ErrFileNotFound = errors.New("file not found in dfs")
 )
 
 // Download does all the validation for the existence of the file and creates a
 // Reader to read the contents of the file from the pod.
 func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
 	// check if file present
-	totalFilePath := utils.CombinePathAndFile(f.podName, podFileWithPath, "")
+	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	if !f.IsFileAlreadyPresent(totalFilePath) {
 		return nil, 0, ErrFileNotPresent
 	}

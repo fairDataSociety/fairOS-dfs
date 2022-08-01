@@ -26,6 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocGetResponse represents a single document row
 type DocGetResponse struct {
 	Doc []byte `json:"doc"`
 }

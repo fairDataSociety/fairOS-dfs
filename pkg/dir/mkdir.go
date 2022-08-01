@@ -35,7 +35,7 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	dirName := filepath.Base(dirToCreateWithPath)
 
 	// validation checks of the arguments
-	if dirName == "" || strings.HasPrefix(dirName, utils.PathSeperator) {
+	if dirName == "" || strings.HasPrefix(dirName, utils.PathSeparator) {
 		return ErrInvalidDirectoryName
 	}
 
@@ -44,7 +44,7 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	}
 
 	// check if directory already present
-	totalPath := utils.CombinePathAndFile(d.podName, parentPath, dirName)
+	totalPath := utils.CombinePathAndFile(parentPath, dirName)
 	topic := utils.HashString(totalPath)
 
 	// check if parent path exists
@@ -91,7 +91,7 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	d.AddToDirectoryMap(totalPath, dirInode)
 
 	// get the parent directory entry and add this new directory to its list of children
-	parentHash := utils.HashString(utils.CombinePathAndFile(d.podName, parentPath, ""))
+	parentHash := utils.HashString(utils.CombinePathAndFile(parentPath, ""))
 	dirName = "_D_" + dirName
 	_, parentData, err := d.fd.GetFeedData(parentHash, d.userAddress)
 	if err != nil {
@@ -125,7 +125,7 @@ func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed
 	meta := MetaData{
 		Version:          MetaVersion,
 		Path:             "",
-		Name:             utils.PathSeperator,
+		Name:             utils.PathSeparator,
 		CreationTime:     now,
 		ModificationTime: now,
 		AccessTime:       now,
@@ -138,7 +138,7 @@ func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed
 	if err != nil {
 		return err
 	}
-	parentPath := utils.CombinePathAndFile(podName, utils.PathSeperator, "")
+	parentPath := utils.CombinePathAndFile(utils.PathSeparator, "")
 	parentHash := utils.HashString(parentPath)
 	addr, data, err := d.fd.GetFeedData(parentHash, d.userAddress)
 	if err == nil && addr != nil && data != nil {
@@ -152,12 +152,12 @@ func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed
 			return err
 		}
 	}
-	d.AddToDirectoryMap(utils.PathSeperator, parentDirInode)
+	d.AddToDirectoryMap(utils.PathSeparator, parentDirInode)
 	return nil
 }
 
 func (d *Directory) AddRootDir(podName string, podAddress utils.Address, fd *feed.API) error {
-	parentPath := utils.CombinePathAndFile(podName, utils.PathSeperator, "")
+	parentPath := utils.CombinePathAndFile(utils.PathSeparator, "")
 	parentHash := utils.HashString(parentPath)
 	_, parentDataBytes, err := fd.GetFeedData(parentHash, podAddress)
 	if err != nil {
@@ -168,6 +168,6 @@ func (d *Directory) AddRootDir(podName string, podAddress utils.Address, fd *fee
 	if err != nil {
 		return err
 	}
-	d.AddToDirectoryMap(utils.PathSeperator, &parentDirInode)
+	d.AddToDirectoryMap(utils.PathSeparator, &parentDirInode)
 	return nil
 }

@@ -19,7 +19,7 @@ package collection_test
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -42,7 +42,7 @@ type TestDocument struct {
 
 func TestDocumentStore(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
 	_, _, err := acc.CreateUserAccount("password", "")

@@ -180,7 +180,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil {
 		return err
 	}
-	f.AddToFileMap(utils.CombinePathAndFile(f.podName, meta.Path, meta.Name), &meta)
+	f.AddToFileMap(utils.CombinePathAndFile(meta.Path, meta.Name), &meta)
 	return nil
 }
 

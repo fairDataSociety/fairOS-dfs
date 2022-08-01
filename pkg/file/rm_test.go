@@ -17,7 +17,7 @@ limitations under the License.
 package file_test
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -31,7 +31,7 @@ import (
 
 func TestRemoveFile(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("password", "")
 	if err != nil {
@@ -65,13 +65,13 @@ func TestRemoveFile(t *testing.T) {
 		}
 
 		// validate file deletion
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("pod1", "/dir1", "file2"))
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file2"))
 		if meta != nil {
 			t.Fatalf("file is not removed")
 		}
 
 		// check if other file is present
-		meta = fileObject.GetFromFileMap(utils.CombinePathAndFile("pod1", "/dir1", "file1"))
+		meta = fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file1"))
 		if meta == nil {
 			t.Fatalf("file is not present")
 		}
@@ -97,7 +97,7 @@ func TestRemoveFile(t *testing.T) {
 			}
 
 			// validate file deletion
-			meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("pod1", "/dir1", "file1"))
+			meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file1"))
 			if meta != nil {
 				t.Fatalf("file is not removed")
 			}

@@ -17,7 +17,7 @@ limitations under the License.
 package pod_test
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -29,7 +29,7 @@ import (
 
 func TestClose(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("password", "")
 	if err != nil {

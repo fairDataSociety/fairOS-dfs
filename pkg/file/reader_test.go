@@ -18,10 +18,11 @@ package file_test
 
 import (
 	"bytes"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/big"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -246,7 +247,7 @@ func TestFileReader(t *testing.T) {
 	})
 }
 
-func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.MockBeeClient) file.INode {
+func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.BeeClient) file.INode {
 	var fileBlocks []*file.BlockInfo
 	noOfBlocks := fileSize / uint64(blockSize)
 	if fileSize%uint64(blockSize) != 0 {
@@ -259,7 +260,10 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 			bytesToWrite = uint32(bytesRemaining)
 		}
 		buf := make([]byte, bytesToWrite)
-		rand.Read(buf)
+		_, err := rand.Read(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
 		if compression != "" {
 			compressedData, err := file.Compress(buf, compression, bytesToWrite)
 			if err != nil {
@@ -288,7 +292,7 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 	}
 }
 
-func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.MockBeeClient, linesPerBlock uint32) (file.INode, int, []byte, int, []byte) {
+func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.BeeClient, linesPerBlock uint32) (file.INode, int, []byte, int, []byte) {
 	var fileBlocks []*file.BlockInfo
 	noOfBlocks := fileSize / uint64(blockSize)
 	if fileSize%uint64(blockSize) != 0 {
@@ -309,12 +313,22 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			bytesToWrite = uint32(bytesRemaining)
 		}
 		buf := make([]byte, bytesToWrite)
-		rand.Read(buf)
-
+		_, err := rand.Read(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
 		for j := uint32(0); j < linesPerBlock; j++ {
-			idx := rand.Intn(int(bytesToWrite))
+			bi, err := rand.Int(rand.Reader, big.NewInt(int64(bytesToWrite)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			idx := bi.Int64()
 			if buf[idx] == '\n' {
-				idx = rand.Intn(int(bytesToWrite))
+				bi, err = rand.Int(rand.Reader, big.NewInt(int64(bytesToWrite)))
+				if err != nil {
+					t.Fatal(err)
+				}
+				idx = bi.Int64()
 			}
 			buf[idx] = '\n'
 		}
@@ -397,7 +411,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 	}, randomLineStartPoint, randomLine, borderCrossingLineStartingPoint, borderCrossingLine
 }
 
-func checkFileContents(t *testing.T, fileInode file.INode, outputBytes []byte, mockClient *mock.MockBeeClient, compression string) bool {
+func checkFileContents(t *testing.T, fileInode file.INode, outputBytes []byte, mockClient *mock.BeeClient, compression string) bool {
 	var inpBuf []byte
 	fileSize := uint32(0)
 	for _, block := range fileInode.Blocks {

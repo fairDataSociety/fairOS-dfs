@@ -32,7 +32,6 @@ import (
 // DirectoryMkdirHandler is the api handler to create a new directory.
 // it takes one argument
 // - dir-path: the new directory to create along with its absolute path
-
 func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

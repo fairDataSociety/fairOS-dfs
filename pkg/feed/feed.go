@@ -55,7 +55,7 @@ func (f *Feed) mapKey() (uint64, error) {
 // binaryPut serializes this feed instance into the provided slice
 func (f *Feed) binaryPut(serializedData []byte) error {
 	if len(serializedData) != feedLength {
-		return NewErrorf(ErrInvalidValue, "Incorrect slice size to serialize feed. Expected %d, got %d", feedLength, len(serializedData))
+		return NewErrorf(errInvalidValue, "Incorrect slice size to serialize feed. Expected %d, got %d", feedLength, len(serializedData))
 	}
 	var cursor int
 	copy(serializedData[cursor:cursor+TopicLength], f.Topic[:TopicLength])

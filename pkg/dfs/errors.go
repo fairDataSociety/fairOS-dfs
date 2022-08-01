@@ -19,12 +19,15 @@ package dfs
 import "errors"
 
 var (
+	// ErrUserNotLoggedIn indicate the user is not logged-in
 	ErrUserNotLoggedIn = errors.New("user not logged in")
-	ErrInvalidUserName = errors.New("invalid user name")
-	ErrPodNotOpen      = errors.New("pod not open")
-	ErrPodAlreadyOpen  = errors.New("pod already open")
-	ErrBeeClient       = errors.New("could not connect to bee client")
-	ErrEthClient       = errors.New("could not connect to eth backend")
-	ErrReadOnlyPod     = errors.New("operation not permitted: read only pod")
-	ErrFileNotPresent  = errors.New("file not present")
+	// ErrPodNotOpen indicates pod is not open
+	ErrPodNotOpen = errors.New("pod not open")
+	// ErrFileNotPresent indicates file is not present
+	ErrFileNotPresent = errors.New("file not present")
+
+	errPodAlreadyOpen = errors.New("pod already open")
+	errBeeClient      = errors.New("could not connect to bee client")
+	errEthClient      = errors.New("could not connect to eth backend")
+	errReadOnlyPod    = errors.New("operation not permitted: read only pod")
 )

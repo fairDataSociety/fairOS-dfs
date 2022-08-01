@@ -17,7 +17,6 @@ limitations under the License.
 package dir
 
 import (
-	"strings"
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
@@ -27,6 +26,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// Directory is the type used to define a directory in a pod
 type Directory struct {
 	podName     string
 	client      blockstore.Client
@@ -56,18 +56,21 @@ func (d *Directory) getAddress() utils.Address {
 	return d.userAddress
 }
 
+// AddToDirectoryMap adds a directory in the path
 func (d *Directory) AddToDirectoryMap(path string, dirInode *Inode) {
 	d.dirMu.Lock()
 	defer d.dirMu.Unlock()
 	d.dirMap[path] = dirInode
 }
 
+// RemoveFromDirectoryMap removes a directory from the path
 func (d *Directory) RemoveFromDirectoryMap(path string) {
 	d.dirMu.Lock()
 	defer d.dirMu.Unlock()
 	delete(d.dirMap, path)
 }
 
+// GetDirFromDirectoryMap returns the directory Inode of the given path
 func (d *Directory) GetDirFromDirectoryMap(path string) *Inode {
 	d.dirMu.Lock()
 	defer d.dirMu.Unlock()
@@ -79,17 +82,7 @@ func (d *Directory) GetDirFromDirectoryMap(path string) *Inode {
 	return nil
 }
 
-func (d *Directory) GetPrefixPodFromPathMap(prefix string) *Inode {
-	d.dirMu.Lock()
-	defer d.dirMu.Unlock()
-	for k := range d.dirMap {
-		if strings.HasPrefix(k, prefix) {
-			delete(d.dirMap, k)
-		}
-	}
-	return nil
-}
-
+// RemoveAllFromDirectoryMap resets user dirMap
 func (d *Directory) RemoveAllFromDirectoryMap() {
 	d.dirMu.Lock()
 	defer d.dirMu.Unlock()

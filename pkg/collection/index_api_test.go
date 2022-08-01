@@ -19,7 +19,7 @@ package collection_test
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -32,7 +32,7 @@ import (
 
 func TestIndexAPI(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
 	_, _, err := acc.CreateUserAccount("password", "")
@@ -137,7 +137,7 @@ func TestIndexAPI(t *testing.T) {
 
 }
 
-func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.MockBeeClient, apnd bool) {
+func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.BeeClient, apnd bool) {
 	ref, err := client.UploadBlob(value, false, false)
 	if err != nil {
 		t.Fatalf("could not add doc %s:%s, %v", key, value, err)
@@ -148,7 +148,7 @@ func addDoc(t *testing.T, key string, value []byte, index *collection.Index, cli
 	}
 }
 
-func getDoc(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient) []byte {
+func getDoc(t *testing.T, key string, index *collection.Index, client *mock.BeeClient) []byte {
 	ref, err := index.Get(key)
 	if err != nil {
 		if errors.Is(err, collection.ErrEntryNotFound) {
@@ -165,7 +165,7 @@ func getDoc(t *testing.T, key string, index *collection.Index, client *mock.Mock
 	}
 	return data
 }
-func getAllDocs(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient) [][]byte {
+func getAllDocs(t *testing.T, key string, index *collection.Index, client *mock.BeeClient) [][]byte {
 	refs, err := index.Get(key)
 	if err != nil {
 		if errors.Is(err, collection.ErrEntryNotFound) {
@@ -188,7 +188,7 @@ func getAllDocs(t *testing.T, key string, index *collection.Index, client *mock.
 	return data
 }
 
-func getValue(t *testing.T, ref []byte, client *mock.MockBeeClient) []byte {
+func getValue(t *testing.T, ref []byte, client *mock.BeeClient) []byte {
 	data, respCode, err := client.DownloadBlob(ref)
 	if err != nil {
 		t.Fatal(err)
@@ -199,7 +199,7 @@ func getValue(t *testing.T, ref []byte, client *mock.MockBeeClient) []byte {
 	return data
 }
 
-func delDoc(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient) []byte {
+func delDoc(t *testing.T, key string, index *collection.Index, client *mock.BeeClient) []byte {
 	ref, err := index.Delete(key)
 	if err != nil {
 		t.Fatal(err)
@@ -215,7 +215,7 @@ func delDoc(t *testing.T, key string, index *collection.Index, client *mock.Mock
 
 }
 
-func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeClient) map[string][]byte {
+func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.BeeClient) map[string][]byte {
 	// Initialize the values
 	kvMap := make(map[string][]byte)
 	kvMap["key1"] = []byte("value1")
@@ -249,7 +249,7 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeCli
 	return kvMap
 }
 
-func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.MockBeeClient) map[string][]byte {
+func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.BeeClient) map[string][]byte {
 	kvMap := make(map[string][]byte)
 	kvMap["key1"] = []byte("value1")
 	kvMap["key11"] = []byte("value11")

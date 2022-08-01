@@ -28,16 +28,18 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// ReceiveFileResponse represents the response for receiving a file
 type ReceiveFileResponse struct {
 	FileName string `json:"file_name"`
 }
 
+// FileSharingReference represents a file reference
 type FileSharingReference struct {
 	Reference string `json:"file_sharing_reference"`
 }
 
 // FileShareHandler is the api handler to share a file from a given pod
-// it takes towe arguments
+// it takes two arguments
 // file_path: the absolute path of the file in the pod
 // dest_user: the address of the destination user (this is not used now)
 func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +105,10 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// FileReceiveHandler is the api handler to receive a file in a given pod
+// it takes two arguments
+// pod_name: the name of the pod
+// sharing_ref: the sharing reference of a file
 func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
@@ -171,6 +177,10 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// FileReceiveInfoHandler is the api handler to receive a file info
+// it takes two arguments
+// pod_name: the name of the pod
+// sharing_ref: the sharing reference of a file
 func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {

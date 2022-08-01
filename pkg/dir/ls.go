@@ -43,10 +43,10 @@ type Entry struct {
 // it also creates a list of files inside the directory and gives it back, so that the file listing
 // function can give information about those files.
 func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
-	topic := utils.HashString(utils.CombinePathAndFile(d.podName, dirNameWithPath, ""))
+	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
 	if err != nil {
-		if dirNameWithPath == utils.PathSeperator {
+		if dirNameWithPath == utils.PathSeparator {
 			return nil, nil, nil
 		}
 		return nil, nil, fmt.Errorf("list dir : %v", err)
@@ -63,7 +63,7 @@ func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
-			dirPath := utils.CombinePathAndFile(d.podName, dirNameWithPath, dirName)
+			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			dirTopic := utils.HashString(dirPath)
 			_, data, err := d.fd.GetFeedData(dirTopic, d.getAddress())
 			if err != nil {
@@ -85,7 +85,7 @@ func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 			listEntries = append(listEntries, entry)
 		} else if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
-			filePath := utils.CombinePathAndFile(d.podName, dirNameWithPath, fileName)
+			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
 			files = append(files, filePath)
 		}
 	}

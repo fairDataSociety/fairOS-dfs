@@ -21,18 +21,18 @@ import (
 )
 
 const (
-	ErrInit = iota
-	ErrNotFound
-	ErrIO
-	ErrUnauthorized
-	ErrInvalidValue
-	ErrDataOverflow
-	ErrNothingToReturn
-	ErrCorruptData
-	ErrInvalidSignature
-	ErrNotSynced
-	ErrPeriodDepth
-	ErrCnt
+	errInit = iota
+	errNotFound
+	errIO
+	errUnauthorized
+	errInvalidValue
+	errDataOverflow
+	errNothingToReturn
+	errCorruptData
+	errInvalidSignature
+	errNotSynced
+	errPeriodDepth
+	errCnt
 )
 
 // Error is a the typed error object used for Swarm feeds
@@ -54,14 +54,14 @@ func (e *Error) Code() int {
 
 // NewError creates a new Swarm feeds Error object with the specified code and custom error message
 func NewError(code int, s string) error {
-	if code < 0 || code >= ErrCnt {
+	if code < 0 || code >= errCnt {
 		panic("no such error code!")
 	}
 	r := &Error{
 		err: s,
 	}
 	switch code {
-	case ErrNotFound, ErrIO, ErrUnauthorized, ErrInvalidValue, ErrDataOverflow, ErrNothingToReturn, ErrInvalidSignature, ErrNotSynced, ErrPeriodDepth, ErrCorruptData:
+	case errNotFound, errIO, errUnauthorized, errInvalidValue, errDataOverflow, errNothingToReturn, errInvalidSignature, errNotSynced, errPeriodDepth, errCorruptData:
 		r.code = code
 	}
 	return r
