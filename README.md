@@ -1,5 +1,13 @@
 # FairOS-dfs
 
+[![Go](https://github.com/fairDataSociety/fairOS-dfs/workflows/Go/badge.svg)](https://github.com/fairDataSociety/fairOS-dfs/actions)
+[![Go Reference](https://pkg.go.dev/badge/github.com/fairDataSociety/fairOS-dfs.svg)](https://pkg.go.dev/github.com/fairdatasociety/fairOS-dfs)
+[![Go Report Card](https://goreportcard.com/badge/github.com/fairDataSociety/fairOS-dfs)](https://goreportcard.com/report/github.com/fairDataSociety/fairOS-dfs)
+[![API OpenAPI Specs](https://img.shields.io/badge/openapi-api-blue)](https://docs.fairos.fairdatasociety.org/api/index.html)
+![Docker Pulls](https://img.shields.io/docker/pulls/fairdatasociety/fairos-dfs)
+![GitHub all releases](https://img.shields.io/github/downloads/fairdatasociety/fairos-dfs/total)
+![GitHub](https://img.shields.io/github/license/fairdatasociety/fairos-dfs)
+
 Latest documentation is available at [https://docs.fairos.fairdatasociety.org/docs/](https://docs.fairos.fairdatasociety.org/docs/)
 
 ![FairOS-dfs](https://github.com/fairDataSociety/fairOS-dfs/blob/master/docs/images/FairOS-dfs.png)
