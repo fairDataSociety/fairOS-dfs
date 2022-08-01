@@ -40,9 +40,6 @@ const (
 	// UserAccountIndex is user root account
 	UserAccountIndex = -1
 
-	// chunkSize is used to set chunk size of the portable account SOC
-	chunkSize = 4096
-
 	// seedSize is used to determine how much padding we need for portable account SOC
 	seedSize = 64
 )
@@ -64,11 +61,11 @@ type Info struct {
 	address    utils.Address
 }
 
-// New create a account object through which the entire account management is done.
+// New create an account object through which the entire account management is done.
 // it uses a 12 word BIP-0039 wordlist to create a 12 word mnemonic for every user
 // and spawns key pais whenever necessary.
 func New(logger logging.Logger) *Account {
-	wal := NewWalletFromMnemonic("")
+	wal := newWalletFromMnemonic("")
 	return &Account{
 		wallet:      wal,
 		userAccount: &Info{},
@@ -77,7 +74,7 @@ func New(logger logging.Logger) *Account {
 	}
 }
 
-// CreateRandomKeyPair creates a ecdsa key pair by using the given int64 number
+// CreateRandomKeyPair creates an ecdsa key pair by using the given int64 number
 // as the random number.
 func CreateRandomKeyPair(now int64) (*ecdsa.PrivateKey, error) {
 	randBytes := make([]byte, 40)
@@ -90,7 +87,7 @@ func CreateRandomKeyPair(now int64) (*ecdsa.PrivateKey, error) {
 // provided it is used, otherwise a new mnemonic is generated. The generated mnemonic is
 // AES encrypted using the password provided.
 func (a *Account) CreateUserAccount(passPhrase, mnemonic string) (string, string, error) {
-	wal := NewWalletFromMnemonic("")
+	wal := newWalletFromMnemonic("")
 	a.wallet = wal
 	acc, mnemonic, err := wal.LoadMnemonicAndCreateRootAccount(mnemonic)
 	if err != nil {
@@ -192,7 +189,7 @@ func (a *Account) LoadUserAccountFromSeed(seed []byte) error {
 	return nil
 }
 
-// Authorise is used to check if the given password is valid for an user account.
+// Authorise is used to check if the given password is valid for a user account.
 // this is done by decrypting the mnemonic using the supplied password and checking
 // the validity of the mnemonic to see if it confirms to bip-0039 list of words.
 func (a *Account) Authorise(password string) bool {
@@ -278,81 +275,9 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 	return accountInfo, nil
 }
 
-// CreateCollectionAccount is used to create a new key pair for every collection (KV or Doc) created. This
-// key pair is again derived from the same master mnemonic of the user.
-func (a *Account) CreateCollectionAccount(accountId int, passPhrase string, createCollection bool) error {
-	if _, ok := a.podAccounts[accountId]; ok {
-		return nil
-	}
-
-	var (
-		hdw         *hdwallet.Wallet
-		err         error
-		acc         accounts.Account
-		accountInfo = &Info{}
-	)
-	path := genericPath + strconv.Itoa(accountId)
-	if a.wallet.seed != nil {
-		acc, err = a.wallet.CreateAccountFromSeed(path, a.wallet.seed)
-		if err != nil {
-			return err
-		}
-		hdw, err = hdwallet.NewFromSeed(a.wallet.seed)
-		if err != nil {
-			return err
-		}
-	} else {
-		password := passPhrase
-		if password == "" {
-			return errBlankPassword
-		}
-
-		plainMnemonic, err := a.wallet.decryptMnemonic(password)
-		if err != nil {
-			return fmt.Errorf("invalid password")
-		}
-
-		acc, err = a.wallet.CreateAccount(path, plainMnemonic)
-		if err != nil {
-			return err
-		}
-		hdw, err = hdwallet.NewFromMnemonic(plainMnemonic)
-		if err != nil {
-			return err
-		}
-	}
-
-	accountInfo.privateKey, err = hdw.PrivateKey(acc)
-	if err != nil {
-		return err
-	}
-	accountInfo.publicKey, err = hdw.PublicKey(acc)
-	if err != nil {
-		return err
-	}
-	addrBytes, err := crypto.NewEthereumAddress(accountInfo.privateKey.PublicKey)
-	if err != nil {
-		return err
-	}
-	accountInfo.address.SetBytes(addrBytes)
-	a.podAccounts[accountId] = accountInfo
-	return nil
-}
-
 // DeletePodAccount unloads/forgets a particular pods key value pair from the memory.
 func (a *Account) DeletePodAccount(accountId int) {
 	delete(a.podAccounts, accountId)
-}
-
-// GetUserPrivateKey retuens the private key of a given account index.
-// the index -1 belongs to user root account and other indexes belong to
-// the respective pods.
-func (a *Account) GetUserPrivateKey(index int) *ecdsa.PrivateKey {
-	if index == UserAccountIndex {
-		return a.userAccount.privateKey
-	} else {
-		return a.podAccounts[index].privateKey
-	}
 }
 
 // GetAddress returns the address of a given account index.
@@ -364,14 +289,6 @@ func (a *Account) GetAddress(index int) utils.Address {
 	} else {
 		return a.podAccounts[index].address
 	}
-}
-
-// GetPodAccountInfo returns the accountInfo for a given pod index.
-func (a *Account) GetPodAccountInfo(index int) (*Info, error) {
-	if info, found := a.podAccounts[index]; found {
-		return info, nil
-	}
-	return nil, fmt.Errorf("invalid index : %d", index)
 }
 
 // GetUserAccountInfo returns the user info
@@ -416,12 +333,12 @@ func (ai *Info) GetPublicKey() *ecdsa.PublicKey {
 
 // PadSeed pads the given seed with random elements to be a chunk of chunkSize
 func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
-	paddingLength := chunkSize - aes.BlockSize - seedSize
+	paddingLength := utils.MaxChunkLength - aes.BlockSize - seedSize
 	randomBytes, err := utils.GetRandBytes(paddingLength)
 	if err != nil {
 		return nil, err
 	}
-	chunkData := make([]byte, 0, chunkSize)
+	chunkData := make([]byte, 0, utils.MaxChunkLength)
 	chunkData = append(chunkData, seed...)
 	chunkData = append(chunkData, randomBytes...)
 	aesKey := sha256.Sum256([]byte(passphrase))

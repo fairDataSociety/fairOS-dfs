@@ -46,7 +46,7 @@ func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
 	if err != nil {
-		if dirNameWithPath == utils.PathSeperator {
+		if dirNameWithPath == utils.PathSeparator {
 			return nil, nil, nil
 		}
 		return nil, nil, fmt.Errorf("list dir : %v", err)

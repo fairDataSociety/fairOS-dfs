@@ -92,14 +92,14 @@ func (h *Handler) deleteChunk(ref []byte) error {
 // GetContent retrieves the data payload of the last synced update of the feed
 func (h *Handler) GetContent(feed *Feed) (swarm.Address, []byte, error) {
 	if feed == nil {
-		return swarm.ZeroAddress, nil, NewError(ErrInvalidValue, "feed is nil")
+		return swarm.ZeroAddress, nil, NewError(errInvalidValue, "feed is nil")
 	}
 	feedUpdate, err := h.get(feed)
 	if err != nil {
 		return swarm.ZeroAddress, nil, err
 	}
 	if feedUpdate == nil {
-		return swarm.ZeroAddress, nil, NewError(ErrNotFound, "feed update not cached")
+		return swarm.ZeroAddress, nil, NewError(errNotFound, "feed update not cached")
 	}
 	return swarm.NewAddress(feedUpdate.lastKey), feedUpdate.data, nil
 }
@@ -127,7 +127,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 
 	// we can't look for anything without a store
 	if h.client == nil {
-		return nil, NewError(ErrInit, "invalid blockstore")
+		return nil, NewError(errInit, "invalid blockstore")
 	}
 
 	var readCount int32
@@ -169,7 +169,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 	}
 	request, _ := requestPtr.(*request)
 	if request == nil {
-		return nil, NewError(ErrNotFound, "feed does not exist or was not updated yet")
+		return nil, NewError(errNotFound, "feed does not exist or was not updated yet")
 	}
 	return h.updateCache(request)
 }
@@ -277,7 +277,7 @@ func (h *Handler) toChunkContent(req *request, id, payloadId []byte) ([]byte, er
 // The resulting structure can then be signed and passed to Handler.Update to be verified and sent
 func (h *Handler) NewRequest(ctx context.Context, feed *Feed) (request2 *request, err error) {
 	if feed == nil {
-		return nil, NewError(ErrInvalidValue, "feed cannot be nil")
+		return nil, NewError(errInvalidValue, "feed cannot be nil")
 	}
 
 	now := TimestampProvider.Now().Time
@@ -287,7 +287,7 @@ func (h *Handler) NewRequest(ctx context.Context, feed *Feed) (request2 *request
 
 	feedUpdate, err := h.Lookup(ctx, query)
 	if err != nil {
-		if err.(*Error).code != ErrNotFound {
+		if err.(*Error).code != errNotFound {
 			return nil, err
 		}
 		// not finding updates means that there is a network error

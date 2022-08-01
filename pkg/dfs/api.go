@@ -42,11 +42,11 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensC
 		if errors.Is(err, ethClient.ErrWrongChainID) {
 			return nil, err
 		}
-		return nil, ErrEthClient
+		return nil, errEthClient
 	}
 	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)
 	if !c.CheckConnection(isGatewayProxy) {
-		return nil, ErrBeeClient
+		return nil, errBeeClient
 	}
 	users := user.NewUsers(dataDir, c, ens, logger)
 	return &API{

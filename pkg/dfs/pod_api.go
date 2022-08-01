@@ -119,7 +119,7 @@ func (d *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) 
 
 	// return if pod already open
 	if ui.IsPodOpen(podName) {
-		return nil, ErrPodAlreadyOpen
+		return nil, errPodAlreadyOpen
 	}
 
 	// open the pod

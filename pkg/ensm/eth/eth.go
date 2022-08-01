@@ -33,9 +33,11 @@ const (
 var (
 	minRequiredBalance = big.NewInt(10000000000000000) // 0.01 eth
 
+	//ErrWrongChainID denotes the rpc endpoint returned different chainId than the configured one
 	ErrWrongChainID = fmt.Errorf("chainID does not match or not supported")
 )
 
+// Client is used to manage ENS
 type Client struct {
 	eth            *ethclient.Client
 	ensConfig      *contracts.Config
@@ -46,6 +48,7 @@ type Client struct {
 	logger logging.Logger
 }
 
+// New returns a new ENS manager Client
 func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
 	eth, err := ethclient.Dial(ensConfig.ProviderBackend)
 	if err != nil {
@@ -89,6 +92,7 @@ func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
 	return c, nil
 }
 
+// GetOwner returns the owner of the username
 func (c *Client) GetOwner(username string) (common.Address, error) {
 	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
@@ -98,6 +102,7 @@ func (c *Client) GetOwner(username string) (common.Address, error) {
 	return c.ensRegistry.Owner(opts, node)
 }
 
+// RegisterSubdomain registers the username
 func (c *Client) RegisterSubdomain(username string, owner common.Address, key *ecdsa.PrivateKey) error {
 	balance, err := c.eth.BalanceAt(context.Background(), owner, nil)
 	if err != nil {
@@ -134,6 +139,7 @@ func (c *Client) RegisterSubdomain(username string, owner common.Address, key *e
 	return nil
 }
 
+// SetResolver sets the resolver for the username
 func (c *Client) SetResolver(username string, owner common.Address, key *ecdsa.PrivateKey) (string, error) {
 	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
@@ -158,6 +164,7 @@ func (c *Client) SetResolver(username string, owner common.Address, key *ecdsa.P
 	return utils.Encode(nameHash), nil
 }
 
+// SetAll sets all the necessary information of the user
 func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error {
 	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {
@@ -191,6 +198,7 @@ func (c *Client) SetAll(username string, owner common.Address, key *ecdsa.Privat
 	return nil
 }
 
+// GetInfo returns the public key of the user
 func (c *Client) GetInfo(username string) (*ecdsa.PublicKey, string, error) {
 	node, err := goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 	if err != nil {

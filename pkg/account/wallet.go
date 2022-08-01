@@ -31,12 +31,13 @@ const (
 	genericPath = "m/44'/60'/0'/0/"
 )
 
+// Wallet is used to create root and pod accounts of user
 type Wallet struct {
 	encryptedmnemonic string
 	seed              []byte
 }
 
-func NewWalletFromMnemonic(mnemonic string) *Wallet {
+func newWalletFromMnemonic(mnemonic string) *Wallet {
 	wallet := &Wallet{
 		encryptedmnemonic: mnemonic,
 	}
@@ -119,6 +120,7 @@ func (*Wallet) IsValidMnemonic(mnemonic string) error {
 	return nil
 }
 
+// LoadSeedFromMnemonic loads seed of the Wallet from pre-loaded mnemonic
 func (w *Wallet) LoadSeedFromMnemonic(password string) ([]byte, error) {
 	mnemonic, err := w.decryptMnemonic(password)
 	if err != nil {

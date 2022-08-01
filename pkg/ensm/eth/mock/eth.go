@@ -18,13 +18,15 @@ type info struct {
 	Name      string
 }
 
-type MockNamespaceManager struct {
+// NamespaceManager is a mock ens provider
+type NamespaceManager struct {
 	storer         map[string]string
 	publicResolver map[string]info
 	storerMu       sync.RWMutex
 }
 
-func (c *MockNamespaceManager) GetInfo(username string) (*ecdsa.PublicKey, string, error) {
+// GetInfo returns the public key of the user
+func (c *NamespaceManager) GetInfo(username string) (*ecdsa.PublicKey, string, error) {
 	c.storerMu.Lock()
 	defer c.storerMu.Unlock()
 	i, ok := c.publicResolver[username]
@@ -44,19 +46,22 @@ func (c *MockNamespaceManager) GetInfo(username string) (*ecdsa.PublicKey, strin
 	return pub, "", nil
 }
 
-func (c *MockNamespaceManager) RegisterSubdomain(username string, owner common.Address, _ *ecdsa.PrivateKey) error {
+// RegisterSubdomain registers the username
+func (c *NamespaceManager) RegisterSubdomain(username string, owner common.Address, _ *ecdsa.PrivateKey) error {
 	c.storerMu.Lock()
 	defer c.storerMu.Unlock()
 	c.storer[username] = owner.Hex()
 	return nil
 }
 
-func (*MockNamespaceManager) SetResolver(string, common.Address, *ecdsa.PrivateKey) (string, error) {
+// SetResolver sets the resolver for the username
+func (*NamespaceManager) SetResolver(string, common.Address, *ecdsa.PrivateKey) (string, error) {
 	// TODO do something
 	return "", nil
 }
 
-func (c *MockNamespaceManager) SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error {
+// SetAll sets all the necessary information of the user
+func (c *NamespaceManager) SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error {
 	name := "subdomain-hidden"
 	contentStr := "0x0000000000000000000000000000000000000000000000000000000000000000"
 	content := [32]byte{}
@@ -83,15 +88,17 @@ func (c *MockNamespaceManager) SetAll(username string, owner common.Address, key
 	return nil
 }
 
-func NewMockNamespaceManager() *MockNamespaceManager {
-	return &MockNamespaceManager{
+// NewMockNamespaceManager returns a new mock ENS manager Client
+func NewMockNamespaceManager() *NamespaceManager {
+	return &NamespaceManager{
 		storer:         make(map[string]string),
 		publicResolver: make(map[string]info),
 		storerMu:       sync.RWMutex{},
 	}
 }
 
-func (c *MockNamespaceManager) GetOwner(username string) (common.Address, error) {
+// GetOwner returns the owner of the username
+func (c *NamespaceManager) GetOwner(username string) (common.Address, error) {
 	c.storerMu.Lock()
 	defer c.storerMu.Unlock()
 	addr := c.storer[username]

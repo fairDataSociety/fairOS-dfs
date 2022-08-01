@@ -31,24 +31,27 @@ import (
 	"github.com/ethersphere/bee/pkg/swarm"
 )
 
-// MockBeeClient is a mock bee client
-type MockBeeClient struct {
+// BeeClient is a mock bee client
+type BeeClient struct {
 	storer   map[string][]byte
 	storerMu sync.RWMutex
 }
 
-func NewMockBeeClient() *MockBeeClient {
-	return &MockBeeClient{
+// NewMockBeeClient returns a mock bee client
+func NewMockBeeClient() *BeeClient {
+	return &BeeClient{
 		storer:   make(map[string][]byte),
 		storerMu: sync.RWMutex{},
 	}
 }
 
-func (*MockBeeClient) CheckConnection(_ bool) bool {
+// CheckConnection checks connection
+func (*BeeClient) CheckConnection(_ bool) bool {
 	return true
 }
 
-func (m *MockBeeClient) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
+// UploadSOC uploads soc into swarm
+func (m *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	ch, err := utils.NewChunkWithoutSpan(data)
@@ -82,14 +85,16 @@ func (m *MockBeeClient) UploadSOC(owner, id, signature string, data []byte) (add
 	return signedChunk.Address().Bytes(), nil
 }
 
-func (m *MockBeeClient) UploadChunk(ch swarm.Chunk, _ bool) (address []byte, err error) {
+// UploadChunk into swarm
+func (m *BeeClient) UploadChunk(ch swarm.Chunk, _ bool) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	m.storer[ch.Address().String()] = ch.Data()
 	return ch.Address().Bytes(), nil
 }
 
-func (m *MockBeeClient) DownloadChunk(_ context.Context, address []byte) (data []byte, err error) {
+// DownloadChunk from swarm
+func (m *BeeClient) DownloadChunk(_ context.Context, address []byte) (data []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	if data, ok := m.storer[swarm.NewAddress(address).String()]; ok {
@@ -98,7 +103,8 @@ func (m *MockBeeClient) DownloadChunk(_ context.Context, address []byte) (data [
 	return nil, fmt.Errorf("error downloading data")
 }
 
-func (m *MockBeeClient) UploadBlob(data []byte, _, _ bool) (address []byte, err error) {
+// UploadBlob into swarm
+func (m *BeeClient) UploadBlob(data []byte, _, _ bool) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	address = make([]byte, 32)
@@ -107,7 +113,8 @@ func (m *MockBeeClient) UploadBlob(data []byte, _, _ bool) (address []byte, err 
 	return address, nil
 }
 
-func (m *MockBeeClient) DownloadBlob(address []byte) (data []byte, respCode int, err error) {
+// DownloadBlob from swarm
+func (m *BeeClient) DownloadBlob(address []byte) (data []byte, respCode int, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	if data, ok := m.storer[swarm.NewAddress(address).String()]; ok {
@@ -116,7 +123,8 @@ func (m *MockBeeClient) DownloadBlob(address []byte) (data []byte, respCode int,
 	return nil, http.StatusInternalServerError, fmt.Errorf("error downloading data")
 }
 
-func (m *MockBeeClient) DeleteReference(address []byte) error {
+// DeleteReference unpins chunk in swarm
+func (m *BeeClient) DeleteReference(address []byte) error {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	if _, found := m.storer[swarm.NewAddress(address).String()]; found {

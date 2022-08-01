@@ -194,7 +194,7 @@ func (d *API) DeleteFile(podName, podFileWithPath, sessionId string) error {
 
 	// check if the pod is readonly before deleting a file
 	if podInfo.GetAccountInfo().IsReadOnlyPod() {
-		return ErrReadOnlyPod
+		return errReadOnlyPod
 	}
 	directory := podInfo.GetDirectory()
 
