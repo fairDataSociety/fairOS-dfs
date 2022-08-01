@@ -21,24 +21,24 @@ import (
 )
 
 // CreateUserV2 is a controller function which calls the create user function from the user object.
-func (d *API) CreateUserV2(userName, passPhrase, mnemonic string, sessionId string) (string, string, string, string, *user.Info, error) {
+func (d *API) CreateUserV2(userName, passPhrase, mnemonic, sessionId string) (string, string, string, string, *user.Info, error) {
 	return d.users.CreateNewUserV2(userName, passPhrase, mnemonic, sessionId)
 }
 
 // LoginUserV2 is a controller function which calls the users login function.
-func (d *API) LoginUserV2(userName, passPhrase string, sessionId string) (*user.Info, string, string, error) {
+func (d *API) LoginUserV2(userName, passPhrase, sessionId string) (*user.Info, string, string, error) {
 	return d.users.LoginUserV2(userName, passPhrase, d.client, sessionId)
 }
 
 // CreateUser is a controller function which calls the create user function from the user object.
 // FOR MIGRATION PURPOSE ONLY
-func (d *API) CreateUser(userName, passPhrase, mnemonic string, sessionId string) (string, string, *user.Info, error) {
+func (d *API) CreateUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *user.Info, error) {
 	return d.users.CreateNewUser(userName, passPhrase, mnemonic, sessionId)
 }
 
 // LoginUser is a controller function which calls the users login function.
 // FOR MIGRATION PURPOSE ONLY
-func (d *API) LoginUser(userName, passPhrase string, sessionId string) (*user.Info, error) {
+func (d *API) LoginUser(userName, passPhrase, sessionId string) (*user.Info, error) {
 	return d.users.LoginUser(userName, passPhrase, d.dataDir, d.client, sessionId)
 }
 
