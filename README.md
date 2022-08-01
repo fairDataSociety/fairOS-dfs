@@ -7,6 +7,7 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/fairdatasociety/fairos-dfs)
 ![GitHub all releases](https://img.shields.io/github/downloads/fairdatasociety/fairos-dfs/total)
 ![GitHub](https://img.shields.io/github/license/fairdatasociety/fairos-dfs)
+[![DeepSource](https://deepsource.io/gh/fairDataSociety/fairOS-dfs.svg/?label=active+issues&show_trend=true&token=AVTnJET1ReJkV2-YqwexTmIQ)](https://deepsource.io/gh/fairDataSociety/fairOS-dfs/?ref=repository-badge)
 
 Latest documentation is available at [https://docs.fairos.fairdatasociety.org/docs/](https://docs.fairos.fairdatasociety.org/docs/)
 
