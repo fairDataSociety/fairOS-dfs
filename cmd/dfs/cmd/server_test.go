@@ -477,7 +477,7 @@ func TestApis(t *testing.T) {
 		}
 		cookie = userLoginResp.Header["Set-Cookie"]
 
-		userStatHttpReq, err = http.NewRequest(http.MethodGet, "http://localhost:9090/v1/user/stat", http.NoBody)
+		userStatHttpReq, err = http.NewRequest(http.MethodGet, basev1+"/user/stat", http.NoBody)
 		if err != nil {
 			t.Fatal(err)
 
@@ -644,7 +644,7 @@ func TestApis(t *testing.T) {
 			t.Fatal("upload failed")
 		}
 
-		userMigrateHttpReq, err := http.NewRequest(http.MethodPost, "http://localhost:9090/v2/user/migrate", bytes.NewBuffer(userBytes))
+		userMigrateHttpReq, err := http.NewRequest(http.MethodPost, basev2+"/user/migrate", bytes.NewBuffer(userBytes))
 		if err != nil {
 			t.Fatal(err)
 
