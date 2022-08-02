@@ -339,7 +339,7 @@ func (itr *Iterator) nextStringKey() bool {
 	if itr.endPrefix != "" {
 		actualKey := manifestState.currentManifest.Name + entry.Name
 		actualKey = strings.TrimPrefix(actualKey, itr.index.name)
-		if actualKey > itr.endPrefix {
+		if actualKey > itr.endPrefix || actualKey == itr.endPrefix {
 			return false
 		}
 	}

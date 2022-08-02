@@ -307,7 +307,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatalf("columns present without setting")
 		}
 		if !bytes.Equal(value, []byte("value1")) {
-			t.Fatal(err)
+			t.Fatal("values do not match", string(value), "value1")
 		}
 	})
 
@@ -353,7 +353,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatalf("columns present without setting")
 		}
 		if !bytes.Equal(value, []byte("value1")) {
-			t.Fatal(err)
+			t.Fatal("values do not match", string(value), "value1")
 		}
 
 		// delete the key
@@ -449,13 +449,13 @@ func TestKeyValueStore(t *testing.T) {
 		// check the columns returned
 		for i, c := range columns {
 			if c != gotColumns[i] {
-				t.Fatal(err)
+				t.Fatal("columns do not match", c, gotColumns[i])
 			}
 		}
 
 		// also check the values returned
 		if !bytes.Equal(value, gotValue) {
-			t.Fatal(err)
+			t.Fatal("values do not match", string(value), string(gotValue))
 		}
 	})
 
@@ -484,10 +484,10 @@ func TestKeyValueStore(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
-				t.Fatal(err)
+				t.Fatal("keys do not match", itr.StringKey(), sortedKeys[i])
 			}
 			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
-				t.Fatal(err)
+				t.Fatal("values do not match", string(itr.Value()), sortedValues[i])
 			}
 		}
 	})
@@ -585,7 +585,6 @@ func TestKeyValueStore(t *testing.T) {
 					endIndex = i
 					break
 				}
-
 			}
 		}
 		if !matched {
@@ -602,10 +601,88 @@ func TestKeyValueStore(t *testing.T) {
 		for i := startIndex; i < endIndex; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
-				t.Fatal(err)
+				t.Fatal("keys do not match", itr.StringKey(), sortedKeys[i])
 			}
 			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
+				t.Fatal("values do not match", string(itr.Value()), sortedValues[i])
+			}
+		}
+
+		// do a ite.Next() after end..to see that it should not return anything
+		if itr.Next() {
+			t.Fatalf("iterating beyond end %s %v", itr.StringKey(), string(itr.Value()))
+		}
+
+	})
+
+	t.Run("Iterate_seek_start_end_string_keys_over_a_known_failing_keys", func(t *testing.T) {
+		tableNo := 486
+		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), collection.StringIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo))
+		if err != nil {
+			t.Fatal(err)
+		}
+		list := []string{
+			"0bL9qTuIq",
+			"1KxCHfroi",
+			"4",
+			"4AwtTa0",
+			"4RVqksE",
+			"5EQ3A5OEu3Vgn",
+			"5U",
+			"6zJ",
+			"7UKzdnTrve5",
+			"7lRJm1js",
+			"94ieVmIfkv",
+			"97MFodQlrV9p",
+			"B9KnfkYw",
+			"BmizOfhSl",
+			"C",
+			"D2IsxTBXGzs5",
+			"DQCUdYBL2xDT",
+		}
+		for _, i := range list {
+			err = kvStore.KVPut(fmt.Sprintf("kv_table_Itr_1%d", tableNo), i, []byte(i))
+			if err != nil {
 				t.Fatal(err)
+			}
+		}
+
+		startIndex := 0
+		endIndex := 0
+
+		startPrefix := "B"
+		endPrefix := "C"
+		for i := 0; i < 100; i++ {
+			if startIndex == 0 && strings.HasPrefix(list[i], startPrefix) {
+				startIndex = i
+			}
+			if strings.HasPrefix(list[i], endPrefix) {
+				if startIndex == 0 {
+					startIndex = i
+					startPrefix = endPrefix
+					endPrefix = "E"
+				} else {
+					endIndex = i
+					break
+				}
+			}
+		}
+		itr, err := kvStore.KVSeek(fmt.Sprintf("kv_table_Itr_1%d", tableNo), startPrefix, endPrefix, -1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// check the order of the keys
+		for i := startIndex; i < endIndex; i++ {
+			itr.Next()
+			if itr.StringKey() != list[i] {
+				t.Fatal("keys do not match", itr.StringKey(), list[i])
+			}
+			if !bytes.Equal(itr.Value(), []byte(list[i])) {
+				t.Fatal("values do not match", string(itr.Value()), list[i])
 			}
 		}
 
@@ -641,10 +718,10 @@ func TestKeyValueStore(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
-				t.Fatal(err)
+				t.Fatal("keys do not match", itr.StringKey(), sortedKeys[i])
 			}
 			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
-				t.Fatal(err)
+				t.Fatal("values do not match", string(itr.Value()), sortedValues[i])
 			}
 		}
 	})
@@ -675,10 +752,10 @@ func TestKeyValueStore(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			itr.Next()
 			if itr.IntegerKey() != int64(keys[i]) {
-				t.Fatal(err)
+				t.Fatal("keys do not match", itr.StringKey(), keys[i])
 			}
 			if !bytes.Equal(itr.Value(), []byte(strconv.Itoa(values[i]))) {
-				t.Fatal(err)
+				t.Fatal("values do not match", string(itr.Value()), keys[i])
 			}
 		}
 	})
@@ -723,10 +800,10 @@ func TestKeyValueStore(t *testing.T) {
 		for i := startIndex; i < endIndex; i++ {
 			itr.Next()
 			if itr.IntegerKey() != int64(keys[i]) {
-				t.Fatal(err)
+				t.Fatal("keys do not match", itr.StringKey(), keys[i])
 			}
 			if !bytes.Equal(itr.Value(), []byte(strconv.Itoa(values[i]))) {
-				t.Fatal(err)
+				t.Fatal("values do not match", string(itr.Value()), keys[i])
 			}
 		}
 
@@ -770,10 +847,10 @@ func TestKeyValueStore(t *testing.T) {
 		for i := startIndex; i < startIndex+10; i++ {
 			itr.Next()
 			if itr.IntegerKey() != int64(keys[i]) {
-				t.Fatal(err)
+				t.Fatal("keys do not match", itr.StringKey(), keys[i])
 			}
 			if !bytes.Equal(itr.Value(), []byte(strconv.Itoa(values[i]))) {
-				t.Fatal(err)
+				t.Fatal("values do not match", string(itr.Value()), keys[i])
 			}
 		}
 
