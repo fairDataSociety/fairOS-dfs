@@ -36,14 +36,14 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("pod_name")
 	if podName == "" {
 		h.logger.Errorf("doc loadjson: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc loadjson: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := r.FormValue("table_name")
 	if name == "" {
 		h.logger.Errorf("doc loadjson: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc loadjson: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"table_name\" argument missing"})
 		return
 	}
 
@@ -51,12 +51,12 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc loadjson: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc loadjson: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc loadjsonv: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc loadjsonv: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -64,13 +64,13 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseMultipartForm(defaultMaxMemory)
 	if err != nil {
 		h.logger.Errorf("doc loadjson: %v", err)
-		jsonhttp.BadRequest(w, "doc loadjson: "+err.Error())
+		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: " + err.Error()})
 		return
 	}
 	files := r.MultipartForm.File["json"]
 	if len(files) == 0 {
 		h.logger.Errorf("doc loadjson: parameter \"csv\" missing")
-		jsonhttp.BadRequest(w, "doc loadjson: parameter \"csv\" missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: parameter \"csv\" missing"})
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	fd, err := file.Open()
 	if err != nil {
 		h.logger.Errorf("doc loadjson: %v", err)
-		jsonhttp.InternalServerError(w, "doc loadjson: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc loadjson: " + err.Error()})
 		return
 	}
 	defer fd.Close()
@@ -89,7 +89,7 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	docBatch, err := h.dfsAPI.DocBatch(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("doc loadjson: %v", err)
-		jsonhttp.InternalServerError(w, "doc loadjson: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc loadjson: " + err.Error()})
 		return
 	}
 
@@ -123,10 +123,10 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	err = h.dfsAPI.DocBatchWrite(sessionId, podName, docBatch)
 	if err != nil {
 		h.logger.Errorf("doc loadjson: %v", err)
-		jsonhttp.InternalServerError(w, "doc loadjson: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc loadjson: " + err.Error()})
 		return
 	}
 
 	sendStr := fmt.Sprintf("json file loaded in to document db (%s) with total:%d, success: %d, failure: %d rows", name, rowCount, successCount, failureCount)
-	jsonhttp.OK(w, sendStr)
+	jsonhttp.OK(w, &response{Message: sendStr})
 }

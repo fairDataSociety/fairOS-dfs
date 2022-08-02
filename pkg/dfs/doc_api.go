@@ -105,24 +105,30 @@ func (d *API) DocList(sessionId, podName string) (map[string]collection.DBSchema
 
 // DocCount is a controller function which does all the checks before counting
 // all the documents ina documentDB.
-func (d *API) DocCount(sessionId, podName, name, expr string) (uint64, error) {
+func (d *API) DocCount(sessionId, podName, name, expr string) (*collection.TableKeyCount, error) {
+	keyCount := &collection.TableKeyCount{TableName: name}
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
-		return 0, ErrUserNotLoggedIn
+		return keyCount, ErrUserNotLoggedIn
 	}
 
 	// check if pod open
 	if !ui.IsPodOpen(podName) {
-		return 0, ErrPodNotOpen
+		return keyCount, ErrPodNotOpen
 	}
 
 	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
-		return 0, err
+		return keyCount, err
 	}
 
-	return podInfo.GetDocStore().Count(name, expr)
+	count, err := podInfo.GetDocStore().Count(name, expr)
+	if err != nil {
+		return keyCount, err
+	}
+	keyCount.Count = count
+	return keyCount, nil
 }
 
 // DocPut is a controller function which does all the checks before inserting

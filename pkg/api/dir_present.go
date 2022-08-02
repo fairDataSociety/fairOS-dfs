@@ -36,7 +36,7 @@ func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("dir present: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "dir present: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir present: \"pod_name\" argument missing"})
 		return
 	}
 	podName := keys[0]
@@ -44,7 +44,7 @@ func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request
 	keys, ok = r.URL.Query()["dir_path"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("dir present: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, "dir present: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir present: \"dir_path\" argument missing"})
 		return
 	}
 	dirToCheck := keys[0]
@@ -53,12 +53,12 @@ func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("dir present: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("dir present: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "dir present: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "dir present: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 

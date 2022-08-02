@@ -33,7 +33,7 @@ func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("kv count: invalid request body type")
-		jsonhttp.BadRequest(w, "kv count: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "kv count: invalid request body type"})
 		return
 	}
 
@@ -42,21 +42,21 @@ func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv count: could not decode arguments")
-		jsonhttp.BadRequest(w, "kv count: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "kv count: could not decode arguments"})
 		return
 	}
 
 	podName := kvReq.PodName
 	if podName == "" {
 		h.logger.Errorf("kv count: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv count: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv count: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv count: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv count: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv count: \"table_name\" argument missing"})
 		return
 	}
 
@@ -64,19 +64,19 @@ func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv count: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv count: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv count: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv count: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	count, err := h.dfsAPI.KVCount(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("kv count: %v", err)
-		jsonhttp.InternalServerError(w, "kv count: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv count: " + err.Error()})
 		return
 	}
 

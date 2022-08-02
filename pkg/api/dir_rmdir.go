@@ -36,7 +36,7 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("rmdir: invalid request body type")
-		jsonhttp.BadRequest(w, "rmdir: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "rmdir: invalid request body type"})
 		return
 	}
 
@@ -45,21 +45,21 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 	err := decoder.Decode(&fsReq)
 	if err != nil {
 		h.logger.Errorf("rmdir: could not decode arguments")
-		jsonhttp.BadRequest(w, "rmdir: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "rmdir: could not decode arguments"})
 		return
 	}
 
 	podName := fsReq.PodName
 	if podName == "" {
 		h.logger.Errorf("rmdir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "rmdir: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"pod_name\" argument missing"})
 		return
 	}
 
 	dir := fsReq.DirectoryPath
 	if dir == "" {
 		h.logger.Errorf("rmdir: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, "rmdir: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"dir_path\" argument missing"})
 		return
 	}
 
@@ -67,12 +67,12 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Error("rmdir: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("rmdir: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "rmdir: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -82,12 +82,12 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
 			h.logger.Errorf("rmdir: %v", err)
-			jsonhttp.BadRequest(w, "rmdir: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "rmdir: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("rmdir: %v", err)
-		jsonhttp.InternalServerError(w, "rmdir: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "rmdir: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "directory removed successfully")
+	jsonhttp.OK(w, &response{Message: "directory removed successfully"})
 }

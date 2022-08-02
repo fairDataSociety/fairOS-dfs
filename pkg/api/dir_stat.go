@@ -33,7 +33,7 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("dir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "dir: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir: \"pod_name\" argument missing"})
 		return
 	}
 	podName := keys[0]
@@ -41,7 +41,7 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok = r.URL.Query()["dir_path"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("dir present: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, "dir present: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir present: \"dir_path\" argument missing"})
 		return
 	}
 	dir := keys[0]
@@ -50,12 +50,12 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("dir stat: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("dir stat: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "dir stat: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "dir stat: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -65,11 +65,11 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
 			h.logger.Errorf("dir stat: %v", err)
-			jsonhttp.BadRequest(w, "dir stat: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "dir stat: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("dir stat: %v", err)
-		jsonhttp.InternalServerError(w, "dir stat: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "dir stat: " + err.Error()})
 		return
 	}
 

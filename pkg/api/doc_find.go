@@ -38,39 +38,39 @@ func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc find: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc find: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"pod_name\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
 		h.logger.Errorf("doc find: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc find: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"pod_name\" argument missing"})
 		return
 	}
 
 	keys, ok = r.URL.Query()["table_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc find: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc find: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"table_name\" argument missing"})
 		return
 	}
 	name := keys[0]
 	if name == "" {
 		h.logger.Errorf("doc find: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc find: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"table_name\" argument missing"})
 		return
 	}
 
 	keys, ok = r.URL.Query()["expr"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("pod stat: \"expr\" argument missing")
-		jsonhttp.BadRequest(w, "pod stat: \"expr\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"expr\" argument missing"})
 		return
 	}
 	expr := keys[0]
 	if expr == "" {
 		h.logger.Errorf("doc find: \"expr\" argument missing")
-		jsonhttp.BadRequest(w, "doc find: \"expr\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"expr\" argument missing"})
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
 		lmt, err := strconv.Atoi(limit)
 		if err != nil {
 			h.logger.Errorf("doc find: invalid value for argument \"limit\"")
-			jsonhttp.BadRequest(w, "doc find: invalid value for argument \"limit\"")
+			jsonhttp.BadRequest(w, &response{Message: "doc find: invalid value for argument \"limit\""})
 			return
 		}
 		limitInt = lmt
@@ -97,19 +97,19 @@ func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc find: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc find: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc find: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	data, err := h.dfsAPI.DocFind(sessionId, podName, name, expr, limitInt)
 	if err != nil {
 		h.logger.Errorf("doc find: %v", err)
-		jsonhttp.InternalServerError(w, "doc find: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc find: " + err.Error()})
 		return
 	}
 

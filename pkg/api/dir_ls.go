@@ -41,7 +41,7 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "ls: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "ls: \"pod_name\" argument missing"})
 		return
 	}
 	podName := keys[0]
@@ -49,7 +49,7 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok = r.URL.Query()["dir_path"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("ls: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, "ls: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "ls: \"dir_path\" argument missing"})
 		return
 	}
 	directory := keys[0]
@@ -58,12 +58,12 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("ls: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("ls: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "ls: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "ls: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -73,16 +73,16 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
 			h.logger.Errorf("ls: %v", err)
-			jsonhttp.BadRequest(w, "ls: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "ls: " + err.Error()})
 			return
 		}
 		if err == dir.ErrDirectoryNotPresent {
 			h.logger.Errorf("ls: %v", err)
-			jsonhttp.NotFound(w, "ls: "+err.Error())
+			jsonhttp.NotFound(w, &response{Message: "ls: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("ls: %v", err)
-		jsonhttp.InternalServerError(w, "ls: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "ls: " + err.Error()})
 		return
 	}
 
@@ -92,7 +92,7 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	if fEntries == nil {
 		fEntries = make([]file.Entry, 0)
 	}
-	w.Header().Set("Content-Type", " application/json")
+	w.Header().Set("Content-Type", "application/json")
 	jsonhttp.OK(w, &ListFileResponse{
 		Directories: dEntries,
 		Files:       fEntries,

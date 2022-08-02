@@ -38,12 +38,12 @@ func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("ls pod: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("ls pod: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "ls pod: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "ls pod: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -53,11 +53,11 @@ func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == pod.ErrPodNotOpened {
 			h.logger.Errorf("ls pod: %v", err)
-			jsonhttp.BadRequest(w, "ls pod: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "ls pod: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("ls pod: %v", err)
-		jsonhttp.InternalServerError(w, "ls pod: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "ls pod: " + err.Error()})
 		return
 	}
 

@@ -35,7 +35,7 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("user signup: invalid request body type")
-		jsonhttp.BadRequest(w, "user signup: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "user signup: invalid request body type"})
 		return
 	}
 
@@ -44,7 +44,7 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user signup: could not decode arguments")
-		jsonhttp.BadRequest(w, "user signup: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "user signup: could not decode arguments"})
 		return
 	}
 
@@ -53,12 +53,12 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	mnemonic := userReq.Mnemonic
 	if user == "" {
 		h.logger.Errorf("user signup: \"user\" argument missing")
-		jsonhttp.BadRequest(w, "user signup: \"user\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user signup: \"user\" argument missing"})
 		return
 	}
 	if password == "" {
 		h.logger.Errorf("user signup: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "user signup: \"password\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user signup: \"password\" argument missing"})
 		return
 	}
 
@@ -67,18 +67,18 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == u.ErrUserAlreadyPresent {
 			h.logger.Errorf("user signup: %v", err)
-			jsonhttp.BadRequest(w, "user signup: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "user signup: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("user signup: %v", err)
-		jsonhttp.InternalServerError(w, "user signup: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user signup: " + err.Error()})
 		return
 	}
 
 	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
 	if err != nil {
 		h.logger.Errorf("user signup: %v", err)
-		jsonhttp.InternalServerError(w, "user signup: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user signup: " + err.Error()})
 		return
 	}
 

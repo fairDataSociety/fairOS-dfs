@@ -37,7 +37,7 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc create: invalid request body type")
-		jsonhttp.BadRequest(w, "doc create: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "doc create: invalid request body type"})
 		return
 	}
 
@@ -46,21 +46,21 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc create: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc create: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "doc create: could not decode arguments"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
 		h.logger.Errorf("doc create: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc create: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc create: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc create: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc  create: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc  create: \"table_name\" argument missing"})
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 			nt := strings.Split(idx, "=")
 			if len(nt) != 2 {
 				h.logger.Errorf("doc create: \"si\" invalid argument ")
-				jsonhttp.BadRequest(w, "doc  create: \"si\" invalid argument")
+				jsonhttp.BadRequest(w, &response{Message: "doc  create: \"si\" invalid argument"})
 				return
 			}
 			switch nt[1] {
@@ -88,7 +88,7 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 			case "bytes":
 			default:
 				h.logger.Errorf("doc create: invalid \"indexType\" ")
-				jsonhttp.BadRequest(w, "doc create: invalid \"indexType\"")
+				jsonhttp.BadRequest(w, &response{Message: "doc create: invalid \"indexType\""})
 				return
 			}
 		}
@@ -100,21 +100,21 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc create: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc create: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc create: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc create: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.DocCreate(sessionId, podName, name, indexes, mutable)
 	if err != nil {
 		h.logger.Errorf("doc create: %v", err)
-		jsonhttp.InternalServerError(w, "doc create: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc create: " + err.Error()})
 		return
 	}
 
-	jsonhttp.Created(w, "document db created")
+	jsonhttp.Created(w, &response{Message: "document db created"})
 }

@@ -34,7 +34,7 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("file delete: invalid request body type")
-		jsonhttp.BadRequest(w, "file delete: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "file delete: invalid request body type"})
 		return
 	}
 
@@ -43,21 +43,21 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&fsReq)
 	if err != nil {
 		h.logger.Errorf("file delete: could not decode arguments")
-		jsonhttp.BadRequest(w, "file delete: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "file delete: could not decode arguments"})
 		return
 	}
 
 	podName := fsReq.PodName
 	if podName == "" {
 		h.logger.Errorf("file delete: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "file delete: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file delete: \"pod_name\" argument missing"})
 		return
 	}
 
 	podFileWithPath := fsReq.FilePath
 	if podFileWithPath == "" {
 		h.logger.Errorf("file delete: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, "file delete: \"file_path\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file delete: \"file_path\" argument missing"})
 		return
 	}
 
@@ -65,12 +65,12 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("file delete: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("file delete: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "file delete: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "file delete: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 	// delete file
@@ -78,18 +78,18 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file delete: %v", err)
-			jsonhttp.BadRequest(w, "file delete: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "file delete: " + err.Error()})
 			return
 		}
 		if err == pod.ErrInvalidFile {
 			h.logger.Errorf("file delete: %v", err)
-			jsonhttp.NotFound(w, "file delete: "+err.Error())
+			jsonhttp.NotFound(w, &response{Message: "file delete: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("file delete: %v", err)
-		jsonhttp.InternalServerError(w, "file delete: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "file delete: " + err.Error()})
 		return
 	}
 
-	jsonhttp.OK(w, "file deleted successfully")
+	jsonhttp.OK(w, &response{Message: "file deleted successfully"})
 }

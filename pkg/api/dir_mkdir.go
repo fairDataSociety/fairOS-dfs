@@ -36,7 +36,7 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("mkdir: invalid request body type")
-		jsonhttp.BadRequest(w, "mkdir: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "mkdir: invalid request body type"})
 		return
 	}
 
@@ -45,21 +45,21 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 	err := decoder.Decode(&fsReq)
 	if err != nil {
 		h.logger.Errorf("mkdir: could not decode arguments")
-		jsonhttp.BadRequest(w, "mkdir: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "mkdir: could not decode arguments"})
 		return
 	}
 
 	podName := fsReq.PodName
 	if podName == "" {
 		h.logger.Errorf("mkdir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "mkdir: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"pod_name\" argument missing"})
 		return
 	}
 
 	dirToCreateWithPath := fsReq.DirectoryPath
 	if dirToCreateWithPath == "" {
 		h.logger.Errorf("mkdir: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, "mkdir: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"dir_path\" argument missing"})
 		return
 	}
 
@@ -67,12 +67,12 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("mkdir: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("mkdir: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "mkdir: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -84,12 +84,12 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 			err == p.ErrTooLongDirectoryName ||
 			err == p.ErrPodNotOpened {
 			h.logger.Errorf("mkdir: %v", err)
-			jsonhttp.BadRequest(w, "mkdir: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "mkdir: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("mkdir: %v", err)
-		jsonhttp.InternalServerError(w, "mkdir: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "mkdir: " + err.Error()})
 		return
 	}
-	jsonhttp.Created(w, "directory created successfully")
+	jsonhttp.Created(w, &response{Message: "directory created successfully"})
 }
