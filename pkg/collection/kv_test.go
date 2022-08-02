@@ -49,6 +49,28 @@ func TestKeyValueStore(t *testing.T) {
 	user := acc.GetAddress(account.UserAccountIndex)
 	kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 
+	t.Run("nil_itr", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1312", collection.StringIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1312")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _, _, err = kvStore.KVGetNext("kv_table_1312")
+		if !errors.Is(err, collection.ErrKVNilIterator) {
+			t.Fatal("found iterator")
+		}
+
+		// delete so that they dont show up in other testcases
+		err = kvStore.DeleteKVTable("kv_table_1312")
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("create_kv_table_with_string_index", func(t *testing.T) {
 		err := kvStore.CreateKVTable("kv_table_0", collection.StringIndex)
 		if err != nil {
@@ -381,7 +403,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 	})
 
-	t.Run("get_non_existent_string_index", func(t *testing.T) {
+	t.Run("delete_non_existent_string_index", func(t *testing.T) {
 		err := kvStore.CreateKVTable("kv_table_13", collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -860,6 +882,35 @@ func TestKeyValueStore(t *testing.T) {
 		}
 	})
 
+	t.Run("get_non_existent_string_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1313", collection.StringIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1313")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.KVPut("kv_table_1313", "key1", []byte("value1"))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1313", "key1", "", -1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// this should have value
+		_, _, _, err = kvStore.KVGetNext("kv_table_1313")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// this should not have value
+		_, _, _, err = kvStore.KVGetNext("kv_table_1313")
+		if !errors.Is(err, collection.ErrNoNextElement) {
+			t.Fatal("found a nonexistent key")
+		}
+	})
 }
 
 func addRandomStrings(t *testing.T, kvStore *collection.KeyValue, count int, tableName string) ([]string, []string, error) {

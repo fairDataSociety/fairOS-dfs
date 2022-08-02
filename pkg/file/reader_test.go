@@ -38,6 +38,7 @@ func TestFileReader(t *testing.T) {
 		blockSize := uint32(10)
 		fileInode := createFile(t, fileSize, blockSize, "", mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
 		if !checkFileContents(t, fileInode, outputBytes, mockClient, "") {
 			t.Fatalf("file contents are not same")
@@ -49,6 +50,7 @@ func TestFileReader(t *testing.T) {
 		blockSize := uint32(10)
 		fileInode := createFile(t, fileSize, blockSize, "", mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
 		if !checkFileContents(t, fileInode, outputBytes, mockClient, "") {
 			t.Fatalf("file contents are not same")
@@ -61,6 +63,7 @@ func TestFileReader(t *testing.T) {
 		compression := "gzip"
 		fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
 		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
 			t.Fatalf("file contents are not same")
@@ -73,6 +76,7 @@ func TestFileReader(t *testing.T) {
 		compression := "gzip"
 		fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
 		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
 			t.Fatalf("file contents are not same")
@@ -85,6 +89,7 @@ func TestFileReader(t *testing.T) {
 		compression := "snappy"
 		fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
 		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
 			t.Fatalf("file contents are not same")
@@ -97,6 +102,7 @@ func TestFileReader(t *testing.T) {
 		compression := "snappy"
 		fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
 		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
 			t.Fatalf("file contents are not same")
@@ -109,6 +115,7 @@ func TestFileReader(t *testing.T) {
 		linesPerBlock := uint32(2)
 		fileInode, _, _, _, _ := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		outputBytes := readFileContentsUsingReadline(t, fileSize, reader)
 		if !checkFileContents(t, fileInode, outputBytes, mockClient, "") {
 			t.Fatalf("file contents are not same")
@@ -121,6 +128,7 @@ func TestFileReader(t *testing.T) {
 		linesPerBlock := uint32(2)
 		fileInode, _, _, _, _ := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		outputBytes := readFileContentsUsingReadline(t, fileSize, reader)
 		if !checkFileContents(t, fileInode, outputBytes, mockClient, "") {
 			t.Fatalf("file contents are not same")
@@ -134,6 +142,7 @@ func TestFileReader(t *testing.T) {
 		compression := "snappy"
 		fileInode, _, _, _, _ := createFileWithNewlines(t, fileSize, blockSize, compression, mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContentsUsingReadline(t, fileSize, reader)
 		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
 			t.Fatalf("file contents are not same")
@@ -146,6 +155,7 @@ func TestFileReader(t *testing.T) {
 		linesPerBlock := uint32(2)
 		fileInode, lineStart, line, _, _ := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
 		if err != nil {
 			t.Fatal(err)
@@ -168,6 +178,7 @@ func TestFileReader(t *testing.T) {
 		linesPerBlock := uint32(2)
 		fileInode, _, _, lineStart, line := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
 		if err != nil {
 			t.Fatal(err)
@@ -191,6 +202,7 @@ func TestFileReader(t *testing.T) {
 		compression := "snappy"
 		fileInode, _, _, lineStart, line := createFileWithNewlines(t, fileSize, blockSize, compression, mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
 		if err != nil {
 			t.Fatal(err)
@@ -214,6 +226,7 @@ func TestFileReader(t *testing.T) {
 		compression := "snappy"
 		fileInode, _, _, lineStart, line := createFileWithNewlines(t, fileSize, blockSize, compression, mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, true)
+		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
 		if err != nil {
 			t.Fatal(err)
