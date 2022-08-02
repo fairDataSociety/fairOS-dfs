@@ -56,7 +56,7 @@ type KVTable struct {
 	columns   []string
 }
 
-type KVCount struct {
+type TableKeyCount struct {
 	Count     uint64 `json:"count"`
 	TableName string `json:"table_name"`
 }
@@ -173,8 +173,8 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 	return nil
 }
 
-// KVCount counts the number of entries in the given key value table.
-func (kv *KeyValue) KVCount(name string) (*KVCount, error) {
+// TableKeyCount counts the number of entries in the given key value table.
+func (kv *KeyValue) KVCount(name string) (*TableKeyCount, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
@@ -182,7 +182,7 @@ func (kv *KeyValue) KVCount(name string) (*KVCount, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &KVCount{
+		return &TableKeyCount{
 			Count:     count,
 			TableName: name,
 		}, nil
@@ -195,7 +195,7 @@ func (kv *KeyValue) KVCount(name string) (*KVCount, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &KVCount{
+		return &TableKeyCount{
 			Count:     count,
 			TableName: name,
 		}, nil

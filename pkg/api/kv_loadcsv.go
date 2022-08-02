@@ -36,14 +36,14 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("pod_name")
 	if podName == "" {
 		h.logger.Errorf("kv loadcsv: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv loadcsv: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := r.FormValue("table_name")
 	if name == "" {
 		h.logger.Errorf("kv loadcsv: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv loadcsv: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"table_name\" argument missing"})
 		return
 	}
 
@@ -57,12 +57,12 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv loadcsv: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv loadcsv: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -70,13 +70,13 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseMultipartForm(defaultMaxMemory)
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)
-		jsonhttp.BadRequest(w, "kv loadcsv: "+err.Error())
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: " + err.Error()})
 		return
 	}
 	files := r.MultipartForm.File["csv"]
 	if len(files) == 0 {
 		h.logger.Errorf("kv loadcsv: parameter \"csv\" missing")
-		jsonhttp.BadRequest(w, "kv loadcsv: parameter \"csv\" missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: parameter \"csv\" missing"})
 		return
 	}
 
@@ -84,7 +84,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	fd, err := file.Open()
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)
-		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv loadcsv: " + err.Error()})
 		return
 	}
 	defer fd.Close()
@@ -115,7 +115,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 			batch, err = h.dfsAPI.KVBatch(sessionId, podName, name, columns)
 			if err != nil {
 				h.logger.Errorf("kv loadcsv: %v", err)
-				jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
+				jsonhttp.InternalServerError(w, &response{Message: "kv loadcsv: " + err.Error()})
 				return
 			}
 
@@ -143,10 +143,10 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = batch.Write("")
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)
-		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv loadcsv: " + err.Error()})
 		return
 	}
 
 	sendStr := fmt.Sprintf("csv file loaded in to kv table (%s) with total:%d, success: %d, failure: %d rows", name, rowCount, successCount, failureCount)
-	jsonhttp.OK(w, sendStr)
+	jsonhttp.OK(w, &response{Message: sendStr})
 }

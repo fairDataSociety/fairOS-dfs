@@ -37,40 +37,40 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		podName = r.FormValue("pod_name")
 		if podName == "" {
 			h.logger.Errorf("download: \"pod_name\" argument missing")
-			jsonhttp.BadRequest(w, "download: \"pod_name\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "download: \"pod_name\" argument missing"})
 			return
 		}
 
 		podFileWithPath = r.FormValue("file_path")
 		if podFileWithPath == "" {
 			h.logger.Errorf("download: \"file_path\" argument missing")
-			jsonhttp.BadRequest(w, "download: \"file_path\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "download: \"file_path\" argument missing"})
 			return
 		}
 	} else {
 		keys, ok := r.URL.Query()["pod_name"]
 		if !ok || len(keys[0]) < 1 {
 			h.logger.Errorf("download \"pod_name\" argument missing")
-			jsonhttp.BadRequest(w, "dir: \"pod_name\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "dir: \"pod_name\" argument missing"})
 			return
 		}
 		podName = keys[0]
 		if podName == "" {
 			h.logger.Errorf("download: \"pod_name\" argument missing")
-			jsonhttp.BadRequest(w, "download: \"pod_name\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "download: \"pod_name\" argument missing"})
 			return
 		}
 
 		keys, ok = r.URL.Query()["file_path"]
 		if !ok || len(keys[0]) < 1 {
 			h.logger.Errorf("download: \"file_path\" argument missing")
-			jsonhttp.BadRequest(w, "download: \"file_path\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "download: \"file_path\" argument missing"})
 			return
 		}
 		podFileWithPath = keys[0]
 		if podFileWithPath == "" {
 			h.logger.Errorf("download: \"file_path\" argument missing")
-			jsonhttp.BadRequest(w, "download: \"file_path\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "download: \"file_path\" argument missing"})
 			return
 		}
 	}
@@ -79,12 +79,12 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("download: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("download: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "download: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "download: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -105,7 +105,7 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, "download: "+err.Error())
 		return
 	}
-
+	defer reader.Close()
 	sizeString := strconv.FormatUint(size, 10)
 	w.Header().Set("Content-Length", sizeString)
 
@@ -115,5 +115,4 @@ func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", " application/json")
 		jsonhttp.InternalServerError(w, "download: "+err.Error())
 	}
-	_ = reader.Close()
 }

@@ -30,19 +30,19 @@ func (h *Handler) UserStatHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("user stat: invalid cookie: ", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Error("user stat: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "user stat: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "user stat: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	userStat, err := h.dfsAPI.GetUserStat(sessionId)
 	if err != nil {
 		h.logger.Errorf("user stat: %v", err)
-		jsonhttp.InternalServerError(w, "user stat: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user stat: " + err.Error()})
 		return
 	}
 

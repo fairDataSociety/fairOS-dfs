@@ -23,7 +23,7 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("kv export: invalid request body type")
-		jsonhttp.BadRequest(w, "kv export: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: invalid request body type"})
 		return
 	}
 
@@ -32,28 +32,28 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv export: could not decode arguments")
-		jsonhttp.BadRequest(w, "kv export: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: could not decode arguments"})
 		return
 	}
 
 	podName := kvReq.PodName
 	if podName == "" {
 		h.logger.Errorf("kv export: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv export: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv export: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv export: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: \"table_name\" argument missing"})
 		return
 	}
 
 	start := kvReq.StartPrefix
 	if start == "" {
 		h.logger.Errorf("kv export: \"start\" argument missing")
-		jsonhttp.BadRequest(w, "kv export: \"start\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: \"start\" argument missing"})
 		return
 	}
 
@@ -65,13 +65,13 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 	noOfRows, err := strconv.ParseInt(limit, 10, 64)
 	if err != nil {
 		h.logger.Errorf("kv export: invalid limit")
-		jsonhttp.BadRequest(w, "kv export: invalid limit")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: invalid limit"})
 		return
 	}
 
 	if noOfRows > MaxExportLimit {
 		h.logger.Errorf("kv export: maximum limit is %d", MaxExportLimit)
-		jsonhttp.BadRequest(w, fmt.Sprintf("kv export: maximum limit is %d", MaxExportLimit))
+		jsonhttp.BadRequest(w, &response{Message: fmt.Sprintf("kv export: maximum limit is %d", MaxExportLimit)})
 		return
 	}
 
@@ -79,19 +79,19 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv export: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv export: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv export: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	itr, err := h.dfsAPI.KVSeek(sessionId, podName, name, start, end, noOfRows)
 	if err != nil {
 		h.logger.Errorf("kv export: %v", err)
-		jsonhttp.InternalServerError(w, "kv export: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv export: " + err.Error()})
 		return
 	}
 	items := []map[string]interface{}{}

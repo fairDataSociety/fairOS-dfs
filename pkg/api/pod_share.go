@@ -42,7 +42,7 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("pod share: invalid request body type")
-		jsonhttp.BadRequest(w, "pod share: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "pod share: invalid request body type"})
 		return
 	}
 
@@ -51,14 +51,14 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod share: could not decode arguments")
-		jsonhttp.BadRequest(w, "pod share: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "pod share: could not decode arguments"})
 		return
 	}
 
 	pod := podReq.PodName
 	if pod == "" {
 		h.logger.Errorf("pod share: \"pod\" argument missing")
-		jsonhttp.BadRequest(w, "pod share: \"pod\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod share: \"pod\" argument missing"})
 		return
 	}
 
@@ -70,7 +70,7 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	password := podReq.Password
 	if password == "" {
 		h.logger.Errorf("pod share: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "pod share: \"password\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod share: \"password\" argument missing"})
 		return
 	}
 
@@ -78,12 +78,12 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("pod share: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("pod share: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "pod stat: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -93,11 +93,11 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName {
 			h.logger.Errorf("pod share: %v", err)
-			jsonhttp.BadRequest(w, "pod share: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "pod share: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("pod share: %v", err)
-		jsonhttp.InternalServerError(w, "pod share: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "pod share: " + err.Error()})
 		return
 	}
 

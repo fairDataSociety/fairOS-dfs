@@ -104,7 +104,7 @@ func (d *API) KVList(sessionId, podName string) (map[string][]string, error) {
 }
 
 // KVCount does validation checks and calls the count KVtable function.
-func (d *API) KVCount(sessionId, podName, name string) (*collection.KVCount, error) {
+func (d *API) KVCount(sessionId, podName, name string) (*collection.TableKeyCount, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {

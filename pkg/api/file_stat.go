@@ -32,26 +32,26 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("file stat: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "file stat: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"pod_name\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
 		h.logger.Errorf("file stat: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "file stat: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"pod_name\" argument missing"})
 		return
 	}
 
 	keys, ok = r.URL.Query()["file_path"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("file stat: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, "file stat: \"file_path\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"file_path\" argument missing"})
 		return
 	}
 	podFileWithPath := keys[0]
 	if podFileWithPath == "" {
 		h.logger.Errorf("file stat: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, "file stat: \"pod_path_file\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"pod_path_file\" argument missing"})
 		return
 	}
 
@@ -59,12 +59,12 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("file stat: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("file stat: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "file stat: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -73,11 +73,11 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file stat: %v", err)
-			jsonhttp.BadRequest(w, "file stat: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "file stat: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("file stat: %v", err)
-		jsonhttp.InternalServerError(w, "file stat: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "file stat: " + err.Error()})
 		return
 	}
 

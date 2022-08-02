@@ -31,12 +31,12 @@ func (h *Handler) UserLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("user logout: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("user logout: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "user logout: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "user logout: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -45,14 +45,14 @@ func (h *Handler) UserLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == u.ErrUserNotLoggedIn || err == u.ErrInvalidUserName {
 			h.logger.Errorf("user logout: %v", err)
-			jsonhttp.BadRequest(w, "user logout: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "user logout: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("user logout: %v", err)
-		jsonhttp.InternalServerError(w, "user logout: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user logout: " + err.Error()})
 		return
 	}
 
 	cookie.ClearSession(w)
-	jsonhttp.OK(w, "user logged out successfully")
+	jsonhttp.OK(w, &response{Message: "user logged out successfully"})
 }

@@ -17,7 +17,7 @@ func (h *Handler) UserMigrateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("user migrate: invalid request body type")
-		jsonhttp.BadRequest(w, "user migrate: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "user migrate: invalid request body type"})
 		return
 	}
 
@@ -26,14 +26,14 @@ func (h *Handler) UserMigrateHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user migrate: could not decode arguments")
-		jsonhttp.BadRequest(w, "user migrate: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "user migrate: could not decode arguments"})
 		return
 	}
 
 	password := userReq.Password
 	if password == "" {
 		h.logger.Errorf("user migrate: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "user migrate: \"password\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user migrate: \"password\" argument missing"})
 		return
 	}
 
@@ -41,12 +41,12 @@ func (h *Handler) UserMigrateHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("user migrate: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("user migrate: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "user migrate: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "user migrate: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -58,16 +58,16 @@ func (h *Handler) UserMigrateHandler(w http.ResponseWriter, r *http.Request) {
 			err == u.ErrInvalidPassword ||
 			err == u.ErrUserNotLoggedIn {
 			h.logger.Errorf("user migrate: %v", err)
-			jsonhttp.BadRequest(w, "user migrate: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "user migrate: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("user migrate: %v", err)
-		jsonhttp.InternalServerError(w, "user migrate: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user migrate: " + err.Error()})
 		return
 	}
 
 	// clear cookie
 	cookie.ClearSession(w)
 
-	jsonhttp.OK(w, "user migrated successfully")
+	jsonhttp.OK(w, &response{Message: "user migrated successfully"})
 }

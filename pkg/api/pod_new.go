@@ -41,7 +41,7 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("pod new: invalid request body type")
-		jsonhttp.BadRequest(w, "pod new: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: invalid request body type"})
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod new: could not decode arguments")
-		jsonhttp.BadRequest(w, "pod new: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: could not decode arguments"})
 		return
 	}
 
@@ -58,12 +58,12 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	password := podReq.Password
 	if password == "" {
 		h.logger.Errorf("pod new: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "pod new: \"password\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: \"password\" argument missing"})
 		return
 	}
 	if pod == "" {
 		h.logger.Errorf("pod new: \"pod\" argument missing")
-		jsonhttp.BadRequest(w, "pod new: \"pod\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: \"pod\" argument missing"})
 		return
 	}
 
@@ -71,12 +71,12 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("pod new: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("pod new: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "pod new: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -89,13 +89,13 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 			err == p.ErrPodAlreadyExists ||
 			err == p.ErrMaxPodsReached {
 			h.logger.Errorf("pod new: %v", err)
-			jsonhttp.BadRequest(w, "pod new: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "pod new: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("pod new: %v", err)
-		jsonhttp.InternalServerError(w, "pod new: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "pod new: " + err.Error()})
 		return
 	}
 
-	jsonhttp.Created(w, "pod created successfully")
+	jsonhttp.Created(w, &response{Message: "pod created successfully"})
 }

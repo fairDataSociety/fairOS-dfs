@@ -36,7 +36,7 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc indexjson: invalid request body type")
-		jsonhttp.BadRequest(w, "doc indexjson: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: invalid request body type"})
 		return
 	}
 
@@ -45,28 +45,28 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc indexjson: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc indexjson: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: could not decode arguments"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
 		h.logger.Errorf("doc indexjson: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc indexjson: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"pod_name\" argument missing"})
 		return
 	}
 
 	tableName := docReq.TableName
 	if tableName == "" {
 		h.logger.Errorf("doc indexjson: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc indexjson: \"table_ame\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"table_ame\" argument missing"})
 		return
 	}
 
 	podFile := docReq.FileName
 	if podFile == "" {
 		h.logger.Errorf("doc indexjson: \"file_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc indexjson: \"file_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"file_name\" argument missing"})
 		return
 	}
 
@@ -74,12 +74,12 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc indexjson: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc indexjson: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc indexjson: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -87,12 +87,12 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrFileNotPresent {
 			h.logger.Errorf("doc indexjson: %v", err)
-			jsonhttp.BadRequest(w, "doc indexjson: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "doc indexjson: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("doc indexjson: %v", err)
-		jsonhttp.InternalServerError(w, "doc indexjson: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc indexjson: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "indexing started")
+	jsonhttp.OK(w, &response{Message: "indexing started"})
 }

@@ -43,7 +43,7 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("kv seek: invalid request body type")
-		jsonhttp.BadRequest(w, "kv seek: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: invalid request body type"})
 		return
 	}
 
@@ -52,28 +52,28 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv seek: could not decode arguments")
-		jsonhttp.BadRequest(w, "kv seek: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: could not decode arguments"})
 		return
 	}
 
 	podName := kvReq.PodName
 	if podName == "" {
 		h.logger.Errorf("kv seek: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv seek: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv seek: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv seek: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: \"table_name\" argument missing"})
 		return
 	}
 
 	start := kvReq.StartPrefix
 	if start == "" {
 		h.logger.Errorf("kv seek: \"start\" argument missing")
-		jsonhttp.BadRequest(w, "kv seek: \"start\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: \"start\" argument missing"})
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	noOfRows, err := strconv.ParseInt(limit, 10, 64)
 	if err != nil {
 		h.logger.Errorf("kv seek: invalid limit")
-		jsonhttp.BadRequest(w, "kv seek: invalid limit")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: invalid limit"})
 		return
 	}
 
@@ -93,22 +93,22 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv seek: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv seek: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv seek: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	_, err = h.dfsAPI.KVSeek(sessionId, podName, name, start, end, noOfRows)
 	if err != nil {
 		h.logger.Errorf("kv seek: %v", err)
-		jsonhttp.InternalServerError(w, "kv seek: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv seek: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "seeked closest to the start key")
+	jsonhttp.OK(w, &response{Message: "seeked closest to the start key"})
 }
 
 // KVGetNextHandler is the api handler to get the key and value from the current seek position

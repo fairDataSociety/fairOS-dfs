@@ -34,7 +34,7 @@ func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("pod close: invalid request body type")
-		jsonhttp.BadRequest(w, "pod close: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "pod close: invalid request body type"})
 		return
 	}
 
@@ -43,7 +43,7 @@ func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod close: could not decode arguments")
-		jsonhttp.BadRequest(w, "pod close: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "pod close: could not decode arguments"})
 		return
 	}
 	podName := podReq.PodName
@@ -52,12 +52,12 @@ func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("pod close: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("pod close: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "pod close: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "pod close: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -67,12 +67,12 @@ func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
 			h.logger.Errorf("pod close: %v", err)
-			jsonhttp.BadRequest(w, "pod close: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "pod close: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("pod close: %v", err)
-		jsonhttp.InternalServerError(w, "pod close: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "pod close: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "pod closed successfully")
+	jsonhttp.OK(w, &response{Message: "pod closed successfully"})
 }

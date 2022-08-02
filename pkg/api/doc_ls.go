@@ -41,13 +41,13 @@ func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc ls: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"pod_name\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
 		h.logger.Errorf("doc ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc ls: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"pod_name\" argument missing"})
 		return
 	}
 
@@ -55,19 +55,19 @@ func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc ls: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc ls: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc ls: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	collections, err := h.dfsAPI.DocList(sessionId, podName)
 	if err != nil {
 		h.logger.Errorf("doc ls: %v", err)
-		jsonhttp.InternalServerError(w, "doc ls: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc ls: " + err.Error()})
 		return
 	}
 

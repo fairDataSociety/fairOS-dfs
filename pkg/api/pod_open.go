@@ -21,12 +21,10 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
-	"resenje.org/jsonhttp"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"resenje.org/jsonhttp"
 )
 
 type PodOpenResponse struct {
@@ -41,7 +39,7 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("pod open: invalid request body type")
-		jsonhttp.BadRequest(w, "pod open: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "pod open: invalid request body type"})
 		return
 	}
 
@@ -50,7 +48,7 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod open: could not decode arguments")
-		jsonhttp.BadRequest(w, "pod open: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "pod open: could not decode arguments"})
 		return
 	}
 	pod := podReq.PodName
@@ -63,12 +61,12 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("pod open: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("pod open: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "pod open: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "pod open: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -78,13 +76,13 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName {
 			h.logger.Errorf("pod open: %v", err)
-			jsonhttp.NotFound(w, "pod open: "+err.Error())
+			jsonhttp.NotFound(w, &response{Message: "pod open: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("pod open: %v", err)
-		jsonhttp.InternalServerError(w, "pod open: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "pod open: " + err.Error()})
 		return
 	}
 
-	jsonhttp.OK(w, "pod opened successfully")
+	jsonhttp.OK(w, &response{Message: "pod opened successfully"})
 }

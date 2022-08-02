@@ -19,7 +19,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
@@ -36,7 +35,7 @@ func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc count: invalid request body type")
-		jsonhttp.BadRequest(w, "doc count: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: invalid request body type"})
 		return
 	}
 
@@ -45,21 +44,21 @@ func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc count: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc count: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: could not decode arguments"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
 		h.logger.Errorf("doc count: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc count: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc count: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc count: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: \"table_name\" argument missing"})
 		return
 	}
 
@@ -69,21 +68,21 @@ func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc count: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc count: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc count: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	count, err := h.dfsAPI.DocCount(sessionId, podName, name, expr)
 	if err != nil {
 		h.logger.Errorf("doc count: %v", err)
-		jsonhttp.InternalServerError(w, "doc count: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc count: " + err.Error()})
 		return
 	}
 
-	jsonhttp.OK(w, strconv.FormatUint(count, 10))
+	jsonhttp.OK(w, count)
 }
