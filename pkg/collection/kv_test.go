@@ -49,6 +49,26 @@ func TestKeyValueStore(t *testing.T) {
 	user := acc.GetAddress(account.UserAccountIndex)
 	kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 
+	t.Run("table_not_opened", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1314", collection.StringIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _, _, err = kvStore.KVGetNext("kv_table_1314")
+		if !errors.Is(err, collection.ErrKVTableNotOpened) {
+			t.Fatal("open table")
+		}
+		err = kvStore.OpenKVTable("kv_table_1314")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// delete so that they dont show up in other testcases
+		err = kvStore.DeleteKVTable("kv_table_1314")
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("nil_itr", func(t *testing.T) {
 		err := kvStore.CreateKVTable("kv_table_1312", collection.StringIndex)
 		if err != nil {
@@ -909,6 +929,54 @@ func TestKeyValueStore(t *testing.T) {
 		_, _, _, err = kvStore.KVGetNext("kv_table_1313")
 		if !errors.Is(err, collection.ErrNoNextElement) {
 			t.Fatal("found a nonexistent key")
+		}
+	})
+
+	t.Run("err_byte_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1316", collection.BytesIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1316")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.KVPut("kv_table_1316", "key1", []byte("value1"))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1316", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVIndexTypeNotSupported) {
+			t.Fatal("unsupported index")
+		}
+	})
+
+	t.Run("err_list_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1317", collection.ListIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1317")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1317", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVInvalidIndexType) {
+			t.Fatal("invalid index")
+		}
+	})
+
+	t.Run("seek_unopened_table", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1318", collection.ListIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1318", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVTableNotOpened) {
+			t.Fatal("table open")
 		}
 	})
 }
