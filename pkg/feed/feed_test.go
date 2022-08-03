@@ -160,7 +160,7 @@ func TestFeed(t *testing.T) {
 				t.Fatal("invalid update address")
 			}
 			if !bytes.Equal(buf, rcvdData) {
-				t.Fatal(err)
+				t.Fatal("data not matching", buf, rcvdData)
 			}
 			fmt.Println("update ", i, " Done")
 		}
