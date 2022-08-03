@@ -27,12 +27,12 @@ const (
 func (*Users) isUserMappingPresent(userName, dataDir string) bool {
 	destDir := filepath.Join(dataDir, userDirectoryName)
 	err := os.MkdirAll(destDir, 0700)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return false
 	}
 	userFileName := filepath.Join(destDir, userName)
 	info, err := os.Stat(userFileName)
-	if os.IsNotExist(err) {
+	if os.IsNotExist(err) { // skipcq: TCV-001
 		return false
 	}
 	return !info.IsDir()
@@ -41,7 +41,7 @@ func (*Users) isUserMappingPresent(userName, dataDir string) bool {
 func (*Users) storeUserNameToAddressFileMapping(userName, dataDir string, address utils.Address) error {
 	destDir := filepath.Join(dataDir, userDirectoryName)
 	err := os.MkdirAll(destDir, 0700)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	userFileName := filepath.Join(destDir, userName)

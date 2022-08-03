@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -14,6 +15,30 @@ import (
 func TestNew(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
+
+	t.Run("new-user-migrate-invalid-session", func(t *testing.T) {
+		dataDir, err := ioutil.TempDir("", "new")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(dataDir)
+
+		ens := mock2.NewMockNamespaceManager()
+
+		//create user
+		userObject := NewUsers(dataDir, mockClient, ens, logger)
+		username := "user12"
+		password := "password1"
+		_, _, _, err = userObject.CreateNewUser(username, password, "", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = userObject.MigrateUser(username, "", dataDir, password, "asd8989", mockClient, nil)
+		if err == nil {
+			t.Fatalf("invalid sessionId")
+		}
+	})
 
 	t.Run("new-user-migrate", func(t *testing.T) {
 		dataDir, err := ioutil.TempDir("", "new")
@@ -67,6 +92,40 @@ func TestNew(t *testing.T) {
 		}
 		if pi1.GetPodAddress() != pi2.GetPodAddress() {
 			t.Fatalf("pod accounts do not match")
+		}
+	})
+
+	t.Run("new-user-migrate-already-migrated", func(t *testing.T) {
+		dataDir, err := ioutil.TempDir("", "new")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(dataDir)
+
+		ens := mock2.NewMockNamespaceManager()
+
+		//create user
+		userObject := NewUsers(dataDir, mockClient, ens, logger)
+		username := "user14"
+		password := "password1"
+		_, _, ui, err := userObject.CreateNewUser(username, password, "", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = userObject.MigrateUser(username, "", dataDir, password, ui.sessionId, mockClient, ui)
+		if err != nil {
+			t.Fatalf("migrate user: %s", err.Error())
+		}
+
+		_, _, ui, err = userObject.CreateNewUser(username, password, "", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = userObject.MigrateUser(username, "", dataDir, password, ui.sessionId, mockClient, ui)
+		if !errors.Is(err, ErrUserAlreadyPresent) {
+			t.Fatal("user already migrated")
 		}
 	})
 
