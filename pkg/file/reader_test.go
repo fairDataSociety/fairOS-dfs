@@ -167,6 +167,8 @@ func TestFileReader(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		//fmt.Println(buf)
+		//fmt.Println(line)
 		if !bytes.Equal(buf, line) {
 			t.Fatalf("line contents are not same")
 		}
@@ -190,6 +192,8 @@ func TestFileReader(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Println(buf)
+		fmt.Println(line)
 		if !bytes.Equal(buf, line) {
 			t.Fatalf("line contents are not same")
 		}
@@ -214,6 +218,8 @@ func TestFileReader(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Println(buf)
+		fmt.Println(line)
 		if !bytes.Equal(buf, line) {
 			t.Fatalf("line contents are not same")
 		}
@@ -238,6 +244,8 @@ func TestFileReader(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Println(buf)
+		fmt.Println(line)
 		if !bytes.Equal(buf, line) {
 			t.Fatalf("line contents are not same")
 		}
@@ -254,6 +262,8 @@ func TestFileReader(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Println(buf)
+		fmt.Println(line)
 		if !bytes.Equal(buf, line) {
 			t.Fatalf("line contents are not same")
 		}
@@ -336,6 +346,9 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 				t.Fatal(err)
 			}
 			idx := bi.Int64()
+			//fmt.Println("index", idx)
+			//fmt.Println("value", buf[idx])
+			//fmt.Println("new line?", buf[idx] == '\n')
 			if buf[idx] == '\n' {
 				bi, err = rand.Int(rand.Reader, big.NewInt(int64(bytesToWrite)))
 				if err != nil {
@@ -345,7 +358,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			}
 			buf[idx] = '\n'
 		}
-
+		//fmt.Println(buf)
 		if i == 2 {
 			start := false
 			startIndex := 0
@@ -353,6 +366,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			for k, ch := range buf {
 				if ch == '\n' && start {
 					endIndex = k + 1
+					break
 				}
 				if ch == '\n' && !start {
 					startIndex = k + 1
@@ -418,7 +432,6 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 		bytesRemaining -= uint64(bytesToWrite)
 		bytesWritten += int(bytesToWrite)
 	}
-
 	return file.INode{
 		Blocks: fileBlocks,
 	}, randomLineStartPoint, randomLine, borderCrossingLineStartingPoint, borderCrossingLine
