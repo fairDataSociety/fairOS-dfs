@@ -19,6 +19,7 @@ package utils
 import (
 	"bytes"
 	"crypto/rand"
+	"errors"
 	"testing"
 )
 
@@ -54,5 +55,85 @@ func TestChunkLength(t *testing.T) {
 	_, err = NewChunkWithSpan(buf)
 	if err != nil && err.Error() != "max chunk size exceeded" {
 		t.Fatal("error should be \"max chunk size exceeded\"")
+	}
+}
+
+func TestDecode(t *testing.T) {
+	_, err := Decode("")
+	if !errors.Is(err, errEmptyString) {
+		t.Fatal("err should be empty string")
+	}
+
+	addr := "0xhello"
+	_, err = Decode(addr)
+	if err == nil {
+		t.Fatal("err should be \"invalid hex string\"")
+	}
+
+	addr = "0x6F55fbFE6770A6b8d353a14045dc69fF1EFa094c"
+	_, err = Decode(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetRandBytes(t *testing.T) {
+	b1, err := GetRandBytes(10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(b1) != 10 {
+		t.Fatal("b1 length should be 10")
+	}
+	b2, err := GetRandBytes(10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(b2) != 10 {
+		t.Fatal("b2 length should be 10")
+	}
+	if bytes.Equal(b1, b2) {
+		t.Fatal("b1 and b2 should not be same")
+	}
+}
+
+func TestGetRandString(t *testing.T) {
+	s1, err := GetRandString(10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(s1) != 10 {
+		t.Fatal("s1 length should be 10")
+	}
+	s2, err := GetRandString(10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(s2) != 10 {
+		t.Fatal("s2 length should be 10")
+	}
+	if s1 == s2 {
+		t.Fatal("s1 and s2 should not be same")
+	}
+}
+
+func TestCombinePathAndFile(t *testing.T) {
+	root1 := ""
+	root2 := "/root"
+	filename := "test.txt"
+
+	path1 := CombinePathAndFile(root1, filename)
+	if path1 != "/"+filename {
+		t.Fatal("path1 is wrong")
+	}
+
+	path2 := CombinePathAndFile(root2, "")
+	if path2 != root2 {
+		t.Fatal("path2 is wrong")
+	}
+
+	path3 := CombinePathAndFile(root2, filename)
+	if path3 != "/root/test.txt" {
+		t.Fatal("path3 is wrong")
 	}
 }
