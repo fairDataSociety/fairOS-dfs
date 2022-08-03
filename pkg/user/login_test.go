@@ -71,6 +71,10 @@ func TestLogin(t *testing.T) {
 		if ui.GetAccount().GetUserAccountInfo().GetAddress().Hex() != ui2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
 			t.Fatal("got different userinfo")
 		}
+
+		if ui.GetUserDirectory() == nil {
+			t.Fatal("user directory handler should not be nil")
+		}
 	})
 
 }

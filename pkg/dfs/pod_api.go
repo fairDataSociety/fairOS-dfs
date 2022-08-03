@@ -52,6 +52,7 @@ func (d *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error
 	return pi, nil
 }
 
+// DeletePod deletes a pod
 func (d *API) DeletePod(podName, passphrase, sessionId string) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)

@@ -193,6 +193,16 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("file not imported")
 		}
 
+		// delete source pod
+		err = pod1.DeleteOwnPod(podName1)
+		if err != nil {
+			t.Fatalf("error deleting pod %s", podName1)
+		}
+		ui.RemovePodName(podName1)
+		isPodOpen := ui.IsPodOpen(podName1)
+		if isPodOpen {
+			t.Fatalf("pod should have been deleted")
+		}
 	})
 }
 
