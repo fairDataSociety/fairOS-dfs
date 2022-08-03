@@ -88,10 +88,10 @@ func TestFeed(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !bytes.Equal(addr, rcvdAddr) {
-			t.Fatal(err)
+			t.Fatal("addresses do not match")
 		}
 		if !bytes.Equal(data, rcvdData) {
-			t.Fatal(err)
+			t.Fatal("data does not match")
 		}
 	})
 
@@ -163,6 +163,47 @@ func TestFeed(t *testing.T) {
 				t.Fatal("data not matching", buf, rcvdData)
 			}
 			fmt.Println("update ", i, " Done")
+		}
+	})
+
+	t.Run("create-feed-from-topic", func(t *testing.T) {
+		fd := New(accountInfo1, client, logger)
+		topic := utils.HashString("feed-topic1")
+		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+		addr, err := fd.CreateFeedFromTopic(topic, user1, data)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check if the data and address is present and is same as stored
+		rcvdAddr, rcvdData, err := fd.GetFeedDataFromTopic(topic, user1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(addr, rcvdAddr) {
+			t.Fatal("addresses do not match")
+		}
+		if !bytes.Equal(data, rcvdData) {
+			t.Fatal("data does not match")
+		}
+	})
+
+	t.Run("delete-feed-from-topic", func(t *testing.T) {
+		fd := New(accountInfo1, client, logger)
+		topic := utils.HashString("feed-topic1")
+		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+		_, err := fd.CreateFeedFromTopic(topic, user1, data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = fd.DeleteFeedFromTopic(topic, user1)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _, err = fd.GetFeedDataFromTopic(topic, user1)
+		if err != nil && err.Error() != "error downloading data" {
+			t.Fatal("error should be \"error downloading data\"")
 		}
 	})
 }
