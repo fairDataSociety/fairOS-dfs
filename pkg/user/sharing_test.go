@@ -70,7 +70,7 @@ func TestSharing(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		//create source user
 		userObject1 := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject1.CreateNewUserV2("user1", "password1", "", "")
+		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -80,7 +80,7 @@ func TestSharing(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
-		ui.AddPodName(podName1, info1)
+		ui0.AddPodName(podName1, info1)
 
 		// make root dir so that other directories can be added
 		err = info1.GetDirectory().MkRootDir("pod1", info1.GetPodAddress(), info1.GetFeed())
@@ -101,14 +101,14 @@ func TestSharing(t *testing.T) {
 		}
 
 		// share file with another user
-		sharingRefString, err := userObject1.ShareFileWithUser("pod1", "/parentDir1/file1", "user2", ui, pod1, info1.GetPodAddress())
+		sharingRefString, err := userObject1.ShareFileWithUser("pod1", "/parentDir1/file1", "user2", ui0, pod1, info1.GetPodAddress())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		//create destination user
 		userObject2 := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err = userObject2.CreateNewUserV2("user2", "password2", "", "")
+		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password2", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -192,15 +192,16 @@ func TestSharing(t *testing.T) {
 		if files[0] != "/parentDir2/file1" {
 			t.Fatalf("file not imported")
 		}
-
+		if !ui0.IsPodOpen(podName1) {
+			t.Fatalf("pod should be open")
+		}
 		// delete source pod
 		err = pod1.DeleteOwnPod(podName1)
 		if err != nil {
 			t.Fatalf("error deleting pod %s", podName1)
 		}
-		ui.RemovePodName(podName1)
-		isPodOpen := ui.IsPodOpen(podName1)
-		if isPodOpen {
+		ui0.RemovePodName(podName1)
+		if ui0.IsPodOpen(podName1) {
 			t.Fatalf("pod should have been deleted")
 		}
 	})
