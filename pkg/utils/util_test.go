@@ -22,8 +22,7 @@ import (
 	"testing"
 )
 
-func Test_Address(t *testing.T) {
-
+func TestAddress(t *testing.T) {
 	buf := make([]byte, 4096)
 	_, err := rand.Read(buf)
 	if err != nil {
@@ -44,5 +43,16 @@ func Test_Address(t *testing.T) {
 	if !bytes.Equal(refBytes, newRef.Bytes()) {
 		t.Fatalf("bytes are not equal")
 	}
+}
 
+func TestChunkLength(t *testing.T) {
+	buf := make([]byte, 5000)
+	_, err := rand.Read(buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = NewChunkWithSpan(buf)
+	if err != nil && err.Error() != "max chunk size exceeded" {
+		t.Fatal("error should be \"max chunk size exceeded\"")
+	}
 }

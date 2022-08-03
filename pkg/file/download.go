@@ -29,6 +29,9 @@ var (
 	// ErrFileNotPresent denotes file is not present
 	ErrFileNotPresent = errors.New("file not present")
 
+	// ErrFileAlreadyPresent denotes file is present
+	ErrFileAlreadyPresent = errors.New("file already present in the destination dir")
+
 	// ErrFileNotFound denotes file is not found in dfs
 	ErrFileNotFound = errors.New("file not found in dfs")
 )

@@ -18,6 +18,7 @@ package user_test
 
 import (
 	"crypto/rand"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -158,10 +159,20 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("invalid block size received")
 		}
 
+		_, err = userObject2.ReceiveFileFromUser("podName2", sharingRef, ui, pod2, "/parentDir2")
+		if !errors.Is(err, pod.ErrPodNotOpened) {
+			t.Fatal("pod does not supposed tp be open")
+		}
+
 		// receive file
 		destinationFilePath, err := userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2")
 		if err != nil {
 			t.Fatal(err)
+		}
+
+		_, err = userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2")
+		if !errors.Is(err, file.ErrFileAlreadyPresent) {
+			t.Fatal("pod does not supposed tp be open")
 		}
 
 		// verify receive
