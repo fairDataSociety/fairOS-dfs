@@ -40,7 +40,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 
 	// get owner address from Subdomain registrar
 	address, err := u.ens.GetOwner(userName)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, "", "", err
 	}
 	// create account
@@ -48,7 +48,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	accountInfo := acc.GetUserAccountInfo()
 	// load public key from public resolver
 	publicKey, nameHash, err := u.ens.GetInfo(userName)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, "", "", err
 	}
 	pb := crypto.FromECDSAPub(publicKey)
@@ -56,22 +56,22 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	// load encrypted private key
 	fd := feed.New(accountInfo, client, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, "", "", err
 	}
 
 	// decrypt and remove pad from private ley
 	seed, err := accountInfo.RemovePadFromSeed(key, passPhrase)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, "", "", err
 	}
 	// load user account
 	err = acc.LoadUserAccountFromSeed(seed)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, "", "", err
 	}
 
-	if u.IsUserLoggedIn(sessionId) {
+	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
 		return nil, "", "", ErrUserAlreadyLoggedIn
 	}
 
@@ -102,7 +102,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 // to execute user function and stores it in memory.
 func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, sessionId string) (*Info, error) {
 	// check if username is available (user created)
-	if !u.IsUsernameAvailable(userName, dataDir) {
+	if !u.IsUsernameAvailable(userName, dataDir) { // skipcq: TCV-001
 		return nil, ErrInvalidUserName
 	}
 
@@ -112,26 +112,26 @@ func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstor
 
 	// load address from userName
 	address, err := u.getAddressFromUserName(userName, dataDir)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// load encrypted mnemonic from Swarm
 	fd := feed.New(accountInfo, client, u.logger)
 	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, address, fd)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	err = acc.LoadUserAccount(passPhrase, encryptedMnemonic)
-	if err != nil {
-		if err.Error() == "mnemonic is invalid" {
+	if err != nil { // skipcq: TCV-001
+		if err.Error() == "mnemonic is invalid" { // skipcq: TCV-001
 			return nil, ErrInvalidPassword
 		}
 		return nil, err
 	}
 
-	if u.IsUserLoggedIn(sessionId) {
+	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
 		return nil, ErrUserAlreadyLoggedIn
 	}
 	// Instantiate pod, dir & file objects
@@ -166,7 +166,7 @@ func (u *Users) addUserAndSessionToMap(ui *Info) error {
 // Logout removes the user information from all the data structures and clears the cookie.
 func (u *Users) Logout(sessionId string) error {
 	// check if session or user present in map
-	if !u.isUserPresentInMap(sessionId) {
+	if !u.isUserPresentInMap(sessionId) { // skipcq: TCV-001
 		return ErrUserNotLoggedIn
 	}
 
@@ -176,14 +176,17 @@ func (u *Users) Logout(sessionId string) error {
 	return nil
 }
 
+// IsUserLoggedIn checks if the user is logged in from sessionID
 func (u *Users) IsUserLoggedIn(sessionId string) bool {
 	return u.isUserPresentInMap(sessionId)
 }
 
+// GetLoggedInUserInfo returns the user info of the user
 func (u *Users) GetLoggedInUserInfo(sessionId string) *Info {
 	return u.getUserFromMap(sessionId)
 }
 
+// IsUserNameLoggedIn checks if the user is logged in from username
 func (u *Users) IsUserNameLoggedIn(userName string) bool {
 	return u.isUserNameInMap(userName)
 }

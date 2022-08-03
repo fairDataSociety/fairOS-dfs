@@ -16,6 +16,29 @@ func TestNew(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 
+	t.Run("new-user-migrate-invalid-user", func(t *testing.T) {
+		dataDir, err := ioutil.TempDir("", "new")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(dataDir)
+
+		ens := mock2.NewMockNamespaceManager()
+
+		//create user
+		userObject := NewUsers(dataDir, mockClient, ens, logger)
+		username := "user12"
+		password := "password1"
+		_, _, ui, err := userObject.CreateNewUser(username, password, "", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = userObject.MigrateUser("username_not_present", "", dataDir, password, ui.sessionId, mockClient, ui)
+		if !errors.Is(err, ErrInvalidUserName) {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("new-user-migrate-invalid-session", func(t *testing.T) {
 		dataDir, err := ioutil.TempDir("", "new")
 		if err != nil {

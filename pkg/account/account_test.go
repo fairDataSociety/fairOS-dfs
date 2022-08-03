@@ -24,10 +24,9 @@ import (
 	"strings"
 	"testing"
 
-	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
 
 func TestAccount_CreateRootAccount(t *testing.T) {
