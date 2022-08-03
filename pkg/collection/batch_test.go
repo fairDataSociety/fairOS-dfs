@@ -77,7 +77,7 @@ func TestBatchIndex(t *testing.T) {
 		}
 	})
 
-	t.Run("batch-add-del-docs", func(t *testing.T) {
+	t.Run("batch-add-docs", func(t *testing.T) {
 		// create a DB and open it
 		index := createAndOpenIndex(t, "pod1", "testdb_batch_1", collection.StringIndex, fd, user, mockClient, ai, logger)
 
@@ -111,6 +111,51 @@ func TestBatchIndex(t *testing.T) {
 
 		if len(batchDocs) != count {
 			t.Fatalf("number of elements mismatch in iteration")
+		}
+	})
+
+	t.Run("batch-add-del-docs", func(t *testing.T) {
+		// create a DB and open it
+		index := createAndOpenIndex(t, "pod1", "testdb_batch_2", collection.StringIndex, fd, user, mockClient, ai, logger)
+
+		// batch load and delete
+		batch, err := collection.NewBatch(index)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = addBatchDocs(t, batch, mockClient)
+		_, err = batch.Write("")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create the iterator
+		itr, err := index.NewStringIterator("", "", 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// iterate through the keys and check for the values returned
+		for itr.Next() {
+			_, err = batch.Del(itr.StringKey())
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		_, err = batch.Write("")
+		if err != nil {
+			t.Fatal(err)
+		}
+		index2, err := collection.OpenIndex("pod1", "testdb_batch_2", "key", fd, ai, user, mockClient, logger)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create the iterator
+		itr2, err := index2.NewStringIterator("", "", 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if itr2.Next() {
+			t.Fatal("should be not element")
 		}
 	})
 }

@@ -313,6 +313,9 @@ func (itr *Iterator) nextStringKey() bool {
 
 	entriesExhausted := true
 	for entriesExhausted {
+		if manifestState.currentManifest == nil {
+			return false
+		}
 		// see if we have exhausted the entries in the current Manifest
 		if manifestState.currentIndex >= len(manifestState.currentManifest.Entries) {
 			// pop the exhausted Manifest from the top and pick the next Manifest to find the entry
