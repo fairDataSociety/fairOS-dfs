@@ -36,7 +36,7 @@ func NewSharingReference(b []byte, n int64) SharingReference {
 
 // ParseSharingReference creates a SharingReference from a SharingReference string
 func ParseSharingReference(s string) (a SharingReference, err error) {
-	refLen := ReferenceLength * 2
+	refLen := referenceLength * 2
 	timeLen := len(strconv.FormatInt(time.Now().Unix(), 10))
 	if len(s) > refLen+timeLen { // skipcq: TCV-001
 		refLen = encryptedRefLength * 2
