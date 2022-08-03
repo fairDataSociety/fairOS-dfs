@@ -22,7 +22,7 @@ import (
 
 // IsDirInodeRoot check if the node is root dir
 func (in *Inode) IsDirInodeRoot() bool {
-	return in.Meta.Path == utils.PathSeparator
+	return in.Meta.Name == utils.PathSeparator
 }
 
 // GetDirInodePathAndNameForRoot returns full path of the root node
@@ -32,6 +32,9 @@ func (in *Inode) GetDirInodePathAndNameForRoot() string {
 
 // GetDirInodePathAndName returns full path of the node from root
 func (in *Inode) GetDirInodePathAndName() string {
+	if in.Meta.Path == "" {
+		return in.Meta.Name
+	}
 	return in.Meta.Path + utils.PathSeparator + in.Meta.Name
 }
 

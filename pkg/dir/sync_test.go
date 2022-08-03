@@ -26,6 +26,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestSync(t *testing.T) {
@@ -75,8 +76,34 @@ func TestSync(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		dirObject2 := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		if dirObject2.GetDirFromDirectoryMap("/") != nil {
+			t.Fatal("it should be nil before sync")
+		}
+		err = dirObject2.SyncDirectory("/")
+		if err != nil {
+			t.Fatal(err)
+		}
+		node := dirObject2.GetDirFromDirectoryMap("/")
+		if node.GetDirInodePathAndNameForRoot() != utils.PathSeparator {
+			t.Fatal("node is root node")
+		}
+		if node.GetDirInodePathAndName() != utils.PathSeparator {
+			t.Fatal("node is root node")
+		}
+		if !node.IsDirInodeRoot() {
+			t.Fatal("node is root node")
+		}
 
-		// sync the directory
-		// TODO: finish the test after pod test is over
+		node2 := dirObject2.GetDirFromDirectoryMap("/dirToStat")
+		if node2.GetDirInodePathAndNameForRoot() == utils.PathSeparator {
+			t.Fatal("node2 is not root node")
+		}
+		if node2.IsDirInodeRoot() {
+			t.Fatal("node2 is not root node")
+		}
+		if node2.GetDirInodePathOnly() != "/" {
+			t.Fatal("node2 path is not \"/\"")
+		}
 	})
 }
