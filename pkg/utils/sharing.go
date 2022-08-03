@@ -23,15 +23,18 @@ import (
 	"time"
 )
 
+// SharingReference is used for sharing files
 type SharingReference struct {
 	r []byte
 	n int64
 }
 
+// NewSharingReference creates a reference from swarm reference and time
 func NewSharingReference(b []byte, n int64) SharingReference {
 	return SharingReference{r: b, n: n}
 }
 
+// ParseSharingReference creates a SharingReference from a SharingReference string
 func ParseSharingReference(s string) (a SharingReference, err error) {
 	refLen := ReferenceLength * 2
 	timeLen := len(strconv.FormatInt(time.Now().Unix(), 10))

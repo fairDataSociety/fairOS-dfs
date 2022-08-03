@@ -93,7 +93,7 @@ func TestDecode(t *testing.T) {
 		t.Fatal("err should be odd length")
 	}
 
-	addr = "0x6F55fbFE6770A6b8d353a14045dc69fF1EFa094c"
+	addr = "0x6F55fbFE6770A6b8d353a14045dc69fF1EFa094b"
 	_, err = Decode(addr)
 	if err != nil {
 		t.Fatal(err)
