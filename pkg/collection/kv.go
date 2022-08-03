@@ -354,13 +354,14 @@ func (kv *KeyValue) KVGetNext(name string) ([]string, string, []byte, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
-		if kv.iterator != nil {
-			ok := kv.iterator.Next()
-			if !ok {
-				return nil, "", nil, ErrNoNextElement
-			}
-			return table.columns, kv.iterator.StringKey(), kv.iterator.Value(), nil
+		if kv.iterator == nil {
+			return nil, "", nil, ErrKVNilIterator
 		}
+		ok := kv.iterator.Next()
+		if !ok {
+			return nil, "", nil, ErrNoNextElement
+		}
+		return table.columns, kv.iterator.StringKey(), kv.iterator.Value(), nil
 	}
 	return nil, "", nil, ErrKVTableNotOpened
 }
