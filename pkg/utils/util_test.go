@@ -46,7 +46,7 @@ func TestAddress(t *testing.T) {
 	}
 }
 
-func TestChunkLength(t *testing.T) {
+func TestChunkLengthWithSpan(t *testing.T) {
 	buf := make([]byte, 5000)
 	_, err := rand.Read(buf)
 	if err != nil {
@@ -58,16 +58,39 @@ func TestChunkLength(t *testing.T) {
 	}
 }
 
+func TestChunkLengthWithoutSpan(t *testing.T) {
+	buf := make([]byte, 6000)
+	_, err := rand.Read(buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = NewChunkWithoutSpan(buf)
+	if err != nil && err.Error() != "max chunk size exceeded" {
+		t.Fatal("error should be \"max chunk size exceeded\"")
+	}
+}
+
 func TestDecode(t *testing.T) {
 	_, err := Decode("")
 	if !errors.Is(err, errEmptyString) {
 		t.Fatal("err should be empty string")
 	}
 
+	_, err = Decode("hello")
+	if !errors.Is(err, errMissingPrefix) {
+		t.Fatal("err should be missing prefix")
+	}
+
 	addr := "0xhello"
 	_, err = Decode(addr)
 	if err == nil {
 		t.Fatal("err should be \"invalid hex string\"")
+	}
+
+	addr = "0x6F55fbFE6770A6b8d353a14045dc69fF1EF"
+	_, err = Decode(addr)
+	if err != nil && err.Error() != errOddLength.Error() {
+		t.Fatal("err should be odd length")
 	}
 
 	addr = "0x6F55fbFE6770A6b8d353a14045dc69fF1EFa094c"

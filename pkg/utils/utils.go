@@ -66,6 +66,7 @@ var (
 )
 
 // Encode encodes b as a hex string with 0x prefix.
+// skipcq: TCV-001
 func Encode(b []byte) string {
 	enc := make([]byte, len(b)*2)
 	hex.Encode(enc, b)
@@ -106,23 +107,25 @@ func mapError(err error) error {
 	if err == hex.ErrLength {
 		return errOddLength
 	}
-	return err
+	return err // skipcq: TCV-001
 }
 
+// skipcq: TCV-001
 func hashFunc() hash.Hash {
 	return sha3.NewLegacyKeccak256()
 }
 
 // HashString returns the bmt hash of a string
+// skipcq: TCV-001
 func HashString(path string) []byte {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	hasher := bmtlegacy.New(p)
 	hasher.Reset()
 	_, err := hasher.Write([]byte(path))
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return []byte{0}
 	}
-	return hasher.Sum(nil)
+	return hasher.Sum(nil) // skipcq: TCV-001
 }
 
 // NewChunkWithSpan returns a chunk with span
@@ -165,7 +168,7 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 	// execute hash, compare and return result
 	hasher.SetHeader(data[:swarm.SpanSize])
 	_, err := hasher.Write(data[swarm.SpanSize:])
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	s := hasher.Sum(nil)
@@ -198,7 +201,7 @@ func GetRandString(n int) (string, error) {
 	b := make([]byte, n)
 	for i := range b {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterBytes))))
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return "", err
 		}
 		b[i] = letterBytes[num.Int64()]
@@ -211,7 +214,7 @@ func GetRandBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	for i := range b {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterBytes))))
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		b[i] = letterBytes[num.Int64()]
