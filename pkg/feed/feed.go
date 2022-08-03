@@ -49,7 +49,7 @@ func (f *Feed) mapKey() (uint64, error) {
 		return 0, err
 	}
 	sumHash := hasher.Sum(nil)
-	return *(*uint64)(unsafe.Pointer(&sumHash[0])), nil
+	return *(*uint64)(unsafe.Pointer(&sumHash[0])), nil // skipcq: GSC-G103
 }
 
 // binaryPut serializes this feed instance into the provided slice

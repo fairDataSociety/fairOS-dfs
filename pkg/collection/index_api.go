@@ -143,7 +143,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 			if apnd {
 				refs = entry.Ref
 			}
-			entry.Ref = append(refs, value)
+			entry.Ref = append(refs, value) // skipcq: CRT-D0001
 			manifest.dirtyFlag = true
 			entryAdded = true
 			break

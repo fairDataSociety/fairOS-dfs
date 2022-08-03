@@ -149,7 +149,7 @@ func NewChunkWithSpan(data []byte) (swarm.Chunk, error) {
 	}
 	s := hasher.Sum(nil)
 
-	payload := append(spanBytes, data...)
+	payload := append(spanBytes, data...) // skipcq: CRT-D0001
 	address := swarm.NewAddress(s)
 	return swarm.NewChunk(address, payload), nil
 }
