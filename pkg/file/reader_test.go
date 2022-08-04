@@ -33,6 +33,95 @@ import (
 func TestFileReader(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 
+	t.Run("read-entire-file-shorter-than-block", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+		fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(10, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		outputBytes := make([]byte, 3)
+		n, err := reader.Read(outputBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != 3 {
+			t.Fatal("file not read properly")
+		}
+	})
+
+	t.Run("read-entire-file-shorter-than-block-2", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+		fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(10, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		outputBytes := make([]byte, 10)
+		_, err = reader.Read(outputBytes)
+		if !errors.Is(err, io.EOF) {
+			t.Fatal("should be EOF")
+		}
+	})
+
+	t.Run("read-entire-file-shorter-than-block-3", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+		fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(10, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		outputBytes := make([]byte, 5)
+		n, err := reader.Read(outputBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != 5 {
+			t.Fatal("file not read properly")
+		}
+	})
+
+	t.Run("read-seek", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+		fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(16, 0)
+		if !errors.Is(err, file.ErrInvalidOffset) {
+			t.Fatal("offset is invalid")
+		}
+	})
+
+	t.Run("read-seek-offset-zero", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+		fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(0, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		outputBytes := make([]byte, 15)
+		n, err := reader.Read(outputBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != 15 {
+			t.Fatal("file not read properly")
+		}
+	})
+
 	t.Run("read-entire-file", func(t *testing.T) {
 		fileSize := uint64(100)
 		blockSize := uint32(10)
