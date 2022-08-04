@@ -50,6 +50,11 @@ func TestFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		longTopic := append(topic, topic...)
+		_, _, err = fd.GetFeedData(longTopic, user1)
+		if !errors.Is(err, ErrInvalidTopicSize) {
+			t.Fatal("invalid topic size")
+		}
 
 		// check if the data and address is present and is same as stored
 		rcvdAddr, rcvdData, err := fd.GetFeedData(topic, user1)
@@ -176,6 +181,11 @@ func TestFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		longTopic := append(topic, topic...)
+		_, _, err = fd.GetFeedDataFromTopic(longTopic, user1)
+		if !errors.Is(err, ErrInvalidTopicSize) {
+			t.Fatal("invalid topic size")
+		}
 
 		// check if the data and address is present and is same as stored
 		rcvdAddr, rcvdData, err := fd.GetFeedDataFromTopic(topic, user1)
@@ -209,10 +219,74 @@ func TestFeed(t *testing.T) {
 		}
 	})
 
-	t.Run("feed-update-errors", func(t *testing.T) {
+	t.Run("create-feed-errors", func(t *testing.T) {
+		nilFd := New(&account.Info{}, client, logger)
+
 		fd := New(accountInfo1, client, logger)
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+		_, err = nilFd.CreateFeed(topic, user1, data)
+		if !errors.Is(err, ErrReadOnlyFeed) {
+			t.Fatal("read only feed")
+		}
+
+		longTopic := append(topic, topic...)
+		_, err = fd.CreateFeed(longTopic, user1, data)
+		if !errors.Is(err, ErrInvalidTopicSize) {
+			t.Fatal("invalid topic size")
+		}
+
+		longData, err := utils.GetRandBytes(5000)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = fd.CreateFeed(topic, user1, longData)
+		if !errors.Is(err, ErrInvalidPayloadSize) {
+			t.Fatal("invalid payload size")
+		}
+	})
+
+	t.Run("create-feed-from-topic-errors", func(t *testing.T) {
+		nilFd := New(&account.Info{}, client, logger)
+
+		fd := New(accountInfo1, client, logger)
+		topic := utils.HashString("feed-topic1")
+		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+		_, err = nilFd.CreateFeedFromTopic(topic, user1, data)
+		if !errors.Is(err, ErrReadOnlyFeed) {
+			t.Fatal("read only feed")
+		}
+
+		longTopic := append(topic, topic...)
+		_, err = fd.CreateFeedFromTopic(longTopic, user1, data)
+		if !errors.Is(err, ErrInvalidTopicSize) {
+			t.Fatal("invalid topic size")
+		}
+
+		longData, err := utils.GetRandBytes(5000)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = fd.CreateFeedFromTopic(topic, user1, longData)
+		if !errors.Is(err, ErrInvalidPayloadSize) {
+			t.Fatal("invalid payload size")
+		}
+	})
+
+	t.Run("feed-update-errors", func(t *testing.T) {
+		nilFd := New(&account.Info{}, client, logger)
+
+		fd := New(accountInfo1, client, logger)
+		topic := utils.HashString("feed-topic1")
+		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+		_, err = nilFd.UpdateFeed(topic, user1, data)
+		if !errors.Is(err, ErrReadOnlyFeed) {
+			t.Fatal("read only feed")
+		}
+
 		longTopic := append(topic, topic...)
 		_, err = fd.UpdateFeed(longTopic, user1, data)
 		if !errors.Is(err, ErrInvalidTopicSize) {
@@ -226,6 +300,38 @@ func TestFeed(t *testing.T) {
 		_, err = fd.UpdateFeed(topic, user1, longData)
 		if !errors.Is(err, ErrInvalidPayloadSize) {
 			t.Fatal("invalid payload size")
+		}
+	})
+
+	t.Run("feed-delete-errors", func(t *testing.T) {
+		nilFd := New(&account.Info{}, client, logger)
+
+		fd := New(accountInfo1, client, logger)
+		topic := utils.HashString("feed-topic1")
+		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+		err = nilFd.DeleteFeed(topic, user1)
+		if !errors.Is(err, ErrReadOnlyFeed) {
+			t.Fatal("read only feed")
+		}
+
+		_, err = fd.CreateFeed(topic, user1, data)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = fd.DeleteFeed(topic, user1)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("feed-from-topic-delete-errors", func(t *testing.T) {
+		nilFd := New(&account.Info{}, client, logger)
+		topic := utils.HashString("feed-topic1")
+		err = nilFd.DeleteFeedFromTopic(topic, user1)
+		if !errors.Is(err, ErrReadOnlyFeed) {
+			t.Fatal("read only feed")
 		}
 	})
 }
