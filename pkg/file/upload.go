@@ -33,7 +33,7 @@ import (
 )
 
 var (
-	NoOfParallelWorkers = runtime.NumCPU()
+	noOfParallelWorkers = runtime.NumCPU()
 )
 
 // Upload uploads a given blob of bytes as a file in the pod. It also splits the file into number of blocks. the
@@ -60,7 +60,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	i := 0
 	errC := make(chan error)
 	doneC := make(chan bool)
-	worker := make(chan bool, NoOfParallelWorkers)
+	worker := make(chan bool, noOfParallelWorkers)
 	var wg sync.WaitGroup
 	refMap := make(map[int]*BlockInfo)
 	refMapMu := sync.RWMutex{}

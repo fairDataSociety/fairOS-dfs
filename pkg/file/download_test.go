@@ -52,6 +52,15 @@ func TestDownload(t *testing.T) {
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
 
+		// file existent check
+		podFile := utils.CombinePathAndFile(filePath, fileName)
+		if fileObject.IsFileAlreadyPresent(podFile) {
+			t.Fatal("file should not be present")
+		}
+		_, _, err = fileObject.Download(podFile)
+		if err == nil {
+			t.Fatal("file should not be present for download")
+		}
 		// upload a file
 		content, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
 		if err != nil {
@@ -59,7 +68,6 @@ func TestDownload(t *testing.T) {
 		}
 
 		// Download the file and read from reader
-		podFile := utils.CombinePathAndFile(filePath, fileName)
 		reader, rcvdSize, err := fileObject.Download(podFile)
 		if err != nil {
 			t.Fatal(err)

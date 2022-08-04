@@ -76,6 +76,23 @@ func TestUpload(t *testing.T) {
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
 		}
+
+		err := fileObject.LoadFileMeta(filePath + "/" + fileName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = fileObject.LoadFileMeta(filePath + "/asd" + fileName)
+		if err == nil {
+			t.Fatal("local file meta should fail")
+		}
+
+		meat2, err := fileObject.BackupFromFileName(filePath + "/" + fileName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if meta.Name == meat2.Name {
+			t.Fatal("name should not be same after backup")
+		}
 	})
 
 	t.Run("upload-small-file-at-root", func(t *testing.T) {
@@ -174,6 +191,13 @@ func TestUpload(t *testing.T) {
 		}
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
+		}
+
+		fileObject.RemoveAllFromFileMap()
+
+		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		if meta2 != nil {
+			t.Fatal("meta2 should be nil")
 		}
 	})
 }
