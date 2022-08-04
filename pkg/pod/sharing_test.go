@@ -17,7 +17,6 @@ limitations under the License.
 package pod_test
 
 import (
-	"fmt"
 	"io"
 	"testing"
 
@@ -209,12 +208,28 @@ func TestShare(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName3)
 		}
-		_, err = pod4.CreatePod(podName4, "password4", "")
+		_, err = pod4.GetAccountInfo(podName4)
+		if err == nil {
+			t.Fatalf("GetAccountInfo for pod4 should fail")
+		}
+
+		pi4, err := pod4.CreatePod(podName4, "password4", "")
 		if err != nil {
-			fmt.Println(err)
 			t.Fatalf("error creating pod %s", podName4)
 		}
 
+		pod4Present := pod4.IsPodPresent(podName4)
+		if !pod4Present {
+			t.Fatal("pod4 should be present")
+		}
+
+		pi, err := pod4.GetAccountInfo(podName4)
+		if err != nil {
+			t.Fatalf("error getting info of pod %s", podName4)
+		}
+		if pi.GetAddress() != pi4.GetAccountInfo().GetAddress() {
+			t.Fatalf("pod4 address does not match")
+		}
 		// make root dir so that other directories can be added
 		err = info.GetDirectory().MkRootDir("", info.GetPodAddress(), info.GetFeed())
 		if err != nil {
@@ -239,7 +254,10 @@ func TestShare(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		pod3Present := pod4.IsPodPresent(podName3)
+		if !pod3Present {
+			t.Fatal("pod3 should be present")
+		}
 		// verify the pod info
 		if podInfo == nil {
 			t.Fatalf("could not receive sharing info")

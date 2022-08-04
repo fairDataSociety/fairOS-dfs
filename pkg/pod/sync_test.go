@@ -41,6 +41,11 @@ func TestSync(t *testing.T) {
 	podName1 := "test1"
 
 	t.Run("sync-pod", func(t *testing.T) {
+
+		err := pod1.SyncPod(podName1)
+		if err == nil {
+			t.Fatal("sync should fail, pod not opened")
+		}
 		// create a pod
 		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {

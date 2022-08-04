@@ -18,9 +18,10 @@ package user
 
 // DeleteUser deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
 // data structures.
+// skipcq: TCV-001
 func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *Info) error {
 	// check if session id and user address present in map
-	if !u.IsUserLoggedIn(sessionId) {
+	if !u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
 		return ErrUserNotLoggedIn
 	}
 

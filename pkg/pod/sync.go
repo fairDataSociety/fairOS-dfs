@@ -29,7 +29,7 @@ func (p *Pod) SyncPod(podName string) error {
 	}
 
 	podInfo, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 

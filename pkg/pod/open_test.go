@@ -125,6 +125,15 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	node := dirObject.GetDirFromDirectoryMap("/parentDir")
+	if pod1.GetName(node) != "parentDir" {
+		t.Fatal("dir name mismatch in pod")
+	}
+	if pod1.GetPath(node) != "/" {
+		t.Fatal("dir path mismatch in pod")
+	}
+
 	// populate the directory with few directory and files
 	err = dirObject.MkDir("/parentDir/subDir1")
 	if err != nil {
