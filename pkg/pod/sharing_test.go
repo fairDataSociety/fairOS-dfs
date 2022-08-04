@@ -86,6 +86,10 @@ func TestShare(t *testing.T) {
 	podName6 := "test6"
 
 	t.Run("share-pod", func(t *testing.T) {
+		_, err := pod1.PodShare(podName1, "", "password")
+		if err == nil {
+			t.Fatal("pod share should fail, not exists")
+		}
 		// create a pod
 		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
@@ -222,7 +226,10 @@ func TestShare(t *testing.T) {
 		if !pod4Present {
 			t.Fatal("pod4 should be present")
 		}
-
+		pod5Present := pod4.IsPodPresent(podName5)
+		if pod5Present {
+			t.Fatal("pod5 should not be present")
+		}
 		pi, err := pod4.GetAccountInfo(podName4)
 		if err != nil {
 			t.Fatalf("error getting info of pod %s", podName4)
@@ -257,6 +264,14 @@ func TestShare(t *testing.T) {
 		pod3Present := pod4.IsPodPresent(podName3)
 		if !pod3Present {
 			t.Fatal("pod3 should be present")
+		}
+
+		podInfo2, err := pod4.OpenPod(podName3, "password4")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if podInfo.GetPodName() != podInfo2.GetPodName() {
+			t.Fatal("pod infos do not match")
 		}
 		// verify the pod info
 		if podInfo == nil {

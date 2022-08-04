@@ -119,7 +119,7 @@ func (*Pod) getIndex(pods map[int]string, podName string) int {
 			return index
 		}
 	}
-	return -1
+	return -1 // skipcq: TCV-001
 }
 
 func (*Pod) getAddress(sharedPods map[string]string, podName string) string {

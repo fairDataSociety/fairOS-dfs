@@ -42,7 +42,7 @@ func (p *Pod) IsPodPresent(podName string) bool {
 	}
 	// check if pods is present and get free index
 	pods, sharedPods, err := p.loadUserPods()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return false
 	}
 	if p.checkIfPodPresent(pods, podName) {
@@ -59,7 +59,7 @@ func (*Pod) GetPath(inode *d.Inode) string {
 	if inode != nil {
 		return inode.Meta.Path
 	}
-	return ""
+	return "" // skipcq: TCV-001
 }
 
 // GetName returns the name of the node in a pod
@@ -67,7 +67,7 @@ func (*Pod) GetName(inode *d.Inode) string {
 	if inode != nil {
 		return inode.Meta.Name
 	}
-	return ""
+	return "" // skipcq: TCV-001
 }
 
 // GetAccountInfo returns the pod account info

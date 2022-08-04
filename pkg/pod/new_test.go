@@ -45,6 +45,11 @@ func TestNew(t *testing.T) {
 	podName1 := "test1"
 	podName2 := "test2"
 	t.Run("create-first-pod", func(t *testing.T) {
+		podPresent := pod1.IsPodPresent("")
+		if podPresent {
+			t.Fatal("blank podname should not be present")
+		}
+
 		// check too long pod name
 		randomLongPOdName, err := utils.GetRandString(26)
 		if err != nil {
@@ -53,6 +58,10 @@ func TestNew(t *testing.T) {
 		_, err = pod1.CreatePod(randomLongPOdName, "password", "")
 		if !errors.Is(err, pod.ErrTooLongPodName) {
 			t.Fatalf("error creating pod %s", podName1)
+		}
+		pod1Present := pod1.IsPodPresent(randomLongPOdName)
+		if pod1Present {
+			t.Fatal("pod1 should not be present")
 		}
 		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {

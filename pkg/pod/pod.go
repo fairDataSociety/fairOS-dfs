@@ -52,10 +52,6 @@ func NewPod(client blockstore.Client, feed *feed.API, account *account.Account, 
 	}
 }
 
-func (p *Pod) GetClient() blockstore.Client {
-	return p.client
-}
-
 func (p *Pod) addPodToPodMap(podName string, podInfo *Info) {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()

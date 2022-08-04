@@ -20,7 +20,7 @@ package pod
 // of files and directories of the pod.
 func (p *Pod) SyncPod(podName string) error {
 	podName, err := cleanPodName(podName)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
