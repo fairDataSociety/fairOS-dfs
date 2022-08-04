@@ -35,7 +35,7 @@ import (
 func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	// check if pods is present and get the index of the pod
 	pods, sharedPods, err := p.loadUserPods()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
@@ -55,7 +55,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	var user utils.Address
 	if sharedPodType {
 		addressString := p.getAddress(sharedPods, podName)
-		if addressString == "" {
+		if addressString == "" { // skipcq: TCV-001
 			return nil, fmt.Errorf("shared pod does not exist")
 		}
 
@@ -77,7 +77,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		// Create pod account and other data structures
 		// create a child account for the userAddress and other data structures for the pod
 		accountInfo, err = p.acc.CreatePodAccount(index, passPhrase, false)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 
@@ -107,7 +107,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 
 	// sync the pod's files and directories
 	err = p.SyncPod(podName)
-	if err != nil && err != d.ErrResourceDeleted {
+	if err != nil && err != d.ErrResourceDeleted { // skipcq: TCV-001
 		return nil, err
 	}
 	return podInfo, nil

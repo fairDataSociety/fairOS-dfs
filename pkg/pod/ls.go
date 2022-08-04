@@ -19,7 +19,7 @@ package pod
 // ListPods List all the available pods belonging to a user.
 func (p *Pod) ListPods() ([]string, []string, error) {
 	pods, sharedPods, err := p.loadUserPods()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, nil, err
 	}
 

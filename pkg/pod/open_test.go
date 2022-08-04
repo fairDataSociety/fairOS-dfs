@@ -18,6 +18,7 @@ package pod_test
 
 import (
 	"crypto/rand"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -45,6 +46,12 @@ func TestOpen(t *testing.T) {
 	podName1 := "test1"
 
 	t.Run("open-pod", func(t *testing.T) {
+		// open non existent the pod
+		_, err := pod1.OpenPod(podName1, "password")
+		if !errors.Is(err, pod.ErrInvalidPodName) {
+			t.Fatal("pod should not be present")
+		}
+
 		// create a pod
 		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {

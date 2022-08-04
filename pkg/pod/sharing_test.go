@@ -17,6 +17,7 @@ limitations under the License.
 package pod_test
 
 import (
+	"errors"
 	"io"
 	"testing"
 
@@ -296,6 +297,23 @@ func TestShare(t *testing.T) {
 		}
 		if len(sharedPods) != 1 && sharedPods[0] != podName4 {
 			t.Fatalf("invalid pod name")
+		}
+
+		_, err = pod4.CreatePod(podName4, "", ref.String())
+		if !errors.Is(err, pod.ErrPodAlreadyExists) {
+			t.Fatal("pod should exist")
+		}
+		_, err = pod4.CreatePod(podName3, "", ref.String())
+		if !errors.Is(err, pod.ErrPodAlreadyExists) {
+			t.Fatal("shared pod should exist")
+		}
+		_, err = pod4.CreatePod(podName4, "password4", "")
+		if !errors.Is(err, pod.ErrPodAlreadyExists) {
+			t.Fatal("pod should exist")
+		}
+		_, err = pod4.CreatePod(podName3, "password4", "")
+		if !errors.Is(err, pod.ErrPodAlreadyExists) {
+			t.Fatal("shared pod should exist")
 		}
 	})
 
