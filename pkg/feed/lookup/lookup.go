@@ -73,6 +73,7 @@ func getBaseTime(t uint64, level uint8) uint64 {
 }
 
 // Hint creates a hint based only on the last known update time
+// skipcq: TCV-001
 func Hint(last uint64) Epoch {
 	return Epoch{
 		Time:  last,

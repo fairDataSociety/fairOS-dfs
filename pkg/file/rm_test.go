@@ -82,6 +82,10 @@ func TestRemoveFile(t *testing.T) {
 		if meta.Name != "file1" {
 			t.Fatalf("retrieved invalid file name")
 		}
+		err := fileObject.LoadFileMeta(utils.CombinePathAndFile("/dir1", "file1"))
+		if err != nil {
+			t.Fatal("loading deleted file meta should be nil")
+		}
 	})
 
 	t.Run("delete-file-in-loop", func(t *testing.T) {
