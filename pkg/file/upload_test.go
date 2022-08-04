@@ -200,6 +200,46 @@ func TestUpload(t *testing.T) {
 			t.Fatal("meta2 should be nil")
 		}
 	})
+
+	t.Run("upload-small-file-at-root-with-prefix-snappy", func(t *testing.T) {
+		filePath := string(os.PathSeparator)
+		fileName := "file2"
+		compression := "snappy"
+		fileSize := int64(100)
+		blockSize := uint32(10)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check for meta
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		if meta == nil {
+			t.Fatalf("file not added in file map")
+		}
+
+		// validate meta items
+		if meta.Path != filePath {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(fileSize) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
+
+		fileObject.RemoveAllFromFileMap()
+
+		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		if meta2 != nil {
+			t.Fatal("meta2 should be nil")
+		}
+	})
 }
 
 func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {

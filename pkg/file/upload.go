@@ -69,7 +69,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	go func() {
 		var mainErr error
 		for {
-			if mainErr != nil {
+			if mainErr != nil { // skipcq: TCV-001
 				errC <- mainErr
 				wg.Done()
 				return
@@ -79,21 +79,21 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 			totalLength += uint64(r)
 			if err != nil {
 				if err == io.EOF {
-					if totalLength < uint64(fileSize) {
+					if totalLength < uint64(fileSize) { // skipcq: TCV-001
 						errC <- fmt.Errorf("invalid file length of file data received")
 						return
 					}
 					wg.Done()
 					break
 				}
-				errC <- err
+				errC <- err // skipcq: TCV-001
 				return
 			}
 
 			// determine the content type from the first 512 bytes of the file
 			if len(contentBytes) < 512 {
 				contentBytes = append(contentBytes, data[:r]...)
-				if len(contentBytes) >= 512 {
+				if len(contentBytes) >= 512 { // skipcq: TCV-001
 					cBytes := bytes.NewReader(contentBytes[:512])
 					cReader := bufio.NewReader(cBytes)
 					meta.ContentType = f.getContentType(cReader)
@@ -107,7 +107,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 				defer func() {
 					<-worker
 					wg.Done()
-					if mainErr != nil {
+					if mainErr != nil { // skipcq: TCV-001
 						f.logger.Error("failed uploading block ", blockName)
 						return
 					}
