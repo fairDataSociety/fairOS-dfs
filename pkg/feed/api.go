@@ -119,7 +119,7 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
 	ch, err := utils.NewChunkWithSpan(data)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	s := soc.New(id, ch)
@@ -130,13 +130,13 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 
 	// generate the data to sign
 	toSignBytes, err := toSignDigest(id, ch.Address().Bytes())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// sign the chunk
 	signature, err := signer.Sign(toSignBytes)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
@@ -146,12 +146,12 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 
 	// set signature and binary data fields
 	_, err = a.handler.toChunkContent(&req, id, payloadId)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	// send the updated soc chunk to bee
 	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
@@ -160,11 +160,11 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 
 // CreateFeedFromTopic creates a soc with the topic as identifier
 func (a *API) CreateFeedFromTopic(topic []byte, user utils.Address, data []byte) ([]byte, error) {
-	if a.accountInfo.GetPrivateKey() == nil {
+	if a.accountInfo.GetPrivateKey() == nil { // skipcq: TCV-001
 		return nil, ErrReadOnlyFeed
 	}
 
-	if len(topic) != TopicLength {
+	if len(topic) != TopicLength { // skipcq: TCV-001
 		return nil, ErrInvalidTopicSize
 	}
 
@@ -175,25 +175,25 @@ func (a *API) CreateFeedFromTopic(topic []byte, user utils.Address, data []byte)
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
 	ch, err := utils.NewChunkWithSpan(data)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// generate the data to sign
 	toSignBytes, err := toSignDigest(topic, ch.Address().Bytes())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// sign the chunk
 	signature, err := signer.Sign(toSignBytes)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// send the updated soc chunk to bee
 	address, err := a.handler.update(topic, user.ToBytes(), signature, ch.Data())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
@@ -369,7 +369,7 @@ func (a *API) DeleteFeedFromTopic(topic []byte, user utils.Address) error {
 	}
 
 	delRef, _, err := a.GetFeedDataFromTopic(topic, user)
-	if err != nil && err.Error() != "feed does not exist or was not updated yet" {
+	if err != nil && err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 		return err
 	}
 	if delRef != nil {
