@@ -50,7 +50,7 @@ func TestFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		longTopic := append(topic, topic...)
+		longTopic := append(topic, topic...) // skipcq: CRT-D0001
 		_, _, err = fd.GetFeedData(longTopic, user1)
 		if !errors.Is(err, ErrInvalidTopicSize) {
 			t.Fatal("invalid topic size")
@@ -181,7 +181,7 @@ func TestFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		longTopic := append(topic, topic...)
+		longTopic := append(topic, topic...) // skipcq: CRT-D0001
 		_, _, err = fd.GetFeedDataFromTopic(longTopic, user1)
 		if !errors.Is(err, ErrInvalidTopicSize) {
 			t.Fatal("invalid topic size")
@@ -231,7 +231,7 @@ func TestFeed(t *testing.T) {
 			t.Fatal("read only feed")
 		}
 
-		longTopic := append(topic, topic...)
+		longTopic := append(topic, topic...) // skipcq: CRT-D0001
 		_, err = fd.CreateFeed(longTopic, user1, data)
 		if !errors.Is(err, ErrInvalidTopicSize) {
 			t.Fatal("invalid topic size")
@@ -259,7 +259,7 @@ func TestFeed(t *testing.T) {
 			t.Fatal("read only feed")
 		}
 
-		longTopic := append(topic, topic...)
+		longTopic := append(topic, topic...) // skipcq: CRT-D0001
 		_, err = fd.CreateFeedFromTopic(longTopic, user1, data)
 		if !errors.Is(err, ErrInvalidTopicSize) {
 			t.Fatal("invalid topic size")
@@ -287,7 +287,7 @@ func TestFeed(t *testing.T) {
 			t.Fatal("read only feed")
 		}
 
-		longTopic := append(topic, topic...)
+		longTopic := append(topic, topic...) // skipcq: CRT-D0001
 		_, err = fd.UpdateFeed(longTopic, user1, data)
 		if !errors.Is(err, ErrInvalidTopicSize) {
 			t.Fatal("invalid topic size")

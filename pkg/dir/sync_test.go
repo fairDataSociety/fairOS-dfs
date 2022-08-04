@@ -96,6 +96,9 @@ func TestSync(t *testing.T) {
 		}
 
 		node2 := dirObject2.GetDirFromDirectoryMap("/dirToStat")
+		if node2.GetDirInodePathAndName() != "/dirToStat" {
+			t.Fatal("node2 is /dirToStat")
+		}
 		if node2.GetDirInodePathAndNameForRoot() == utils.PathSeparator {
 			t.Fatal("node2 is not root node")
 		}

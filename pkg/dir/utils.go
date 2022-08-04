@@ -34,6 +34,8 @@ func (in *Inode) GetDirInodePathAndNameForRoot() string {
 func (in *Inode) GetDirInodePathAndName() string {
 	if in.Meta.Path == "" {
 		return in.Meta.Name
+	} else if in.Meta.Path == utils.PathSeparator {
+		return utils.PathSeparator + in.Meta.Name
 	}
 	return in.Meta.Path + utils.PathSeparator + in.Meta.Name
 }

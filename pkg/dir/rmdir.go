@@ -25,13 +25,16 @@ import (
 
 // RmDir removes a given directory and all the entries (file/directory) under that.
 func (d *Directory) RmDir(directoryNameWithPath string) error {
+	if directoryNameWithPath == "" {
+		return ErrInvalidDirectoryName
+	}
 	parentPath := filepath.Dir(directoryNameWithPath)
 	dirToDelete := filepath.Base(directoryNameWithPath)
 	// validation checks of the arguments
-	if parentPath == "" {
+	if parentPath == "." { // skipcq: CRT-D0001
 		return ErrInvalidDirectoryName
 	}
-	if dirToDelete == "" {
+	if dirToDelete == "." { // skipcq: CRT-D0001
 		return ErrInvalidDirectoryName
 	}
 
@@ -55,11 +58,11 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 				filePath := utils.CombinePathAndFile(directoryNameWithPath, fileName)
 				err := d.file.RmFile(filePath)
-				if err != nil {
+				if err != nil { // skipcq: CRT-D0001
 					return err
 				}
 				err = d.RemoveEntryFromDir(directoryNameWithPath, fileName, true)
-				if err != nil {
+				if err != nil { // skipcq: CRT-D0001
 					return err
 				}
 			} else if strings.HasPrefix(fileOrDirName, "_D_") {
@@ -68,7 +71,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 				d.logger.Infof(directoryNameWithPath)
 
 				err := d.RmDir(path)
-				if err != nil {
+				if err != nil { // skipcq: CRT-D0001
 					return err
 				}
 			}
@@ -78,7 +81,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 	// remove the feed and clear the data structure
 	topic := utils.HashString(totalPath)
 	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord))
-	if err != nil {
+	if err != nil { // skipcq: CRT-D0001
 		return err
 	}
 	d.RemoveFromDirectoryMap(totalPath)
@@ -98,7 +101,7 @@ func (d *Directory) RmRootDir() error {
 	// check if directory present
 	var totalPath = utils.CombinePathAndFile(dirToDelete, "")
 
-	if d.GetDirFromDirectoryMap(totalPath) == nil {
+	if d.GetDirFromDirectoryMap(totalPath) == nil { // skipcq: CRT-D0001
 		return ErrDirectoryNotPresent
 	}
 
@@ -110,7 +113,7 @@ func (d *Directory) RmRootDir() error {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 				filePath := utils.CombinePathAndFile(dirToDelete, fileName)
 				err := d.file.RmFile(filePath)
-				if err != nil {
+				if err != nil { // skipcq: CRT-D0001
 					return err
 				}
 				err = d.RemoveEntryFromDir(dirToDelete, fileName, true)
@@ -133,7 +136,7 @@ func (d *Directory) RmRootDir() error {
 	// remove the feed and clear the data structure
 	topic := utils.HashString(totalPath)
 	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord))
-	if err != nil {
+	if err != nil { // skipcq: CRT-D0001
 		return err
 	}
 	d.RemoveFromDirectoryMap(totalPath)
