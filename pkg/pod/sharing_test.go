@@ -315,6 +315,16 @@ func TestShare(t *testing.T) {
 		if !errors.Is(err, pod.ErrPodAlreadyExists) {
 			t.Fatal("shared pod should exist")
 		}
+
+		err = pod4.DeleteSharedPod(podName3)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = pod4.DeleteSharedPod(podName3)
+		if err == nil {
+			t.Fatal("pod should have been deleted")
+		}
 	})
 
 	t.Run("receive-pod-with-new-name", func(t *testing.T) {

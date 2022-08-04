@@ -24,7 +24,7 @@ import (
 // DeleteOwnPod removed a pod and the list of pods belonging to a user.
 func (p *Pod) DeleteOwnPod(podName string) error {
 	pods, sharedPods, err := p.loadUserPods()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	found := false
@@ -57,7 +57,7 @@ func (p *Pod) DeleteOwnPod(podName string) error {
 // DeleteSharedPod removed a pod and the list of pods shared by other users.
 func (p *Pod) DeleteSharedPod(podName string) error {
 	pods, sharedPods, err := p.loadUserPods()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	found := false

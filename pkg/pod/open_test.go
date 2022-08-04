@@ -173,4 +173,10 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// close the pod
+	err = pod1.ClosePod(podName1)
+	if !errors.Is(err, pod.ErrPodNotOpened) {
+		t.Fatal("pod should not be open")
+	}
 }

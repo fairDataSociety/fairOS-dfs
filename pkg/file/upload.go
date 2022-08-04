@@ -119,7 +119,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 				uploadData := data[:size]
 				if compression != "" {
 					uploadData, err = compress(data[:size], compression, blockSize)
-					if err != nil {
+					if err != nil { // skipcq: TCV-001
 						mainErr = err
 						return
 					}
@@ -154,7 +154,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	select {
 	case <-doneC:
 		break
-	case err := <-errC:
+	case err := <-errC: // skipcq: TCV-001
 		close(errC)
 		return err
 	}
@@ -166,24 +166,25 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	}
 
 	fileInodeData, err := json.Marshal(fileINode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	addr, err := f.client.UploadBlob(fileInodeData, true, true)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	meta.InodeAddress = addr
 	err = f.handleMeta(&meta)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	f.AddToFileMap(utils.CombinePathAndFile(meta.Path, meta.Name), &meta)
 	return nil
 }
 
+// skipcq: TCV-001
 func (*File) getContentType(bufferReader *bufio.Reader) string {
 	buffer, err := bufferReader.Peek(512)
 	if err != nil && err != io.EOF {
@@ -203,7 +204,7 @@ func compress(dataToCompress []byte, compression string, blockSize uint32) ([]by
 			return nil, err
 		}
 		_, err = w.Write(dataToCompress)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		err = w.Close()
