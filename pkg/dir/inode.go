@@ -32,14 +32,17 @@ var (
 	ErrResourceDeleted = errors.New("resource was deleted")
 )
 
+// skipcq: TCV-001
 func (in *Inode) GetMeta() *MetaData {
 	return in.Meta
 }
 
+// skipcq: TCV-001
 func (in *Inode) GetFileOrDirNames() []string {
 	return in.FileOrDirNames
 }
 
+// skipcq: TCV-001
 func (in *Inode) SetFileOrDirNames(fileOrDirNames []string) {
 	in.FileOrDirNames = fileOrDirNames
 }
@@ -49,7 +52,7 @@ func (in *Inode) Unmarshal(data []byte) error {
 		return ErrResourceDeleted
 	}
 	err := json.Unmarshal(data, in)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	return nil

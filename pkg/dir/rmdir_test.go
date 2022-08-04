@@ -279,6 +279,10 @@ func TestRmRootDir(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		node := dirObject.GetDirFromDirectoryMap("/dirToRemove1/dirToRemove2/dirToRemove")
+		if node.GetDirInodePathAndName() != "/dirToRemove1/dirToRemove2/dirToRemove" {
+			t.Fatal("node returned wrong path and name")
+		}
 
 		// make sure directories were created
 		dirEntry, _, err := dirObject.ListDir("/dirToRemove1")

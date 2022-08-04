@@ -50,11 +50,11 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*Stats, error) {
 
 	var dirInode Inode
 	err = json.Unmarshal(data, &dirInode)
-	if err != nil { // skipcq: CRT-D0001
+	if err != nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("dir stat: %v", err)
 	}
 
-	if dirInode.Meta == nil && dirInode.FileOrDirNames == nil { // skipcq: CRT-D0001
+	if dirInode.Meta == nil && dirInode.FileOrDirNames == nil { // skipcq: TCV-001
 		return nil, ErrDirectoryNotPresent
 	}
 
