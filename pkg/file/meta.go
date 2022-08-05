@@ -50,7 +50,7 @@ type MetaData struct {
 // LoadFileMeta is used in syncing
 func (f *File) LoadFileMeta(fileNameWithPath string) error {
 	meta, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		if err == ErrDeletedFeed {
 			return nil
 		}
