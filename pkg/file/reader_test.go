@@ -323,6 +323,7 @@ func TestFileReader(t *testing.T) {
 		if seekN != int64(lineStart) {
 			t.Fatalf("did not seek to proper line start")
 		}
+
 		buf, err := reader.ReadLine()
 		if err != nil {
 			t.Fatal(err)
@@ -434,6 +435,9 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			}
 			buf[idx] = '\n'
 		}
+		if buf[int64(bytesToWrite)-1] == 10 {
+			buf[int64(bytesToWrite)-1] = 11
+		}
 		if i == 2 {
 			start := false
 			startIndex := 0
@@ -451,6 +455,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			}
 			if startIndex > endIndex {
 				startIndex, endIndex = endIndex, startIndex
+				randomLineStartPoint = (int(blockSize) * int(i)) + startIndex
 			}
 			randomLine = append(randomLine, buf[startIndex:endIndex]...)
 		}
@@ -469,8 +474,10 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 					borderCrossingLineStartingPoint = (int(blockSize) * int(i)) + startIndex
 				}
 			}
-			borderCrossingLine = append(borderCrossingLine, buf[startIndex:]...)
-			gotFromFirstBlock = true
+			if borderCrossingLineStartingPoint != 0 {
+				borderCrossingLine = append(borderCrossingLine, buf[startIndex:]...)
+				gotFromFirstBlock = true
+			}
 		}
 
 		if i >= 4 && !gotFromFirstBlock && borderCrossingLine != nil && borderCrossingLine[len(borderCrossingLine)-1] != '\n' {
@@ -483,7 +490,6 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 				}
 			}
 		}
-
 		if compression != "" {
 			compressedData, err := file.Compress(buf, compression, bytesToWrite)
 			if err != nil {
@@ -491,7 +497,6 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			}
 			buf = compressedData
 		}
-
 		addr, err := mockClient.UploadBlob(buf, true, true)
 		if err != nil {
 			t.Fatal(err)
