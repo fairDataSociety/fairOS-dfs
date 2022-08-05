@@ -46,7 +46,7 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensC
 	}
 	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)
 	if !c.CheckConnection(isGatewayProxy) {
-		return nil, errBeeClient
+		return nil, ErrBeeClient
 	}
 	users := user.NewUsers(dataDir, c, ens, logger)
 	return &API{

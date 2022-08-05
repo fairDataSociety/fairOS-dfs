@@ -27,7 +27,7 @@ var (
 	ErrFileNotPresent = errors.New("file not present")
 
 	errPodAlreadyOpen = errors.New("pod already open")
-	errBeeClient      = errors.New("could not connect to bee client")
+	ErrBeeClient      = errors.New("could not connect to bee client")
 	errEthClient      = errors.New("could not connect to eth backend")
 	errReadOnlyPod    = errors.New("operation not permitted: read only pod")
 )

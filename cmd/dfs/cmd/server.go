@@ -69,7 +69,7 @@ can consume it.`,
 		}
 		return config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId"))
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		httpPort = config.GetString(optionDFSHttpPort)
 		pprofPort = config.GetString(optionDFSPprofPort)
 		cookieDomain = config.GetString(optionCookieDomain)
@@ -81,15 +81,15 @@ can consume it.`,
 			if postageBlockId == "" {
 				_ = cmd.Help()
 				fmt.Println("\npostageBlockId is required to run server")
-				return
+				return fmt.Errorf("postageBlockId is required to run server")
 			} else if len(postageBlockId) != 64 {
 				fmt.Println("\npostageBlockId is invalid")
-				return
+				return fmt.Errorf("postageBlockId is invalid")
 			}
 			_, err := hex.DecodeString(postageBlockId)
 			if err != nil {
 				fmt.Println("\npostageBlockId is invalid")
-				return
+				return fmt.Errorf("postageBlockId is invalid")
 			}
 		}
 		ensConfig := &contracts.Config{}
@@ -97,12 +97,12 @@ can consume it.`,
 		rpc := config.GetString(optionRPC)
 		if rpc == "" {
 			fmt.Println("\nrpc endpoint is missing")
-			return
+			return fmt.Errorf("rpc endpoint is missing")
 		}
 		if network != "testnet" && network != "mainnet" && network != "play" {
 			if network != "" {
 				fmt.Println("\nunknown network")
-				return
+				return fmt.Errorf("unknown network")
 			}
 			network = "custom"
 			providerDomain := config.GetString(optionProviderDomain)
@@ -112,19 +112,19 @@ can consume it.`,
 
 			if providerDomain == "" {
 				fmt.Println("\nens provider domain is missing")
-				return
+				return fmt.Errorf("ens provider domain is missing")
 			}
 			if publicResolverAddress == "" {
 				fmt.Println("\npublicResolver contract address is missing")
-				return
+				return fmt.Errorf("publicResolver contract address is missing")
 			}
 			if fdsRegistrarAddress == "" {
 				fmt.Println("\nfdsRegistrar contract address is missing")
-				return
+				return fmt.Errorf("fdsRegistrar contract address is missing")
 			}
 			if ensRegistryAddress == "" {
 				fmt.Println("\nensRegistry contract address is missing")
-				return
+				return fmt.Errorf("ensRegistry contract address is missing")
 			}
 
 			ensConfig = &contracts.Config{
@@ -137,7 +137,7 @@ can consume it.`,
 			switch v := strings.ToLower(network); v {
 			case "mainnet":
 				fmt.Println("\nens is not available for mainnet yet")
-				return
+				return fmt.Errorf("ens is not available for mainnet yet")
 			case "testnet":
 				ensConfig = contracts.TestnetConfig()
 			case "play":
@@ -160,8 +160,8 @@ can consume it.`,
 		case "5", "trace":
 			logger = logging.New(cmd.OutOrStdout(), logrus.TraceLevel)
 		default:
-			fmt.Println("unknown verbosity level ", v)
-			return
+			fmt.Println("unknown verbosity level", v)
+			return fmt.Errorf("unknown verbosity level")
 		}
 
 		logger.Info("configuration values")
@@ -180,10 +180,11 @@ can consume it.`,
 		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, ensConfig, logger)
 		if err != nil {
 			logger.Error(err.Error())
-			return
+			return err
 		}
 		handler = hdlr
 		startHttpService(logger)
+		return nil
 	},
 }
 
