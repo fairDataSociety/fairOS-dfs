@@ -45,7 +45,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 
 	// check if pods is present and get free index
 	pods, sharedPods, err := p.loadUserPods()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
@@ -74,7 +74,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		// store the pod file with shared pod
 		sharedPods[addressString] = podName
 		err = p.storeUserPods(pods, sharedPods)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 
@@ -86,19 +86,18 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		if p.checkIfPodPresent(pods, podName) {
 			return nil, ErrPodAlreadyExists
 		}
-
 		if p.checkIfSharedPodPresent(sharedPods, podName) {
 			return nil, ErrPodAlreadyExists
 		}
 
 		freeId, err := p.getFreeId(pods)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 
 		// create a child account for the userAddress and other data structures for the pod
 		accountInfo, err = p.acc.CreatePodAccount(freeId, passPhrase, true)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 
@@ -109,7 +108,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		// store the pod file
 		pods[freeId] = podName
 		err = p.storeUserPods(pods, sharedPods)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 
@@ -138,7 +137,7 @@ func (p *Pod) loadUserPods() (map[int]string, map[string]string, error) {
 	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
 	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex))
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		if err.Error() != "feed does not exist or was not updated yet" {
 			return nil, nil, err
 		}
@@ -153,7 +152,7 @@ func (p *Pod) loadUserPods() (map[int]string, map[string]string, error) {
 		if err == io.EOF {
 			break
 		}
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, nil, fmt.Errorf("loading pods: %w", err)
 		}
 		line = strings.Trim(line, "\n")
@@ -174,7 +173,7 @@ func (p *Pod) storeUserPods(pods map[int]string, sharedPods map[string]string) e
 	podLen := len(pods)
 	for index, pod := range pods {
 		pod := strings.Trim(pod, "\n")
-		if podLen > 1 && pod == "" {
+		if podLen > 1 && pod == "" { // skipcq: TCV-001
 			continue
 		}
 		line := fmt.Sprintf("%s,%d", pod, index)
@@ -189,10 +188,12 @@ func (p *Pod) storeUserPods(pods map[int]string, sharedPods map[string]string) e
 		line := fmt.Sprintf("%s,%s", pod, addr)
 		buf.WriteString(line + "\n")
 	}
-
+	if len(buf.Bytes()) > utils.MaxChunkLength {
+		return ErrMaximumPodLimit
+	}
 	topic := utils.HashString(podFile)
 	_, err := p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), buf.Bytes())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	return nil
@@ -208,7 +209,7 @@ func (*Pod) getFreeId(pods map[int]string) (int, error) {
 			return i, nil
 		}
 	}
-	return 0, ErrMaxPodsReached
+	return 0, ErrMaxPodsReached // skipcq: TCV-001
 }
 
 func (*Pod) checkIfPodPresent(pods map[int]string, podName string) bool {
@@ -233,7 +234,7 @@ func (p *Pod) getPodIndex(podName string) (int, error) {
 	pods, _, err := p.loadUserPods()
 	if err != nil {
 		return -1, err
-	}
+	} // skipcq: TCV-001
 	podIndex := -1
 	for index, pod := range pods {
 		if strings.Trim(pod, "\n") == podName {

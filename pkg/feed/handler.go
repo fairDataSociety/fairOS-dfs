@@ -52,7 +52,7 @@ var hashPool sync.Pool
 // init initializes the package and hashPool
 func init() {
 	hashPool = sync.Pool{
-		New: func() interface{} {
+		New: func() interface{} { // skipcq: TCV-001
 			return crypto.SHA256.New()
 		},
 	}
@@ -91,14 +91,14 @@ func (h *Handler) deleteChunk(ref []byte) error {
 
 // GetContent retrieves the data payload of the last synced update of the feed
 func (h *Handler) GetContent(feed *Feed) (swarm.Address, []byte, error) {
-	if feed == nil {
+	if feed == nil { // skipcq: TCV-001
 		return swarm.ZeroAddress, nil, NewError(errInvalidValue, "feed is nil")
 	}
 	feedUpdate, err := h.get(feed)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return swarm.ZeroAddress, nil, err
 	}
-	if feedUpdate == nil {
+	if feedUpdate == nil { // skipcq: TCV-001
 		return swarm.ZeroAddress, nil, NewError(errNotFound, "feed update not cached")
 	}
 	return swarm.NewAddress(feedUpdate.lastKey), feedUpdate.data, nil
@@ -117,7 +117,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 
 	if query.Hint == lookup.NoClue { // try to use our cache
 		entry, err := h.get(&query.Feed)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		if entry != nil && entry.Epoch.Time <= timeLimit { // avoid bad hints
@@ -126,7 +126,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 	}
 
 	// we can't look for anything without a store
-	if h.client == nil {
+	if h.client == nil { // skipcq: TCV-001
 		return nil, NewError(errInit, "invalid blockstore")
 	}
 
@@ -144,7 +144,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 		defer cancel()
 
 		addr, err := h.getAddress(id.Topic, query.Feed.User, epoch)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		data, err := h.client.DownloadChunk(ctx, addr.Bytes())
@@ -162,7 +162,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 		if request.Time <= timeLimit {
 			return &request, nil
 		}
-		return nil, nil
+		return nil, nil // skipcq: TCV-001
 	})
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 func (*Handler) fromChunk(chunk swarm.Chunk, r *request, q *Query, id *ID) error {
 	chunkdata := chunk.Data()
 
-	if len(chunkdata) < idLength+signatureLength+utils.SpanLength {
+	if len(chunkdata) < idLength+signatureLength+utils.SpanLength { // skipcq: TCV-001
 		return fmt.Errorf("invalid chunk data len")
 	}
 
@@ -238,7 +238,7 @@ func hashFunc() hash.Hash {
 
 func (h *Handler) getAddress(topic Topic, user utils.Address, epoch lookup.Epoch) (swarm.Address, error) {
 	id, err := h.getId(topic, epoch.Time, epoch.Level)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return swarm.ZeroAddress, err
 	}
 	addr, err := toSignDigest(id, user[:])

@@ -36,7 +36,7 @@ type ShareInfo struct {
 func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error) {
 	// check if pods is present and get the index of the pod
 	pods, _, err := p.loadUserPods()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 	if !p.checkIfPodPresent(pods, podName) {
@@ -44,13 +44,13 @@ func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error
 	}
 
 	index := p.getIndex(pods, podName)
-	if index == -1 {
+	if index == -1 { // skipcq: TCV-001
 		return "", fmt.Errorf("pod does not exist")
 	}
 
 	// Create pod account  and get the address
 	accountInfo, err := p.acc.CreatePodAccount(index, passPhrase, false)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
@@ -66,12 +66,12 @@ func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error
 	}
 
 	data, err := json.Marshal(shareInfo)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
 	ref, err := p.client.UploadBlob(data, true, true)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
@@ -81,11 +81,11 @@ func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error
 
 func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
-	if resp != http.StatusOK {
+	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
 	}
 
@@ -101,16 +101,16 @@ func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 
 func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	if resp != http.StatusOK {
+	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePod: could not download blob")
 	}
 
 	var shareInfo ShareInfo
 	err = json.Unmarshal(data, &shareInfo)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 

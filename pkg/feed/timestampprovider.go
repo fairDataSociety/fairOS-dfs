@@ -35,11 +35,13 @@ type timestampProvider interface {
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface
+// skipcq: TCV-001
 func (t *Timestamp) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &t.Time)
 }
 
 // MarshalJSON implements the json.Marshaller interface
+// skipcq: TCV-001
 func (t *Timestamp) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.Time)
 }

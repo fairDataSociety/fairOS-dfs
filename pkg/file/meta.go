@@ -50,7 +50,7 @@ type MetaData struct {
 // LoadFileMeta is used in syncing
 func (f *File) LoadFileMeta(fileNameWithPath string) error {
 	meta, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		if err == ErrDeletedFeed {
 			return nil
 		}
@@ -76,7 +76,7 @@ func (f *File) handleMeta(meta *MetaData) error {
 func (f *File) uploadMeta(meta *MetaData) error {
 	// marshall the meta structure
 	fileMetaBytes, err := json.Marshal(meta)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -84,7 +84,7 @@ func (f *File) uploadMeta(meta *MetaData) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	_, err = f.fd.CreateFeed(topic, meta.UserAddress, fileMetaBytes)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -100,7 +100,7 @@ func (f *File) deleteMeta(meta *MetaData) error {
 func (f *File) updateMeta(meta *MetaData) error {
 	// marshall the meta structure
 	fileMetaBytes, err := json.Marshal(meta)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -108,7 +108,7 @@ func (f *File) updateMeta(meta *MetaData) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	_, err = f.fd.UpdateFeed(topic, meta.UserAddress, fileMetaBytes)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -154,7 +154,7 @@ func (f *File) GetMetaFromFileName(fileNameWithPath string, userAddress utils.Ad
 
 	var meta *MetaData
 	err = json.Unmarshal(metaBytes, &meta)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 

@@ -24,7 +24,7 @@ func (u *Users) IsUsernameAvailable(userName, dataDir string) bool {
 // IsUsernameAvailableV2 checks if a supplied user name is present in blockchain
 func (u *Users) IsUsernameAvailableV2(userName string) bool {
 	addr, err := u.ens.GetOwner(userName)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return false
 	}
 	return addr.Hex() != "0x0000000000000000000000000000000000000000"

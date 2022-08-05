@@ -17,9 +17,12 @@ limitations under the License.
 package pod_test
 
 import (
+	"errors"
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -42,6 +45,24 @@ func TestNew(t *testing.T) {
 	podName1 := "test1"
 	podName2 := "test2"
 	t.Run("create-first-pod", func(t *testing.T) {
+		podPresent := pod1.IsPodPresent("")
+		if podPresent {
+			t.Fatal("blank podname should not be present")
+		}
+
+		// check too long pod name
+		randomLongPOdName, err := utils.GetRandString(26)
+		if err != nil {
+			t.Fatalf("error creating pod %s", podName1)
+		}
+		_, err = pod1.CreatePod(randomLongPOdName, "password", "")
+		if !errors.Is(err, pod.ErrTooLongPodName) {
+			t.Fatalf("error creating pod %s", podName1)
+		}
+		pod1Present := pod1.IsPodPresent(randomLongPOdName)
+		if pod1Present {
+			t.Fatal("pod1 should not be present")
+		}
 		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)

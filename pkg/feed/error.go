@@ -48,13 +48,14 @@ func (e *Error) Error() string {
 
 // Code returns the error code
 // Error codes are enumerated in the error.go file within the feeds package
+// skipcq: TCV-001
 func (e *Error) Code() int {
 	return e.code
 }
 
 // NewError creates a new Swarm feeds Error object with the specified code and custom error message
 func NewError(code int, s string) error {
-	if code < 0 || code >= errCnt {
+	if code < 0 || code >= errCnt { // skipcq: TCV-001
 		panic("no such error code!")
 	}
 	r := &Error{
@@ -68,6 +69,7 @@ func NewError(code int, s string) error {
 }
 
 // NewErrorf is a convenience version of NewError that incorporates printf-style formatting
+// skipcq: TCV-001
 func NewErrorf(code int, format string, args ...interface{}) error {
 	return NewError(code, fmt.Sprintf(format, args...))
 }

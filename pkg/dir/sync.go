@@ -26,13 +26,13 @@ import (
 func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
 	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil // pod is empty
 	}
 
 	var dirInode Inode
 	err = dirInode.Unmarshal(data)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("dir sync: %v", err)
 		return err
 	}
@@ -42,7 +42,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
 			err := d.file.LoadFileMeta(filePath)
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				return err
 			}
 
@@ -52,7 +52,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 			d.logger.Infof(dirNameWithPath)
 
 			err = d.SyncDirectory(path)
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				return err
 			}
 		}

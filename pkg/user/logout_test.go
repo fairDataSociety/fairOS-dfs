@@ -17,6 +17,7 @@ limitations under the License.
 package user_test
 
 import (
+	"errors"
 	"io"
 	"testing"
 
@@ -36,6 +37,12 @@ func TestLogout(t *testing.T) {
 		userObject := user.NewUsers("", mockClient, ens, logger)
 		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "")
 		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Logout user
+		err = userObject.LogoutUser(ui.GetUserName(), "invalid sessionID")
+		if !errors.Is(err, user.ErrUserNotLoggedIn) {
 			t.Fatal(err)
 		}
 

@@ -38,23 +38,23 @@ const feedLength = TopicLength + utils.AddressLength
 func (f *Feed) mapKey() (uint64, error) {
 	serializedData := make([]byte, feedLength)
 	err := f.binaryPut(serializedData)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
 	hasher := hashPool.Get().(hash.Hash)
 	defer hashPool.Put(hasher)
 	hasher.Reset()
 	_, err = hasher.Write(serializedData)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
 	sumHash := hasher.Sum(nil)
-	return *(*uint64)(unsafe.Pointer(&sumHash[0])), nil
+	return *(*uint64)(unsafe.Pointer(&sumHash[0])), nil // skipcq: GSC-G103
 }
 
 // binaryPut serializes this feed instance into the provided slice
 func (f *Feed) binaryPut(serializedData []byte) error {
-	if len(serializedData) != feedLength {
+	if len(serializedData) != feedLength { // skipcq: TCV-001
 		return NewErrorf(errInvalidValue, "Incorrect slice size to serialize feed. Expected %d, got %d", feedLength, len(serializedData))
 	}
 	var cursor int

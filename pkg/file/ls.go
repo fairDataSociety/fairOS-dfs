@@ -39,12 +39,12 @@ func (f *File) ListFiles(files []string) ([]Entry, error) {
 	for _, filePath := range files {
 		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
 		_, data, err := f.fd.GetFeedData(fileTopic, f.userAddress)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			continue
 		}
 		var meta *MetaData
 		err = json.Unmarshal(data, &meta)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			continue
 		}
 		entry := Entry{

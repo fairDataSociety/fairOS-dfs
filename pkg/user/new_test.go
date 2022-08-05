@@ -17,6 +17,7 @@ limitations under the License.
 package user_test
 
 import (
+	"errors"
 	"io"
 	"testing"
 
@@ -30,6 +31,17 @@ func TestNew(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 
+	t.Run("new-blank-username", func(t *testing.T) {
+		ens := mock2.NewMockNamespaceManager()
+
+		//create user
+		userObject := user.NewUsers("", mockClient, ens, logger)
+		_, _, _, _, _, err := userObject.CreateNewUserV2("", "password1", "", "")
+		if !errors.Is(err, user.ErrInvalidUserName) {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("new-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
@@ -37,6 +49,11 @@ func TestNew(t *testing.T) {
 		userObject := user.NewUsers("", mockClient, ens, logger)
 		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "")
 		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _, _, _, _, err = userObject.CreateNewUserV2("user1", "password1", "", "")
+		if !errors.Is(err, user.ErrUserAlreadyPresent) {
 			t.Fatal(err)
 		}
 

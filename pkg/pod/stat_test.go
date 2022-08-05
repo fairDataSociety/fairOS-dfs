@@ -41,6 +41,10 @@ func TestStat(t *testing.T) {
 	podName1 := "test1"
 
 	t.Run("pod-stat", func(t *testing.T) {
+		_, err := pod1.PodStat(podName1)
+		if err == nil {
+			t.Fatal("stat should be nil")
+		}
 		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)

@@ -48,18 +48,18 @@ type Blocks struct {
 // including the block information.
 func (f *File) GetStats(podName, podFileWithPath string) (*Stats, error) {
 	meta := f.GetFromFileMap(podFileWithPath)
-	if meta == nil {
+	if meta == nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("file not found")
 	}
 
 	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 

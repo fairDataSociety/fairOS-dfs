@@ -17,8 +17,11 @@ limitations under the License.
 package dir_test
 
 import (
+	"errors"
 	"io"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -52,11 +55,27 @@ func TestListDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		// create some dir and files
-		err := dirObject.MkDir("/parentDir")
+		err := dirObject.MkDir("/")
+		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
+			t.Fatal("invalid dir name")
+		}
+		longDirName, err := utils.GetRandString(101)
 		if err != nil {
 			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/" + longDirName)
+		if !errors.Is(err, dir.ErrTooLongDirectoryName) {
+			t.Fatal("dir name too long")
+		}
+
+		// create some dir and files
+		err = dirObject.MkDir("/parentDir")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/parentDir")
+		if !errors.Is(err, dir.ErrDirectoryAlreadyPresent) {
+			t.Fatal("dir already present")
 		}
 		// populate the directory with few directory and files
 		err = dirObject.MkDir("/parentDir/subDir1")
@@ -67,6 +86,20 @@ func TestListDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		err = dirObject.AddEntryToDir("", "file1", true)
+		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
+			t.Fatal("invalid dir name")
+		}
+		err = dirObject.AddEntryToDir("/parentDir", "", true)
+		if !errors.Is(err, dir.ErrInvalidFileOrDirectoryName) {
+			t.Fatal("invalid file or dir name")
+		}
+		err = dirObject.AddEntryToDir("/parentDir-not-available", "file1", true)
+		if !errors.Is(err, dir.ErrDirectoryNotPresent) {
+			t.Fatal("parent not available")
+		}
+
 		// just add dummy file enty as file listing is not tested here
 		err = dirObject.AddEntryToDir("/parentDir", "file1", true)
 		if err != nil {
@@ -98,6 +131,46 @@ func TestListDirectory(t *testing.T) {
 		}
 		if files[1] != "/parentDir/file2" {
 			t.Fatalf("invalid file name")
+		}
+	})
+
+	t.Run("list-dir-from-different-dir-object", func(t *testing.T) {
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+
+		// make root dir so that other directories can be added
+		err = dirObject.MkRootDir("pod1", user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create dir
+		err = dirObject.MkDir("/parentDir")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// populate the directory with few directory and files
+		err = dirObject.MkDir("/parentDir/subDir1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		dirObject2 := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		err = dirObject2.AddRootDir("pod1", user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// validate dir listing
+		dirs, _, err := dirObject2.ListDir("/parentDir")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(dirs) != 1 {
+			t.Fatalf("invalid directory entry count")
+		}
+
+		// validate entry names
+		if dirs[0].Name != "subDir1" {
+			t.Fatalf("invalid directory name")
 		}
 	})
 }

@@ -32,7 +32,7 @@ func (*Users) uploadEncryptedMnemonic(userName string, address utils.Address, en
 func (*Users) getEncryptedMnemonic(userName string, address utils.Address, fd *feed.API) (string, error) {
 	topic := utils.HashString(userName)
 	_, data, err := fd.GetFeedData(topic, address)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 	return string(data), nil
@@ -41,7 +41,7 @@ func (*Users) getEncryptedMnemonic(userName string, address utils.Address, fd *f
 func (*Users) deleteMnemonic(userName string, address utils.Address, fd *feed.API, client blockstore.Client) error {
 	topic := utils.HashString(userName)
 	feedAddress, _, err := fd.GetFeedData(topic, address)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	return client.DeleteReference(feedAddress)

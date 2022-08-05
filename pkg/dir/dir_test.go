@@ -1,19 +1,3 @@
-/*
-Copyright © 2020 FairOS Authors
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package dir_test
 
 import (
@@ -28,7 +12,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
-func TestDirPresent(t *testing.T) {
+func TestDirRmAllFromMap(t *testing.T) {
 	mockClient := bm.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
@@ -44,7 +28,7 @@ func TestDirPresent(t *testing.T) {
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
 
-	t.Run("dir-present", func(t *testing.T) {
+	t.Run("dir-rm-all-from-map", func(t *testing.T) {
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
 
 		// make root dir so that other directories can be added
@@ -65,14 +49,10 @@ func TestDirPresent(t *testing.T) {
 			t.Fatalf("directory is not present")
 		}
 
-		err = dirObject.RmDir("/baseDir")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		present = dirObject.IsDirectoryPresent("/baseDir")
-		if present {
-			t.Fatalf("directory is present")
+		dirObject.RemoveAllFromDirectoryMap()
+		node := dirObject.GetDirFromDirectoryMap("/baseDir")
+		if node != nil {
+			t.Fatal("node should be nil")
 		}
 	})
 }

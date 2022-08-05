@@ -46,7 +46,7 @@ func (a Address) Hex() string {
 	unchecksummed := hex.EncodeToString(a[:])
 	sha := sha3.NewLegacyKeccak256()
 	_, err := sha.Write([]byte(unchecksummed))
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ""
 	}
 	sumHash := sha.Sum(nil)

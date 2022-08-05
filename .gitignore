@@ -27,3 +27,5 @@ _cgo_export.*
 *.prof
 
 .DS_Store
+cover.html
+cover.out

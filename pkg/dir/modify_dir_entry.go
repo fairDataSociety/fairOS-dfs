@@ -45,20 +45,20 @@ func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) erro
 	// get the latest meta from swarm
 	topic := utils.HashString(parentDir)
 	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry: %v", err)
 	}
 
 	var dirInode Inode
 	err = json.Unmarshal(data, &dirInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
 
 	// add file or directory entry
 	if isFile {
 		itemToAdd = "_F_" + itemToAdd
-	} else {
+	} else { // skipcq: TCV-001
 		itemToAdd = "_D_" + itemToAdd
 	}
 	dirInode.FileOrDirNames = append(dirInode.FileOrDirNames, itemToAdd)
@@ -66,11 +66,11 @@ func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) erro
 
 	// update the feed of the dir and the data structure with latest info
 	data, err = json.Marshal(dirInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
 	_, err = d.fd.UpdateFeed(topic, d.userAddress, data)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
 	d.AddToDirectoryMap(parentDir, &dirInode)
@@ -82,23 +82,23 @@ func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) erro
 // a file is removed under the given directory.
 func (d *Directory) RemoveEntryFromDir(parentDir, itemToDelete string, isFile bool) error {
 	// validation checks of the arguments
-	if parentDir == "" {
+	if parentDir == "" { // skipcq: TCV-001
 		return ErrInvalidDirectoryName
 	}
 
-	if itemToDelete == "" {
+	if itemToDelete == "" { // skipcq: TCV-001
 		return ErrInvalidFileOrDirectoryName
 	}
 
 	parentHash := utils.HashString(parentDir)
 	_, parentData, err := d.fd.GetFeedData(parentHash, d.userAddress)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	var parentDirInode *Inode
 	err = json.Unmarshal(parentData, &parentDirInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -118,11 +118,11 @@ func (d *Directory) RemoveEntryFromDir(parentDir, itemToDelete string, isFile bo
 	parentDirInode.Meta.ModificationTime = time.Now().Unix()
 
 	parentData, err = json.Marshal(parentDirInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	_, err = d.fd.UpdateFeed(parentHash, d.userAddress, parentData)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	d.AddToDirectoryMap(parentDir, parentDirInode)

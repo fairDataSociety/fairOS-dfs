@@ -18,6 +18,7 @@ package pod_test
 
 import (
 	"crypto/rand"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -45,6 +46,12 @@ func TestOpen(t *testing.T) {
 	podName1 := "test1"
 
 	t.Run("open-pod", func(t *testing.T) {
+		// open non existent the pod
+		_, err := pod1.OpenPod(podName1, "password")
+		if !errors.Is(err, pod.ErrInvalidPodName) {
+			t.Fatal("pod should not be present")
+		}
+
 		// create a pod
 		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
@@ -125,6 +132,15 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	node := dirObject.GetDirFromDirectoryMap("/parentDir")
+	if pod1.GetName(node) != "parentDir" {
+		t.Fatal("dir name mismatch in pod")
+	}
+	if pod1.GetPath(node) != "/" {
+		t.Fatal("dir path mismatch in pod")
+	}
+
 	// populate the directory with few directory and files
 	err = dirObject.MkDir("/parentDir/subDir1")
 	if err != nil {
@@ -156,5 +172,11 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	err = pod1.ClosePod(podName1)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	// close the pod
+	err = pod1.ClosePod(podName1)
+	if !errors.Is(err, pod.ErrPodNotOpened) {
+		t.Fatal("pod should not be open")
 	}
 }

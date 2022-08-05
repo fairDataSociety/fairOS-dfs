@@ -76,13 +76,13 @@ func NewKeyValueStore(podName string, fd *feed.API, ai *account.Info, user utils
 
 // CreateKVTable creates the key value table  with a given index type.
 func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
-	if kv.fd.IsReadOnlyFeed() {
+	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 
 	// load the existing db's and see if this name is already there
 	kvtables, err := kv.LoadKVTables()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	if _, ok := kvtables[name]; ok {
@@ -91,7 +91,7 @@ func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
 
 	//  since this tables is not present already, create the index required for this table
 	err = CreateIndex(kv.podName, defaultCollectionName, name, indexType, kv.fd, kv.user, kv.client, true)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -102,12 +102,12 @@ func (kv *KeyValue) CreateKVTable(name string, indexType IndexType) error {
 
 // DeleteKVTable deletes a given key value table with all it index and data entries.
 func (kv *KeyValue) DeleteKVTable(name string) error {
-	if kv.fd.IsReadOnlyFeed() {
+	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 
 	kvtables, err := kv.LoadKVTables()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -119,17 +119,17 @@ func (kv *KeyValue) DeleteKVTable(name string) error {
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
 		err = table.index.DeleteIndex()
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 		delete(kv.openKVTables, name)
 	} else {
 		idx, err := OpenIndex(kv.podName, defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 		err = idx.DeleteIndex()
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	}
@@ -141,7 +141,7 @@ func (kv *KeyValue) DeleteKVTable(name string) error {
 // OpenKVTable open a given key value table and loads the index.
 func (kv *KeyValue) OpenKVTable(name string) error {
 	kvtables, err := kv.LoadKVTables()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	values, ok := kvtables[name]
@@ -151,13 +151,13 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 	idxType := toIndexTypeEnum(values[0])
 
 	idx, err := OpenIndex(kv.podName, defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	hdr, err := idx.Get(CSVHeaderKey)
 	var columns []string
-	if err == nil && len(hdr) >= 1 {
+	if err == nil && len(hdr) >= 1 { // skipcq: TCV-001
 		columns = strings.Split(string(hdr[0]), ",")
 	}
 
@@ -173,7 +173,7 @@ func (kv *KeyValue) OpenKVTable(name string) error {
 	return nil
 }
 
-// TableKeyCount counts the number of entries in the given key value table.
+// KVCount counts the number of entries in the given key value table.
 func (kv *KeyValue) KVCount(name string) (*TableKeyCount, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
@@ -204,7 +204,7 @@ func (kv *KeyValue) KVCount(name string) (*TableKeyCount, error) {
 
 // KVPut inserts a given key and value in to the KV table.
 func (kv *KeyValue) KVPut(name, key string, value []byte) error {
-	if kv.fd.IsReadOnlyFeed() {
+	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 
@@ -222,11 +222,11 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 			return table.index.PutNumber(fkey, value, NumberIndex, false)
 		case BytesIndex:
 			ref, err := kv.client.UploadBlob(value, true, true)
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				return err
 			}
 			return table.index.Put(key, ref, StringIndex, false)
-		default:
+		default: // skipcq: TCV-001
 			return ErrKVInvalidIndexType
 		}
 	}
@@ -244,7 +244,7 @@ func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 		}
 		if table.indexType == BytesIndex {
 			data, _, err := kv.client.DownloadBlob(value[0])
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				return nil, nil, err
 			}
 			value[0] = data
@@ -256,7 +256,7 @@ func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 
 // KVDelete removed a key value entry from the KV table given a key.
 func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
-	if kv.fd.IsReadOnlyFeed() {
+	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return nil, ErrReadOnlyIndex
 	}
 
@@ -269,12 +269,12 @@ func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
 		}
 		return refs[0], err
 	}
-	return nil, ErrKVTableNotOpened
+	return nil, ErrKVTableNotOpened // skipcq: TCV-001
 }
 
 // KVBatch prepares the index to do a batch insert if keys and values.
 func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
-	if kv.fd.IsReadOnlyFeed() {
+	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return nil, ErrReadOnlyIndex
 	}
 	kv.openKVTMu.Lock()
@@ -288,11 +288,11 @@ func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
 
 // KVBatchPut inserts a key and value in to the memory for batch.
 func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
-	if kv.fd.IsReadOnlyFeed() {
+	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 
-	if key == CSVHeaderKey {
+	if key == CSVHeaderKey { // skipcq: TCV-001
 		kv.openKVTMu.Lock()
 		defer kv.openKVTMu.Unlock()
 		if table, ok := kv.openKVTables[batch.idx.name]; ok {
@@ -304,7 +304,7 @@ func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 
 // KVBatchWrite commits all the batch entries in to the key value table.
 func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
-	if kv.fd.IsReadOnlyFeed() {
+	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 	_, err := batch.Write("")
@@ -319,22 +319,22 @@ func (kv *KeyValue) KVSeek(name, start, end string, limit int64) (*Iterator, err
 		switch table.indexType {
 		case StringIndex:
 			itr, err := table.index.NewStringIterator(start, end, limit)
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				return nil, err
 			}
 			kv.iterator = itr
 			return itr, nil
 		case NumberIndex:
 			startInt, err := strconv.ParseInt(start, 10, 64)
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				return nil, err
 			}
 			endInt, err := strconv.ParseInt(end, 10, 64)
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				return nil, err
 			}
 			itr, err := table.index.NewIntIterator(startInt, endInt, limit)
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				return nil, err
 			}
 			kv.iterator = itr
@@ -372,7 +372,7 @@ func (kv *KeyValue) LoadKVTables() (map[string][]string, error) {
 	topic := utils.HashString(kvFile)
 	_, data, err := kv.fd.GetFeedData(topic, kv.user)
 	if err != nil {
-		if err.Error() != "feed does not exist or was not updated yet" {
+		if err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 			return collections, err
 		}
 	}
@@ -384,7 +384,7 @@ func (kv *KeyValue) LoadKVTables() (map[string][]string, error) {
 		if err == io.EOF {
 			break
 		}
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, fmt.Errorf("loading collections: %w", err)
 		}
 		line = strings.Trim(line, "\n")
@@ -410,7 +410,7 @@ func (kv *KeyValue) storeKVTables(collections map[string][]string) error {
 		data = []byte(utils.DeletedFeedMagicWord)
 	}
 	_, err := kv.fd.UpdateFeed(topic, kv.user, data)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	return nil

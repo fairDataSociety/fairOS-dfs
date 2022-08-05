@@ -49,6 +49,32 @@ func TestKeyValueStore(t *testing.T) {
 	user := acc.GetAddress(account.UserAccountIndex)
 	kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 
+	t.Run("table_not_opened", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1314", collection.StringIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = kvStore.CreateKVTable("kv_table_1314", collection.StringIndex)
+		if !errors.Is(err, collection.ErrKvTableAlreadyPresent) {
+			t.Fatal("table should be already present")
+		}
+
+		_, _, _, err = kvStore.KVGetNext("kv_table_1314")
+		if !errors.Is(err, collection.ErrKVTableNotOpened) {
+			t.Fatal("open table")
+		}
+		err = kvStore.OpenKVTable("kv_table_1314")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// delete so that they dont show up in other testcases
+		err = kvStore.DeleteKVTable("kv_table_1314")
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("nil_itr", func(t *testing.T) {
 		err := kvStore.CreateKVTable("kv_table_1312", collection.StringIndex)
 		if err != nil {
@@ -304,6 +330,53 @@ func TestKeyValueStore(t *testing.T) {
 		if !bytes.Equal(value, []byte("value1")) {
 			t.Fatal(err)
 		}
+
+		countObject, err := kvStore.KVCount("kv_table_8")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if countObject.Count != 1 {
+			t.Fatal("kv count value should be one")
+		}
+	})
+
+	t.Run("put_bytes_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_bytes", collection.BytesIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _, err = kvStore.KVGet("kv_table_bytes", "key1")
+		if !errors.Is(err, collection.ErrKVTableNotOpened) {
+			t.Fatal("kv table open")
+		}
+		err = kvStore.OpenKVTable("kv_table_bytes")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.KVPut("kv_table_bytes", "key1", []byte("value1"))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// get the value to see if it is present
+		columns, value, err := kvStore.KVGet("kv_table_bytes", "key1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if columns != nil {
+			t.Fatalf("columns present without setting")
+		}
+		if !bytes.Equal(value, []byte("value1")) {
+			t.Fatal(err)
+		}
+
+		countObject, err := kvStore.KVCount("kv_table_bytes")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if countObject.Count != 1 {
+			t.Fatal("kv count value should be one")
+		}
 	})
 
 	t.Run("put_chinese_string_index", func(t *testing.T) {
@@ -478,6 +551,70 @@ func TestKeyValueStore(t *testing.T) {
 		// also check the values returned
 		if !bytes.Equal(value, gotValue) {
 			t.Fatal("values do not match", string(value), string(gotValue))
+		}
+	})
+
+	t.Run("batch_put_columns_and_get_values", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_batch_9", collection.StringIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_batch_9")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		columns := []string{"c1", "c2", "c3"}
+		batch, err := kvStore.KVBatch("kv_table_batch_9", columns)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		value := []byte("v1,v2,v3")
+		err = kvStore.KVBatchPut(batch, "key1", value)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = batch.Put("key1", value, false, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = kvStore.KVBatchWrite(batch)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		gotColumns, gotValue, err := kvStore.KVGet("kv_table_batch_9", "key1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check the columns returned
+		for i, c := range columns {
+			if c != gotColumns[i] {
+				t.Fatal("columns do not match", c, gotColumns[i])
+			}
+		}
+
+		// also check the values returned
+		if !bytes.Equal(value, gotValue) {
+			t.Fatal("values do not match", string(value), string(gotValue))
+		}
+	})
+
+	t.Run("count_columns_and_get_values", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_batch_count", collection.StringIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		countObject, err := kvStore.KVCount("kv_table_batch_count")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if countObject.Count != 0 {
+			t.Fatal("count should be zero")
 		}
 	})
 
@@ -909,6 +1046,86 @@ func TestKeyValueStore(t *testing.T) {
 		_, _, _, err = kvStore.KVGetNext("kv_table_1313")
 		if !errors.Is(err, collection.ErrNoNextElement) {
 			t.Fatal("found a nonexistent key")
+		}
+	})
+
+	t.Run("err_byte_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1316", collection.BytesIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1316")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.KVPut("kv_table_1316", "key1", []byte("value1"))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1316", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVIndexTypeNotSupported) {
+			t.Fatal("unsupported index")
+		}
+	})
+
+	t.Run("err_seek_list_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1317", collection.ListIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1317")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1317", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVInvalidIndexType) {
+			t.Fatal("invalid index")
+		}
+	})
+
+	t.Run("err_seek_map_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1318", collection.MapIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1318")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1318", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVInvalidIndexType) {
+			t.Fatal("invalid index")
+		}
+	})
+
+	t.Run("err_seek_invalid_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1319", collection.InvalidIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1319")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1319", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVInvalidIndexType) {
+			t.Fatal("invalid index")
+		}
+	})
+
+	t.Run("seek_unopened_table", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1320", collection.ListIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1320", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVTableNotOpened) {
+			t.Fatal("table open")
 		}
 	})
 }
