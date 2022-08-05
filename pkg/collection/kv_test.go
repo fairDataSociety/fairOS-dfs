@@ -1069,7 +1069,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 	})
 
-	t.Run("err_list_index", func(t *testing.T) {
+	t.Run("err_seek_list_index", func(t *testing.T) {
 		err := kvStore.CreateKVTable("kv_table_1317", collection.ListIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1085,13 +1085,45 @@ func TestKeyValueStore(t *testing.T) {
 		}
 	})
 
-	t.Run("seek_unopened_table", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1318", collection.ListIndex)
+	t.Run("err_seek_map_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1318", collection.MapIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1318")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		_, err = kvStore.KVSeek("kv_table_1318", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVInvalidIndexType) {
+			t.Fatal("invalid index")
+		}
+	})
+
+	t.Run("err_seek_invalid_index", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1319", collection.InvalidIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_1319")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1319", "key1", "", -1)
+		if !errors.Is(err, collection.ErrKVInvalidIndexType) {
+			t.Fatal("invalid index")
+		}
+	})
+
+	t.Run("seek_unopened_table", func(t *testing.T) {
+		err := kvStore.CreateKVTable("kv_table_1320", collection.ListIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = kvStore.KVSeek("kv_table_1320", "key1", "", -1)
 		if !errors.Is(err, collection.ErrKVTableNotOpened) {
 			t.Fatal("table open")
 		}

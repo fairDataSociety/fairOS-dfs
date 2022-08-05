@@ -97,7 +97,7 @@ var (
 
 // CreateIndex creates a common index file to be used in kv or document tables.
 func CreateIndex(podName, collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client, mutable bool) error {
-	if fd.IsReadOnlyFeed() {
+	if fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 	actualIndexName := podName + collectionName + indexName
@@ -112,16 +112,16 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 
 	// marshall and store the Manifest as new feed
 	data, err := json.Marshal(manifest)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
 
 	ref, err := client.UploadBlob(data, true, true)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
 
-	if string(oldData) == utils.DeletedFeedMagicWord {
+	if string(oldData) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
 		_, err = fd.UpdateFeed(topic, user, ref)
 		if err != nil {
 			return ErrManifestCreate
@@ -129,7 +129,7 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 		return nil
 	}
 	_, err = fd.CreateFeed(topic, user, ref)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
 	return nil
@@ -161,7 +161,7 @@ func OpenIndex(podName, collectionName, indexName string, fd *feed.API, ai *acco
 
 // DeleteIndex delete the index from file and all its entries.
 func (idx *Index) DeleteIndex() error {
-	if idx.isReadOnlyFeed() {
+	if idx.isReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 	manifest := getRootManifestOfIndex(idx.name, idx.feed, idx.user, idx.client)
@@ -172,7 +172,7 @@ func (idx *Index) DeleteIndex() error {
 	// erase the top Manifest
 	topic := utils.HashString(idx.name)
 	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(utils.DeletedFeedMagicWord))
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ErrDeleteingIndex
 	}
 	return nil
@@ -200,7 +200,7 @@ func (idx *Index) CountIndex() (uint64, error) {
 
 	idx.loadIndexAndCount(ctx, cancel, workers, idx.memDB, errC)
 	select {
-	case err := <-errC:
+	case err := <-errC: // skipcq: TCV-001
 		if err != nil {
 			idx.count = 0
 			return 0, err
@@ -218,13 +218,13 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 			if entry.Manifest == nil {
 
 				man, err := idx.loadManifest(manifest.Name + entry.Name)
-				if err != nil {
-					fmt.Println("Manifest load error: ", manifest.Name+entry.Name)
+				if err != nil { // skipcq: TCV-001
+					idx.logger.Error("Manifest load error: ", manifest.Name+entry.Name)
 					return
 				}
 				newManifest = man
 				entry.Manifest = newManifest
-			} else {
+			} else { // skipcq: TCV-001
 				newManifest = entry.Manifest
 			}
 			idx.loadIndexAndCount(ctx, cancel, workers, newManifest, errC)
@@ -241,20 +241,20 @@ func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 	idx.logger.Info("loading Manifest: ", manifestPath)
 	topic := utils.HashString(manifestPath)
 	_, refData, err := idx.feed.GetFeedData(topic, idx.user)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, ErrNoManifestFound
 	}
 	data, respCode, err := idx.client.DownloadBlob(refData)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, ErrNoManifestFound
 	}
-	if respCode != http.StatusOK {
+	if respCode != http.StatusOK { // skipcq: TCV-001
 		return nil, ErrNoManifestFound
 	}
 
 	var manifest Manifest
 	err = json.Unmarshal(data, &manifest)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, ErrManifestUnmarshall
 	}
 
@@ -265,18 +265,18 @@ func (idx *Index) updateManifest(manifest *Manifest) error {
 	// marshall and update the Manifest in the feed
 	idx.logger.Info("updating Manifest: ", manifest.Name)
 	data, err := json.Marshal(manifest)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
 
 	ref, err := idx.client.UploadBlob(data, true, true)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
 
 	topic := utils.HashString(manifest.Name)
 	_, err = idx.feed.UpdateFeed(topic, idx.user, ref)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
 	return nil
@@ -285,7 +285,7 @@ func (idx *Index) updateManifest(manifest *Manifest) error {
 func (idx *Index) storeManifest(manifest *Manifest) error {
 	// marshall and store the Manifest as new feed
 	data, err := json.Marshal(manifest)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
 	logStr := fmt.Sprintf("storing Manifest: %s, data len = %d", manifest.Name, len(data))
@@ -294,14 +294,14 @@ func (idx *Index) storeManifest(manifest *Manifest) error {
 	ref, err := idx.client.UploadBlob(data, true, true)
 	//TODO: once the tags issue is fixed i bytes..
 	// remove the error string check
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		idx.logger.Errorf("uploadBlob failed in storeManifest : %s", err.Error())
 		return ErrManifestCreate
 	}
 
 	topic := utils.HashString(manifest.Name)
 	_, err = idx.feed.CreateFeed(topic, idx.user, ref)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
 	return nil
@@ -345,7 +345,7 @@ func getRootManifestOfIndex(actualIndexName string, fd *feed.API, user utils.Add
 		return nil
 	}
 	err = json.Unmarshal(data, &manifest)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil
 	}
 	return &manifest
