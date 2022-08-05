@@ -38,6 +38,12 @@ func TestAccount_CreateRootAccount(t *testing.T) {
 	password := "letmein"
 	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
+
+	_, _, err = acc.CreateUserAccount(password, "invalid mnemonic that we are passing to check create account error message")
+	if err == nil {
+		t.Fatal("invalid mnemonic passed")
+	}
+
 	_, _, err = acc.CreateUserAccount(password, "")
 	if err != nil {
 		t.Fatal(err)
@@ -165,6 +171,15 @@ func TestLoadUserAccount(t *testing.T) {
 	acc.wallet.encryptedmnemonic = em
 
 	acc2 := New(logger)
+	err = acc2.LoadUserAccount("", em)
+	if err == nil {
+		t.Fatal("blank password")
+	}
+	err = acc2.LoadUserAccount("asdasd", em)
+	if err == nil {
+		t.Fatal("wrong password password")
+	}
+
 	err = acc2.LoadUserAccount(password, em)
 	if err != nil {
 		t.Fatal(err)
@@ -198,6 +213,11 @@ func TestLoadUserAccountFromSeed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	err = acc2.LoadUserAccountFromSeed([]byte{})
+	if err == nil {
+		t.Fatal("nil seed provided")
+	}
+
 	err = acc2.LoadUserAccountFromSeed(seed)
 	if err != nil {
 		t.Fatal(err)

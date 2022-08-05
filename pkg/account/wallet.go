@@ -49,13 +49,13 @@ func newWalletFromMnemonic(mnemonic string) *Wallet {
 func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Account, string, error) {
 	// Generate a mnemonic for memorization or user-friendly seeds
 	entropy, err := bip39.NewEntropy(128)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return accounts.Account{}, "", err
 	}
 	if mnemonic == "" {
 		// create a new mnemonic if it is not supplied
 		mnemonic, err = bip39.NewMnemonic(entropy)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return accounts.Account{}, "", err
 		}
 	} else {
@@ -66,12 +66,12 @@ func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Acc
 	}
 
 	wallet, err := hdwallet.NewFromMnemonic(mnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return accounts.Account{}, "", err
 	}
 	path := hdwallet.MustParseDerivationPath(rootPath)
 	acc, err := wallet.Derive(path, false)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return accounts.Account{}, "", err
 	}
 	return acc, mnemonic, nil
@@ -81,12 +81,12 @@ func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Acc
 // CreateAccount is used to create a new hd wallet using the given mnemonic and the walletPath.
 func (*Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Account, error) {
 	wallet, err := hdwallet.NewFromMnemonic(plainMnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return accounts.Account{}, err
 	}
 	path := hdwallet.MustParseDerivationPath(walletPath)
 	acc, err := wallet.Derive(path, false)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return accounts.Account{}, err
 	}
 	return acc, nil
@@ -95,12 +95,12 @@ func (*Wallet) CreateAccount(walletPath, plainMnemonic string) (accounts.Account
 // CreateAccountFromSeed is used to create a new hd wallet using the given seed and the walletPath.
 func (w *Wallet) CreateAccountFromSeed(walletPath string, seed []byte) (accounts.Account, error) {
 	wallet, err := hdwallet.NewFromSeed(seed)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return accounts.Account{}, err
 	}
 	path := hdwallet.MustParseDerivationPath(walletPath)
 	acc, err := wallet.Derive(path, false)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return accounts.Account{}, err
 	}
 	w.seed = seed
@@ -127,7 +127,7 @@ func (w *Wallet) LoadSeedFromMnemonic(password string) ([]byte, error) {
 		return nil, err
 	}
 	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	w.seed = seed
@@ -142,7 +142,7 @@ func (w *Wallet) decryptMnemonic(password string) (string, error) {
 
 	//decrypt the message
 	mnemonic, err := decrypt(aesKey[:], w.encryptedmnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 

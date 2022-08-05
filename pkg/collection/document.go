@@ -117,7 +117,7 @@ func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType,
 
 	// load the existing db's and see if this name is already there
 	docTables, err := d.LoadDocumentDBSchemas()
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	if _, ok := docTables[dbName]; ok {
