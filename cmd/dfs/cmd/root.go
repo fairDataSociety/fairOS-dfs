@@ -159,9 +159,11 @@ func initConfig() {
 	}
 
 	config.AutomaticEnv() // read in environment variables that match
+
 	// If a config file is found, read it in.
-	if err := config.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", config.ConfigFileUsed())
+	if err := config.ReadInConfig(); err != nil {
+		fmt.Println("config file not found")
+		os.Exit(1)
 	}
 }
 

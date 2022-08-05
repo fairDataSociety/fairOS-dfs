@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"bytes"
-	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 )
 
 func Test_ExecuteCommand(t *testing.T) {
@@ -41,9 +38,9 @@ func Test_ExecuteCommand(t *testing.T) {
 		defer os.RemoveAll(tempDir)
 		b := bytes.NewBufferString("")
 		rootCmd.SetOut(b)
-		rootCmd.SetArgs([]string{"server", "--dataDir", tempDir})
+		rootCmd.SetArgs([]string{"server", "--config", tempDir + string(os.PathSeparator) + ".dfs.yaml", "--dataDir", tempDir + string(os.PathSeparator) + ".fairOS/dfs"})
 		err = rootCmd.Execute()
-		if !errors.Is(err, dfs.ErrBeeClient) {
+		if err.Error() != "postageBlockId is required to run server" {
 			t.Fatal("server should fail")
 		}
 	})
