@@ -41,7 +41,7 @@ type Stats struct {
 func (d *Directory) DirStat(podName, dirNameWithPath string) (*Stats, error) {
 	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("dir stat: %v", err)
 	}
 	if string(data) == utils.DeletedFeedMagicWord {
