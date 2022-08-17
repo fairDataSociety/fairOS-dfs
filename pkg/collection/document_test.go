@@ -21,13 +21,13 @@ import (
 	"errors"
 	"io"
 	"testing"
-
-	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
@@ -53,6 +53,32 @@ func TestDocumentStore(t *testing.T) {
 	user := acc.GetAddress(account.UserAccountIndex)
 	file := f.NewFile("pod1", mockClient, fd, user, logger)
 	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, mockClient, logger)
+
+	t.Run("create_document_db_errors", func(t *testing.T) {
+		nilFd := feed.New(&account.Info{}, mockClient, logger)
+		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, mockClient, logger)
+		err := nilDocStore.CreateDocumentDB("docdb_err", nil, true)
+		if !errors.Is(err, collection.ErrReadOnlyIndex) {
+			t.Fatal("should be readonly index")
+		}
+
+		// create a document DB
+		createDocumentDBs(t, []string{"docdb_err"}, docStore, nil)
+
+		err = docStore.CreateDocumentDB("docdb_err", nil, true)
+		if !errors.Is(err, collection.ErrDocumentDBAlreadyPresent) {
+			t.Fatal("db should be present already")
+		}
+
+		err = docStore.OpenDocumentDB("docdb_err")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = docStore.CreateDocumentDB("docdb_err", nil, true)
+		if !errors.Is(err, collection.ErrDocumentDBAlreadyOpened) {
+			t.Fatal("db should be opened already")
+		}
+	})
 
 	t.Run("create_document_db", func(t *testing.T) {
 		// create a document DB
@@ -136,12 +162,14 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 	})
-
-	t.Run("put_and_get", func(t *testing.T) {
+	t.Run("put_immutable_error", func(t *testing.T) {
 		// create a document DB
-		createDocumentDBs(t, []string{"docdb_4"}, docStore, nil)
+		err := docStore.CreateDocumentDB("doc_do_immutable", nil, false)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		err := docStore.OpenDocumentDB("docdb_4")
+		err = docStore.OpenDocumentDB("doc_do_immutable")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -154,6 +182,66 @@ func TestDocumentStore(t *testing.T) {
 			Age:       25,
 		}
 		data, err := json.Marshal(document1)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// insert the docment in the DB
+		err = docStore.Put("doc_do_immutable", data)
+		if !errors.Is(err, collection.ErrModifyingImmutableDocDB) {
+			t.Fatal("db is immutable")
+		}
+	})
+
+	t.Run("put_and_get", func(t *testing.T) {
+		// create a document DB
+		createDocumentDBs(t, []string{"docdb_4"}, docStore, nil)
+
+		err := docStore.OpenDocumentDB("docdb_4")
+		if err != nil {
+			t.Fatal(err)
+		}
+		invalidType := struct {
+			Time int64 `json:"created_at"`
+		}{
+			Time: time.Now().Unix(),
+		}
+
+		data, err := json.Marshal(invalidType)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = docStore.Put("docdb_4", data)
+		if !errors.Is(err, collection.ErrDocumentDBIndexFieldNotPresent) {
+			t.Fatal("index is not present")
+		}
+
+		document1 := &TestDocument{
+			ID:        "",
+			FirstName: "John",
+			LastName:  "Doe",
+			Age:       25,
+		}
+		data, err = json.Marshal(document1)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// insert the docment in the DB
+		err = docStore.Put("docdb_4", data)
+		if !errors.Is(err, collection.ErrInvalidDocumentId) {
+			t.Fatal("index is invalid")
+		}
+
+		// create a json document
+		document1 = &TestDocument{
+			ID:        "1",
+			FirstName: "John",
+			LastName:  "Doe",
+			Age:       25,
+		}
+		data, err = json.Marshal(document1)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -36,7 +36,7 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("kv create: invalid request body type")
-		jsonhttp.BadRequest(w, "kv create: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: invalid request body type"})
 		return
 	}
 
@@ -45,21 +45,21 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv create: could not decode arguments")
-		jsonhttp.BadRequest(w, "kv create: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: could not decode arguments"})
 		return
 	}
 
 	podName := kvReq.PodName
 	if podName == "" {
 		h.logger.Errorf("kv create: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv create: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv create: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv create: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: \"table_name\" argument missing"})
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	case "bytes":
 	default:
 		h.logger.Errorf("kv create: invalid \"indexType\" ")
-		jsonhttp.BadRequest(w, "kv create: invalid \"indexType\"")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: invalid \"indexType\""})
 		return
 	}
 
@@ -86,20 +86,20 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv create: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv create: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv create: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.KVCreate(sessionId, podName, name, indexType)
 	if err != nil {
 		h.logger.Errorf("kv create: %v", err)
-		jsonhttp.InternalServerError(w, "kv create: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv create: " + err.Error()})
 		return
 	}
-	jsonhttp.Created(w, "kv store created")
+	jsonhttp.Created(w, &response{Message: "kv store created"})
 }

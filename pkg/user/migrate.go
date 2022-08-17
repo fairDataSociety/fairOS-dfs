@@ -29,14 +29,14 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 	// check for valid password
 	userInfo := u.getUserFromMap(sessionId)
 	acc := userInfo.account
-	if !acc.Authorise(password) {
+	if !acc.Authorise(password) { // skipcq: TCV-001
 		return ErrInvalidPassword
 	}
 	accountInfo := acc.GetUserAccountInfo()
 
 	// create ens subdomain and store mnemonic
 	_, err := u.createENS(newUsername, accountInfo)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	// load address from userName
@@ -47,11 +47,11 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 
 	fd := feed.New(accountInfo, client, u.logger)
 	encryptedMnemonic, err := u.getEncryptedMnemonic(oldUsername, address, fd)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	err = acc.LoadUserAccount(password, encryptedMnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -60,21 +60,21 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 		return err
 	}
 	key, err := accountInfo.PadSeed(seed, password)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	if err := u.uploadPortableAccount(accountInfo, newUsername, password, key, fd); err != nil {
+	if err := u.uploadPortableAccount(accountInfo, newUsername, password, key, fd); err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	// Logout user
 	err = u.Logout(sessionId)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	err = u.deleteMnemonic(oldUsername, accountInfo.GetAddress(), ui.GetFeed(), u.client)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 

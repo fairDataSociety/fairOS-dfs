@@ -35,7 +35,7 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("user login: invalid request body type")
-		jsonhttp.BadRequest(w, "user login: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "user login: invalid request body type"})
 		return
 	}
 
@@ -44,7 +44,7 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user login: could not decode arguments")
-		jsonhttp.BadRequest(w, "user login: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "user login: could not decode arguments"})
 		return
 	}
 
@@ -52,12 +52,12 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	password := userReq.Password
 	if user == "" {
 		h.logger.Errorf("user login: \"user_name\" argument missing")
-		jsonhttp.BadRequest(w, "user login: \"user_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user login: \"user_name\" argument missing"})
 		return
 	}
 	if password == "" {
 		h.logger.Errorf("user login: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "user login: \"password\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user login: \"password\" argument missing"})
 		return
 	}
 
@@ -68,17 +68,17 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 			err == u.ErrInvalidUserName ||
 			err == u.ErrInvalidPassword {
 			h.logger.Errorf("user login: %v", err)
-			jsonhttp.BadRequest(w, "user login: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "user login: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("user login: %v", err)
-		jsonhttp.InternalServerError(w, "user login: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
 		return
 	}
 	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
 	if err != nil {
 		h.logger.Errorf("user login: %v", err)
-		jsonhttp.InternalServerError(w, "user login: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
 		return
 	}
 

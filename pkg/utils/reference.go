@@ -19,17 +19,21 @@ package utils
 import "encoding/hex"
 
 const (
-	ReferenceLength    = 32
+	referenceLength    = 32
 	encryptedRefLength = 64
 )
 
+// Reference is used for creating pod sharing references
 type Reference struct {
 	R []byte
 }
 
+// NewReference creates a Reference
 func NewReference(b []byte) Reference {
 	return Reference{R: b}
 }
+
+// ParseHexReference creates a Reference from a Reference string
 func ParseHexReference(s string) (a Reference, err error) {
 	b, err := hex.DecodeString(s)
 	if err != nil {
@@ -37,9 +41,12 @@ func ParseHexReference(s string) (a Reference, err error) {
 	}
 	return NewReference(b), nil
 }
+
 func (ref Reference) String() string {
 	return hex.EncodeToString(ref.R)
 }
+
+// Bytes returns the bytes form of the reference
 func (ref Reference) Bytes() []byte {
 	return ref.R
 }

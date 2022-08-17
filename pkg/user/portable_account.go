@@ -13,7 +13,7 @@ const (
 func (*Users) uploadPortableAccount(accountInfo *account.Info, username, password string, data []byte, fd *feed.API) error {
 	topic := utils.HashString(AuthVersion + username + password)
 	_, err := fd.CreateFeedFromTopic(topic, accountInfo.GetAddress(), data)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	return nil
@@ -22,7 +22,7 @@ func (*Users) uploadPortableAccount(accountInfo *account.Info, username, passwor
 func (*Users) downloadPortableAccount(address utils.Address, username, password string, fd *feed.API) ([]byte, error) {
 	topic := utils.HashString(AuthVersion + username + password)
 	_, data, err := fd.GetFeedDataFromTopic(topic, address)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	return data, nil

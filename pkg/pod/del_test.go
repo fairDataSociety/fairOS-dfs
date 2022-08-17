@@ -64,6 +64,11 @@ func TestDelete(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		err = pod1.DeleteOwnPod(podName1)
+		if err == nil {
+			t.Fatal("pod should have been deleted")
+		}
+
 		pods, _, err = pod1.ListPods()
 		if err != nil {
 			t.Fatalf("error getting pods")

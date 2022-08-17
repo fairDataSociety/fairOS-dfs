@@ -37,7 +37,7 @@ import (
 // then it is used instead of creating a new one.
 func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *Info, error) {
 	// username validation
-	if u.IsUsernameAvailable(userName, u.dataDir) {
+	if u.IsUsernameAvailable(userName, u.dataDir) { // skipcq: TCV-001
 		return "", "", nil, ErrUserAlreadyPresent
 	}
 
@@ -47,19 +47,19 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 
 	//create a new base user account with the mnemonic
 	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", nil, err
 	}
 
 	// store the encrypted mnemonic in Swarm
 	err = u.uploadEncryptedMnemonic(userName, accountInfo.GetAddress(), encryptedMnemonic, fd)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", nil, err
 	}
 
 	// store the username -> address mapping locally
 	err = u.storeUserNameToAddressFileMapping(userName, u.dataDir, accountInfo.GetAddress())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", nil, err
 	}
 
@@ -86,7 +86,7 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 
 	// set cookie and add user to map
 	err = u.addUserAndSessionToMap(ui)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", nil, err
 	}
 
@@ -116,21 +116,21 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 
 	// create ens subdomain and store mnemonic
 	nameHash, err := u.createENS(userName, accountInfo)
-	if err != nil {
-		if err == eth.ErrInsufficientBalance {
+	if err != nil { // skipcq: TCV-001
+		if err == eth.ErrInsufficientBalance { // skipcq: TCV-001
 			return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
 		}
-		return "", "", "", "", nil, err
+		return "", "", "", "", nil, err // skipcq: TCV-001
 	}
 	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", "", "", nil, err
 	}
 	key, err := accountInfo.PadSeed(seed, passPhrase)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", "", "", nil, err
 	}
-	if err := u.uploadPortableAccount(accountInfo, userName, passPhrase, key, fd); err != nil {
+	if err := u.uploadPortableAccount(accountInfo, userName, passPhrase, key, fd); err != nil { // skipcq: TCV-001
 		return "", "", "", "", nil, err
 	}
 	// Instantiate pod, dir & file objects
@@ -170,7 +170,7 @@ func isUserNameValid(username string) bool {
 	}
 	pattern := `^[a-z0-9_-]*$`
 	matches, err := regexp.MatchString(pattern, username)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return false
 	}
 	pattern2 := `^[A-Z]*$`
@@ -187,17 +187,17 @@ func isUserNameValid(username string) bool {
 
 func (u *Users) createENS(userName string, accountInfo *account.Info) (string, error) {
 	err := u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
 	nameHash, err := u.ens.SetResolver(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
 	err = u.ens.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 	return nameHash, nil

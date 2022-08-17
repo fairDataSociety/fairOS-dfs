@@ -33,7 +33,7 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("kv open: invalid request body type")
-		jsonhttp.BadRequest(w, "kv open: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: invalid request body type"})
 		return
 	}
 
@@ -42,21 +42,21 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv open: could not decode arguments")
-		jsonhttp.BadRequest(w, "kv open: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: could not decode arguments"})
 		return
 	}
 
 	podName := kvReq.PodName
 	if podName == "" {
 		h.logger.Errorf("kv open: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv open: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
 		h.logger.Errorf("kv open: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv open: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: \"table_name\" argument missing"})
 		return
 	}
 
@@ -64,20 +64,20 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv open: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv open: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv open: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.KVOpen(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("kv open: %v", err)
-		jsonhttp.InternalServerError(w, "kv open: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv open: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "kv store opened")
+	jsonhttp.OK(w, &response{Message: "kv store opened"})
 }

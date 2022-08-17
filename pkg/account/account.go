@@ -95,28 +95,28 @@ func (a *Account) CreateUserAccount(passPhrase, mnemonic string) (string, string
 	}
 
 	hdw, err := hdwallet.NewFromMnemonic(mnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", err
 	}
 
 	// store publicKey, private key and user
 	a.userAccount.privateKey, err = hdw.PrivateKey(acc)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", err
 	}
 	a.userAccount.publicKey, err = hdw.PublicKey(acc)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", err
 	}
 	addrBytes, err := crypto.NewEthereumAddress(a.userAccount.privateKey.PublicKey)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", err
 	}
 	a.userAccount.address.SetBytes(addrBytes)
 
 	// store the mnemonic
 	encryptedMnemonic, err := a.encryptMnemonic(mnemonic, passPhrase)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", err
 	}
 	a.wallet.encryptedmnemonic = encryptedMnemonic
@@ -139,24 +139,24 @@ func (a *Account) LoadUserAccount(passPhrase, encryptedMnemonic string) error {
 	}
 
 	acc, err := a.wallet.CreateAccount(rootPath, plainMnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	hdw, err := hdwallet.NewFromMnemonic(plainMnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	a.userAccount.privateKey, err = hdw.PrivateKey(acc)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	a.userAccount.publicKey, err = hdw.PublicKey(acc)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	addrBytes, err := crypto.NewEthereumAddress(a.userAccount.privateKey.PublicKey)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	a.userAccount.address.SetBytes(addrBytes)
@@ -170,19 +170,19 @@ func (a *Account) LoadUserAccountFromSeed(seed []byte) error {
 		return err
 	}
 	hdw, err := hdwallet.NewFromSeed(seed)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	a.userAccount.privateKey, err = hdw.PrivateKey(acc)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	a.userAccount.publicKey, err = hdw.PublicKey(acc)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	addrBytes, err := crypto.NewEthereumAddress(a.userAccount.privateKey.PublicKey)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	a.userAccount.address.SetBytes(addrBytes)
@@ -202,14 +202,14 @@ func (a *Account) Authorise(password string) bool {
 		return false
 	}
 	// check the validity of the mnemonic
-	if plainMnemonic == "" {
+	if plainMnemonic == "" { // skipcq: TCV-001
 		return false
 	}
 	words := strings.Split(plainMnemonic, " ")
-	if len(words) != 12 {
+	if len(words) != 12 { // skipcq: TCV-001
 		return false
 	}
-	if !bip39.IsMnemonicValid(plainMnemonic) {
+	if !bip39.IsMnemonicValid(plainMnemonic) { // skipcq: TCV-001
 		return false
 	}
 	return true
@@ -218,7 +218,7 @@ func (a *Account) Authorise(password string) bool {
 // CreatePodAccount is used to create a new key pair from the master mnemonic. this key pair is
 // used as the base key pair for a newly created pod.
 func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod bool) (*Info, error) {
-	if acc, ok := a.podAccounts[accountId]; ok {
+	if acc, ok := a.podAccounts[accountId]; ok { // skipcq: TCV-001
 		return acc, nil
 	}
 	var (
@@ -230,44 +230,44 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 	path := genericPath + strconv.Itoa(accountId)
 	if a.wallet.seed != nil {
 		acc, err = a.wallet.CreateAccountFromSeed(path, a.wallet.seed)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		hdw, err = hdwallet.NewFromSeed(a.wallet.seed)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 	} else {
 		password := passPhrase
-		if password == "" {
+		if password == "" { // skipcq: TCV-001
 			return nil, errBlankPassword
 		}
 
 		plainMnemonic, err := a.wallet.decryptMnemonic(password)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, fmt.Errorf("invalid password")
 		}
 
 		acc, err = a.wallet.CreateAccount(path, plainMnemonic)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		hdw, err = hdwallet.NewFromMnemonic(plainMnemonic)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 	}
 
 	accountInfo.privateKey, err = hdw.PrivateKey(acc)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	accountInfo.publicKey, err = hdw.PublicKey(acc)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	addrBytes, err := crypto.NewEthereumAddress(accountInfo.privateKey.PublicKey)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	accountInfo.address.SetBytes(addrBytes)
@@ -276,6 +276,7 @@ func (a *Account) CreatePodAccount(accountId int, passPhrase string, createPod b
 }
 
 // DeletePodAccount unloads/forgets a particular pods key value pair from the memory.
+// skipcq: TCV-001
 func (a *Account) DeletePodAccount(accountId int) {
 	delete(a.podAccounts, accountId)
 }
@@ -292,36 +293,42 @@ func (a *Account) GetAddress(index int) utils.Address {
 }
 
 // GetUserAccountInfo returns the user info
+// skipcq: TCV-001
 func (a *Account) GetUserAccountInfo() *Info {
 	return a.userAccount
 }
 
 // GetEmptyAccountInfo returns blank user info
+// skipcq: TCV-001
 func (*Account) GetEmptyAccountInfo() *Info {
 	return &Info{}
 }
 
 // GetWallet returns the account.Wallet which contains the encrypted mnemonic or seed
+// skipcq: TCV-001
 func (a *Account) GetWallet() *Wallet {
 	return a.wallet
 }
 
 // IsReadOnlyPod checks if a pod account info is read only
+// skipcq: TCV-001
 func (ai *Info) IsReadOnlyPod() bool {
 	return ai.privateKey == nil
 }
 
 // GetAddress returns the address of the account info
+// skipcq: TCV-001
 func (ai *Info) GetAddress() utils.Address {
 	return ai.address
 }
 
 // SetAddress sets the address of the account info
+// skipcq: TCV-001
 func (ai *Info) SetAddress(addr utils.Address) {
 	ai.address = addr
 }
 
-// GetPrivateKey returns the private key from the accoutn info
+// GetPrivateKey returns the private key from the account info
 func (ai *Info) GetPrivateKey() *ecdsa.PrivateKey {
 	return ai.privateKey
 }
@@ -335,7 +342,7 @@ func (ai *Info) GetPublicKey() *ecdsa.PublicKey {
 func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
 	paddingLength := utils.MaxChunkLength - aes.BlockSize - seedSize
 	randomBytes, err := utils.GetRandBytes(paddingLength)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	chunkData := make([]byte, 0, utils.MaxChunkLength)
@@ -343,7 +350,7 @@ func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
 	chunkData = append(chunkData, randomBytes...)
 	aesKey := sha256.Sum256([]byte(passphrase))
 	encryptedBytes, err := encryptBytes(aesKey[:], chunkData)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("mnemonic padding failed: %w", err)
 	}
 	return encryptedBytes, nil
@@ -353,7 +360,7 @@ func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
 func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, error) {
 	aesKey := sha256.Sum256([]byte(passphrase))
 	decryptedBytes, err := decryptBytes(aesKey[:], paddedSeed)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("seed decryption failed: %w", err)
 	}
 
@@ -363,14 +370,14 @@ func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, er
 func (*Account) encryptMnemonic(mnemonic, passPhrase string) (string, error) {
 	// get the password and hash it to 256 bits
 	password := passPhrase
-	if password == "" {
+	if password == "" { // skipcq: TCV-001
 		return "", errBlankPassword
 	}
 	aesKey := sha256.Sum256([]byte(password))
 
 	// encrypt the mnemonic
 	encryptedMessage, err := encrypt(aesKey[:], mnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", fmt.Errorf("create user account: %w", err)
 	}
 

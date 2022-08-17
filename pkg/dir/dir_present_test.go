@@ -64,5 +64,15 @@ func TestDirPresent(t *testing.T) {
 		if !present {
 			t.Fatalf("directory is not present")
 		}
+
+		err = dirObject.RmDir("/baseDir")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		present = dirObject.IsDirectoryPresent("/baseDir")
+		if present {
+			t.Fatalf("directory is present")
+		}
 	})
 }

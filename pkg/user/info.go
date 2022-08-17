@@ -26,6 +26,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// Info is user information on fairOS
 type Info struct {
 	name       string
 	sessionId  string
@@ -38,38 +39,46 @@ type Info struct {
 	openPodsMu *sync.RWMutex
 }
 
+// GetUserName return username
 func (i *Info) GetUserName() string {
 	return i.name
 }
 
+// GetSessionId get sessionId
 func (i *Info) GetSessionId() string {
 	return i.sessionId
 }
 
+// GetPod returns user pod handler
 func (i *Info) GetPod() *pod.Pod {
 	return i.pod
 }
 
+// GetAccount returns user account info
 func (i *Info) GetAccount() *account.Account {
 	return i.account
 }
 
+// GetFeed returns user feed handler
 func (i *Info) GetFeed() *feed.API {
 	return i.feedApi
 }
 
+// AddPodName adds pod to user user pod map
 func (i *Info) AddPodName(podName string, podInfo *pod.Info) {
 	i.openPodsMu.Lock()
 	defer i.openPodsMu.Unlock()
 	i.openPods[podName] = podInfo
 }
 
+// RemovePodName removes pod from user pod map
 func (i *Info) RemovePodName(podName string) {
 	i.openPodsMu.Lock()
 	defer i.openPodsMu.Unlock()
 	delete(i.openPods, podName)
 }
 
+// IsPodOpen checks if users pod is open
 func (i *Info) IsPodOpen(podName string) bool {
 	i.openPodsMu.RLock()
 	defer i.openPodsMu.RUnlock()
@@ -79,6 +88,7 @@ func (i *Info) IsPodOpen(podName string) bool {
 	return false
 }
 
+// GetUserDirectory returns user directory handler
 func (i *Info) GetUserDirectory() *d.Directory {
 	return i.dir
 }

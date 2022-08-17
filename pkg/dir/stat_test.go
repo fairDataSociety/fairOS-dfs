@@ -17,6 +17,7 @@ limitations under the License.
 package dir_test
 
 import (
+	"errors"
 	"io"
 	"strconv"
 	"testing"
@@ -101,6 +102,16 @@ func TestStat(t *testing.T) {
 		}
 		if dirStats.NoOfFiles != strconv.FormatUint(2, 10) {
 			t.Fatalf("invalid files count")
+		}
+
+		err = dirObject.RmDir("/dirToStat")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = dirObject.DirStat("pod1", "/dirToStat")
+		if !errors.Is(err, dir.ErrDirectoryNotPresent) {
+			t.Fatal("dir should not be present")
 		}
 	})
 }

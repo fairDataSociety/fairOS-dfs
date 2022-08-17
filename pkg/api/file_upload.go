@@ -27,10 +27,10 @@ import (
 )
 
 type UploadFileResponse struct {
-	Responses []Response
+	Responses []UploadResponse
 }
 
-type Response struct {
+type UploadResponse struct {
 	FileName string `json:"file_name"`
 	Message  string `json:"message,omitempty"`
 }
@@ -51,21 +51,21 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("pod_name")
 	if podName == "" {
 		h.logger.Errorf("file upload: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "file upload: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file upload: \"pod_name\" argument missing"})
 		return
 	}
 
 	podPath := r.FormValue("dir_path")
 	if podPath == "" {
 		h.logger.Errorf("file upload: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, "file upload: \"dir_path\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file upload: \"dir_path\" argument missing"})
 		return
 	}
 
 	blockSize := r.FormValue("block_size")
 	if blockSize == "" {
 		h.logger.Errorf("file upload: \"block_size\" argument missing")
-		jsonhttp.BadRequest(w, "file upload: \"block_size\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file upload: \"block_size\" argument missing"})
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	if compression != "" {
 		if compression != "snappy" && compression != "gzip" {
 			h.logger.Errorf("file upload: invalid value for \"compression\" header")
-			jsonhttp.BadRequest(w, "file upload: invalid value for \"compression\" header")
+			jsonhttp.BadRequest(w, &response{Message: "file upload: invalid value for \"compression\" header"})
 			return
 		}
 	}
@@ -82,12 +82,12 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("file upload: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("file upload: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "file upload: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "file upload: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -95,45 +95,45 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseMultipartForm(defaultMaxMemory)
 	if err != nil {
 		h.logger.Errorf("file upload: %v", err)
-		jsonhttp.BadRequest(w, "file upload: "+err.Error())
+		jsonhttp.BadRequest(w, &response{Message: "file upload: " + err.Error()})
 		return
 	}
 
 	bs, err := humanize.ParseBytes(blockSize)
 	if err != nil {
 		h.logger.Errorf("file upload: %v", err)
-		jsonhttp.BadRequest(w, "file upload: "+err.Error())
+		jsonhttp.BadRequest(w, &response{Message: "file upload: " + err.Error()})
 		return
 	}
 
 	files := r.MultipartForm.File["files"]
 	if len(files) == 0 {
 		h.logger.Errorf("file upload: parameter \"files\" missing")
-		jsonhttp.BadRequest(w, "file upload: parameter \"files\" missing")
+		jsonhttp.BadRequest(w, &response{Message: "file upload: parameter \"files\" missing"})
 		return
 	}
 
 	// upload files one by one
-	var responses []Response
+	var responses []UploadResponse
 	for _, file := range files {
 		fd, err := file.Open()
 		if err != nil {
 			h.logger.Errorf("file upload: %v", err)
-			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
+			responses = append(responses, UploadResponse{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
 		err = h.handleFileUpload(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
 		if err != nil {
 			if err == dfs.ErrPodNotOpen {
 				h.logger.Errorf("file upload: %v", err)
-				jsonhttp.BadRequest(w, "file upload: "+err.Error())
+				jsonhttp.BadRequest(w, &response{Message: "file upload: " + err.Error()})
 				return
 			}
 			h.logger.Errorf("file upload: %v", err)
-			responses = append(responses, Response{FileName: file.Filename, Message: err.Error()})
+			responses = append(responses, UploadResponse{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
-		responses = append(responses, Response{FileName: file.Filename, Message: "uploaded successfully"})
+		responses = append(responses, UploadResponse{FileName: file.Filename, Message: "uploaded successfully"})
 	}
 
 	w.Header().Set("Content-Type", " application/json")

@@ -76,6 +76,23 @@ func TestUpload(t *testing.T) {
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
 		}
+
+		err := fileObject.LoadFileMeta(filePath + "/" + fileName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = fileObject.LoadFileMeta(filePath + "/asd" + fileName)
+		if err == nil {
+			t.Fatal("local file meta should fail")
+		}
+
+		meat2, err := fileObject.BackupFromFileName(filePath + "/" + fileName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if meta.Name == meat2.Name {
+			t.Fatal("name should not be same after backup")
+		}
 	})
 
 	t.Run("upload-small-file-at-root", func(t *testing.T) {
@@ -174,6 +191,53 @@ func TestUpload(t *testing.T) {
 		}
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
+		}
+
+		fileObject.RemoveAllFromFileMap()
+
+		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		if meta2 != nil {
+			t.Fatal("meta2 should be nil")
+		}
+	})
+
+	t.Run("upload-small-file-at-root-with-prefix-snappy", func(t *testing.T) {
+		filePath := string(os.PathSeparator)
+		fileName := "file2"
+		compression := "snappy"
+		fileSize := int64(100)
+		blockSize := uint32(10)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check for meta
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		if meta == nil {
+			t.Fatalf("file not added in file map")
+		}
+
+		// validate meta items
+		if meta.Path != filePath {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(fileSize) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
+
+		fileObject.RemoveAllFromFileMap()
+
+		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		if meta2 != nil {
+			t.Fatal("meta2 should be nil")
 		}
 	})
 }

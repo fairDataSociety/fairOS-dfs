@@ -18,14 +18,15 @@ package user
 
 // DeleteUser deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
 // data structures.
+// skipcq: TCV-001
 func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *Info) error {
 	// check if session id and user address present in map
-	if !u.IsUserLoggedIn(sessionId) {
+	if !u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
 		return ErrUserNotLoggedIn
 	}
 
 	// username validation
-	if !u.IsUsernameAvailable(userName, dataDir) {
+	if !u.IsUsernameAvailable(userName, dataDir) { // skipcq: TCV-001
 		return ErrInvalidUserName
 	}
 
@@ -36,26 +37,28 @@ func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *In
 		return ErrInvalidPassword
 	}
 
+	// skipcq: TCV-001
 	// Logout user
 	err := u.Logout(sessionId)
 	if err != nil {
 		return err
 	}
 
+	// skipcq: TCV-001
 	// remove the user mnemonic file and the user-address mapping file
 	address, err := u.getAddressFromUserName(userName, dataDir)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	err = u.deleteMnemonic(userName, address, ui.GetFeed(), u.client)
-	if err != nil {
+	err = u.deleteMnemonic(userName, address, ui.GetFeed(), u.client) // skipcq: TCV-001
+	if err != nil {                                                   // skipcq: TCV-001
 		return err
 	}
 	err = u.deleteUserMapping(userName, dataDir)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	return nil
+	return nil // skipcq: TCV-001
 }
 
 // DeleteUserV2 deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
@@ -67,7 +70,7 @@ func (u *Users) DeleteUserV2(userName, password, sessionId string, ui *Info) err
 	}
 
 	// username validation
-	if !u.IsUsernameAvailableV2(userName) {
+	if !u.IsUsernameAvailableV2(userName) { // skipcq: TCV-001
 		return ErrInvalidUserName
 	}
 
@@ -80,7 +83,7 @@ func (u *Users) DeleteUserV2(userName, password, sessionId string, ui *Info) err
 
 	// Logout user
 	err := u.Logout(sessionId)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 

@@ -46,7 +46,11 @@ func TestRemoveFile(t *testing.T) {
 
 	t.Run("delete-file", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
-
+		// remove file2
+		err = fileObject.RmFile("/dir1/file2")
+		if err == nil {
+			t.Fatal("file not present")
+		}
 		// upload few files
 		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
 		if err != nil {
@@ -77,6 +81,10 @@ func TestRemoveFile(t *testing.T) {
 		}
 		if meta.Name != "file1" {
 			t.Fatalf("retrieved invalid file name")
+		}
+		err := fileObject.LoadFileMeta(utils.CombinePathAndFile("/dir1", "file1"))
+		if err != nil {
+			t.Fatal("loading deleted file meta should be nil")
 		}
 	})
 

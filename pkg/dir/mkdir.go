@@ -70,7 +70,7 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 		Meta: &meta,
 	}
 	data, err := json.Marshal(dirInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -78,12 +78,12 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	previousAddr, _, err := d.fd.GetFeedData(topic, d.userAddress)
 	if err == nil && previousAddr != nil {
 		_, err = d.fd.UpdateFeed(topic, d.userAddress, data)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	} else {
 		_, err = d.fd.CreateFeed(topic, d.userAddress, data)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	}
@@ -101,18 +101,18 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 	// unmarshall the data and add the directory entry to the parent
 	var parentDirInode *Inode
 	err = json.Unmarshal(parentData, &parentDirInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	parentDirInode.FileOrDirNames = append(parentDirInode.FileOrDirNames, dirName)
 
 	// marshall it back and update the parent feed
 	parentData, err = json.Marshal(parentDirInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	_, err = d.fd.UpdateFeed(parentHash, d.userAddress, parentData)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	d.AddToDirectoryMap(parentPath, parentDirInode)
@@ -135,7 +135,7 @@ func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed
 	}
 
 	parentData, err := json.Marshal(&parentDirInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	parentPath := utils.CombinePathAndFile(utils.PathSeparator, "")
@@ -143,12 +143,12 @@ func (d *Directory) MkRootDir(podName string, podAddress utils.Address, fd *feed
 	addr, data, err := d.fd.GetFeedData(parentHash, d.userAddress)
 	if err == nil && addr != nil && data != nil {
 		_, err = fd.UpdateFeed(parentHash, podAddress, parentData)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	} else {
 		_, err = fd.CreateFeed(parentHash, podAddress, parentData)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	}

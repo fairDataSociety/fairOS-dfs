@@ -29,7 +29,7 @@ func (u *Users) LogoutUser(userName, sessionId string) error {
 	}
 
 	err := u.Logout(sessionId)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 

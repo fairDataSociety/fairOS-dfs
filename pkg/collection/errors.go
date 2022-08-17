@@ -34,6 +34,7 @@ var (
 	ErrKVTableNotPresent              = errors.New("kv table not present")
 	ErrKVTableNotOpened               = errors.New("kv table not opened")
 	ErrKVInvalidIndexType             = errors.New("kv invalid index type")
+	ErrKVNilIterator                  = errors.New("iterator not set, seek first")
 	ErrKVIndexTypeNotSupported        = errors.New("kv index type not supported yet")
 	ErrKVKeyNotANumber                = errors.New("kv key not a number")
 	ErrUnmarshallingDBSchema          = errors.New("could not unmarshall document db schema")

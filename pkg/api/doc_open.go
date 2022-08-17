@@ -33,7 +33,7 @@ func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc open: invalid request body type")
-		jsonhttp.BadRequest(w, "doc open: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: invalid request body type"})
 		return
 	}
 
@@ -42,21 +42,21 @@ func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc open: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc open: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: could not decode arguments"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
 		h.logger.Errorf("doc open: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc open: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc open: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc open: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: \"table_name\" argument missing"})
 		return
 	}
 
@@ -64,20 +64,20 @@ func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc open: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc open: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc open: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.DocOpen(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("doc open: %v", err)
-		jsonhttp.InternalServerError(w, "doc open: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc open: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "document store opened")
+	jsonhttp.OK(w, &response{Message: "document store opened"})
 }

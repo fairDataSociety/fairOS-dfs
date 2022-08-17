@@ -17,7 +17,7 @@ limitations under the License.
 package pod_test
 
 import (
-	"fmt"
+	"errors"
 	"io"
 	"testing"
 
@@ -87,6 +87,10 @@ func TestShare(t *testing.T) {
 	podName6 := "test6"
 
 	t.Run("share-pod", func(t *testing.T) {
+		_, err := pod1.PodShare(podName1, "", "password")
+		if err == nil {
+			t.Fatal("pod share should fail, not exists")
+		}
 		// create a pod
 		info, err := pod1.CreatePod(podName1, "password", "")
 		if err != nil {
@@ -209,12 +213,31 @@ func TestShare(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName3)
 		}
-		_, err = pod4.CreatePod(podName4, "password4", "")
+		_, err = pod4.GetAccountInfo(podName4)
+		if err == nil {
+			t.Fatalf("GetAccountInfo for pod4 should fail")
+		}
+
+		pi4, err := pod4.CreatePod(podName4, "password4", "")
 		if err != nil {
-			fmt.Println(err)
 			t.Fatalf("error creating pod %s", podName4)
 		}
 
+		pod4Present := pod4.IsPodPresent(podName4)
+		if !pod4Present {
+			t.Fatal("pod4 should be present")
+		}
+		pod5Present := pod4.IsPodPresent(podName5)
+		if pod5Present {
+			t.Fatal("pod5 should not be present")
+		}
+		pi, err := pod4.GetAccountInfo(podName4)
+		if err != nil {
+			t.Fatalf("error getting info of pod %s", podName4)
+		}
+		if pi.GetAddress() != pi4.GetAccountInfo().GetAddress() {
+			t.Fatalf("pod4 address does not match")
+		}
 		// make root dir so that other directories can be added
 		err = info.GetDirectory().MkRootDir("", info.GetPodAddress(), info.GetFeed())
 		if err != nil {
@@ -239,7 +262,18 @@ func TestShare(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		pod3Present := pod4.IsPodPresent(podName3)
+		if !pod3Present {
+			t.Fatal("pod3 should be present")
+		}
 
+		podInfo2, err := pod4.OpenPod(podName3, "password4")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if podInfo.GetPodName() != podInfo2.GetPodName() {
+			t.Fatal("pod infos do not match")
+		}
 		// verify the pod info
 		if podInfo == nil {
 			t.Fatalf("could not receive sharing info")
@@ -263,6 +297,33 @@ func TestShare(t *testing.T) {
 		}
 		if len(sharedPods) != 1 && sharedPods[0] != podName4 {
 			t.Fatalf("invalid pod name")
+		}
+
+		_, err = pod4.CreatePod(podName4, "", ref.String())
+		if !errors.Is(err, pod.ErrPodAlreadyExists) {
+			t.Fatal("pod should exist")
+		}
+		_, err = pod4.CreatePod(podName3, "", ref.String())
+		if !errors.Is(err, pod.ErrPodAlreadyExists) {
+			t.Fatal("shared pod should exist")
+		}
+		_, err = pod4.CreatePod(podName4, "password4", "")
+		if !errors.Is(err, pod.ErrPodAlreadyExists) {
+			t.Fatal("pod should exist")
+		}
+		_, err = pod4.CreatePod(podName3, "password4", "")
+		if !errors.Is(err, pod.ErrPodAlreadyExists) {
+			t.Fatal("shared pod should exist")
+		}
+
+		err = pod4.DeleteSharedPod(podName3)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = pod4.DeleteSharedPod(podName3)
+		if err == nil {
+			t.Fatal("pod should have been deleted")
 		}
 	})
 

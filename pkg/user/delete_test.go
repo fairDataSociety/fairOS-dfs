@@ -17,6 +17,7 @@ limitations under the License.
 package user_test
 
 import (
+	"errors"
 	"io"
 	"testing"
 
@@ -39,6 +40,18 @@ func TestDelete(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		// delete user with wrong password
+		err = userObject.DeleteUserV2("user1", "password11", ui.GetSessionId(), ui)
+		if !errors.Is(err, user.ErrInvalidPassword) {
+			t.Fatal(err)
+		}
+
+		// delete user invalid sessionid
+		err = userObject.DeleteUserV2("user1", "password1", "invalid_session", ui)
+		if !errors.Is(err, user.ErrUserNotLoggedIn) {
+			t.Fatal(err)
+		}
+
 		// delete user
 		err = userObject.DeleteUserV2("user1", "password1", ui.GetSessionId(), ui)
 		if err != nil {
@@ -49,6 +62,5 @@ func TestDelete(t *testing.T) {
 		if userObject.IsUserNameLoggedIn("user1") {
 			t.Fatalf("user not deleted")
 		}
-		// TODO test if user is deleted
 	})
 }

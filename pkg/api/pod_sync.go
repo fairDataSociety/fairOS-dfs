@@ -34,7 +34,7 @@ func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("pod sync: invalid request body type")
-		jsonhttp.BadRequest(w, "pod sync: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "pod sync: invalid request body type"})
 		return
 	}
 
@@ -43,7 +43,7 @@ func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod sync: could not decode arguments")
-		jsonhttp.BadRequest(w, "pod sync: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "pod sync: could not decode arguments"})
 		return
 	}
 	podName := podReq.PodName
@@ -52,12 +52,12 @@ func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("pod sync: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("pod sync: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "pod sync: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "pod sync: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -69,12 +69,12 @@ func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 			err == p.ErrTooLongPodName ||
 			err == p.ErrPodNotOpened {
 			h.logger.Errorf("pod sync: %v", err)
-			jsonhttp.BadRequest(w, "pod sync: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "pod sync: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("pod sync: %v", err)
-		jsonhttp.InternalServerError(w, "pod sync: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "pod sync: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "pod synced successfully")
+	jsonhttp.OK(w, &response{Message: "pod synced successfully"})
 }

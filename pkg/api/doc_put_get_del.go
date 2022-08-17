@@ -39,7 +39,7 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc put: invalid request body type")
-		jsonhttp.BadRequest(w, "doc put: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "doc put: invalid request body type"})
 		return
 	}
 
@@ -48,27 +48,27 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc put: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc put: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "doc put: could not decode arguments"})
 		return
 	}
 	podName := docReq.PodName
 	if podName == "" {
 		h.logger.Errorf("doc put: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc put: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc put: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc put: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc put: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc put: \"table_name\" argument missing"})
 		return
 	}
 
 	doc := docReq.Document
 	if doc == "" {
 		h.logger.Errorf("doc put: \"doc\" argument missing")
-		jsonhttp.BadRequest(w, "doc put: \"doc\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc put: \"doc\" argument missing"})
 		return
 	}
 
@@ -76,22 +76,22 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc put: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc put: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc put: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc put: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.DocPut(sessionId, podName, name, []byte(doc))
 	if err != nil {
 		h.logger.Errorf("doc put: %v", err)
-		jsonhttp.InternalServerError(w, "doc put: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc put: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "added document to db")
+	jsonhttp.OK(w, &response{Message: "added document to db"})
 }
 
 // DocGetHandler is the api handler to get a document from a document database
@@ -102,39 +102,39 @@ func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc get: \"pod_name\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
 		h.logger.Errorf("doc get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc get: \"pod_name\" argument missing"})
 		return
 	}
 
 	keys, ok = r.URL.Query()["table_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc get: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc get: \"table_name\" argument missing"})
 		return
 	}
 	name := keys[0]
 	if name == "" {
 		h.logger.Errorf("doc get: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc get: \"table_name\" argument missing"})
 		return
 	}
 
 	keys, ok = r.URL.Query()["id"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc get: \"id\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"id\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc get: \"id\" argument missing"})
 		return
 	}
 	id := keys[0]
 	if id == "" {
 		h.logger.Errorf("doc get: \"id\" argument missing")
-		jsonhttp.BadRequest(w, "doc get: \"id\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc get: \"id\" argument missing"})
 		return
 	}
 
@@ -142,19 +142,19 @@ func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc get: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc get: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc get: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc get: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	data, err := h.dfsAPI.DocGet(sessionId, podName, name, id)
 	if err != nil {
 		h.logger.Errorf("doc get: %v", err)
-		jsonhttp.InternalServerError(w, "doc get: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc get: " + err.Error()})
 		return
 	}
 
@@ -173,7 +173,7 @@ func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc del: invalid request body type")
-		jsonhttp.BadRequest(w, "doc del: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "doc del: invalid request body type"})
 		return
 	}
 
@@ -182,28 +182,28 @@ func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc del: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc del: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "doc del: could not decode arguments"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
 		h.logger.Errorf("doc del: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc del: \"pod_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc del: \"pod_name\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
 		h.logger.Errorf("doc del: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc del: \"table_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc del: \"table_name\" argument missing"})
 		return
 	}
 
 	id := docReq.ID
 	if id == "" {
 		h.logger.Errorf("doc del: \"id\" argument missing")
-		jsonhttp.BadRequest(w, "doc del: \"id\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc del: \"id\" argument missing"})
 		return
 	}
 
@@ -211,21 +211,21 @@ func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc del: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc del: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc del: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc del: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.DocDel(sessionId, podName, name, id)
 	if err != nil {
 		h.logger.Errorf("doc del: %v", err)
-		jsonhttp.InternalServerError(w, "doc del: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc del: " + err.Error()})
 		return
 	}
 
-	jsonhttp.OK(w, "deleted document from db")
+	jsonhttp.OK(w, &response{Message: "deleted document from db"})
 }

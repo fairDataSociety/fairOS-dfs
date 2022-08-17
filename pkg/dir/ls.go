@@ -45,11 +45,11 @@ type Entry struct {
 func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		if dirNameWithPath == utils.PathSeparator {
 			return nil, nil, nil
 		}
-		return nil, nil, fmt.Errorf("list dir : %v", err)
+		return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
 	}
 
 	var dirInode Inode
@@ -66,13 +66,13 @@ func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			dirTopic := utils.HashString(dirPath)
 			_, data, err := d.fd.GetFeedData(dirTopic, d.getAddress())
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				return nil, nil, fmt.Errorf("list dir : %v", err)
 			}
 
 			var dirInode *Inode
 			err = json.Unmarshal(data, &dirInode)
-			if err != nil {
+			if err != nil { // skipcq: TCV-001
 				continue
 			}
 			entry := Entry{

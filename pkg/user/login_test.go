@@ -17,6 +17,7 @@ limitations under the License.
 package user_test
 
 import (
+	"errors"
 	"io"
 	"testing"
 
@@ -45,11 +46,18 @@ func TestLogin(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		_, _, _, err = userObject.LoginUserV2("not_an_username", "password1", mockClient, "")
+		if !errors.Is(err, user.ErrInvalidUserName) {
+			t.Fatal(err)
+		}
+
 		// addUserAndSessionToMap user again
 		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", mockClient, "")
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		ui2 := userObject.GetLoggedInUserInfo(ui1.GetSessionId())
 
 		// Validate login
 		if !userObject.IsUserNameLoggedIn("7e4567e7cb003804992eef11fd5c757275a4c") {
@@ -58,6 +66,14 @@ func TestLogin(t *testing.T) {
 
 		if ui.GetAccount().GetUserAccountInfo().GetAddress().Hex() != ui1.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
 			t.Fatal("loaded with different account")
+		}
+
+		if ui.GetAccount().GetUserAccountInfo().GetAddress().Hex() != ui2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+			t.Fatal("got different userinfo")
+		}
+
+		if ui.GetUserDirectory() == nil {
+			t.Fatal("user directory handler should not be nil")
 		}
 	})
 
