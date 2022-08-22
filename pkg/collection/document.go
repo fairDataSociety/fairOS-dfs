@@ -318,13 +318,15 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	// delete the document db from the DB file
 	delete(docTables, dbName)
 
-	if len(docTables) > 0 {
-		// store the rest of the document db
-		err = d.storeDocumentDBSchemas(docTables)
-		if err != nil { // skipcq: TCV-001
-			d.logger.Errorf("deleting document db: ", err.Error())
-			return err
-		}
+	if len(docTables) == 0 {
+		docTables = map[string]DBSchema{}
+	}
+
+	// store the rest of the document db
+	err = d.storeDocumentDBSchemas(docTables)
+	if err != nil { // skipcq: TCV-001
+		d.logger.Errorf("deleting document db: ", err.Error())
+		return err
 	}
 
 	d.logger.Info("deleted document db: ", dbName)

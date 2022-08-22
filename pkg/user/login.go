@@ -56,8 +56,8 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	// load encrypted private key
 	fd := feed.New(accountInfo, client, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
-	if err != nil { // skipcq: TCV-001
-		return nil, "", "", err
+	if err != nil {
+		return nil, "", "", ErrInvalidPassword
 	}
 
 	// decrypt and remove pad from private ley

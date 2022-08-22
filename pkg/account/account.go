@@ -197,6 +197,14 @@ func (a *Account) Authorise(password string) bool {
 		a.logger.Errorf(errBlankPassword.Error())
 		return false
 	}
+
+	/*
+		TODO this is just a temporary fix, in future when mnemonic logic will be removed,
+		 we have to remove Authorise logic or come up with something to check password validity
+	*/
+	if a.wallet.seed != nil {
+		return true
+	}
 	plainMnemonic, err := a.wallet.decryptMnemonic(password)
 	if err != nil {
 		return false

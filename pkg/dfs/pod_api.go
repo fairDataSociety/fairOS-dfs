@@ -87,7 +87,6 @@ func (d *API) DeletePod(podName, passphrase, sessionId string) error {
 			// remove from the login session
 			ui.RemovePodName(podName)
 		}
-
 		return nil
 	}
 
