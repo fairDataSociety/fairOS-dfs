@@ -104,6 +104,16 @@ func TestDocumentStore(t *testing.T) {
 
 		// check if other two db exists
 		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_3"}, docStore)
+		err = docStore.DeleteDocumentDB("docdb_1_1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = docStore.DeleteDocumentDB("docdb_1_3")
+		if err != nil {
+			t.Fatal(err)
+		}
+		checkIfDBNotExists(t, "docdb_1_1", docStore)
+		checkIfDBNotExists(t, "docdb_1_3", docStore)
 	})
 
 	t.Run("create_document_db_with_multiple_indexes", func(t *testing.T) {
@@ -861,6 +871,17 @@ func checkIfDBsExists(t *testing.T, dbNames []string, docStore *collection.Docum
 		if _, found := tables[tableName]; !found {
 			t.Fatalf("document db not found")
 		}
+	}
+}
+
+func checkIfDBNotExists(t *testing.T, tableName string, docStore *collection.Document) {
+	t.Helper()
+	tables, err := docStore.LoadDocumentDBSchemas()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, found := tables[tableName]; found {
+		t.Fatalf("document db found")
 	}
 }
 
