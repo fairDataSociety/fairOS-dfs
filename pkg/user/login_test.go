@@ -51,6 +51,11 @@ func TestLogin(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		_, _, _, err = userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "wrong_password", mockClient, "")
+		if !errors.Is(err, user.ErrInvalidPassword) {
+			t.Fatal(err)
+		}
+
 		// addUserAndSessionToMap user again
 		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", mockClient, "")
 		if err != nil {
