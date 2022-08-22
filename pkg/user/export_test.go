@@ -2,12 +2,10 @@ package user
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -18,7 +16,7 @@ func TestExport(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 
 	t.Run("export-user", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "new")
+		dataDir, err := os.MkdirTemp("", "new")
 		if err != nil {
 			t.Fatal(err)
 		}

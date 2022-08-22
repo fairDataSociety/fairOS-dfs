@@ -96,6 +96,13 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) 
 // CreateNewUserV2 creates a new user with the given user name and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
 func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string) (string, string, string, string, *Info, error) {
+	if userName == "" {
+		return "", "", "", "", nil, ErrBlankUsername
+	}
+	if passPhrase == "" {
+		return "", "", "", "", nil, ErrBlankPassword
+	}
+
 	// Check username validity
 	if !isUserNameValid(userName) {
 		return "", "", "", "", nil, ErrInvalidUserName

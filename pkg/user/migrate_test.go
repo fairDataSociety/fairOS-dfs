@@ -3,7 +3,6 @@ package user
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -17,7 +16,7 @@ func TestNew(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 
 	t.Run("new-user-migrate-invalid-user", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "new")
+		dataDir, err := os.MkdirTemp("", "new")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -40,7 +39,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("new-user-migrate-invalid-session", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "new")
+		dataDir, err := os.MkdirTemp("", "new")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -64,7 +63,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("new-user-migrate", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "new")
+		dataDir, err := os.MkdirTemp("", "new")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -119,7 +118,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("new-user-migrate-already-migrated", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "new")
+		dataDir, err := os.MkdirTemp("", "new")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -153,7 +152,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("new-user-migrate-with-pods", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "new")
+		dataDir, err := os.MkdirTemp("", "new")
 		if err != nil {
 			t.Fatal(err)
 		}
