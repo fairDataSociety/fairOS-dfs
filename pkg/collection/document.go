@@ -347,7 +347,7 @@ func (d *Document) DeleteAllDocumentDBs() error {
 		return err
 	}
 
-	for dbName, _ := range docTables {
+	for dbName := range docTables {
 		// open and delete the indexes
 		if !d.IsDBOpened(dbName) {
 			err = d.OpenDocumentDB(dbName)

@@ -148,7 +148,7 @@ func (kv *KeyValue) DeleteAllKVTables() error {
 		return err
 	}
 
-	for name, _ := range kvtables {
+	for name := range kvtables {
 		if _, ok := kvtables[name]; !ok {
 			return ErrKVTableNotPresent
 		}
