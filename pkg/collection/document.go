@@ -333,6 +333,72 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	return nil
 }
 
+// DeleteAllDocumentDBs deletes all document DBs, all their data and related indxes.
+func (d *Document) DeleteAllDocumentDBs() error {
+	if d.fd.IsReadOnlyFeed() { // skipcq: TCV-001
+		d.logger.Errorf("deleting document db: %v", ErrReadOnlyIndex)
+		return ErrReadOnlyIndex
+	}
+
+	// load the existing db's and see if this name is already there
+	docTables, err := d.LoadDocumentDBSchemas()
+	if err != nil { // skipcq: TCV-001
+		d.logger.Errorf("deleting document db: %v", err.Error())
+		return err
+	}
+
+	for dbName, _ := range docTables {
+		// open and delete the indexes
+		if !d.IsDBOpened(dbName) {
+			err = d.OpenDocumentDB(dbName)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("deleting document db: %v", err.Error())
+				return err
+			}
+		}
+		defer d.removeFromOpenedDB(dbName)
+
+		docDB := d.getOpenedDb(dbName)
+		//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
+		for _, si := range docDB.simpleIndexes {
+			d.logger.Info("deleting simple index: ", si.name, si.indexType)
+			err = si.DeleteIndex()
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("deleting simple index: %v", err.Error())
+				return err
+			}
+		}
+		for _, mi := range docDB.mapIndexes {
+			d.logger.Info("deleting map index: ", mi.name, mi.indexType)
+			err = mi.DeleteIndex()
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("deleting map index: %v", err.Error())
+				return err
+			}
+		}
+		for _, li := range docDB.listIndexes {
+			d.logger.Info("deleting list index: ", li.name, li.indexType)
+			err = li.DeleteIndex()
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("deleting map index: %v", err.Error())
+				return err
+			}
+		}
+
+		// delete the document db from the DB file
+		delete(docTables, dbName)
+
+		d.logger.Info("deleted document db: ", dbName)
+	}
+	docTables = map[string]DBSchema{}
+	err = d.storeDocumentDBSchemas(docTables)
+	if err != nil { // skipcq: TCV-001
+		d.logger.Errorf("deleting document db: ", err.Error())
+		return err
+	}
+	return nil
+}
+
 // Count counts the number of document in a document DB which matches a given expression
 func (d *Document) Count(dbName, expr string) (uint64, error) {
 	d.logger.Info("counting document db: ", dbName, expr)

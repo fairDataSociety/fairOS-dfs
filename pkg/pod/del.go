@@ -40,6 +40,22 @@ func (p *Pod) DeleteOwnPod(podName string) error {
 		return fmt.Errorf("pod not found")
 	}
 
+	// delete tables
+	podInfo, err := p.GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return err
+	}
+
+	err = podInfo.GetDocStore().DeleteAllDocumentDBs()
+	if err != nil {
+		return err
+	}
+
+	err = podInfo.GetKVStore().DeleteAllKVTables()
+	if err != nil {
+		return err
+	}
+
 	// remove it from other data structures
 	p.removePodFromPodMap(podName)
 	p.acc.DeletePodAccount(podIndex)
