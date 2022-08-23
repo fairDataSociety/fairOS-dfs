@@ -5,7 +5,8 @@ GOGOPROTOBUF ?= protoc-gen-gogofaster
 GOGOPROTOBUF_VERSION ?= v1.3.1
 
 COMMIT ?= "$(shell git describe --long --dirty --always --match "" || true)"
-LDFLAGS ?= -s -w -X github.com/fairdatasociety/fairOS-dfs.commit="$(COMMIT)"
+VERSION ?= "$(shell git describe --tags --abbrev=0 || true)"
+LDFLAGS ?= -s -w -X github.com/fairdatasociety/fairOS-dfs.commit="$(COMMIT)" -X github.com/fairdatasociety/fairOS-dfs.version="$(VERSION)"
 
 .PHONY: all
 all: build lint vet test-race binary
