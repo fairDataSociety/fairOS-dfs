@@ -368,7 +368,7 @@ func (d *API) ReceiveFile(podName, sessionId string, sharingRef utils.SharingRef
 // ReceiveInfo is a controller function which validates if the user is logged in,
 // pod is open and calls the ReceiveInfo function to display the shared files
 // information.
-func (d *API) ReceiveInfo(podName, sessionId string, sharingRef utils.SharingReference) (*user.ReceiveFileInfo, error) {
+func (d *API) ReceiveInfo(podName string, sharingRef utils.SharingReference, sessionId string) (*user.ReceiveFileInfo, error) {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {

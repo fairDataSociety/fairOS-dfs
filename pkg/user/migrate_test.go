@@ -11,7 +11,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
-func TestNew(t *testing.T) {
+func TestMigrate(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 

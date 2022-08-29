@@ -30,6 +30,12 @@ type PodRequest struct {
 	SharedPodName string `json:"shared_pod_name,omitempty"`
 }
 
+type PodReceiveRequest struct {
+	PodName       string `json:"pod_name,omitempty"`
+	Reference     string `json:"sharing_ref,omitempty"`
+	SharedPodName string `json:"shared_pod_name,omitempty"`
+}
+
 type FileSystemRequest struct {
 	PodName       string `json:"pod_name,omitempty"`
 	DirectoryPath string `json:"dir_path,omitempty"`
@@ -37,6 +43,12 @@ type FileSystemRequest struct {
 	FilePath      string `json:"file_path,omitempty"`
 	FileName      string `json:"file_name,omitempty"`
 	Destination   string `json:"dest_user,omitempty"`
+}
+
+type FileReceiveRequest struct {
+	PodName          string `json:"pod_name,omitempty"`
+	SharingReference string `json:"sharing_ref,omitempty"`
+	DirectoryPath    string `json:"dir_path,omitempty"`
 }
 
 type KVRequest struct {
