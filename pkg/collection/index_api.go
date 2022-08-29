@@ -385,7 +385,7 @@ func (idx *Index) seekManifestAndEntry(key string) (*Manifest, *Manifest, int, e
 	}
 
 	// if there are any elements in the index, then search for the entry
-	if len(fm.Entries) > 0 {
+	if fm.Entries != nil && len(fm.Entries) > 0 {
 		return idx.findManifest(nil, fm, key)
 	}
 	return nil, nil, 0, ErrEntryNotFound

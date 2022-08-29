@@ -51,6 +51,7 @@ var (
 	KVOpen             Event = "/kv/open"
 	KVDelete           Event = "/kv/delete"
 	KVCount            Event = "/kv/count"
+	KVEntryPresent     Event = "/kv/entry/present"
 	KVEntryPut         Event = "/kv/entry/put"
 	KVEntryGet         Event = "/kv/entry/get"
 	KVEntryDelete      Event = "/kv/entry/del"
@@ -79,11 +80,13 @@ type WebsocketRequest struct {
 }
 
 type FileRequest struct {
-	PodName   string `json:"pod_name,omitempty"`
-	TableName string `json:"table_name,omitempty"`
-	DirPath   string `json:"dir_path,omitempty"`
-	BlockSize string `json:"block_size,omitempty"`
-	FileName  string `json:"file_name,omitempty"`
+	PodName       string `json:"pod_name,omitempty"`
+	TableName     string `json:"table_name,omitempty"`
+	DirPath       string `json:"dir_path,omitempty"`
+	BlockSize     string `json:"block_size,omitempty"`
+	FileName      string `json:"file_name,omitempty"`
+	ContentLength string `json:"content_length,omitempty"`
+	Compression   string `json:"compression,omitempty"`
 }
 
 type FileDownloadRequest struct {

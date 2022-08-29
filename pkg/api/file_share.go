@@ -228,7 +228,7 @@ func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	receiveInfo, err := h.dfsAPI.ReceiveInfo(podName, sessionId, sharingRef)
+	receiveInfo, err := h.dfsAPI.ReceiveInfo(podName, sharingRef, sessionId)
 	if err != nil {
 		h.logger.Errorf("file receive info: %v", err)
 		jsonhttp.InternalServerError(w, &response{Message: "file receive info: " + err.Error()})
