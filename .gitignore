@@ -29,3 +29,7 @@ _cgo_export.*
 .DS_Store
 cover.html
 cover.out
+
+# goreleaser environment resources
+.release-env
+.docker-creds

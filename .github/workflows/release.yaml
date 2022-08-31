@@ -1,5 +1,9 @@
 name: Release
 
+defaults:
+  run:
+    shell: bash
+
 on:
   push:
     branches-ignore:
@@ -21,17 +25,16 @@ jobs:
           fetch-depth: 0
       - name: Fetch all tags
         run: git fetch --force --tags
-      - name: Docker Hub Login
-        run: |
-          printf ${{ secrets.DOCKERHUB_TOKEN }} | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+      - name: setup release environment
+        run: |-
+          echo '${{secrets.DOCKERHUB_USERNAME}}:${{secrets.DOCKERHUB_TOKEN}}:docker.io' > .docker-creds
+          echo 'DOCKER_CREDS_FILE=.docker-creds'                                        > .release-env
+          echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}'                                >> .release-env
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |-
+          sudo rm -rf dist
+          make release
