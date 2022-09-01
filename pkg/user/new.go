@@ -33,6 +33,10 @@ import (
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
 
+const (
+	zeroAddressHex = "0x0000000000000000000000000000000000000000"
+)
+
 // CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
 func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *Info, error) {
@@ -100,28 +104,46 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	if !isUserNameValid(userName) {
 		return "", "", "", "", nil, ErrInvalidUserName
 	}
-	// username availability
-	if u.IsUsernameAvailableV2(userName) {
-		return "", "", "", "", nil, ErrUserAlreadyPresent
+
+	ownerAddress, err := u.ens.GetOwner(userName)
+	if err != nil {
+		return "", "", "", "", nil, err
 	}
+	//// username availability
+	//if u.IsUsernameAvailableV2(userName) {
+	//	return "", "", "", "", nil, ErrUserAlreadyPresent
+	//}
 
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, u.client, u.logger)
 	//create a new base user account with the mnemonic
-	mnemonic, _, err := acc.CreateUserAccount(passPhrase, mnemonic)
+	mnemonic, _, err = acc.CreateUserAccount(passPhrase, mnemonic)
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
 
-	// create ens subdomain and store mnemonic
-	nameHash, err := u.createENS(userName, accountInfo)
-	if err != nil { // skipcq: TCV-001
-		if err == eth.ErrInsufficientBalance { // skipcq: TCV-001
-			return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
-		}
-		return "", "", "", "", nil, err // skipcq: TCV-001
+	if ownerAddress.Hex() != zeroAddressHex &&
+		ownerAddress.Hex() != accountInfo.GetAddress().Hex() {
+		return "", "", "", "", nil, ErrUserAlreadyPresent
 	}
+	nameHash := ""
+	if ownerAddress.Hex() == zeroAddressHex {
+		// create ens subdomain and store mnemonic
+		nameHash, err = u.createENS(userName, accountInfo)
+		if err != nil { // skipcq: TCV-001
+			if err == eth.ErrInsufficientBalance { // skipcq: TCV-001
+				return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
+			}
+			return "", "", "", "", nil, err // skipcq: TCV-001
+		}
+	} else {
+		_, nameHash, err = u.ens.GetInfo(userName)
+		if err != nil { // skipcq: TCV-001
+			return "", "", "", "", nil, err
+		}
+	}
+
 	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
 	if err != nil { // skipcq: TCV-001
 		return "", "", "", "", nil, err

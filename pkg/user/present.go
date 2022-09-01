@@ -27,5 +27,5 @@ func (u *Users) IsUsernameAvailableV2(userName string) bool {
 	if err != nil { // skipcq: TCV-001
 		return false
 	}
-	return addr.Hex() != "0x0000000000000000000000000000000000000000"
+	return addr.Hex() != zeroAddressHex
 }
