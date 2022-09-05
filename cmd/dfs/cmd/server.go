@@ -204,42 +204,7 @@ func startHttpService(logger logging.Logger) {
 
 	// Web page handlers
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := fmt.Fprintln(w, "FairOS-dfs")
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, dfs.Version)
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, beeApi)
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, verbosity)
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, httpPort)
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, pprofPort)
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, cookieDomain)
-		if err != nil {
-			logger.Errorf("error in API /: ", err)
-			return
-		}
-		_, err = fmt.Fprintln(w, corsOrigins)
+		_, err := fmt.Fprintln(w, "OK")
 		if err != nil {
 			logger.Errorf("error in API /: ", err)
 			return

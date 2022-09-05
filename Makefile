@@ -5,7 +5,8 @@ GOGOPROTOBUF ?= protoc-gen-gogofaster
 GOGOPROTOBUF_VERSION ?= v1.3.1
 
 COMMIT ?= "$(shell git describe --long --dirty --always --match "" || true)"
-LDFLAGS ?= -s -w -X github.com/fairdatasociety/fairOS-dfs.commit="$(COMMIT)"
+VERSION ?= "$(shell git describe --tags --abbrev=0 || true)"
+LDFLAGS ?= -s -w -X github.com/fairdatasociety/fairOS-dfs.commit="$(COMMIT)" -X github.com/fairdatasociety/fairOS-dfs.version="$(VERSION)"
 
 .PHONY: all
 all: build lint vet test-race binary
@@ -62,5 +63,26 @@ protobuf: protobuftools
 clean:
 	$(GO) clean
 	rm -rf dist/
+
+.PHONY: release
+release:
+	docker run --rm --privileged \
+		--env-file .release-env \
+		-v ~/go/pkg/mod:/go/pkg/mod \
+		-v `pwd`:/go/src/github.com/asabya/fairOS-dfs \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-w /go/src/github.com/asabya/fairOS-dfs \
+		ghcr.io/goreleaser/goreleaser-cross:v1.19.0 release --rm-dist
+
+.PHONY: release-dry-run
+release-dry-run:
+	docker run --rm --privileged \
+		-v ~/go/pkg/mod:/go/pkg/mod \
+		-v `pwd`:/go/src/github.com/asabya/fairOS-dfs \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-w /go/src/github.com/asabya/fairOS-dfs \
+		ghcr.io/goreleaser/goreleaser-cross:v1.19.0 release --rm-dist \
+		--skip-validate=true \
+		--skip-publish
 
 FORCE:

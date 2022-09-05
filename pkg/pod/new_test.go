@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 		}
 
 		// check too long pod name
-		randomLongPOdName, err := utils.GetRandString(26)
+		randomLongPOdName, err := utils.GetRandString(65)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}

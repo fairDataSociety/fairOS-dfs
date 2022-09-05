@@ -22,18 +22,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
 func TestDelete(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
+
 	_, _, err := acc.CreateUserAccount("password", "")
 	if err != nil {
 		t.Fatal(err)
@@ -144,4 +145,59 @@ func TestDelete(t *testing.T) {
 
 	})
 
+	t.Run("create-pod-and-del-with-tables", func(t *testing.T) {
+		podName := "delPod"
+		for i := 0; i < 10; i++ {
+			pi, err := pod1.CreatePod(podName, "password", "")
+			if err != nil {
+				t.Fatalf("error creating pod %s", podName)
+			}
+			dbTables, err := pi.GetDocStore().LoadDocumentDBSchemas()
+			if err != nil {
+				t.Fatalf("err doc list %s", podName)
+			}
+			if len(dbTables) != 0 {
+				t.Fatal("doc tables delete failed while pod delete")
+			}
+			kvTables, err := pi.GetKVStore().LoadKVTables()
+			if err != nil {
+				t.Fatalf("err kv list %s", podName)
+			}
+			if len(kvTables) != 0 {
+				t.Fatal("kv tables delete failed while pod delete")
+			}
+			si := make(map[string]collection.IndexType)
+			si["first_name"] = collection.StringIndex
+			si["age"] = collection.NumberIndex
+			err = pi.GetDocStore().CreateDocumentDB("dbName", si, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = pi.GetKVStore().CreateKVTable("kvName", collection.StringIndex)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			dbTables, err = pi.GetDocStore().LoadDocumentDBSchemas()
+			if err != nil {
+				t.Fatalf("err doc list %s", podName)
+			}
+			if len(dbTables) != 1 {
+				t.Fatal("doc tables create failed while pod delete")
+			}
+			kvTables, err = pi.GetKVStore().LoadKVTables()
+			if err != nil {
+				t.Fatalf("err kv list %s", podName)
+			}
+			if len(kvTables) != 1 {
+				t.Fatal("kv tables create failed while pod delete")
+			}
+
+			err = pod1.DeleteOwnPod(podName)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+	})
 }

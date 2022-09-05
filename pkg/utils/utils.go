@@ -42,7 +42,7 @@ const (
 	PathSeparator = string(os.PathSeparator)
 
 	// MaxPodNameLength defines how long a pod name can be
-	MaxPodNameLength = 25
+	MaxPodNameLength = 64
 
 	// SpanLength of a chunk
 	SpanLength = 8

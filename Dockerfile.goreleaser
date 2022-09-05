@@ -1,13 +1,9 @@
-FROM alpine:3.15
+FROM debian:bullseye
 
-ARG CONFIG
-ENV CONFIG=$CONFIG
+RUN apt-get update
+RUN apt-get install -y ca-certificates
+RUN update-ca-certificates
 
-RUN addgroup -g 10000 fds
-RUN adduser -u 10000 -G fds -h /home/fds -D fds
-
-USER fds
-RUN if [ -n "$CONFIG" ]; then  echo -e "$CONFIG" > ~/.dfs.yaml; fi
 EXPOSE 9090
 
 COPY dfs /usr/local/bin/dfs

@@ -135,7 +135,46 @@ func (kv *KeyValue) DeleteKVTable(name string) error {
 	}
 	delete(kvtables, name)
 	return kv.storeKVTables(kvtables)
+}
 
+// DeleteAllKVTables deletes all key value tables with all their index and data entries.
+func (kv *KeyValue) DeleteAllKVTables() error {
+	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
+		return ErrReadOnlyIndex
+	}
+
+	kvtables, err := kv.LoadKVTables()
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
+	for name := range kvtables {
+		if _, ok := kvtables[name]; !ok {
+			return ErrKVTableNotPresent
+		}
+
+		kv.openKVTMu.Lock()
+		defer kv.openKVTMu.Unlock()
+		if table, ok := kv.openKVTables[name]; ok {
+			err = table.index.DeleteIndex()
+			if err != nil { // skipcq: TCV-001
+				return err
+			}
+			delete(kv.openKVTables, name)
+		} else {
+			idx, err := OpenIndex(kv.podName, defaultCollectionName, name, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+			if err != nil { // skipcq: TCV-001
+				return err
+			}
+			err = idx.DeleteIndex()
+			if err != nil { // skipcq: TCV-001
+				return err
+			}
+		}
+		delete(kvtables, name)
+	}
+
+	return kv.storeKVTables(kvtables)
 }
 
 // OpenKVTable open a given key value table and loads the index.
