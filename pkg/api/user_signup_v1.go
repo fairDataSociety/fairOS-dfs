@@ -21,8 +21,6 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )
 
@@ -50,7 +48,6 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	user := userReq.UserName
 	password := userReq.Password
-	mnemonic := userReq.Mnemonic
 	if user == "" {
 		h.logger.Errorf("user signup: \"user\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "user signup: \"user\" argument missing"})
@@ -61,37 +58,5 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "user signup: \"password\" argument missing"})
 		return
 	}
-
-	// create user
-	address, createdMnemonic, ui, err := h.dfsAPI.CreateUser(user, password, mnemonic, "")
-	if err != nil {
-		if err == u.ErrUserAlreadyPresent {
-			h.logger.Errorf("user signup: %v", err)
-			jsonhttp.BadRequest(w, &response{Message: "user signup: " + err.Error()})
-			return
-		}
-		h.logger.Errorf("user signup: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user signup: " + err.Error()})
-		return
-	}
-
-	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
-	if err != nil {
-		h.logger.Errorf("user signup: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user signup: " + err.Error()})
-		return
-	}
-
-	if mnemonic == "" {
-		mnemonic = createdMnemonic
-	} else {
-		mnemonic = ""
-	}
-
-	// send the response
-	w.Header().Set("Content-Type", " application/json")
-	jsonhttp.Created(w, &UserSignupResponse{
-		Address:  address,
-		Mnemonic: mnemonic,
-	})
+	jsonhttp.BadRequest(w, &response{Message: "user signup: deprecated"})
 }

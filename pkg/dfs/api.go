@@ -17,7 +17,12 @@ limitations under the License.
 package dfs
 
 import (
+	"context"
 	"errors"
+	"io"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
@@ -27,12 +32,18 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
+const (
+	defaultMaxWorkers = 100
+)
+
 // API is the go api for fairOS
 type API struct {
 	client  blockstore.Client
 	users   *user.Users
 	logger  logging.Logger
 	dataDir string
+	tm      *taskmanager.TaskManager
+	io.Closer
 }
 
 // NewDfsAPI is the main entry point for the df controller.
@@ -49,11 +60,13 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensC
 		return nil, ErrBeeClient
 	}
 	users := user.NewUsers(dataDir, c, ens, logger)
+
 	return &API{
 		client:  c,
 		users:   users,
 		logger:  logger,
 		dataDir: dataDir,
+		tm:      taskmanager.New(1, defaultMaxWorkers, time.Second*15, logger),
 	}, nil
 }
 
@@ -64,5 +77,13 @@ func NewMockDfsAPI(client blockstore.Client, users *user.Users, logger logging.L
 		users:   users,
 		logger:  logger,
 		dataDir: dataDir,
+		tm:      taskmanager.New(1, 100, time.Second*15, logger),
 	}
+}
+
+// Close stops the taskmanager
+func (a *API) Close() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	return a.tm.Stop(ctx)
 }

@@ -17,10 +17,14 @@ limitations under the License.
 package dir_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -42,12 +46,16 @@ func TestRmdir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
 
 	t.Run("simple-rmdir", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)
@@ -86,7 +94,7 @@ func TestRmdir(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if dirEntry != nil {
+		if len(dirEntry) != 0 {
 			t.Fatalf("could not delete directory")
 		}
 
@@ -96,7 +104,7 @@ func TestRmdir(t *testing.T) {
 		}
 	})
 	t.Run("nested-rmdir", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)
@@ -147,7 +155,7 @@ func TestRmdir(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if dirEntry != nil {
+		if len(dirEntry) != 0 {
 			t.Fatalf("could not delete directory")
 		}
 	})
@@ -168,9 +176,12 @@ func TestRmRootDirByPath(t *testing.T) {
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
-
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	t.Run("rmrootdir", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)
@@ -251,12 +262,16 @@ func TestRmRootDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
 
 	t.Run("rmrootdir", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)

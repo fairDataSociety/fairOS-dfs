@@ -17,9 +17,13 @@ limitations under the License.
 package dir_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
@@ -46,9 +50,13 @@ func TestListDirectory(t *testing.T) {
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("list-dirr", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)
@@ -135,7 +143,7 @@ func TestListDirectory(t *testing.T) {
 	})
 
 	t.Run("list-dir-from-different-dir-object", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)
@@ -154,7 +162,7 @@ func TestListDirectory(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		dirObject2 := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject2 := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 		err = dirObject2.AddRootDir("pod1", user, fd)
 		if err != nil {
 			t.Fatal(err)

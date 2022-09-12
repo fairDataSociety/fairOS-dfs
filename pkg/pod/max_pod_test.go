@@ -4,6 +4,9 @@ import (
 	"errors"
 	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -22,7 +25,9 @@ func TestMaxPods(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, logger)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 
 	t.Run("create-max-pods", func(t *testing.T) {
 		maxPodId := 140

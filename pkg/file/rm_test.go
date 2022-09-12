@@ -17,8 +17,12 @@ limitations under the License.
 package file_test
 
 import (
+	"context"
 	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -43,9 +47,12 @@ func TestRemoveFile(t *testing.T) {
 	}
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
-
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	t.Run("delete-file", func(t *testing.T) {
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		// remove file2
 		err = fileObject.RmFile("/dir1/file2")
 		if err == nil {
@@ -89,7 +96,7 @@ func TestRemoveFile(t *testing.T) {
 	})
 
 	t.Run("delete-file-in-loop", func(t *testing.T) {
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		for i := 0; i < 80; i++ {
 			// upload file1

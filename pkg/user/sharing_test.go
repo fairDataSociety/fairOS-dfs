@@ -24,6 +24,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -34,6 +35,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
 )
 
 func TestSharing(t *testing.T) {
@@ -49,8 +51,10 @@ func TestSharing(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+
 	fd1 := feed.New(acc1.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd1, acc1, logger)
+	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, logger)
 	podName1 := "test1"
 
 	acc2 := account.New(logger)
@@ -63,14 +67,14 @@ func TestSharing(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, logger)
 	podName2 := "test2"
 
 	t.Run("sharing-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		//create source user
 		userObject1 := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1", "", "")
+		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -108,7 +112,7 @@ func TestSharing(t *testing.T) {
 
 		//create destination user
 		userObject2 := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password2", "", "")
+		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password2", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}

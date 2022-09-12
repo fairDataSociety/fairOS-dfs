@@ -17,9 +17,13 @@ limitations under the License.
 package pod_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -38,7 +42,11 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, logger)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"
 
 	acc2 := account.New(logger)
@@ -47,7 +55,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, logger)
 	podName2 := "test2"
 
 	acc3 := account.New(logger)
@@ -56,7 +64,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd3 := feed.New(acc3.GetUserAccountInfo(), mockClient, logger)
-	pod3 := pod.NewPod(mockClient, fd3, acc3, logger)
+	pod3 := pod.NewPod(mockClient, fd3, acc3, tm, logger)
 	podName3 := "test3"
 
 	acc4 := account.New(logger)
@@ -65,7 +73,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd4 := feed.New(acc4.GetUserAccountInfo(), mockClient, logger)
-	pod4 := pod.NewPod(mockClient, fd4, acc4, logger)
+	pod4 := pod.NewPod(mockClient, fd4, acc4, tm, logger)
 	podName4 := "test4"
 
 	acc5 := account.New(logger)
@@ -74,7 +82,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd5 := feed.New(acc5.GetUserAccountInfo(), mockClient, logger)
-	pod5 := pod.NewPod(mockClient, fd5, acc5, logger)
+	pod5 := pod.NewPod(mockClient, fd5, acc5, tm, logger)
 	podName5 := "test5"
 
 	acc6 := account.New(logger)
@@ -83,7 +91,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd6 := feed.New(acc6.GetUserAccountInfo(), mockClient, logger)
-	pod6 := pod.NewPod(mockClient, fd6, acc6, logger)
+	pod6 := pod.NewPod(mockClient, fd6, acc6, tm, logger)
 	podName6 := "test6"
 
 	t.Run("share-pod", func(t *testing.T) {

@@ -16,6 +16,11 @@ limitations under the License.
 
 package pod
 
+import (
+	"context"
+	"sync"
+)
+
 // SyncPod syncs the pod to the latest version by extracting the current meta information
 // of files and directories of the pod.
 func (p *Pod) SyncPod(podName string) error {
@@ -34,10 +39,38 @@ func (p *Pod) SyncPod(podName string) error {
 	}
 
 	// sync from the root directory
-	err = podInfo.GetDirectory().SyncDirectory("/")
+	wg := new(sync.WaitGroup)
+	err = podInfo.GetDirectory().SyncDirectoryAsync(context.Background(), "/", wg)
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// SyncPodAsync syncs the pod to the latest version by extracting the current meta information
+// of files and directories of the pod, concurrently.
+func (p *Pod) SyncPodAsync(ctx context.Context, podName string) error {
+	podName, err := cleanPodName(podName)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
+	if !p.IsPodOpened(podName) {
+		return ErrPodNotOpened
+	}
+
+	podInfo, err := p.GetPodInfoFromPodMap(podName)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
+	// sync from the root directory
+	wg := new(sync.WaitGroup)
+	err = podInfo.GetDirectory().SyncDirectoryAsync(ctx, "/", wg)
+	if err != nil {
+		return err
+	}
+	wg.Wait()
 	return nil
 }

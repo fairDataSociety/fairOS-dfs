@@ -38,16 +38,6 @@ func (*Users) isUserMappingPresent(userName, dataDir string) bool {
 	return !info.IsDir()
 }
 
-func (*Users) storeUserNameToAddressFileMapping(userName, dataDir string, address utils.Address) error {
-	destDir := filepath.Join(dataDir, userDirectoryName)
-	err := os.MkdirAll(destDir, 0700)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-	userFileName := filepath.Join(destDir, userName)
-	return os.WriteFile(userFileName, address.ToBytes(), 0700)
-}
-
 func (*Users) deleteUserMapping(userName, dataDir string) error {
 	destDir := filepath.Join(dataDir, userDirectoryName)
 	userFileName := filepath.Join(destDir, userName)

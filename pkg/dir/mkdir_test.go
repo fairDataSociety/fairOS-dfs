@@ -17,8 +17,12 @@ limitations under the License.
 package dir_test
 
 import (
+	"context"
 	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -40,11 +44,15 @@ func TestMkdir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
 	t.Run("simple-mkdir", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)
@@ -71,7 +79,7 @@ func TestMkdir(t *testing.T) {
 		}
 	})
 	t.Run("complicated-mkdir", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)

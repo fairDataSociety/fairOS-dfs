@@ -19,6 +19,9 @@ package pod
 import (
 	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -32,7 +35,8 @@ func TestPod_ListPods(t *testing.T) {
 	acc := account.New(logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, mockClient, logger)
-	pod1 := NewPod(mockClient, fd, acc, logger)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	pod1 := NewPod(mockClient, fd, acc, tm, logger)
 	_, _, err := acc.CreateUserAccount("password", "")
 	if err != nil {
 		t.Fatal(err)

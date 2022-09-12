@@ -64,8 +64,8 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		accountInfo.SetAddress(address)
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
-		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
 		// set the userAddress as the pod address we got from shared pod
 		user = address
@@ -82,8 +82,8 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		}
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.logger)
-		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.logger)
+		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
+		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
 		user = p.acc.GetAddress(index)
 	}

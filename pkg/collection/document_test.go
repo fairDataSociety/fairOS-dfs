@@ -17,11 +17,14 @@ limitations under the License.
 package collection_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"testing"
 	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -51,7 +54,11 @@ func TestDocumentStore(t *testing.T) {
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-	file := f.NewFile("pod1", mockClient, fd, user, logger)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
+	file := f.NewFile("pod1", mockClient, fd, user, tm, logger)
 	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, mockClient, logger)
 
 	t.Run("create_document_db_errors", func(t *testing.T) {

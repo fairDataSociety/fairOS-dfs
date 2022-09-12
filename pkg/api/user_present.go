@@ -43,18 +43,7 @@ func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "user present: \"user\" argument missing"})
 		return
 	}
-
-	w.Header().Set("Content-Type", " application/json")
-	// check if user is present
-	if h.dfsAPI.IsUserNameAvailable(user) {
-		jsonhttp.OK(w, &PresentResponse{
-			Present: true,
-		})
-	} else {
-		jsonhttp.OK(w, &PresentResponse{
-			Present: false,
-		})
-	}
+	jsonhttp.BadRequest(w, &response{Message: "user present: deprecated"})
 }
 
 // UserPresentV2Handler is the api handler to check if a gien user name is present

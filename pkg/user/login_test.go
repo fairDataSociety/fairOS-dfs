@@ -20,11 +20,13 @@ import (
 	"errors"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/plexsysio/taskmanager"
 )
 
 func TestLogin(t *testing.T) {
@@ -32,10 +34,12 @@ func TestLogin(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 
 	t.Run("login-user", func(t *testing.T) {
+		tm := taskmanager.New(1, 10, time.Second*15, logger)
+
 		ens := mock2.NewMockNamespaceManager()
 		//create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", "", "")
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -46,18 +50,18 @@ func TestLogin(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, _, _, err = userObject.LoginUserV2("not_an_username", "password1", mockClient, "")
+		_, _, _, err = userObject.LoginUserV2("not_an_username", "password1", mockClient, tm, "")
 		if !errors.Is(err, user.ErrInvalidUserName) {
 			t.Fatal(err)
 		}
 
-		_, _, _, err = userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "wrong_password", mockClient, "")
+		_, _, _, err = userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "wrong_password", mockClient, tm, "")
 		if !errors.Is(err, user.ErrInvalidPassword) {
 			t.Fatal(err)
 		}
 
 		// addUserAndSessionToMap user again
-		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", mockClient, "")
+		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", mockClient, tm, "")
 		if err != nil {
 			t.Fatal(err)
 		}

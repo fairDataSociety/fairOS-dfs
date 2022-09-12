@@ -17,10 +17,14 @@ limitations under the License.
 package pod_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
@@ -40,7 +44,11 @@ func TestNew(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, logger)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 
 	podName1 := "test1"
 	podName2 := "test2"

@@ -40,16 +40,5 @@ func (h *Handler) ExportUserHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "user export: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
-
-	name, address, err := h.dfsAPI.ExportUser(sessionId)
-	if err != nil {
-		h.logger.Errorf("user export: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user export: " + err.Error()})
-		return
-	}
-
-	jsonhttp.OK(w, &UserExportResponse{
-		Name:    name,
-		Address: address,
-	})
+	jsonhttp.BadRequest(w, &response{Message: "user export: deprecated"})
 }

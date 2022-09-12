@@ -30,9 +30,9 @@ import (
 
 // Mkdir is a controller function which validates if the user is logged in,
 // pod is open and calls the make directory function in the dir object.
-func (d *API) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
+func (a *API) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -57,9 +57,9 @@ func (d *API) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
 
 // IsDirPresent is acontroller function which validates if the user is logged in,
 // pod is open and calls the dir object to check if the directory is present.
-func (d *API) IsDirPresent(podName, directoryNameWithPath, sessionId string) (bool, error) {
+func (a *API) IsDirPresent(podName, directoryNameWithPath, sessionId string) (bool, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return false, ErrUserNotLoggedIn
 	}
@@ -82,9 +82,9 @@ func (d *API) IsDirPresent(podName, directoryNameWithPath, sessionId string) (bo
 
 // RmDir is a controller function which validates if the user is logged in,
 // pod is open and calls the dir object to remove the supplied directory.
-func (d *API) RmDir(podName, directoryNameWithPath, sessionId string) error {
+func (a *API) RmDir(podName, directoryNameWithPath, sessionId string) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -109,9 +109,9 @@ func (d *API) RmDir(podName, directoryNameWithPath, sessionId string) error {
 
 // ListDir is a controller function which validates if the user is logged in,
 // pod is open and calls the dir object to list the contents of the supplied directory.
-func (d *API) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.Entry, error) {
+func (a *API) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.Entry, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, nil, ErrUserNotLoggedIn
 	}
@@ -147,9 +147,9 @@ func (d *API) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.E
 
 // DirectoryStat is a controller function which validates if the user is logged in,
 // pod is open and calls the dir object to get the information about the given directory.
-func (d *API) DirectoryStat(podName, directoryName, sessionId string) (*dir.Stats, error) {
+func (a *API) DirectoryStat(podName, directoryName, sessionId string) (*dir.Stats, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -175,9 +175,9 @@ func (d *API) DirectoryStat(podName, directoryName, sessionId string) (*dir.Stat
 // DeleteFile is a controller function which validates if the user is logged in,
 // pod is open and delete the file. It also remove the file entry from the parent
 // directory.
-func (d *API) DeleteFile(podName, podFileWithPath, sessionId string) error {
+func (a *API) DeleteFile(podName, podFileWithPath, sessionId string) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -215,9 +215,9 @@ func (d *API) DeleteFile(podName, podFileWithPath, sessionId string) error {
 
 // FileStat is a controller function which validates if the user is logged in,
 // pod is open and gets the information about the file.
-func (d *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, error) {
+func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -241,9 +241,9 @@ func (d *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 
 // UploadFile is a controller function which validates if the user is logged in,
 //  pod is open and calls the upload function.
-func (d *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32) error {
+func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -288,9 +288,9 @@ func (d *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 
 // DownloadFile is a controller function which validates if the user is logged in,
 // pod is open and calls the download function.
-func (d *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadCloser, uint64, error) {
+func (a *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadCloser, uint64, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, 0, ErrUserNotLoggedIn
 	}
@@ -322,9 +322,9 @@ func (d *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadC
 
 // ShareFile is a controller function which validates if the user is logged in,
 // pod is open and calls the sharefile function.
-func (d *API) ShareFile(podName, podFileWithPath, destinationUser, sessionId string) (string, error) {
+func (a *API) ShareFile(podName, podFileWithPath, destinationUser, sessionId string) (string, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return "", ErrUserNotLoggedIn
 	}
@@ -340,7 +340,7 @@ func (d *API) ShareFile(podName, podFileWithPath, destinationUser, sessionId str
 		return "", err
 	}
 
-	sharingRef, err := d.users.ShareFileWithUser(podName, podFileWithPath, destinationUser, ui, ui.GetPod(), podInfo.GetAccountInfo().GetAddress())
+	sharingRef, err := a.users.ShareFileWithUser(podName, podFileWithPath, destinationUser, ui, ui.GetPod(), podInfo.GetAccountInfo().GetAddress())
 	if err != nil {
 		return "", err
 	}
@@ -350,9 +350,9 @@ func (d *API) ShareFile(podName, podFileWithPath, destinationUser, sessionId str
 // ReceiveFile is a controller function which validates if the user is logged in,
 // pod is open and calls the ReceiveFile function to get the shared file in to the
 // given pod.
-func (d *API) ReceiveFile(podName, sessionId string, sharingRef utils.SharingReference, dir string) (string, error) {
+func (a *API) ReceiveFile(podName, sessionId string, sharingRef utils.SharingReference, dir string) (string, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return "", ErrUserNotLoggedIn
 	}
@@ -362,15 +362,15 @@ func (d *API) ReceiveFile(podName, sessionId string, sharingRef utils.SharingRef
 		return "", ErrPodNotOpen
 	}
 
-	return d.users.ReceiveFileFromUser(podName, sharingRef, ui, ui.GetPod(), dir)
+	return a.users.ReceiveFileFromUser(podName, sharingRef, ui, ui.GetPod(), dir)
 }
 
 // ReceiveInfo is a controller function which validates if the user is logged in,
 // pod is open and calls the ReceiveInfo function to display the shared files
 // information.
-func (d *API) ReceiveInfo(podName, sessionId string, sharingRef utils.SharingReference) (*user.ReceiveFileInfo, error) {
+func (a *API) ReceiveInfo(podName, sessionId string, sharingRef utils.SharingReference) (*user.ReceiveFileInfo, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -380,5 +380,5 @@ func (d *API) ReceiveInfo(podName, sessionId string, sharingRef utils.SharingRef
 		return nil, ErrPodNotOpen
 	}
 
-	return d.users.ReceiveFileInfo(sharingRef)
+	return a.users.ReceiveFileInfo(sharingRef)
 }

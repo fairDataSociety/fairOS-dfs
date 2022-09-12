@@ -34,6 +34,7 @@ import (
 )
 
 var (
+	pprof          bool
 	httpPort       string
 	pprofPort      string
 	cookieDomain   string
@@ -183,12 +184,16 @@ can consume it.`,
 			return err
 		}
 		handler = hdlr
+		if pprof {
+			go startPprofService(logger)
+		}
 		startHttpService(logger)
 		return nil
 	},
 }
 
 func init() {
+	serverCmd.Flags().BoolVar(&pprof, "pprof", false, "should run pprof")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
@@ -353,20 +358,19 @@ func startHttpService(logger logging.Logger) {
 	// Insert the middleware
 	handler := c.Handler(router)
 
-	// starting the pprof server
-	go func() {
-		logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
-		err := http.ListenAndServe("localhost"+pprofPort, nil)
-		if err != nil {
-			logger.Errorf("pprof listenAndServe: %v ", err.Error())
-			return
-		}
-	}()
-
 	logger.Infof("fairOS-dfs API server listening on port: %v", httpPort)
 	err := http.ListenAndServe(httpPort, handler)
 	if err != nil {
 		logger.Errorf("http listenAndServe: %v ", err.Error())
+		return
+	}
+}
+
+func startPprofService(logger logging.Logger) {
+	logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
+	err := http.ListenAndServe("localhost"+pprofPort, nil)
+	if err != nil {
+		logger.Errorf("pprof listenAndServe: %v ", err.Error())
 		return
 	}
 }

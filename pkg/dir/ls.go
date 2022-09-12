@@ -17,10 +17,9 @@ limitations under the License.
 package dir
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -58,36 +57,27 @@ func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 		return nil, nil, fmt.Errorf("list dir : %v", err)
 	}
 
-	var listEntries []Entry
+	wg := new(sync.WaitGroup)
+	mtx := &sync.Mutex{}
+	listEntries := &[]Entry{}
 	var files []string
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
 			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			dirTopic := utils.HashString(dirPath)
-			_, data, err := d.fd.GetFeedData(dirTopic, d.getAddress())
-			if err != nil { // skipcq: TCV-001
+			wg.Add(1)
+			lsTask := newLsTask(d, dirTopic, dirPath, listEntries, mtx, wg)
+			_, err := d.syncManager.Go(lsTask)
+			if err != nil {
 				return nil, nil, fmt.Errorf("list dir : %v", err)
 			}
-
-			var dirInode *Inode
-			err = json.Unmarshal(data, &dirInode)
-			if err != nil { // skipcq: TCV-001
-				continue
-			}
-			entry := Entry{
-				Name:             dirInode.Meta.Name,
-				ContentType:      MineTypeDirectory, // per RFC2425
-				CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
-				AccessTime:       strconv.FormatInt(dirInode.Meta.AccessTime, 10),
-				ModificationTime: strconv.FormatInt(dirInode.Meta.ModificationTime, 10),
-			}
-			listEntries = append(listEntries, entry)
 		} else if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
 			files = append(files, filePath)
 		}
 	}
-	return listEntries, files, nil
+	wg.Wait()
+	return *listEntries, files, nil
 }

@@ -20,6 +20,8 @@ import (
 	"regexp"
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -33,69 +35,9 @@ import (
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
 
-// CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
-// then it is used instead of creating a new one.
-func (u *Users) CreateNewUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *Info, error) {
-	// username validation
-	if u.IsUsernameAvailable(userName, u.dataDir) { // skipcq: TCV-001
-		return "", "", nil, ErrUserAlreadyPresent
-	}
-
-	acc := account.New(u.logger)
-	accountInfo := acc.GetUserAccountInfo()
-	fd := feed.New(accountInfo, u.client, u.logger)
-
-	//create a new base user account with the mnemonic
-	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
-	if err != nil { // skipcq: TCV-001
-		return "", "", nil, err
-	}
-
-	// store the encrypted mnemonic in Swarm
-	err = u.uploadEncryptedMnemonic(userName, accountInfo.GetAddress(), encryptedMnemonic, fd)
-	if err != nil { // skipcq: TCV-001
-		return "", "", nil, err
-	}
-
-	// store the username -> address mapping locally
-	err = u.storeUserNameToAddressFileMapping(userName, u.dataDir, accountInfo.GetAddress())
-	if err != nil { // skipcq: TCV-001
-		return "", "", nil, err
-	}
-
-	// Instantiate pod, dir & file objects
-	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), u.logger)
-	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, u.logger)
-	pod := p.NewPod(u.client, fd, acc, u.logger)
-	if sessionId == "" {
-		sessionId = cookie.GetUniqueSessionId()
-	}
-
-	userAddressString := accountInfo.GetAddress().Hex()
-	ui := &Info{
-		name:       userName,
-		sessionId:  sessionId,
-		feedApi:    fd,
-		account:    acc,
-		file:       file,
-		dir:        dir,
-		pod:        pod,
-		openPods:   make(map[string]*p.Info),
-		openPodsMu: &sync.RWMutex{},
-	}
-
-	// set cookie and add user to map
-	err = u.addUserAndSessionToMap(ui)
-	if err != nil { // skipcq: TCV-001
-		return "", "", nil, err
-	}
-
-	return userAddressString, mnemonic, ui, nil
-}
-
 // CreateNewUserV2 creates a new user with the given user name and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
-func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string) (string, string, string, string, *Info, error) {
+func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string, tm taskmanager.TaskManagerGO) (string, string, string, string, *Info, error) {
 	// Check username validity
 	if !isUserNameValid(userName) {
 		return "", "", "", "", nil, ErrInvalidUserName
@@ -134,9 +76,9 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		return "", "", "", "", nil, err
 	}
 	// Instantiate pod, dir & file objects
-	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), u.logger)
-	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, u.logger)
-	pod := p.NewPod(u.client, fd, acc, u.logger)
+	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), tm, u.logger)
+	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, tm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}

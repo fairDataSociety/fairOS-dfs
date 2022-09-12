@@ -17,8 +17,13 @@ limitations under the License.
 package dir_test
 
 import (
+	"context"
 	"io"
+	"sync"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -44,9 +49,10 @@ func TestSync(t *testing.T) {
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
 
 	t.Run("sync-dir", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)
@@ -76,14 +82,16 @@ func TestSync(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		dirObject2 := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject2 := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 		if dirObject2.GetDirFromDirectoryMap("/") != nil {
 			t.Fatal("it should be nil before sync")
 		}
-		err = dirObject2.SyncDirectory("/")
+		wg := new(sync.WaitGroup)
+		err = dirObject2.SyncDirectoryAsync(context.Background(), "/", wg)
 		if err != nil {
 			t.Fatal(err)
 		}
+		wg.Wait()
 		node := dirObject2.GetDirFromDirectoryMap("/")
 		if node.GetDirInodePathAndNameForRoot() != utils.PathSeparator {
 			t.Fatal("node is root node")

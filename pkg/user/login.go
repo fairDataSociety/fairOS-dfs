@@ -19,6 +19,8 @@ package user
 import (
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
+
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
@@ -32,7 +34,7 @@ import (
 
 // LoginUserV2 checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, sessionId string) (*Info, string, string, error) {
+func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sessionId string) (*Info, string, string, error) {
 	// check if username is available (user created)
 	if !u.IsUsernameAvailableV2(userName) {
 		return nil, "", "", ErrInvalidUserName
@@ -76,9 +78,9 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 
 	// Instantiate pod, dir & file objects
-	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
-	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
-	pod := p.NewPod(u.client, fd, acc, u.logger)
+	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, u.logger)
+	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}
@@ -96,66 +98,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 
 	// set cookie and add user to map
 	return ui, nameHash, utils.Encode(pb), u.addUserAndSessionToMap(ui)
-}
-
-// LoginUser checks if the user is present and logs in the user. It also creates the required information
-// to execute user function and stores it in memory.
-func (u *Users) LoginUser(userName, passPhrase, dataDir string, client blockstore.Client, sessionId string) (*Info, error) {
-	// check if username is available (user created)
-	if !u.IsUsernameAvailable(userName, dataDir) { // skipcq: TCV-001
-		return nil, ErrInvalidUserName
-	}
-
-	// create account
-	acc := account.New(u.logger)
-	accountInfo := acc.GetUserAccountInfo()
-
-	// load address from userName
-	address, err := u.getAddressFromUserName(userName, dataDir)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
-
-	// load encrypted mnemonic from Swarm
-	fd := feed.New(accountInfo, client, u.logger)
-	encryptedMnemonic, err := u.getEncryptedMnemonic(userName, address, fd)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
-
-	err = acc.LoadUserAccount(passPhrase, encryptedMnemonic)
-	if err != nil { // skipcq: TCV-001
-		if err.Error() == "mnemonic is invalid" { // skipcq: TCV-001
-			return nil, ErrInvalidPassword
-		}
-		return nil, err
-	}
-
-	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
-		return nil, ErrUserAlreadyLoggedIn
-	}
-	// Instantiate pod, dir & file objects
-	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), u.logger)
-	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, u.logger)
-	pod := p.NewPod(u.client, fd, acc, u.logger)
-	if sessionId == "" {
-		sessionId = cookie.GetUniqueSessionId()
-	}
-
-	ui := &Info{
-		name:       userName,
-		sessionId:  sessionId,
-		feedApi:    fd,
-		account:    acc,
-		file:       file,
-		dir:        dir,
-		pod:        pod,
-		openPods:   make(map[string]*p.Info),
-		openPodsMu: &sync.RWMutex{},
-	}
-
-	// set cookie and add user to map
-	return ui, u.addUserAndSessionToMap(ui)
 }
 
 func (u *Users) addUserAndSessionToMap(ui *Info) error {

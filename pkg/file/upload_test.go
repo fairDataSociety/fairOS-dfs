@@ -17,11 +17,15 @@ limitations under the License.
 package file_test
 
 import (
+	"context"
 	"crypto/rand"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -45,13 +49,17 @@ func TestUpload(t *testing.T) {
 	}
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	t.Run("upload-small-file", func(t *testing.T) {
 		filePath := "/dir1"
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
@@ -101,7 +109,7 @@ func TestUpload(t *testing.T) {
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
@@ -134,7 +142,7 @@ func TestUpload(t *testing.T) {
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
@@ -167,7 +175,7 @@ func TestUpload(t *testing.T) {
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
@@ -207,7 +215,7 @@ func TestUpload(t *testing.T) {
 		compression := "snappy"
 		fileSize := int64(100)
 		blockSize := uint32(10)
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)

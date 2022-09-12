@@ -22,13 +22,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (*Users) uploadEncryptedMnemonic(userName string, address utils.Address, encryptedMnemonic string, fd *feed.API) error {
-	topic := utils.HashString(userName)
-	data := []byte(encryptedMnemonic)
-	_, err := fd.CreateFeed(topic, address, data)
-	return err
-}
-
 func (*Users) getEncryptedMnemonic(userName string, address utils.Address, fd *feed.API) (string, error) {
 	topic := utils.HashString(userName)
 	_, data, err := fd.GetFeedData(topic, address)

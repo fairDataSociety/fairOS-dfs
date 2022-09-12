@@ -18,8 +18,12 @@ package file_test
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -43,14 +47,17 @@ func TestDownload(t *testing.T) {
 	}
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
-
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	t.Run("download-small-file", func(t *testing.T) {
 		filePath := "/dir1"
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// file existent check
 		podFile := utils.CombinePathAndFile(filePath, fileName)

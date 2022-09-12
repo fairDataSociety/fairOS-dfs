@@ -17,15 +17,16 @@ limitations under the License.
 package dfs
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error) {
+func (a *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -53,9 +54,9 @@ func (d *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error
 }
 
 // DeletePod deletes a pod
-func (d *API) DeletePod(podName, passphrase, sessionId string) error {
+func (a *API) DeletePod(podName, passphrase, sessionId string) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -110,38 +111,33 @@ func (d *API) DeletePod(podName, passphrase, sessionId string) error {
 	return nil
 }
 
-func (d *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) {
+func (a *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-
 	// return if pod already open
 	if ui.IsPodOpen(podName) {
 		return nil, errPodAlreadyOpen
 	}
-
 	// open the pod
 	pi, err := ui.GetPod().OpenPod(podName, passPhrase)
 	if err != nil {
 		return nil, err
 	}
-
 	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
-
 	// Add podName in the login user session
 	ui.AddPodName(podName, pi)
-
 	return pi, nil
 }
 
-func (d *API) ClosePod(podName, sessionId string) error {
+func (a *API) ClosePod(podName, sessionId string) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -162,9 +158,9 @@ func (d *API) ClosePod(podName, sessionId string) error {
 	return nil
 }
 
-func (d *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
+func (a *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -177,9 +173,9 @@ func (d *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
 	return podStat, nil
 }
 
-func (d *API) SyncPod(podName, sessionId string) error {
+func (a *API) SyncPod(ctx context.Context, podName, sessionId string) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -197,9 +193,9 @@ func (d *API) SyncPod(podName, sessionId string) error {
 	return nil
 }
 
-func (d *API) ListPods(sessionId string) ([]string, []string, error) {
+func (a *API) ListPods(sessionId string) ([]string, []string, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, nil, ErrUserNotLoggedIn
 	}
@@ -212,9 +208,9 @@ func (d *API) ListPods(sessionId string) ([]string, []string, error) {
 	return pods, sharedPods, nil
 }
 
-func (d *API) PodShare(podName, sharedPodName, passPhrase, sessionId string) (string, error) {
+func (a *API) PodShare(podName, sharedPodName, passPhrase, sessionId string) (string, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return "", ErrUserNotLoggedIn
 	}
@@ -227,9 +223,9 @@ func (d *API) PodShare(podName, sharedPodName, passPhrase, sessionId string) (st
 	return address, nil
 }
 
-func (d *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareInfo, error) {
+func (a *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareInfo, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -237,9 +233,9 @@ func (d *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareI
 	return ui.GetPod().ReceivePodInfo(ref)
 }
 
-func (d *API) PodReceive(sessionId, sharedPodName string, ref utils.Reference) (*pod.Info, error) {
+func (a *API) PodReceive(sessionId, sharedPodName string, ref utils.Reference) (*pod.Info, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -247,8 +243,8 @@ func (d *API) PodReceive(sessionId, sharedPodName string, ref utils.Reference) (
 	return ui.GetPod().ReceivePod(sharedPodName, ref)
 }
 
-func (d *API) IsPodExist(podName, sessionId string) bool {
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+func (a *API) IsPodExist(podName, sessionId string) bool {
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return false
 	}

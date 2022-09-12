@@ -65,26 +65,7 @@ func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "user delete: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
-
-	// delete user
-	err = h.dfsAPI.DeleteUser(password, sessionId)
-	if err != nil {
-		if err == u.ErrInvalidUserName ||
-			err == u.ErrInvalidPassword ||
-			err == u.ErrUserNotLoggedIn {
-			h.logger.Errorf("user delete: %v", err)
-			jsonhttp.BadRequest(w, &response{Message: "user delete: " + err.Error()})
-			return
-		}
-		h.logger.Errorf("user delete: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user delete: " + err.Error()})
-		return
-	}
-
-	// clear cookie
-	cookie.ClearSession(w)
-
-	jsonhttp.OK(w, &response{Message: "user deleted successfully"})
+	jsonhttp.BadRequest(w, &response{Message: "user delete: deprecated"})
 }
 
 // UserDeleteV2Handler is the api handler to delete a user

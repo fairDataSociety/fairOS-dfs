@@ -19,6 +19,7 @@ require (
 	github.com/klauspost/pgzip v1.2.5
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.1
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/plexsysio/taskmanager v0.0.0-20211220123746-de5ebdd49ae2
 	github.com/rs/cors v1.7.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
@@ -78,6 +79,7 @@ require (
 	github.com/tklauser/numcpus v0.4.0 // indirect
 	github.com/wealdtech/go-multicodec v1.4.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
