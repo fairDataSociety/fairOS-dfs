@@ -39,12 +39,10 @@ func (p *Pod) SyncPod(podName string) error {
 	}
 
 	// sync from the root directory
-	wg := new(sync.WaitGroup)
-	err = podInfo.GetDirectory().SyncDirectoryAsync(context.Background(), "/", wg)
+	err = podInfo.GetDirectory().SyncDirectory("/")
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

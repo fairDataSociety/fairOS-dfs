@@ -101,16 +101,19 @@ func (d *Directory) RemoveAllFromDirectoryMap() {
 type syncTask struct {
 	d    *Directory
 	path string
+	wg   *sync.WaitGroup
 }
 
-func newSyncTask(d *Directory, path string) *syncTask {
+func newSyncTask(d *Directory, path string, wg *sync.WaitGroup) *syncTask {
 	return &syncTask{
 		d:    d,
 		path: path,
+		wg:   wg,
 	}
 }
 
 func (st *syncTask) Execute(context.Context) error {
+	defer st.wg.Done()
 	return st.d.file.LoadFileMeta(st.path)
 }
 

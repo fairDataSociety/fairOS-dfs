@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"sort"
 	"testing"
 	"time"
 
@@ -119,19 +120,27 @@ func TestListDirectory(t *testing.T) {
 		}
 
 		// validate dir listing
-		dirs, files, err := dirObject.ListDir("/parentDir")
+		dirEntries, files, err := dirObject.ListDir("/parentDir")
 		if err != nil {
 			t.Fatal(err)
 		}
+		dirs := []string{}
+
+		for _, v := range dirEntries {
+			dirs = append(dirs, v.Name)
+		}
+
 		if len(dirs) != 2 {
 			t.Fatalf("invalid directory entry count")
 		}
 
+		sort.Strings(dirs)
+		sort.Strings(files)
 		// validate entry names
-		if dirs[0].Name != "subDir1" {
+		if dirs[0] != "subDir1" {
 			t.Fatalf("invalid directory name")
 		}
-		if dirs[1].Name != "subDir2" {
+		if dirs[1] != "subDir2" {
 			t.Fatalf("invalid directory name")
 		}
 		if files[0] != "/parentDir/file1" {

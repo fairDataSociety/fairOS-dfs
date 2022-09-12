@@ -78,18 +78,14 @@ func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath stri
 	d.AddToDirectoryMap(dirNameWithPath, &dirInode)
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
+			wg.Add(1)
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
-			syncTask := newSyncTask(d, filePath)
-			done, err := d.syncManager.Go(syncTask)
+			syncTask := newSyncTask(d, filePath, wg)
+			_, err = d.syncManager.Go(syncTask)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
-			wg.Add(1)
-			go func() {
-				<-done
-				wg.Done()
-			}()
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
 			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
