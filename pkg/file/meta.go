@@ -151,7 +151,7 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileName string) (*MetaDa
 	if err != nil {
 		return nil, err
 	}
-
+	oldname := p.Name
 	// change previous meta.Name
 	p.Name = newFileName
 	p.ModificationTime = time.Now().Unix()
@@ -169,7 +169,7 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileName string) (*MetaDa
 	if err != nil {
 		return nil, err
 	}
-	f.RemoveFromFileMap(utils.CombinePathAndFile(p.Path, p.Name))
+	f.RemoveFromFileMap(utils.CombinePathAndFile(p.Path, oldname))
 	return p, nil
 }
 
