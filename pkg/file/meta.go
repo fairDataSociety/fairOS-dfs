@@ -94,6 +94,11 @@ func (f *File) uploadMeta(meta *MetaData) error {
 func (f *File) deleteMeta(meta *MetaData) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
+	// update with utils.DeletedFeedMagicWord
+	_, err := f.fd.UpdateFeed(topic, meta.UserAddress, []byte(utils.DeletedFeedMagicWord))
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
 	return f.fd.DeleteFeed(topic, meta.UserAddress)
 }
 
@@ -128,6 +133,33 @@ func (f *File) BackupFromFileName(fileNameWithPath string) (*MetaData, error) {
 
 	// change previous meta.Name
 	p.Name = fmt.Sprintf("%d_%s", time.Now().Unix(), p.Name)
+	p.ModificationTime = time.Now().Unix()
+
+	// upload PreviousMeta
+	err = f.uploadMeta(p)
+	if err != nil {
+		return nil, err
+	}
+
+	// add file to map
+	f.AddToFileMap(utils.CombinePathAndFile(p.Path, p.Name), p)
+	return p, nil
+}
+
+func (f *File) RenameFromFileName(fileNameWithPath, newFileName string) (*MetaData, error) {
+	p, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	err = f.deleteMeta(p)
+	if err != nil {
+		return nil, err
+	}
+	f.RemoveFromFileMap(utils.CombinePathAndFile(p.Path, p.Name))
+
+	// change previous meta.Name
+	p.Name = newFileName
 	p.ModificationTime = time.Now().Unix()
 
 	// upload PreviousMeta

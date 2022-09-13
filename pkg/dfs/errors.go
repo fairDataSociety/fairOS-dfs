@@ -24,7 +24,8 @@ var (
 	// ErrPodNotOpen indicates pod is not open
 	ErrPodNotOpen = errors.New("pod not open")
 	// ErrFileNotPresent indicates file is not present
-	ErrFileNotPresent = errors.New("file not present")
+	ErrFileNotPresent     = errors.New("file not present")
+	ErrFileAlreadyPresent = errors.New("file already exist with new name")
 
 	errPodAlreadyOpen = errors.New("pod already open")
 	ErrBeeClient      = errors.New("could not connect to bee client")

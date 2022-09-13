@@ -286,6 +286,53 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 	return directory.AddEntryToDir(podPath, podFileName, true)
 }
 
+// RenameFile is a controller function which validates if the user is logged in,
+//  pod is open and calls renaming of a file
+func (a *API) RenameFile(podName, podFileName, newName, sessionId, podPath string) error {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return err
+	}
+	file := podInfo.GetFile()
+	directory := podInfo.GetDirectory()
+
+	// check if file exists
+	totalPath := utils.CombinePathAndFile(podPath, podFileName)
+	if !file.IsFileAlreadyPresent(totalPath) {
+		return ErrFileNotPresent
+	}
+	totalNewPath := utils.CombinePathAndFile(podPath, newName)
+	if file.IsFileAlreadyPresent(totalNewPath) {
+		return ErrFileAlreadyPresent
+	}
+	m, err := file.RenameFromFileName(totalPath, newName)
+	if err != nil {
+		return err
+	}
+	err = directory.AddEntryToDir(podPath, m.Name, true)
+	if err != nil {
+		return err
+	}
+	err = directory.RemoveEntryFromDir(podPath, podFileName, true)
+	if err != nil {
+		return err
+	}
+
+	// add the file to the directory metadata
+	return directory.AddEntryToDir(podPath, podFileName, true)
+}
+
 // DownloadFile is a controller function which validates if the user is logged in,
 // pod is open and calls the download function.
 func (a *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadCloser, uint64, error) {
