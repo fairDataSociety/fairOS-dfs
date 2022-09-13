@@ -81,7 +81,7 @@ func (d *Directory) RenameDir(dirWithPath, newName string) error {
 	}
 	err = d.fd.DeleteFeed(topic, d.userAddress)
 	if err != nil { // skipcq: TCV-001
-		return err
+		d.logger.Warningf("failed to unpin feed %s\n", utils.CombinePathAndFile(totalPath, ""))
 	}
 
 	// get the parent directory entry and add this new directory to its list of children
@@ -141,7 +141,7 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath string) error {
 			}
 			err = d.fd.DeleteFeed(topic, d.userAddress)
 			if err != nil { // skipcq: TCV-001
-				return err
+				d.logger.Warningf("failed to unpin feed %s\n", utils.CombinePathAndFile(totalPath, ""))
 			}
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
@@ -185,7 +185,7 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath string) error {
 			}
 			err = d.fd.DeleteFeed(topic, d.userAddress)
 			if err != nil { // skipcq: TCV-001
-				return err
+				d.logger.Warningf("failed to unpin feed %s\n", utils.CombinePathAndFile(totalPath, ""))
 			}
 		}
 	}

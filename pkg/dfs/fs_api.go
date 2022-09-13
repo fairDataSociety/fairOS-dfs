@@ -303,7 +303,7 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 
 // RenameFile is a controller function which validates if the user is logged in,
 //  pod is open and calls renaming of a file
-func (a *API) RenameFile(podName, podFileName, newName, sessionId, podPath string) error {
+func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, sessionId string) error {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -323,29 +323,28 @@ func (a *API) RenameFile(podName, podFileName, newName, sessionId, podPath strin
 	directory := podInfo.GetDirectory()
 
 	// check if file exists
-	totalPath := utils.CombinePathAndFile(podPath, podFileName)
-	if !file.IsFileAlreadyPresent(totalPath) {
+	if !file.IsFileAlreadyPresent(fileNameWithPath) {
 		return ErrFileNotPresent
 	}
-	totalNewPath := utils.CombinePathAndFile(podPath, newName)
-	if file.IsFileAlreadyPresent(totalNewPath) {
+	if file.IsFileAlreadyPresent(newFileNameWithPath) {
 		return ErrFileAlreadyPresent
 	}
-	m, err := file.RenameFromFileName(totalPath, newName)
-	if err != nil {
-		return err
-	}
-	err = directory.AddEntryToDir(podPath, m.Name, true)
-	if err != nil {
-		return err
-	}
-	err = directory.RemoveEntryFromDir(podPath, podFileName, true)
+
+	m, err := file.RenameFromFileName(fileNameWithPath, newFileNameWithPath)
 	if err != nil {
 		return err
 	}
 
+	oldPrnt := filepath.Dir(fileNameWithPath)
+	newPrnt := filepath.Dir(newFileNameWithPath)
+
 	// add the file to the directory metadata
-	return directory.AddEntryToDir(podPath, podFileName, true)
+	err = directory.AddEntryToDir(newPrnt, m.Name, true)
+	if err != nil {
+		return err
+	}
+
+	return directory.RemoveEntryFromDir(oldPrnt, filepath.Base(fileNameWithPath), true)
 }
 
 // DownloadFile is a controller function which validates if the user is logged in,
