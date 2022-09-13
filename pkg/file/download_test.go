@@ -94,4 +94,48 @@ func TestDownload(t *testing.T) {
 		}
 
 	})
+
+	t.Run("download-small-file-gzip", func(t *testing.T) {
+		filePath := "/dir1"
+		fileName := "file1"
+		compression := "gzip"
+		fileSize := int64(100)
+		blockSize := uint32(164000)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+
+		// file existent check
+		podFile := utils.CombinePathAndFile(filePath, fileName)
+		if fileObject.IsFileAlreadyPresent(podFile) {
+			t.Fatal("file should not be present")
+		}
+		_, _, err = fileObject.Download(podFile)
+		if err == nil {
+			t.Fatal("file should not be present for download")
+		}
+		// upload a file
+		content, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Download the file and read from reader
+		reader, rcvdSize, err := fileObject.Download(podFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer := new(bytes.Buffer)
+		_, err = rcvdBuffer.ReadFrom(reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// validate the result
+		if len(rcvdBuffer.Bytes()) != len(content) || int(rcvdSize) != len(content) {
+			t.Fatalf("downloaded content size is invalid")
+		}
+		if !bytes.Equal(content, rcvdBuffer.Bytes()) {
+			t.Fatalf("downloaded content is not equal")
+		}
+
+	})
 }
