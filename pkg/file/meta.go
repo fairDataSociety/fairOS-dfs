@@ -152,17 +152,11 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileName string) (*MetaDa
 		return nil, err
 	}
 
-	err = f.deleteMeta(p)
-	if err != nil {
-		return nil, err
-	}
-	f.RemoveFromFileMap(utils.CombinePathAndFile(p.Path, p.Name))
-
 	// change previous meta.Name
 	p.Name = newFileName
 	p.ModificationTime = time.Now().Unix()
 
-	// upload PreviousMeta
+	// upload meta
 	err = f.uploadMeta(p)
 	if err != nil {
 		return nil, err
@@ -170,6 +164,12 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileName string) (*MetaDa
 
 	// add file to map
 	f.AddToFileMap(utils.CombinePathAndFile(p.Path, p.Name), p)
+
+	err = f.deleteMeta(p)
+	if err != nil {
+		return nil, err
+	}
+	f.RemoveFromFileMap(utils.CombinePathAndFile(p.Path, p.Name))
 	return p, nil
 }
 

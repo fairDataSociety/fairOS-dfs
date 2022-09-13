@@ -48,11 +48,30 @@ func (a *API) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	err = directory.MkDir(dirToCreateWithPath)
+	return directory.MkDir(dirToCreateWithPath)
+}
+
+// RenameDir is a controller function which validates if the user is logged in,
+// pod is open and calls the rename directory function in the dir object.
+func (a *API) RenameDir(podName, dirToRenameWithPath, newName, sessionId string) error {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return ErrPodNotOpen
+	}
+
+	// get the dir object and rename directory
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
-	return nil
+	directory := podInfo.GetDirectory()
+	return directory.RenameDir(dirToRenameWithPath, newName)
 }
 
 // IsDirPresent is acontroller function which validates if the user is logged in,
@@ -100,11 +119,7 @@ func (a *API) RmDir(podName, directoryNameWithPath, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	err = directory.RmDir(directoryNameWithPath)
-	if err != nil {
-		return err
-	}
-	return nil
+	return directory.RmDir(directoryNameWithPath)
 }
 
 // ListDir is a controller function which validates if the user is logged in,
