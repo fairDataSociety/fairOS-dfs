@@ -110,7 +110,7 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		dirEntries, files, err := dirObject.ListDir("/")
+		dirEntries, _, err := dirObject.ListDir("/")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -119,7 +119,7 @@ func TestRenameDirectory(t *testing.T) {
 		}
 
 		// validate dir listing
-		dirEntries, files, err = dirObject.ListDir("/parentNew")
+		dirEntries, files, err := dirObject.ListDir("/parentNew")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -152,7 +152,7 @@ func TestRenameDirectory(t *testing.T) {
 			t.Fatalf("invalid file name")
 		}
 
-		dirEntries, files, err = dirObject.ListDir("/parentNew/subDir2")
+		_, files, err = dirObject.ListDir("/parentNew/subDir2")
 		if err != nil {
 			t.Fatal(err)
 		}
