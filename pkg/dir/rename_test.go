@@ -236,12 +236,12 @@ func TestRenameDirectory(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		dirEntries, files, err := dirObject.ListDir("/parentDir/subDir1/subDir11/sub111")
+		_, _, err = dirObject.ListDir("/parentDir/subDir1/subDir11/sub111")
 		if err == nil {
 			t.Fatal("should fail")
 		}
 
-		dirEntries, files, err = dirObject.ListDir("/parentDir")
+		dirEntries, files, err := dirObject.ListDir("/parentDir")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -387,7 +387,7 @@ func TestRenameDirectory(t *testing.T) {
 			t.Fatalf("invalid files entry count")
 		}
 
-		dirEntries, files, err = dirObject.ListDir("/parentDir/subDir2/sub111")
+		_, _, err = dirObject.ListDir("/parentDir/subDir2/sub111")
 		if err == nil {
 			t.Fatal("should be err")
 		}
