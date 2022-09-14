@@ -12,9 +12,12 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (d *Directory) RenameDir(dirWithPath, newName string) error {
-	parentPath := filepath.Dir(dirWithPath)
-	dirName := filepath.Base(dirWithPath)
+func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath string) error {
+	parentPath := filepath.Dir(dirNameWithPath)
+	dirName := filepath.Base(dirNameWithPath)
+
+	newParentPath := filepath.Dir(newDirNameWithPath)
+	newDirName := filepath.Base(newDirNameWithPath)
 
 	// validation checks of the arguments
 	if dirName == "" || strings.HasPrefix(dirName, utils.PathSeparator) {
@@ -29,26 +32,26 @@ func (d *Directory) RenameDir(dirWithPath, newName string) error {
 		return fmt.Errorf("cannot rename root dir")
 	}
 
-	// check if directory already present
-	totalPath := utils.CombinePathAndFile(parentPath, dirName)
-	newTotalPath := utils.CombinePathAndFile(parentPath, newName)
-
-	// check if parent path exists
-	if d.GetDirFromDirectoryMap(parentPath) == nil {
+	// check if directory exists
+	if d.GetDirFromDirectoryMap(dirNameWithPath) == nil {
 		return ErrDirectoryNotPresent
 	}
 
-	if d.GetDirFromDirectoryMap(newTotalPath) != nil {
+	// check if parent directory exists
+	if d.GetDirFromDirectoryMap(parentPath) == nil {
+		return ErrDirectoryNotPresent
+	}
+	if d.GetDirFromDirectoryMap(newDirNameWithPath) != nil {
 		return ErrDirectoryAlreadyPresent
 	}
 
-	err := d.mapChildrenToNewPath(totalPath, newTotalPath)
+	err := d.mapChildrenToNewPath(dirNameWithPath, newDirNameWithPath)
 	if err != nil {
 		return err
 	}
 
-	topic := utils.HashString(utils.CombinePathAndFile(totalPath, ""))
-	newTopic := utils.HashString(utils.CombinePathAndFile(newTotalPath, ""))
+	topic := utils.HashString(dirNameWithPath)
+	newTopic := utils.HashString(newDirNameWithPath)
 	_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress)
 	if err != nil {
 		return err
@@ -60,17 +63,28 @@ func (d *Directory) RenameDir(dirWithPath, newName string) error {
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	inode.Meta.Name = newName
+
+	inode.Meta.Name = newDirName
+	inode.Meta.Path = newParentPath
 	inode.Meta.ModificationTime = time.Now().Unix()
+
 	// upload meta
 	fileMetaBytes, err := json.Marshal(inode)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
-	_, err = d.fd.CreateFeed(newTopic, d.userAddress, fileMetaBytes)
-	if err != nil { // skipcq: TCV-001
-		return err
+	previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress)
+	if err == nil && previousAddr != nil {
+		_, err = d.fd.UpdateFeed(newTopic, d.userAddress, fileMetaBytes)
+		if err != nil { // skipcq: TCV-001
+			return err
+		}
+	} else {
+		_, err = d.fd.CreateFeed(newTopic, d.userAddress, fileMetaBytes)
+		if err != nil { // skipcq: TCV-001
+			return err
+		}
 	}
 
 	// delete old meta
@@ -79,22 +93,31 @@ func (d *Directory) RenameDir(dirWithPath, newName string) error {
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	err = d.fd.DeleteFeed(topic, d.userAddress)
-	if err != nil { // skipcq: TCV-001
-		d.logger.Warningf("failed to unpin feed %s\n", utils.CombinePathAndFile(totalPath, ""))
-	}
+	d.RemoveFromDirectoryMap(dirNameWithPath)
 
 	// get the parent directory entry and add this new directory to its list of children
 	err = d.RemoveEntryFromDir(parentPath, dirName, false)
 	if err != nil {
 		return err
 	}
-	err = d.AddEntryToDir(parentPath, newName, false)
+	err = d.AddEntryToDir(newParentPath, newDirName, false)
 	if err != nil {
 		return err
 	}
 
-	return d.SyncDirectory(parentPath)
+	err = d.SyncDirectory(parentPath)
+	if err != nil {
+		return err
+	}
+
+	if parentPath != newParentPath {
+		err = d.SyncDirectory(newParentPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath string) error {
@@ -128,9 +151,17 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath string) error {
 				return err
 			}
 
-			_, err = d.fd.CreateFeed(newTopic, d.userAddress, fileMetaBytes)
-			if err != nil { // skipcq: TCV-001
-				return err
+			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress)
+			if err == nil && previousAddr != nil {
+				_, err = d.fd.UpdateFeed(newTopic, d.userAddress, fileMetaBytes)
+				if err != nil { // skipcq: TCV-001
+					return err
+				}
+			} else {
+				_, err = d.fd.CreateFeed(newTopic, d.userAddress, fileMetaBytes)
+				if err != nil { // skipcq: TCV-001
+					return err
+				}
 			}
 
 			// delete old meta
@@ -139,25 +170,20 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath string) error {
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
-			err = d.fd.DeleteFeed(topic, d.userAddress)
-			if err != nil { // skipcq: TCV-001
-				d.logger.Warningf("failed to unpin feed %s\n", utils.CombinePathAndFile(totalPath, ""))
-			}
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
-			pathWithFile := utils.CombinePathAndFile(totalPath, dirName)
-			newPathWithFile := utils.CombinePathAndFile(newTotalPath, dirName)
-			err := d.mapChildrenToNewPath(pathWithFile, newPathWithFile)
+			pathWithDir := utils.CombinePathAndFile(totalPath, dirName)
+			newPathWithDir := utils.CombinePathAndFile(newTotalPath, dirName)
+			err := d.mapChildrenToNewPath(pathWithDir, newPathWithDir)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
-			topic := utils.HashString(utils.CombinePathAndFile(pathWithFile, ""))
-			newTopic := utils.HashString(utils.CombinePathAndFile(newPathWithFile, ""))
+			topic := utils.HashString(pathWithDir)
+			newTopic := utils.HashString(newPathWithDir)
 			_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress)
 			if err != nil {
 				return err
 			}
-
 			// unmarshall the data and add the directory entry to the parent
 			var inode *Inode
 			err = json.Unmarshal(inodeData, &inode)
@@ -171,10 +197,17 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath string) error {
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
-
-			_, err = d.fd.CreateFeed(newTopic, d.userAddress, fileMetaBytes)
-			if err != nil { // skipcq: TCV-001
-				return err
+			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress)
+			if err == nil && previousAddr != nil {
+				_, err = d.fd.UpdateFeed(newTopic, d.userAddress, fileMetaBytes)
+				if err != nil { // skipcq: TCV-001
+					return err
+				}
+			} else {
+				_, err = d.fd.CreateFeed(newTopic, d.userAddress, fileMetaBytes)
+				if err != nil { // skipcq: TCV-001
+					return err
+				}
 			}
 
 			// delete old meta
@@ -182,10 +215,6 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath string) error {
 			_, err = d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord))
 			if err != nil { // skipcq: TCV-001
 				return err
-			}
-			err = d.fd.DeleteFeed(topic, d.userAddress)
-			if err != nil { // skipcq: TCV-001
-				d.logger.Warningf("failed to unpin feed %s\n", utils.CombinePathAndFile(totalPath, ""))
 			}
 		}
 	}

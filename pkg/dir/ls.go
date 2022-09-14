@@ -42,7 +42,7 @@ type Entry struct {
 // it also creates a list of files inside the directory and gives it back, so that the file listing
 // function can give information about those files.
 func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
-	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
+	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
 	if err != nil { // skipcq: TCV-001
 		if dirNameWithPath == utils.PathSeparator {
@@ -50,7 +50,6 @@ func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 		}
 		return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
 	}
-
 	var dirInode Inode
 	err = dirInode.Unmarshal(data)
 	if err != nil {

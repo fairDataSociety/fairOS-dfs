@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"sort"
 	"testing"
@@ -39,7 +40,7 @@ func TestRenameDirectory(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 
-	t.Run("rename-dirr", func(t *testing.T) {
+	t.Run("rename-dir-same-prnt", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, fileObject, tm, logger)
 		// make root dir so that other directories can be added
@@ -106,7 +107,7 @@ func TestRenameDirectory(t *testing.T) {
 			t.Fatal(err)
 		}
 		// rename
-		err = dirObject.RenameDir("/parentDir", "parentNew")
+		err = dirObject.RenameDir("/parentDir", "/parentNew")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -169,6 +170,251 @@ func TestRenameDirectory(t *testing.T) {
 		}
 		if n != 0 {
 			t.Fatal("file size mismatch")
+		}
+	})
+
+	t.Run("rename-dir-diff-prnt", func(t *testing.T) {
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, fileObject, tm, logger)
+		// make root dir so that other directories can be added
+		err = dirObject.MkRootDir("pod1", user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err := dirObject.MkDir("/")
+		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
+			t.Fatal("invalid dir name")
+		}
+		longDirName, err := utils.GetRandString(101)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/" + longDirName)
+		if !errors.Is(err, dir.ErrTooLongDirectoryName) {
+			t.Fatal("dir name too long")
+		}
+
+		// create some dir and files
+		err = dirObject.MkDir("/parentDir")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// populate the directory with few directory and files
+		err = dirObject.MkDir("/parentDir/subDir1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/parentDir/subDir1/subDir11")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/parentDir/subDir1/subDir11/sub111")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/parentDir/subDir2")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		r := new(bytes.Buffer)
+		err = fileObject.Upload(r, "file1", 0, 100, "/parentDir/subDir1/subDir11/sub111", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// just add dummy file enty as file listing is not tested here
+		err = dirObject.AddEntryToDir("/parentDir/subDir1/subDir11/sub111", "file1", true)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// rename
+		err = dirObject.RenameDir("/parentDir/subDir1/subDir11/sub111", "/parentDir/subDir2/sub111")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		dirEntries, files, err := dirObject.ListDir("/parentDir/subDir1/subDir11/sub111")
+		if err == nil {
+			t.Fatal("should fail")
+		}
+
+		dirEntries, files, err = dirObject.ListDir("/parentDir")
+		if err != nil {
+			t.Fatal(err)
+		}
+		dirs := []string{}
+
+		for _, v := range dirEntries {
+			dirs = append(dirs, v.Name)
+		}
+
+		if len(dirs) != 2 {
+			t.Fatalf("invalid directory entry count")
+		}
+		if len(files) != 0 {
+			t.Fatalf("invalid files entry count")
+		}
+
+		sort.Strings(dirs)
+		sort.Strings(files)
+
+		if dirs[0] != "subDir1" && dirs[1] != "subDir2" {
+			t.Fatal("wrong list of directories")
+		}
+
+		dirEntries, files, err = dirObject.ListDir("/parentDir/subDir1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		dirs = []string{}
+
+		for _, v := range dirEntries {
+			dirs = append(dirs, v.Name)
+		}
+
+		if len(dirs) != 1 {
+			t.Fatalf("invalid directory entry count")
+		}
+		if len(files) != 0 {
+			t.Fatalf("invalid files entry count")
+		}
+
+		if dirs[0] != "subDir11" {
+			t.Fatal("wrong list of directories")
+		}
+
+		dirEntries, files, err = dirObject.ListDir("/parentDir/subDir2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		dirs = []string{}
+
+		for _, v := range dirEntries {
+			dirs = append(dirs, v.Name)
+		}
+		fmt.Println(dirs, files)
+		if len(dirs) != 1 {
+			t.Fatalf("invalid directory entry count")
+		}
+		if len(files) != 0 {
+			t.Fatalf("invalid files entry count")
+		}
+
+		if dirs[0] != "sub111" {
+			t.Fatal("wrong list of directories")
+		}
+
+		dirEntries, files, err = dirObject.ListDir("/parentDir/subDir2/sub111")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(dirEntries) != 0 {
+			t.Fatalf("invalid directory entry count")
+		}
+		if len(files) != 1 {
+			t.Fatalf("invalid files entry count")
+		}
+
+		if files[0] != "/parentDir/subDir2/sub111/file1" {
+			t.Fatal("wrong list of files")
+		}
+
+		err = dirObject.RenameDir("/parentDir/subDir2/sub111", "/parentDir/sub111")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		dirEntries, files, err = dirObject.ListDir("/parentDir")
+		if err != nil {
+			t.Fatal(err)
+		}
+		dirs = []string{}
+
+		for _, v := range dirEntries {
+			dirs = append(dirs, v.Name)
+		}
+
+		if len(dirs) != 3 {
+			t.Fatalf("invalid directory entry count")
+		}
+		if len(files) != 0 {
+			t.Fatalf("invalid files entry count")
+		}
+
+		sort.Strings(dirs)
+		sort.Strings(files)
+		if dirs[0] != "sub111" && dirs[1] != "subDir1" && dirs[2] != "subDir2" {
+			t.Fatal("wrong list of directories")
+		}
+
+		// validate dir listing
+		dirEntries, files, err = dirObject.ListDir("/parentDir/subDir1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		dirs = []string{}
+
+		for _, v := range dirEntries {
+			dirs = append(dirs, v.Name)
+		}
+
+		if len(dirs) != 1 {
+			t.Fatalf("invalid directory entry count")
+		}
+		if len(files) != 0 {
+			t.Fatalf("invalid files entry count")
+		}
+
+		if dirs[0] != "subDir11" {
+			t.Fatal("wrong list of directories")
+		}
+
+		dirEntries, files, err = dirObject.ListDir("/parentDir/subDir2")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(dirEntries) != 0 {
+			t.Fatalf("invalid directory entry count")
+		}
+		if len(files) != 0 {
+			t.Fatalf("invalid files entry count")
+		}
+
+		dirEntries, files, err = dirObject.ListDir("/parentDir/subDir2/sub111")
+		if err == nil {
+			t.Fatal("should be err")
+		}
+
+		dirEntries, files, err = dirObject.ListDir("/parentDir/sub111")
+		if err != nil {
+			t.Fatal(err)
+		}
+		dirs = []string{}
+
+		for _, v := range dirEntries {
+			dirs = append(dirs, v.Name)
+		}
+
+		if len(dirs) != 0 {
+			t.Fatalf("invalid directory entry count")
+		}
+		if len(files) != 1 {
+			t.Fatalf("invalid files entry count")
+		}
+
+		if files[0] != "/parentDir/sub111/file1" {
+			t.Fatal("wrong list of files")
+		}
+		err = dirObject.RenameDir("/parentDir/sub111", "/parentDir/subDir2/sub111")
+		if err != nil {
+			t.Fatal(err)
 		}
 	})
 }
