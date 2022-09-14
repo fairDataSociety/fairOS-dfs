@@ -39,6 +39,12 @@ type FileSystemRequest struct {
 	Destination   string `json:"dest_user,omitempty"`
 }
 
+type RenameRequest struct {
+	PodName string `json:"pod_name,omitempty"`
+	OldPath string `json:"old_path,omitempty"`
+	NewPath string `json:"new_path,omitempty"`
+}
+
 type KVRequest struct {
 	PodName     string `json:"pod_name,omitempty"`
 	TableName   string `json:"table_name,omitempty"`
