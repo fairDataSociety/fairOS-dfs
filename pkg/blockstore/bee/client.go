@@ -48,6 +48,7 @@ const (
 	chunkUploadDownloadUrl = "/chunks"
 	bytesUploadDownloadUrl = "/bytes"
 	pinsUrl                = "/pins/"
+	_                      = pinsUrl
 	swarmPinHeader         = "Swarm-Pin"
 	swarmEncryptHeader     = "Swarm-Encrypt"
 	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
