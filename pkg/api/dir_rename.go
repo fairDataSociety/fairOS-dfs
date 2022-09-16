@@ -99,5 +99,5 @@ func (h *Handler) DirectoryRenameHandler(w http.ResponseWriter, r *http.Request)
 		jsonhttp.InternalServerError(w, &response{Message: "rename-dir: " + err.Error()})
 		return
 	}
-	jsonhttp.Created(w, &response{Message: "directory renamed successfully"})
+	jsonhttp.OK(w, &response{Message: "directory renamed successfully"})
 }
