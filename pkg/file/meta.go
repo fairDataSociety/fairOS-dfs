@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -94,7 +95,16 @@ func (f *File) uploadMeta(meta *MetaData) error {
 func (f *File) deleteMeta(meta *MetaData) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
-	return f.fd.DeleteFeed(topic, meta.UserAddress)
+	// update with utils.DeletedFeedMagicWord
+	_, err := f.fd.UpdateFeed(topic, meta.UserAddress, []byte(utils.DeletedFeedMagicWord))
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+	err = f.fd.DeleteFeed(topic, meta.UserAddress)
+	if err != nil {
+		f.logger.Warningf("failed to remove file feed %s", totalPath)
+	}
+	return nil
 }
 
 func (f *File) updateMeta(meta *MetaData) error {
@@ -138,6 +148,38 @@ func (f *File) BackupFromFileName(fileNameWithPath string) (*MetaData, error) {
 
 	// add file to map
 	f.AddToFileMap(utils.CombinePathAndFile(p.Path, p.Name), p)
+	return p, nil
+}
+
+func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath string) (*MetaData, error) {
+	p, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// remove old meta and from file map
+	err = f.deleteMeta(p)
+	if err != nil {
+		return nil, err
+	}
+	f.RemoveFromFileMap(fileNameWithPath)
+
+	newFileName := filepath.Base(newFileNameWithPath)
+	newPrnt := filepath.Dir(newFileNameWithPath)
+
+	// change previous meta.Name
+	p.Name = newFileName
+	p.Path = newPrnt
+	p.ModificationTime = time.Now().Unix()
+
+	// upload meta
+	err = f.uploadMeta(p)
+	if err != nil {
+		return nil, err
+	}
+
+	// add file to map
+	f.AddToFileMap(newFileNameWithPath, p)
 	return p, nil
 }
 
