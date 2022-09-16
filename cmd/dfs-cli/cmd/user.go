@@ -42,7 +42,7 @@ func userNew(userName, mnemonic string) {
 	}
 	data, err := fdfsAPI.postReq(http.MethodPost, apiUserSignupV2, jsonData)
 	if err != nil {
-		fmt.Println("create user asdasd: ", err)
+		fmt.Println("create user: ", err)
 		return
 	}
 
