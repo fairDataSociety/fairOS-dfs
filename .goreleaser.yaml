@@ -26,7 +26,6 @@ builds:
       - -s -w
       - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
       - -X github.com/fairdatasociety/fairOS-dfs.version={{ .Version }}
-      - -linkmode=external
   - id: dfs-darwin-arm64
     main: ./cmd/dfs
     binary: dfs
@@ -44,7 +43,6 @@ builds:
       - -s -w
       - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
       - -X github.com/fairdatasociety/fairOS-dfs.version={{ .Version }}
-      - -linkmode=external
   - id: dfs-linux-amd64
     main: ./cmd/dfs
     binary: dfs
@@ -62,8 +60,6 @@ builds:
       - -s -w
       - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
       - -X github.com/fairdatasociety/fairOS-dfs.version={{ .Version }}
-      - -linkmode=external
-      - -extldflags "-lc -lrt -lpthread --static"
   - id: dfs-linux-arm64
     main: ./cmd/dfs
     binary: dfs
@@ -81,8 +77,6 @@ builds:
       - -s -w
       - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
       - -X github.com/fairdatasociety/fairOS-dfs.version={{ .Version }}
-      - -linkmode=external
-      - -extldflags "-lc -lrt -lpthread --static"
   - id: dfs-windows-amd64
     main: ./cmd/dfs
     binary: dfs
@@ -101,7 +95,6 @@ builds:
       - -s -w
       - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
       - -X github.com/fairdatasociety/fairOS-dfs.version={{ .Version }}
-      - -linkmode=external
 archives:
   - id: binary
     name_template: '{{ .Binary }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}'
