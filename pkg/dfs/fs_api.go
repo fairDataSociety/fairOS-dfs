@@ -381,6 +381,40 @@ func (a *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadC
 	return reader, size, nil
 }
 
+// ReadSeekCloser is a controller function which validates if the user is logged in,
+// pod is open and calls the download function.
+func (a *API) ReadSeekCloser(podName, podFileWithPath, sessionId string) (io.ReadSeekCloser, uint64, error) {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, 0, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return nil, 0, ErrPodNotOpen
+	}
+
+	// check if logged in to pod
+	if !ui.GetPod().IsPodOpened(podName) {
+		return nil, 0, fmt.Errorf("login to pod to do this operation")
+	}
+
+	// get podInfo and construct the path
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// download the file by creating the reader
+	file := podInfo.GetFile()
+	reader, size, err := file.ReadSeeker(podFileWithPath)
+	if err != nil {
+		return nil, 0, err
+	}
+	return reader, size, nil
+}
+
 // ShareFile is a controller function which validates if the user is logged in,
 // pod is open and calls the sharefile function.
 func (a *API) ShareFile(podName, podFileWithPath, destinationUser, sessionId string) (string, error) {
