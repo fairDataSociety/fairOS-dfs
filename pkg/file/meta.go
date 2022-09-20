@@ -191,6 +191,7 @@ func (f *File) GetMetaFromFileName(fileNameWithPath string, userAddress utils.Ad
 	}
 
 	if string(metaBytes) == utils.DeletedFeedMagicWord {
+		f.logger.Errorf("found deleted feed for %s\n", fileNameWithPath)
 		return nil, ErrDeletedFeed
 	}
 

@@ -82,7 +82,7 @@ func TestWriteAt(t *testing.T) {
 		update := []byte("12345")
 		rewrite := &bytes.Buffer{}
 		rewrite.Write(update)
-		_, err = fileObject.WriteAt(utils.CombinePathAndFile(filePath+fileName, ""), rewrite, offset)
+		_, err = fileObject.WriteAt(utils.CombinePathAndFile(filePath+fileName, ""), rewrite, offset, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -101,6 +101,80 @@ func TestWriteAt(t *testing.T) {
 		if uint64(len(update))+offset < uint64(len(dt)) {
 			updatedContent = append(updatedContent, dt[uint64(len(update))+offset:]...)
 		}
+
+		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
+			t.Fatal("content is different")
+		}
+
+		fileObject.RemoveAllFromFileMap()
+
+		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		if meta2 != nil {
+			t.Fatal("meta2 should be nil")
+		}
+	})
+
+	t.Run("upload-update-truncate-known-very-small-file", func(t *testing.T) {
+		filePath := string(os.PathSeparator)
+		fileName := "file1"
+		compression := ""
+		blockSize := uint32(20)
+		var offset uint64 = 0
+
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+		dt, err := uploadFileKnownContent(t, fileObject, filePath, fileName, compression, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check for meta
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath+fileName, ""))
+		if meta == nil {
+			t.Fatalf("file not added in file map")
+		}
+
+		// validate meta items
+		if meta.Path != filePath {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(len(dt)) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
+
+		reader, _, err := fileObject.Download(utils.CombinePathAndFile(filePath+fileName, ""))
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer := new(bytes.Buffer)
+		_, err = rcvdBuffer.ReadFrom(reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		update := []byte("abcdefg 12345")
+		rewrite := &bytes.Buffer{}
+		rewrite.Write(update)
+		_, err = fileObject.WriteAt(utils.CombinePathAndFile(filePath+fileName, ""), rewrite, offset, true)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		reader, _, err = fileObject.Download(utils.CombinePathAndFile(filePath+fileName, ""))
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer = new(bytes.Buffer)
+		_, err = rcvdBuffer.ReadFrom(reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+		updatedContent := append(dt[:offset], update...)
 
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
@@ -160,7 +234,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		n, err := fileObject.WriteAt(utils.CombinePathAndFile(filePath, fileName), r, uint64(offset))
+		n, err := fileObject.WriteAt(utils.CombinePathAndFile(filePath, fileName), r, uint64(offset), false)
 		if n != offset {
 			t.Fatalf("Failed to update %d bytes", offset-n)
 		}
@@ -234,7 +308,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		n, err := fileObject.WriteAt(utils.CombinePathAndFile(filePath, fileName), r, uint64(offset))
+		n, err := fileObject.WriteAt(utils.CombinePathAndFile(filePath, fileName), r, uint64(offset), false)
 		if n != offset {
 			t.Fatalf("Failed to update %d bytes", offset-n)
 		}
@@ -313,7 +387,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		_, err = fileObject.WriteAt(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), r, uint64(offset))
+		_, err = fileObject.WriteAt(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), r, uint64(offset), false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -349,7 +423,7 @@ func TestWriteAt(t *testing.T) {
 
 func uploadFileKnownContent(t *testing.T, fileObject *file.File, filePath, fileName, compression string, blockSize uint32) ([]byte, error) {
 	f1 := &bytes.Buffer{}
-	content := []byte("abcdefghijk")
+	content := []byte("abcdefghijk abcdefghijk abcdefghijk")
 	_, err := f1.Write(content)
 	if err != nil {
 		t.Fatal(err)
