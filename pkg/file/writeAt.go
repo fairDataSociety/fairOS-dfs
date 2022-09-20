@@ -11,17 +11,21 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64) (int, error) {
+// WriteAt writes a file from a given offset
+func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64, truncate bool) (int, error) {
+	// check file is present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	if !f.IsFileAlreadyPresent(totalFilePath) {
 		return 0, ErrFileNotPresent
 	}
 
+	// get file meta
 	meta := f.GetFromFileMap(totalFilePath)
 	if meta == nil { // skipcq: TCV-001
 		return 0, ErrFileNotFound
 	}
 
+	// download file inode (blocks info)
 	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
@@ -31,24 +35,36 @@ func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64) 
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
+
+	// create file reader
 	fd := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)
 	reader := &bytes.Buffer{}
 	_, err = reader.ReadFrom(fd)
 	if err != nil {
 		return 0, err
 	}
+
+	// prepare updater
 	updater := &bytes.Buffer{}
 	_, err = updater.ReadFrom(update)
 	if err != nil {
 		return 0, err
 	}
+
+	// get file size
 	dataSize := uint64(reader.Len())
+
+	// updater size
 	updaterSize := uint64(updater.Len())
+
 	if offset > dataSize {
 		return 0, fmt.Errorf("wrong offset")
 	}
 
 	newDataSize := dataSize
+	if truncate {
+		newDataSize = updaterSize
+	}
 	endofst := offset + updaterSize
 	if endofst > dataSize {
 		newDataSize = endofst
@@ -57,7 +73,7 @@ func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64) 
 	readStartPoint := startingBlock * uint64(meta.BlockSize)
 	reader.Next(int(readStartPoint))
 	blockOffset := offset - readStartPoint
-	var totalLength uint64 = readStartPoint
+	var totalLength = readStartPoint
 	i := startingBlock
 	errC := make(chan error)
 	doneC := make(chan bool)
@@ -127,7 +143,7 @@ func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64) 
 				}
 			}
 
-			if uint32(len(data)) != meta.BlockSize {
+			if uint32(len(data)) != meta.BlockSize && !truncate {
 				if totalLength < dataSize && uint32(len(data)) != meta.BlockSize {
 					temp := make([]byte, meta.BlockSize-uint32(len(data)))
 					n, err = reader.Read(temp)
@@ -212,10 +228,14 @@ func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64) 
 		close(errC)
 		return 0, err
 	}
+
 	// copy the block references to the fileInode
 	fileInode.Blocks = []*BlockInfo{}
-	for i := 0; i < len(refMap); i++ {
-		fileInode.Blocks = append(fileInode.Blocks, refMap[i])
+	for j := 0; j < len(refMap); j++ {
+		fileInode.Blocks = append(fileInode.Blocks, refMap[j])
+		if truncate && i == uint64(j) {
+			break
+		}
 	}
 	fileInodeData, err := json.Marshal(fileInode)
 	if err != nil { // skipcq: TCV-001

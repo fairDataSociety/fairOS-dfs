@@ -18,6 +18,7 @@ package file
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -29,6 +30,9 @@ import (
 func (f *File) RmFile(podFileWithPath string) error {
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	meta, err := f.GetMetaFromFileName(totalFilePath, f.userAddress)
+	if errors.Is(err, ErrDeletedFeed) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
