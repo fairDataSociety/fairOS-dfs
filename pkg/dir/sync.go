@@ -45,7 +45,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
 			err := d.file.LoadFileMeta(filePath)
 			if err != nil { // skipcq: TCV-001
-				return err
+				d.logger.Errorf("loading metadata failed %s: %s", filePath, err.Error())
 			}
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
