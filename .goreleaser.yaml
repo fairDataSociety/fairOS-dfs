@@ -95,6 +95,58 @@ builds:
       - -s -w
       - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
       - -X github.com/fairdatasociety/fairOS-dfs.version={{ .Version }}
+
+  - id: dfs-cli-linux
+    main: ./cmd/dfs-cli
+    binary: dfs_cli
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
+      - -X github.com/fairdatasociety/fairOS-dfs.version={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+  - id: dfs-cli-darwin
+    main: ./cmd/dfs-cli
+    binary: dfs_cli
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
+      - -X github.com/fairdatasociety/fairOS-dfs.version={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+  - id: dfs-cli-windows
+    main: ./cmd/dfs-cli
+    binary: dfs_cli
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/fairdatasociety/fairOS-dfs.commit={{ .ShortCommit }}
+      - -X github.com/fairdatasociety/fairOS-dfs.version={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+    goarch:
+      - amd64
+
 archives:
   - id: binary
     name_template: '{{ .Binary }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}'
