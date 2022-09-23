@@ -23,15 +23,27 @@ dfs_download() {
     exit 1
   fi
 
-  eval curl -s https://api.github.com/repos/fairDataSociety/fairOS-dfs/releases/latest \
+  if [[ "$2" == "latest" ]] ; then
+      eval curl -s https://api.github.com/repos/fairDataSociety/fairOS-dfs/releases/latest \
 | grep "$1" \
 | cut -d : -f 2,3 \
 | tr -d \" \
 | wget -qi -
-
+  else
+      eval curl -s https://api.github.com/repos/fairDataSociety/fairOS-dfs/releases \
+| grep "$2/$1" \
+| cut -d : -f 2,3 \
+| tr -d \" \
+| wget -qi -
+  fi
 }
 
 install_dfs() {
+  VERSION="latest"
+  if [[ "$1" != "" ]]; then
+    VERSION="$1"
+  fi
+
   BIN_NAME="dfs-"
 
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
@@ -51,6 +63,8 @@ install_dfs() {
     exit 1
   fi
 
+  dfs_echo VERSION
+
   ARCH=$(uname -m)
 
   echo "  /@@@@@@          /@@            /@@@@@@   /@@@@@@                /@@  /@@@@@@"
@@ -65,37 +79,29 @@ install_dfs() {
   echo "========== FairOs-dfs Installation =========="
   echo "Detected OS: $DETECTED_OS"
   echo "Detected Architecture: $ARCH"
-  echo "====================================================="
+  echo "Downloading Version: $VERSION"
+  echo "============================================="
 
   if [[ "$ARCH" == "arm64" && $DETECTED_OS == "mac" ]]; then
-    BIN_NAME="dfs-darwin-amd64"
-    dfs_echo $BIN_NAME
+    BIN_NAME="dfs_darwin_arm64"
+  elif [[ "$ARCH" == "amd64" && $DETECTED_OS == "mac" ]]; then
+    BIN_NAME="dfs_darwin_amd64"
   elif [[ "$ARCH" == "x86_64" && $DETECTED_OS == "windows" ]]; then
-    BIN_NAME="dfs-windows-amd64.exe"
-    dfs_echo $BIN_NAME
-  elif [[ "$ARCH" == "x86_32" && $DETECTED_OS == "windows" ]]; then
-    BIN_NAME="dfs-windows-386.exe"
-    dfs_echo $BIN_NAME
+    BIN_NAME="dfs_windows_amd64.exe"
   elif [[ "$ARCH" == "arm64" && $DETECTED_OS == "linux" ]]; then
-    BIN_NAME="dfs-linux-arm64.exe"
-    dfs_echo $BIN_NAME
-  elif [[ "$ARCH" == "x86_32" && $DETECTED_OS == "linux" ]]; then
-    BIN_NAME="dfs-linux-386.exe"
-    dfs_echo $BIN_NAME
+    BIN_NAME="dfs_linux_arm64"
   elif [[ "$ARCH" == "x86_64" && $DETECTED_OS == "linux" ]]; then
-    BIN_NAME="dfs-linux-amd64.exe"
-    dfs_echo $BIN_NAME
+    BIN_NAME="dfs_linux_amd64"
   elif [[ "$ARCH" == "amd64" && $DETECTED_OS == "linux" ]]; then
-    BIN_NAME="dfs-linux-amd64.exe"
-    dfs_echo $BIN_NAME
+    BIN_NAME="dfs_linux_amd64"
   else
     dfs_echo "Error: unable to detect architecture. Please install manually by referring to $GH_README"
     exit 1
   fi
-
-  dfs_download $BIN_NAME
+  dfs_echo "Downloading $BIN_NAME"
+  dfs_download $BIN_NAME "$VERSION"
 }
 
-install_dfs
+install_dfs "$1"
 
 }
