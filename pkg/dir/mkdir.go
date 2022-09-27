@@ -48,7 +48,6 @@ func (d *Directory) MkDir(dirToCreateWithPath string) error {
 
 	// check if directory already present
 	totalPath := utils.CombinePathAndFile(parentPath, dirName)
-	fmt.Println("===========MkDir", totalPath)
 	topic := utils.HashString(totalPath)
 
 	// check if parent path exists

@@ -39,7 +39,6 @@ type Stats struct {
 
 // DirStat returns all the information related to a given directory.
 func (d *Directory) DirStat(podName, dirNameWithPath string) (*Stats, error) {
-	fmt.Println("=================DirStat", dirNameWithPath)
 	topic := utils.HashString(dirNameWithPath)
 	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
 	if err != nil { // skipcq: TCV-001

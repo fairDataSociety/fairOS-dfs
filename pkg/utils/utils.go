@@ -182,7 +182,6 @@ func CombinePathAndFile(path, fileName string) string {
 		return PathSeparator
 	}
 	var totalPath string
-	fmt.Println("path=======", path)
 	if path == PathSeparator || path == "" {
 		fileName = strings.TrimPrefix(fileName, PathSeparator)
 		totalPath = PathSeparator + fileName
@@ -195,7 +194,6 @@ func CombinePathAndFile(path, fileName string) string {
 			totalPath = PathSeparator + path + PathSeparator + fileName
 		}
 	}
-	fmt.Println("totalPath=======", totalPath)
 	return totalPath
 }
 

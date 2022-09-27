@@ -63,7 +63,6 @@ func (f *File) LoadFileMeta(fileNameWithPath string) error {
 }
 
 func (f *File) handleMeta(meta *MetaData) error {
-	fmt.Println("=====================handleMeta", meta.Path)
 	// check if meta is present.
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	_, err := f.GetMetaFromFileName(totalPath, meta.UserAddress)
@@ -187,7 +186,6 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath string) 
 }
 
 func (f *File) GetMetaFromFileName(fileNameWithPath string, userAddress utils.Address) (*MetaData, error) {
-	fmt.Println("GetMetaFromFileName======", fileNameWithPath)
 	topic := utils.HashString(fileNameWithPath)
 	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress)
 	if err != nil {
