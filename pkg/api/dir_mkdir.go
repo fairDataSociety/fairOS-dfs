@@ -18,7 +18,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -79,7 +78,6 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 
 	// make directory
 	err = h.dfsAPI.Mkdir(podName, dirToCreateWithPath, sessionId)
-	fmt.Println("errrrr", err)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidDirectory ||

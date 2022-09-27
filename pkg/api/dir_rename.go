@@ -18,7 +18,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -87,7 +86,6 @@ func (h *Handler) DirectoryRenameHandler(w http.ResponseWriter, r *http.Request)
 
 	// make directory
 	err = h.dfsAPI.RenameDir(podName, oldPath, newPath, sessionId)
-	fmt.Println("errrrrr", err)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidDirectory ||

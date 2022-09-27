@@ -17,7 +17,6 @@ limitations under the License.
 package dir
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -39,7 +38,6 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 	if dirToDelete == "." { // skipcq: TCV-001
 		return ErrInvalidDirectoryName
 	}
-	fmt.Println("===========RmDir 1", parentPath, dirToDelete)
 
 	// check if directory present
 	var totalPath string
@@ -87,7 +85,6 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 		return err
 	}
 	d.RemoveFromDirectoryMap(totalPath)
-	fmt.Println("===========RmDir 2", parentPath, dirToDelete)
 	// return if root directory
 	if parentPath == utils.PathSeparator && filepath.ToSlash(dirToDelete) == utils.PathSeparator {
 		return nil
