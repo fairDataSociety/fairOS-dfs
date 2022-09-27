@@ -119,7 +119,8 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, fileName))
+		fmt.Println("get from file map ===========", filepath.ToSlash(utils.CombinePathAndFile(filePath, fileName)))
+		meta := fileObject.GetFromFileMap(filepath.ToSlash(utils.CombinePathAndFile(filePath, fileName)))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -159,7 +160,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -192,7 +193,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -226,6 +227,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
+		fmt.Println("get from file map ===========", filepath.ToSlash(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName)))
 		meta := fileObject.GetFromFileMap(filepath.ToSlash(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName)))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
@@ -266,6 +268,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
+		fmt.Println("get from file map ===========", filepath.ToSlash(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName)))
 		meta := fileObject.GetFromFileMap(filepath.ToSlash(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName)))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
