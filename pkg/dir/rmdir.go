@@ -98,7 +98,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 
 // RmRootDir removes root directory and all the entries (file/directory) under that.
 func (d *Directory) RmRootDir() error {
-	dirToDelete := filepath.Base("/")
+	dirToDelete := utils.PathSeparator
 
 	// check if directory present
 	var totalPath = utils.CombinePathAndFile(dirToDelete, "")
