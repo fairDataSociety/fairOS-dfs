@@ -274,6 +274,9 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 	}
 	file := podInfo.GetFile()
 	directory := podInfo.GetDirectory()
+	fmt.Println("File upload path", podPath)
+	podPath = filepath.ToSlash(podPath)
+	fmt.Println("File upload path to slash", podPath)
 
 	// check if file exists, then backup the file
 	totalPath := utils.CombinePathAndFile(podPath, podFileName)
