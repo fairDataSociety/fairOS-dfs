@@ -84,7 +84,7 @@ func (h *Handler) FileRenameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// delete file
 	err = h.dfsAPI.RenameFile(podName, podFileWithPath, newPodFileWithPath, sessionId)
-	fmt.Println("errrrrr", err)
+	fmt.Println("RenameFile errrrrr", err, podFileWithPath, newPodFileWithPath)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file rename: %v", err)
