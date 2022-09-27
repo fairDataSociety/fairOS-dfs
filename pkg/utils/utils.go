@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"hash"
 	"math/big"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -180,7 +179,6 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 // CombinePathAndFile joins filename with provided path
 func CombinePathAndFile(path, fileName string) string {
 	var totalPath string
-	path = filepath.ToSlash(path)
 	fmt.Println("path=======", path)
 	if path == PathSeparator || path == "" {
 		fileName = strings.TrimPrefix(fileName, PathSeparator)

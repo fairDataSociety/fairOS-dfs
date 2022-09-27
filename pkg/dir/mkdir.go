@@ -32,7 +32,7 @@ const (
 )
 
 func (d *Directory) MkDir(dirToCreateWithPath string) error {
-	parentPath := filepath.Dir(dirToCreateWithPath)
+	parentPath := filepath.ToSlash(filepath.Dir(dirToCreateWithPath))
 	dirName := filepath.Base(dirToCreateWithPath)
 
 	fmt.Println("parentPath", parentPath)
