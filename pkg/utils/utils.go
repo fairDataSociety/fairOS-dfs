@@ -180,7 +180,8 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 // CombinePathAndFile joins filename with provided path
 func CombinePathAndFile(path, fileName string) string {
 	var totalPath string
-
+	path = filepath.ToSlash(path)
+	fmt.Println("path=======", path)
 	if path == PathSeparator || path == "" {
 		fileName = strings.TrimPrefix(fileName, PathSeparator)
 		totalPath = PathSeparator + fileName
@@ -193,7 +194,8 @@ func CombinePathAndFile(path, fileName string) string {
 			totalPath = PathSeparator + path + PathSeparator + fileName
 		}
 	}
-	return filepath.ToSlash(totalPath)
+	fmt.Println("totalPath=======", totalPath)
+	return totalPath
 }
 
 // GetRandString return random string of length n
