@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -49,14 +50,15 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath+fileName), "")
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath+fileName, ""))
+		meta := fileObject.GetFromFileMap(fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -69,7 +71,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		reader, _, err := fileObject.Download(utils.CombinePathAndFile(filePath+fileName, ""))
+		reader, _, err := fileObject.Download(fp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -82,12 +84,12 @@ func TestWriteAt(t *testing.T) {
 		update := []byte("12345")
 		rewrite := &bytes.Buffer{}
 		rewrite.Write(update)
-		_, err = fileObject.WriteAt(utils.CombinePathAndFile(filePath+fileName, ""), rewrite, offset, false)
+		_, err = fileObject.WriteAt(fp, rewrite, offset, false)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		reader, _, err = fileObject.Download(utils.CombinePathAndFile(filePath+fileName, ""))
+		reader, _, err = fileObject.Download(fp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -108,7 +110,7 @@ func TestWriteAt(t *testing.T) {
 
 		fileObject.RemoveAllFromFileMap()
 
-		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta2 := fileObject.GetFromFileMap(fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -128,13 +130,14 @@ func TestWriteAt(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath+fileName, ""))
+		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath+fileName), "")
+		meta := fileObject.GetFromFileMap(fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -147,7 +150,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		reader, _, err := fileObject.Download(utils.CombinePathAndFile(filePath+fileName, ""))
+		reader, _, err := fileObject.Download(fp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -160,12 +163,12 @@ func TestWriteAt(t *testing.T) {
 		update := []byte("abcdefg 12345")
 		rewrite := &bytes.Buffer{}
 		rewrite.Write(update)
-		_, err = fileObject.WriteAt(utils.CombinePathAndFile(filePath+fileName, ""), rewrite, offset, true)
+		_, err = fileObject.WriteAt(fp, rewrite, offset, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		reader, _, err = fileObject.Download(utils.CombinePathAndFile(filePath+fileName, ""))
+		reader, _, err = fileObject.Download(fp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -182,7 +185,7 @@ func TestWriteAt(t *testing.T) {
 
 		fileObject.RemoveAllFromFileMap()
 
-		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta2 := fileObject.GetFromFileMap(fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -201,13 +204,14 @@ func TestWriteAt(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, fileName))
+		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)
+		meta := fileObject.GetFromFileMap(fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -234,14 +238,14 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		n, err := fileObject.WriteAt(utils.CombinePathAndFile(filePath, fileName), r, uint64(offset), false)
+		n, err := fileObject.WriteAt(fp, r, uint64(offset), false)
 		if n != offset {
 			t.Fatalf("Failed to update %d bytes", offset-n)
 		}
 		if err != nil {
 			t.Fatal(err)
 		}
-		reader, _, err := fileObject.Download(utils.CombinePathAndFile(filePath, fileName))
+		reader, _, err := fileObject.Download(fp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -261,7 +265,7 @@ func TestWriteAt(t *testing.T) {
 		}
 		fileObject.RemoveAllFromFileMap()
 
-		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta2 := fileObject.GetFromFileMap(fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -280,13 +284,14 @@ func TestWriteAt(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)
+		meta := fileObject.GetFromFileMap(fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -308,14 +313,14 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		n, err := fileObject.WriteAt(utils.CombinePathAndFile(filePath, fileName), r, uint64(offset), false)
+		n, err := fileObject.WriteAt(fp, r, uint64(offset), false)
 		if n != offset {
 			t.Fatalf("Failed to update %d bytes", offset-n)
 		}
 		if err != nil {
 			t.Fatal(err)
 		}
-		reader, _, err := fileObject.Download(utils.CombinePathAndFile(filePath, fileName))
+		reader, _, err := fileObject.Download(fp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -336,7 +341,7 @@ func TestWriteAt(t *testing.T) {
 
 		fileObject.RemoveAllFromFileMap()
 
-		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta2 := fileObject.GetFromFileMap(fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -359,13 +364,14 @@ func TestWriteAt(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)
+		meta := fileObject.GetFromFileMap(fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -387,11 +393,11 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		_, err = fileObject.WriteAt(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), r, uint64(offset), false)
+		_, err = fileObject.WriteAt(fp, r, uint64(offset), false)
 		if err != nil {
 			t.Fatal(err)
 		}
-		reader, n1, err := fileObject.Download(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		reader, n1, err := fileObject.Download(fp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -414,7 +420,7 @@ func TestWriteAt(t *testing.T) {
 
 		fileObject.RemoveAllFromFileMap()
 
-		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta2 := fileObject.GetFromFileMap(fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}

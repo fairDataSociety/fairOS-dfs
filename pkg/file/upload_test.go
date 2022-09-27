@@ -230,7 +230,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -270,7 +270,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
