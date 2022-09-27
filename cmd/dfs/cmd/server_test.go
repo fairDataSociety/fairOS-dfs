@@ -405,7 +405,7 @@ func TestApis(t *testing.T) {
 					t.Fatal(err)
 				}
 				if mkDirResp.StatusCode != 201 {
-					t.Fatal("mkdir failed failed")
+					t.Fatal("mkdir failed")
 				}
 			} else {
 				body := new(bytes.Buffer)
