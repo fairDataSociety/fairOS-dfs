@@ -41,7 +41,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 
 	// check if directory present
 	var totalPath string
-	if parentPath == "/" && dirToDelete == "/" {
+	if parentPath == utils.PathSeparator && filepath.ToSlash(dirToDelete) == utils.PathSeparator {
 		totalPath = utils.CombinePathAndFile(parentPath, "")
 	} else {
 		totalPath = utils.CombinePathAndFile(parentPath, dirToDelete)
