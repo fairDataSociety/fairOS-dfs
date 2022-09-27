@@ -322,6 +322,9 @@ func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, session
 	file := podInfo.GetFile()
 	directory := podInfo.GetDirectory()
 
+	fileNameWithPath = filepath.ToSlash(fileNameWithPath)
+	newFileNameWithPath = filepath.ToSlash(newFileNameWithPath)
+
 	// check if file exists
 	if !file.IsFileAlreadyPresent(fileNameWithPath) {
 		return ErrFileNotPresent
@@ -335,8 +338,8 @@ func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, session
 		return err
 	}
 
-	oldPrnt := filepath.Dir(fileNameWithPath)
-	newPrnt := filepath.Dir(newFileNameWithPath)
+	oldPrnt := filepath.ToSlash(filepath.Dir(fileNameWithPath))
+	newPrnt := filepath.ToSlash(filepath.Dir(newFileNameWithPath))
 
 	// add the file to the directory metadata
 	err = directory.AddEntryToDir(newPrnt, m.Name, true)

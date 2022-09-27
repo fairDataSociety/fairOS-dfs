@@ -152,6 +152,8 @@ func (f *File) BackupFromFileName(fileNameWithPath string) (*MetaData, error) {
 }
 
 func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath string) (*MetaData, error) {
+	fileNameWithPath = filepath.ToSlash(newFileNameWithPath)
+	newFileNameWithPath = filepath.ToSlash(newFileNameWithPath)
 	p, err := f.GetMetaFromFileName(fileNameWithPath, f.userAddress)
 	if err != nil {
 		return nil, err
@@ -165,7 +167,7 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath string) 
 	f.RemoveFromFileMap(fileNameWithPath)
 
 	newFileName := filepath.Base(newFileNameWithPath)
-	newPrnt := filepath.Dir(newFileNameWithPath)
+	newPrnt := filepath.ToSlash(filepath.Dir(newFileNameWithPath))
 
 	// change previous meta.Name
 	p.Name = newFileName

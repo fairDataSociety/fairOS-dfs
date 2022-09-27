@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -83,6 +84,7 @@ func (h *Handler) FileRenameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// delete file
 	err = h.dfsAPI.RenameFile(podName, podFileWithPath, newPodFileWithPath, sessionId)
+	fmt.Println("errrrrr", err)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file rename: %v", err)
