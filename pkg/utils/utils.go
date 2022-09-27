@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"hash"
 	"math/big"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -192,7 +193,7 @@ func CombinePathAndFile(path, fileName string) string {
 			totalPath = PathSeparator + path + PathSeparator + fileName
 		}
 	}
-	return totalPath
+	return filepath.ToSlash(totalPath)
 }
 
 // GetRandString return random string of length n
