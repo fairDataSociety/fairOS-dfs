@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"hash"
 	"math/big"
-	"os"
 	"strconv"
 	"strings"
 
@@ -38,8 +37,8 @@ const (
 	// MaxChunkLength is the maximum size of a chunk
 	MaxChunkLength = 4096
 
-	// PathSeparator is string of os.PathSeparator
-	PathSeparator = string(os.PathSeparator)
+	// PathSeparator is string of unix filesystem
+	PathSeparator = "/"
 
 	// MaxPodNameLength defines how long a pod name can be
 	MaxPodNameLength = 64
