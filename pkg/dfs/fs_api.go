@@ -94,7 +94,7 @@ func (a *API) IsDirPresent(podName, directoryNameWithPath, sessionId string) (bo
 		return false, err
 	}
 	directory := podInfo.GetDirectory()
-
+	directoryNameWithPath = filepath.ToSlash(directoryNameWithPath)
 	dirPresent := directory.IsDirectoryPresent(directoryNameWithPath)
 	return dirPresent, nil
 }
