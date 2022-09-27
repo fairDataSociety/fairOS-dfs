@@ -119,8 +119,13 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		fmt.Println("get from file map ===========", filepath.ToSlash(utils.CombinePathAndFile(filePath, fileName)))
-		meta := fileObject.GetFromFileMap(filepath.ToSlash(utils.CombinePathAndFile(filePath, fileName)))
+		fmt.Println("=============", filePath)
+		fmt.Println("=============", fileName)
+		fmt.Println("=============", utils.CombinePathAndFile(filePath, fileName))
+		fmt.Println("=============", utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)))
+		fmt.Println("=============", filepath.ToSlash(utils.CombinePathAndFile(filePath, fileName)))
+		fmt.Println("get from file map ===========", utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)))
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
