@@ -28,7 +28,8 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 	if directoryNameWithPath == "" {
 		return ErrInvalidDirectoryName
 	}
-	parentPath := filepath.Dir(directoryNameWithPath)
+	directoryNameWithPath = filepath.ToSlash(directoryNameWithPath)
+	parentPath := filepath.ToSlash(filepath.Dir(directoryNameWithPath))
 	dirToDelete := filepath.Base(directoryNameWithPath)
 	// validation checks of the arguments
 	if parentPath == "." { // skipcq: TCV-001
