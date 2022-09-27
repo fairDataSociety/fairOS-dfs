@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -151,6 +152,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
+		fmt.Println("get from file map ===========", filepath.ToSlash(utils.CombinePathAndFile(filePath+fileName, "")))
 		meta := fileObject.GetFromFileMap(filepath.ToSlash(utils.CombinePathAndFile(filePath+fileName, "")))
 		if meta == nil {
 			t.Fatalf("file not added in file map")

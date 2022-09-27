@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -46,6 +47,7 @@ var (
 // size of the block is provided during upload. This function also does compression of the blocks gzip/snappy if it is
 // requested during the upload.
 func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error {
+	podPath = filepath.ToSlash(podPath)
 	// check compression gzip and blocksize
 	// pgzip does not allow block size lower or equal to 163840
 	// so we set block size lower bound to 164000 for
