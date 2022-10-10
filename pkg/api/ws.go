@@ -1630,13 +1630,11 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			logEventDescription(string(common.KVSeek), to, res.StatusCode, h.logger)
 		case common.KVSeekNext:
-			fmt.Println(1)
 			jsonBytes, err := json.Marshal(req.Params)
 			if err != nil {
 				respondWithError(res, err)
 				continue
 			}
-			fmt.Println(2)
 
 			kvReq := &common.KVRequest{}
 			err = json.Unmarshal(jsonBytes, kvReq)
@@ -1644,7 +1642,6 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			fmt.Println(3)
 
 			columns, key, data, err := h.dfsAPI.KVGetNext(sessionID, kvReq.PodName, kvReq.TableName)
 			if err != nil {
@@ -1658,23 +1655,18 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				resp.Keys = []string{key}
 			}
 			resp.Values = data
-			fmt.Println(4)
 
 			messageBytes, err := json.Marshal(resp)
 			if err != nil {
 				respondWithError(res, err)
 				continue
 			}
-			fmt.Println(5)
-
 			res.StatusCode = http.StatusOK
 			_, err = res.WriteJson(messageBytes)
 			if err != nil {
 				respondWithError(res, err)
 				continue
 			}
-			fmt.Println(6)
-
 			logEventDescription(string(common.KVSeekNext), to, res.StatusCode, h.logger)
 
 		// doc related events
@@ -2057,7 +2049,6 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			}
 			logEventDescription(string(common.DocIndexJson), to, res.StatusCode, h.logger)
 		default:
-			fmt.Println("default")
 			respondWithError(res, fmt.Errorf("unknown event"))
 			continue
 		}
