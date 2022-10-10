@@ -24,16 +24,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/plexsysio/taskmanager"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
 )
 
 func TestListDirectory(t *testing.T) {

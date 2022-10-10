@@ -287,7 +287,11 @@ func (h *Handler) NewRequest(ctx context.Context, feed *Feed) (request2 *request
 
 	feedUpdate, err := h.Lookup(ctx, query)
 	if err != nil {
-		if err.(*Error).code != errNotFound {
+		feedErr, ok := err.(*Error)
+		if !ok {
+			return nil, err
+		}
+		if feedErr.code != errNotFound {
 			return nil, err
 		}
 		// not finding updates means that there is a network error

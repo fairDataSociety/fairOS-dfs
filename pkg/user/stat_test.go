@@ -48,6 +48,20 @@ func TestStat(t *testing.T) {
 		}
 	})
 
+	t.Run("stat-nonexistent-user", func(t *testing.T) {
+		ens := mock2.NewMockNamespaceManager()
+		//create user
+		userObject := NewUsers("", mockClient, ens, logger)
+		ui := &Info{
+			name: "user1123123",
+		}
+		//  stat the user
+		_, err := userObject.GetUserStat(ui)
+		if !errors.Is(err, ErrInvalidUserName) {
+			t.Fatal("should be invalid user")
+		}
+	})
+
 	t.Run("stat-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		//create user

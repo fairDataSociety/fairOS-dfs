@@ -258,6 +258,7 @@ func TestUpload(t *testing.T) {
 		fileSize := int64(100)
 		blockSize := uint32(164000)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
@@ -266,6 +267,7 @@ func TestUpload(t *testing.T) {
 		// check for meta
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName))
 		meta := fileObject.GetFromFileMap(fp)
+
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -295,6 +297,7 @@ func TestUpload(t *testing.T) {
 		fileObject.RemoveAllFromFileMap()
 
 		meta2 := fileObject.GetFromFileMap(fp)
+
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
