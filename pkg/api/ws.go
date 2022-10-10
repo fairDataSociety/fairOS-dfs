@@ -275,7 +275,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			logEventDescription(string(common.UserLogout), to, res.StatusCode, h.logger)
-		case common.UserDelete:
+		case common.UserDeleteV2:
 			jsonBytes, err := json.Marshal(req.Params)
 			if err != nil {
 				respondWithError(res, err)
@@ -287,7 +287,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			err = h.dfsAPI.DeleteUser(request.Password, sessionID)
+			err = h.dfsAPI.DeleteUserV2(request.Password, sessionID)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -306,7 +306,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			logEventDescription(string(common.UserDelete), to, res.StatusCode, h.logger)
+			logEventDescription(string(common.UserDeleteV2), to, res.StatusCode, h.logger)
 		case common.UserStat:
 			userStat, err := h.dfsAPI.GetUserStat(sessionID)
 			if err != nil {
@@ -1176,7 +1176,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			receiveInfo, err := h.dfsAPI.ReceiveInfo(fsReq.PodName, sharingRef, sessionID)
+			receiveInfo, err := h.dfsAPI.ReceiveInfo(fsReq.PodName, sessionID, sharingRef)
 			if err != nil {
 				respondWithError(res, err)
 				continue

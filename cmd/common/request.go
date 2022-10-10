@@ -45,17 +45,16 @@ type FileSystemRequest struct {
 	Destination   string `json:"dest_user,omitempty"`
 }
 
-<<<<<<< HEAD
 type RenameRequest struct {
 	PodName string `json:"pod_name,omitempty"`
 	OldPath string `json:"old_path,omitempty"`
 	NewPath string `json:"new_path,omitempty"`
-=======
+}
+
 type FileReceiveRequest struct {
 	PodName          string `json:"pod_name,omitempty"`
 	SharingReference string `json:"sharing_ref,omitempty"`
 	DirectoryPath    string `json:"dir_path,omitempty"`
->>>>>>> feat/issue230
 }
 
 type KVRequest struct {

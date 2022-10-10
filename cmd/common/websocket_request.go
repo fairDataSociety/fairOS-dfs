@@ -18,7 +18,7 @@ var (
 	UserIsLoggedin     Event = "/user/isloggedin"
 	UserLogout         Event = "/user/logout"
 	UserExport         Event = "/user/export"
-	UserDelete         Event = "/user/delete"
+	UserDeleteV2       Event = "/user/deleteV2"
 	UserStat           Event = "/user/stat"
 	PodNew             Event = "/pod/new"
 	PodOpen            Event = "/pod/open"

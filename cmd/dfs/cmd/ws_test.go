@@ -3,14 +3,11 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
 	"testing"
 	"time"
-
-	"github.com/gorilla/websocket"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
@@ -19,6 +16,7 @@ import (
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,7 +24,7 @@ func TestWsConnection(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	ens := mock2.NewMockNamespaceManager()
 	logger := logging.New(os.Stdout, logrus.DebugLevel)
-	dataDir, err := ioutil.TempDir("", "new")
+	dataDir, err := os.MkdirTemp("", "new")
 	if err != nil {
 		t.Fatal(err)
 	}

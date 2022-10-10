@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/big"
 	"mime/multipart"
 	"net/http"
@@ -44,7 +43,7 @@ func TestApis(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	ens := mock2.NewMockNamespaceManager()
 	logger := logging.New(io.Discard, logrus.ErrorLevel)
-	dataDir, err := ioutil.TempDir("", "new")
+	dataDir, err := os.MkdirTemp("", "new")
 	if err != nil {
 		t.Fatal(err)
 	}
