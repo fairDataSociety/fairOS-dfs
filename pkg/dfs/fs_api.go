@@ -240,8 +240,9 @@ func (d *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 }
 
 // UploadFile is a controller function which validates if the user is logged in,
-//  pod is open and calls the upload function.
-func (d *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32) error {
+//
+//	pod is open and calls the upload function.
+func (d *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32, overwrite bool) error {
 	// get the logged in user information
 	ui := d.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -262,7 +263,8 @@ func (d *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 
 	// check if file exists, then backup the file
 	totalPath := utils.CombinePathAndFile(podPath, podFileName)
-	if file.IsFileAlreadyPresent(totalPath) {
+	alreadyPresent := file.IsFileAlreadyPresent(totalPath)
+	if alreadyPresent && !overwrite {
 		m, err := file.BackupFromFileName(totalPath)
 		if err != nil {
 			return err
@@ -275,15 +277,18 @@ func (d *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 		if err != nil {
 			return err
 		}
+		alreadyPresent = false
 	}
 
 	err = file.Upload(fd, podFileName, fileSize, blockSize, podPath, compression)
 	if err != nil {
 		return err
 	}
-
 	// add the file to the directory metadata
-	return directory.AddEntryToDir(podPath, podFileName, true)
+	if !alreadyPresent {
+		return directory.AddEntryToDir(podPath, podFileName, true)
+	}
+	return nil
 }
 
 // DownloadFile is a controller function which validates if the user is logged in,
