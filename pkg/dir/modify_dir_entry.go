@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// AddEntryToDir adds a new entry (diretory/file) do a given directory.
+// AddEntryToDir adds a new entry (directory/file) to a given directory.
 // This is typically called when a new directory is created under the given directory or
 // a new file is uploaded under the given directory.
 func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) error {
