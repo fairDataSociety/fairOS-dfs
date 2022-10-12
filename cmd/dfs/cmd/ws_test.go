@@ -34,7 +34,7 @@ func TestWsConnection(t *testing.T) {
 	defer os.RemoveAll(dataDir)
 	users := user.NewUsers(dataDir, mockClient, ens, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger, dataDir)
-	handler = api.NewMockHandler(dfsApi, logger)
+	handler = api.NewMockHandler(dfsApi, logger, []string{"http://localhost:3000"})
 
 	httpPort = ":9090"
 	base := "localhost:9090"
@@ -45,7 +45,9 @@ func TestWsConnection(t *testing.T) {
 	<-time.After(time.Second * 10)
 
 	u := url.URL{Scheme: "ws", Host: base, Path: "/ws/v1/"}
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	header := http.Header{}
+	header.Set("Origin", "http://localhost:3000")
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), header)
 	if err != nil {
 		t.Fatal("dial:", err)
 	}
