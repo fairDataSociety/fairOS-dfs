@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -165,13 +164,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(uPresent)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// userLoggedIN
@@ -183,13 +180,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(uLoggedIn)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// userStat
@@ -198,13 +193,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(userStat)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// podNew
@@ -217,13 +210,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(podNew)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// podLs
@@ -232,13 +223,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(podLs)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// mkdir
@@ -251,13 +240,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(mkDir)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// rmDir
@@ -270,13 +257,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(rmDir)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// dirLs
@@ -289,13 +274,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(dirLs)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// dirStat
@@ -308,13 +291,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(dirStat)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// dirPresent
@@ -327,13 +308,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(dirPresent)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		//Upload
@@ -348,13 +327,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(upload)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 		file, err := os.Open("../../../README.md")
 		if err != nil {
@@ -364,12 +341,11 @@ func TestWsConnection(t *testing.T) {
 		body := &bytes.Buffer{}
 		_, err = io.Copy(body, file)
 		if err != nil {
-			panic(err)
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.BinaryMessage, body.Bytes())
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		//Download
@@ -382,13 +358,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(download)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// stat
@@ -401,13 +375,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(stat)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		table := "kv_1"
@@ -422,13 +394,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(kvCreate)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// kvList
@@ -440,13 +410,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(kvList)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// kvOpen
@@ -459,13 +427,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(kvOpen)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		//kvEntryPut
@@ -480,13 +446,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(kvEntryPut)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// kvCount
@@ -499,13 +463,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(kvCount)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// kvGet
@@ -519,13 +481,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(kvGet)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// kvSeek
@@ -539,13 +499,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(kvSeek)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// kvSeek
@@ -558,13 +516,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(kvSeekNext)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// kvEntryDel
@@ -578,13 +534,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(kvEntryDel)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		docTable := "doc_1"
@@ -600,13 +554,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(docCreate)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// docLs
@@ -619,13 +571,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(docLs)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// docOpen
@@ -638,13 +588,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(docOpen)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// docEntryPut
@@ -658,13 +606,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(docEntryPut)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// docEntryGet
@@ -678,13 +624,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(docEntryGet)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// docFind
@@ -698,13 +642,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(docFind)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// docCount
@@ -717,13 +659,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(docCount)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// docEntryGet
@@ -737,13 +677,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(docEntryDel)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// docDel
@@ -756,13 +694,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(docDel)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 		// user Logout
 		uLogout := &common.WebsocketRequest{
@@ -770,13 +706,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(uLogout)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		// userLoggedIN
@@ -788,13 +722,11 @@ func TestWsConnection(t *testing.T) {
 		}
 		data, err = json.Marshal(uLoggedIn)
 		if err != nil {
-			log.Println("Marshal:", err)
-			return
+			t.Fatal(err)
 		}
 		err = c.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
-			log.Println("write:", err)
-			return
+			t.Fatal(err)
 		}
 
 		err = c.WriteMessage(websocket.CloseMessage, []byte{})
