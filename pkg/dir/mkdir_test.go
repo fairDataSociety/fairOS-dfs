@@ -81,7 +81,7 @@ func TestMkdir(t *testing.T) {
 		}
 	})
 	t.Run("too-many-dirs", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", user, fd)

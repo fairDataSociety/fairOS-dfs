@@ -21,13 +21,10 @@ import (
 	"context"
 	"crypto/rand"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
-
-	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -35,6 +32,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
 )
 
 func TestUpload(t *testing.T) {
@@ -303,7 +301,7 @@ func TestUpload(t *testing.T) {
 
 func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
-	fd, err := ioutil.TempFile("", fileName)
+	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
 		t.Fatal(err)
 	}
