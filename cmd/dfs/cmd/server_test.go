@@ -742,7 +742,6 @@ func TestApis(t *testing.T) {
 						t.Errorf("%s failed: %s\n", res.Event, res.Params)
 						continue
 					}
-					t.Logf("%s ran successfully : %s\n", res.Event, res.Params)
 				}
 			}
 		}()

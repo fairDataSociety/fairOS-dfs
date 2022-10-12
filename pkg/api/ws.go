@@ -36,7 +36,6 @@ func (h *Handler) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{} // use default options
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		fmt.Println(origin, h.whitelistedOrigins)
 		for _, v := range h.whitelistedOrigins {
 			if origin == v {
 				return true
