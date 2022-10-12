@@ -714,7 +714,6 @@ func TestApis(t *testing.T) {
 				t.Fatal("download failed", err)
 			}
 			if fmt.Sprintf("%d", n) == cl {
-				t.Log("download finished ")
 				return
 			}
 		}
