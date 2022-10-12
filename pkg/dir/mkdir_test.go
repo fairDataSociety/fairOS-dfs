@@ -24,8 +24,6 @@ import (
 
 	"github.com/plexsysio/taskmanager"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -53,6 +51,7 @@ func TestMkdir(t *testing.T) {
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
+
 	t.Run("simple-mkdir", func(t *testing.T) {
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
@@ -80,38 +79,7 @@ func TestMkdir(t *testing.T) {
 			t.Fatalf("invalid directory name")
 		}
 	})
-	t.Run("too-many-dirs", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
-		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
-		if err != nil {
-			t.Fatal(err)
-		}
-		for i := 0; i < 37; i++ {
-			name, err := utils.GetRandString(100)
-			if err != nil {
-				t.Fatal(err)
-			}
-			// create a new dir
-			err = dirObject.MkDir("/" + name)
-			if err != nil {
-				t.Fatal("i", i, err)
-			}
-			for j := 0; j < 36; j++ {
-				name2, err := utils.GetRandString(100)
-				if err != nil {
-					t.Fatal(err)
-				}
-				path := "/" + name + "/" + name2
-				// create a new dir
-				err = dirObject.MkDir("/" + path)
-				if err != nil {
-					t.Fatal("j", j, err)
-				}
-			}
-		}
-	})
 	t.Run("complicated-mkdir", func(t *testing.T) {
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
