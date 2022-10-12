@@ -17,7 +17,6 @@ limitations under the License.
 package dfs
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -173,7 +172,7 @@ func (a *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
 	return podStat, nil
 }
 
-func (a *API) SyncPod(ctx context.Context, podName, sessionId string) error {
+func (a *API) SyncPod(podName, sessionId string) error {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {

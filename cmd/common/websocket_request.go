@@ -3,16 +3,18 @@ package common
 import (
 	"bytes"
 	"encoding/json"
-	"net/http"
 )
 
 type Event string
 
 var (
 	UserSignup         Event = "/user/signup"
+	UserSignupV2       Event = "/user/signupV2"
 	UserLogin          Event = "/user/login"
+	UserLoginV2        Event = "/user/loginV2"
 	UserImport         Event = "/user/import"
 	UserPresent        Event = "/user/present"
+	UserPresentV2      Event = "/user/presentV2"
 	UserIsLoggedin     Event = "/user/isloggedin"
 	UserLogout         Event = "/user/logout"
 	UserExport         Event = "/user/export"
@@ -49,6 +51,7 @@ var (
 	KVOpen             Event = "/kv/open"
 	KVDelete           Event = "/kv/delete"
 	KVCount            Event = "/kv/count"
+	KVEntryPresent     Event = "/kv/entry/present"
 	KVEntryPut         Event = "/kv/entry/put"
 	KVEntryGet         Event = "/kv/entry/get"
 	KVEntryDelete      Event = "/kv/entry/del"
@@ -71,16 +74,19 @@ var (
 )
 
 type WebsocketRequest struct {
+	Id     string      `json:"_id"`
 	Event  Event       `json:"event"`
 	Params interface{} `json:"params,omitempty"`
 }
 
 type FileRequest struct {
-	PodName   string `json:"pod_name,omitempty"`
-	TableName string `json:"table_name,omitempty"`
-	DirPath   string `json:"dir_path,omitempty"`
-	BlockSize string `json:"block_size,omitempty"`
-	FileName  string `json:"file_name,omitempty"`
+	PodName       string `json:"pod_name,omitempty"`
+	TableName     string `json:"table_name,omitempty"`
+	DirPath       string `json:"dir_path,omitempty"`
+	BlockSize     string `json:"block_size,omitempty"`
+	FileName      string `json:"file_name,omitempty"`
+	ContentLength string `json:"content_length,omitempty"`
+	Compression   string `json:"compression,omitempty"`
 }
 
 type FileDownloadRequest struct {
@@ -89,52 +95,37 @@ type FileDownloadRequest struct {
 }
 
 type WebsocketResponse struct {
-	Event      Event       `json:"event"`
-	StatusCode int         `json:"code"`
-	Params     interface{} `json:"params,omitempty"`
-	header     http.Header
-	buf        bytes.Buffer
+	Id          string      `json:"_id"`
+	Event       Event       `json:"event"`
+	Params      interface{} `json:"params,omitempty"`
+	StatusCode  int         `json:"code,omitempty"`
+	buf         bytes.Buffer
+	contentType string
 }
 
 func NewWebsocketResponse() *WebsocketResponse {
-	return &WebsocketResponse{
-		header: map[string][]string{},
-	}
-}
-
-func (w *WebsocketResponse) Header() http.Header {
-	return w.header
+	return &WebsocketResponse{}
 }
 
 func (w *WebsocketResponse) Write(bytes []byte) (int, error) {
-	if w.Header().Get("Content-Type") == "application/json; charset=utf-8" ||
-		w.Header().Get("Content-Type") == "application/json" {
-		body := map[string]interface{}{}
-		err := json.Unmarshal(bytes, &body)
-		if err != nil {
-			return 0, err
-		}
-		w.Params = body
-		return len(bytes), nil
-	}
-	if w.Header().Get("Content-Length") != "" || w.Header().Get("Content-Length") != "0" {
-		return w.buf.Write(bytes)
-	}
-	return 0, nil
+	return w.buf.Write(bytes)
 }
 
-func (w *WebsocketResponse) WriteHeader(statusCode int) {
-	w.StatusCode = statusCode
+func (w *WebsocketResponse) WriteJson(bytes []byte) (int, error) {
+	w.contentType = "json"
+	body := map[string]interface{}{}
+	err := json.Unmarshal(bytes, &body)
+	if err != nil {
+		return 0, err
+	}
+	w.Params = body
+	return len(bytes), nil
 }
 
 func (w *WebsocketResponse) Marshal() []byte {
-	if w.Header().Get("Content-Type") == "application/json; charset=utf-8" ||
-		w.Header().Get("Content-Type") == "application/json" {
+	if w.contentType == "json" {
 		data, _ := json.Marshal(w)
 		return data
 	}
-	if w.Header().Get("Content-Length") != "" {
-		return w.buf.Bytes()
-	}
-	return nil
+	return w.buf.Bytes()
 }

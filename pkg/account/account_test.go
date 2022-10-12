@@ -19,7 +19,6 @@ package account
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -30,7 +29,7 @@ import (
 )
 
 func TestAccount_CreateRootAccount(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +73,7 @@ func TestAccount_CreateRootAccount(t *testing.T) {
 }
 
 func TestAuthorise(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +106,7 @@ func TestAuthorise(t *testing.T) {
 }
 
 func TestLoadAndStoreMnemonic(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +155,7 @@ func TestCreateRandomKeyPair(t *testing.T) {
 }
 
 func TestLoadUserAccount(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,7 +193,7 @@ func TestLoadUserAccount(t *testing.T) {
 }
 
 func TestLoadUserAccountFromSeed(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,7 +231,7 @@ func TestLoadUserAccountFromSeed(t *testing.T) {
 }
 
 func TestPadUnpadSeed(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -270,7 +269,7 @@ func TestPadUnpadSeed(t *testing.T) {
 }
 
 func TestCreatePodAccount(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -303,7 +302,7 @@ func TestCreatePodAccount(t *testing.T) {
 }
 
 func TestCreatePodAccountWithSeed(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -345,7 +344,7 @@ func TestCreatePodAccountWithSeed(t *testing.T) {
 }
 
 func TestGetAddress(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -395,7 +394,7 @@ func TestGetAddress(t *testing.T) {
 }
 
 func TestLoadSeedFromMnemonic(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
