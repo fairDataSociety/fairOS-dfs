@@ -28,7 +28,8 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 	if directoryNameWithPath == "" {
 		return ErrInvalidDirectoryName
 	}
-	parentPath := filepath.Dir(directoryNameWithPath)
+	directoryNameWithPath = filepath.ToSlash(directoryNameWithPath)
+	parentPath := filepath.ToSlash(filepath.Dir(directoryNameWithPath))
 	dirToDelete := filepath.Base(directoryNameWithPath)
 	// validation checks of the arguments
 	if parentPath == "." { // skipcq: TCV-001
@@ -40,11 +41,10 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 
 	// check if directory present
 	var totalPath string
-	if parentPath == "/" && dirToDelete == "/" {
+	if parentPath == utils.PathSeparator && filepath.ToSlash(dirToDelete) == utils.PathSeparator {
 		totalPath = utils.CombinePathAndFile(parentPath, "")
 	} else {
 		totalPath = utils.CombinePathAndFile(parentPath, dirToDelete)
-
 	}
 	if d.GetDirFromDirectoryMap(totalPath) == nil {
 		return ErrDirectoryNotPresent
@@ -85,9 +85,8 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 		return err
 	}
 	d.RemoveFromDirectoryMap(totalPath)
-
 	// return if root directory
-	if parentPath == "/" && dirToDelete == "/" {
+	if parentPath == utils.PathSeparator && filepath.ToSlash(dirToDelete) == utils.PathSeparator {
 		return nil
 	}
 	// remove the directory entry from the parent dir
@@ -96,7 +95,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 
 // RmRootDir removes root directory and all the entries (file/directory) under that.
 func (d *Directory) RmRootDir() error {
-	dirToDelete := filepath.Base("/")
+	dirToDelete := utils.PathSeparator
 
 	// check if directory present
 	var totalPath = utils.CombinePathAndFile(dirToDelete, "")

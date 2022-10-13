@@ -60,9 +60,8 @@ func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "pod sync: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
-	ctx := r.Context()
 	// fetch pods and list them
-	err = h.dfsAPI.SyncPod(ctx, podName, sessionId)
+	err = h.dfsAPI.SyncPod(podName, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName ||

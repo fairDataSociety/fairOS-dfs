@@ -35,7 +35,7 @@ import (
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
 
-// CreateNewUserV2 creates a new user with the given user name and password. if a mnemonic is passed
+// CreateNewUserV2 creates a new user with the given username and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
 func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string, tm taskmanager.TaskManagerGO) (string, string, string, string, *Info, error) {
 	// Check username validity

@@ -94,7 +94,7 @@ func (a *API) IsDirPresent(podName, directoryNameWithPath, sessionId string) (bo
 		return false, err
 	}
 	directory := podInfo.GetDirectory()
-
+	directoryNameWithPath = filepath.ToSlash(directoryNameWithPath)
 	dirPresent := directory.IsDirectoryPresent(directoryNameWithPath)
 	return dirPresent, nil
 }
@@ -274,6 +274,7 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 	}
 	file := podInfo.GetFile()
 	directory := podInfo.GetDirectory()
+	podPath = filepath.ToSlash(podPath)
 
 	// check if file exists, then backup the file
 	totalPath := utils.CombinePathAndFile(podPath, podFileName)
@@ -322,6 +323,9 @@ func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, session
 	file := podInfo.GetFile()
 	directory := podInfo.GetDirectory()
 
+	fileNameWithPath = filepath.ToSlash(fileNameWithPath)
+	newFileNameWithPath = filepath.ToSlash(newFileNameWithPath)
+
 	// check if file exists
 	if !file.IsFileAlreadyPresent(fileNameWithPath) {
 		return ErrFileNotPresent
@@ -335,8 +339,8 @@ func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, session
 		return err
 	}
 
-	oldPrnt := filepath.Dir(fileNameWithPath)
-	newPrnt := filepath.Dir(newFileNameWithPath)
+	oldPrnt := filepath.ToSlash(filepath.Dir(fileNameWithPath))
+	newPrnt := filepath.ToSlash(filepath.Dir(newFileNameWithPath))
 
 	// add the file to the directory metadata
 	err = directory.AddEntryToDir(newPrnt, m.Name, true)

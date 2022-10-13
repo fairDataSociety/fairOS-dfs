@@ -13,10 +13,13 @@ import (
 )
 
 func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath string) error {
-	parentPath := filepath.Dir(dirNameWithPath)
+	dirNameWithPath = filepath.ToSlash(dirNameWithPath)
+	newDirNameWithPath = filepath.ToSlash(newDirNameWithPath)
+
+	parentPath := filepath.ToSlash(filepath.Dir(dirNameWithPath))
 	dirName := filepath.Base(dirNameWithPath)
 
-	newParentPath := filepath.Dir(newDirNameWithPath)
+	newParentPath := filepath.ToSlash(filepath.Dir(newDirNameWithPath))
 	newDirName := filepath.Base(newDirNameWithPath)
 
 	// validation checks of the arguments

@@ -21,12 +21,10 @@ import (
 	"context"
 	"crypto/rand"
 	"io"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
-
-	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -34,6 +32,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
 )
 
 func TestUpload(t *testing.T) {
@@ -117,13 +116,13 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, fileName))
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -150,13 +149,13 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath+fileName, ""))
+		meta := fileObject.GetFromFileMap(filepath.ToSlash(utils.CombinePathAndFile(filePath+fileName, "")))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -183,13 +182,13 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -223,13 +222,13 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -263,13 +262,14 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName))
+		meta := fileObject.GetFromFileMap(fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
 
 		// validate meta items
-		if meta.Path != filePath {
+		if meta.Path != filepath.ToSlash(filePath) {
 			t.Fatalf("invalid path in meta")
 		}
 		if meta.Name != fileName {
@@ -281,7 +281,7 @@ func TestUpload(t *testing.T) {
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
 		}
-		reader, _, err := fileObject.Download(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		reader, _, err := fileObject.Download(fp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -292,7 +292,7 @@ func TestUpload(t *testing.T) {
 		}
 		fileObject.RemoveAllFromFileMap()
 
-		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta2 := fileObject.GetFromFileMap(fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -301,7 +301,7 @@ func TestUpload(t *testing.T) {
 
 func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
-	fd, err := ioutil.TempFile("", fileName)
+	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
 		t.Fatal(err)
 	}

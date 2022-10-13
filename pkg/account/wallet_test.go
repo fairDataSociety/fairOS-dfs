@@ -2,7 +2,6 @@ package account
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 )
 
 func TestWallet(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
