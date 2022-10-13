@@ -48,6 +48,7 @@ const (
 	chunkUploadDownloadUrl = "/chunks"
 	bytesUploadDownloadUrl = "/bytes"
 	pinsUrl                = "/pins/"
+	_                      = pinsUrl
 	swarmPinHeader         = "Swarm-Pin"
 	swarmEncryptHeader     = "Swarm-Encrypt"
 	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
@@ -403,35 +404,37 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 
 // DeleteReference unpins a reference so that it will be garbage collected by the Swarm network.
 func (s *Client) DeleteReference(address []byte) error {
-	to := time.Now()
-	addrString := swarm.NewAddress(address).String()
+	// TODO uncomment after unpinning is fixed
 
-	fullUrl := s.url + pinsUrl + addrString
-	req, err := http.NewRequest(http.MethodDelete, fullUrl, http.NoBody)
-	if err != nil {
-		return err
-	}
-
-	response, err := s.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	req.Close = true
-	if response.StatusCode != http.StatusOK {
-		respData, err := io.ReadAll(response.Body)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("failed to unpin reference : %s", respData)
-	}
-
-	fields := logrus.Fields{
-		"reference": addrString,
-		"duration":  time.Since(to).String(),
-	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete chunk: ")
+	//to := time.Now()
+	//addrString := swarm.NewAddress(address).String()
+	//
+	//fullUrl := s.url + pinsUrl + addrString
+	//req, err := http.NewRequest(http.MethodDelete, fullUrl, http.NoBody)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//response, err := s.client.Do(req)
+	//if err != nil {
+	//	return err
+	//}
+	//defer response.Body.Close()
+	//
+	//req.Close = true
+	//if response.StatusCode != http.StatusOK {
+	//	respData, err := io.ReadAll(response.Body)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	return fmt.Errorf("failed to unpin reference : %s", respData)
+	//}
+	//
+	//fields := logrus.Fields{
+	//	"reference": addrString,
+	//	"duration":  time.Since(to).String(),
+	//}
+	//s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete chunk: ")
 	return nil
 }
 

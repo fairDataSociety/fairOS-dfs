@@ -48,11 +48,30 @@ func (a *API) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	err = directory.MkDir(dirToCreateWithPath)
+	return directory.MkDir(dirToCreateWithPath)
+}
+
+// RenameDir is a controller function which validates if the user is logged in,
+// pod is open and calls the rename directory function in the dir object.
+func (a *API) RenameDir(podName, dirToRenameWithPath, newName, sessionId string) error {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return ErrPodNotOpen
+	}
+
+	// get the dir object and rename directory
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
-	return nil
+	directory := podInfo.GetDirectory()
+	return directory.RenameDir(dirToRenameWithPath, newName)
 }
 
 // IsDirPresent is acontroller function which validates if the user is logged in,
@@ -75,7 +94,7 @@ func (a *API) IsDirPresent(podName, directoryNameWithPath, sessionId string) (bo
 		return false, err
 	}
 	directory := podInfo.GetDirectory()
-
+	directoryNameWithPath = filepath.ToSlash(directoryNameWithPath)
 	dirPresent := directory.IsDirectoryPresent(directoryNameWithPath)
 	return dirPresent, nil
 }
@@ -100,11 +119,7 @@ func (a *API) RmDir(podName, directoryNameWithPath, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	err = directory.RmDir(directoryNameWithPath)
-	if err != nil {
-		return err
-	}
-	return nil
+	return directory.RmDir(directoryNameWithPath)
 }
 
 // ListDir is a controller function which validates if the user is logged in,
@@ -259,6 +274,7 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 	}
 	file := podInfo.GetFile()
 	directory := podInfo.GetDirectory()
+	podPath = filepath.ToSlash(podPath)
 
 	// check if file exists, then backup the file
 	totalPath := utils.CombinePathAndFile(podPath, podFileName)
@@ -284,6 +300,55 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 
 	// add the file to the directory metadata
 	return directory.AddEntryToDir(podPath, podFileName, true)
+}
+
+// RenameFile is a controller function which validates if the user is logged in,
+//  pod is open and calls renaming of a file
+func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, sessionId string) error {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return ErrPodNotOpen
+	}
+
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return err
+	}
+	file := podInfo.GetFile()
+	directory := podInfo.GetDirectory()
+
+	fileNameWithPath = filepath.ToSlash(fileNameWithPath)
+	newFileNameWithPath = filepath.ToSlash(newFileNameWithPath)
+
+	// check if file exists
+	if !file.IsFileAlreadyPresent(fileNameWithPath) {
+		return ErrFileNotPresent
+	}
+	if file.IsFileAlreadyPresent(newFileNameWithPath) {
+		return ErrFileAlreadyPresent
+	}
+
+	m, err := file.RenameFromFileName(fileNameWithPath, newFileNameWithPath)
+	if err != nil {
+		return err
+	}
+
+	oldPrnt := filepath.ToSlash(filepath.Dir(fileNameWithPath))
+	newPrnt := filepath.ToSlash(filepath.Dir(newFileNameWithPath))
+
+	// add the file to the directory metadata
+	err = directory.AddEntryToDir(newPrnt, m.Name, true)
+	if err != nil {
+		return err
+	}
+
+	return directory.RemoveEntryFromDir(oldPrnt, filepath.Base(fileNameWithPath), true)
 }
 
 // DownloadFile is a controller function which validates if the user is logged in,
@@ -314,6 +379,40 @@ func (a *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadC
 	// download the file by creating the reader
 	file := podInfo.GetFile()
 	reader, size, err := file.Download(podFileWithPath)
+	if err != nil {
+		return nil, 0, err
+	}
+	return reader, size, nil
+}
+
+// ReadSeekCloser is a controller function which validates if the user is logged in,
+// pod is open and calls the download function.
+func (a *API) ReadSeekCloser(podName, podFileWithPath, sessionId string) (io.ReadSeekCloser, uint64, error) {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, 0, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return nil, 0, ErrPodNotOpen
+	}
+
+	// check if logged in to pod
+	if !ui.GetPod().IsPodOpened(podName) {
+		return nil, 0, fmt.Errorf("login to pod to do this operation")
+	}
+
+	// get podInfo and construct the path
+	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// download the file by creating the reader
+	file := podInfo.GetFile()
+	reader, size, err := file.ReadSeeker(podFileWithPath)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -31,11 +31,11 @@ const (
 )
 
 func (d *Directory) MkDir(dirToCreateWithPath string) error {
-	parentPath := filepath.Dir(dirToCreateWithPath)
+	parentPath := filepath.ToSlash(filepath.Dir(dirToCreateWithPath))
 	dirName := filepath.Base(dirToCreateWithPath)
 
 	// validation checks of the arguments
-	if dirName == "" || strings.HasPrefix(dirName, utils.PathSeparator) {
+	if dirName == "" || strings.HasPrefix(filepath.ToSlash(dirName), utils.PathSeparator) {
 		return ErrInvalidDirectoryName
 	}
 

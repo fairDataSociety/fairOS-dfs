@@ -75,9 +75,36 @@ func TestListFiles(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		foundIndex1 := -1
+		for i, v := range entries {
+			if v.Name == "file1" {
+				foundIndex1 = i
+			}
+		}
+		if foundIndex1 < 0 {
+			t.Fatal("file1 not found")
+		}
+		foundIndex2 := -1
+		for i, v := range entries {
+			if v.Name == "file2" {
+				foundIndex2 = i
+			}
+		}
+		if foundIndex2 < 0 {
+			t.Fatal("file1 not found")
+		}
+		foundIndex3 := -1
+		for i, v := range entries {
+			if v.Name == "file3" {
+				foundIndex3 = i
+			}
+		}
+		if foundIndex3 < 0 {
+			t.Fatal("file1 not found")
+		}
 
 		// validate the entries
-		entry := entries[0]
+		entry := entries[foundIndex1]
 		if entry.Name != "file1" {
 			t.Fatalf("invalid name")
 		}
@@ -87,7 +114,7 @@ func TestListFiles(t *testing.T) {
 		if entry.BlockSize != strconv.FormatUint(10, 10) {
 			t.Fatalf("invalid block size")
 		}
-		entry = entries[1]
+		entry = entries[foundIndex2]
 		if entry.Name != "file2" {
 			t.Fatalf("invalid name")
 		}
@@ -97,7 +124,7 @@ func TestListFiles(t *testing.T) {
 		if entry.BlockSize != strconv.FormatUint(20, 10) {
 			t.Fatalf("invalid block size")
 		}
-		entry = entries[2]
+		entry = entries[foundIndex3]
 		if entry.Name != "file3" {
 			t.Fatalf("invalid name")
 		}

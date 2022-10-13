@@ -20,7 +20,6 @@ import (
 	"crypto/rand"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -213,7 +212,7 @@ func TestSharing(t *testing.T) {
 
 func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
-	fd, err := ioutil.TempFile("", fileName)
+	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
 		t.Fatal(err)
 	}

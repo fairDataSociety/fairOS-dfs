@@ -66,7 +66,7 @@ func TestListDirectory(t *testing.T) {
 		}
 		err := dirObject.MkDir("/")
 		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
-			t.Fatal("invalid dir name")
+			t.Fatal("invalid dir name", err)
 		}
 		longDirName, err := utils.GetRandString(101)
 		if err != nil {

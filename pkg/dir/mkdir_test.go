@@ -51,6 +51,7 @@ func TestMkdir(t *testing.T) {
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
+
 	t.Run("simple-mkdir", func(t *testing.T) {
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
@@ -78,6 +79,7 @@ func TestMkdir(t *testing.T) {
 			t.Fatalf("invalid directory name")
 		}
 	})
+
 	t.Run("complicated-mkdir", func(t *testing.T) {
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
