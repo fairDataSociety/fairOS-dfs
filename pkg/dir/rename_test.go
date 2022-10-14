@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"sort"
 	"testing"
@@ -107,6 +106,7 @@ func TestRenameDirectory(t *testing.T) {
 			t.Fatal(err)
 		}
 		// rename
+
 		err = dirObject.RenameDir("/parentDir", "/parentNew")
 		if err != nil {
 			t.Fatal(err)
@@ -117,6 +117,15 @@ func TestRenameDirectory(t *testing.T) {
 		}
 		if dirEntries[0].Name != "parentNew" {
 			t.Fatal("rename failed for parentDir")
+		}
+
+		err = dirObject.MkDir("/parent")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.RenameDir("/parentNew", "/parent")
+		if !errors.Is(err, dir.ErrDirectoryAlreadyPresent) {
+			t.Fatal("directory name should already be present")
 		}
 
 		// validate dir listing
@@ -296,7 +305,7 @@ func TestRenameDirectory(t *testing.T) {
 		for _, v := range dirEntries {
 			dirs = append(dirs, v.Name)
 		}
-		fmt.Println(dirs, files)
+
 		if len(dirs) != 1 {
 			t.Fatalf("invalid directory entry count")
 		}

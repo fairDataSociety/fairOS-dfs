@@ -11,7 +11,7 @@ package user
 //		}
 //		defer os.RemoveAll(dataDir)
 //		ens := mock2.NewMockNamespaceManager()
-//		//create user
+//		// create user
 //		userObject := NewUsers(dataDir, mockClient, ens, logger)
 //		_, _, ui, err := userObject.CreateNewUser("7e4567e7cb003804992eef11fd5c757275a4a", "password1", "", "")
 //		if err != nil {

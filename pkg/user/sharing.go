@@ -72,7 +72,7 @@ func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef strin
 		return "", err
 	}
 
-	//encrypt data
+	// encrypt data
 	encryptedData, err := encryptData(data, now.Unix())
 	if err != nil { // skipcq: TCV-001
 		return "", err

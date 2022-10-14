@@ -74,6 +74,7 @@ func (a *API) GetUserStat(sessionId string) (*user.Stat, error) {
 	return a.users.GetUserStat(ui)
 }
 
+/*
 // MigrateUser is a controller function which migrates user credentials to swarm from local storage
 func (a *API) MigrateUser(username, passPhrase, sessionId string) error {
 	// get the logged in user information
@@ -83,3 +84,4 @@ func (a *API) MigrateUser(username, passPhrase, sessionId string) error {
 	}
 	return a.users.MigrateUser(ui.GetUserName(), username, a.dataDir, passPhrase, sessionId, a.client, ui)
 }
+*/

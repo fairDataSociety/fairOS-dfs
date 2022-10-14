@@ -6,7 +6,6 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )
 
@@ -50,24 +49,5 @@ func (h *Handler) UserMigrateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// migrate user
-	username := userReq.UserName
-	err = h.dfsAPI.MigrateUser(username, password, sessionId)
-	if err != nil {
-		if err == u.ErrInvalidUserName ||
-			err == u.ErrInvalidPassword ||
-			err == u.ErrUserNotLoggedIn {
-			h.logger.Errorf("user migrate: %v", err)
-			jsonhttp.BadRequest(w, &response{Message: "user migrate: " + err.Error()})
-			return
-		}
-		h.logger.Errorf("user migrate: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user migrate: " + err.Error()})
-		return
-	}
-
-	// clear cookie
-	cookie.ClearSession(w)
-
-	jsonhttp.OK(w, &response{Message: "user migrated successfully"})
+	jsonhttp.BadRequest(w, &response{Message: "user migrate: deprecated"})
 }

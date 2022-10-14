@@ -1,5 +1,6 @@
 package user
 
+/*
 import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -80,3 +81,4 @@ func (u *Users) MigrateUser(oldUsername, newUsername, dataDir, password, session
 
 	return u.deleteUserMapping(oldUsername, dataDir)
 }
+*/

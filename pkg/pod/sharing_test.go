@@ -155,7 +155,7 @@ func TestShare(t *testing.T) {
 			t.Fatalf("could not share pod")
 		}
 
-		//receive pod info for name validation
+		// receive pod info for name validation
 		ref, err := utils.ParseHexReference(sharingRef)
 		if err != nil {
 			t.Fatal(err)

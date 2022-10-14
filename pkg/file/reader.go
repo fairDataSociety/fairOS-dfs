@@ -115,7 +115,6 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 			r.blockCursor += bytesToRead
 			r.readOffset += int64(bytesToRead)
 			bytesRead = int(bytesToRead)
-			//bytesToRead = 0
 			if r.blockCursor == r.blockSize {
 				r.lastBlock = nil
 				r.blockCursor = 0
@@ -158,7 +157,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 				r.blockSize = uint32(len(r.lastBlock))
 			}
 
-			//if length of bytes to read is greater than block size
+			// if length of bytes to read is greater than block size
 			if bytesToRead > r.blockSize {
 				bytesToRead = r.blockSize
 			}

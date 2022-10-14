@@ -61,11 +61,13 @@ func (i *Info) GetFeed() *feed.API {
 	return i.feed
 }
 
+// GetKVStore returns kvStore
 // skipcq: TCV-001
 func (i *Info) GetKVStore() *collection.KeyValue {
 	return i.kvStore
 }
 
+// GetDocStore returns docStore
 // skipcq: TCV-001
 func (i *Info) GetDocStore() *collection.Document {
 	return i.docStore
