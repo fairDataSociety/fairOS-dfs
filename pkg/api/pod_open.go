@@ -86,3 +86,59 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 
 	jsonhttp.OK(w, &response{Message: "pod opened successfully"})
 }
+
+// PodOpenAsyncHandler is the api handler to open a pod asynchronously
+// it takes two arguments
+// - pod_name: the name of the pod to open
+// - password: the password of the user
+func (h *Handler) PodOpenAsyncHandler(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("pod open: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "pod open: invalid request body type"})
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var podReq common.PodRequest
+	err := decoder.Decode(&podReq)
+	if err != nil {
+		h.logger.Errorf("pod open: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "pod open: could not decode arguments"})
+		return
+	}
+	pod := podReq.PodName
+
+	// password will be empty in case of opening a shared pod
+	// so allow even if it is not set
+	password := podReq.Password
+
+	// get values from cookie
+	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	if err != nil {
+		h.logger.Errorf("pod open: invalid cookie: %v", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
+		return
+	}
+	if sessionId == "" {
+		h.logger.Errorf("pod open: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "pod open: \"cookie-id\" parameter missing in cookie"})
+		return
+	}
+
+	// open pod
+	_, err = h.dfsAPI.OpenPodAsync(r.Context(), pod, password, sessionId)
+	if err != nil {
+		if err == dfs.ErrUserNotLoggedIn ||
+			err == p.ErrInvalidPodName {
+			h.logger.Errorf("pod open: %v", err)
+			jsonhttp.NotFound(w, &response{Message: "pod open: " + err.Error()})
+			return
+		}
+		h.logger.Errorf("pod open: %v", err)
+		jsonhttp.InternalServerError(w, &response{Message: "pod open: " + err.Error()})
+		return
+	}
+
+	jsonhttp.OK(w, &response{Message: "pod opened successfully"})
+}

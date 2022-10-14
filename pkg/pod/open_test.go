@@ -50,9 +50,10 @@ func TestOpen(t *testing.T) {
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"
+	podName2 := "test2"
 
 	t.Run("open-pod", func(t *testing.T) {
-		// open non existent the pod
+		// open non-existent the pod
 		_, err := pod1.OpenPod(podName1, "password")
 		if !errors.Is(err, pod.ErrInvalidPodName) {
 			t.Fatal("pod should not be present")
@@ -91,6 +92,50 @@ func TestOpen(t *testing.T) {
 			t.Fatalf("pod not opened")
 		}
 		if gotPodInfo.GetPodName() != podName1 {
+			t.Fatalf("invalid pod name")
+		}
+	})
+
+	t.Run("open-pod-async", func(t *testing.T) {
+		// open non-existent the pod
+		_, err := pod1.OpenPod(podName2, "password")
+		if !errors.Is(err, pod.ErrInvalidPodName) {
+			t.Fatal("pod should not be present")
+		}
+
+		// create a pod
+		info, err := pod1.CreatePod(podName2, "password", "")
+		if err != nil {
+			t.Fatalf("error creating pod %s", podName1)
+		}
+
+		// make root dir so that other directories can be added
+		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create some dir and files
+		addFilesAndDirectories(t, info, pod1, podName2)
+
+		// open the pod
+		podInfo, err := pod1.OpenPodAsync(context.Background(), podName2, "password")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// validate if properly opened
+		if podInfo == nil {
+			t.Fatalf("pod not opened")
+		}
+		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName2)
+		if err != nil {
+			t.Fatalf("pod not opened")
+		}
+		if gotPodInfo == nil {
+			t.Fatalf("pod not opened")
+		}
+		if gotPodInfo.GetPodName() != podName2 {
 			t.Fatalf("invalid pod name")
 		}
 	})

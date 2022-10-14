@@ -17,6 +17,7 @@ limitations under the License.
 package dfs
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -122,6 +123,30 @@ func (a *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) 
 	}
 	// open the pod
 	pi, err := ui.GetPod().OpenPod(podName, passPhrase)
+	if err != nil {
+		return nil, err
+	}
+	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	if err != nil {
+		return nil, err
+	}
+	// Add podName in the login user session
+	ui.AddPodName(podName, pi)
+	return pi, nil
+}
+
+func (a *API) OpenPodAsync(ctx context.Context, podName, passPhrase, sessionId string) (*pod.Info, error) {
+	// get the logged-in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+	// return if pod already open
+	if ui.IsPodOpen(podName) {
+		return nil, errPodAlreadyOpen
+	}
+	// open the pod
+	pi, err := ui.GetPod().OpenPodAsync(ctx, podName, passPhrase)
 	if err != nil {
 		return nil, err
 	}
