@@ -16,8 +16,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/websocket"
-
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -25,6 +23,7 @@ import (
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 )
 
@@ -724,8 +723,7 @@ func TestApis(t *testing.T) {
 				if err != nil {
 					return
 				}
-				switch mt {
-				case 1:
+				if mt == 1 {
 					res := &common.WebsocketResponse{}
 					if err := json.Unmarshal(message, res); err != nil {
 						t.Error("got error ", err)
