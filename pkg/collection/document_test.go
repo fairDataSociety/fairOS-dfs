@@ -774,7 +774,7 @@ func TestDocumentStore(t *testing.T) {
 	//	si["age"] = collection.NumberIndex
 	//	si["tag_map"] = collection.MapIndex
 	//	si["tag_list"] = collection.ListIndex
-	//	//createDocumentDBs(t, []string{"docdb_12"}, docStore, si)
+	//	// createDocumentDBs(t, []string{"docdb_12"}, docStore, si)
 	//	err := docStore.CreateDocumentDB("docdb_12", si, false)
 	//	if err != nil {
 	//		t.Fatal(err)

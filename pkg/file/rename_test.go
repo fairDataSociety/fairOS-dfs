@@ -65,7 +65,7 @@ func TestRename(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//Download the file and read from reader
+		// Download the file and read from reader
 		present := fileObject.IsFileAlreadyPresent(podFile)
 		if present {
 			t.Fatal("old name should not be present")
@@ -137,7 +137,7 @@ func TestRename(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//Download the file and read from reader
+		// Download the file and read from reader
 		present := fileObject.IsFileAlreadyPresent(podFile)
 		if present {
 			t.Fatal("old name should not be present")

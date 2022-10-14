@@ -69,7 +69,7 @@ func TestListFiles(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//list the files
+		// list the files
 		fileList := []string{"/dir1/file1", "/dir1/file2", "/dir1/file3"}
 		entries, err := fileObject.ListFiles(fileList)
 		if err != nil {

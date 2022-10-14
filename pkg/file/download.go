@@ -60,7 +60,7 @@ func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
 		return nil, 0, err
 	}
 
-	//need to change the access time for podFile if it is owned by user
+	// need to change the access time for podFile if it is owned by user
 	if !f.fd.IsReadOnlyFeed() {
 		meta.AccessTime = time.Now().Unix()
 		err = f.updateMeta(meta)
@@ -97,7 +97,7 @@ func (f *File) ReadSeeker(podFileWithPath string) (io.ReadSeekCloser, uint64, er
 		return nil, 0, err
 	}
 
-	//need to change the access time for podFile if it is owned by user
+	// need to change the access time for podFile if it is owned by user
 	if !f.fd.IsReadOnlyFeed() {
 		meta.AccessTime = time.Now().Unix()
 		err = f.updateMeta(meta)

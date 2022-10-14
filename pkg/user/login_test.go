@@ -37,7 +37,7 @@ func TestLogin(t *testing.T) {
 		tm := taskmanager.New(1, 10, time.Second*15, logger)
 
 		ens := mock2.NewMockNamespaceManager()
-		//create user
+		// create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
 		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", "", "", tm)
 		if err != nil {

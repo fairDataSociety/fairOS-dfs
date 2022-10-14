@@ -50,7 +50,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, u.client, u.logger)
-	//create a new base user account with the mnemonic
+	// create a new base user account with the mnemonic
 	mnemonic, _, err := acc.CreateUserAccount(passPhrase, mnemonic)
 	if err != nil {
 		return "", "", "", "", nil, err

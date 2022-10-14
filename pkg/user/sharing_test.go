@@ -71,7 +71,7 @@ func TestSharing(t *testing.T) {
 
 	t.Run("sharing-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
-		//create source user
+		// create source user
 		userObject1 := user.NewUsers("", mockClient, ens, logger)
 		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil {
@@ -109,7 +109,7 @@ func TestSharing(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//create destination user
+		// create destination user
 		userObject2 := user.NewUsers("", mockClient, ens, logger)
 		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password2", "", "", tm)
 		if err != nil {
