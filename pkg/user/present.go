@@ -16,12 +16,10 @@ limitations under the License.
 
 package user
 
-/*
 // IsUsernameAvailable checks if a supplied username is present in this dfs server.
 func (u *Users) IsUsernameAvailable(userName, dataDir string) bool {
 	return u.isUserMappingPresent(userName, dataDir)
 }
-*/
 
 // IsUsernameAvailableV2 checks if a supplied username is present in blockchain
 func (u *Users) IsUsernameAvailableV2(userName string) bool {
