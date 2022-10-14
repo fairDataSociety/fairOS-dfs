@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"hash"
 	"io"
@@ -172,17 +171,17 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusCreated {
-		return nil, errors.New("error uploading data")
+	respData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error uploading data : %s", err.Error())
 	}
 
-	addrData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, errors.New("error downloading data")
+	if response.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("error uploading data : %s", string(respData))
 	}
 
 	var addrResp *chunkAddressResponse
-	err = json.Unmarshal(addrData, &addrResp)
+	err = json.Unmarshal(respData, &addrResp)
 	if err != nil {
 		return nil, err
 	}
@@ -222,17 +221,17 @@ func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err erro
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
-		return nil, errors.New("error uploading data")
+	respData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error uploading data : %s", err.Error())
 	}
 
-	addrData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, errors.New("error downloading data")
+	if response.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("error uploading data : %s", string(respData))
 	}
 
 	var addrResp *chunkAddressResponse
-	err = json.Unmarshal(addrData, &addrResp)
+	err = json.Unmarshal(respData, &addrResp)
 	if err != nil {
 		return nil, err
 	}
@@ -274,13 +273,13 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
-		return nil, errors.New("error downloading data")
-	}
-
 	data, err = io.ReadAll(response.Body)
 	if err != nil {
-		return nil, errors.New("error downloading data")
+		return nil, fmt.Errorf("error downloading data: %s", err.Error())
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error downloading data: %s", string(data))
 	}
 
 	s.addToChunkCache(addrString, data)
@@ -326,13 +325,13 @@ func (s *Client) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
-		return nil, errors.New("error uploading blob")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, errors.New("error uploading blob")
+		return nil, fmt.Errorf("error uploading data : %s", err.Error())
+	}
+
+	if response.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("error uploading data : %s", string(respData))
 	}
 
 	var resp bytesPostResponse
@@ -379,13 +378,13 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
-		return nil, response.StatusCode, errors.New("error downloading blob ")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, response.StatusCode, errors.New("error downloading blob")
+		return nil, response.StatusCode, fmt.Errorf("error downloading data: %s", err.Error())
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return nil, response.StatusCode, fmt.Errorf("error downloading data: %s", string(respData))
 	}
 
 	fields := logrus.Fields{
