@@ -44,7 +44,7 @@ func (a *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error
 	}
 
 	// create the root directory
-	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), podPassword, pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (a *API) DeletePod(podName, passphrase, sessionId string) error {
 
 	// delete all the directory, files, and database tables under this pod from
 	// the Swarm network.
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (a *API) DeletePod(podName, passphrase, sessionId string) error {
 		return nil
 	}
 
-	err = directory.RmRootDir()
+	err = directory.RmRootDir(podInfo.GetPodPassword())
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (a *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) 
 	if err != nil {
 		return nil, err
 	}
-	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (a *API) OpenPodAsync(ctx context.Context, podName, passPhrase, sessionId s
 	if err != nil {
 		return nil, err
 	}
-	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}

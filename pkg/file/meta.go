@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	MetaVersion uint8 = 1
+	MetaVersion uint8 = 2
 
 	ErrDeletedFeed = errors.New("deleted feed")
 )
@@ -84,7 +84,7 @@ func (f *File) uploadMeta(meta *MetaData) error {
 	// put the file meta as a feed
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
-	_, err = f.fd.CreateFeed(topic, meta.UserAddress, fileMetaBytes)
+	_, err = f.fd.CreateFeed(topic, meta.UserAddress, fileMetaBytes, nil)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -96,7 +96,7 @@ func (f *File) deleteMeta(meta *MetaData) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	// update with utils.DeletedFeedMagicWord
-	_, err := f.fd.UpdateFeed(topic, meta.UserAddress, []byte(utils.DeletedFeedMagicWord))
+	_, err := f.fd.UpdateFeed(topic, meta.UserAddress, []byte(utils.DeletedFeedMagicWord), nil)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -117,7 +117,7 @@ func (f *File) updateMeta(meta *MetaData) error {
 	// put the file meta as a feed
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
-	_, err = f.fd.UpdateFeed(topic, meta.UserAddress, fileMetaBytes)
+	_, err = f.fd.UpdateFeed(topic, meta.UserAddress, fileMetaBytes, nil)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -187,7 +187,7 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath string) 
 
 func (f *File) GetMetaFromFileName(fileNameWithPath string, userAddress utils.Address) (*MetaData, error) {
 	topic := utils.HashString(fileNameWithPath)
-	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress)
+	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress, nil)
 	if err != nil {
 		return nil, err
 	}

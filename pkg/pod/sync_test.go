@@ -60,13 +60,13 @@ func TestSync(t *testing.T) {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
+		err = info.GetDirectory().MkRootDir("pod1", podPassword, info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create some dir and files
-		addFilesAndDirectories(t, info, pod1, podName1)
+		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
 		// open the pod ths triggers sync too
 		gotInfo, err := pod1.OpenPod(podName1, "password")

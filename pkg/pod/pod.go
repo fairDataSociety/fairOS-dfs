@@ -86,13 +86,13 @@ func (p *Pod) removePodFromPodMap(podName string) {
 	delete(p.podMap, podName)
 }
 
-func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, error) {
+func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, string, error) {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
 	if podInfo, ok := p.podMap[podName]; ok {
-		return podInfo, nil
+		return podInfo, podInfo.podPassword, nil
 	}
-	return nil, fmt.Errorf("could not find pod: %s", podName)
+	return nil, "", fmt.Errorf("could not find pod: %s", podName)
 }
 
 func (p *Pod) GetFeed() *feed.API {

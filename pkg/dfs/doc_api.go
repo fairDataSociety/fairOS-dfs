@@ -31,7 +31,7 @@ func (a *API) DocCreate(sessionId, podName, name string, indexes map[string]coll
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (a *API) DocOpen(sessionId, podName, name string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (a *API) DocDelete(sessionId, podName, name string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (a *API) DocList(sessionId, podName string) (map[string]collection.DBSchema
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (a *API) DocCount(sessionId, podName, name, expr string) (*collection.Table
 		return keyCount, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return keyCount, err
 	}
@@ -145,7 +145,7 @@ func (a *API) DocPut(sessionId, podName, name string, value []byte) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (a *API) DocPut(sessionId, podName, name string, value []byte) error {
 }
 
 // DocGet is a controller function which does all the checks before retrieving
-//// a document in the documentDB.
+// // a document in the documentDB.
 func (a *API) DocGet(sessionId, podName, name, id string) ([]byte, error) {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -167,7 +167,7 @@ func (a *API) DocGet(sessionId, podName, name, id string) ([]byte, error) {
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (a *API) DocDel(sessionId, podName, name, id string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func (a *API) DocFind(sessionId, podName, name, expr string, limit int) ([][]byt
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,7 @@ func (a *API) DocBatch(sessionId, podName, name string) (*collection.DocBatch, e
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func (a *API) DocBatchPut(sessionId, podName string, doc []byte, docBatch *colle
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -274,7 +274,7 @@ func (a *API) DocBatchWrite(sessionId, podName string, docBatch *collection.DocB
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (a *API) DocIndexJson(sessionId, podName, name, podFileWithPath string) err
 	}
 
 	// check if file present
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}

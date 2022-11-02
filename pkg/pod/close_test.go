@@ -59,16 +59,16 @@ func TestClose(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
+		err = info.GetDirectory().MkRootDir("pod1", podPassword, info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create some dir and files
-		addFilesAndDirectories(t, info, pod1, podName1)
+		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
 		// verify if the pod is closed
-		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName1)
+		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err == nil {
 			t.Fatalf("pod not closed")
 		}

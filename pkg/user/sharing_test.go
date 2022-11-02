@@ -86,14 +86,14 @@ func TestSharing(t *testing.T) {
 		ui0.AddPodName(podName1, info1)
 
 		// make root dir so that other directories can be added
-		err = info1.GetDirectory().MkRootDir("pod1", info1.GetPodAddress(), info1.GetFeed())
+		err = info1.GetDirectory().MkRootDir("pod1", podPassword, info1.GetPodAddress(), info1.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create dir and file
 		dirObject1 := info1.GetDirectory()
-		err = dirObject1.MkDir("/parentDir1")
+		err = dirObject1.MkDir("/parentDir1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -124,14 +124,14 @@ func TestSharing(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = info2.GetDirectory().MkRootDir("pod1", info2.GetPodAddress(), info2.GetFeed())
+		err = info2.GetDirectory().MkRootDir("pod1", podPassword, info2.GetPodAddress(), info2.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create dir and file
 		dirObject2 := info2.GetDirectory()
-		err = dirObject2.MkDir("/parentDir2")
+		err = dirObject2.MkDir("/parentDir2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -183,7 +183,7 @@ func TestSharing(t *testing.T) {
 		if destinationFilePath != "/parentDir2/file1" {
 			t.Fatalf("invalid destination file name")
 		}
-		_, files, err := dirObject2.ListDir("/parentDir2")
+		_, files, err := dirObject2.ListDir("/parentDir2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}

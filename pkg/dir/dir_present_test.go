@@ -21,6 +21,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -49,32 +52,33 @@ func TestDirPresent(t *testing.T) {
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 
 	t.Run("dir-present", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/baseDir")
+		err := dirObject.MkDir("/baseDir", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check if dir is present
-		present := dirObject.IsDirectoryPresent("/baseDir")
+		present := dirObject.IsDirectoryPresent("/baseDir", podPassword)
 		if !present {
 			t.Fatalf("directory is not present")
 		}
 
-		err = dirObject.RmDir("/baseDir")
+		err = dirObject.RmDir("/baseDir", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		present = dirObject.IsDirectoryPresent("/baseDir")
+		present = dirObject.IsDirectoryPresent("/baseDir", podPassword)
 		if present {
 			t.Fatalf("directory is present")
 		}

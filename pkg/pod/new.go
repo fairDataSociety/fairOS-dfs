@@ -137,6 +137,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString, podPassword string) 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
 		podName:     podName,
+		podPassword: podPassword,
 		userAddress: user,
 		dir:         dir,
 		file:        file,
@@ -152,21 +153,16 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString, podPassword string) 
 func (p *Pod) loadUserPods() (*PodList, error) {
 	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
-	_, encryptedData, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex))
+	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
+	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex), privKeyBytes)
 	if err != nil { // skipcq: TCV-001
 		if err.Error() != "feed does not exist or was not updated yet" {
 			return nil, err
 		}
 	}
 	podList := &PodList{}
-	if len(encryptedData) == 0 {
+	if len(data) == 0 {
 		return podList, nil
-	}
-
-	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	data, err := utils.DecryptBytes(privKeyBytes, encryptedData)
-	if err != nil {
-		return nil, err
 	}
 
 	err = json.Unmarshal(data, podList)
@@ -189,8 +185,7 @@ func (p *Pod) storeUserPods(podList *PodList) error {
 	topic := utils.HashString(podFile)
 
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	encryptedData, err := utils.EncryptBytes(privKeyBytes, data)
-	_, err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), encryptedData)
+	_, err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), data, privKeyBytes)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

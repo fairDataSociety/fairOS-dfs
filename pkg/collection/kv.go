@@ -409,7 +409,7 @@ func (kv *KeyValue) KVGetNext(name string) ([]string, string, []byte, error) {
 func (kv *KeyValue) LoadKVTables() (map[string][]string, error) {
 	collections := make(map[string][]string)
 	topic := utils.HashString(kvFile)
-	_, data, err := kv.fd.GetFeedData(topic, kv.user)
+	_, data, err := kv.fd.GetFeedData(topic, kv.user, nil)
 	if err != nil {
 		if err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 			return collections, err
@@ -448,7 +448,7 @@ func (kv *KeyValue) storeKVTables(collections map[string][]string) error {
 	if buf.Len() == 0 {
 		data = []byte(utils.DeletedFeedMagicWord)
 	}
-	_, err := kv.fd.UpdateFeed(topic, kv.user, data)
+	_, err := kv.fd.UpdateFeed(topic, kv.user, data, nil)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

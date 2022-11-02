@@ -45,14 +45,17 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 			sharedPodType = true
 		}
 	}
-
-	var accountInfo *account.Info
-	var file *f.File
-	var fd *feed.API
-	var dir *d.Directory
-	var user utils.Address
+	var (
+		podPassword string
+		accountInfo *account.Info
+		file        *f.File
+		fd          *feed.API
+		dir         *d.Directory
+		user        utils.Address
+	)
 	if sharedPodType {
-		addressString := p.getAddress(podList, podName)
+		var addressString string
+		addressString, podPassword = p.getAddressPassword(podList, podName)
 		if addressString == "" { // skipcq: TCV-001
 			return nil, fmt.Errorf("shared pod does not exist")
 		}
@@ -68,7 +71,8 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		// set the userAddress as the pod address we got from shared pod
 		user = address
 	} else {
-		index := p.getIndex(podList, podName)
+		var index int
+		index, podPassword = p.getIndexPassword(podList, podName)
 		if index == -1 {
 			return nil, fmt.Errorf("pod does not exist")
 		}
@@ -92,6 +96,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
 		podName:     podName,
+		podPassword: podPassword,
 		userAddress: user,
 		accountInfo: accountInfo,
 		feed:        fd,
@@ -130,13 +135,17 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*In
 		}
 	}
 
-	var accountInfo *account.Info
-	var file *f.File
-	var fd *feed.API
-	var dir *d.Directory
-	var user utils.Address
+	var (
+		podPassword string
+		accountInfo *account.Info
+		file        *f.File
+		fd          *feed.API
+		dir         *d.Directory
+		user        utils.Address
+	)
 	if sharedPodType {
-		addressString := p.getAddress(podList, podName)
+		var addressString string
+		addressString, podPassword = p.getAddressPassword(podList, podName)
 		if addressString == "" { // skipcq: TCV-001
 			return nil, fmt.Errorf("shared pod does not exist")
 		}
@@ -152,7 +161,8 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*In
 		// set the userAddress as the pod address we got from shared pod
 		user = address
 	} else {
-		index := p.getIndex(podList, podName)
+		var index int
+		index, podPassword = p.getIndexPassword(podList, podName)
 		if index == -1 {
 			return nil, fmt.Errorf("pod does not exist")
 		}
@@ -176,6 +186,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*In
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
 		podName:     podName,
+		podPassword: podPassword,
 		userAddress: user,
 		accountInfo: accountInfo,
 		feed:        fd,
@@ -186,7 +197,6 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*In
 	}
 
 	p.addPodToPodMap(podName, podInfo)
-
 	// sync the pod's files and directories
 	err = p.SyncPodAsync(ctx, podName)
 	if err != nil && err != d.ErrResourceDeleted { // skipcq: TCV-001
@@ -195,20 +205,20 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*In
 	return podInfo, nil
 }
 
-func (*Pod) getIndex(podList *PodList, podName string) int {
+func (*Pod) getIndexPassword(podList *PodList, podName string) (int, string) {
 	for _, pod := range podList.Pods {
 		if pod.Name == podName {
-			return pod.Index
+			return pod.Index, pod.Password
 		}
 	}
-	return -1 // skipcq: TCV-001
+	return -1, "" // skipcq: TCV-001
 }
 
-func (*Pod) getAddress(podList *PodList, podName string) string {
+func (*Pod) getAddressPassword(podList *PodList, podName string) (string, string) {
 	for _, pod := range podList.SharedPods {
 		if pod.Name == podName {
-			return pod.Address
+			return pod.Address, pod.Password
 		}
 	}
-	return ""
+	return "", ""
 }

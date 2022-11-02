@@ -24,7 +24,7 @@ import (
 
 func (*Users) deleteMnemonic(userName string, address utils.Address, fd *feed.API, client blockstore.Client) error {
 	topic := utils.HashString(userName)
-	feedAddress, _, err := fd.GetFeedData(topic, address)
+	feedAddress, _, err := fd.GetFeedData(topic, address, nil)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

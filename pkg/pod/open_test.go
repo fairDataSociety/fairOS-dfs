@@ -69,13 +69,13 @@ func TestOpen(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
+		err = info.GetDirectory().MkRootDir("pod1", podPassword, info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create some dir and files
-		addFilesAndDirectories(t, info, pod1, podName1)
+		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
 		// open the pod
 		podInfo, err := pod1.OpenPod(podName1, "password")
@@ -87,7 +87,7 @@ func TestOpen(t *testing.T) {
 		if podInfo == nil {
 			t.Fatalf("pod not opened")
 		}
-		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName1)
+		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err != nil {
 			t.Fatalf("pod not opened")
 		}
@@ -114,13 +114,13 @@ func TestOpen(t *testing.T) {
 		}
 
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
+		err = info.GetDirectory().MkRootDir("pod1", podPassword, info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create some dir and files
-		addFilesAndDirectories(t, info, pod1, podName2)
+		addFilesAndDirectories(t, info, pod1, podName2, podPassword)
 
 		// open the pod
 		podInfo, err := pod1.OpenPodAsync(context.Background(), podName2, "password")
@@ -132,7 +132,7 @@ func TestOpen(t *testing.T) {
 		if podInfo == nil {
 			t.Fatalf("pod not opened")
 		}
-		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName2)
+		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName2)
 		if err != nil {
 			t.Fatalf("pod not opened")
 		}
@@ -180,10 +180,10 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
 }
 
-func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1 string) {
+func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1, podPassword string) {
 	t.Helper()
 	dirObject := info.GetDirectory()
-	err := dirObject.MkDir("/parentDir")
+	err := dirObject.MkDir("/parentDir", podPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -197,11 +197,11 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	}
 
 	// populate the directory with few directory and files
-	err = dirObject.MkDir("/parentDir/subDir1")
+	err = dirObject.MkDir("/parentDir/subDir1", podPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dirObject.MkDir("/parentDir/subDir2")
+	err = dirObject.MkDir("/parentDir/subDir2", podPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +210,7 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dirObject.AddEntryToDir("/parentDir", "file1", true)
+	err = dirObject.AddEntryToDir("/parentDir", podPassword, "file1", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +218,7 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dirObject.AddEntryToDir("/parentDir", "file2", true)
+	err = dirObject.AddEntryToDir("/parentDir", podPassword, "file2", true)
 	if err != nil {
 		t.Fatal(err)
 	}

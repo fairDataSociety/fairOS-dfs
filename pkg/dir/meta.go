@@ -17,7 +17,7 @@ limitations under the License.
 package dir
 
 var (
-	MetaVersion uint8 = 1
+	MetaVersion uint8 = 2
 )
 
 type MetaData struct {

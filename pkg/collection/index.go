@@ -102,7 +102,7 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 	}
 	actualIndexName := podName + collectionName + indexName
 	topic := utils.HashString(actualIndexName)
-	_, oldData, err := fd.GetFeedData(topic, user)
+	_, oldData, err := fd.GetFeedData(topic, user, nil)
 	if err == nil && len(oldData) != 0 && string(oldData) != utils.DeletedFeedMagicWord {
 		// if the feed is present and it has some data means there index is still valid
 		return ErrIndexAlreadyPresent
@@ -122,13 +122,13 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 	}
 
 	if string(oldData) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
-		_, err = fd.UpdateFeed(topic, user, ref)
+		_, err = fd.UpdateFeed(topic, user, ref, nil)
 		if err != nil {
 			return ErrManifestCreate
 		}
 		return nil
 	}
-	_, err = fd.CreateFeed(topic, user, ref)
+	_, err = fd.CreateFeed(topic, user, ref, nil)
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -171,7 +171,7 @@ func (idx *Index) DeleteIndex() error {
 
 	// erase the top Manifest
 	topic := utils.HashString(idx.name)
-	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(utils.DeletedFeedMagicWord))
+	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(utils.DeletedFeedMagicWord), nil)
 	if err != nil { // skipcq: TCV-001
 		return ErrDeleteingIndex
 	}
@@ -240,7 +240,7 @@ func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 	// get feed data and unmarshall the Manifest
 	idx.logger.Info("loading Manifest: ", manifestPath)
 	topic := utils.HashString(manifestPath)
-	_, refData, err := idx.feed.GetFeedData(topic, idx.user)
+	_, refData, err := idx.feed.GetFeedData(topic, idx.user, nil)
 	if err != nil { // skipcq: TCV-001
 		return nil, ErrNoManifestFound
 	}
@@ -275,7 +275,7 @@ func (idx *Index) updateManifest(manifest *Manifest) error {
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.UpdateFeed(topic, idx.user, ref)
+	_, err = idx.feed.UpdateFeed(topic, idx.user, ref, nil)
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -300,7 +300,7 @@ func (idx *Index) storeManifest(manifest *Manifest) error {
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.CreateFeed(topic, idx.user, ref)
+	_, err = idx.feed.CreateFeed(topic, idx.user, ref, nil)
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -336,7 +336,7 @@ func longestCommonPrefix(str1, str2 string) (string, string, string) {
 func getRootManifestOfIndex(actualIndexName string, fd *feed.API, user utils.Address, client blockstore.Client) *Manifest {
 	var manifest Manifest
 	topic := utils.HashString(actualIndexName)
-	_, addr, err := fd.GetFeedData(topic, user)
+	_, addr, err := fd.GetFeedData(topic, user, nil)
 	if err != nil {
 		return nil
 	}

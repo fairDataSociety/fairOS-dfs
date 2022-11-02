@@ -90,7 +90,7 @@ func TestDelete(t *testing.T) {
 			t.Fatalf("delete failed")
 		}
 
-		infoGot, err := pod1.GetPodInfoFromPodMap(podName1)
+		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err == nil {
 			t.Fatalf("pod not deleted from map")
 		}
@@ -142,7 +142,7 @@ func TestDelete(t *testing.T) {
 			t.Fatalf("delete pod failed")
 		}
 
-		infoGot, err := pod1.GetPodInfoFromPodMap(podName1)
+		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err == nil {
 			t.Fatalf("pod not deleted from map")
 		}
@@ -150,7 +150,7 @@ func TestDelete(t *testing.T) {
 			t.Fatalf("pod not deleted from map")
 		}
 
-		_, err = pod1.GetPodInfoFromPodMap(podName2)
+		_, _, err = pod1.GetPodInfoFromPodMap(podName2)
 		if err != nil {
 			t.Fatalf("removed wrong pod")
 		}

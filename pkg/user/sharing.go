@@ -118,7 +118,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 		return "", pod.ErrPodNotOpened
 	}
 
-	podInfo, err := pd.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := pd.GetPodInfoFromPodMap(podName)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -156,7 +156,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-	err = dir.AddEntryToDir(podDir, fileNameToAdd, true)
+	err = dir.AddEntryToDir(podDir, podInfo.GetPodPassword(), fileNameToAdd, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}

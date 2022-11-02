@@ -125,7 +125,7 @@ func newLsTask(f *File, topic []byte, path string, l *[]Entry, mtx sync.Locker, 
 
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
-	_, data, err := lt.f.fd.GetFeedData(lt.topic, lt.f.userAddress)
+	_, data, err := lt.f.fd.GetFeedData(lt.topic, lt.f.userAddress, nil)
 	if err != nil {
 		return fmt.Errorf("file mtdt : %v", err)
 	}

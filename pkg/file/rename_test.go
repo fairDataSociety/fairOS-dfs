@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -101,18 +103,20 @@ func TestRename(t *testing.T) {
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, fileObject, tm, logger)
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// populate the directory with few directory and files
-		err = dirObject.MkDir(filePath)
+		err = dirObject.MkDir(filePath, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir(newFilePath)
+		err = dirObject.MkDir(newFilePath, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -165,6 +169,5 @@ func TestRename(t *testing.T) {
 		if !bytes.Equal(content, rcvdBuffer.Bytes()) {
 			t.Fatalf("downloaded content is not equal")
 		}
-
 	})
 }

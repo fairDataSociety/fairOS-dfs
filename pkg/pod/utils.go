@@ -72,7 +72,7 @@ func (*Pod) GetName(inode *d.Inode) string {
 
 // GetAccountInfo returns the pod account info
 func (p *Pod) GetAccountInfo(podName string) (*account.Info, error) {
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}

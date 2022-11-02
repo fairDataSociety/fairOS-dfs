@@ -27,6 +27,7 @@ import (
 type ShareInfo struct {
 	PodName     string `json:"pod_name"`
 	Address     string `json:"pod_address"`
+	Password    string `json:"password"`
 	UserAddress string `json:"user_address"`
 }
 
@@ -43,7 +44,7 @@ func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error
 		return "", ErrInvalidPodName
 	}
 
-	index := p.getIndex(podList, podName)
+	index, podPassword := p.getIndexPassword(podList, podName)
 	if index == -1 { // skipcq: TCV-001
 		return "", fmt.Errorf("pod does not exist")
 	}
@@ -61,6 +62,7 @@ func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error
 	}
 	shareInfo := &ShareInfo{
 		PodName:     sharedPodName,
+		Password:    podPassword,
 		Address:     address.String(),
 		UserAddress: userAddress.String(),
 	}
@@ -117,6 +119,5 @@ func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, erro
 	if sharedPodName != "" {
 		shareInfo.PodName = sharedPodName
 	}
-	podPassword, _ := utils.GetRandString(PodPasswordLength)
-	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address, podPassword)
+	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address, shareInfo.Password)
 }

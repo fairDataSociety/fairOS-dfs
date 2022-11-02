@@ -38,9 +38,9 @@ type Stats struct {
 }
 
 // DirStat returns all the information related to a given directory.
-func (d *Directory) DirStat(podName, dirNameWithPath string) (*Stats, error) {
+func (d *Directory) DirStat(podName, podPassword, dirNameWithPath string) (*Stats, error) {
 	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
+	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("dir stat: %v", err)
 	}

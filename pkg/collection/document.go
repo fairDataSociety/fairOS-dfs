@@ -971,7 +971,7 @@ func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 func (d *Document) LoadDocumentDBSchemas() (map[string]DBSchema, error) {
 	collections := make(map[string]DBSchema)
 	topic := utils.HashString(documentFile)
-	_, data, err := d.fd.GetFeedData(topic, d.user)
+	_, data, err := d.fd.GetFeedData(topic, d.user, nil)
 	if err != nil {
 		if err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 			return collections, err
@@ -1023,7 +1023,7 @@ func (d *Document) storeDocumentDBSchemas(collections map[string]DBSchema) error
 		}
 	}
 	topic := utils.HashString(documentFile)
-	_, err := d.fd.UpdateFeed(topic, d.user, buf.Bytes())
+	_, err := d.fd.UpdateFeed(topic, d.user, buf.Bytes(), nil)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

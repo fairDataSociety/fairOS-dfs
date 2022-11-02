@@ -122,28 +122,30 @@ func (st *syncTask) Name() string {
 }
 
 type lsTask struct {
-	d       *Directory
-	topic   []byte
-	path    string
-	entries *[]Entry
-	mtx     sync.Locker
-	wg      *sync.WaitGroup
+	d           *Directory
+	podPassword string
+	topic       []byte
+	path        string
+	entries     *[]Entry
+	mtx         sync.Locker
+	wg          *sync.WaitGroup
 }
 
-func newLsTask(d *Directory, topic []byte, path string, l *[]Entry, mtx sync.Locker, wg *sync.WaitGroup) *lsTask {
+func newLsTask(d *Directory, topic []byte, path, podPassword string, l *[]Entry, mtx sync.Locker, wg *sync.WaitGroup) *lsTask {
 	return &lsTask{
-		d:       d,
-		topic:   topic,
-		path:    path,
-		entries: l,
-		mtx:     mtx,
-		wg:      wg,
+		d:           d,
+		podPassword: podPassword,
+		topic:       topic,
+		path:        path,
+		entries:     l,
+		mtx:         mtx,
+		wg:          wg,
 	}
 }
 
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
-	_, data, err := lt.d.fd.GetFeedData(lt.topic, lt.d.getAddress())
+	_, data, err := lt.d.fd.GetFeedData(lt.topic, lt.d.getAddress(), []byte(lt.podPassword))
 	if err != nil {
 		return fmt.Errorf("list dir : %v", err)
 	}
