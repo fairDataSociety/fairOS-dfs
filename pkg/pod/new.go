@@ -19,6 +19,8 @@ package pod
 import (
 	"encoding/json"
 
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -53,7 +55,6 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString, podPassword string) 
 	for _, pod := range podList.SharedPods {
 		sharedPods[pod.Address] = pod.Name
 	}
-
 	var accountInfo *account.Info
 	var fd *feed.API
 	var file *f.File
@@ -151,17 +152,23 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString, podPassword string) 
 func (p *Pod) loadUserPods() (*PodList, error) {
 	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
-	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex))
+	_, encryptedData, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex))
 	if err != nil { // skipcq: TCV-001
 		if err.Error() != "feed does not exist or was not updated yet" {
 			return nil, err
 		}
 	}
-
 	podList := &PodList{}
-	if len(data) == 0 {
+	if len(encryptedData) == 0 {
 		return podList, nil
 	}
+
+	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
+	data, err := utils.DecryptBytes(privKeyBytes, encryptedData)
+	if err != nil {
+		return nil, err
+	}
+
 	err = json.Unmarshal(data, podList)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
@@ -180,7 +187,10 @@ func (p *Pod) storeUserPods(podList *PodList) error {
 		return ErrMaximumPodLimit
 	}
 	topic := utils.HashString(podFile)
-	_, err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), data)
+
+	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
+	encryptedData, err := utils.EncryptBytes(privKeyBytes, data)
+	_, err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
