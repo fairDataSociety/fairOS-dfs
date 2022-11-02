@@ -77,9 +77,9 @@ func TestSharing(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		// create source pod
-		info1, err := pod1.CreatePod(podName1, "password", "")
+		info1, err := pod1.CreatePod(podName1, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -117,7 +117,8 @@ func TestSharing(t *testing.T) {
 		}
 
 		// create destination pod
-		info2, err := pod2.CreatePod(podName2, "password", "")
+		podPassword, _ = utils.GetRandString(pod.PodPasswordLength)
+		info2, err := pod2.CreatePod(podName2, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName2)
 		}

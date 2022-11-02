@@ -36,19 +36,19 @@ func (p *Pod) IsPodOpened(podName string) bool {
 
 // IsPodPresent checks if a pod is already present for user
 func (p *Pod) IsPodPresent(podName string) bool {
-	podName, err := cleanPodName(podName)
+	podName, err := CleanPodName(podName)
 	if err != nil {
 		return false
 	}
 	// check if pods is present and get free index
-	pods, sharedPods, err := p.loadUserPods()
+	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return false
 	}
-	if p.checkIfPodPresent(pods, podName) {
+	if p.checkIfPodPresent(podList, podName) {
 		return true
 	}
-	if p.checkIfSharedPodPresent(sharedPods, podName) {
+	if p.checkIfSharedPodPresent(podList, podName) {
 		return true
 	}
 	return false
@@ -79,8 +79,8 @@ func (p *Pod) GetAccountInfo(podName string) (*account.Info, error) {
 	return podInfo.GetAccountInfo(), nil
 }
 
-// cleanPodName trims spaces from a pod name
-func cleanPodName(podName string) (string, error) {
+// CleanPodName trims spaces from a pod name
+func CleanPodName(podName string) (string, error) {
 	if podName == "" {
 		return "", ErrInvalidPodName
 	}

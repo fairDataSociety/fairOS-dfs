@@ -29,6 +29,8 @@ import (
 
 const (
 	maxPodId = 65535
+
+	PodPasswordLength = 32
 )
 
 type Pod struct {
@@ -39,6 +41,23 @@ type Pod struct {
 	podMu  *sync.RWMutex
 	logger logging.Logger
 	tm     taskmanager.TaskManagerGO
+}
+
+type PodListItem struct {
+	Name     string `json:"name"`
+	Index    int    `json:"index"`
+	Password string `json:"password"`
+}
+
+type SharedPodListItem struct {
+	Name     string `json:"name"`
+	Address  string `json:"address"`
+	Password string `json:"password"`
+}
+
+type PodList struct {
+	Pods       []PodListItem       `json:"pods"`
+	SharedPods []SharedPodListItem `json:"sharedPods"`
 }
 
 // NewPod creates the main pod object which has all the methods related to the pods.

@@ -24,7 +24,7 @@ import (
 // SyncPod syncs the pod to the latest version by extracting the current meta information
 // of files and directories of the pod.
 func (p *Pod) SyncPod(podName string) error {
-	podName, err := cleanPodName(podName)
+	podName, err := CleanPodName(podName)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -49,7 +49,7 @@ func (p *Pod) SyncPod(podName string) error {
 // SyncPodAsync syncs the pod to the latest version by extracting the current meta information
 // of files and directories of the pod, concurrently.
 func (p *Pod) SyncPodAsync(ctx context.Context, podName string) error {
-	podName, err := cleanPodName(podName)
+	podName, err := CleanPodName(podName)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

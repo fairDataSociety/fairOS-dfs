@@ -18,19 +18,19 @@ package pod
 
 // ListPods List all the available pods belonging to a user.
 func (p *Pod) ListPods() ([]string, []string, error) {
-	pods, sharedPods, err := p.loadUserPods()
+	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return nil, nil, err
 	}
 
 	var listPods []string
-	for _, pod := range pods {
-		listPods = append(listPods, pod)
+	for _, pod := range podList.Pods {
+		listPods = append(listPods, pod.Name)
 	}
 
 	var listSharedPods []string
-	for _, pod := range sharedPods {
-		listSharedPods = append(listSharedPods, pod)
+	for _, pod := range podList.SharedPods {
+		listSharedPods = append(listSharedPods, pod.Name)
 	}
 
 	return listPods, listSharedPods, nil

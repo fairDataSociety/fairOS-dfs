@@ -21,6 +21,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -53,11 +55,12 @@ func TestPod_ListPods(t *testing.T) {
 	})
 
 	t.Run("create-two-pods", func(t *testing.T) {
-		_, err := pod1.CreatePod(podName1, "password", "")
+		podPassword, _ := utils.GetRandString(PodPasswordLength)
+		_, err := pod1.CreatePod(podName1, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod: %v", err)
 		}
-		_, err = pod1.CreatePod(podName2, "password", "")
+		_, err = pod1.CreatePod(podName2, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}

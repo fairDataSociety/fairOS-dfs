@@ -30,8 +30,9 @@ func (a *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	// create the pod
-	_, err := ui.GetPod().CreatePod(podName, passPhrase, "")
+	_, err := ui.GetPod().CreatePod(podName, passPhrase, "", podPassword)
 	if err != nil {
 		return nil, err
 	}

@@ -59,6 +59,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	fd := feed.New(accountInfo, client, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
 	if err != nil {
+		u.logger.Errorf(err.Error())
 		return nil, "", "", ErrInvalidPassword
 	}
 

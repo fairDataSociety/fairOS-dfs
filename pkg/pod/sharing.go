@@ -35,15 +35,15 @@ type ShareInfo struct {
 // required to import this pod.
 func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error) {
 	// check if pods is present and get the index of the pod
-	pods, _, err := p.loadUserPods()
+	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-	if !p.checkIfPodPresent(pods, podName) {
+	if !p.checkIfPodPresent(podList, podName) {
 		return "", ErrInvalidPodName
 	}
 
-	index := p.getIndex(pods, podName)
+	index := p.getIndex(podList, podName)
 	if index == -1 { // skipcq: TCV-001
 		return "", fmt.Errorf("pod does not exist")
 	}
@@ -117,5 +117,6 @@ func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, erro
 	if sharedPodName != "" {
 		shareInfo.PodName = sharedPodName
 	}
-	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address)
+	podPassword, _ := utils.GetRandString(PodPasswordLength)
+	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address, podPassword)
 }

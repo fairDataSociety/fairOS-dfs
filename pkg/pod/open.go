@@ -19,13 +19,11 @@ package pod
 import (
 	"context"
 	"fmt"
-	"strings"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -35,14 +33,13 @@ import (
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	// check if pods is present and get the index of the pod
-	pods, sharedPods, err := p.loadUserPods()
+	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	sharedPodType := false
-	if !p.checkIfPodPresent(pods, podName) {
-		if !p.checkIfSharedPodPresent(sharedPods, podName) {
+	if !p.checkIfPodPresent(podList, podName) {
+		if !p.checkIfSharedPodPresent(podList, podName) {
 			return nil, ErrInvalidPodName
 		} else {
 			sharedPodType = true
@@ -55,7 +52,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 	var dir *d.Directory
 	var user utils.Address
 	if sharedPodType {
-		addressString := p.getAddress(sharedPods, podName)
+		addressString := p.getAddress(podList, podName)
 		if addressString == "" { // skipcq: TCV-001
 			return nil, fmt.Errorf("shared pod does not exist")
 		}
@@ -71,7 +68,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		// set the userAddress as the pod address we got from shared pod
 		user = address
 	} else {
-		index := p.getIndex(pods, podName)
+		index := p.getIndex(podList, podName)
 		if index == -1 {
 			return nil, fmt.Errorf("pod does not exist")
 		}
@@ -119,14 +116,14 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*Info, error) {
 	// check if pods is present and get the index of the pod
-	pods, sharedPods, err := p.loadUserPods()
+	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	sharedPodType := false
-	if !p.checkIfPodPresent(pods, podName) {
-		if !p.checkIfSharedPodPresent(sharedPods, podName) {
+	if !p.checkIfPodPresent(podList, podName) {
+		if !p.checkIfSharedPodPresent(podList, podName) {
 			return nil, ErrInvalidPodName
 		} else {
 			sharedPodType = true
@@ -139,7 +136,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*In
 	var dir *d.Directory
 	var user utils.Address
 	if sharedPodType {
-		addressString := p.getAddress(sharedPods, podName)
+		addressString := p.getAddress(podList, podName)
 		if addressString == "" { // skipcq: TCV-001
 			return nil, fmt.Errorf("shared pod does not exist")
 		}
@@ -155,7 +152,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*In
 		// set the userAddress as the pod address we got from shared pod
 		user = address
 	} else {
-		index := p.getIndex(pods, podName)
+		index := p.getIndex(podList, podName)
 		if index == -1 {
 			return nil, fmt.Errorf("pod does not exist")
 		}
@@ -198,19 +195,19 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*In
 	return podInfo, nil
 }
 
-func (*Pod) getIndex(pods map[int]string, podName string) int {
-	for index, pod := range pods {
-		if strings.Trim(pod, "\n") == podName {
-			return index
+func (*Pod) getIndex(podList *PodList, podName string) int {
+	for _, pod := range podList.Pods {
+		if pod.Name == podName {
+			return pod.Index
 		}
 	}
 	return -1 // skipcq: TCV-001
 }
 
-func (*Pod) getAddress(sharedPods map[string]string, podName string) string {
-	for address, pod := range sharedPods {
-		if strings.Trim(pod, "\n") == podName {
-			return address
+func (*Pod) getAddress(podList *PodList, podName string) string {
+	for _, pod := range podList.SharedPods {
+		if pod.Name == podName {
+			return pod.Address
 		}
 	}
 	return ""

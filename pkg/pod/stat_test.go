@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -53,7 +55,8 @@ func TestStat(t *testing.T) {
 		if err == nil {
 			t.Fatal("stat should be nil")
 		}
-		info, err := pod1.CreatePod(podName1, "password", "")
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		info, err := pod1.CreatePod(podName1, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}

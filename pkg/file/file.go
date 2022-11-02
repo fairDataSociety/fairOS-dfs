@@ -129,6 +129,9 @@ func (lt *lsTask) Execute(context.Context) error {
 	if err != nil {
 		return fmt.Errorf("file mtdt : %v", err)
 	}
+	if string(data) == utils.DeletedFeedMagicWord {
+		return nil
+	}
 	var meta *MetaData
 	err = json.Unmarshal(data, &meta)
 	if err != nil { // skipcq: TCV-001

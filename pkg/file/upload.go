@@ -183,7 +183,6 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
 	addr, err := f.client.UploadBlob(fileInodeData, true, true)
 	if err != nil { // skipcq: TCV-001
 		return err
