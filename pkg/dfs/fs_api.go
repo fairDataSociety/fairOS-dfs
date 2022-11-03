@@ -153,7 +153,7 @@ func (a *API) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.E
 		return nil, nil, err
 	}
 	file := podInfo.GetFile()
-	fEntries, err := file.ListFiles(fileList)
+	fEntries, err := file.ListFiles(fileList, podInfo.GetPodPassword())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -214,7 +214,7 @@ func (a *API) DeleteFile(podName, podFileWithPath, sessionId string) error {
 	directory := podInfo.GetDirectory()
 
 	file := podInfo.GetFile()
-	err = file.RmFile(podFileWithPath)
+	err = file.RmFile(podFileWithPath, podInfo.GetPodPassword())
 	if err != nil {
 		if err == f.ErrDeletedFeed {
 			return pod.ErrInvalidFile
@@ -280,7 +280,7 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 	// check if file exists, then backup the file
 	totalPath := utils.CombinePathAndFile(podPath, podFileName)
 	if file.IsFileAlreadyPresent(totalPath) {
-		m, err := file.BackupFromFileName(totalPath)
+		m, err := file.BackupFromFileName(totalPath, podInfo.GetPodPassword())
 		if err != nil {
 			return err
 		}
@@ -294,7 +294,7 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 		}
 	}
 
-	err = file.Upload(fd, podFileName, fileSize, blockSize, podPath, compression)
+	err = file.Upload(fd, podFileName, fileSize, blockSize, podPath, compression, podInfo.GetPodPassword())
 	if err != nil {
 		return err
 	}
@@ -336,7 +336,7 @@ func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, session
 		return ErrFileAlreadyPresent
 	}
 
-	m, err := file.RenameFromFileName(fileNameWithPath, newFileNameWithPath)
+	m, err := file.RenameFromFileName(fileNameWithPath, newFileNameWithPath, podInfo.GetPodPassword())
 	if err != nil {
 		return err
 	}
@@ -380,7 +380,7 @@ func (a *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadC
 
 	// download the file by creating the reader
 	file := podInfo.GetFile()
-	reader, size, err := file.Download(podFileWithPath)
+	reader, size, err := file.Download(podFileWithPath, podInfo.GetPodPassword())
 	if err != nil {
 		return nil, 0, err
 	}
@@ -414,7 +414,7 @@ func (a *API) ReadSeekCloser(podName, podFileWithPath, sessionId string) (io.Rea
 
 	// download the file by creating the reader
 	file := podInfo.GetFile()
-	reader, size, err := file.ReadSeeker(podFileWithPath)
+	reader, size, err := file.ReadSeeker(podFileWithPath, podInfo.GetPodPassword())
 	if err != nil {
 		return nil, 0, err
 	}
@@ -441,7 +441,7 @@ func (a *API) ShareFile(podName, podFileWithPath, destinationUser, sessionId str
 		return "", err
 	}
 
-	sharingRef, err := a.users.ShareFileWithUser(podName, podFileWithPath, destinationUser, ui, ui.GetPod(), podInfo.GetAccountInfo().GetAddress())
+	sharingRef, err := a.users.ShareFileWithUser(podName, podInfo.GetPodPassword(), podFileWithPath, destinationUser, ui, ui.GetPod(), podInfo.GetAccountInfo().GetAddress())
 	if err != nil {
 		return "", err
 	}

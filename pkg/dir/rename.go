@@ -15,7 +15,6 @@ import (
 func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword string) error {
 	dirNameWithPath = filepath.ToSlash(dirNameWithPath)
 	newDirNameWithPath = filepath.ToSlash(newDirNameWithPath)
-
 	parentPath := filepath.ToSlash(filepath.Dir(dirNameWithPath))
 	dirName := filepath.Base(dirNameWithPath)
 
@@ -119,8 +118,6 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 			return err
 		}
 	}
-	fmt.Println(podPassword)
-
 	return nil
 }
 
@@ -132,7 +129,7 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 			filePath := utils.CombinePathAndFile(totalPath, fileName)
 			newFilePath := utils.CombinePathAndFile(newTotalPath, fileName)
 			topic := utils.HashString(filePath)
-			_, metaBytes, err := d.fd.GetFeedData(topic, d.userAddress, nil)
+			_, metaBytes, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
 			if err != nil {
 				return err
 			}
@@ -155,14 +152,14 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 				return err
 			}
 
-			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, nil)
+			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword))
 			if err == nil && previousAddr != nil {
-				_, err = d.fd.UpdateFeed(newTopic, d.userAddress, fileMetaBytes, nil)
+				_, err = d.fd.UpdateFeed(newTopic, d.userAddress, fileMetaBytes, []byte(podPassword))
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
 			} else {
-				_, err = d.fd.CreateFeed(newTopic, d.userAddress, fileMetaBytes, nil)
+				_, err = d.fd.CreateFeed(newTopic, d.userAddress, fileMetaBytes, []byte(podPassword))
 				if err != nil { // skipcq: TCV-001
 					return err
 				}

@@ -29,15 +29,15 @@ func NewMockFile() *File {
 	return &File{}
 }
 
-func (*File) Upload(_ io.Reader, _ string, _ int64, _ uint32, _, _ string) error {
+func (*File) Upload(_ io.Reader, _ string, _ int64, _ uint32, _, _, _ string) error {
 	return nil
 }
 
-func (*File) Download(_ string) (io.ReadCloser, uint64, error) {
+func (*File) Download(_, _ string) (io.ReadCloser, uint64, error) {
 	return nil, 0, nil
 }
 
-func (*File) ListFiles(_ []string) ([]file.Entry, error) {
+func (*File) ListFiles(_ []string, _ string) ([]file.Entry, error) {
 	return nil, nil
 }
 
@@ -45,7 +45,7 @@ func (*File) GetStats(_, _ string) (*file.Stats, error) {
 	return nil, nil
 }
 
-func (*File) RmFile(_ string) error {
+func (*File) RmFile(_, _ string) error {
 	return nil
 }
 
@@ -57,6 +57,6 @@ func (*File) AddFileToPath(_, _ string) error {
 	return nil
 }
 
-func (*File) LoadFileMeta(_ string) error {
+func (*File) LoadFileMeta(_, _ string) error {
 	return nil
 }

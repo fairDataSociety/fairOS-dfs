@@ -12,7 +12,7 @@ import (
 )
 
 // WriteAt writes a file from a given offset
-func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64, truncate bool) (int, error) {
+func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, offset uint64, truncate bool) (int, error) {
 	// check file is present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	if !f.IsFileAlreadyPresent(totalFilePath) {
@@ -249,7 +249,7 @@ func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64, 
 
 	meta.InodeAddress = addr
 	meta.Size = newDataSize
-	err = f.handleMeta(meta)
+	err = f.handleMeta(meta, podPassword)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}

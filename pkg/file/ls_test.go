@@ -18,10 +18,14 @@ package file_test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/plexsysio/taskmanager"
 
@@ -51,36 +55,41 @@ func TestListFiles(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	t.Run("list-file", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// upload few files
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", 200, 20)
+		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", podPassword, 200, 20)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file3", "", 300, 30)
+		_, err = uploadFile(t, fileObject, "/dir1", "file3", "", podPassword, 300, 30)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// list the files
 		fileList := []string{"/dir1/file1", "/dir1/file2", "/dir1/file3"}
-		entries, err := fileObject.ListFiles(fileList)
+		entries, err := fileObject.ListFiles(fileList, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Println(entries)
 		foundIndex1 := -1
 		for i, v := range entries {
+			fmt.Println(v)
 			if v.Name == "file1" {
 				foundIndex1 = i
 			}
 		}
+		fmt.Println(foundIndex1)
+
 		if foundIndex1 < 0 {
 			t.Fatal("file1 not found")
 		}

@@ -43,7 +43,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath, podPassword string) error {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
-			err := d.file.LoadFileMeta(filePath)
+			err := d.file.LoadFileMeta(filePath, podPassword)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("loading metadata failed %s: %s", filePath, err.Error())
 			}
@@ -82,7 +82,7 @@ func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath, pod
 			wg.Add(1)
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
-			syncTask := newSyncTask(d, filePath, wg)
+			syncTask := newSyncTask(d, filePath, podPassword, wg)
 			_, err = d.syncManager.Go(syncTask)
 			if err != nil { // skipcq: TCV-001
 				return err

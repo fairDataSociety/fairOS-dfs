@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -52,25 +54,26 @@ func TestRemoveFile(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	t.Run("delete-file", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		// remove file2
-		err = fileObject.RmFile("/dir1/file2")
+		err = fileObject.RmFile("/dir1/file2", podPassword)
 		if err == nil {
 			t.Fatal("file not present")
 		}
 		// upload few files
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", 200, 20)
+		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", podPassword, 200, 20)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// remove file2
-		err = fileObject.RmFile("/dir1/file2")
+		err = fileObject.RmFile("/dir1/file2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -89,7 +92,7 @@ func TestRemoveFile(t *testing.T) {
 		if meta.Name != "file1" {
 			t.Fatalf("retrieved invalid file name")
 		}
-		err := fileObject.LoadFileMeta(utils.CombinePathAndFile("/dir1", "file1"))
+		err := fileObject.LoadFileMeta(utils.CombinePathAndFile("/dir1", "file1"), podPassword)
 		if err != nil {
 			t.Fatal("loading deleted file meta should be nil")
 		}
@@ -97,16 +100,17 @@ func TestRemoveFile(t *testing.T) {
 
 	t.Run("delete-file-in-loop", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 
 		for i := 0; i < 80; i++ {
 			// upload file1
-			_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
+			_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// remove file1
-			err = fileObject.RmFile("/dir1/file1")
+			err = fileObject.RmFile("/dir1/file1", podPassword)
 			if err != nil {
 				t.Fatal(err)
 			}

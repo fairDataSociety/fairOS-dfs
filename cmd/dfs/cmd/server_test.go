@@ -698,7 +698,8 @@ func TestApis(t *testing.T) {
 			if err != nil {
 				t.Fatal("download failed", err)
 			}
-			fo, err := os.Create(fmt.Sprintf("./%d", time.Now().Unix()))
+
+			fo, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("%d", time.Now().Unix()))
 			if err != nil {
 				t.Fatal("download failed", err)
 			}

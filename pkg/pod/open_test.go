@@ -145,7 +145,7 @@ func TestOpen(t *testing.T) {
 	})
 }
 
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
 	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
@@ -177,7 +177,7 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
 }
 
 func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1, podPassword string) {
@@ -206,7 +206,7 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 		t.Fatal(err)
 	}
 	fileObject := info.GetFile()
-	_, err = uploadFile(t, fileObject, "/parentDir", "file1", "", 100, 10)
+	_, err = uploadFile(t, fileObject, "/parentDir", "file1", "", podPassword, 100, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -214,7 +214,7 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = uploadFile(t, fileObject, "/parentDir", "file2", "", 200, 20)
+	_, err = uploadFile(t, fileObject, "/parentDir", "file2", "", podPassword, 200, 20)
 	if err != nil {
 		t.Fatal(err)
 	}

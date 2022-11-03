@@ -98,13 +98,12 @@ func TestSharing(t *testing.T) {
 			t.Fatal(err)
 		}
 		fileObject1 := info1.GetFile()
-		_, err = uploadFile(t, fileObject1, "/parentDir1", "file1", "", 100, 10)
+		_, err = uploadFile(t, fileObject1, "/parentDir1", "file1", "", podPassword, 100, 10)
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		// share file with another user
-		sharingRefString, err := userObject1.ShareFileWithUser("pod1", "/parentDir1/file1", "user2", ui0, pod1, info1.GetPodAddress())
+		sharingRefString, err := userObject1.ShareFileWithUser("pod1", podPassword, "/parentDir1/file1", "user2", ui0, pod1, info1.GetPodAddress())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -211,7 +210,7 @@ func TestSharing(t *testing.T) {
 	})
 }
 
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
 	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
@@ -243,5 +242,5 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
 }

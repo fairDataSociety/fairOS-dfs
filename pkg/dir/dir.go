@@ -99,22 +99,24 @@ func (d *Directory) RemoveAllFromDirectoryMap() {
 }
 
 type syncTask struct {
-	d    *Directory
-	path string
-	wg   *sync.WaitGroup
+	d           *Directory
+	path        string
+	podPassword string
+	wg          *sync.WaitGroup
 }
 
-func newSyncTask(d *Directory, path string, wg *sync.WaitGroup) *syncTask {
+func newSyncTask(d *Directory, path, podPassword string, wg *sync.WaitGroup) *syncTask {
 	return &syncTask{
-		d:    d,
-		path: path,
-		wg:   wg,
+		d:           d,
+		path:        path,
+		wg:          wg,
+		podPassword: podPassword,
 	}
 }
 
 func (st *syncTask) Execute(context.Context) error {
 	defer st.wg.Done()
-	return st.d.file.LoadFileMeta(st.path)
+	return st.d.file.LoadFileMeta(st.path, st.podPassword)
 }
 
 func (st *syncTask) Name() string {

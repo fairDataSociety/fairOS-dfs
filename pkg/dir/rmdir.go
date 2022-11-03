@@ -17,7 +17,6 @@ limitations under the License.
 package dir
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -57,9 +56,8 @@ func (d *Directory) RmDir(directoryNameWithPath, podPassword string) error {
 			if strings.HasPrefix(fileOrDirName, "_F_") {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 				filePath := utils.CombinePathAndFile(directoryNameWithPath, fileName)
-				err := d.file.RmFile(filePath)
+				err := d.file.RmFile(filePath, podPassword)
 				if err != nil { // skipcq: TCV-001
-					fmt.Println("rmFile", err)
 					return err
 				}
 				err = d.RemoveEntryFromDir(directoryNameWithPath, podPassword, fileName, true)
@@ -83,7 +81,6 @@ func (d *Directory) RmDir(directoryNameWithPath, podPassword string) error {
 	topic := utils.HashString(totalPath)
 	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
-		fmt.Println("asdasdasdasdasda")
 		return err
 	}
 	d.RemoveFromDirectoryMap(totalPath)
@@ -114,7 +111,7 @@ func (d *Directory) RmRootDir(podPassword string) error {
 			if strings.HasPrefix(fileOrDirName, "_F_") {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 				filePath := utils.CombinePathAndFile(dirToDelete, fileName)
-				err := d.file.RmFile(filePath)
+				err := d.file.RmFile(filePath, podPassword)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}

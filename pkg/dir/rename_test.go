@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"sort"
 	"testing"
@@ -44,6 +45,7 @@ func TestRenameDirectory(t *testing.T) {
 	t.Run("rename-dir-same-prnt", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		fmt.Println(podPassword)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, fileObject, tm, logger)
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
@@ -83,15 +85,15 @@ func TestRenameDirectory(t *testing.T) {
 		}
 
 		r := new(bytes.Buffer)
-		err = fileObject.Upload(r, "file1", 0, 100, "/parentDir", "")
+		err = fileObject.Upload(r, "file1", 0, 100, "/parentDir", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.Upload(r, "file2", 0, 100, "/parentDir", "")
+		err = fileObject.Upload(r, "file2", 0, 100, "/parentDir", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.Upload(r, "file2", 0, 100, "/parentDir/subDir2", "")
+		err = fileObject.Upload(r, "file2", 0, 100, "/parentDir/subDir2", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -175,7 +177,7 @@ func TestRenameDirectory(t *testing.T) {
 			t.Fatal("file name mismatch /parentNew/subDir2")
 		}
 
-		_, n, err := fileObject.Download("/parentNew/subDir2/file2")
+		_, n, err := fileObject.Download("/parentNew/subDir2/file2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -231,7 +233,7 @@ func TestRenameDirectory(t *testing.T) {
 		}
 
 		r := new(bytes.Buffer)
-		err = fileObject.Upload(r, "file1", 0, 100, "/parentDir/subDir1/subDir11/sub111", "")
+		err = fileObject.Upload(r, "file1", 0, 100, "/parentDir/subDir1/subDir11/sub111", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
