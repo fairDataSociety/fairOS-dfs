@@ -247,7 +247,7 @@ func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 		return nil, err
 	}
 	file := podInfo.GetFile()
-	ds, err := file.GetStats(podName, podFileWithPath)
+	ds, err := file.GetStats(podName, podFileWithPath, podInfo.GetPodPassword())
 	if err != nil {
 		return nil, err
 	}

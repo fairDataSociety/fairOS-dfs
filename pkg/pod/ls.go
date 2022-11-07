@@ -35,3 +35,8 @@ func (p *Pod) ListPods() ([]string, []string, error) {
 
 	return listPods, listSharedPods, nil
 }
+
+// PodList List all the available pods belonging to a user in json format.
+func (p *Pod) PodList() (*PodList, error) {
+	return p.loadUserPods()
+}

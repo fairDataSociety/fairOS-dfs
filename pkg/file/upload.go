@@ -139,7 +139,13 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
+				encryptedData, enErr := utils.EncryptBytes([]byte(podPassword), uploadData)
+				if enErr != nil {
+					mainErr = enErr
+					return
+				}
+
+				addr, uploadErr := f.client.UploadBlob(encryptedData, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
@@ -183,7 +189,11 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	addr, err := f.client.UploadBlob(fileInodeData, true, true)
+	encryptedFileInodeBytes, err := utils.EncryptBytes([]byte(podPassword), fileInodeData)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+	addr, err := f.client.UploadBlob(encryptedFileInodeBytes, true, true)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

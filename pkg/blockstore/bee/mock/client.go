@@ -114,7 +114,7 @@ func (m *BeeClient) UploadBlob(data []byte, _, _ bool) (address []byte, err erro
 }
 
 // DownloadBlob from swarm
-func (m *BeeClient) DownloadBlob(address []byte) (data []byte, respCode int, err error) {
+func (m *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	if data, ok := m.storer[swarm.NewAddress(address).String()]; ok {

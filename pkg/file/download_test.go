@@ -79,7 +79,7 @@ func TestDownload(t *testing.T) {
 		}
 
 		// Download the file and read from reader
-		reader, rcvdSize, err := fileObject.Download(podFile, podPassword)
+		reader, _, err := fileObject.Download(podFile, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -89,11 +89,22 @@ func TestDownload(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		// Download the file and read from reader
+		reader2, rcvdSize2, err := fileObject.Download(podFile, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer2 := new(bytes.Buffer)
+		_, err = rcvdBuffer2.ReadFrom(reader2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		// validate the result
-		if len(rcvdBuffer.Bytes()) != len(content) || int(rcvdSize) != len(content) {
+		if len(rcvdBuffer2.Bytes()) != len(content) || int(rcvdSize2) != len(content) {
 			t.Fatalf("downloaded content size is invalid")
 		}
-		if !bytes.Equal(content, rcvdBuffer.Bytes()) {
+		if !bytes.Equal(content, rcvdBuffer2.Bytes()) {
 			t.Fatalf("downloaded content is not equal")
 		}
 

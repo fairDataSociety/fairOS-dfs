@@ -41,7 +41,7 @@ func (*File) ListFiles(_ []string, _ string) ([]file.Entry, error) {
 	return nil, nil
 }
 
-func (*File) GetStats(_, _ string) (*file.Stats, error) {
+func (*File) GetStats(_, _, _ string) (*file.Stats, error) {
 	return nil, nil
 }
 

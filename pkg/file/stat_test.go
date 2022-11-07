@@ -64,7 +64,7 @@ func TestStat(t *testing.T) {
 		}
 
 		// stat the file
-		stats, err := fileObject.GetStats("pod1", "/dir1/file1")
+		stats, err := fileObject.GetStats("pod1", "/dir1/file1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}

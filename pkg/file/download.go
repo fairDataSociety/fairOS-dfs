@@ -49,8 +49,11 @@ func (f *File) Download(podFileWithPath, podPassword string) (io.ReadCloser, uin
 	if meta == nil { // skipcq: TCV-001
 		return nil, 0, ErrFileNotFound
 	}
-
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), encryptedFileInodeBytes)
 	if err != nil { // skipcq: TCV-001
 		return nil, 0, err
 	}
@@ -69,7 +72,7 @@ func (f *File) Download(podFileWithPath, podPassword string) (io.ReadCloser, uin
 		}
 	}
 
-	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)
+	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, podPassword, false)
 	return reader, meta.Size, nil
 }
 
@@ -87,10 +90,15 @@ func (f *File) ReadSeeker(podFileWithPath, podPassword string) (io.ReadSeekClose
 		return nil, 0, ErrFileNotFound
 	}
 
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil { // skipcq: TCV-001
 		return nil, 0, err
 	}
+	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), encryptedFileInodeBytes)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001
@@ -106,6 +114,6 @@ func (f *File) ReadSeeker(podFileWithPath, podPassword string) (io.ReadSeekClose
 		}
 	}
 
-	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)
+	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, podPassword, false)
 	return reader, meta.Size, nil
 }

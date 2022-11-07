@@ -36,6 +36,7 @@ type MetaData struct {
 	Version          uint8         `json:"version"`
 	UserAddress      utils.Address `json:"user_address"`
 	PodName          string        `json:"pod_name"`
+	SharedPassword   string        `json:"shared_password"`
 	Path             string        `json:"file_path"`
 	Name             string        `json:"file_name"`
 	Size             uint64        `json:"file_size"`

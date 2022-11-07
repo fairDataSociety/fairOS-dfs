@@ -17,6 +17,7 @@ limitations under the License.
 package pod
 
 import (
+	"encoding/hex"
 	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -46,8 +47,8 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString, podPassword string) 
 		return nil, err
 	}
 
-	pods := make(map[int]string)
-	sharedPods := make(map[string]string)
+	pods := map[int]string{}
+	sharedPods := map[string]string{}
 	for _, pod := range podList.Pods {
 		pods[pod.Index] = pod.Name
 	}
@@ -154,13 +155,16 @@ func (p *Pod) loadUserPods() (*PodList, error) {
 	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex), privKeyBytes)
+	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex), []byte(hex.EncodeToString(privKeyBytes)))
 	if err != nil { // skipcq: TCV-001
 		if err.Error() != "feed does not exist or was not updated yet" {
 			return nil, err
 		}
 	}
-	podList := &PodList{}
+	podList := &PodList{
+		Pods:       []PodListItem{},
+		SharedPods: []SharedPodListItem{},
+	}
 	if len(data) == 0 {
 		return podList, nil
 	}
@@ -185,7 +189,7 @@ func (p *Pod) storeUserPods(podList *PodList) error {
 	topic := utils.HashString(podFile)
 
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	_, err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), data, privKeyBytes)
+	_, err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), data, []byte(hex.EncodeToString(privKeyBytes)))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

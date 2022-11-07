@@ -41,14 +41,17 @@ func DecryptBytes(passphrase, cipherText []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	temp := make([]byte, len(cipherText))
+	copy(temp, cipherText)
+
 	//IV needs to be unique, but doesn't have to be secure.
 	//It's common to put it at the beginning of the ciphertext.
-	iv := cipherText[:aes.BlockSize]
-	cipherText = cipherText[aes.BlockSize:]
+	iv := temp[:aes.BlockSize]
+	temp = temp[aes.BlockSize:]
 
 	stream := cipher.NewCFBDecrypter(block, iv)
 	// XORKeyStream can work in-place if the two arguments are the same.
-	stream.XORKeyStream(cipherText, cipherText)
+	stream.XORKeyStream(temp, temp)
 
-	return cipherText, nil
+	return temp, nil
 }

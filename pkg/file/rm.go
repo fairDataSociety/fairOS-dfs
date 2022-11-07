@@ -36,11 +36,14 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 	if err != nil {
 		return err
 	}
-	fdata, respCode, err := f.client.DownloadBlob(meta.InodeAddress)
+	encryptedFileInodeBytes, respCode, err := f.client.DownloadBlob(meta.InodeAddress)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
+	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), encryptedFileInodeBytes)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
 	if respCode != http.StatusOK { // skipcq: TCV-001
 		f.logger.Warningf("could not remove blocks in %s", swarm.NewAddress(meta.InodeAddress).String())
 		return fmt.Errorf("could not remove blocks in %v", swarm.NewAddress(meta.InodeAddress).String())
@@ -48,7 +51,7 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 
 	// find the inode and remove the blocks present in the inode one by one
 	var fInode *INode
-	err = json.Unmarshal(fdata, &fInode)
+	err = json.Unmarshal(fileInodeBytes, &fInode)
 	if err != nil { // skipcq: TCV-001
 		f.logger.Warningf("could not unmarshall data in address %s", swarm.NewAddress(meta.InodeAddress).String())
 		return fmt.Errorf("could not unmarshall data in address %v", swarm.NewAddress(meta.InodeAddress).String())

@@ -244,7 +244,6 @@ func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword [
 	if err != nil { // skipcq: TCV-001
 		return nil, nil, err
 	}
-
 	if encryptionPassword == nil {
 		return addr.Bytes(), encryptedData, nil
 	}

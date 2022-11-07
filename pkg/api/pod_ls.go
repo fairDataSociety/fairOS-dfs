@@ -48,7 +48,7 @@ func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch pods and list them
-	pods, sharedPods, err := h.dfsAPI.ListPods(sessionId)
+	podList, err := h.dfsAPI.PodList(sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == pod.ErrPodNotOpened {
@@ -61,16 +61,6 @@ func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if pods == nil {
-		pods = make([]string, 0)
-	}
-	if sharedPods == nil {
-		sharedPods = make([]string, 0)
-	}
-
 	w.Header().Set("Content-Type", " application/json")
-	jsonhttp.OK(w, &PodListResponse{
-		Pods:       pods,
-		SharedPods: sharedPods,
-	})
+	jsonhttp.OK(w, podList)
 }

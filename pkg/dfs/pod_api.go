@@ -18,6 +18,7 @@ package dfs
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -30,7 +31,8 @@ func (a *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
+	podPassword := hex.EncodeToString(podPasswordBytes)
 	// create the pod
 	_, err := ui.GetPod().CreatePod(podName, passPhrase, "", podPassword)
 	if err != nil {
@@ -231,6 +233,18 @@ func (a *API) ListPods(sessionId string) ([]string, []string, error) {
 		return nil, nil, err
 	}
 	return pods, sharedPods, nil
+}
+
+// PodList lists all available pods in json format
+func (a *API) PodList(sessionId string) (*pod.PodList, error) {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// list pods of a user
+	return ui.GetPod().PodList()
 }
 
 func (a *API) PodShare(podName, sharedPodName, passPhrase, sessionId string) (string, error) {
