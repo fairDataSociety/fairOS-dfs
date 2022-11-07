@@ -552,37 +552,6 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 	}, randomLineStartPoint, randomLine, borderCrossingLineStartingPoint, borderCrossingLine
 }
 
-func checkFileContents(t *testing.T, fileInode file.INode, outputBytes []byte, mockClient *mock.BeeClient, compression, encryptionPassword string) bool {
-	var inpBuf []byte
-	fileSize := uint32(0)
-	for _, block := range fileInode.Blocks {
-		encryptedData, _, err := mockClient.DownloadBlob(block.Reference.Bytes())
-		if err != nil {
-			t.Fatal(err)
-		}
-		fmt.Println([]byte(encryptionPassword))
-		buf, err := utils.DecryptBytes([]byte(encryptionPassword), encryptedData)
-		if err != nil {
-			t.Fatal(err)
-		}
-		deflatedBuf, err := file.Decompress(buf, compression, block.Size)
-		if err != nil {
-			t.Fatal(err)
-		}
-		fileSize += block.Size
-		inpBuf = append(inpBuf, deflatedBuf...)
-	}
-
-	inputBytes := make([]byte, fileSize)
-	copy(inputBytes, inpBuf[:fileSize])
-
-	for i := range inputBytes {
-		if inputBytes[i] != outputBytes[i] {
-		}
-	}
-	return bytes.Equal(inputBytes, outputBytes)
-}
-
 func readFileContents(t *testing.T, fileSize uint64, reader *file.Reader) []byte {
 	outputBytes := make([]byte, fileSize)
 	count := uint64(0)
