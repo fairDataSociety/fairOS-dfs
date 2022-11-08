@@ -24,6 +24,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -60,28 +63,28 @@ func TestDocumentStore(t *testing.T) {
 	}()
 	file := f.NewFile("pod1", mockClient, fd, user, tm, logger)
 	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, mockClient, logger)
-
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("create_document_db_errors", func(t *testing.T) {
 		nilFd := feed.New(&account.Info{}, mockClient, logger)
 		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, mockClient, logger)
-		err := nilDocStore.CreateDocumentDB("docdb_err", nil, true)
+		err := nilDocStore.CreateDocumentDB("docdb_err", podPassword, nil, true)
 		if !errors.Is(err, collection.ErrReadOnlyIndex) {
 			t.Fatal("should be readonly index")
 		}
 
 		// create a document DB
-		createDocumentDBs(t, []string{"docdb_err"}, docStore, nil)
+		createDocumentDBs(t, []string{"docdb_err"}, docStore, nil, podPassword)
 
-		err = docStore.CreateDocumentDB("docdb_err", nil, true)
+		err = docStore.CreateDocumentDB("docdb_err", podPassword, nil, true)
 		if !errors.Is(err, collection.ErrDocumentDBAlreadyPresent) {
 			t.Fatal("db should be present already")
 		}
 
-		err = docStore.OpenDocumentDB("docdb_err")
+		err = docStore.OpenDocumentDB("docdb_err", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = docStore.CreateDocumentDB("docdb_err", nil, true)
+		err = docStore.CreateDocumentDB("docdb_err", podPassword, nil, true)
 		if !errors.Is(err, collection.ErrDocumentDBAlreadyOpened) {
 			t.Fatal("db should be opened already")
 		}
@@ -89,10 +92,10 @@ func TestDocumentStore(t *testing.T) {
 
 	t.Run("create_document_db", func(t *testing.T) {
 		// create a document DB
-		createDocumentDBs(t, []string{"docdb_0"}, docStore, nil)
+		createDocumentDBs(t, []string{"docdb_0"}, docStore, nil, podPassword)
 
 		// load the schem and check the count of simple indexes
-		schema := loadSchemaAndCheckSimpleIndexCount(t, docStore, "docdb_0", 1)
+		schema := loadSchemaAndCheckSimpleIndexCount(t, docStore, "docdb_0", podPassword, 1)
 
 		// check the default index
 		checkIndex(t, schema.SimpleIndexes[0], collection.DefaultIndexFieldName, collection.StringIndex)
@@ -100,27 +103,27 @@ func TestDocumentStore(t *testing.T) {
 
 	t.Run("delete_document_db", func(t *testing.T) {
 		// create multiple document DB
-		createDocumentDBs(t, []string{"docdb_1_1", "docdb_1_2", "docdb_1_3"}, docStore, nil)
-		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_2", "docdb_1_3"}, docStore)
+		createDocumentDBs(t, []string{"docdb_1_1", "docdb_1_2", "docdb_1_3"}, docStore, nil, podPassword)
+		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_2", "docdb_1_3"}, docStore, podPassword)
 
 		// delete the db in the middle
-		err = docStore.DeleteDocumentDB("docdb_1_2")
+		err = docStore.DeleteDocumentDB("docdb_1_2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check if other two db exists
-		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_3"}, docStore)
-		err = docStore.DeleteDocumentDB("docdb_1_1")
+		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_3"}, docStore, podPassword)
+		err = docStore.DeleteDocumentDB("docdb_1_1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = docStore.DeleteDocumentDB("docdb_1_3")
+		err = docStore.DeleteDocumentDB("docdb_1_3", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		checkIfDBNotExists(t, "docdb_1_1", docStore)
-		checkIfDBNotExists(t, "docdb_1_3", docStore)
+		checkIfDBNotExists(t, "docdb_1_1", podPassword, docStore)
+		checkIfDBNotExists(t, "docdb_1_3", podPassword, docStore)
 	})
 
 	t.Run("create_document_db_with_multiple_indexes", func(t *testing.T) {
@@ -130,10 +133,10 @@ func TestDocumentStore(t *testing.T) {
 		si["field2"] = collection.NumberIndex
 		si["field3"] = collection.MapIndex
 		si["field4"] = collection.ListIndex
-		createDocumentDBs(t, []string{"docdb_2"}, docStore, si)
+		createDocumentDBs(t, []string{"docdb_2"}, docStore, si, podPassword)
 
 		// load the schem and check the count of simple indexes
-		schema := loadSchemaAndCheckSimpleIndexCount(t, docStore, "docdb_2", 3)
+		schema := loadSchemaAndCheckSimpleIndexCount(t, docStore, "docdb_2", podPassword, 3)
 
 		// first check the default index
 		checkIndex(t, schema.SimpleIndexes[0], collection.DefaultIndexFieldName, collection.StringIndex)
@@ -166,9 +169,9 @@ func TestDocumentStore(t *testing.T) {
 
 	t.Run("create_and open_document_db", func(t *testing.T) {
 		// create a document DB
-		createDocumentDBs(t, []string{"docdb_3"}, docStore, nil)
+		createDocumentDBs(t, []string{"docdb_3"}, docStore, nil, podPassword)
 
-		err := docStore.OpenDocumentDB("docdb_3")
+		err := docStore.OpenDocumentDB("docdb_3", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -177,16 +180,16 @@ func TestDocumentStore(t *testing.T) {
 		if !docStore.IsDBOpened("docdb_3") {
 			t.Fatalf("db not opened")
 		}
-
 	})
+
 	t.Run("put_immutable_error", func(t *testing.T) {
 		// create a document DB
-		err := docStore.CreateDocumentDB("doc_do_immutable", nil, false)
+		err := docStore.CreateDocumentDB("doc_do_immutable", podPassword, nil, false)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = docStore.OpenDocumentDB("doc_do_immutable")
+		err = docStore.OpenDocumentDB("doc_do_immutable", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -212,9 +215,9 @@ func TestDocumentStore(t *testing.T) {
 
 	t.Run("put_and_get", func(t *testing.T) {
 		// create a document DB
-		createDocumentDBs(t, []string{"docdb_4"}, docStore, nil)
+		createDocumentDBs(t, []string{"docdb_4"}, docStore, nil, podPassword)
 
-		err := docStore.OpenDocumentDB("docdb_4")
+		err := docStore.OpenDocumentDB("docdb_4", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -270,7 +273,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// get the data and test if the retreived data is okay
-		gotData, err := docStore.Get("docdb_4", "1")
+		gotData, err := docStore.Get("docdb_4", "1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -295,9 +298,9 @@ func TestDocumentStore(t *testing.T) {
 		si["age"] = collection.NumberIndex
 		si["tag_map"] = collection.MapIndex
 		si["tag_list"] = collection.ListIndex
-		createDocumentDBs(t, []string{"docdb_5"}, docStore, si)
+		createDocumentDBs(t, []string{"docdb_5"}, docStore, si, podPassword)
 
-		err := docStore.OpenDocumentDB("docdb_5")
+		err := docStore.OpenDocumentDB("docdb_5", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -306,7 +309,7 @@ func TestDocumentStore(t *testing.T) {
 		createTestDocuments(t, docStore, "docdb_5")
 
 		// get string index and check if the documents returned are okay
-		docs, err := docStore.Get("docdb_5", "2")
+		docs, err := docStore.Get("docdb_5", "2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -332,9 +335,9 @@ func TestDocumentStore(t *testing.T) {
 		si["age"] = collection.NumberIndex
 		si["tag_map"] = collection.MapIndex
 		si["tag_list"] = collection.ListIndex
-		createDocumentDBs(t, []string{"docdb_6"}, docStore, si)
+		createDocumentDBs(t, []string{"docdb_6"}, docStore, si, podPassword)
 
-		err := docStore.OpenDocumentDB("docdb_6")
+		err := docStore.OpenDocumentDB("docdb_6", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -360,9 +363,9 @@ func TestDocumentStore(t *testing.T) {
 		si["age"] = collection.NumberIndex
 		si["tag_map"] = collection.MapIndex
 		si["tag_list"] = collection.ListIndex
-		createDocumentDBs(t, []string{"docdb_7"}, docStore, si)
+		createDocumentDBs(t, []string{"docdb_7"}, docStore, si, podPassword)
 
-		err := docStore.OpenDocumentDB("docdb_7")
+		err := docStore.OpenDocumentDB("docdb_7", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -422,9 +425,9 @@ func TestDocumentStore(t *testing.T) {
 		si["age"] = collection.NumberIndex
 		si["tag_map"] = collection.MapIndex
 		si["tag_list"] = collection.ListIndex
-		createDocumentDBs(t, []string{"docdb_8"}, docStore, si)
+		createDocumentDBs(t, []string{"docdb_8"}, docStore, si, podPassword)
 
-		err := docStore.OpenDocumentDB("docdb_8")
+		err := docStore.OpenDocumentDB("docdb_8", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -433,7 +436,7 @@ func TestDocumentStore(t *testing.T) {
 		createTestDocuments(t, docStore, "docdb_8")
 
 		// String =
-		docs, err := docStore.Find("docdb_8", "first_name=John", -1)
+		docs, err := docStore.Find("docdb_8", "first_name=John", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -464,7 +467,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// tag
-		docs, err = docStore.Find("docdb_8", "tag_map=tgf21:tgv21", -1)
+		docs, err = docStore.Find("docdb_8", "tag_map=tgf21:tgv21", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -484,7 +487,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// Number =
-		docs, err = docStore.Find("docdb_8", "age=25", -1)
+		docs, err = docStore.Find("docdb_8", "age=25", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -524,7 +527,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// Number = with limit
-		docs, err = docStore.Find("docdb_8", "age=25", 2)
+		docs, err = docStore.Find("docdb_8", "age=25", podPassword, 2)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -553,7 +556,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// Number =>
-		docs, err = docStore.Find("docdb_8", "age=>30", -1)
+		docs, err = docStore.Find("docdb_8", "age=>30", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -582,7 +585,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// Number >
-		docs, err = docStore.Find("docdb_8", "age>30", -1)
+		docs, err = docStore.Find("docdb_8", "age>30", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -606,9 +609,9 @@ func TestDocumentStore(t *testing.T) {
 		si := make(map[string]collection.IndexType)
 		si["first_name"] = collection.StringIndex
 		si["age"] = collection.NumberIndex
-		createDocumentDBs(t, []string{"docdb_9"}, docStore, si)
+		createDocumentDBs(t, []string{"docdb_9"}, docStore, si, podPassword)
 
-		err := docStore.OpenDocumentDB("docdb_9")
+		err := docStore.OpenDocumentDB("docdb_9", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -620,7 +623,7 @@ func TestDocumentStore(t *testing.T) {
 		var list1 []string
 		list1 = append(list1, "lst11", "lst12")
 		addDocument(t, docStore, "docdb_9", "1", "John", "Doe", 45, tag1, list1)
-		docs, err := docStore.Get("docdb_9", "1")
+		docs, err := docStore.Get("docdb_9", "1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -641,7 +644,7 @@ func TestDocumentStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = docStore.Get("docdb_9", "1")
+		_, err = docStore.Get("docdb_9", "1", podPassword)
 		if !errors.Is(err, collection.ErrEntryNotFound) {
 			t.Fatal(err)
 		}
@@ -652,9 +655,9 @@ func TestDocumentStore(t *testing.T) {
 		si := make(map[string]collection.IndexType)
 		si["first_name"] = collection.StringIndex
 		si["age"] = collection.NumberIndex
-		createDocumentDBs(t, []string{"docdb_10"}, docStore, si)
+		createDocumentDBs(t, []string{"docdb_10"}, docStore, si, podPassword)
 
-		err := docStore.OpenDocumentDB("docdb_10")
+		err := docStore.OpenDocumentDB("docdb_10", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -677,7 +680,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// count the total docs using another index to make sure we dont have it any index
-		docs, err := docStore.Find("docdb_10", "age=>20", -1)
+		docs, err := docStore.Find("docdb_10", "age=>20", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -693,14 +696,14 @@ func TestDocumentStore(t *testing.T) {
 		si["age"] = collection.NumberIndex
 		si["tag_map"] = collection.MapIndex
 		si["tag_list"] = collection.ListIndex
-		createDocumentDBs(t, []string{"docdb_11"}, docStore, si)
+		createDocumentDBs(t, []string{"docdb_11"}, docStore, si, podPassword)
 
-		err := docStore.OpenDocumentDB("docdb_11")
+		err := docStore.OpenDocumentDB("docdb_11", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		docBatch, err := docStore.CreateDocBatch("docdb_11")
+		docBatch, err := docStore.CreateDocBatch("docdb_11", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -745,7 +748,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// count the total docs using another index to make sure we dont have it any index
-		docs, err := docStore.Find("docdb_11", "age=>20", -1)
+		docs, err := docStore.Find("docdb_11", "age=>20", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -754,14 +757,14 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		// tag
-		docs, err = docStore.Find("docdb_11", "tag_map=tgf21:tgv21", -1)
+		docs, err = docStore.Find("docdb_11", "tag_map=tgf21:tgv21", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if len(docs) != 1 {
 			t.Fatalf("expected count %d, got %d", 1, len(docs))
 		}
-		err = docStore.DeleteDocumentDB("docdb_11")
+		err = docStore.DeleteDocumentDB("docdb_11", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -858,19 +861,19 @@ func TestDocumentStore(t *testing.T) {
 
 }
 
-func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Document, si map[string]collection.IndexType) {
+func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Document, si map[string]collection.IndexType, podPassword string) {
 	t.Helper()
 	for _, dbName := range dbNames {
-		err := docStore.CreateDocumentDB(dbName, si, true)
+		err := docStore.CreateDocumentDB(dbName, podPassword, si, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 }
 
-func checkIfDBsExists(t *testing.T, dbNames []string, docStore *collection.Document) {
+func checkIfDBsExists(t *testing.T, dbNames []string, docStore *collection.Document, podPassword string) {
 	t.Helper()
-	tables, err := docStore.LoadDocumentDBSchemas()
+	tables, err := docStore.LoadDocumentDBSchemas(podPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -881,9 +884,9 @@ func checkIfDBsExists(t *testing.T, dbNames []string, docStore *collection.Docum
 	}
 }
 
-func checkIfDBNotExists(t *testing.T, tableName string, docStore *collection.Document) {
+func checkIfDBNotExists(t *testing.T, tableName, podPassword string, docStore *collection.Document) {
 	t.Helper()
-	tables, err := docStore.LoadDocumentDBSchemas()
+	tables, err := docStore.LoadDocumentDBSchemas(podPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -892,9 +895,9 @@ func checkIfDBNotExists(t *testing.T, tableName string, docStore *collection.Doc
 	}
 }
 
-func loadSchemaAndCheckSimpleIndexCount(t *testing.T, docStore *collection.Document, dbName string, count int) collection.DBSchema {
+func loadSchemaAndCheckSimpleIndexCount(t *testing.T, docStore *collection.Document, dbName, podPassword string, count int) collection.DBSchema {
 	t.Helper()
-	tables, err := docStore.LoadDocumentDBSchemas()
+	tables, err := docStore.LoadDocumentDBSchemas(podPassword)
 	if err != nil {
 		t.Fatal(err)
 	}

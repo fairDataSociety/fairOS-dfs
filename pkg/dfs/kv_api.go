@@ -38,7 +38,7 @@ func (a *API) KVCreate(sessionId, podName, name string, indexType collection.Ind
 		return err
 	}
 
-	return podInfo.GetKVStore().CreateKVTable(name, indexType)
+	return podInfo.GetKVStore().CreateKVTable(name, podInfo.GetPodPassword(), indexType)
 }
 
 // KVDelete does validation checks and calls the delete KVtable function.
@@ -59,7 +59,7 @@ func (a *API) KVDelete(sessionId, podName, name string) error {
 		return err
 	}
 
-	return podInfo.GetKVStore().DeleteKVTable(name)
+	return podInfo.GetKVStore().DeleteKVTable(name, podInfo.GetPodPassword())
 }
 
 // KVOpen does validation checks and calls the open KVtable function.
@@ -80,7 +80,7 @@ func (a *API) KVOpen(sessionId, podName, name string) error {
 		return err
 	}
 
-	return podInfo.GetKVStore().OpenKVTable(name)
+	return podInfo.GetKVStore().OpenKVTable(name, podInfo.GetPodPassword())
 }
 
 // KVList does validation checks and calls the list KVtable function.
@@ -100,7 +100,7 @@ func (a *API) KVList(sessionId, podName string) (map[string][]string, error) {
 		return nil, err
 	}
 
-	return podInfo.GetKVStore().LoadKVTables()
+	return podInfo.GetKVStore().LoadKVTables(podInfo.GetPodPassword())
 }
 
 // KVCount does validation checks and calls the count KVtable function.
@@ -121,7 +121,7 @@ func (a *API) KVCount(sessionId, podName, name string) (*collection.TableKeyCoun
 		return nil, err
 	}
 
-	return podInfo.GetKVStore().KVCount(name)
+	return podInfo.GetKVStore().KVCount(name, podInfo.GetPodPassword())
 }
 
 // KVPut does validation checks and calls the put KVtable function.

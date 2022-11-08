@@ -47,7 +47,7 @@ func (idx *Index) NewStringIterator(start, end string, limit int64) (*Iterator, 
 	var manifest *Manifest
 	if idx.mutable {
 		// get the first feed of the Index
-		mf, err := idx.loadManifest(idx.name)
+		mf, err := idx.loadManifest(idx.name, idx.encryptionPassword)
 		if err != nil { // skipcq: TCV-001
 			return nil, ErrEmptyIndex
 		}
@@ -89,7 +89,7 @@ func (idx *Index) NewIntIterator(start, end, limit int64) (*Iterator, error) {
 	var manifest *Manifest
 	if idx.mutable {
 		// get the first feed of the Index
-		mf, err := idx.loadManifest(idx.name)
+		mf, err := idx.loadManifest(idx.name, idx.encryptionPassword)
 		if err != nil { // skipcq: TCV-001
 			return nil, ErrEmptyIndex
 		}
@@ -140,7 +140,7 @@ func (idx *Index) NewIntIterator(start, end, limit int64) (*Iterator, error) {
 func (itr *Iterator) Seek(key string) error {
 	var manifest *Manifest
 	if itr.index.mutable {
-		mf, err := itr.index.loadManifest(itr.index.name)
+		mf, err := itr.index.loadManifest(itr.index.name, itr.index.encryptionPassword)
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
@@ -232,7 +232,7 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 				var childManifest *Manifest
 				if itr.index.mutable || entry.Manifest == nil {
 					// now load the child Manifest and re-seek
-					cf, err := itr.index.loadManifest(manifest.Name + entry.Name)
+					cf, err := itr.index.loadManifest(manifest.Name+entry.Name, itr.index.encryptionPassword)
 					if err != nil { // skipcq: TCV-001
 						return err
 					}
@@ -268,7 +268,7 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 						var childManifest *Manifest
 						if itr.index.mutable {
 							// now load the child Manifest and re-seek
-							cf, err := itr.index.loadManifest(manifest.Name + entry.Name)
+							cf, err := itr.index.loadManifest(manifest.Name+entry.Name, itr.index.encryptionPassword)
 							if err != nil {
 								return err
 							}
@@ -361,7 +361,7 @@ func (itr *Iterator) nextStringKey() bool {
 	if entry.EType == IntermediateEntry {
 		var newManifest *Manifest
 		if itr.index.mutable {
-			mf, err := itr.index.loadManifest(manifestState.currentManifest.Name + entry.Name)
+			mf, err := itr.index.loadManifest(manifestState.currentManifest.Name+entry.Name, itr.index.encryptionPassword)
 			if err != nil { // skipcq: TCV-001
 				itr.error = err
 				return false

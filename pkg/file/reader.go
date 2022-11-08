@@ -61,17 +61,24 @@ type Reader struct {
 // OpenFileForIndex opens file for indexing for document db from pod filepath
 // TODO test
 // skipcq: TCV-001
-func (f *File) OpenFileForIndex(podFile string) (*Reader, error) {
+func (f *File) OpenFileForIndex(podFile, podPassword string) (*Reader, error) {
 	meta := f.GetFromFileMap(podFile)
 	if meta == nil {
 		return nil, fmt.Errorf("file not found in dfs")
 	}
 
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil {
 		return nil, err
 	}
-	// TODO add decrypt
+
+	temp := make([]byte, len(encryptedFileInodeBytes))
+	copy(temp, encryptedFileInodeBytes)
+	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), temp)
+	if err != nil {
+		return nil, err
+	}
+
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil {

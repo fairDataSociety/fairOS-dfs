@@ -102,7 +102,7 @@ func NewDocumentStore(podName string, fd *feed.API, ai *account.Info, user utils
 }
 
 // CreateDocumentDB creates a new document database and its related indexes.
-func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType, mutable bool) error {
+func (d *Document) CreateDocumentDB(dbName, encryptionPassword string, indexes map[string]IndexType, mutable bool) error {
 	d.logger.Info("creating document db: ", dbName)
 	if d.fd.IsReadOnlyFeed() {
 		d.logger.Errorf("creating document db: %v", ErrReadOnlyIndex)
@@ -116,7 +116,7 @@ func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType,
 	}
 
 	// load the existing db's and see if this name is already there
-	docTables, err := d.LoadDocumentDBSchemas()
+	docTables, err := d.LoadDocumentDBSchemas(encryptionPassword)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -127,7 +127,7 @@ func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType,
 
 	// since this db is not present already, create the table
 	d.logger.Info("creating simple index: ", DefaultIndexFieldName)
-	err = CreateIndex(d.podName, dbName, DefaultIndexFieldName, StringIndex, d.fd, d.user, d.client, mutable)
+	err = CreateIndex(d.podName, dbName, DefaultIndexFieldName, encryptionPassword, StringIndex, d.fd, d.user, d.client, mutable)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -146,7 +146,7 @@ func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType,
 	// Now add the other indexes to simpleIndexes array
 	for fieldName, fieldType := range indexes {
 		// create the simple index
-		err = CreateIndex(d.podName, dbName, fieldName, fieldType, d.fd, d.user, d.client, mutable)
+		err = CreateIndex(d.podName, dbName, fieldName, encryptionPassword, fieldType, d.fd, d.user, d.client, mutable)
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
@@ -175,7 +175,7 @@ func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType,
 		ListIndexes:   listIndexes,
 	}
 
-	err = d.storeDocumentDBSchemas(docTables)
+	err = d.storeDocumentDBSchemas(encryptionPassword, docTables)
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("creating document db: %v", err.Error())
 		return err
@@ -185,7 +185,7 @@ func (d *Document) CreateDocumentDB(dbName string, indexes map[string]IndexType,
 }
 
 // OpenDocumentDB open a document database and its related indexes.
-func (d *Document) OpenDocumentDB(dbName string) error {
+func (d *Document) OpenDocumentDB(dbName, encryptionPassword string) error {
 	d.logger.Info("opening document db: ", dbName)
 	// check if the db is already present and opened
 	if d.IsDBOpened(dbName) { // skipcq: TCV-001
@@ -194,7 +194,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 	}
 
 	// load the existing db's and see if this name is present
-	docTables, err := d.LoadDocumentDBSchemas()
+	docTables, err := d.LoadDocumentDBSchemas(encryptionPassword)
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("opening document db: %v", err.Error())
 		return err
@@ -209,7 +209,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 	simpleIndexs := make(map[string]*Index)
 	for _, si := range schema.SimpleIndexes {
 		d.logger.Info("opening simple index: ", si.FieldName)
-		idx, err := OpenIndex(d.podName, dbName, si.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
+		idx, err := OpenIndex(d.podName, dbName, si.FieldName, encryptionPassword, d.fd, d.ai, d.user, d.client, d.logger)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("opening simple index: %v", err.Error())
 			return err
@@ -221,7 +221,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 	mapIndexs := make(map[string]*Index)
 	for _, mi := range schema.MapIndexes {
 		d.logger.Info("opening map index: ", mi.FieldName)
-		idx, err := OpenIndex(d.podName, dbName, mi.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
+		idx, err := OpenIndex(d.podName, dbName, mi.FieldName, encryptionPassword, d.fd, d.ai, d.user, d.client, d.logger)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("opening map index: %v", err.Error())
 			return err
@@ -233,7 +233,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 	listIndexes := make(map[string]*Index)
 	for _, li := range schema.ListIndexes {
 		d.logger.Info("opening list index: ", li.FieldName)
-		idx, err := OpenIndex(d.podName, dbName, li.FieldName, d.fd, d.ai, d.user, d.client, d.logger)
+		idx, err := OpenIndex(d.podName, dbName, li.FieldName, encryptionPassword, d.fd, d.ai, d.user, d.client, d.logger)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("opening list index: %v", err.Error())
 			return err
@@ -257,7 +257,7 @@ func (d *Document) OpenDocumentDB(dbName string) error {
 }
 
 // DeleteDocumentDB a document DB, all its data and its related indxes.
-func (d *Document) DeleteDocumentDB(dbName string) error {
+func (d *Document) DeleteDocumentDB(dbName, encryptionPassword string) error {
 	d.logger.Info("deleting document db: ", dbName)
 	if d.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		d.logger.Errorf("deleting document db: %v", ErrReadOnlyIndex)
@@ -265,7 +265,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	}
 
 	// load the existing db's and see if this name is already there
-	docTables, err := d.LoadDocumentDBSchemas()
+	docTables, err := d.LoadDocumentDBSchemas(encryptionPassword)
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("deleting document db: %v", err.Error())
 		return err
@@ -280,7 +280,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 
 	// open and delete the indexes
 	if !d.IsDBOpened(dbName) {
-		err = d.OpenDocumentDB(dbName)
+		err = d.OpenDocumentDB(dbName, encryptionPassword)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("deleting document db: %v", err.Error())
 			return err
@@ -292,7 +292,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
 	for _, si := range docDB.simpleIndexes {
 		d.logger.Info("deleting simple index: ", si.name, si.indexType)
-		err = si.DeleteIndex()
+		err = si.DeleteIndex(encryptionPassword)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("deleting simple index: %v", err.Error())
 			return err
@@ -300,7 +300,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	}
 	for _, mi := range docDB.mapIndexes {
 		d.logger.Info("deleting map index: ", mi.name, mi.indexType)
-		err = mi.DeleteIndex()
+		err = mi.DeleteIndex(encryptionPassword)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("deleting map index: %v", err.Error())
 			return err
@@ -308,7 +308,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	}
 	for _, li := range docDB.listIndexes {
 		d.logger.Info("deleting list index: ", li.name, li.indexType)
-		err = li.DeleteIndex()
+		err = li.DeleteIndex(encryptionPassword)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("deleting map index: %v", err.Error())
 			return err
@@ -323,7 +323,7 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 	}
 
 	// store the rest of the document db
-	err = d.storeDocumentDBSchemas(docTables)
+	err = d.storeDocumentDBSchemas(encryptionPassword, docTables)
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("deleting document db: ", err.Error())
 		return err
@@ -334,14 +334,14 @@ func (d *Document) DeleteDocumentDB(dbName string) error {
 }
 
 // DeleteAllDocumentDBs deletes all document DBs, all their data and related indxes.
-func (d *Document) DeleteAllDocumentDBs() error {
+func (d *Document) DeleteAllDocumentDBs(encryptionPassword string) error {
 	if d.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		d.logger.Errorf("deleting document db: %v", ErrReadOnlyIndex)
 		return ErrReadOnlyIndex
 	}
 
 	// load the existing db's and see if this name is already there
-	docTables, err := d.LoadDocumentDBSchemas()
+	docTables, err := d.LoadDocumentDBSchemas(encryptionPassword)
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("deleting document db: %v", err.Error())
 		return err
@@ -350,7 +350,7 @@ func (d *Document) DeleteAllDocumentDBs() error {
 	for dbName := range docTables {
 		// open and delete the indexes
 		if !d.IsDBOpened(dbName) {
-			err = d.OpenDocumentDB(dbName)
+			err = d.OpenDocumentDB(dbName, encryptionPassword)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("deleting document db: %v", err.Error())
 				return err
@@ -362,7 +362,7 @@ func (d *Document) DeleteAllDocumentDBs() error {
 		//TODO: before deleting the indexes, unpin all the documents referenced in the ID index
 		for _, si := range docDB.simpleIndexes {
 			d.logger.Info("deleting simple index: ", si.name, si.indexType)
-			err = si.DeleteIndex()
+			err = si.DeleteIndex(encryptionPassword)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("deleting simple index: %v", err.Error())
 				return err
@@ -370,7 +370,7 @@ func (d *Document) DeleteAllDocumentDBs() error {
 		}
 		for _, mi := range docDB.mapIndexes {
 			d.logger.Info("deleting map index: ", mi.name, mi.indexType)
-			err = mi.DeleteIndex()
+			err = mi.DeleteIndex(encryptionPassword)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("deleting map index: %v", err.Error())
 				return err
@@ -378,7 +378,7 @@ func (d *Document) DeleteAllDocumentDBs() error {
 		}
 		for _, li := range docDB.listIndexes {
 			d.logger.Info("deleting list index: ", li.name, li.indexType)
-			err = li.DeleteIndex()
+			err = li.DeleteIndex(encryptionPassword)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("deleting map index: %v", err.Error())
 				return err
@@ -391,7 +391,7 @@ func (d *Document) DeleteAllDocumentDBs() error {
 		d.logger.Info("deleted document db: ", dbName)
 	}
 	docTables = map[string]DBSchema{}
-	err = d.storeDocumentDBSchemas(docTables)
+	err = d.storeDocumentDBSchemas(encryptionPassword, docTables)
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("deleting document db: ", err.Error())
 		return err
@@ -415,7 +415,7 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 			d.logger.Errorf("counting document db: %v", ErrIndexNotPresent)
 			return 0, ErrIndexNotPresent
 		}
-		return idx.CountIndex()
+		return idx.CountIndex(idx.encryptionPassword)
 	}
 
 	// count documents based on expression
@@ -659,7 +659,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 }
 
 // Get retrieves a specific document from a document database matching the dcument id.
-func (d *Document) Get(dbName, id string) ([]byte, error) {
+func (d *Document) Get(dbName, id, podPassword string) ([]byte, error) {
 	d.logger.Info("getting from document db: ", dbName, id)
 	db := d.getOpenedDb(dbName)
 	if db == nil { // skipcq: TCV-001
@@ -695,7 +695,7 @@ func (d *Document) Get(dbName, id string) ([]byte, error) {
 			return nil, err
 		}
 
-		data, err := d.getLineFromFile(idIndex.podFile, seekOffset)
+		data, err := d.getLineFromFile(idIndex.podFile, podPassword, seekOffset)
 		if err != nil {
 			d.logger.Errorf("getting from document db: ", err.Error())
 			return nil, err
@@ -815,7 +815,7 @@ func (d *Document) Del(dbName, id string) error {
 }
 
 // Find selects a number of rows from a document database matching an expression.
-func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
+func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, error) {
 	d.logger.Info("finding from document db: ", dbName, expr, limit)
 	db := d.getOpenedDb(dbName)
 	if db == nil { // skipcq: TCV-001
@@ -955,7 +955,7 @@ func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 				d.logger.Errorf("getting from document db: ", err.Error())
 				return nil, err
 			}
-			data, err := d.getLineFromFile(idx.podFile, seekOffset)
+			data, err := d.getLineFromFile(idx.podFile, podPassword, seekOffset)
 			if err != nil {
 				d.logger.Errorf("finding from document db: ", err.Error())
 				return nil, err
@@ -968,10 +968,10 @@ func (d *Document) Find(dbName, expr string, limit int) ([][]byte, error) {
 }
 
 // LoadDocumentDBSchemas loads the schema of all documents belonging to a pod.
-func (d *Document) LoadDocumentDBSchemas() (map[string]DBSchema, error) {
+func (d *Document) LoadDocumentDBSchemas(encryptionPassword string) (map[string]DBSchema, error) {
 	collections := make(map[string]DBSchema)
 	topic := utils.HashString(documentFile)
-	_, data, err := d.fd.GetFeedData(topic, d.user, nil)
+	_, data, err := d.fd.GetFeedData(topic, d.user, []byte(encryptionPassword))
 	if err != nil {
 		if err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 			return collections, err
@@ -1010,7 +1010,7 @@ func (d *Document) IsDBOpened(dbName string) bool {
 	return false
 }
 
-func (d *Document) storeDocumentDBSchemas(collections map[string]DBSchema) error {
+func (d *Document) storeDocumentDBSchemas(encryptionPassword string, collections map[string]DBSchema) error {
 	buf := bytes.NewBuffer(nil)
 	collectionLen := len(collections)
 	if collectionLen > 0 {
@@ -1023,7 +1023,7 @@ func (d *Document) storeDocumentDBSchemas(collections map[string]DBSchema) error
 		}
 	}
 	topic := utils.HashString(documentFile)
-	_, err := d.fd.UpdateFeed(topic, d.user, buf.Bytes(), nil)
+	_, err := d.fd.UpdateFeed(topic, d.user, buf.Bytes(), []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -1074,7 +1074,7 @@ func (*Document) resolveExpression(expr string) (string, string, string, error) 
 }
 
 // CreateDocBatch creates a batch index instead of normal index. This is used when doing a bulk insert.
-func (d *Document) CreateDocBatch(dbName string) (*DocBatch, error) {
+func (d *Document) CreateDocBatch(dbName, podPassword string) (*DocBatch, error) {
 	d.logger.Info("creating batch for inserting in document db: ", dbName)
 	if d.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		d.logger.Errorf("creating batch: ", ErrReadOnlyIndex)
@@ -1082,7 +1082,7 @@ func (d *Document) CreateDocBatch(dbName string) (*DocBatch, error) {
 	}
 
 	// see if the document db is empty
-	data, err := d.Find(dbName, "", 1)
+	data, err := d.Find(dbName, "", podPassword, 1)
 	if err != nil {
 		if !errors.Is(err, ErrEntryNotFound) { // skipcq: TCV-001
 			d.logger.Errorf("creating simple batch index: ", err.Error())
@@ -1380,9 +1380,9 @@ func (d *Document) DocBatchWrite(docBatch *DocBatch, podFile string) error {
 
 // DocFileIndex indexes a existing json file in the pod with the document DB.
 // skipcq: TCV-001
-func (d *Document) DocFileIndex(dbName, podFile string) error {
+func (d *Document) DocFileIndex(dbName, podFile, podPassword string) error {
 	d.logger.Info("Indexing file to db: ", podFile, dbName)
-	reader, err := d.file.OpenFileForIndex(podFile)
+	reader, err := d.file.OpenFileForIndex(podFile, podPassword)
 	if err != nil {
 		d.logger.Errorf("Indexing file: ", err.Error())
 		return err
@@ -1393,7 +1393,7 @@ func (d *Document) DocFileIndex(dbName, podFile string) error {
 		return err
 	}
 
-	batch, err := d.CreateDocBatch(dbName)
+	batch, err := d.CreateDocBatch(dbName, podPassword)
 	if err != nil {
 		d.logger.Errorf("Indexing file: ", err.Error())
 		return err
@@ -1434,8 +1434,8 @@ func (d *Document) DocFileIndex(dbName, podFile string) error {
 }
 
 // skipcq: TCV-001
-func (d *Document) getLineFromFile(podFile string, seekOffset uint64) ([]byte, error) {
-	reader, err := d.file.OpenFileForIndex(podFile)
+func (d *Document) getLineFromFile(podFile, podPassword string, seekOffset uint64) ([]byte, error) {
+	reader, err := d.file.OpenFileForIndex(podFile, podPassword)
 	if err != nil {
 		d.logger.Errorf("getting  line: ", err.Error())
 		return nil, err

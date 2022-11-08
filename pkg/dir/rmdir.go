@@ -134,7 +134,7 @@ func (d *Directory) RmRootDir(podPassword string) error {
 
 	// remove the feed and clear the data structure
 	topic := utils.HashString(totalPath)
-	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord), nil)
+	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

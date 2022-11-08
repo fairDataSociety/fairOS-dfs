@@ -45,12 +45,12 @@ func (p *Pod) DeleteOwnPod(podName string) error {
 		return err
 	}
 
-	err = podInfo.GetDocStore().DeleteAllDocumentDBs()
+	err = podInfo.GetDocStore().DeleteAllDocumentDBs(podInfo.GetPodPassword())
 	if err != nil {
 		return err
 	}
 
-	err = podInfo.GetKVStore().DeleteAllKVTables()
+	err = podInfo.GetKVStore().DeleteAllKVTables(podInfo.GetPodPassword())
 	if err != nil {
 		return err
 	}

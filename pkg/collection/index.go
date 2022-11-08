@@ -78,17 +78,18 @@ func toIndexTypeEnum(s string) IndexType {
 }
 
 type Index struct {
-	name        string
-	mutable     bool
-	indexType   IndexType
-	podFile     string
-	user        utils.Address
-	accountInfo *account.Info
-	feed        *feed.API
-	client      blockstore.Client
-	count       uint64
-	memDB       *Manifest
-	logger      logging.Logger
+	name               string
+	mutable            bool
+	indexType          IndexType
+	podFile            string
+	encryptionPassword string
+	user               utils.Address
+	accountInfo        *account.Info
+	feed               *feed.API
+	client             blockstore.Client
+	count              uint64
+	memDB              *Manifest
+	logger             logging.Logger
 }
 
 var (
@@ -96,13 +97,13 @@ var (
 )
 
 // CreateIndex creates a common index file to be used in kv or document tables.
-func CreateIndex(podName, collectionName, indexName string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client, mutable bool) error {
+func CreateIndex(podName, collectionName, indexName, encryptionPassword string, indexType IndexType, fd *feed.API, user utils.Address, client blockstore.Client, mutable bool) error {
 	if fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 	actualIndexName := podName + collectionName + indexName
 	topic := utils.HashString(actualIndexName)
-	_, oldData, err := fd.GetFeedData(topic, user, nil)
+	_, oldData, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
 	if err == nil && len(oldData) != 0 && string(oldData) != utils.DeletedFeedMagicWord {
 		// if the feed is present and it has some data means there index is still valid
 		return ErrIndexAlreadyPresent
@@ -122,13 +123,13 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 	}
 
 	if string(oldData) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
-		_, err = fd.UpdateFeed(topic, user, ref, nil)
+		_, err = fd.UpdateFeed(topic, user, ref, []byte(encryptionPassword))
 		if err != nil {
 			return ErrManifestCreate
 		}
 		return nil
 	}
-	_, err = fd.CreateFeed(topic, user, ref, nil)
+	_, err = fd.CreateFeed(topic, user, ref, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -136,42 +137,43 @@ func CreateIndex(podName, collectionName, indexName string, indexType IndexType,
 }
 
 // OpenIndex open the index and loas any index in to the memory.
-func OpenIndex(podName, collectionName, indexName string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
+func OpenIndex(podName, collectionName, indexName, podPassword string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
 	actualIndexName := podName + collectionName + indexName
-	manifest := getRootManifestOfIndex(actualIndexName, fd, user, client) // this will load the entire Manifest for immutable indexes
+	manifest := getRootManifestOfIndex(actualIndexName, podPassword, fd, user, client) // this will load the entire Manifest for immutable indexes
 	if manifest == nil {
 		return nil, ErrIndexNotPresent
 	}
 
 	idx := &Index{
-		name:        manifest.Name,
-		mutable:     manifest.Mutable,
-		indexType:   manifest.IdxType,
-		podFile:     manifest.PodFile,
-		user:        user,
-		accountInfo: ai,
-		feed:        fd,
-		client:      client,
-		count:       0,
-		memDB:       manifest,
-		logger:      logger,
+		name:               manifest.Name,
+		encryptionPassword: podPassword,
+		mutable:            manifest.Mutable,
+		indexType:          manifest.IdxType,
+		podFile:            manifest.PodFile,
+		user:               user,
+		accountInfo:        ai,
+		feed:               fd,
+		client:             client,
+		count:              0,
+		memDB:              manifest,
+		logger:             logger,
 	}
 	return idx, nil
 }
 
 // DeleteIndex delete the index from file and all its entries.
-func (idx *Index) DeleteIndex() error {
+func (idx *Index) DeleteIndex(encryptionPassword string) error {
 	if idx.isReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
-	manifest := getRootManifestOfIndex(idx.name, idx.feed, idx.user, idx.client)
+	manifest := getRootManifestOfIndex(idx.name, encryptionPassword, idx.feed, idx.user, idx.client)
 	if manifest == nil {
 		return ErrIndexNotPresent
 	}
 
 	// erase the top Manifest
 	topic := utils.HashString(idx.name)
-	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(utils.DeletedFeedMagicWord), nil)
+	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrDeleteingIndex
 	}
@@ -179,9 +181,9 @@ func (idx *Index) DeleteIndex() error {
 }
 
 // CountIndex counts the entries in an index.
-func (idx *Index) CountIndex() (uint64, error) {
+func (idx *Index) CountIndex(encryptionPassword string) (uint64, error) {
 	if idx.memDB == nil || idx.memDB.Entries == nil {
-		manifest, err := idx.loadManifest(idx.name)
+		manifest, err := idx.loadManifest(idx.name, encryptionPassword)
 		if err != nil {
 			return 0, err
 		}
@@ -198,7 +200,7 @@ func (idx *Index) CountIndex() (uint64, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	idx.loadIndexAndCount(ctx, cancel, workers, idx.memDB, errC)
+	idx.loadIndexAndCount(ctx, cancel, workers, idx.memDB, encryptionPassword, errC)
 	select {
 	case err := <-errC: // skipcq: TCV-001
 		if err != nil {
@@ -210,14 +212,15 @@ func (idx *Index) CountIndex() (uint64, error) {
 	return idx.count, nil
 }
 
-func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFunc, workers chan bool, manifest *Manifest, errC chan error) {
+func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFunc, workers chan bool, manifest *Manifest,
+	encryptionPassword string, errC chan error) {
 	var count uint64
 	for _, entry := range manifest.Entries {
 		if entry.EType == IntermediateEntry {
 			var newManifest *Manifest
 			if entry.Manifest == nil {
 
-				man, err := idx.loadManifest(manifest.Name + entry.Name)
+				man, err := idx.loadManifest(manifest.Name+entry.Name, encryptionPassword)
 				if err != nil { // skipcq: TCV-001
 					idx.logger.Error("Manifest load error: ", manifest.Name+entry.Name)
 					return
@@ -227,7 +230,7 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 			} else { // skipcq: TCV-001
 				newManifest = entry.Manifest
 			}
-			idx.loadIndexAndCount(ctx, cancel, workers, newManifest, errC)
+			idx.loadIndexAndCount(ctx, cancel, workers, newManifest, encryptionPassword, errC)
 		} else {
 			count++
 		}
@@ -236,11 +239,11 @@ func (idx *Index) loadIndexAndCount(ctx context.Context, cancel context.CancelFu
 }
 
 // Manifest related functions
-func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
+func (idx *Index) loadManifest(manifestPath, encryptionPassword string) (*Manifest, error) {
 	// get feed data and unmarshall the Manifest
 	idx.logger.Info("loading Manifest: ", manifestPath)
 	topic := utils.HashString(manifestPath)
-	_, refData, err := idx.feed.GetFeedData(topic, idx.user, nil)
+	_, refData, err := idx.feed.GetFeedData(topic, idx.user, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return nil, ErrNoManifestFound
 	}
@@ -261,7 +264,7 @@ func (idx *Index) loadManifest(manifestPath string) (*Manifest, error) {
 	return &manifest, nil
 }
 
-func (idx *Index) updateManifest(manifest *Manifest) error {
+func (idx *Index) updateManifest(manifest *Manifest, encryptionPassword string) error {
 	// marshall and update the Manifest in the feed
 	idx.logger.Info("updating Manifest: ", manifest.Name)
 	data, err := json.Marshal(manifest)
@@ -275,14 +278,14 @@ func (idx *Index) updateManifest(manifest *Manifest) error {
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.UpdateFeed(topic, idx.user, ref, nil)
+	_, err = idx.feed.UpdateFeed(topic, idx.user, ref, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
 	return nil
 }
 
-func (idx *Index) storeManifest(manifest *Manifest) error {
+func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) error {
 	// marshall and store the Manifest as new feed
 	data, err := json.Marshal(manifest)
 	if err != nil { // skipcq: TCV-001
@@ -300,7 +303,7 @@ func (idx *Index) storeManifest(manifest *Manifest) error {
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.CreateFeed(topic, idx.user, ref, nil)
+	_, err = idx.feed.CreateFeed(topic, idx.user, ref, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -333,10 +336,10 @@ func longestCommonPrefix(str1, str2 string) (string, string, string) {
 	return str1[:matchLen], str1[matchLen:], str2[matchLen:]
 }
 
-func getRootManifestOfIndex(actualIndexName string, fd *feed.API, user utils.Address, client blockstore.Client) *Manifest {
+func getRootManifestOfIndex(actualIndexName, encryptionPassword string, fd *feed.API, user utils.Address, client blockstore.Client) *Manifest {
 	var manifest Manifest
 	topic := utils.HashString(actualIndexName)
-	_, addr, err := fd.GetFeedData(topic, user, nil)
+	_, addr, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
 	if err != nil {
 		return nil
 	}

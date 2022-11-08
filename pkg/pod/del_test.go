@@ -165,14 +165,14 @@ func TestDelete(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error creating pod %s", podName)
 			}
-			dbTables, err := pi.GetDocStore().LoadDocumentDBSchemas()
+			dbTables, err := pi.GetDocStore().LoadDocumentDBSchemas(podPassword)
 			if err != nil {
 				t.Fatalf("err doc list %s", podName)
 			}
 			if len(dbTables) != 0 {
 				t.Fatal("doc tables delete failed while pod delete")
 			}
-			kvTables, err := pi.GetKVStore().LoadKVTables()
+			kvTables, err := pi.GetKVStore().LoadKVTables(podPassword)
 			if err != nil {
 				t.Fatalf("err kv list %s", podName)
 			}
@@ -182,24 +182,24 @@ func TestDelete(t *testing.T) {
 			si := make(map[string]collection.IndexType)
 			si["first_name"] = collection.StringIndex
 			si["age"] = collection.NumberIndex
-			err = pi.GetDocStore().CreateDocumentDB("dbName", si, true)
+			err = pi.GetDocStore().CreateDocumentDB("dbName", podPassword, si, true)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			err = pi.GetKVStore().CreateKVTable("kvName", collection.StringIndex)
+			err = pi.GetKVStore().CreateKVTable("kvName", podPassword, collection.StringIndex)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			dbTables, err = pi.GetDocStore().LoadDocumentDBSchemas()
+			dbTables, err = pi.GetDocStore().LoadDocumentDBSchemas(podPassword)
 			if err != nil {
 				t.Fatalf("err doc list %s", podName)
 			}
 			if len(dbTables) != 1 {
 				t.Fatal("doc tables create failed while pod delete")
 			}
-			kvTables, err = pi.GetKVStore().LoadKVTables()
+			kvTables, err = pi.GetKVStore().LoadKVTables(podPassword)
 			if err != nil {
 				t.Fatalf("err kv list %s", podName)
 			}

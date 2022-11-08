@@ -36,7 +36,7 @@ func (a *API) DocCreate(sessionId, podName, name string, indexes map[string]coll
 		return err
 	}
 
-	return podInfo.GetDocStore().CreateDocumentDB(name, indexes, mutable)
+	return podInfo.GetDocStore().CreateDocumentDB(name, podInfo.GetPodPassword(), indexes, mutable)
 }
 
 // DocOpen is a controller function which does all the checks before opening a documentDB.
@@ -57,7 +57,7 @@ func (a *API) DocOpen(sessionId, podName, name string) error {
 		return err
 	}
 
-	return podInfo.GetDocStore().OpenDocumentDB(name)
+	return podInfo.GetDocStore().OpenDocumentDB(name, podInfo.GetPodPassword())
 }
 
 // DocDelete is a controller function which does all the checks before deleting a documentDB.
@@ -78,7 +78,7 @@ func (a *API) DocDelete(sessionId, podName, name string) error {
 		return err
 	}
 
-	return podInfo.GetDocStore().DeleteDocumentDB(name)
+	return podInfo.GetDocStore().DeleteDocumentDB(name, podInfo.GetPodPassword())
 }
 
 // DocList is a controller function which does all the checks before listing all the
@@ -100,7 +100,7 @@ func (a *API) DocList(sessionId, podName string) (map[string]collection.DBSchema
 		return nil, err
 	}
 
-	return podInfo.GetDocStore().LoadDocumentDBSchemas()
+	return podInfo.GetDocStore().LoadDocumentDBSchemas(podInfo.GetPodPassword())
 }
 
 // DocCount is a controller function which does all the checks before counting
@@ -172,7 +172,7 @@ func (a *API) DocGet(sessionId, podName, name, id string) ([]byte, error) {
 		return nil, err
 	}
 
-	return podInfo.GetDocStore().Get(name, id)
+	return podInfo.GetDocStore().Get(name, id, podInfo.GetPodPassword())
 }
 
 // DocDel is a controller function which does all the checks before deleting
@@ -216,7 +216,7 @@ func (a *API) DocFind(sessionId, podName, name, expr string, limit int) ([][]byt
 		return nil, err
 	}
 
-	return podInfo.GetDocStore().Find(name, expr, limit)
+	return podInfo.GetDocStore().Find(name, expr, podInfo.GetPodPassword(), limit)
 }
 
 // DocBatch initiates a batch inserting session.
@@ -237,7 +237,7 @@ func (a *API) DocBatch(sessionId, podName, name string) (*collection.DocBatch, e
 		return nil, err
 	}
 
-	return podInfo.GetDocStore().CreateDocBatch(name)
+	return podInfo.GetDocStore().CreateDocBatch(name, podInfo.GetPodPassword())
 }
 
 // DocBatchPut inserts records in to a document batch.
@@ -305,5 +305,5 @@ func (a *API) DocIndexJson(sessionId, podName, name, podFileWithPath string) err
 		return ErrFileNotPresent
 	}
 
-	return podInfo.GetDocStore().DocFileIndex(name, podFileWithPath)
+	return podInfo.GetDocStore().DocFileIndex(name, podFileWithPath, podInfo.GetPodPassword())
 }
