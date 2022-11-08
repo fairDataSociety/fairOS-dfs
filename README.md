@@ -179,3 +179,17 @@ To make binaries for all platforms run this command
 
 `./generate-exe.sh`
 
+### Generate swagger docs
+
+#### Install swag
+
+```
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+#### generate
+
+```
+swag init -g cmd/server.go -d cmd/dfs,pkg/api -o ./swagger
+```
+

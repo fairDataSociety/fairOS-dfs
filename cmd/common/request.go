@@ -19,7 +19,6 @@ package common
 type UserRequest struct {
 	UserName string `json:"user_name,omitempty"`
 	Password string `json:"password,omitempty"`
-	Address  string `json:"address,omitempty"`
 	Mnemonic string `json:"mnemonic,omitempty"`
 }
 

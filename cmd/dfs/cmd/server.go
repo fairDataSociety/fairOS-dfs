@@ -31,6 +31,9 @@ import (
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	_ "github.com/fairdatasociety/fairOS-dfs/swagger"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 var (
@@ -43,7 +46,19 @@ var (
 	handler        *api.Handler
 )
 
-// startCmd represents the start command
+//
+//  @title           FairOS-dfs server
+//  @version         1.0
+//  @description     This is fairOS-dfs server api specifications
+
+//  @contact.name   Sabyasachi Patra
+//  @contact.url    http://www.swagger.io/support
+//  @contact.email  sabyasachi@datafund.io
+
+//  @license.name  Apache 2.0
+//  @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:9090
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "starts a HTTP server for the dfs",
@@ -222,6 +237,10 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 	})
+	router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:9090/swagger/doc.json"), //The url pointing to API definition
+	)).Methods(http.MethodGet)
+
 	apiVersion := "v1"
 
 	// v2 introduces user credentials storage on secondary location and identity storage on ens registry

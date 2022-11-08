@@ -1,0 +1,75 @@
+definitions:
+  api.UserSignupResponse:
+    properties:
+      address:
+        type: string
+      message:
+        type: string
+      mnemonic:
+        type: string
+      name_hash:
+        type: string
+      public_key:
+        type: string
+    type: object
+  api.response:
+    properties:
+      message:
+        type: string
+    type: object
+  common.UserRequest:
+    properties:
+      mnemonic:
+        type: string
+      password:
+        type: string
+      user_name:
+        type: string
+    type: object
+host: localhost:9090
+info:
+  contact: {}
+paths:
+  /v2/user/signup:
+    post:
+      consumes:
+      - application/json
+      description: registers new user
+      parameters:
+      - description: user name
+        in: body
+        name: user_request
+        required: true
+        schema:
+          $ref: '#/definitions/common.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.UserSignupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.response'
+        "402":
+          description: Payment Required
+          schema:
+            $ref: '#/definitions/api.UserSignupResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Register New User
+      tags:
+      - v2
+swagger: "2.0"
