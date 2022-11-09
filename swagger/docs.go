@@ -16,6 +16,18 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1/user/delete": {
+            "post": {
+                "deprecated": true,
+                "responses": {}
+            }
+        },
+        "/v1/user/export": {
+            "post": {
+                "deprecated": true,
+                "responses": {}
+            }
+        },
         "/v1/user/isloggedin": {
             "get": {
                 "description": "Check if the given user is logged-in",
@@ -47,6 +59,106 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/user/login": {
+            "post": {
+                "deprecated": true,
+                "responses": {}
+            }
+        },
+        "/v1/user/logout": {
+            "post": {
+                "description": "logs-out user",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "v1"
+                ],
+                "summary": "Logout",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/user/present": {
+            "get": {
+                "deprecated": true,
+                "responses": {}
+            }
+        },
+        "/v1/user/signup": {
+            "post": {
+                "deprecated": true,
+                "responses": {}
+            }
+        },
+        "/v1/user/stat": {
+            "get": {
+                "description": "show user stats",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "v1"
+                ],
+                "summary": "User stat",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/user.Stat"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/api.response"
                         }
@@ -332,6 +444,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.Stat": {
+            "type": "object",
+            "properties": {
+                "address": {
                     "type": "string"
                 },
                 "user_name": {

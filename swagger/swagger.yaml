@@ -59,10 +59,25 @@ definitions:
       user_name:
         type: string
     type: object
+  user.Stat:
+    properties:
+      address:
+        type: string
+      user_name:
+        type: string
+    type: object
 host: localhost:9090
 info:
   contact: {}
 paths:
+  /v1/user/delete:
+    post:
+      deprecated: true
+      responses: {}
+  /v1/user/export:
+    post:
+      deprecated: true
+      responses: {}
   /v1/user/isloggedin:
     get:
       consumes:
@@ -86,6 +101,72 @@ paths:
           schema:
             $ref: '#/definitions/api.response'
       summary: Is user logged-in
+      tags:
+      - v1
+  /v1/user/login:
+    post:
+      deprecated: true
+      responses: {}
+  /v1/user/logout:
+    post:
+      consumes:
+      - application/json
+      description: logs-out user
+      parameters:
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Logout
+      tags:
+      - v1
+  /v1/user/present:
+    get:
+      deprecated: true
+      responses: {}
+  /v1/user/signup:
+    post:
+      deprecated: true
+      responses: {}
+  /v1/user/stat:
+    get:
+      consumes:
+      - application/json
+      description: show user stats
+      parameters:
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.Stat'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: User stat
       tags:
       - v1
   /v2/user/delete:

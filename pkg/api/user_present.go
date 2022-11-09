@@ -29,6 +29,7 @@ type PresentResponse struct {
 // UserPresentHandler godoc
 //
 //	@Deprecated
+//	@Router       /v1/user/present [get]
 func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["user_name"]
 	if !ok || len(keys[0]) < 1 {

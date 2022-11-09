@@ -27,6 +27,7 @@ import (
 // UserSignupHandler godoc
 //
 //	@Deprecated
+//	@Router       /v1/user/signup [post]
 func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

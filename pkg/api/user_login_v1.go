@@ -27,6 +27,7 @@ import (
 // UserLoginHandler godoc
 //
 //	@Deprecated
+//	@Router       /v1/user/login [post]
 func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
