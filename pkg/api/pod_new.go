@@ -20,23 +20,35 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
-	"resenje.org/jsonhttp"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"resenje.org/jsonhttp"
 )
 
-type PodCreateResponse struct {
-	Reference string `json:"reference"`
+type PodRequest struct {
+	PodName  string `json:"pod_name,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 // PodCreateHandler is the api handler to create a new pod
 // it takes two arguments
 // - pod_name: the name of the pod to create
 // - password: the password of the user
+
+// PodCreateHandler godoc
+//
+//	@Summary      Create pod
+//	@Description  PodCreateHandler is the api handler to create a new pod
+//	@Tags         v1
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_request body PodRequest true "pod name and user password"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      201  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/new [post]
 func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -46,7 +58,7 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq common.PodRequest
+	var podReq PodRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod new: could not decode arguments")

@@ -34,10 +34,19 @@ type PodSharingReference struct {
 	Reference string `json:"pod_sharing_reference"`
 }
 
-// PodShareHandler is the api handler to share a pod to the public
-// it takes two arguments
-// - pod_name: the name of the pod to share
-// - password: the password of the user
+// PodShareHandler godoc
+//
+//	@Summary      Share pod
+//	@Description  PodShareHandler is the api handler to share a pod to the public
+//	@Tags         v1
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_request body common.PodShareRequest true "pod name and user password"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  PodSharingReference
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/share [post]
 func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -47,7 +56,7 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq common.PodRequest
+	var podReq common.PodShareRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod share: could not decode arguments")
@@ -107,6 +116,19 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// PodReceiveInfoHandler godoc
+//
+//	@Summary      Receive shared pod info
+//	@Description  PodReceiveInfoHandler is the api handler to receive shared pod info from shared reference
+//	@Tags         v1
+//	@Accept       json
+//	@Produce      json
+//	@Param	      sharing_ref query string true "pod sharing reference"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  pod.ShareInfo
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/receiveinfo [get]
 func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["sharing_ref"]
 	if !ok || len(keys[0]) < 1 {
@@ -153,6 +175,20 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 	jsonhttp.OK(w, shareInfo)
 }
 
+// PodReceiveHandler godoc
+//
+//	@Summary      Receive shared pod
+//	@Description  PodReceiveHandler is the api handler to receive shared pod from shared reference
+//	@Tags         v1
+//	@Accept       json
+//	@Produce      json
+//	@Param	      sharing_ref query string true "pod sharing reference"
+//	@Param	      shared_pod_name query string false "pod name to be saved as"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/receive [get]
 func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["sharing_ref"]
 	if !ok || len(keys[0]) < 1 {

@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"resenje.org/jsonhttp"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -28,8 +27,19 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-// PodSyncHandler is the api handler to sync a pod's contents from the Swarm network
-// it takes no arguments
+// PodSyncHandler godoc
+//
+//	@Summary      Sync pod
+//	@Description  PodSyncHandler is the api handler to sync a pod's content
+//	@Tags         v1
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_request body PodNameRequest true "pod name"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/sync [post]
 func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -39,7 +49,7 @@ func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq common.PodRequest
+	var podReq PodNameRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod sync: could not decode arguments")

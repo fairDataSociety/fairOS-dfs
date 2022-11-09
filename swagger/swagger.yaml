@@ -4,6 +4,41 @@ definitions:
       loggedin:
         type: boolean
     type: object
+  api.PodListResponse:
+    properties:
+      pod_name:
+        items:
+          type: string
+        type: array
+      shared_pod_name:
+        items:
+          type: string
+        type: array
+    type: object
+  api.PodNameRequest:
+    properties:
+      pod_name:
+        type: string
+    type: object
+  api.PodRequest:
+    properties:
+      password:
+        type: string
+      pod_name:
+        type: string
+    type: object
+  api.PodSharingReference:
+    properties:
+      pod_sharing_reference:
+        type: string
+    type: object
+  api.PodStatResponse:
+    properties:
+      address:
+        type: string
+      pod_name:
+        type: string
+    type: object
   api.PresentResponse:
     properties:
       present:
@@ -43,6 +78,15 @@ definitions:
       message:
         type: string
     type: object
+  common.PodShareRequest:
+    properties:
+      password:
+        type: string
+      pod_name:
+        type: string
+      shared_pod_name:
+        type: string
+    type: object
   common.UserLoginRequest:
     properties:
       password:
@@ -59,6 +103,17 @@ definitions:
       user_name:
         type: string
     type: object
+  pod.ShareInfo:
+    properties:
+      password:
+        type: string
+      pod_address:
+        type: string
+      pod_name:
+        type: string
+      user_address:
+        type: string
+    type: object
   user.Stat:
     properties:
       address:
@@ -70,6 +125,422 @@ host: localhost:9090
 info:
   contact: {}
 paths:
+  /v1/pod/close:
+    post:
+      consumes:
+      - application/json
+      description: PodCloseHandler is the api handler to close an open pod
+      parameters:
+      - description: pod name
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodNameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Close pod
+      tags:
+      - v1
+  /v1/pod/delete:
+    delete:
+      consumes:
+      - application/json
+      description: PodDeleteHandler is the api handler to delete a pod
+      parameters:
+      - description: pod name and user password
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Delete pod
+      tags:
+      - v1
+  /v1/pod/list:
+    get:
+      consumes:
+      - application/json
+      description: PodListHandler is the api handler to list all pods
+      parameters:
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PodListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: List pods
+      tags:
+      - v1
+  /v1/pod/new:
+    post:
+      consumes:
+      - application/json
+      description: PodCreateHandler is the api handler to create a new pod
+      parameters:
+      - description: pod name and user password
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Create pod
+      tags:
+      - v1
+  /v1/pod/open:
+    post:
+      consumes:
+      - application/json
+      description: PodOpenHandler is the api handler to open pod
+      parameters:
+      - description: pod name and user password
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Open pod
+      tags:
+      - v1
+  /v1/pod/open-async:
+    post:
+      consumes:
+      - application/json
+      description: PodOpenAsyncHandler is the api handler to open pod asynchronously
+      parameters:
+      - description: pod name and user password
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Open pod
+      tags:
+      - v1
+  /v1/pod/present:
+    get:
+      consumes:
+      - application/json
+      description: PodPresentHandler is the api handler to check if a pod is present
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Is pod present
+      tags:
+      - v1
+  /v1/pod/receive:
+    get:
+      consumes:
+      - application/json
+      description: PodReceiveHandler is the api handler to receive shared pod from
+        shared reference
+      parameters:
+      - description: pod sharing reference
+        in: query
+        name: sharing_ref
+        required: true
+        type: string
+      - description: pod name to be saved as
+        in: query
+        name: shared_pod_name
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Receive shared pod
+      tags:
+      - v1
+  /v1/pod/receiveinfo:
+    get:
+      consumes:
+      - application/json
+      description: PodReceiveInfoHandler is the api handler to receive shared pod
+        info from shared reference
+      parameters:
+      - description: pod sharing reference
+        in: query
+        name: sharing_ref
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pod.ShareInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Receive shared pod info
+      tags:
+      - v1
+  /v1/pod/share:
+    post:
+      consumes:
+      - application/json
+      description: PodShareHandler is the api handler to share a pod to the public
+      parameters:
+      - description: pod name and user password
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/common.PodShareRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PodSharingReference'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Share pod
+      tags:
+      - v1
+  /v1/pod/stat:
+    get:
+      consumes:
+      - application/json
+      description: PodStatHandler is the api handler get information about a pod
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PodStatResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Stats for pod
+      tags:
+      - v1
+  /v1/pod/sync:
+    post:
+      consumes:
+      - application/json
+      description: PodSyncHandler is the api handler to sync a pod's content
+      parameters:
+      - description: pod name
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodNameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Sync pod
+      tags:
+      - v1
   /v1/user/delete:
     post:
       deprecated: true
