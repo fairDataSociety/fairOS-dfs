@@ -46,13 +46,11 @@ var (
 	handler        *api.Handler
 )
 
-//
 //  @title           FairOS-dfs server
 //  @version         1.0
 //  @description     This is fairOS-dfs server api specifications
 
 //  @contact.name   Sabyasachi Patra
-//  @contact.url    http://www.swagger.io/support
 //  @contact.email  sabyasachi@datafund.io
 
 //  @license.name  Apache 2.0

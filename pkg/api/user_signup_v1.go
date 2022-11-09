@@ -24,11 +24,9 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserSignupHandler is the api handler to create new user
-// it takes two mandatory arguments and one optional argument
-// - user_name: the name of the user to create
-// - password: the password of the user
-// * mnemonic: a 12 word mnemonic to use to create the hd wallet of the user
+// UserSignupHandler godoc
+//
+//	@Deprecated
 func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -38,7 +36,7 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq common.UserSignupRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user signup: could not decode arguments")

@@ -170,7 +170,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			loginRequest := &common.UserRequest{}
+			loginRequest := &common.UserSignupRequest{}
 			err = json.Unmarshal(jsonBytes, loginRequest)
 			if err != nil {
 				respondWithError(res, err)
@@ -204,7 +204,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			request := &common.UserRequest{}
+			request := &common.UserSignupRequest{}
 			err = json.Unmarshal(jsonBytes, request)
 			if err != nil {
 				respondWithError(res, err)
@@ -231,7 +231,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			request := &common.UserRequest{}
+			request := &common.UserSignupRequest{}
 			err = json.Unmarshal(jsonBytes, request)
 			if err != nil {
 				respondWithError(res, err)
@@ -280,7 +280,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			request := &common.UserRequest{}
+			request := &common.UserSignupRequest{}
 			err = json.Unmarshal(jsonBytes, request)
 			if err != nil {
 				respondWithError(res, err)

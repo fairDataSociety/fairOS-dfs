@@ -33,25 +33,23 @@ var (
 
 type UserSignupResponse struct {
 	Address   string `json:"address"`
-	Mnemonic  string `json:"mnemonic,omitempty"`
 	NameHash  string `json:"name_hash,omitempty"`
 	PublicKey string `json:"public_key,omitempty"`
 	Message   string `json:"message,omitempty"`
+	Mnemonic  string `json:"mnemonic,omitempty"`
 }
 
 // UserSignupV2Handler godoc
 //
 //	@Summary      Register New User
-//	@Description  registers new user
+//	@Description  registers new user with the new ENS based authentication
 //	@Tags         v2
 //	@Accept       json
 //	@Produce      json
-//	@Param	      user_request body common.UserRequest true "user name"
-//	@Success      200  {object}  UserSignupResponse
+//	@Param	      user_request body common.UserSignupRequest true "user name"
+//	@Success      201  {object}  UserSignupResponse
 //	@Failure      400  {object}  response
-//	@Failure      401  {object}  response
 //	@Failure      402  {object}  UserSignupResponse
-//	@Failure      404  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v2/user/signup [post]
 func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +61,7 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq common.UserSignupRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user signup: could not decode arguments")

@@ -27,10 +27,26 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserLoginV2Handler is the api handler to login a user
-// it takes two arguments
-// - user_name: the name of the user to login
-// - password: the password of the user
+type UserLoginResponse struct {
+	Address   string `json:"address"`
+	NameHash  string `json:"name_hash,omitempty"`
+	PublicKey string `json:"public_key,omitempty"`
+	Message   string `json:"message,omitempty"`
+}
+
+// UserLoginV2Handler godoc
+//
+//	@Summary      Login User
+//	@Description  login user with the new ENS based authentication
+//	@Tags         v2
+//	@Accept       json
+//	@Produce      json
+//	@Param	      user_request body common.UserLoginRequest true "user name"
+//	@Success      200  {object}  UserLoginResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Header	      200  {string}  Set-Cookie "fairos-dfs session"
+//	@Router       /v2/user/login [post]
 func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -40,7 +56,7 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq common.UserLoginRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user login: could not decode arguments")

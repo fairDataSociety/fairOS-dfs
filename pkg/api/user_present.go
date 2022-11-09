@@ -26,9 +26,9 @@ type PresentResponse struct {
 	Present bool `json:"present"`
 }
 
-// UserPresentHandler is the api handler to check if a gien user name is present
-// it takes only one argument
-// - user_name: the name of the user to check
+// UserPresentHandler godoc
+//
+//	@Deprecated
 func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["user_name"]
 	if !ok || len(keys[0]) < 1 {
@@ -46,9 +46,16 @@ func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.BadRequest(w, &response{Message: "user present: deprecated"})
 }
 
-// UserPresentV2Handler is the api handler to check if a gien user name is present
-// it takes only one argument
-// - user_name: the name of the user to check
+// UserPresentV2Handler godoc
+//
+//	@Summary      Check if user is present
+//	@Description  checks if the new user is present in the new ENS based authentication
+//	@Tags         v2
+//	@Produce      json
+//	@Param	      user_name query string true "user name"
+//	@Success      200  {object}  PresentResponse
+//	@Failure      400  {object}  response
+//	@Router       /v2/user/present [get]
 func (h *Handler) UserPresentV2Handler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["user_name"]
 	if !ok || len(keys[0]) < 1 {
@@ -59,8 +66,8 @@ func (h *Handler) UserPresentV2Handler(w http.ResponseWriter, r *http.Request) {
 
 	user := keys[0]
 	if user == "" {
-		h.logger.Errorf("user present: \"user\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user present: \"user\" argument missing"})
+		h.logger.Errorf("user present: \"user_name\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user present: \"user_name\" argument missing"})
 		return
 	}
 

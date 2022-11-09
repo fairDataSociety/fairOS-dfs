@@ -1,4 +1,30 @@
 definitions:
+  api.LoginStatus:
+    properties:
+      loggedin:
+        type: boolean
+    type: object
+  api.PresentResponse:
+    properties:
+      present:
+        type: boolean
+    type: object
+  api.UserDeleteRequest:
+    properties:
+      password:
+        type: string
+    type: object
+  api.UserLoginResponse:
+    properties:
+      address:
+        type: string
+      message:
+        type: string
+      name_hash:
+        type: string
+      public_key:
+        type: string
+    type: object
   api.UserSignupResponse:
     properties:
       address:
@@ -17,7 +43,14 @@ definitions:
       message:
         type: string
     type: object
-  common.UserRequest:
+  common.UserLoginRequest:
+    properties:
+      password:
+        type: string
+      user_name:
+        type: string
+    type: object
+  common.UserSignupRequest:
     properties:
       mnemonic:
         type: string
@@ -30,41 +63,148 @@ host: localhost:9090
 info:
   contact: {}
 paths:
-  /v2/user/signup:
-    post:
+  /v1/user/isloggedin:
+    get:
       consumes:
       - application/json
-      description: registers new user
+      description: Check if the given user is logged-in
       parameters:
       - description: user name
-        in: body
-        name: user_request
+        in: query
+        name: user_name
         required: true
-        schema:
-          $ref: '#/definitions/common.UserRequest'
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.UserSignupResponse'
+            $ref: '#/definitions/api.LoginStatus'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/api.response'
-        "401":
-          description: Unauthorized
+      summary: Is user logged-in
+      tags:
+      - v1
+  /v2/user/delete:
+    delete:
+      description: deletes user info from swarm
+      parameters:
+      - description: user delete request
+        in: body
+        name: UserDeleteRequest
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserDeleteRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Delete user for ENS based authentication
+      tags:
+      - v2
+  /v2/user/login:
+    post:
+      consumes:
+      - application/json
+      description: login user with the new ENS based authentication
+      parameters:
+      - description: user name
+        in: body
+        name: user_request
+        required: true
+        schema:
+          $ref: '#/definitions/common.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            Set-Cookie:
+              description: fairos-dfs session
+              type: string
+          schema:
+            $ref: '#/definitions/api.UserLoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Login User
+      tags:
+      - v2
+  /v2/user/present:
+    get:
+      description: checks if the new user is present in the new ENS based authentication
+      parameters:
+      - description: user name
+        in: query
+        name: user_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PresentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Check if user is present
+      tags:
+      - v2
+  /v2/user/signup:
+    post:
+      consumes:
+      - application/json
+      description: registers new user with the new ENS based authentication
+      parameters:
+      - description: user name
+        in: body
+        name: user_request
+        required: true
+        schema:
+          $ref: '#/definitions/common.UserSignupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.UserSignupResponse'
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/api.response'
         "402":
           description: Payment Required
           schema:
             $ref: '#/definitions/api.UserSignupResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.response'
         "500":
           description: Internal Server Error
           schema:
