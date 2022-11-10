@@ -35,14 +35,14 @@ type PodListResponse struct {
 //
 //	@Summary      List pods
 //	@Description  PodListHandler is the api handler to list all pods
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  PodListResponse
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
-//	@Router       /v1/pod/list [get]
+//	@Router       /v1/pod/ls [get]
 func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

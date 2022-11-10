@@ -27,11 +27,20 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// FileDownloadHandler is the api handler to download a file from a given pod
+// FileDownloadHandler godoc
 //
-//	it takes only one argument
-//
-// file_path: the absolute path of the file in the pod
+//	@Summary      Download a file
+//	@Description  FileDownloadHandler is the api handler to download a file from a given pod
+//	@Tags         file
+//	@Accept       mpfd
+//	@Produce      */*
+//	@Param	      pod_name formData string true "pod name"
+//	@Param	      file_path formData string true "file path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {array}  byte
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/file/download [post]
 func (h *Handler) FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	podName := ""
 	podFileWithPath := ""

@@ -1,4 +1,29 @@
 definitions:
+  api.DirPresentResponse:
+    properties:
+      error:
+        type: string
+      present:
+        type: boolean
+    type: object
+  api.DirRequest:
+    properties:
+      dir_path:
+        type: string
+      pod_name:
+        type: string
+    type: object
+  api.ListFileResponse:
+    properties:
+      dirs:
+        items:
+          $ref: '#/definitions/dir.Entry'
+        type: array
+      files:
+        items:
+          $ref: '#/definitions/file.Entry'
+        type: array
+    type: object
   api.LoginStatus:
     properties:
       loggedin:
@@ -87,6 +112,15 @@ definitions:
       shared_pod_name:
         type: string
     type: object
+  common.RenameRequest:
+    properties:
+      new_path:
+        type: string
+      old_path:
+        type: string
+      pod_name:
+        type: string
+    type: object
   common.UserLoginRequest:
     properties:
       password:
@@ -101,6 +135,59 @@ definitions:
       password:
         type: string
       user_name:
+        type: string
+    type: object
+  dir.Entry:
+    properties:
+      access_time:
+        type: string
+      block_size:
+        type: string
+      content_type:
+        type: string
+      creation_time:
+        type: string
+      modification_time:
+        type: string
+      name:
+        type: string
+      size:
+        type: string
+    type: object
+  dir.Stats:
+    properties:
+      access_time:
+        type: string
+      creation_time:
+        type: string
+      dir_name:
+        type: string
+      dir_path:
+        type: string
+      modification_time:
+        type: string
+      no_of_directories:
+        type: string
+      no_of_files:
+        type: string
+      pod_name:
+        type: string
+    type: object
+  file.Entry:
+    properties:
+      access_time:
+        type: string
+      block_size:
+        type: string
+      content_type:
+        type: string
+      creation_time:
+        type: string
+      modification_time:
+        type: string
+      name:
+        type: string
+      size:
         type: string
     type: object
   pod.ShareInfo:
@@ -125,6 +212,267 @@ host: localhost:9090
 info:
   contact: {}
 paths:
+  /v1/dir/ls:
+    get:
+      description: DirectoryLsHandler is the api handler for listing the contents
+        of a directory.
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: dir path
+        in: query
+        name: dir_path
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.ListFileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: List directory
+      tags:
+      - dir
+  /v1/dir/mkdir:
+    post:
+      consumes:
+      - application/json
+      description: DirectoryMkdirHandler is the api handler to create a new directory.
+      parameters:
+      - description: pod name and dir path
+        in: body
+        name: dir_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DirRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Create directory
+      tags:
+      - dir
+  /v1/dir/present:
+    get:
+      description: DirectoryPresentHandler is the api handler which says if a directory
+        is present or not
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: dir path
+        in: query
+        name: dir_path
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.DirPresentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Is directory present
+      tags:
+      - dir
+  /v1/dir/rename:
+    post:
+      consumes:
+      - application/json
+      description: DirectoryRenameHandler is the api handler to rename a directory.
+      parameters:
+      - description: old name and new path
+        in: body
+        name: dir_request
+        required: true
+        schema:
+          $ref: '#/definitions/common.RenameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Rename directory
+      tags:
+      - dir
+  /v1/dir/rmdir:
+    delete:
+      consumes:
+      - application/json
+      description: DirectoryRmdirHandler is the api handler to remove a directory.
+      parameters:
+      - description: pod name and dir path
+        in: body
+        name: dir_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DirRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Remove directory
+      tags:
+      - dir
+  /v1/dir/stat:
+    get:
+      description: DirectoryStatHandler is the api handler which gives the information
+        about a directory
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: dir path
+        in: query
+        name: dir_path
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dir.Stats'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Directory stat
+      tags:
+      - dir
+  /v1/file/download:
+    post:
+      consumes:
+      - multipart/form-data
+      description: FileDownloadHandler is the api handler to download a file from
+        a given pod
+      parameters:
+      - description: pod name
+        in: formData
+        name: pod_name
+        required: true
+        type: string
+      - description: file path
+        in: formData
+        name: file_path
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - '*/*'
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: integer
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Download a file
+      tags:
+      - file
   /v1/pod/close:
     post:
       consumes:
@@ -159,7 +507,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Close pod
       tags:
-      - v1
+      - pod
   /v1/pod/delete:
     delete:
       consumes:
@@ -194,8 +542,8 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Delete pod
       tags:
-      - v1
-  /v1/pod/list:
+      - pod
+  /v1/pod/ls:
     get:
       consumes:
       - application/json
@@ -223,7 +571,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: List pods
       tags:
-      - v1
+      - pod
   /v1/pod/new:
     post:
       consumes:
@@ -258,7 +606,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Create pod
       tags:
-      - v1
+      - pod
   /v1/pod/open:
     post:
       consumes:
@@ -293,7 +641,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Open pod
       tags:
-      - v1
+      - pod
   /v1/pod/open-async:
     post:
       consumes:
@@ -328,7 +676,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Open pod
       tags:
-      - v1
+      - pod
   /v1/pod/present:
     get:
       consumes:
@@ -362,7 +710,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Is pod present
       tags:
-      - v1
+      - pod
   /v1/pod/receive:
     get:
       consumes:
@@ -401,7 +749,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Receive shared pod
       tags:
-      - v1
+      - pod
   /v1/pod/receiveinfo:
     get:
       consumes:
@@ -436,7 +784,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Receive shared pod info
       tags:
-      - v1
+      - pod
   /v1/pod/share:
     post:
       consumes:
@@ -471,7 +819,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Share pod
       tags:
-      - v1
+      - pod
   /v1/pod/stat:
     get:
       consumes:
@@ -505,7 +853,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Stats for pod
       tags:
-      - v1
+      - pod
   /v1/pod/sync:
     post:
       consumes:
@@ -540,7 +888,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Sync pod
       tags:
-      - v1
+      - pod
   /v1/user/delete:
     post:
       deprecated: true
@@ -573,7 +921,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Is user logged-in
       tags:
-      - v1
+      - user
   /v1/user/login:
     post:
       deprecated: true
@@ -604,7 +952,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Logout
       tags:
-      - v1
+      - user
   /v1/user/present:
     get:
       deprecated: true
@@ -639,7 +987,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: User stat
       tags:
-      - v1
+      - user
   /v2/user/delete:
     delete:
       description: deletes user info from swarm
@@ -672,7 +1020,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Delete user for ENS based authentication
       tags:
-      - v2
+      - user
   /v2/user/login:
     post:
       consumes:
@@ -706,7 +1054,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Login User
       tags:
-      - v2
+      - user
   /v2/user/present:
     get:
       description: checks if the new user is present in the new ENS based authentication
@@ -729,7 +1077,7 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Check if user is present
       tags:
-      - v2
+      - user
   /v2/user/signup:
     post:
       consumes:
@@ -763,5 +1111,5 @@ paths:
             $ref: '#/definitions/api.response'
       summary: Register New User
       tags:
-      - v2
+      - user
 swagger: "2.0"

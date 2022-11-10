@@ -31,14 +31,11 @@ type PodStatResponse struct {
 	PodAddress string `json:"address"`
 }
 
-// PodStatHandler is the api handler to get information about a pod
-// it takes only one argument
-// - pod_name: the name of the pod to get the info
 // PodStatHandler godoc
 //
 //	@Summary      Stats for pod
 //	@Description  PodStatHandler is the api handler get information about a pod
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      pod_name query string true "pod name"

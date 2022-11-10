@@ -27,7 +27,7 @@ import (
 //
 //	@Summary      User stat
 //	@Description  show user stats
-//	@Tags         v1
+//	@Tags         user
 //	@Accept       json
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  user.Stat

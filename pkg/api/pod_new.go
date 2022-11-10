@@ -31,16 +31,11 @@ type PodRequest struct {
 	Password string `json:"password,omitempty"`
 }
 
-// PodCreateHandler is the api handler to create a new pod
-// it takes two arguments
-// - pod_name: the name of the pod to create
-// - password: the password of the user
-
 // PodCreateHandler godoc
 //
 //	@Summary      Create pod
 //	@Description  PodCreateHandler is the api handler to create a new pod
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      pod_request body PodRequest true "pod name and user password"

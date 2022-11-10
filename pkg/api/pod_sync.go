@@ -31,7 +31,7 @@ import (
 //
 //	@Summary      Sync pod
 //	@Description  PodSyncHandler is the api handler to sync a pod's content
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      pod_request body PodNameRequest true "pod name"

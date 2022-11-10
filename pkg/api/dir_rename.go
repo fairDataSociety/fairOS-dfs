@@ -29,10 +29,19 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-// DirectoryRenameHandler is the api handler to create a new directory.
-// it takes two arguments
-// - old-path: the directory path to rename along with its absolute path
-// - new-path: the new directory path along with its absolute path
+// DirectoryRenameHandler godoc
+//
+//	@Summary      Rename directory
+//	@Description  DirectoryRenameHandler is the api handler to rename a directory.
+//	@Tags         dir
+//	@Accept       json
+//	@Produce      json
+//	@Param	      dir_request body common.RenameRequest true "old name and new path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/dir/rename [post]
 func (h *Handler) DirectoryRenameHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

@@ -38,7 +38,7 @@ type UserLoginResponse struct {
 //
 //	@Summary      Login User
 //	@Description  login user with the new ENS based authentication
-//	@Tags         v2
+//	@Tags         user
 //	@Accept       json
 //	@Produce      json
 //	@Param	      user_request body common.UserLoginRequest true "user name"

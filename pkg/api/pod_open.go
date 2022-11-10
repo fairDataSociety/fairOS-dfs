@@ -35,7 +35,7 @@ type PodOpenResponse struct {
 //
 //	@Summary      Open pod
 //	@Description  PodOpenHandler is the api handler to open pod
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      pod_request body PodRequest true "pod name and user password"
@@ -100,7 +100,7 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Open pod
 //	@Description  PodOpenAsyncHandler is the api handler to open pod asynchronously
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      pod_request body PodRequest true "pod name and user password"

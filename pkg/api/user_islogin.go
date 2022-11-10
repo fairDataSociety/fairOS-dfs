@@ -30,7 +30,7 @@ type LoginStatus struct {
 //
 //	@Summary      Is user logged-in
 //	@Description  Check if the given user is logged-in
-//	@Tags         v1
+//	@Tags         user
 //	@Accept       json
 //	@Produce      json
 //	@Param	      user_name query string true "user name"

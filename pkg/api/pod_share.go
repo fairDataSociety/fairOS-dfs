@@ -38,7 +38,7 @@ type PodSharingReference struct {
 //
 //	@Summary      Share pod
 //	@Description  PodShareHandler is the api handler to share a pod to the public
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      pod_request body common.PodShareRequest true "pod name and user password"
@@ -120,7 +120,7 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Receive shared pod info
 //	@Description  PodReceiveInfoHandler is the api handler to receive shared pod info from shared reference
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      sharing_ref query string true "pod sharing reference"
@@ -179,7 +179,7 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 //
 //	@Summary      Receive shared pod
 //	@Description  PodReceiveHandler is the api handler to receive shared pod from shared reference
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      sharing_ref query string true "pod sharing reference"

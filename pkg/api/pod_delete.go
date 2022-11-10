@@ -30,7 +30,7 @@ import (
 //
 //	@Summary      Delete pod
 //	@Description  PodDeleteHandler is the api handler to delete a pod
-//	@Tags         v1
+//	@Tags         pod
 //	@Accept       json
 //	@Produce      json
 //	@Param	      pod_request body PodRequest true "pod name and user password"

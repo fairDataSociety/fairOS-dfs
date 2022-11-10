@@ -16,6 +16,391 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1/dir/ls": {
+            "get": {
+                "description": "DirectoryLsHandler is the api handler for listing the contents of a directory.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dir"
+                ],
+                "summary": "List directory",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "dir path",
+                        "name": "dir_path",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.ListFileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/dir/mkdir": {
+            "post": {
+                "description": "DirectoryMkdirHandler is the api handler to create a new directory.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dir"
+                ],
+                "summary": "Create directory",
+                "parameters": [
+                    {
+                        "description": "pod name and dir path",
+                        "name": "dir_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.DirRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/dir/present": {
+            "get": {
+                "description": "DirectoryPresentHandler is the api handler which says if a directory is present or not",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dir"
+                ],
+                "summary": "Is directory present",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "dir path",
+                        "name": "dir_path",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.DirPresentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/dir/rename": {
+            "post": {
+                "description": "DirectoryRenameHandler is the api handler to rename a directory.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dir"
+                ],
+                "summary": "Rename directory",
+                "parameters": [
+                    {
+                        "description": "old name and new path",
+                        "name": "dir_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/common.RenameRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/dir/rmdir": {
+            "delete": {
+                "description": "DirectoryRmdirHandler is the api handler to remove a directory.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dir"
+                ],
+                "summary": "Remove directory",
+                "parameters": [
+                    {
+                        "description": "pod name and dir path",
+                        "name": "dir_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.DirRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/dir/stat": {
+            "get": {
+                "description": "DirectoryStatHandler is the api handler which gives the information about a directory",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dir"
+                ],
+                "summary": "Directory stat",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "dir path",
+                        "name": "dir_path",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dir.Stats"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/file/download": {
+            "post": {
+                "description": "FileDownloadHandler is the api handler to download a file from a given pod",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "*/*"
+                ],
+                "tags": [
+                    "file"
+                ],
+                "summary": "Download a file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "file path",
+                        "name": "file_path",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/pod/close": {
             "post": {
                 "description": "PodCloseHandler is the api handler to close an open pod",
@@ -26,7 +411,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Close pod",
                 "parameters": [
@@ -79,7 +464,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Delete pod",
                 "parameters": [
@@ -122,7 +507,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/pod/list": {
+        "/v1/pod/ls": {
             "get": {
                 "description": "PodListHandler is the api handler to list all pods",
                 "consumes": [
@@ -132,7 +517,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "List pods",
                 "parameters": [
@@ -176,7 +561,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Create pod",
                 "parameters": [
@@ -229,7 +614,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Open pod",
                 "parameters": [
@@ -282,7 +667,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Open pod",
                 "parameters": [
@@ -335,7 +720,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Is pod present",
                 "parameters": [
@@ -386,7 +771,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Receive shared pod",
                 "parameters": [
@@ -443,7 +828,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Receive shared pod info",
                 "parameters": [
@@ -494,7 +879,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Share pod",
                 "parameters": [
@@ -547,7 +932,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Stats for pod",
                 "parameters": [
@@ -598,7 +983,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "pod"
                 ],
                 "summary": "Sync pod",
                 "parameters": [
@@ -663,7 +1048,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "user"
                 ],
                 "summary": "Is user logged-in",
                 "parameters": [
@@ -704,7 +1089,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "user"
                 ],
                 "summary": "Logout",
                 "parameters": [
@@ -757,7 +1142,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v1"
+                    "user"
                 ],
                 "summary": "User stat",
                 "parameters": [
@@ -798,7 +1183,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v2"
+                    "user"
                 ],
                 "summary": "Delete user for ENS based authentication",
                 "parameters": [
@@ -851,7 +1236,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v2"
+                    "user"
                 ],
                 "summary": "Login User",
                 "parameters": [
@@ -900,7 +1285,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v2"
+                    "user"
                 ],
                 "summary": "Check if user is present",
                 "parameters": [
@@ -938,7 +1323,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "v2"
+                    "user"
                 ],
                 "summary": "Register New User",
                 "parameters": [
@@ -982,6 +1367,45 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.DirPresentResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "present": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.DirRequest": {
+            "type": "object",
+            "properties": {
+                "dir_path": {
+                    "type": "string"
+                },
+                "pod_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ListFileResponse": {
+            "type": "object",
+            "properties": {
+                "dirs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dir.Entry"
+                    }
+                },
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/file.Entry"
+                    }
+                }
+            }
+        },
         "api.LoginStatus": {
             "type": "object",
             "properties": {
@@ -1120,6 +1544,20 @@ const docTemplate = `{
                 }
             }
         },
+        "common.RenameRequest": {
+            "type": "object",
+            "properties": {
+                "new_path": {
+                    "type": "string"
+                },
+                "old_path": {
+                    "type": "string"
+                },
+                "pod_name": {
+                    "type": "string"
+                }
+            }
+        },
         "common.UserLoginRequest": {
             "type": "object",
             "properties": {
@@ -1141,6 +1579,87 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dir.Entry": {
+            "type": "object",
+            "properties": {
+                "access_time": {
+                    "type": "string"
+                },
+                "block_size": {
+                    "type": "string"
+                },
+                "content_type": {
+                    "type": "string"
+                },
+                "creation_time": {
+                    "type": "string"
+                },
+                "modification_time": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "string"
+                }
+            }
+        },
+        "dir.Stats": {
+            "type": "object",
+            "properties": {
+                "access_time": {
+                    "type": "string"
+                },
+                "creation_time": {
+                    "type": "string"
+                },
+                "dir_name": {
+                    "type": "string"
+                },
+                "dir_path": {
+                    "type": "string"
+                },
+                "modification_time": {
+                    "type": "string"
+                },
+                "no_of_directories": {
+                    "type": "string"
+                },
+                "no_of_files": {
+                    "type": "string"
+                },
+                "pod_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "file.Entry": {
+            "type": "object",
+            "properties": {
+                "access_time": {
+                    "type": "string"
+                },
+                "block_size": {
+                    "type": "string"
+                },
+                "content_type": {
+                    "type": "string"
+                },
+                "creation_time": {
+                    "type": "string"
+                },
+                "modification_time": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
                     "type": "string"
                 }
             }
