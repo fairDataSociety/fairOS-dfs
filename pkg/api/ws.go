@@ -871,7 +871,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		//		respondWithError(res, err)
 		//		continue
 		//	}
-		//	h.FileDownloadHandler(res, httpReq)
+		//	h.FileDownloadHandlerPost(res, httpReq)
 		//	if res.StatusCode != 0 {
 		//		errMessage := res.Params.(map[string]interface{})
 		//		respondWithError(res, fmt.Errorf("%s", errMessage["message"]))

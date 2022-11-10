@@ -27,10 +27,20 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// FileRenameHandler is the api handler to rename a file from a given pod
-// it takes two arguments
-// - old-path: the file path to rename along with its absolute path
-// - new-path: the new file path along with its absolute path
+// FileRenameHandler godoc
+//
+//	@Summary      Info of a file
+//	@Description  FileRenameHandler is the api handler to get the information of a file
+//	@Tags         file
+//	@Accept       json
+//	@Produce      json
+//	@Param	      rename_request body common.RenameRequest true "old name & new name"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      404  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/file/rename [post]
 func (h *Handler) FileRenameHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

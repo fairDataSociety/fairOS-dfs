@@ -13,6 +13,27 @@ definitions:
       pod_name:
         type: string
     type: object
+  api.FileDeleteRequest:
+    properties:
+      file_path:
+        type: string
+      pod_name:
+        type: string
+    type: object
+  api.FileShareRequest:
+    properties:
+      dest_user:
+        type: string
+      file_path:
+        type: string
+      pod_name:
+        type: string
+    type: object
+  api.FileSharingReference:
+    properties:
+      file_sharing_reference:
+        type: string
+    type: object
   api.ListFileResponse:
     properties:
       dirs:
@@ -173,6 +194,17 @@ definitions:
       pod_name:
         type: string
     type: object
+  file.Blocks:
+    properties:
+      compressed_size:
+        type: string
+      name:
+        type: string
+      reference:
+        type: string
+      size:
+        type: string
+    type: object
   file.Entry:
     properties:
       access_time:
@@ -190,6 +222,33 @@ definitions:
       size:
         type: string
     type: object
+  file.Stats:
+    properties:
+      access_time:
+        type: string
+      block_size:
+        type: string
+      blocks:
+        items:
+          $ref: '#/definitions/file.Blocks'
+        type: array
+      compression:
+        type: string
+      content_type:
+        type: string
+      creation_time:
+        type: string
+      file_name:
+        type: string
+      file_path:
+        type: string
+      file_size:
+        type: string
+      modification_time:
+        type: string
+      pod_name:
+        type: string
+    type: object
   pod.ShareInfo:
     properties:
       password:
@@ -199,6 +258,29 @@ definitions:
       pod_name:
         type: string
       user_address:
+        type: string
+    type: object
+  user.ReceiveFileInfo:
+    properties:
+      block_size:
+        type: string
+      compression:
+        type: string
+      content_type:
+        type: string
+      dest_address:
+        type: string
+      name:
+        type: string
+      number_of_blocks:
+        type: string
+      pod_name:
+        type: string
+      shared_time:
+        type: string
+      size:
+        type: string
+      source_address:
         type: string
     type: object
   user.Stat:
@@ -431,11 +513,92 @@ paths:
       summary: Directory stat
       tags:
       - dir
+  /v1/file/delete:
+    delete:
+      consumes:
+      - application/json
+      description: FileReceiveHandler is the api handler to delete a file from a given
+        pod
+      parameters:
+      - description: pod name and file path
+        in: body
+        name: file_delete_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.FileDeleteRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Delete a file
+      tags:
+      - file
   /v1/file/download:
+    get:
+      consumes:
+      - application/json
+      description: FileDownloadHandlerGet is the api handler to download a file from
+        a given pod
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: file path
+        in: query
+        name: file_path
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - '*/*'
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: integer
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Download a file
+      tags:
+      - file
     post:
       consumes:
       - multipart/form-data
-      description: FileDownloadHandler is the api handler to download a file from
+      description: FileDownloadHandlerPost is the api handler to download a file from
         a given pod
       parameters:
       - description: pod name
@@ -471,6 +634,262 @@ paths:
           schema:
             $ref: '#/definitions/api.response'
       summary: Download a file
+      tags:
+      - file
+  /v1/file/receive:
+    get:
+      consumes:
+      - application/json
+      description: FileReceiveHandler is the api handler to receive a file in a given
+        pod
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: sharing reference
+        in: query
+        name: sharing_ref
+        required: true
+        type: string
+      - description: file location
+        in: query
+        name: dir_path
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.FileSharingReference'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Receive a file
+      tags:
+      - file
+  /v1/file/receiveinfo:
+    get:
+      consumes:
+      - application/json
+      description: FileReceiveInfoHandler is the api handler to receive a file info
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: sharing reference
+        in: query
+        name: sharing_ref
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.ReceiveFileInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Receive a file info
+      tags:
+      - file
+  /v1/file/rename:
+    post:
+      consumes:
+      - application/json
+      description: FileRenameHandler is the api handler to get the information of
+        a file
+      parameters:
+      - description: old name & new name
+        in: body
+        name: rename_request
+        required: true
+        schema:
+          $ref: '#/definitions/common.RenameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Info of a file
+      tags:
+      - file
+  /v1/file/share:
+    post:
+      consumes:
+      - application/json
+      description: FileShareHandler is the api handler to share a file from a given
+        pod
+      parameters:
+      - description: file share request params
+        in: body
+        name: file_share_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.FileShareRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.FileSharingReference'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Share a file
+      tags:
+      - file
+  /v1/file/stat:
+    get:
+      consumes:
+      - application/json
+      description: FileStatHandler is the api handler to get the information of a
+        file
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: file path
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/file.Stats'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Info of a file
+      tags:
+      - file
+  /v1/file/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: FileUploadHandler is the api handler to upload a file from a local
+        file system to the dfs
+      parameters:
+      - description: pod name
+        in: formData
+        name: pod_name
+        required: true
+        type: string
+      - description: location
+        in: formData
+        name: dir_path
+        required: true
+        type: string
+      - description: block size to break the file
+        example: 4Kb, 1Mb
+        in: formData
+        name: block_size
+        required: true
+        type: string
+      - description: file to upload
+        in: formData
+        name: files
+        required: true
+        type: file
+      - description: cookie parameter
+        example: snappy, gzip
+        in: header
+        name: fairOS-dfs-Compression
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Upload a file
       tags:
       - file
   /v1/pod/close:
