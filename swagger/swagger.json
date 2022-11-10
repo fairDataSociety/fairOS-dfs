@@ -881,6 +881,757 @@
                 }
             }
         },
+        "/v1/kv/count": {
+            "post": {
+                "description": "KVCountHandler is the api handler to count the number of rows in a key value table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Count rows in a key value table",
+                "parameters": [
+                    {
+                        "description": "kv table request",
+                        "name": "kv_table_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.KVTableRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/collection.TableKeyCount"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/delete": {
+            "delete": {
+                "description": "KVDeleteHandler is the api handler to delete a key value table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Delete a key value table",
+                "parameters": [
+                    {
+                        "description": "kv table request",
+                        "name": "kv_table_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.KVTableRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/entry/del": {
+            "delete": {
+                "description": "KVDelHandler is the api handler to delete a key and value from the kv table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Delete key-value from the kv table",
+                "parameters": [
+                    {
+                        "description": "delete request",
+                        "name": "delete_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.KVEntryDeleteRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.KVResponseRaw"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/entry/get": {
+            "get": {
+                "description": "KVGetDataHandler is the api handler to get raw value from the kv table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "get value from the kv table",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "table_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "key",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "byte-string, string",
+                        "description": "format of the value",
+                        "name": "format",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.KVResponseRaw"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/entry/present": {
+            "get": {
+                "description": "KVPresentHandler is the api handler to check if a value exists in the kv table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Check if a value exists in the kv table",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "table_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "key",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/entry/put": {
+            "post": {
+                "description": "KVPutHandler is the api handler to put a key-value  in the kv table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "put key and value in the kv table",
+                "parameters": [
+                    {
+                        "description": "kv entry",
+                        "name": "kv_entry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.KVEntryRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/export": {
+            "post": {
+                "description": "KVExportHandler is the api handler to export from a particular key with the given prefix",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Export from a particular key with the given prefix",
+                "parameters": [
+                    {
+                        "description": "kv export info",
+                        "name": "export_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.KVExportRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/loadcsv": {
+            "post": {
+                "description": "KVLoadCSVHandler is the api handler to load a csv file as key and value in a KV table",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Upload a csv file in kv table",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "table_name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "keep in memory",
+                        "name": "memory",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "file to upload",
+                        "name": "csv",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/ls": {
+            "get": {
+                "description": "KVListHandler is the api handler to list all the key value tables in a pod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "List all key value tables",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Collections"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/new": {
+            "post": {
+                "description": "KVCreateHandler is the api handler to create a key value table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Create a key value table",
+                "parameters": [
+                    {
+                        "description": "kv table request",
+                        "name": "kv_table_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.KVTableRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/open": {
+            "post": {
+                "description": "KVOpenHandler is the api handler to open a key value table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Open a key value table",
+                "parameters": [
+                    {
+                        "description": "kv table request",
+                        "name": "kv_table_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.KVTableRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/seek": {
+            "post": {
+                "description": "KVSeekHandler is the api handler to seek to a particular key with the given prefix",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Seek in kv table",
+                "parameters": [
+                    {
+                        "description": "kv seek info",
+                        "name": "export_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.KVExportRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/seek/next": {
+            "post": {
+                "description": "KVGetNextHandler is the api handler to get the key and value from the current seek position",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "Get next value from last seek in kv table",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "table_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.KVResponse"
+                        }
+                    },
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/pod/close": {
             "post": {
                 "description": "PodCloseHandler is the api handler to close an open pod",
@@ -1847,6 +2598,34 @@
         }
     },
     "definitions": {
+        "api.Collection": {
+            "type": "object",
+            "properties": {
+                "indexes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "table_name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.Collections": {
+            "type": "object",
+            "properties": {
+                "tables": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Collection"
+                    }
+                }
+            }
+        },
         "api.DirPresentResponse": {
             "type": "object",
             "properties": {
@@ -1898,6 +2677,102 @@
             "type": "object",
             "properties": {
                 "file_sharing_reference": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.KVEntryDeleteRequest": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "pod_name": {
+                    "type": "string"
+                },
+                "table_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.KVEntryRequest": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "pod_name": {
+                    "type": "string"
+                },
+                "table_name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.KVExportRequest": {
+            "type": "object",
+            "properties": {
+                "end_prefix": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "string"
+                },
+                "pod_name": {
+                    "type": "string"
+                },
+                "start_prefix": {
+                    "type": "string"
+                },
+                "table_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.KVResponse": {
+            "type": "object",
+            "properties": {
+                "keys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "api.KVResponseRaw": {
+            "type": "object",
+            "properties": {
+                "keys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "values": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.KVTableRequest": {
+            "type": "object",
+            "properties": {
+                "index_type": {
+                    "type": "string"
+                },
+                "pod_name": {
+                    "type": "string"
+                },
+                "table_name": {
                     "type": "string"
                 }
             }
@@ -2039,6 +2914,17 @@
             "type": "object",
             "properties": {
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "collection.TableKeyCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "table_name": {
                     "type": "string"
                 }
             }

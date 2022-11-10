@@ -49,7 +49,7 @@ const (
 //	@Produce      json
 //	@Param	      pod_name formData string true "pod name"
 //	@Param	      dir_path formData string true "location"
-//	@Param	      block_size formData string true "block size to break the file" example(4Kb, 1Mb)"
+//	@Param	      block_size formData string true "block size to break the file" example(4Kb, 1Mb)
 //	@Param	      files formData file true "file to upload"
 //	@Param	      fairOS-dfs-Compression header string false "cookie parameter" example(snappy, gzip)
 //	@Param	      Cookie header string true "cookie parameter"

@@ -1,4 +1,22 @@
 definitions:
+  api.Collection:
+    properties:
+      indexes:
+        items:
+          type: string
+        type: array
+      table_name:
+        type: string
+      type:
+        type: string
+    type: object
+  api.Collections:
+    properties:
+      tables:
+        items:
+          $ref: '#/definitions/api.Collection'
+        type: array
+    type: object
   api.DirPresentResponse:
     properties:
       error:
@@ -32,6 +50,68 @@ definitions:
   api.FileSharingReference:
     properties:
       file_sharing_reference:
+        type: string
+    type: object
+  api.KVEntryDeleteRequest:
+    properties:
+      key:
+        type: string
+      pod_name:
+        type: string
+      table_name:
+        type: string
+    type: object
+  api.KVEntryRequest:
+    properties:
+      key:
+        type: string
+      pod_name:
+        type: string
+      table_name:
+        type: string
+      value:
+        type: string
+    type: object
+  api.KVExportRequest:
+    properties:
+      end_prefix:
+        type: string
+      limit:
+        type: string
+      pod_name:
+        type: string
+      start_prefix:
+        type: string
+      table_name:
+        type: string
+    type: object
+  api.KVResponse:
+    properties:
+      keys:
+        items:
+          type: string
+        type: array
+      values:
+        items:
+          type: integer
+        type: array
+    type: object
+  api.KVResponseRaw:
+    properties:
+      keys:
+        items:
+          type: string
+        type: array
+      values:
+        type: string
+    type: object
+  api.KVTableRequest:
+    properties:
+      index_type:
+        type: string
+      pod_name:
+        type: string
+      table_name:
         type: string
     type: object
   api.ListFileResponse:
@@ -122,6 +202,13 @@ definitions:
   api.response:
     properties:
       message:
+        type: string
+    type: object
+  collection.TableKeyCount:
+    properties:
+      count:
+        type: integer
+      table_name:
         type: string
     type: object
   common.PodShareRequest:
@@ -892,6 +979,516 @@ paths:
       summary: Upload a file
       tags:
       - file
+  /v1/kv/count:
+    post:
+      consumes:
+      - application/json
+      description: KVCountHandler is the api handler to count the number of rows in
+        a key value table
+      parameters:
+      - description: kv table request
+        in: body
+        name: kv_table_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.KVTableRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collection.TableKeyCount'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Count rows in a key value table
+      tags:
+      - kv
+  /v1/kv/delete:
+    delete:
+      consumes:
+      - application/json
+      description: KVDeleteHandler is the api handler to delete a key value table
+      parameters:
+      - description: kv table request
+        in: body
+        name: kv_table_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.KVTableRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Delete a key value table
+      tags:
+      - kv
+  /v1/kv/entry/del:
+    delete:
+      consumes:
+      - application/json
+      description: KVDelHandler is the api handler to delete a key and value from
+        the kv table
+      parameters:
+      - description: delete request
+        in: body
+        name: delete_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.KVEntryDeleteRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.KVResponseRaw'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Delete key-value from the kv table
+      tags:
+      - kv
+  /v1/kv/entry/get:
+    get:
+      consumes:
+      - application/json
+      description: KVGetDataHandler is the api handler to get raw value from the kv
+        table
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: table name
+        in: query
+        name: table_name
+        required: true
+        type: string
+      - description: key
+        in: query
+        name: key
+        required: true
+        type: string
+      - description: format of the value
+        example: byte-string, string
+        in: query
+        name: format
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.KVResponseRaw'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: get value from the kv table
+      tags:
+      - kv
+  /v1/kv/entry/present:
+    get:
+      consumes:
+      - application/json
+      description: KVPresentHandler is the api handler to check if a value exists
+        in the kv table
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: table name
+        in: query
+        name: table_name
+        required: true
+        type: string
+      - description: key
+        in: query
+        name: key
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Check if a value exists in the kv table
+      tags:
+      - kv
+  /v1/kv/entry/put:
+    post:
+      consumes:
+      - application/json
+      description: KVPutHandler is the api handler to put a key-value  in the kv table
+      parameters:
+      - description: kv entry
+        in: body
+        name: kv_entry
+        required: true
+        schema:
+          $ref: '#/definitions/api.KVEntryRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: put key and value in the kv table
+      tags:
+      - kv
+  /v1/kv/export:
+    post:
+      consumes:
+      - application/json
+      description: KVExportHandler is the api handler to export from a particular
+        key with the given prefix
+      parameters:
+      - description: kv export info
+        in: body
+        name: export_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.KVExportRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Export from a particular key with the given prefix
+      tags:
+      - kv
+  /v1/kv/loadcsv:
+    post:
+      consumes:
+      - multipart/form-data
+      description: KVLoadCSVHandler is the api handler to load a csv file as key and
+        value in a KV table
+      parameters:
+      - description: pod name
+        in: formData
+        name: pod_name
+        required: true
+        type: string
+      - description: table name
+        in: formData
+        name: table_name
+        required: true
+        type: string
+      - description: keep in memory
+        in: formData
+        name: memory
+        type: string
+      - description: file to upload
+        in: formData
+        name: csv
+        required: true
+        type: file
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Upload a csv file in kv table
+      tags:
+      - kv
+  /v1/kv/ls:
+    get:
+      consumes:
+      - application/json
+      description: KVListHandler is the api handler to list all the key value tables
+        in a pod
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Collections'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: List all key value tables
+      tags:
+      - kv
+  /v1/kv/new:
+    post:
+      consumes:
+      - application/json
+      description: KVCreateHandler is the api handler to create a key value table
+      parameters:
+      - description: kv table request
+        in: body
+        name: kv_table_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.KVTableRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Create a key value table
+      tags:
+      - kv
+  /v1/kv/open:
+    post:
+      consumes:
+      - application/json
+      description: KVOpenHandler is the api handler to open a key value table
+      parameters:
+      - description: kv table request
+        in: body
+        name: kv_table_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.KVTableRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Open a key value table
+      tags:
+      - kv
+  /v1/kv/seek:
+    post:
+      consumes:
+      - application/json
+      description: KVSeekHandler is the api handler to seek to a particular key with
+        the given prefix
+      parameters:
+      - description: kv seek info
+        in: body
+        name: export_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.KVExportRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Seek in kv table
+      tags:
+      - kv
+  /v1/kv/seek/next:
+    post:
+      consumes:
+      - application/json
+      description: KVGetNextHandler is the api handler to get the key and value from
+        the current seek position
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: table name
+        in: query
+        name: table_name
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.KVResponse'
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Get next value from last seek in kv table
+      tags:
+      - kv
   /v1/pod/close:
     post:
       consumes:

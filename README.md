@@ -190,6 +190,6 @@ go install github.com/swaggo/swag/cmd/swag@latest
 #### generate
 
 ```
-swag init -g cmd/server.go -d cmd/dfs,pkg/api,cmd/common,pkg/dir,pkg/file,pkg/pod,pkg/user -o ./swagger
+swag init -g cmd/server.go -d cmd/dfs,pkg/api,cmd/common,pkg/dir,pkg/file,pkg/pod,pkg/user,pkg/collection -o ./swagger
 ```
 

@@ -20,8 +20,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
@@ -29,6 +27,20 @@ import (
 // KVCountHandler is the api handler to count the number of rows in a key value table
 // it has ony one argument
 // - table_name: the name of the key value table
+
+// KVCountHandler godoc
+//
+//	@Summary      Count rows in a key value table
+//	@Description  KVCountHandler is the api handler to count the number of rows in a key value table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      kv_table_request body KVTableRequest true "kv table request"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  collection.TableKeyCount
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/count [post]
 func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -38,7 +50,7 @@ func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var kvReq common.KVRequest
+	var kvReq KVTableRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv count: could not decode arguments")
