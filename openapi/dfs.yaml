@@ -309,10 +309,10 @@ paths:
           schema:
             type: object
             properties:
-              reference:
+              sharing_ref:
                 $ref: '#/components/schemas/FileSharingReference'
             required:
-              - reference
+              - sharing_ref
       responses:
         '200':
           description: 'OK'
@@ -341,10 +341,10 @@ paths:
           schema:
             type: object
             properties:
-              reference:
+              sharing_ref:
                 $ref: '#/components/schemas/FileSharingReference'
             required:
-              - reference
+              - sharing_ref
       responses:
         '200':
           description: 'OK'
