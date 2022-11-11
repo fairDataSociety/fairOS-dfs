@@ -23,6 +23,8 @@ import (
 	"net/http"
 	"strings"
 
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
@@ -33,11 +35,11 @@ import (
 	"github.com/spf13/cobra"
 
 	_ "github.com/fairdatasociety/fairOS-dfs/swagger"
-	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 var (
 	pprof          bool
+	swag           bool
 	httpPort       string
 	pprofPort      string
 	cookieDomain   string
@@ -207,6 +209,7 @@ can consume it.`,
 
 func init() {
 	serverCmd.Flags().BoolVar(&pprof, "pprof", false, "should run pprof")
+	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
@@ -235,9 +238,11 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 	})
-	router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:9090/swagger/doc.json"), //The url pointing to API definition
-	)).Methods(http.MethodGet)
+	if swag {
+		router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+			httpSwagger.URL("http://localhost:9090/swagger/doc.json"), //The url pointing to API definition
+		)).Methods(http.MethodGet)
+	}
 
 	apiVersion := "v1"
 
