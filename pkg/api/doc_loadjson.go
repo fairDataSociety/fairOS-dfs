@@ -27,11 +27,21 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// DocLoadJsonHandler is the api handler that indexes a json file that is present
-// in the local file system
-// it takes two arguments
-// table_name: the document database in which to insert the data
-// file: the json file as a multi part file
+// DocLoadJsonHandler godoc
+//
+//	@Summary      Load json file from local file system
+//	@Description  DocLoadJsonHandler is the api handler that indexes a json file that is present in the local file system
+//	@Tags         doc
+//	@Accept       mpfd
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      table_name query string true "table name"
+//	@Param	      json formData file true "json to index"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/loadjson [post]
 func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("pod_name")
 	if podName == "" {

@@ -21,18 +21,36 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// DocCreateHandler is the api handler to create a new document database
-// it takes 2 mandatory arguments and one optional argument
-// - table_name: thename of the document database
-// - si: the fields and their type for crating simple indexes (ex: name=string,age=integer)
-// * mutable: make the table mutable / immutable (default is true, means mutable)
+type DocRequest struct {
+	PodName     string `json:"pod_name,omitempty"`
+	TableName   string `json:"table_name,omitempty"`
+	SimpleIndex string `json:"si,omitempty"`
+	Mutable     bool   `json:"mutable,omitempty"`
+}
+
+type SimpleDocRequest struct {
+	PodName   string `json:"pod_name,omitempty"`
+	TableName string `json:"table_name,omitempty"`
+}
+
+// DocCreateHandler godoc
+//
+//	@Summary      Create in doc table
+//	@Description  DocCreateHandler is the api handler to create a new document database
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      doc_request body DocRequest true "doc table info"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      201  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/new [post]
 func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -42,7 +60,7 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq DocRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc create: could not decode arguments")

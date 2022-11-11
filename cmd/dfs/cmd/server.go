@@ -356,9 +356,9 @@ func startHttpService(logger logging.Logger) {
 	docRouter.HandleFunc("/find", handler.DocFindHandler).Methods("GET")
 	docRouter.HandleFunc("/loadjson", handler.DocLoadJsonHandler).Methods("POST")
 	docRouter.HandleFunc("/indexjson", handler.DocIndexJsonHandler).Methods("POST")
-	docRouter.HandleFunc("/entry/put", handler.DocPutHandler).Methods("POST")
-	docRouter.HandleFunc("/entry/get", handler.DocGetHandler).Methods("GET")
-	docRouter.HandleFunc("/entry/del", handler.DocDelHandler).Methods("DELETE")
+	docRouter.HandleFunc("/entry/put", handler.DocEntryPutHandler).Methods("POST")
+	docRouter.HandleFunc("/entry/get", handler.DocEntryGetHandler).Methods("GET")
+	docRouter.HandleFunc("/entry/del", handler.DocEntryDelHandler).Methods("DELETE")
 
 	var origins []string
 	for _, c := range corsOrigins {

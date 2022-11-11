@@ -20,18 +20,30 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"resenje.org/jsonhttp"
 )
 
-// DocIndexJsonHandler is the api handler to index a json file that is present
-// in a pod, in to the given document database
-// it takes two arguments
-// table_name: the document database in which to insert the data
-// file_name: the file name of the index json with absolute path
+type DocIndexRequest struct {
+	PodName   string `json:"pod_name,omitempty"`
+	TableName string `json:"table_name,omitempty"`
+	FileName  string `json:"file_name,omitempty"`
+}
+
+// DocIndexJsonHandler godoc
+//
+//	@Summary      Index a json file that is present in a pod, in to the given document database
+//	@Description  DocIndexJsonHandler is the api handler to index a json file that is present in a pod, in to the given document database
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      index_request body DocIndexRequest true "index request"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/find [post]
 func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -41,7 +53,7 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq DocIndexRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc indexjson: could not decode arguments")

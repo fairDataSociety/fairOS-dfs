@@ -340,6 +340,639 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/doc/count": {
+            "post": {
+                "description": "DocCountHandler is the api handler to count the number of documents in a given document database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Count number of document in a table",
+                "parameters": [
+                    {
+                        "description": "doc table info",
+                        "name": "doc_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.DocCountRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/collection.TableKeyCount"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/doc/delete": {
+            "delete": {
+                "description": "DocDeleteHandler is the api handler to delete the given document database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Delete a doc table",
+                "parameters": [
+                    {
+                        "description": "doc table info",
+                        "name": "doc_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.SimpleDocRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/doc/entry/delete": {
+            "delete": {
+                "description": "DocEntryDelHandler is the api handler to delete a document from a document datastore",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Delete a document from a document datastore",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "pod_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "table_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/doc/entry/get": {
+            "get": {
+                "description": "DocEntryGetHandler is the api handler to get a document from a document datastore",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Get a document from a document datastore",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "table_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "id to search for",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.DocGetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/doc/entry/put": {
+            "post": {
+                "description": "DocEntryPutHandler is the api handler add a document in to a document datastore",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Add a record in document datastore",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "doc",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "pod_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "table_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/doc/find": {
+            "get": {
+                "description": "DocFindHandler is the api handler to select rows from a given document datastore",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Get rows from a given doc datastore",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "table_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "expression to search for",
+                        "name": "expr",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "number od documents",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.DocFindResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "DocIndexJsonHandler is the api handler to index a json file that is present in a pod, in to the given document database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Index a json file that is present in a pod, in to the given document database",
+                "parameters": [
+                    {
+                        "description": "index request",
+                        "name": "index_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.DocIndexRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/doc/loadjson": {
+            "post": {
+                "description": "DocLoadJsonHandler is the api handler that indexes a json file that is present in the local file system",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Load json file from local file system",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "table_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "json to index",
+                        "name": "json",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/doc/ls": {
+            "get": {
+                "description": "DocListHandler is the api handler which lists all the document database in a pod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "List all doc table",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "pod_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.DocumentDBs"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/doc/new": {
+            "post": {
+                "description": "DocCreateHandler is the api handler to create a new document database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Create in doc table",
+                "parameters": [
+                    {
+                        "description": "doc table info",
+                        "name": "doc_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.DocRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/doc/open": {
+            "post": {
+                "description": "DocOpenHandler is the api handler to open a document database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "doc"
+                ],
+                "summary": "Open a doc table",
+                "parameters": [
+                    {
+                        "description": "doc table info",
+                        "name": "doc_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.DocRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.DocumentDBs"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/file/delete": {
             "delete": {
                 "description": "FileReceiveHandler is the api handler to delete a file from a given pod",
@@ -2659,6 +3292,93 @@ const docTemplate = `{
                 }
             }
         },
+        "api.DocCountRequest": {
+            "type": "object",
+            "properties": {
+                "expr": {
+                    "type": "string"
+                },
+                "mutable": {
+                    "type": "boolean"
+                },
+                "pod_name": {
+                    "type": "string"
+                },
+                "si": {
+                    "type": "string"
+                },
+                "table_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.DocFindResponse": {
+            "type": "object",
+            "properties": {
+                "docs": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "api.DocGetResponse": {
+            "type": "object",
+            "properties": {
+                "doc": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "api.DocIndexRequest": {
+            "type": "object",
+            "properties": {
+                "file_name": {
+                    "type": "string"
+                },
+                "pod_name": {
+                    "type": "string"
+                },
+                "table_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.DocRequest": {
+            "type": "object",
+            "properties": {
+                "mutable": {
+                    "type": "boolean"
+                },
+                "pod_name": {
+                    "type": "string"
+                },
+                "si": {
+                    "type": "string"
+                },
+                "table_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.DocumentDBs": {
+            "type": "object",
+            "properties": {
+                "tables": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.documentDB"
+                    }
+                }
+            }
+        },
         "api.FileDeleteRequest": {
             "type": "object",
             "properties": {
@@ -2876,6 +3596,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.SimpleDocRequest": {
+            "type": "object",
+            "properties": {
+                "pod_name": {
+                    "type": "string"
+                },
+                "table_name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.UserDeleteRequest": {
             "type": "object",
             "properties": {
@@ -2921,11 +3652,39 @@ const docTemplate = `{
                 }
             }
         },
+        "api.documentDB": {
+            "type": "object",
+            "properties": {
+                "indexes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/collection.SIndex"
+                    }
+                },
+                "table_name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "api.response": {
             "type": "object",
             "properties": {
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "collection.SIndex": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "integer"
                 }
             }
         },

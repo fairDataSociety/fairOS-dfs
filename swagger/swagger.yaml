@@ -31,6 +31,62 @@ definitions:
       pod_name:
         type: string
     type: object
+  api.DocCountRequest:
+    properties:
+      expr:
+        type: string
+      mutable:
+        type: boolean
+      pod_name:
+        type: string
+      si:
+        type: string
+      table_name:
+        type: string
+    type: object
+  api.DocFindResponse:
+    properties:
+      docs:
+        items:
+          items:
+            type: integer
+          type: array
+        type: array
+    type: object
+  api.DocGetResponse:
+    properties:
+      doc:
+        items:
+          type: integer
+        type: array
+    type: object
+  api.DocIndexRequest:
+    properties:
+      file_name:
+        type: string
+      pod_name:
+        type: string
+      table_name:
+        type: string
+    type: object
+  api.DocRequest:
+    properties:
+      mutable:
+        type: boolean
+      pod_name:
+        type: string
+      si:
+        type: string
+      table_name:
+        type: string
+    type: object
+  api.DocumentDBs:
+    properties:
+      tables:
+        items:
+          $ref: '#/definitions/api.documentDB'
+        type: array
+    type: object
   api.FileDeleteRequest:
     properties:
       file_path:
@@ -170,6 +226,13 @@ definitions:
       present:
         type: boolean
     type: object
+  api.SimpleDocRequest:
+    properties:
+      pod_name:
+        type: string
+      table_name:
+        type: string
+    type: object
   api.UserDeleteRequest:
     properties:
       password:
@@ -199,10 +262,28 @@ definitions:
       public_key:
         type: string
     type: object
+  api.documentDB:
+    properties:
+      indexes:
+        items:
+          $ref: '#/definitions/collection.SIndex'
+        type: array
+      table_name:
+        type: string
+      type:
+        type: string
+    type: object
   api.response:
     properties:
       message:
         type: string
+    type: object
+  collection.SIndex:
+    properties:
+      name:
+        type: string
+      type:
+        type: integer
     type: object
   collection.TableKeyCount:
     properties:
@@ -600,6 +681,436 @@ paths:
       summary: Directory stat
       tags:
       - dir
+  /v1/doc/count:
+    post:
+      consumes:
+      - application/json
+      description: DocCountHandler is the api handler to count the number of documents
+        in a given document database
+      parameters:
+      - description: doc table info
+        in: body
+        name: doc_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DocCountRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/collection.TableKeyCount'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Count number of document in a table
+      tags:
+      - doc
+  /v1/doc/delete:
+    delete:
+      consumes:
+      - application/json
+      description: DocDeleteHandler is the api handler to delete the given document
+        database
+      parameters:
+      - description: doc table info
+        in: body
+        name: doc_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.SimpleDocRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Delete a doc table
+      tags:
+      - doc
+  /v1/doc/entry/delete:
+    delete:
+      consumes:
+      - application/json
+      description: DocEntryDelHandler is the api handler to delete a document from
+        a document datastore
+      parameters:
+      - in: query
+        name: id
+        type: string
+      - in: query
+        name: pod_name
+        type: string
+      - in: query
+        name: table_name
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Delete a document from a document datastore
+      tags:
+      - doc
+  /v1/doc/entry/get:
+    get:
+      consumes:
+      - application/json
+      description: DocEntryGetHandler is the api handler to get a document from a
+        document datastore
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: table name
+        in: query
+        name: table_name
+        required: true
+        type: string
+      - description: id to search for
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.DocGetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Get a document from a document datastore
+      tags:
+      - doc
+  /v1/doc/entry/put:
+    post:
+      consumes:
+      - application/json
+      description: DocEntryPutHandler is the api handler add a document in to a document
+        datastore
+      parameters:
+      - in: query
+        name: doc
+        type: string
+      - in: query
+        name: pod_name
+        type: string
+      - in: query
+        name: table_name
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Add a record in document datastore
+      tags:
+      - doc
+  /v1/doc/find:
+    get:
+      consumes:
+      - application/json
+      description: DocFindHandler is the api handler to select rows from a given document
+        datastore
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: table name
+        in: query
+        name: table_name
+        required: true
+        type: string
+      - description: expression to search for
+        in: query
+        name: expr
+        required: true
+        type: string
+      - description: number od documents
+        in: query
+        name: limit
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.DocFindResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Get rows from a given doc datastore
+      tags:
+      - doc
+    post:
+      consumes:
+      - application/json
+      description: DocIndexJsonHandler is the api handler to index a json file that
+        is present in a pod, in to the given document database
+      parameters:
+      - description: index request
+        in: body
+        name: index_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DocIndexRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Index a json file that is present in a pod, in to the given document
+        database
+      tags:
+      - doc
+  /v1/doc/loadjson:
+    post:
+      consumes:
+      - multipart/form-data
+      description: DocLoadJsonHandler is the api handler that indexes a json file
+        that is present in the local file system
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: table name
+        in: query
+        name: table_name
+        required: true
+        type: string
+      - description: json to index
+        in: formData
+        name: json
+        required: true
+        type: file
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Load json file from local file system
+      tags:
+      - doc
+  /v1/doc/ls:
+    get:
+      consumes:
+      - application/json
+      description: DocListHandler is the api handler which lists all the document
+        database in a pod
+      parameters:
+      - description: pod name
+        in: query
+        name: pod_name
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.DocumentDBs'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: List all doc table
+      tags:
+      - doc
+  /v1/doc/new:
+    post:
+      consumes:
+      - application/json
+      description: DocCreateHandler is the api handler to create a new document database
+      parameters:
+      - description: doc table info
+        in: body
+        name: doc_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DocRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Create in doc table
+      tags:
+      - doc
+  /v1/doc/open:
+    post:
+      consumes:
+      - application/json
+      description: DocOpenHandler is the api handler to open a document database
+      parameters:
+      - description: doc table info
+        in: body
+        name: doc_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DocRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.DocumentDBs'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Open a doc table
+      tags:
+      - doc
   /v1/file/delete:
     delete:
       consumes:
