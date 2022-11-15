@@ -187,6 +187,34 @@ func (a *API) DirectoryStat(podName, directoryName, sessionId string) (*dir.Stat
 	return ds, nil
 }
 
+// DirectoryInode is a controller function which validates if the user is logged in,
+// pod is open and calls the dir object to get the inode info about the given directory.
+func (a *API) DirectoryInode(podName, directoryName, sessionId string) (*dir.Inode, error) {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return nil, ErrPodNotOpen
+	}
+
+	// get the dir object and stat directory
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return nil, err
+	}
+	directory := podInfo.GetDirectory()
+	inode := directory.GetDirFromDirectoryMap(directoryName)
+	if inode == nil {
+		a.logger.Errorf("dir not found: %s", directoryName)
+		return nil, fmt.Errorf("dir not found")
+	}
+	return inode, nil
+}
+
 // DeleteFile is a controller function which validates if the user is logged in,
 // pod is open and delete the file. It also remove the file entry from the parent
 // directory.
@@ -385,6 +413,35 @@ func (a *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadC
 		return nil, 0, err
 	}
 	return reader, size, nil
+}
+
+// WriteAtFile is a controller function which writes a file from a given offset
+//
+//	pod is open and calls writeAt of a file
+func (a *API) WriteAtFile(podName, fileNameWithPath, sessionId string, update io.Reader, offset uint64, truncate bool) (int, error) {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return 0, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return 0, ErrPodNotOpen
+	}
+
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return 0, err
+	}
+	file := podInfo.GetFile()
+	fileNameWithPath = filepath.ToSlash(fileNameWithPath)
+	// check if file exists
+	if !file.IsFileAlreadyPresent(fileNameWithPath) {
+		return 0, ErrFileNotPresent
+	}
+
+	return file.WriteAt(fileNameWithPath, podInfo.GetPodPassword(), update, offset, truncate)
 }
 
 // ReadSeekCloser is a controller function which validates if the user is logged in,
