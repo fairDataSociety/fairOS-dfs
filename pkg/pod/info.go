@@ -28,6 +28,7 @@ import (
 
 type Info struct {
 	podName     string
+	podPassword string
 	userAddress utils.Address
 	dir         *di.Directory
 	file        *f.File
@@ -43,6 +44,10 @@ func (i *Info) GetPodName() string {
 
 func (i *Info) GetPodAddress() utils.Address {
 	return i.userAddress
+}
+
+func (i *Info) GetPodPassword() string {
+	return i.podPassword
 }
 
 func (i *Info) GetDirectory() *di.Directory {

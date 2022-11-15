@@ -31,12 +31,12 @@ func (a *API) DocCreate(sessionId, podName, name string, indexes map[string]coll
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
 
-	return podInfo.GetDocStore().CreateDocumentDB(name, indexes, mutable)
+	return podInfo.GetDocStore().CreateDocumentDB(name, podInfo.GetPodPassword(), indexes, mutable)
 }
 
 // DocOpen is a controller function which does all the checks before opening a documentDB.
@@ -52,12 +52,12 @@ func (a *API) DocOpen(sessionId, podName, name string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
 
-	return podInfo.GetDocStore().OpenDocumentDB(name)
+	return podInfo.GetDocStore().OpenDocumentDB(name, podInfo.GetPodPassword())
 }
 
 // DocDelete is a controller function which does all the checks before deleting a documentDB.
@@ -73,12 +73,12 @@ func (a *API) DocDelete(sessionId, podName, name string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
 
-	return podInfo.GetDocStore().DeleteDocumentDB(name)
+	return podInfo.GetDocStore().DeleteDocumentDB(name, podInfo.GetPodPassword())
 }
 
 // DocList is a controller function which does all the checks before listing all the
@@ -95,12 +95,12 @@ func (a *API) DocList(sessionId, podName string) (map[string]collection.DBSchema
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 
-	return podInfo.GetDocStore().LoadDocumentDBSchemas()
+	return podInfo.GetDocStore().LoadDocumentDBSchemas(podInfo.GetPodPassword())
 }
 
 // DocCount is a controller function which does all the checks before counting
@@ -118,7 +118,7 @@ func (a *API) DocCount(sessionId, podName, name, expr string) (*collection.Table
 		return keyCount, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return keyCount, err
 	}
@@ -145,7 +145,7 @@ func (a *API) DocPut(sessionId, podName, name string, value []byte) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (a *API) DocPut(sessionId, podName, name string, value []byte) error {
 }
 
 // DocGet is a controller function which does all the checks before retrieving
-//// a document in the documentDB.
+// // a document in the documentDB.
 func (a *API) DocGet(sessionId, podName, name, id string) ([]byte, error) {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -167,12 +167,12 @@ func (a *API) DocGet(sessionId, podName, name, id string) ([]byte, error) {
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 
-	return podInfo.GetDocStore().Get(name, id)
+	return podInfo.GetDocStore().Get(name, id, podInfo.GetPodPassword())
 }
 
 // DocDel is a controller function which does all the checks before deleting
@@ -189,7 +189,7 @@ func (a *API) DocDel(sessionId, podName, name, id string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -211,12 +211,12 @@ func (a *API) DocFind(sessionId, podName, name, expr string, limit int) ([][]byt
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 
-	return podInfo.GetDocStore().Find(name, expr, limit)
+	return podInfo.GetDocStore().Find(name, expr, podInfo.GetPodPassword(), limit)
 }
 
 // DocBatch initiates a batch inserting session.
@@ -232,12 +232,12 @@ func (a *API) DocBatch(sessionId, podName, name string) (*collection.DocBatch, e
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 
-	return podInfo.GetDocStore().CreateDocBatch(name)
+	return podInfo.GetDocStore().CreateDocBatch(name, podInfo.GetPodPassword())
 }
 
 // DocBatchPut inserts records in to a document batch.
@@ -253,7 +253,7 @@ func (a *API) DocBatchPut(sessionId, podName string, doc []byte, docBatch *colle
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -274,7 +274,7 @@ func (a *API) DocBatchWrite(sessionId, podName string, docBatch *collection.DocB
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (a *API) DocIndexJson(sessionId, podName, name, podFileWithPath string) err
 	}
 
 	// check if file present
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -305,5 +305,5 @@ func (a *API) DocIndexJson(sessionId, podName, name, podFileWithPath string) err
 		return ErrFileNotPresent
 	}
 
-	return podInfo.GetDocStore().DocFileIndex(name, podFileWithPath)
+	return podInfo.GetDocStore().DocFileIndex(name, podFileWithPath, podInfo.GetPodPassword())
 }

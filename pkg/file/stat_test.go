@@ -23,6 +23,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -50,17 +53,18 @@ func TestStat(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("stat-file", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// upload a file
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// stat the file
-		stats, err := fileObject.GetStats("pod1", "/dir1/file1")
+		stats, err := fileObject.GetStats("pod1", "/dir1/file1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}

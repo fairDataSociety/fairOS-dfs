@@ -80,7 +80,7 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 // CreateFeed creates a feed by constructing a single owner chunk. This chunk
 // can only be accessed if the pod address is known. Also, no one else can spoof this
 // chunk since this is signed by the pod.
-func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
+func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte, encryptionPassword []byte) ([]byte, error) {
 	var req request
 
 	if a.accountInfo.GetPrivateKey() == nil {
@@ -95,6 +95,16 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 		return nil, ErrInvalidPayloadSize
 	}
 
+	var err error
+
+	encryptedData := data
+	if encryptionPassword != nil {
+		encryptedData, err = utils.EncryptBytes(encryptionPassword, data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+	}
+
 	// fill Feed and Epoc related details
 	copy(req.ID.Topic[:], topic)
 	req.ID.User = user
@@ -102,7 +112,7 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	req.Epoch.Time = uint64(time.Now().Unix())
 
 	// Add initial feed data
-	req.data = data
+	req.data = encryptedData
 
 	// create the id, hash(topic, epoc)
 	id, err := a.handler.getId(req.Topic, req.Time, req.Level)
@@ -111,14 +121,14 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	}
 
 	// get the payload id BMT(span, payload)
-	payloadId, err := a.handler.getPayloadId(data)
+	payloadId, err := a.handler.getPayloadId(encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
-	ch, err := utils.NewChunkWithSpan(data)
+	ch, err := utils.NewChunkWithSpan(encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -213,7 +223,7 @@ func (a *API) GetSOCFromAddress(address []byte) ([]byte, error) {
 }
 
 // GetFeedData looks up feed from swarm
-func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, error) {
+func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword []byte) ([]byte, []byte, error) {
 	if len(topic) != TopicLength {
 		return nil, nil, ErrInvalidTopicSize
 	}
@@ -230,8 +240,14 @@ func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, err
 	if err != nil {
 		return nil, nil, err
 	}
-	var data []byte
-	addr, data, err := a.handler.GetContent(&q.Feed)
+	addr, encryptedData, err := a.handler.GetContent(&q.Feed)
+	if err != nil { // skipcq: TCV-001
+		return nil, nil, err
+	}
+	if encryptionPassword == nil || string(encryptedData) == utils.DeletedFeedMagicWord {
+		return addr.Bytes(), encryptedData, nil
+	}
+	data, err := utils.DecryptBytes(encryptionPassword, encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return nil, nil, err
 	}
@@ -264,7 +280,7 @@ func (a *API) GetFeedDataFromTopic(topic []byte, user utils.Address) ([]byte, []
 }
 
 // UpdateFeed updates the contents of an already created feed.
-func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
+func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encryptionPassword []byte) ([]byte, error) {
 	if a.accountInfo.GetPrivateKey() == nil {
 		return nil, ErrReadOnlyFeed
 	}
@@ -275,6 +291,16 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 
 	if len(data) > utils.MaxChunkLength {
 		return nil, ErrInvalidPayloadSize
+	}
+
+	var err error
+
+	encryptedData := data
+	if encryptionPassword != nil && string(data) != utils.DeletedFeedMagicWord {
+		encryptedData, err = utils.EncryptBytes(encryptionPassword, data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
 	}
 
 	ctx := context.Background()
@@ -288,7 +314,7 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 		return nil, err
 	}
 	req.Time = uint64(time.Now().Unix())
-	req.data = data
+	req.data = encryptedData
 
 	// create the id, hash(topic, epoc)
 	id, err := a.handler.getId(req.Topic, req.Time, req.Level)
@@ -297,14 +323,14 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	}
 
 	// get the payload id BMT(span, payload)
-	payloadId, err := a.handler.getPayloadId(data)
+	payloadId, err := a.handler.getPayloadId(encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
-	ch, err := utils.NewChunkWithSpan(data)
+	ch, err := utils.NewChunkWithSpan(encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -349,7 +375,7 @@ func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 		return ErrReadOnlyFeed
 	}
 
-	delRef, _, err := a.GetFeedData(topic, user)
+	delRef, _, err := a.GetFeedData(topic, user, nil)
 	if err != nil && err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 		return err
 	}

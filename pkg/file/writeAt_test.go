@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -37,15 +39,17 @@ func TestWriteAt(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
 	t.Run("upload-update-known-very-small-file", func(t *testing.T) {
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
 		compression := ""
-		blockSize := uint32(5)
+		blockSize := uint32(10)
 		var offset uint64 = 3
 
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		dt, err := uploadFileKnownContent(t, fileObject, filePath, fileName, compression, blockSize)
+		dt, err := uploadFileKnownContent(t, fileObject, filePath, fileName, compression, podPassword, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -70,8 +74,7 @@ func TestWriteAt(t *testing.T) {
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
 		}
-
-		reader, _, err := fileObject.Download(fp)
+		reader, _, err := fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -80,16 +83,35 @@ func TestWriteAt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		update := []byte("12345")
-		rewrite := &bytes.Buffer{}
-		rewrite.Write(update)
-		_, err = fileObject.WriteAt(fp, rewrite, offset, false)
+		reader.Close()
+		reader2, _, err := fileObject.Download(fp, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer2 := new(bytes.Buffer)
+		_, err = rcvdBuffer2.ReadFrom(reader2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		reader, _, err = fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		reader, _, err = fileObject.Download(fp)
+		rcvdBuffer3 := new(bytes.Buffer)
+		_, err = rcvdBuffer3.ReadFrom(reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		update := []byte("123")
+		rewrite := &bytes.Buffer{}
+		rewrite.Write(update)
+		_, err = fileObject.WriteAt(fp, podPassword, rewrite, offset, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		reader, _, err = fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -124,7 +146,7 @@ func TestWriteAt(t *testing.T) {
 		var offset uint64 = 0
 
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		dt, err := uploadFileKnownContent(t, fileObject, filePath, fileName, compression, blockSize)
+		dt, err := uploadFileKnownContent(t, fileObject, filePath, fileName, compression, podPassword, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -150,7 +172,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		reader, _, err := fileObject.Download(fp)
+		reader, _, err := fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -163,12 +185,12 @@ func TestWriteAt(t *testing.T) {
 		update := []byte("abcdefg 12345")
 		rewrite := &bytes.Buffer{}
 		rewrite.Write(update)
-		_, err = fileObject.WriteAt(fp, rewrite, offset, true)
+		_, err = fileObject.WriteAt(fp, podPassword, rewrite, offset, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		reader, _, err = fileObject.Download(fp)
+		reader, _, err = fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -198,7 +220,7 @@ func TestWriteAt(t *testing.T) {
 		fileSize := int64(100)
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -224,7 +246,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		err = fileObject.LoadFileMeta(filePath + "/" + fileName)
+		err = fileObject.LoadFileMeta(filePath+"/"+fileName, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -238,14 +260,14 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		n, err := fileObject.WriteAt(fp, r, uint64(offset), false)
+		n, err := fileObject.WriteAt(fp, podPassword, r, uint64(offset), false)
 		if n != offset {
 			t.Fatalf("Failed to update %d bytes", offset-n)
 		}
 		if err != nil {
 			t.Fatal(err)
 		}
-		reader, _, err := fileObject.Download(fp)
+		reader, _, err := fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -278,7 +300,7 @@ func TestWriteAt(t *testing.T) {
 		fileSize := int64(100)
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -313,14 +335,14 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		n, err := fileObject.WriteAt(fp, r, uint64(offset), false)
+		n, err := fileObject.WriteAt(fp, podPassword, r, uint64(offset), false)
 		if n != offset {
 			t.Fatalf("Failed to update %d bytes", offset-n)
 		}
 		if err != nil {
 			t.Fatal(err)
 		}
-		reader, _, err := fileObject.Download(fp)
+		reader, _, err := fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -354,11 +376,11 @@ func TestWriteAt(t *testing.T) {
 		fileSize := int64(100)
 		blockSize := uint32(164000)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.LoadFileMeta(filePath + "/" + fileName)
+		err = fileObject.LoadFileMeta(filePath+"/"+fileName, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -393,11 +415,11 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		_, err = fileObject.WriteAt(fp, r, uint64(offset), false)
+		_, err = fileObject.WriteAt(fp, podPassword, r, uint64(offset), false)
 		if err != nil {
 			t.Fatal(err)
 		}
-		reader, n1, err := fileObject.Download(fp)
+		reader, n1, err := fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -427,7 +449,7 @@ func TestWriteAt(t *testing.T) {
 	})
 }
 
-func uploadFileKnownContent(t *testing.T, fileObject *file.File, filePath, fileName, compression string, blockSize uint32) ([]byte, error) {
+func uploadFileKnownContent(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, blockSize uint32) ([]byte, error) {
 	f1 := &bytes.Buffer{}
 	content := []byte("abcdefghijk abcdefghijk abcdefghijk")
 	_, err := f1.Write(content)
@@ -435,5 +457,5 @@ func uploadFileKnownContent(t *testing.T, fileObject *file.File, filePath, fileN
 		t.Fatal(err)
 	}
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, int64(len(content)), blockSize, filePath, compression)
+	return content, fileObject.Upload(f1, fileName, int64(len(content)), blockSize, filePath, compression, podPassword)
 }

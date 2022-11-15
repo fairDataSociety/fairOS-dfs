@@ -17,12 +17,10 @@ limitations under the License.
 package pod
 
 import (
-	"bufio"
-	"bytes"
-	"fmt"
-	"io"
-	"strconv"
-	"strings"
+	"encoding/hex"
+	"encoding/json"
+
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -37,28 +35,37 @@ const (
 )
 
 // CreatePod creates a new pod for a given user.
-func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error) {
-	podName, err := cleanPodName(podName)
+func (p *Pod) CreatePod(podName, passPhrase, addressString, podPassword string) (*Info, error) {
+	podName, err := CleanPodName(podName)
 	if err != nil {
 		return nil, err
 	}
 
 	// check if pods is present and get free index
-	pods, sharedPods, err := p.loadUserPods()
+	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
+	pods := map[int]string{}
+	sharedPods := map[string]string{}
+	for _, pod := range podList.Pods {
+		pods[pod.Index] = pod.Name
+	}
+
+	for _, pod := range podList.SharedPods {
+		sharedPods[pod.Address] = pod.Name
+	}
 	var accountInfo *account.Info
 	var fd *feed.API
 	var file *f.File
 	var dir *d.Directory
 	var user utils.Address
 	if addressString != "" {
-		if p.checkIfPodPresent(pods, podName) {
+		if p.checkIfPodPresent(podList, podName) {
 			return nil, ErrPodAlreadyExists
 		}
-		if p.checkIfSharedPodPresent(sharedPods, podName) {
+		if p.checkIfSharedPodPresent(podList, podName) {
 			return nil, ErrPodAlreadyExists
 		}
 
@@ -72,8 +79,13 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
 		// store the pod file with shared pod
-		sharedPods[addressString] = podName
-		err = p.storeUserPods(pods, sharedPods)
+		sharedPod := &SharedPodListItem{
+			Name:     podName,
+			Address:  addressString,
+			Password: podPassword,
+		}
+		podList.SharedPods = append(podList.SharedPods, *sharedPod)
+		err = p.storeUserPods(podList)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
@@ -83,10 +95,10 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 
 	} else {
 		// your own pod, so create a new account with private key
-		if p.checkIfPodPresent(pods, podName) {
+		if p.checkIfPodPresent(podList, podName) {
 			return nil, ErrPodAlreadyExists
 		}
-		if p.checkIfSharedPodPresent(sharedPods, podName) {
+		if p.checkIfSharedPodPresent(podList, podName) {
 			return nil, ErrPodAlreadyExists
 		}
 
@@ -107,11 +119,16 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 
 		// store the pod file
 		pods[freeId] = podName
-		err = p.storeUserPods(pods, sharedPods)
+		pod := &PodListItem{
+			Name:     podName,
+			Index:    freeId,
+			Password: podPassword,
+		}
+		podList.Pods = append(podList.Pods, *pod)
+		err = p.storeUserPods(podList)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-
 		user = p.acc.GetAddress(freeId)
 	}
 
@@ -121,6 +138,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
 		podName:     podName,
+		podPassword: podPassword,
 		userAddress: user,
 		dir:         dir,
 		file:        file,
@@ -133,66 +151,45 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString string) (*Info, error
 	return podInfo, nil
 }
 
-func (p *Pod) loadUserPods() (map[int]string, map[string]string, error) {
+func (p *Pod) loadUserPods() (*PodList, error) {
 	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
-	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex))
+	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
+	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex), []byte(hex.EncodeToString(privKeyBytes)))
 	if err != nil { // skipcq: TCV-001
 		if err.Error() != "feed does not exist or was not updated yet" {
-			return nil, nil, err
+			return nil, err
 		}
+	}
+	podList := &PodList{
+		Pods:       []PodListItem{},
+		SharedPods: []SharedPodListItem{},
+	}
+	if len(data) == 0 {
+		return podList, nil
 	}
 
-	buf := bytes.NewBuffer(data)
-	rd := bufio.NewReader(buf)
-	pods := make(map[int]string)
-	sharedPods := make(map[string]string)
-	for {
-		line, err := rd.ReadString('\n')
-		if err == io.EOF {
-			break
-		}
-		if err != nil { // skipcq: TCV-001
-			return nil, nil, fmt.Errorf("loading pods: %w", err)
-		}
-		line = strings.Trim(line, "\n")
-		lines := strings.Split(line, ",")
-		index, err := strconv.ParseInt(lines[1], 10, 64)
-		p.logger.Debug(line)
-		if err != nil {
-			sharedPods[lines[1]] = lines[0]
-			continue
-		}
-		pods[int(index)] = lines[0]
+	err = json.Unmarshal(data, podList)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
 	}
-	return pods, sharedPods, nil
+
+	return podList, nil
 }
 
-func (p *Pod) storeUserPods(pods map[int]string, sharedPods map[string]string) error {
-	buf := bytes.NewBuffer(nil)
-	podLen := len(pods)
-	for index, pod := range pods {
-		pod := strings.Trim(pod, "\n")
-		if podLen > 1 && pod == "" { // skipcq: TCV-001
-			continue
-		}
-		line := fmt.Sprintf("%s,%d", pod, index)
-		buf.WriteString(line + "\n")
+func (p *Pod) storeUserPods(podList *PodList) error {
+	data, err := json.Marshal(podList)
+	if err != nil {
+		return err
 	}
 
-	for addr, pod := range sharedPods {
-		pod := strings.Trim(pod, "\n")
-		if podLen > 1 && pod == "" {
-			continue
-		}
-		line := fmt.Sprintf("%s,%s", pod, addr)
-		buf.WriteString(line + "\n")
-	}
-	if len(buf.Bytes()) > utils.MaxChunkLength {
+	if len(data) > utils.MaxChunkLength {
 		return ErrMaximumPodLimit
 	}
 	topic := utils.HashString(podFile)
-	_, err := p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), buf.Bytes())
+
+	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
+	_, err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), data, []byte(hex.EncodeToString(privKeyBytes)))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -212,35 +209,35 @@ func (*Pod) getFreeId(pods map[int]string) (int, error) {
 	return 0, ErrMaxPodsReached // skipcq: TCV-001
 }
 
-func (*Pod) checkIfPodPresent(pods map[int]string, podName string) bool {
-	for _, pod := range pods {
-		if strings.Trim(pod, "\n") == podName {
+func (*Pod) checkIfPodPresent(pods *PodList, podName string) bool {
+	for _, pod := range pods.Pods {
+		if pod.Name == podName {
 			return true
 		}
 	}
 	return false
 }
 
-func (*Pod) checkIfSharedPodPresent(sharedPods map[string]string, podName string) bool {
-	for _, pod := range sharedPods {
-		if strings.Trim(pod, "\n") == podName {
+func (*Pod) checkIfSharedPodPresent(pods *PodList, podName string) bool {
+	for _, pod := range pods.SharedPods {
+		if pod.Name == podName {
 			return true
 		}
 	}
 	return false
 }
 
-func (p *Pod) getPodIndex(podName string) (int, error) {
-	pods, _, err := p.loadUserPods()
+func (p *Pod) getPodIndex(podName string) (podIndex int, err error) {
+	podList, err := p.loadUserPods()
 	if err != nil {
 		return -1, err
 	} // skipcq: TCV-001
-	podIndex := -1
-	for index, pod := range pods {
-		if strings.Trim(pod, "\n") == podName {
-			delete(pods, index)
-			podIndex = index
+	podIndex = -1
+	for _, pod := range podList.Pods {
+		if pod.Name == podName {
+			podIndex = pod.Index
+			return
 		}
 	}
-	return podIndex, nil
+	return
 }

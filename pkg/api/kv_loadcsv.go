@@ -32,6 +32,23 @@ import (
 // it has two arguments
 // - table_name: the name of the key value table
 // - csv: the name of the parameter which contains the file to upload in a multipart upload
+
+// KVLoadCSVHandler godoc
+//
+//	@Summary      Upload a csv file in kv table
+//	@Description  KVLoadCSVHandler is the api handler to load a csv file as key and value in a KV table
+//	@Tags         kv
+//	@Accept       mpfd
+//	@Produce      json
+//	@Param	      pod_name formData string true "pod name"
+//	@Param	      table_name formData string true "table name"
+//	@Param	      memory formData string false "keep in memory"
+//	@Param	      csv formData file true "file to upload"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/loadcsv [Post]
 func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("pod_name")
 	if podName == "" {

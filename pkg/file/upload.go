@@ -46,7 +46,7 @@ var (
 // Upload uploads a given blob of bytes as a file in the pod. It also splits the file into number of blocks. the
 // size of the block is provided during upload. This function also does compression of the blocks gzip/snappy if it is
 // requested during the upload.
-func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error {
+func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression, podPassword string) error {
 	podPath = filepath.ToSlash(podPath)
 	// check compression gzip and blocksize
 	// pgzip does not allow block size lower or equal to 163840
@@ -139,7 +139,13 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
+				encryptedData, enErr := utils.EncryptBytes([]byte(podPassword), uploadData)
+				if enErr != nil {
+					mainErr = enErr
+					return
+				}
+
+				addr, uploadErr := f.client.UploadBlob(encryptedData, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
@@ -183,14 +189,17 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
-	addr, err := f.client.UploadBlob(fileInodeData, true, true)
+	encryptedFileInodeBytes, err := utils.EncryptBytes([]byte(podPassword), fileInodeData)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+	addr, err := f.client.UploadBlob(encryptedFileInodeBytes, true, true)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	meta.InodeAddress = addr
-	err = f.handleMeta(&meta)
+	err = f.handleMeta(&meta, podPassword)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

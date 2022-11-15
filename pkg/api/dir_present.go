@@ -29,9 +29,19 @@ type DirPresentResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
-// DirectoryPresentHandler is the api handler which says if a a directory is present or not
-// it takes only one argument
-// - dir-path: the directory to check along with its absolute path
+// DirectoryPresentHandler godoc
+//
+//	@Summary      Is directory present
+//	@Description  DirectoryPresentHandler is the api handler which says if a directory is present or not
+//	@Tags         dir
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      dir_path query string true "dir path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  DirPresentResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/dir/present [get]
 func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {

@@ -8,8 +8,19 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// PodPresentHandler is the api handler to check if a pod is present
-// it takes pod_name as query parameter
+// PodPresentHandler godoc
+//
+//	@Summary      Is pod present
+//	@Description  PodPresentHandler is the api handler to check if a pod is present
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/present [get]
 func (h *Handler) PodPresentHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {

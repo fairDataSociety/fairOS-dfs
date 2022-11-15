@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -50,22 +52,23 @@ func TestClose(t *testing.T) {
 
 	t.Run("close-pod", func(t *testing.T) {
 		// create a pod
-		info, err := pod1.CreatePod(podName1, "password", "")
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		info, err := pod1.CreatePod(podName1, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
+		err = info.GetDirectory().MkRootDir("pod1", podPassword, info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create some dir and files
-		addFilesAndDirectories(t, info, pod1, podName1)
+		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
 		// verify if the pod is closed
-		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName1)
+		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err == nil {
 			t.Fatalf("pod not closed")
 		}

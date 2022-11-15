@@ -38,7 +38,7 @@ var (
 
 // Download does all the validation for the existence of the file and creates a
 // Reader to read the contents of the file from the pod.
-func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
+func (f *File) Download(podFileWithPath, podPassword string) (io.ReadCloser, uint64, error) {
 	// check if file present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	if !f.IsFileAlreadyPresent(totalFilePath) {
@@ -49,8 +49,11 @@ func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
 	if meta == nil { // skipcq: TCV-001
 		return nil, 0, ErrFileNotFound
 	}
-
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), encryptedFileInodeBytes)
 	if err != nil { // skipcq: TCV-001
 		return nil, 0, err
 	}
@@ -63,19 +66,19 @@ func (f *File) Download(podFileWithPath string) (io.ReadCloser, uint64, error) {
 	// need to change the access time for podFile if it is owned by user
 	if !f.fd.IsReadOnlyFeed() {
 		meta.AccessTime = time.Now().Unix()
-		err = f.updateMeta(meta)
+		err = f.updateMeta(meta, podPassword)
 		if err != nil { // skipcq: TCV-001
 			return nil, 0, err
 		}
 	}
 
-	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)
+	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, podPassword, false)
 	return reader, meta.Size, nil
 }
 
 // ReadSeeker does all the validation for the existence of the file and creates a
 // ReadSeekCloser to read the contents of the file from the pod.
-func (f *File) ReadSeeker(podFileWithPath string) (io.ReadSeekCloser, uint64, error) {
+func (f *File) ReadSeeker(podFileWithPath, podPassword string) (io.ReadSeekCloser, uint64, error) {
 	// check if file present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	if !f.IsFileAlreadyPresent(totalFilePath) {
@@ -87,10 +90,15 @@ func (f *File) ReadSeeker(podFileWithPath string) (io.ReadSeekCloser, uint64, er
 		return nil, 0, ErrFileNotFound
 	}
 
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil { // skipcq: TCV-001
 		return nil, 0, err
 	}
+	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), encryptedFileInodeBytes)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001
@@ -100,12 +108,12 @@ func (f *File) ReadSeeker(podFileWithPath string) (io.ReadSeekCloser, uint64, er
 	// need to change the access time for podFile if it is owned by user
 	if !f.fd.IsReadOnlyFeed() {
 		meta.AccessTime = time.Now().Unix()
-		err = f.updateMeta(meta)
+		err = f.updateMeta(meta, podPassword)
 		if err != nil { // skipcq: TCV-001
 			return nil, 0, err
 		}
 	}
 
-	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)
+	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, podPassword, false)
 	return reader, meta.Size, nil
 }

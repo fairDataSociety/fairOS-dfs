@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -54,13 +56,15 @@ func TestUpload(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	t.Run("upload-small-file", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
 		filePath := "/dir1"
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -85,16 +89,16 @@ func TestUpload(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		err := fileObject.LoadFileMeta(filePath + "/" + fileName)
+		err := fileObject.LoadFileMeta(filePath+"/"+fileName, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.LoadFileMeta(filePath + "/asd" + fileName)
+		err = fileObject.LoadFileMeta(filePath+"/asd"+fileName, podPassword)
 		if err == nil {
 			t.Fatal("local file meta should fail")
 		}
 
-		meat2, err := fileObject.BackupFromFileName(filePath + "/" + fileName)
+		meat2, err := fileObject.BackupFromFileName(filePath+"/"+fileName, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -104,13 +108,15 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -137,13 +143,15 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root-with-blank-filename", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -170,13 +178,14 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root-with-prefix", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -210,13 +219,14 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root-with-prefix-snappy", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		filePath := string(os.PathSeparator)
 		fileName := "file2"
 		compression := "snappy"
 		fileSize := int64(100)
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -250,13 +260,14 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root-with-prefix-gzip", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		filePath := string(os.PathSeparator)
 		fileName := "file2"
 		compression := "gzip"
 		fileSize := int64(100)
 		blockSize := uint32(164000)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -281,7 +292,7 @@ func TestUpload(t *testing.T) {
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
 		}
-		reader, _, err := fileObject.Download(fp)
+		reader, _, err := fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -299,7 +310,7 @@ func TestUpload(t *testing.T) {
 	})
 }
 
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
 	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
@@ -331,5 +342,5 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
 }

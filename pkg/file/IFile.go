@@ -19,10 +19,10 @@ package file
 import "io"
 
 type IFile interface {
-	Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error
-	Download(podFileWithPath string) (io.ReadCloser, uint64, error)
-	ListFiles(files []string) ([]Entry, error)
-	GetStats(podName, podFileWithPath string) (*Stats, error)
-	RmFile(podFileWithPath string) error
-	LoadFileMeta(fileNameWithPath string) error
+	Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression, podPassword string) error
+	Download(podFileWithPath, podPassword string) (io.ReadCloser, uint64, error)
+	ListFiles(files []string, podPassword string) ([]Entry, error)
+	GetStats(podName, podFileWithPath, podPassword string) (*Stats, error)
+	RmFile(podFileWithPath, podPassword string) error
+	LoadFileMeta(fileNameWithPath, podPassword string) error
 }

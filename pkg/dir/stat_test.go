@@ -24,6 +24,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -54,39 +57,40 @@ func TestStat(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	t.Run("stat-dir", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// populate the directory with few directory and files
-		err := dirObject.MkDir("/dirToStat")
+		err := dirObject.MkDir("/dirToStat", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/dirToStat/subDir1")
+		err = dirObject.MkDir("/dirToStat/subDir1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/dirToStat/subDir2")
+		err = dirObject.MkDir("/dirToStat/subDir2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// just add dummy file enty as file listing is not tested here
-		err = dirObject.AddEntryToDir("/dirToStat", "file1", true)
+		err = dirObject.AddEntryToDir("/dirToStat", podPassword, "file1", true)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.AddEntryToDir("/dirToStat", "file2", true)
+		err = dirObject.AddEntryToDir("/dirToStat", podPassword, "file2", true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// stat the directory
-		dirStats, err := dirObject.DirStat("pod1", "/dirToStat")
+		dirStats, err := dirObject.DirStat("pod1", podPassword, "/dirToStat")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -111,12 +115,12 @@ func TestStat(t *testing.T) {
 			t.Fatalf("invalid files count")
 		}
 
-		err = dirObject.RmDir("/dirToStat")
+		err = dirObject.RmDir("/dirToStat", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = dirObject.DirStat("pod1", "/dirToStat")
+		_, err = dirObject.DirStat("pod1", podPassword, "/dirToStat")
 		if !errors.Is(err, dir.ErrDirectoryNotPresent) {
 			t.Fatal("dir should not be present")
 		}

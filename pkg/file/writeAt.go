@@ -12,7 +12,7 @@ import (
 )
 
 // WriteAt writes a file from a given offset
-func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64, truncate bool) (int, error) {
+func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, offset uint64, truncate bool) (int, error) {
 	// check file is present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	if !f.IsFileAlreadyPresent(totalFilePath) {
@@ -26,7 +26,11 @@ func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64, 
 	}
 
 	// download file inode (blocks info)
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	if err != nil { // skipcq: TCV-001
+		return 0, err
+	}
+	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), encryptedFileInodeBytes)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
@@ -37,7 +41,7 @@ func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64, 
 	}
 
 	// create file reader
-	fd := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)
+	fd := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, podPassword, false)
 	reader := &bytes.Buffer{}
 	_, err = reader.ReadFrom(fd)
 	if err != nil {
@@ -195,7 +199,13 @@ func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64, 
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
+				encryptedData, enErr := utils.EncryptBytes([]byte(podPassword), uploadData)
+				if enErr != nil {
+					mainErr = enErr
+					return
+				}
+
+				addr, uploadErr := f.client.UploadBlob(encryptedData, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
@@ -241,15 +251,18 @@ func (f *File) WriteAt(podFileWithPath string, update io.Reader, offset uint64, 
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
-
-	addr, err := f.client.UploadBlob(fileInodeData, true, true)
+	encryptedFileInodeBytes, err = utils.EncryptBytes([]byte(podPassword), fileInodeData)
+	if err != nil { // skipcq: TCV-001
+		return 0, err
+	}
+	addr, err := f.client.UploadBlob(encryptedFileInodeBytes, true, true)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
 
 	meta.InodeAddress = addr
 	meta.Size = newDataSize
-	err = f.handleMeta(meta)
+	err = f.handleMeta(meta, podPassword)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}

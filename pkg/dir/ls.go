@@ -42,17 +42,18 @@ type Entry struct {
 // ListDir given a directory, this function lists all the children (directory) inside the given directory.
 // it also creates a list of files inside the directory and gives it back, so that the file listing
 // function can give information about those files.
-func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
+func (d *Directory) ListDir(dirNameWithPath, podPassword string) ([]Entry, []string, error) {
 	dirNameWithPath = filepath.ToSlash(dirNameWithPath)
 	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
+	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		if dirNameWithPath == utils.PathSeparator {
 			return nil, nil, nil
 		}
 		return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
 	}
-	var dirInode Inode
+
+	dirInode := &Inode{}
 	err = dirInode.Unmarshal(data)
 	if err != nil {
 		return nil, nil, fmt.Errorf("list dir : %v", err)
@@ -68,7 +69,7 @@ func (d *Directory) ListDir(dirNameWithPath string) ([]Entry, []string, error) {
 			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			dirTopic := utils.HashString(dirPath)
 			wg.Add(1)
-			lsTask := newLsTask(d, dirTopic, dirPath, listEntries, mtx, wg)
+			lsTask := newLsTask(d, dirTopic, dirPath, podPassword, listEntries, mtx, wg)
 			_, err := d.syncManager.Go(lsTask)
 			if err != nil {
 				return nil, nil, fmt.Errorf("list dir : %v", err)

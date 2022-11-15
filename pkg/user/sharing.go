@@ -18,6 +18,7 @@ package user
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -50,14 +51,14 @@ type ReceiveFileInfo struct {
 }
 
 // ShareFileWithUser exports a file to another user by creating and uploading a new encrypted sharing file entry.
-func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
+func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
-	meta, err := userInfo.file.GetMetaFromFileName(totalFilePath, userAddress)
+	meta, err := userInfo.file.GetMetaFromFileName(totalFilePath, podPassword, userAddress)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-
-	// Create a outbox entry
+	meta.SharedPassword = podPassword
+	// Create an outbox entry
 	now := time.Now()
 	sharingEntry := SharingEntry{
 		Meta:       meta,
@@ -118,7 +119,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 		return "", pod.ErrPodNotOpened
 	}
 
-	podInfo, err := pd.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := pd.GetPodInfoFromPodMap(podName)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -149,14 +150,15 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 		AccessTime:       now,
 		ModificationTime: now,
 		InodeAddress:     sharingEntry.Meta.InodeAddress,
+		SharedPassword:   sharingEntry.Meta.SharedPassword,
 	}
 
 	file.AddToFileMap(totalPath, &newMeta)
-	err = file.PutMetaForFile(&newMeta)
+	err = file.PutMetaForFile(&newMeta, podInfo.GetPodPassword())
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-	err = dir.AddEntryToDir(podDir, fileNameToAdd, true)
+	err = dir.AddEntryToDir(podDir, podInfo.GetPodPassword(), fileNameToAdd, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -206,13 +208,18 @@ func (u *Users) ReceiveFileInfo(sharingRef utils.SharingReference) (*ReceiveFile
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	fileInodeBytes, respCode, err := u.client.DownloadBlob(sharingEntry.Meta.InodeAddress)
+	encryptedFileInodeBytes, respCode, err := u.client.DownloadBlob(sharingEntry.Meta.InodeAddress)
 	if err != nil || respCode != http.StatusOK { // skipcq: TCV-001
+		return nil, err
+	}
+	fileInodeBytes, err := utils.DecryptBytes([]byte(sharingEntry.Meta.SharedPassword), encryptedFileInodeBytes)
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	var fileInode f.INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001
+		fmt.Println("ekhane problem")
 		return nil, err
 	}
 

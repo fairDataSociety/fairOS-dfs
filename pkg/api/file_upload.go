@@ -40,13 +40,23 @@ const (
 	CompressionHeader = "fairOS-dfs-Compression"
 )
 
-// FileUploadHandler is the api handler to upload a file from a local file system to the dfs
-// it takes three argument
-// - dir_path: the directory in the pod where the file should be uploaded
-// - block_size: the block size of the file
-// - files: the argument name of the file to upload is attached in the multipart file upload
-// Header:
-// - fairOS-dfs-Compression: gzip/snappy
+// FileUploadHandler godoc
+//
+//	@Summary      Upload a file
+//	@Description  FileUploadHandler is the api handler to upload a file from a local file system to the dfs
+//	@Tags         file
+//	@Accept       mpfd
+//	@Produce      json
+//	@Param	      pod_name formData string true "pod name"
+//	@Param	      dir_path formData string true "location"
+//	@Param	      block_size formData string true "block size to break the file" example(4Kb, 1Mb)
+//	@Param	      files formData file true "file to upload"
+//	@Param	      fairOS-dfs-Compression header string false "cookie parameter" example(snappy, gzip)
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/file/upload [Post]
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("pod_name")
 	if podName == "" {
@@ -91,7 +101,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//  get the files parameter from the multi part
+	//  get the files parameter from the multipart
 	err = r.ParseMultipartForm(defaultMaxMemory)
 	if err != nil {
 		h.logger.Errorf("file upload: %v", err)

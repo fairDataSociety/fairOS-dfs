@@ -77,34 +77,33 @@ func TestSharing(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		// create source pod
-		info1, err := pod1.CreatePod(podName1, "password", "")
+		info1, err := pod1.CreatePod(podName1, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 		ui0.AddPodName(podName1, info1)
 
 		// make root dir so that other directories can be added
-		err = info1.GetDirectory().MkRootDir("pod1", info1.GetPodAddress(), info1.GetFeed())
+		err = info1.GetDirectory().MkRootDir("pod1", podPassword, info1.GetPodAddress(), info1.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create dir and file
 		dirObject1 := info1.GetDirectory()
-		err = dirObject1.MkDir("/parentDir1")
+		err = dirObject1.MkDir("/parentDir1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		fileObject1 := info1.GetFile()
-		_, err = uploadFile(t, fileObject1, "/parentDir1", "file1", "", 100, 10)
+		_, err = uploadFile(t, fileObject1, "/parentDir1", "file1", "", podPassword, 100, 10)
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		// share file with another user
-		sharingRefString, err := userObject1.ShareFileWithUser("pod1", "/parentDir1/file1", "user2", ui0, pod1, info1.GetPodAddress())
+		sharingRefString, err := userObject1.ShareFileWithUser("pod1", podPassword, "/parentDir1/file1", "user2", ui0, pod1, info1.GetPodAddress())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -117,20 +116,21 @@ func TestSharing(t *testing.T) {
 		}
 
 		// create destination pod
-		info2, err := pod2.CreatePod(podName2, "password", "")
+		podPassword, _ = utils.GetRandString(pod.PodPasswordLength)
+		info2, err := pod2.CreatePod(podName2, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName2)
 		}
 
 		// make root dir so that other directories can be added
-		err = info2.GetDirectory().MkRootDir("pod1", info2.GetPodAddress(), info2.GetFeed())
+		err = info2.GetDirectory().MkRootDir("pod1", podPassword, info2.GetPodAddress(), info2.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create dir and file
 		dirObject2 := info2.GetDirectory()
-		err = dirObject2.MkDir("/parentDir2")
+		err = dirObject2.MkDir("/parentDir2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -182,7 +182,7 @@ func TestSharing(t *testing.T) {
 		if destinationFilePath != "/parentDir2/file1" {
 			t.Fatalf("invalid destination file name")
 		}
-		_, files, err := dirObject2.ListDir("/parentDir2")
+		_, files, err := dirObject2.ListDir("/parentDir2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -210,7 +210,7 @@ func TestSharing(t *testing.T) {
 	})
 }
 
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
 	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
@@ -242,5 +242,5 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
 }

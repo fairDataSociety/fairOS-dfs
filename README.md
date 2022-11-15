@@ -154,7 +154,7 @@ Flags:
       --postageBlockId string   the postage block used to store the data in bee
       --pprofPort string        pprof port (default ":9091")
       --rpc string              rpc endpoint for ens network. xDai for mainnet | Goerli for testnet | local fdp-play rpc endpoint for play
-
+      --swag                    should run swagger-ui
 Global Flags:
       --beeApi string      full bee api endpoint (default "localhost:1633")
       --config string      config file (default "/Users/sabyasachipatra/.dfs.yaml")
@@ -178,4 +178,43 @@ https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/cli-reference
 To make binaries for all platforms run this command
 
 `./generate-exe.sh`
+
+### Generate swagger docs
+
+#### Install swag
+
+```
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+#### Generate
+
+```
+swag init -g cmd/server.go -d cmd/dfs,pkg/api,cmd/common,pkg/dir,pkg/file,pkg/pod,pkg/user,pkg/collection -o ./swagger
+```
+
+### Running swagger-ui
+
+By default, swagger-ui is disabled. To run swagger-ui we run the `server` command with `--swag` flag
+
+```
+$ dfs server --swag
+```
+
+This should run the dfs server along with swagger-ui, available at `http://localhost:9090/swagger/index.html` assuming 
+server is running on default `9090` port on your localhost
+
+### Running fairOS on goerli testnet and swarm mainnet
+
+we need to set `network` configuration in the config file as testnet and bee configuration should point to a bee running
+on mainnet 
+
+```
+network: "testnet"
+bee:
+  bee-api-endpoint: http://localhost:1633 # bee running on mainnet  
+  postage-batch-id: <BATCH>
+  is-gateway-proxy: false
+```
+
 

@@ -21,7 +21,7 @@ func (h *Handler) UserMigrateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq common.UserSignupRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user migrate: could not decode arguments")

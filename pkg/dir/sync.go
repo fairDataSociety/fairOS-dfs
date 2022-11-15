@@ -25,9 +25,9 @@ import (
 )
 
 // SyncDirectory syncs all the latest entries under a given directory.
-func (d *Directory) SyncDirectory(dirNameWithPath string) error {
+func (d *Directory) SyncDirectory(dirNameWithPath, podPassword string) error {
 	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
-	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
+	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return nil // pod is empty
 	}
@@ -43,7 +43,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
-			err := d.file.LoadFileMeta(filePath)
+			err := d.file.LoadFileMeta(filePath, podPassword)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("loading metadata failed %s: %s", filePath, err.Error())
 			}
@@ -52,7 +52,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			d.logger.Infof(dirNameWithPath)
 
-			err = d.SyncDirectory(path)
+			err = d.SyncDirectory(path, podPassword)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
@@ -62,9 +62,9 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 }
 
 // SyncDirectoryAsync syncs all the latest entries under a given directory concurrently.
-func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath string, wg *sync.WaitGroup) error {
+func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath, podPassword string, wg *sync.WaitGroup) error {
 	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
-	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
+	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return nil // pod is empty
 	}
@@ -75,13 +75,14 @@ func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath stri
 		d.logger.Errorf("dir sync: %v", err)
 		return err
 	}
+
 	d.AddToDirectoryMap(dirNameWithPath, &dirInode)
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			wg.Add(1)
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
-			syncTask := newSyncTask(d, filePath, wg)
+			syncTask := newSyncTask(d, filePath, podPassword, wg)
 			_, err = d.syncManager.Go(syncTask)
 			if err != nil { // skipcq: TCV-001
 				return err
@@ -91,7 +92,7 @@ func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath stri
 			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			d.logger.Infof(dirNameWithPath)
 
-			err = d.SyncDirectoryAsync(ctx, path, wg)
+			err = d.SyncDirectoryAsync(ctx, path, podPassword, wg)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}

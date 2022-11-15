@@ -17,9 +17,11 @@ limitations under the License.
 package pod
 
 import (
-	"io"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/plexsysio/taskmanager"
 
@@ -31,7 +33,7 @@ import (
 
 func TestPod_ListPods(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	logger := logging.New(os.Stdout, 0)
 	acc := account.New(logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, mockClient, logger)
@@ -53,11 +55,12 @@ func TestPod_ListPods(t *testing.T) {
 	})
 
 	t.Run("create-two-pods", func(t *testing.T) {
-		_, err := pod1.CreatePod(podName1, "password", "")
+		podPassword, _ := utils.GetRandString(PodPasswordLength)
+		_, err := pod1.CreatePod(podName1, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod: %v", err)
 		}
-		_, err = pod1.CreatePod(podName2, "password", "")
+		_, err = pod1.CreatePod(podName2, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}

@@ -31,8 +31,18 @@ type PodListResponse struct {
 	SharedPods []string `json:"shared_pod_name"`
 }
 
-// PodListHandler is the api handler to list all pods
-// it takes no arguments
+// PodListHandler godoc
+//
+//	@Summary      List pods
+//	@Description  PodListHandler is the api handler to list all pods
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  PodListResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/ls [get]
 func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
@@ -60,14 +70,12 @@ func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, &response{Message: "ls pod: " + err.Error()})
 		return
 	}
-
 	if pods == nil {
 		pods = make([]string, 0)
 	}
 	if sharedPods == nil {
 		sharedPods = make([]string, 0)
 	}
-
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &PodListResponse{
 		Pods:       pods,

@@ -30,22 +30,26 @@ func TestMaxPods(t *testing.T) {
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 
 	t.Run("create-max-pods", func(t *testing.T) {
-		maxPodId := 140
+		//t.SkipNow()
+
+		maxPodId := 30
 		for i := 1; i <= maxPodId; i++ {
-			name, err := utils.GetRandString(25)
+			name, err := utils.GetRandString(utils.MaxPodNameLength)
 			if err != nil {
 				t.Fatal(err)
 			}
-			_, err = pod1.CreatePod(name, "password", "")
+			podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+			_, err = pod1.CreatePod(name, "password", "", podPassword)
 			if err != nil {
 				t.Fatalf("error creating pod %s with index %d: %s", name, i, err)
 			}
 		}
-		name, err := utils.GetRandString(25)
+		name, err := utils.GetRandString(utils.MaxPodNameLength)
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = pod1.CreatePod(name, "password", "")
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		_, err = pod1.CreatePod(name, "password", "", podPassword)
 		if !errors.Is(err, pod.ErrMaximumPodLimit) {
 			t.Fatalf("maximum pod limit should have been reached")
 		}

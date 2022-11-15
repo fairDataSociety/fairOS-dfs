@@ -40,62 +40,72 @@ var (
 )
 
 type Reader struct {
-	readOffset  int64
-	client      blockstore.Client
-	fileInode   INode
-	fileC       chan []byte
-	lastBlock   []byte
-	fileSize    uint64
-	blockSize   uint32
-	blockCursor uint32
-	totalSize   uint64
-	compression string
-	blockCache  *lru.Cache
+	encryptionPassword string
+	readOffset         int64
+	client             blockstore.Client
+	fileInode          INode
+	fileC              chan []byte
+	lastBlock          []byte
+	fileSize           uint64
+	blockSize          uint32
+	blockCursor        uint32
+	totalSize          uint64
+	compression        string
+	blockCache         *lru.Cache
 
 	rlBuffer      []byte
 	rlOffset      int
 	rlReadNewLine bool
 }
 
-// OpenFileForIndex opens file for indexing for documetn db from pod filepath
+// OpenFileForIndex opens file for indexing for document db from pod filepath
 // TODO test
 // skipcq: TCV-001
-func (f *File) OpenFileForIndex(podFile string) (*Reader, error) {
+func (f *File) OpenFileForIndex(podFile, podPassword string) (*Reader, error) {
 	meta := f.GetFromFileMap(podFile)
 	if meta == nil {
 		return nil, fmt.Errorf("file not found in dfs")
 	}
 
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil {
 		return nil, err
 	}
+
+	temp := make([]byte, len(encryptedFileInodeBytes))
+	copy(temp, encryptedFileInodeBytes)
+	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), temp)
+	if err != nil {
+		return nil, err
+	}
+
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil {
 		return nil, err
 	}
 
-	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, true)
+	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, "encryptionPassword", true)
 	return reader, nil
 }
 
 // NewReader create a new reader object to read a file from the pod based on its configuration.
-func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string, cache bool) *Reader {
+func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint32, compression, encryptionPassword string, cache bool) *Reader {
 	var blockCache *lru.Cache
 	if cache {
 		blockCache, _ = lru.New(blockCacheSize)
 	}
 
 	r := &Reader{
-		fileInode:     fileInode,
-		client:        client,
-		fileC:         make(chan []byte),
-		fileSize:      fileSize,
-		blockSize:     blockSize,
-		compression:   compression,
-		blockCache:    blockCache,
-		rlReadNewLine: false,
+		encryptionPassword: encryptionPassword,
+		fileInode:          fileInode,
+		client:             client,
+		fileC:              make(chan []byte),
+		fileSize:           fileSize,
+		blockSize:          blockSize,
+		compression:        compression,
+		blockCache:         blockCache,
+		rlReadNewLine:      false,
 	}
 	return r
 }
@@ -305,14 +315,22 @@ func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]b
 			return data.([]byte), nil
 		}
 	}
-	stdoutBytes, _, err := r.client.DownloadBlob(ref)
+	encryptedData, _, err := r.client.DownloadBlob(ref)
 	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	temp := make([]byte, len(encryptedData))
+	copy(temp, encryptedData)
+	stdoutBytes, err := utils.DecryptBytes([]byte(r.encryptionPassword), temp)
+	if err != nil {
 		return nil, err
 	}
 	decompressedData, err := Decompress(stdoutBytes, compression, blockSize)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
+
 	if r.blockCache != nil {
 		r.blockCache.Add(refStr, decompressedData)
 	}

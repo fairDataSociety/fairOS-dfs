@@ -168,7 +168,7 @@ func (b *Batch) Write(podFile string) (*Manifest, error) {
 	}
 
 	if b.memDb.dirtyFlag {
-		diskManifest, err := b.idx.loadManifest(b.memDb.Name)
+		diskManifest, err := b.idx.loadManifest(b.memDb.Name, b.idx.encryptionPassword)
 		if err != nil && errors.Is(err, ErrNoManifestFound) { // skipcq: TCV-001
 			return nil, err
 		}
@@ -203,7 +203,7 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Man
 
 		if diskManifest.dirtyFlag {
 			// save th disk manifest
-			err := b.idx.updateManifest(diskManifest)
+			err := b.idx.updateManifest(diskManifest, b.idx.encryptionPassword)
 			if err != nil { // skipcq: TCV-001
 				return nil, err
 			}
@@ -284,7 +284,7 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 
 	// store this manifest
 	//go func() {
-	err := b.idx.storeManifest(manifest)
+	err := b.idx.storeManifest(manifest, b.idx.encryptionPassword)
 	if err != nil {
 		return err
 	}

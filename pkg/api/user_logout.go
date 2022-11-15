@@ -24,8 +24,17 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserLogoutHandler is the api handler to logout a user
-// it takes no arguments
+// UserLogoutHandler godoc
+//
+//	@Summary      Logout
+//	@Description  logs-out user
+//	@Tags         user
+//	@Accept       json
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/user/logout [post]
 func (h *Handler) UserLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

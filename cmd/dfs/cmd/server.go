@@ -27,14 +27,17 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	_ "github.com/fairdatasociety/fairOS-dfs/swagger"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 var (
 	pprof          bool
+	swag           bool
 	httpPort       string
 	pprofPort      string
 	cookieDomain   string
@@ -43,7 +46,17 @@ var (
 	handler        *api.Handler
 )
 
-// startCmd represents the start command
+//  @title           FairOS-dfs server
+//  @version         1.0
+//  @description     This is fairOS-dfs server api specifications
+
+//  @contact.name   Sabyasachi Patra
+//  @contact.email  sabyasachi@datafund.io
+
+//  @license.name  Apache 2.0
+//  @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:9090
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "starts a HTTP server for the dfs",
@@ -194,6 +207,7 @@ can consume it.`,
 
 func init() {
 	serverCmd.Flags().BoolVar(&pprof, "pprof", false, "should run pprof")
+	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
@@ -222,6 +236,12 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 	})
+	if swag {
+		router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+			httpSwagger.URL("http://localhost:9090/swagger/doc.json"), //The url pointing to API definition
+		)).Methods(http.MethodGet)
+	}
+
 	apiVersion := "v1"
 
 	// v2 introduces user credentials storage on secondary location and identity storage on ens registry
@@ -273,9 +293,6 @@ func startHttpService(logger logging.Logger) {
 	userRouter.HandleFunc("/stat", handler.UserStatHandler).Methods("GET")
 
 	// pod related handlers
-	baseRouter.HandleFunc("/pod/receive", handler.PodReceiveHandler).Methods("GET")
-	baseRouter.HandleFunc("/pod/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
-
 	podRouter := baseRouter.PathPrefix("/pod/").Subrouter()
 	podRouter.Use(handler.LoginMiddleware)
 	podRouter.HandleFunc("/present", handler.PodPresentHandler).Methods("GET")
@@ -288,6 +305,8 @@ func startHttpService(logger logging.Logger) {
 	podRouter.HandleFunc("/delete", handler.PodDeleteHandler).Methods("DELETE")
 	podRouter.HandleFunc("/ls", handler.PodListHandler).Methods("GET")
 	podRouter.HandleFunc("/stat", handler.PodStatHandler).Methods("GET")
+	podRouter.HandleFunc("/receive", handler.PodReceiveHandler).Methods("GET")
+	podRouter.HandleFunc("/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
 
 	// directory related handlers
 	dirRouter := baseRouter.PathPrefix("/dir/").Subrouter()
@@ -302,8 +321,8 @@ func startHttpService(logger logging.Logger) {
 	// file related handlers
 	fileRouter := baseRouter.PathPrefix("/file/").Subrouter()
 	fileRouter.Use(handler.LoginMiddleware)
-	fileRouter.HandleFunc("/download", handler.FileDownloadHandler).Methods("GET")
-	fileRouter.HandleFunc("/download", handler.FileDownloadHandler).Methods("POST")
+	fileRouter.HandleFunc("/download", handler.FileDownloadHandlerGet).Methods("GET")
+	fileRouter.HandleFunc("/download", handler.FileDownloadHandlerPost).Methods("POST")
 	fileRouter.HandleFunc("/upload", handler.FileUploadHandler).Methods("POST")
 	fileRouter.HandleFunc("/share", handler.FileShareHandler).Methods("POST")
 	fileRouter.HandleFunc("/receive", handler.FileReceiveHandler).Methods("GET")
@@ -340,9 +359,9 @@ func startHttpService(logger logging.Logger) {
 	docRouter.HandleFunc("/find", handler.DocFindHandler).Methods("GET")
 	docRouter.HandleFunc("/loadjson", handler.DocLoadJsonHandler).Methods("POST")
 	docRouter.HandleFunc("/indexjson", handler.DocIndexJsonHandler).Methods("POST")
-	docRouter.HandleFunc("/entry/put", handler.DocPutHandler).Methods("POST")
-	docRouter.HandleFunc("/entry/get", handler.DocGetHandler).Methods("GET")
-	docRouter.HandleFunc("/entry/del", handler.DocDelHandler).Methods("DELETE")
+	docRouter.HandleFunc("/entry/put", handler.DocEntryPutHandler).Methods("POST")
+	docRouter.HandleFunc("/entry/get", handler.DocEntryGetHandler).Methods("GET")
+	docRouter.HandleFunc("/entry/del", handler.DocEntryDelHandler).Methods("DELETE")
 
 	var origins []string
 	for _, c := range corsOrigins {

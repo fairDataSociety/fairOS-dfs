@@ -18,6 +18,7 @@ package dfs
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -30,8 +31,10 @@ func (a *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
+	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
+	podPassword := hex.EncodeToString(podPasswordBytes)
 	// create the pod
-	_, err := ui.GetPod().CreatePod(podName, passPhrase, "")
+	_, err := ui.GetPod().CreatePod(podName, passPhrase, "", podPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +46,7 @@ func (a *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error
 	}
 
 	// create the root directory
-	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), podPassword, pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +72,7 @@ func (a *API) DeletePod(podName, passphrase, sessionId string) error {
 
 	// delete all the directory, files, and database tables under this pod from
 	// the Swarm network.
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -91,7 +94,7 @@ func (a *API) DeletePod(podName, passphrase, sessionId string) error {
 		return nil
 	}
 
-	err = directory.RmRootDir()
+	err = directory.RmRootDir(podInfo.GetPodPassword())
 	if err != nil {
 		return err
 	}
@@ -126,7 +129,7 @@ func (a *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) 
 	if err != nil {
 		return nil, err
 	}
-	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +153,7 @@ func (a *API) OpenPodAsync(ctx context.Context, podName, passPhrase, sessionId s
 	if err != nil {
 		return nil, err
 	}
-	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodAddress(), pi.GetFeed())
+	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +233,18 @@ func (a *API) ListPods(sessionId string) ([]string, []string, error) {
 		return nil, nil, err
 	}
 	return pods, sharedPods, nil
+}
+
+// PodList lists all available pods in json format
+func (a *API) PodList(sessionId string) (*pod.PodList, error) {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// list pods of a user
+	return ui.GetPod().PodList()
 }
 
 func (a *API) PodShare(podName, sharedPodName, passPhrase, sessionId string) (string, error) {

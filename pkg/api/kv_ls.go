@@ -32,8 +32,19 @@ type Collection struct {
 	CollectionType string   `json:"type"`
 }
 
-// KVListHandler is the api handler to list all the key value tables in a pod
-// it has no arguments
+// KVListHandler godoc
+//
+//	@Summary      List all key value tables
+//	@Description  KVListHandler is the api handler to list all the key value tables in a pod
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  Collections
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/ls [get]
 func (h *Handler) KVListHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {

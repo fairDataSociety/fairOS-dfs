@@ -22,6 +22,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -53,22 +56,23 @@ func TestMkdir(t *testing.T) {
 	mockFile := fm.NewMockFile()
 
 	t.Run("simple-mkdir", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/baseDir")
+		err := dirObject.MkDir("/baseDir", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// validate dir
-		dirs, _, err := dirObject.ListDir("/")
+		dirs, _, err := dirObject.ListDir("/", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -81,37 +85,38 @@ func TestMkdir(t *testing.T) {
 	})
 
 	t.Run("complicated-mkdir", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// try to create a new dir without creating root
-		err := dirObject.MkDir("/baseDir/baseDir2/baseDir3/baseDir4")
+		err := dirObject.MkDir("/baseDir/baseDir2/baseDir3/baseDir4", podPassword)
 		if err == nil || err != dir.ErrDirectoryNotPresent {
 			t.Fatal(err)
 		}
 
-		err = dirObject.MkDir("/baseDir")
+		err = dirObject.MkDir("/baseDir", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = dirObject.MkDir("/baseDir/baseDir2")
+		err = dirObject.MkDir("/baseDir/baseDir2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = dirObject.MkDir("/baseDir/baseDir2/baseDir3")
+		err = dirObject.MkDir("/baseDir/baseDir2/baseDir3", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// validate dir
-		dirs, _, err := dirObject.ListDir("/baseDir")
+		dirs, _, err := dirObject.ListDir("/baseDir", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -122,7 +127,7 @@ func TestMkdir(t *testing.T) {
 			t.Fatalf("invalid directory name")
 		}
 
-		dirs, _, err = dirObject.ListDir("/baseDir/baseDir2")
+		dirs, _, err = dirObject.ListDir("/baseDir/baseDir2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}

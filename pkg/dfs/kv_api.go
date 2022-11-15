@@ -33,12 +33,12 @@ func (a *API) KVCreate(sessionId, podName, name string, indexType collection.Ind
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
 
-	return podInfo.GetKVStore().CreateKVTable(name, indexType)
+	return podInfo.GetKVStore().CreateKVTable(name, podInfo.GetPodPassword(), indexType)
 }
 
 // KVDelete does validation checks and calls the delete KVtable function.
@@ -54,12 +54,12 @@ func (a *API) KVDelete(sessionId, podName, name string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
 
-	return podInfo.GetKVStore().DeleteKVTable(name)
+	return podInfo.GetKVStore().DeleteKVTable(name, podInfo.GetPodPassword())
 }
 
 // KVOpen does validation checks and calls the open KVtable function.
@@ -75,12 +75,12 @@ func (a *API) KVOpen(sessionId, podName, name string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
 
-	return podInfo.GetKVStore().OpenKVTable(name)
+	return podInfo.GetKVStore().OpenKVTable(name, podInfo.GetPodPassword())
 }
 
 // KVList does validation checks and calls the list KVtable function.
@@ -95,12 +95,12 @@ func (a *API) KVList(sessionId, podName string) (map[string][]string, error) {
 	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 
-	return podInfo.GetKVStore().LoadKVTables()
+	return podInfo.GetKVStore().LoadKVTables(podInfo.GetPodPassword())
 }
 
 // KVCount does validation checks and calls the count KVtable function.
@@ -116,12 +116,12 @@ func (a *API) KVCount(sessionId, podName, name string) (*collection.TableKeyCoun
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 
-	return podInfo.GetKVStore().KVCount(name)
+	return podInfo.GetKVStore().KVCount(name, podInfo.GetPodPassword())
 }
 
 // KVPut does validation checks and calls the put KVtable function.
@@ -137,7 +137,7 @@ func (a *API) KVPut(sessionId, podName, name, key string, value []byte) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func (a *API) KVGet(sessionId, podName, name, key string) ([]string, []byte, err
 		return nil, nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -178,7 +178,7 @@ func (a *API) KVDel(sessionId, podName, name, key string) ([]byte, error) {
 	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +199,7 @@ func (a *API) KVBatch(sessionId, podName, name string, columns []string) (*colle
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func (a *API) KVSeek(sessionId, podName, name, start, end string, limit int64) (
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +274,7 @@ func (a *API) KVGetNext(sessionId, podName, name string) ([]string, string, []by
 		return nil, "", nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, "", nil, err
 	}

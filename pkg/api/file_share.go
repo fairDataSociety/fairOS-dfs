@@ -20,8 +20,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"resenje.org/jsonhttp"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -38,10 +36,25 @@ type FileSharingReference struct {
 	Reference string `json:"file_sharing_reference"`
 }
 
-// FileShareHandler is the api handler to share a file from a given pod
-// it takes two arguments
-// file_path: the absolute path of the file in the pod
-// dest_user: the address of the destination user (this is not used now)
+type FileShareRequest struct {
+	PodName     string `json:"pod_name,omitempty"`
+	FilePath    string `json:"file_path,omitempty"`
+	Destination string `json:"dest_user,omitempty"`
+}
+
+// FileShareHandler godoc
+//
+//	@Summary      Share a file
+//	@Description  FileShareHandler is the api handler to share a file from a given pod
+//	@Tags         file
+//	@Accept       json
+//	@Produce      json
+//	@Param	      file_share_request body FileShareRequest true "file share request params"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  FileSharingReference
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/file/share [post]
 func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -51,7 +64,7 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var fsReq common.FileSystemRequest
+	var fsReq FileShareRequest
 	err := decoder.Decode(&fsReq)
 	if err != nil {
 		h.logger.Errorf("file share: could not decode arguments")
@@ -105,10 +118,21 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// FileReceiveHandler is the api handler to receive a file in a given pod
-// it takes two arguments
-// pod_name: the name of the pod
-// sharing_ref: the sharing reference of a file
+// FileReceiveHandler godoc
+//
+//	@Summary      Receive a file
+//	@Description  FileReceiveHandler is the api handler to receive a file in a given pod
+//	@Tags         file
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      sharing_ref query string true "sharing reference"
+//	@Param	      dir_path query string true "file location"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  FileSharingReference
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/file/receive [get]
 func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
@@ -177,10 +201,20 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// FileReceiveInfoHandler is the api handler to receive a file info
-// it takes two arguments
-// pod_name: the name of the pod
-// sharing_ref: the sharing reference of a file
+// FileReceiveInfoHandler godoc
+//
+//	@Summary      Receive a file info
+//	@Description  FileReceiveInfoHandler is the api handler to receive a file info
+//	@Tags         file
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      sharing_ref query string true "sharing reference"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  user.ReceiveFileInfo
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/file/receiveinfo [get]
 func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {

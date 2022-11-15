@@ -34,9 +34,19 @@ type ListFileResponse struct {
 	Files       []file.Entry `json:"files,omitempty"`
 }
 
-// DirectoryLsHandler is the api handler for listing the contents of a directory.
-// it takes only one argument
-// - dir_path: the path of the directory to list it contents
+// DirectoryLsHandler godoc
+//
+//	@Summary      List directory
+//	@Description  DirectoryLsHandler is the api handler for listing the contents of a directory.
+//	@Tags         dir
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      dir_path query string true "dir path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  ListFileResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/dir/ls [get]
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {

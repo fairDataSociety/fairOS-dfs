@@ -21,6 +21,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -39,10 +42,10 @@ func TestBatchIndex(t *testing.T) {
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("batch-add-docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_batch_0", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_batch_0", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		// batch load and delete
 
 		batch, err := collection.NewBatch(index)
@@ -79,7 +82,7 @@ func TestBatchIndex(t *testing.T) {
 
 	t.Run("batch-add-docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_batch_1", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_batch_1", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// batch load and delete
 		batch, err := collection.NewBatch(index)
@@ -116,7 +119,7 @@ func TestBatchIndex(t *testing.T) {
 
 	t.Run("batch-add-del-docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_batch_2", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_batch_2", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// batch load and delete
 		batch, err := collection.NewBatch(index)
@@ -145,7 +148,7 @@ func TestBatchIndex(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		index2, err := collection.OpenIndex("pod1", "testdb_batch_2", "key", fd, ai, user, mockClient, logger)
+		index2, err := collection.OpenIndex("pod1", "testdb_batch_2", "key", podPassword, fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}

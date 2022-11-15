@@ -356,8 +356,7 @@ func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
 	chunkData := make([]byte, 0, utils.MaxChunkLength)
 	chunkData = append(chunkData, seed...)
 	chunkData = append(chunkData, randomBytes...)
-	aesKey := sha256.Sum256([]byte(passphrase))
-	encryptedBytes, err := encryptBytes(aesKey[:], chunkData)
+	encryptedBytes, err := utils.EncryptBytes([]byte(passphrase), chunkData)
 	if err != nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("mnemonic padding failed: %w", err)
 	}
@@ -366,8 +365,7 @@ func (*Info) PadSeed(seed []byte, passphrase string) ([]byte, error) {
 
 // RemovePadFromSeed removes the padding of random elements from the given data and returns the seed
 func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, error) {
-	aesKey := sha256.Sum256([]byte(passphrase))
-	decryptedBytes, err := decryptBytes(aesKey[:], paddedSeed)
+	decryptedBytes, err := utils.DecryptBytes([]byte(passphrase), paddedSeed)
 	if err != nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("seed decryption failed: %w", err)
 	}

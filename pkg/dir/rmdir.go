@@ -24,7 +24,7 @@ import (
 )
 
 // RmDir removes a given directory and all the entries (file/directory) under that.
-func (d *Directory) RmDir(directoryNameWithPath string) error {
+func (d *Directory) RmDir(directoryNameWithPath, podPassword string) error {
 	if directoryNameWithPath == "" {
 		return ErrInvalidDirectoryName
 	}
@@ -49,7 +49,6 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 	if d.GetDirFromDirectoryMap(totalPath) == nil {
 		return ErrDirectoryNotPresent
 	}
-
 	// recursive delete
 	dirInode := d.GetDirFromDirectoryMap(totalPath)
 	if dirInode.FileOrDirNames != nil && len(dirInode.FileOrDirNames) > 0 {
@@ -57,11 +56,11 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 			if strings.HasPrefix(fileOrDirName, "_F_") {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 				filePath := utils.CombinePathAndFile(directoryNameWithPath, fileName)
-				err := d.file.RmFile(filePath)
+				err := d.file.RmFile(filePath, podPassword)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
-				err = d.RemoveEntryFromDir(directoryNameWithPath, fileName, true)
+				err = d.RemoveEntryFromDir(directoryNameWithPath, podPassword, fileName, true)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
@@ -70,7 +69,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 				path := utils.CombinePathAndFile(directoryNameWithPath, dirName)
 				d.logger.Infof(directoryNameWithPath)
 
-				err := d.RmDir(path)
+				err := d.RmDir(path, podPassword)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
@@ -80,7 +79,7 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 
 	// remove the feed and clear the data structure
 	topic := utils.HashString(totalPath)
-	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord))
+	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -90,11 +89,12 @@ func (d *Directory) RmDir(directoryNameWithPath string) error {
 		return nil
 	}
 	// remove the directory entry from the parent dir
-	return d.RemoveEntryFromDir(parentPath, dirToDelete, false)
+
+	return d.RemoveEntryFromDir(parentPath, podPassword, dirToDelete, false)
 }
 
 // RmRootDir removes root directory and all the entries (file/directory) under that.
-func (d *Directory) RmRootDir() error {
+func (d *Directory) RmRootDir(podPassword string) error {
 	dirToDelete := utils.PathSeparator
 
 	// check if directory present
@@ -111,11 +111,11 @@ func (d *Directory) RmRootDir() error {
 			if strings.HasPrefix(fileOrDirName, "_F_") {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 				filePath := utils.CombinePathAndFile(dirToDelete, fileName)
-				err := d.file.RmFile(filePath)
+				err := d.file.RmFile(filePath, podPassword)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
-				err = d.RemoveEntryFromDir(dirToDelete, fileName, true)
+				err = d.RemoveEntryFromDir(dirToDelete, podPassword, fileName, true)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
@@ -124,7 +124,7 @@ func (d *Directory) RmRootDir() error {
 				path := utils.CombinePathAndFile(dirToDelete, dirName)
 				d.logger.Infof(dirToDelete)
 
-				err := d.RmDir(path)
+				err := d.RmDir(path, podPassword)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
@@ -134,7 +134,7 @@ func (d *Directory) RmRootDir() error {
 
 	// remove the feed and clear the data structure
 	topic := utils.HashString(totalPath)
-	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord))
+	_, err := d.fd.UpdateFeed(topic, d.userAddress, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

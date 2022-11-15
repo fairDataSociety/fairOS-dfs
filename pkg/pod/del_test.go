@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -54,7 +56,8 @@ func TestDelete(t *testing.T) {
 	podName2 := "test2"
 
 	t.Run("create-one-pod-and-del", func(t *testing.T) {
-		_, err := pod1.CreatePod(podName1, "password", "")
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		_, err := pod1.CreatePod(podName1, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -87,7 +90,7 @@ func TestDelete(t *testing.T) {
 			t.Fatalf("delete failed")
 		}
 
-		infoGot, err := pod1.GetPodInfoFromPodMap(podName1)
+		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err == nil {
 			t.Fatalf("pod not deleted from map")
 		}
@@ -97,11 +100,12 @@ func TestDelete(t *testing.T) {
 	})
 
 	t.Run("create-two-pod-and-del", func(t *testing.T) {
-		_, err := pod1.CreatePod(podName1, "password", "")
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		_, err := pod1.CreatePod(podName1, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
-		_, err = pod1.CreatePod(podName2, "password", "")
+		_, err = pod1.CreatePod(podName2, "password", "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -138,7 +142,7 @@ func TestDelete(t *testing.T) {
 			t.Fatalf("delete pod failed")
 		}
 
-		infoGot, err := pod1.GetPodInfoFromPodMap(podName1)
+		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err == nil {
 			t.Fatalf("pod not deleted from map")
 		}
@@ -146,7 +150,7 @@ func TestDelete(t *testing.T) {
 			t.Fatalf("pod not deleted from map")
 		}
 
-		_, err = pod1.GetPodInfoFromPodMap(podName2)
+		_, _, err = pod1.GetPodInfoFromPodMap(podName2)
 		if err != nil {
 			t.Fatalf("removed wrong pod")
 		}
@@ -156,18 +160,19 @@ func TestDelete(t *testing.T) {
 	t.Run("create-pod-and-del-with-tables", func(t *testing.T) {
 		podName := "delPod"
 		for i := 0; i < 10; i++ {
-			pi, err := pod1.CreatePod(podName, "password", "")
+			podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+			pi, err := pod1.CreatePod(podName, "password", "", podPassword)
 			if err != nil {
 				t.Fatalf("error creating pod %s", podName)
 			}
-			dbTables, err := pi.GetDocStore().LoadDocumentDBSchemas()
+			dbTables, err := pi.GetDocStore().LoadDocumentDBSchemas(podPassword)
 			if err != nil {
 				t.Fatalf("err doc list %s", podName)
 			}
 			if len(dbTables) != 0 {
 				t.Fatal("doc tables delete failed while pod delete")
 			}
-			kvTables, err := pi.GetKVStore().LoadKVTables()
+			kvTables, err := pi.GetKVStore().LoadKVTables(podPassword)
 			if err != nil {
 				t.Fatalf("err kv list %s", podName)
 			}
@@ -177,24 +182,24 @@ func TestDelete(t *testing.T) {
 			si := make(map[string]collection.IndexType)
 			si["first_name"] = collection.StringIndex
 			si["age"] = collection.NumberIndex
-			err = pi.GetDocStore().CreateDocumentDB("dbName", si, true)
+			err = pi.GetDocStore().CreateDocumentDB("dbName", podPassword, si, true)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			err = pi.GetKVStore().CreateKVTable("kvName", collection.StringIndex)
+			err = pi.GetKVStore().CreateKVTable("kvName", podPassword, collection.StringIndex)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			dbTables, err = pi.GetDocStore().LoadDocumentDBSchemas()
+			dbTables, err = pi.GetDocStore().LoadDocumentDBSchemas(podPassword)
 			if err != nil {
 				t.Fatalf("err doc list %s", podName)
 			}
 			if len(dbTables) != 1 {
 				t.Fatal("doc tables create failed while pod delete")
 			}
-			kvTables, err = pi.GetKVStore().LoadKVTables()
+			kvTables, err = pi.GetKVStore().LoadKVTables(podPassword)
 			if err != nil {
 				t.Fatalf("err kv list %s", podName)
 			}

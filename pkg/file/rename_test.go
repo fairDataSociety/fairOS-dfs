@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -36,6 +38,7 @@ func TestRename(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	t.Run("upload-rename-same-dir-download-small-file", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		filePath := "/dir1"
 		fileName := "file1"
 		newFileName := "file_new"
@@ -49,18 +52,18 @@ func TestRename(t *testing.T) {
 		if fileObject.IsFileAlreadyPresent(podFile) {
 			t.Fatal("file should not be present")
 		}
-		_, _, err = fileObject.Download(podFile)
+		_, _, err = fileObject.Download(podFile, podPassword)
 		if err == nil {
 			t.Fatal("file should not be present for download")
 		}
 		// upload a file
-		content, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		content, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		newPodFile := utils.CombinePathAndFile(filePath, newFileName)
-		_, err = fileObject.RenameFromFileName(podFile, newPodFile)
+		_, err = fileObject.RenameFromFileName(podFile, newPodFile, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -72,7 +75,7 @@ func TestRename(t *testing.T) {
 		}
 
 		// Download the file and read from reader
-		reader, rcvdSize, err := fileObject.Download(utils.CombinePathAndFile(filePath, newFileName))
+		reader, rcvdSize, err := fileObject.Download(utils.CombinePathAndFile(filePath, newFileName), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -101,18 +104,20 @@ func TestRename(t *testing.T) {
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, fileObject, tm, logger)
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// populate the directory with few directory and files
-		err = dirObject.MkDir(filePath)
+		err = dirObject.MkDir(filePath, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir(newFilePath)
+		err = dirObject.MkDir(newFilePath, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -124,7 +129,7 @@ func TestRename(t *testing.T) {
 		}
 
 		// upload a file
-		content, err := uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		content, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -132,7 +137,7 @@ func TestRename(t *testing.T) {
 		if fileObject.IsFileAlreadyPresent(newPodFile) {
 			t.Fatal("file should not be present")
 		}
-		_, err = fileObject.RenameFromFileName(podFile, newPodFile)
+		_, err = fileObject.RenameFromFileName(podFile, newPodFile, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -148,7 +153,7 @@ func TestRename(t *testing.T) {
 			t.Fatal("new name should be present")
 		}
 		// Download the file and read from reader
-		reader, rcvdSize, err := fileObject.Download(newPodFile)
+		reader, rcvdSize, err := fileObject.Download(newPodFile, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -165,6 +170,5 @@ func TestRename(t *testing.T) {
 		if !bytes.Equal(content, rcvdBuffer.Bytes()) {
 			t.Fatalf("downloaded content is not equal")
 		}
-
 	})
 }

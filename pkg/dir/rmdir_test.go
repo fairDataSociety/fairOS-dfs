@@ -24,6 +24,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -55,42 +58,43 @@ func TestRmdir(t *testing.T) {
 	mockFile := fm.NewMockFile()
 
 	t.Run("simple-rmdir", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/dirToRemove")
+		err := dirObject.MkDir("/dirToRemove", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = dirObject.RmDir("")
+		err = dirObject.RmDir("", podPassword)
 		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
 			t.Fatal("invalid dir name")
 		}
 
-		err = dirObject.RmDir("asdasd")
+		err = dirObject.RmDir("asdasd", podPassword)
 		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
 			t.Fatal("invalid dir name")
 		}
-		err = dirObject.RmDir("/asdasd")
+		err = dirObject.RmDir("/asdasd", podPassword)
 		if !errors.Is(err, dir.ErrDirectoryNotPresent) {
 			t.Fatal("dir not present")
 		}
 
 		// now delete the directory
-		err = dirObject.RmDir("/dirToRemove")
+		err = dirObject.RmDir("/dirToRemove", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// verify if the directory is actually removed
-		dirEntry, _, err := dirObject.ListDir("/")
+		dirEntry, _, err := dirObject.ListDir("/", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -98,45 +102,46 @@ func TestRmdir(t *testing.T) {
 			t.Fatalf("could not delete directory")
 		}
 
-		err = dirObject.RmDir("/")
+		err = dirObject.RmDir("/", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 	t.Run("nested-rmdir", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/dirToRemove1")
+		err := dirObject.MkDir("/dirToRemove1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2")
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove")
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// make sure directories were created
-		dirEntry, _, err := dirObject.ListDir("/dirToRemove1")
+		dirEntry, _, err := dirObject.ListDir("/dirToRemove1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if dirEntry == nil {
 			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2\" was not created")
 		}
-		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2")
+		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -145,13 +150,13 @@ func TestRmdir(t *testing.T) {
 		}
 
 		// now delete the directory
-		err = dirObject.RmDir("/dirToRemove1")
+		err = dirObject.RmDir("/dirToRemove1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// verify if the directory is actually removed
-		dirEntry, _, err = dirObject.ListDir("/")
+		dirEntry, _, err = dirObject.ListDir("/", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -181,39 +186,40 @@ func TestRmRootDirByPath(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	t.Run("rmrootdir", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/dirToRemove1")
+		err := dirObject.MkDir("/dirToRemove1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2")
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove")
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// make sure directories were created
-		dirEntry, _, err := dirObject.ListDir("/dirToRemove1")
+		dirEntry, _, err := dirObject.ListDir("/dirToRemove1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if dirEntry == nil {
 			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2\" was not created")
 		}
-		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2")
+		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -222,11 +228,11 @@ func TestRmRootDirByPath(t *testing.T) {
 		}
 
 		fileName := "file1"
-		err = dirObject.AddEntryToDir("/dirToRemove1", fileName, true)
+		err = dirObject.AddEntryToDir("/dirToRemove1", podPassword, fileName, true)
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, fileEntry, err := dirObject.ListDir("/dirToRemove1")
+		_, fileEntry, err := dirObject.ListDir("/dirToRemove1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -234,13 +240,13 @@ func TestRmRootDirByPath(t *testing.T) {
 			t.Fatal("there should a file entry")
 		}
 		// now delete the root directory
-		err = dirObject.RmDir("/")
+		err = dirObject.RmDir("/", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// verify if the directory is actually removed
-		dirEntry, _, err = dirObject.ListDir("/")
+		dirEntry, _, err = dirObject.ListDir("/", podPassword)
 		if err != nil && !strings.HasSuffix(err.Error(), dir.ErrResourceDeleted.Error()) {
 			t.Fatal("root directory was not deleted")
 		}
@@ -271,26 +277,27 @@ func TestRmRootDir(t *testing.T) {
 	mockFile := fm.NewMockFile()
 
 	t.Run("rmrootdir", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/dirToRemove1")
+		err := dirObject.MkDir("/dirToRemove1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2")
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove")
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -300,14 +307,14 @@ func TestRmRootDir(t *testing.T) {
 		}
 
 		// make sure directories were created
-		dirEntry, _, err := dirObject.ListDir("/dirToRemove1")
+		dirEntry, _, err := dirObject.ListDir("/dirToRemove1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if dirEntry == nil {
 			t.Fatal("nested directory \"/dirToRemove1/dirToRemove2\" was not created")
 		}
-		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2")
+		dirEntry, _, err = dirObject.ListDir("/dirToRemove1/dirToRemove2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -316,11 +323,11 @@ func TestRmRootDir(t *testing.T) {
 		}
 
 		fileName := "file1"
-		err = dirObject.AddEntryToDir("/", fileName, true)
+		err = dirObject.AddEntryToDir("/", podPassword, fileName, true)
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, fileEntry, err := dirObject.ListDir("/")
+		_, fileEntry, err := dirObject.ListDir("/", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -329,13 +336,13 @@ func TestRmRootDir(t *testing.T) {
 		}
 
 		// now delete the root directory
-		err = dirObject.RmRootDir()
+		err = dirObject.RmRootDir(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// verify if the directory is actually removed
-		dirEntry, _, err = dirObject.ListDir("/")
+		dirEntry, _, err = dirObject.ListDir("/", podPassword)
 		if err != nil && !strings.HasSuffix(err.Error(), dir.ErrResourceDeleted.Error()) {
 			t.Fatal("root directory was not deleted")
 		}

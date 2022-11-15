@@ -34,14 +34,14 @@ type Entry struct {
 }
 
 // ListFiles given a list of files, list files gives back the information related to each file.
-func (f *File) ListFiles(files []string) ([]Entry, error) {
+func (f *File) ListFiles(files []string, podPassword string) ([]Entry, error) {
 	fileEntries := &[]Entry{}
 	wg := new(sync.WaitGroup)
 	mtx := &sync.Mutex{}
 	for _, filePath := range files {
 		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
 		wg.Add(1)
-		lsTask := newLsTask(f, fileTopic, filePath, fileEntries, mtx, wg)
+		lsTask := newLsTask(f, fileTopic, filePath, podPassword, fileEntries, mtx, wg)
 		_, err := f.syncManager.Go(lsTask)
 		if err != nil {
 			return nil, fmt.Errorf("list files : %v", err)

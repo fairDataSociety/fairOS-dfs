@@ -35,8 +35,19 @@ type documentDB struct {
 	CollectionType string              `json:"type"`
 }
 
-// DocListHandler is the api handler which lists all the document database in a pod
-// it takes no arguments
+// DocListHandler godoc
+//
+//	@Summary      List all doc table
+//	@Description  DocListHandler is the api handler which lists all the document database in a pod
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  DocumentDBs
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/ls [get]
 func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
