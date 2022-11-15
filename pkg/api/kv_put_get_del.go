@@ -336,11 +336,6 @@ func (h *Handler) KVGetDataHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &resp)
 }
 
-// KVDelHandler is the api handler to delete a key and value from the kv table
-// it takes two arguments
-// - table_name: the name of the kv table
-// - key: the key string
-
 // KVDelHandler godoc
 //
 //	@Summary      Delete key-value from the kv table

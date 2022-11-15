@@ -43,7 +43,7 @@ type DocIndexRequest struct {
 //	@Success      200  {object}  response
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
-//	@Router       /v1/doc/find [post]
+//	@Router       /v1/doc/indexjson [post]
 func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

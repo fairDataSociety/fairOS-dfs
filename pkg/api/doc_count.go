@@ -32,12 +32,6 @@ type DocCountRequest struct {
 	Expression  string `json:"expr,omitempty"`
 }
 
-// DocCountHandler is the api handler to count the number of documents in
-// a given document database
-// it takes two arguments
-// - table_name: the name of the table to count the rows
-// - expr: the expression for selecting certain rows
-
 // DocCountHandler godoc
 //
 //	@Summary      Count number of document in a table

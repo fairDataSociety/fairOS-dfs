@@ -23,18 +23,16 @@ import (
 	"net/http"
 	"strings"
 
-	httpSwagger "github.com/swaggo/http-swagger"
-
 	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	_ "github.com/fairdatasociety/fairOS-dfs/swagger"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	_ "github.com/fairdatasociety/fairOS-dfs/swagger"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 var (
