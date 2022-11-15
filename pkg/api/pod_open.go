@@ -31,10 +31,19 @@ type PodOpenResponse struct {
 	Reference string `json:"reference"`
 }
 
-// PodOpenHandler is the api handler to open a pod
-// it takes two arguments
-// - pod_name: the name of the pod to open
-// - password: the password of the user
+// PodOpenHandler godoc
+//
+//	@Summary      Open pod
+//	@Description  PodOpenHandler is the api handler to open pod
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_request body PodRequest true "pod name and user password"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/open [post]
 func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -44,7 +53,7 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq common.PodRequest
+	var podReq PodRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod open: could not decode arguments")
@@ -87,10 +96,19 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &response{Message: "pod opened successfully"})
 }
 
-// PodOpenAsyncHandler is the api handler to open a pod asynchronously
-// it takes two arguments
-// - pod_name: the name of the pod to open
-// - password: the password of the user
+// PodOpenAsyncHandler godoc
+//
+//	@Summary      Open pod
+//	@Description  PodOpenAsyncHandler is the api handler to open pod asynchronously
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_request body PodRequest true "pod name and user password"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/open-async [post]
 func (h *Handler) PodOpenAsyncHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

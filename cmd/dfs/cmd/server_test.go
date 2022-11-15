@@ -64,7 +64,7 @@ func TestApis(t *testing.T) {
 	<-time.After(time.Second * 10)
 	t.Run("login-fail-test", func(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
-		userRequest := &common.UserRequest{
+		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
 			Password: randStringRunes(8),
 		}
@@ -94,7 +94,7 @@ func TestApis(t *testing.T) {
 
 	t.Run("signup-login", func(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
-		userRequest := &common.UserRequest{
+		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
 			Password: randStringRunes(8),
 		}
@@ -145,7 +145,7 @@ func TestApis(t *testing.T) {
 
 	t.Run("signup-login-logout-loggedin", func(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
-		userRequest := &common.UserRequest{
+		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
 			Password: randStringRunes(8),
 		}
@@ -241,7 +241,7 @@ func TestApis(t *testing.T) {
 
 	t.Run("signup-login-pod-dir-file-rename", func(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
-		userRequest := &common.UserRequest{
+		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
 			Password: randStringRunes(8),
 		}
@@ -744,7 +744,7 @@ func TestApis(t *testing.T) {
 			}
 		}()
 
-		userRequest := &common.UserRequest{
+		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
 			Password: randStringRunes(8),
 		}
@@ -795,7 +795,7 @@ func TestApis(t *testing.T) {
 		// userPresent
 		uPresent := &common.WebsocketRequest{
 			Event: common.UserPresentV2,
-			Params: common.UserRequest{
+			Params: common.UserSignupRequest{
 				UserName: userRequest.UserName,
 			},
 		}
@@ -811,7 +811,7 @@ func TestApis(t *testing.T) {
 		// userLoggedIN
 		uLoggedIn := &common.WebsocketRequest{
 			Event: common.UserIsLoggedin,
-			Params: common.UserRequest{
+			Params: common.UserSignupRequest{
 				UserName: userRequest.UserName,
 			},
 		}
@@ -1353,7 +1353,7 @@ func TestApis(t *testing.T) {
 		// userLoggedIN
 		uLoggedIn = &common.WebsocketRequest{
 			Event: common.UserIsLoggedin,
-			Params: common.UserRequest{
+			Params: common.UserSignupRequest{
 				UserName: userRequest.UserName,
 			},
 		}

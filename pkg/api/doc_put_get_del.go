@@ -20,22 +20,41 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
+
+type DocPutRequest struct {
+	PodName   string `json:"pod_name,omitempty"`
+	TableName string `json:"table_name,omitempty"`
+	Document  string `json:"doc,omitempty"`
+}
+
+type DocDeleteRequest struct {
+	PodName   string `json:"pod_name,omitempty"`
+	TableName string `json:"table_name,omitempty"`
+	ID        string `json:"id,omitempty"`
+}
 
 // DocGetResponse represents a single document row
 type DocGetResponse struct {
 	Doc []byte `json:"doc"`
 }
 
-// DocPutHandler is the api handler to add a document in to a document database
-// it has two arguments
-// table_name: the name of the document database
-// doc: the document to add
-func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
+// DocEntryPutHandler godoc
+//
+//	@Summary      Add a record in document datastore
+//	@Description  DocEntryPutHandler is the api handler add a document in to a document datastore
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      doc_entry_put_request query DocPutRequest true "doc put request"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/entry/put [post]
+func (h *Handler) DocEntryPutHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc put: invalid request body type")
@@ -44,7 +63,7 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq DocPutRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc put: could not decode arguments")
@@ -94,11 +113,22 @@ func (h *Handler) DocPutHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &response{Message: "added document to db"})
 }
 
-// DocGetHandler is the api handler to get a document from a document database
-// it has two arguments
-// table_name: the name of the document database
-// id: the document id to get
-func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
+// DocEntryGetHandler godoc
+//
+//	@Summary      Get a document from a document datastore
+//	@Description  DocEntryGetHandler is the api handler to get a document from a document datastore
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      table_name query string true "table name"
+//	@Param	      id query string true "id to search for"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  DocGetResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/entry/get [get]
+func (h *Handler) DocEntryGetHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc get: \"pod_name\" argument missing")
@@ -165,11 +195,20 @@ func (h *Handler) DocGetHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &getResponse)
 }
 
-// DocDelHandler is the api handler to delete a document from a document database
-// it has two arguments
-// table_name: the name of the document database
-// id: the document id to delete
-func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
+// DocEntryDelHandler godoc
+//
+//	@Summary      Delete a document from a document datastore
+//	@Description  DocEntryDelHandler is the api handler to delete a document from a document datastore
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      doc_entry_delete_request query DocDeleteRequest true "doc entry delete"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/entry/delete [delete]
+func (h *Handler) DocEntryDelHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc del: invalid request body type")
@@ -178,7 +217,7 @@ func (h *Handler) DocDelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq DocDeleteRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc del: could not decode arguments")

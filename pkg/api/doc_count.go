@@ -20,17 +20,31 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// DocCountHandler is the api handler to count the number of documents in
-// a given document database
-// it takes two arguments
-// - table_name: the name of the table to count the rows
-// - expr: the expression for selecting certain rows
+type DocCountRequest struct {
+	PodName     string `json:"pod_name,omitempty"`
+	TableName   string `json:"table_name,omitempty"`
+	SimpleIndex string `json:"si,omitempty"`
+	Mutable     bool   `json:"mutable,omitempty"`
+	Expression  string `json:"expr,omitempty"`
+}
+
+// DocCountHandler godoc
+//
+//	@Summary      Count number of document in a table
+//	@Description  DocCountHandler is the api handler to count the number of documents in a given document database
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      doc_request body DocCountRequest true "doc table info"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  collection.TableKeyCount
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/count [post]
 func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -40,7 +54,7 @@ func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq DocCountRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc count: could not decode arguments")

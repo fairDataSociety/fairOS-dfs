@@ -20,15 +20,23 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// KVOpenHandler is the api handler to open a key value table
-// it takes only one argument
-// - table_name: the name of the kv table
+// KVOpenHandler godoc
+//
+//	@Summary      Open a key value table
+//	@Description  KVOpenHandler is the api handler to open a key value table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      kv_table_request body KVTableRequest true "kv table request"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      201  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/open [post]
 func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -38,7 +46,7 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var kvReq common.KVRequest
+	var kvReq KVTableRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv open: could not decode arguments")

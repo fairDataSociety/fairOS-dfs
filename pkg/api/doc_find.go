@@ -29,11 +29,22 @@ type DocFindResponse struct {
 	Docs [][]byte `json:"docs"`
 }
 
-// DocFindHandler is the api handler to select rows from a given document database
-// it takes three arguments
-// table_name: the daument database from which to select the rows
-// expr: the expression which helps in selection particular rows
-// limit: the threshold of documents to return in the result
+// DocFindHandler godoc
+//
+//	@Summary      Get rows from a given doc datastore
+//	@Description  DocFindHandler is the api handler to select rows from a given document datastore
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_name query string true "pod name"
+//	@Param	      table_name query string true "table name"
+//	@Param	      expr query string true "expression to search for"
+//	@Param	      limit query string false "number od documents"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  DocFindResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/find [get]
 func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {

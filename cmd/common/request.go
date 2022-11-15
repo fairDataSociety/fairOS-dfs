@@ -16,17 +16,27 @@ limitations under the License.
 
 package common
 
-type UserRequest struct {
+type UserSignupRequest struct {
 	UserName string `json:"user_name,omitempty"`
 	Password string `json:"password,omitempty"`
-	Address  string `json:"address,omitempty"`
 	Mnemonic string `json:"mnemonic,omitempty"`
+}
+
+type UserLoginRequest struct {
+	UserName string `json:"user_name,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 type PodRequest struct {
 	PodName       string `json:"pod_name,omitempty"`
 	Password      string `json:"password,omitempty"`
 	Reference     string `json:"reference,omitempty"`
+	SharedPodName string `json:"shared_pod_name,omitempty"`
+}
+
+type PodShareRequest struct {
+	PodName       string `json:"pod_name,omitempty"`
+	Password      string `json:"password,omitempty"`
 	SharedPodName string `json:"shared_pod_name,omitempty"`
 }
 

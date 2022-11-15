@@ -20,18 +20,31 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"resenje.org/jsonhttp"
 )
 
-// FileDeleteHandler is the api handler to delete a file from a given pod
+type FileDeleteRequest struct {
+	PodName  string `json:"pod_name,omitempty"`
+	FilePath string `json:"file_path,omitempty"`
+}
+
+// FileDeleteHandler godoc
 //
-//	it takes only one argument
-//
-// file_path: the absolute path of the file in the pod
+//	@Summary      Delete a file
+//	@Description  FileReceiveHandler is the api handler to delete a file from a given pod
+//	@Tags         file
+//	@Accept       json
+//	@Produce      json
+//	@Param	      file_delete_request body FileDeleteRequest true "pod name and file path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      404  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/file/delete [delete]
 func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -41,7 +54,7 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var fsReq common.FileSystemRequest
+	var fsReq FileDeleteRequest
 	err := decoder.Decode(&fsReq)
 	if err != nil {
 		h.logger.Errorf("file delete: could not decode arguments")
