@@ -204,4 +204,17 @@ $ dfs server --swag
 This should run the dfs server along with swagger-ui, available at `http://localhost:9090/swagger/index.html` assuming 
 server is running on default `9090` port on your localhost
 
+### Running fairOS on goerli testnet and swarm mainnet
+
+we need to set `network` configuration in the config file as testnet and bee configuration should point to a bee running
+on mainnet 
+
+```
+network: "testnet"
+bee:
+  bee-api-endpoint: http://localhost:1633 # bee running on mainnet  
+  postage-batch-id: <BATCH>
+  is-gateway-proxy: false
+```
+
 
