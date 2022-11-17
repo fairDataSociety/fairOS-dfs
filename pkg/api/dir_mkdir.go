@@ -28,8 +28,8 @@ import (
 )
 
 type DirRequest struct {
-	PodName       string `json:"pod_name,omitempty"`
-	DirectoryPath string `json:"dir_path,omitempty"`
+	PodName       string `json:"podName,omitempty"`
+	DirectoryPath string `json:"dirPath,omitempty"`
 }
 
 // DirectoryMkdirHandler godoc

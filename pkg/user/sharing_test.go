@@ -152,9 +152,6 @@ func TestSharing(t *testing.T) {
 		if receiveFileInfo.FileName != "file1" {
 			t.Fatalf("invalid filename received")
 		}
-		if receiveFileInfo.PodName != podName1 {
-			t.Fatalf("invalid podName received")
-		}
 		if receiveFileInfo.Size != strconv.FormatUint(100, 10) {
 			t.Fatalf("invalid file size received")
 		}

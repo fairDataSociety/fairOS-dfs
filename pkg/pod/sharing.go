@@ -25,10 +25,10 @@ import (
 )
 
 type ShareInfo struct {
-	PodName     string `json:"pod_name"`
-	Address     string `json:"pod_address"`
+	PodName     string `json:"podName"`
+	Address     string `json:"podAddress"`
 	Password    string `json:"password"`
-	UserAddress string `json:"user_address"`
+	UserAddress string `json:"userAddress"`
 }
 
 // PodShare makes a pod public by exporting all the pod related information and its

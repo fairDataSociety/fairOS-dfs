@@ -33,20 +33,17 @@ var (
 )
 
 type MetaData struct {
-	Version          uint8         `json:"version"`
-	UserAddress      utils.Address `json:"user_address"`
-	PodName          string        `json:"pod_name"`
-	SharedPassword   string        `json:"shared_password"`
-	Path             string        `json:"file_path"`
-	Name             string        `json:"file_name"`
-	Size             uint64        `json:"file_size"`
-	BlockSize        uint32        `json:"block_size"`
-	ContentType      string        `json:"content_type"`
-	Compression      string        `json:"compression"`
-	CreationTime     int64         `json:"creation_time"`
-	AccessTime       int64         `json:"access_time"`
-	ModificationTime int64         `json:"modification_time"`
-	InodeAddress     []byte        `json:"file_inode_reference"`
+	Version          uint8  `json:"version"`
+	Path             string `json:"filePath"`
+	Name             string `json:"fileName"`
+	Size             uint64 `json:"fileSize"`
+	BlockSize        uint32 `json:"blockSize"`
+	ContentType      string `json:"contentType"`
+	Compression      string `json:"compression"`
+	CreationTime     int64  `json:"creationTime"`
+	AccessTime       int64  `json:"accessTime"`
+	ModificationTime int64  `json:"modificationTime"`
+	InodeAddress     []byte `json:"fileInodeReference"`
 }
 
 // LoadFileMeta is used in syncing
@@ -66,7 +63,7 @@ func (f *File) LoadFileMeta(fileNameWithPath, podPassword string) error {
 func (f *File) handleMeta(meta *MetaData, podPassword string) error {
 	// check if meta is present.
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
-	_, err := f.GetMetaFromFileName(totalPath, podPassword, meta.UserAddress)
+	_, err := f.GetMetaFromFileName(totalPath, podPassword, f.userAddress)
 	if err != nil {
 		if err != ErrDeletedFeed {
 			return f.uploadMeta(meta, podPassword)
@@ -85,7 +82,7 @@ func (f *File) uploadMeta(meta *MetaData, podPassword string) error {
 	// put the file meta as a feed
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
-	_, err = f.fd.CreateFeed(topic, meta.UserAddress, fileMetaBytes, []byte(podPassword))
+	_, err = f.fd.CreateFeed(topic, f.userAddress, fileMetaBytes, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -97,11 +94,11 @@ func (f *File) deleteMeta(meta *MetaData, podPassword string) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	// update with utils.DeletedFeedMagicWord
-	_, err := f.fd.UpdateFeed(topic, meta.UserAddress, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
+	_, err := f.fd.UpdateFeed(topic, f.userAddress, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	err = f.fd.DeleteFeed(topic, meta.UserAddress)
+	err = f.fd.DeleteFeed(topic, f.userAddress)
 	if err != nil {
 		f.logger.Warningf("failed to remove file feed %s", totalPath)
 	}
@@ -118,7 +115,7 @@ func (f *File) updateMeta(meta *MetaData, podPassword string) error {
 	// put the file meta as a feed
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
-	_, err = f.fd.UpdateFeed(topic, meta.UserAddress, fileMetaBytes, []byte(podPassword))
+	_, err = f.fd.UpdateFeed(topic, f.userAddress, fileMetaBytes, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

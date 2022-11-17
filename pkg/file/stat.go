@@ -26,24 +26,23 @@ import (
 )
 
 type Stats struct {
-	PodName          string `json:"pod_name"`
-	FilePath         string `json:"file_path"`
-	FileName         string `json:"file_name"`
-	FileSize         string `json:"file_size"`
-	BlockSize        string `json:"block_size"`
-	Compression      string `json:"compression"`
-	ContentType      string `json:"content_type"`
-	CreationTime     string `json:"creation_time"`
-	ModificationTime string `json:"modification_time"`
-	AccessTime       string `json:"access_time"`
-	Blocks           []Blocks
+	PodName          string   `json:"podName"`
+	FilePath         string   `json:"filePath"`
+	FileName         string   `json:"fileName"`
+	FileSize         string   `json:"fileSize"`
+	BlockSize        string   `json:"blockSize"`
+	Compression      string   `json:"compression"`
+	ContentType      string   `json:"contentType"`
+	CreationTime     string   `json:"creationTime"`
+	ModificationTime string   `json:"modificationTime"`
+	AccessTime       string   `json:"accessTime"`
+	Blocks           []Blocks `json:"blocks"`
 }
 
 type Blocks struct {
-	Name           string `json:"name"`
 	Reference      string `json:"reference"`
 	Size           string `json:"size"`
-	CompressedSize string `json:"compressed_size"`
+	CompressedSize string `json:"compressedSize"`
 }
 
 // GetStats given a filename this function returns all the information about the file
@@ -71,7 +70,6 @@ func (f *File) GetStats(podName, podFileWithPath, podPassword string) (*Stats, e
 	var fileBlocks []Blocks
 	for _, b := range fileInode.Blocks {
 		fb := Blocks{
-			Name:           b.Name,
 			Reference:      hex.EncodeToString(b.Reference.Bytes()),
 			Size:           strconv.Itoa(int(b.Size)),
 			CompressedSize: strconv.Itoa(int(b.CompressedSize)),

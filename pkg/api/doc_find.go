@@ -36,8 +36,8 @@ type DocFindResponse struct {
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_name query string true "pod name"
-//	@Param	      table_name query string true "table name"
+//	@Param	      podName query string true "pod name"
+//	@Param	      tableName query string true "table name"
 //	@Param	      expr query string true "expression to search for"
 //	@Param	      limit query string false "number od documents"
 //	@Param	      Cookie header string true "cookie parameter"
@@ -46,29 +46,29 @@ type DocFindResponse struct {
 //	@Failure      500  {object}  response
 //	@Router       /v1/doc/find [get]
 func (h *Handler) DocFindHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("doc find: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc find: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc find: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("doc find: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc find: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc find: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"podName\" argument missing"})
 		return
 	}
 
-	keys, ok = r.URL.Query()["table_name"]
+	keys, ok = r.URL.Query()["tableName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("doc find: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc find: \"table_name\" argument missing"})
+		h.logger.Errorf("doc find: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"tableName\" argument missing"})
 		return
 	}
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("doc find: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc find: \"table_name\" argument missing"})
+		h.logger.Errorf("doc find: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc find: \"tableName\" argument missing"})
 		return
 	}
 

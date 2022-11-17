@@ -31,12 +31,12 @@ const (
 
 type Entry struct {
 	Name             string `json:"name"`
-	ContentType      string `json:"content_type"`
+	ContentType      string `json:"contentType"`
 	Size             string `json:"size,omitempty"`
-	BlockSize        string `json:"block_size,omitempty"`
-	CreationTime     string `json:"creation_time"`
-	ModificationTime string `json:"modification_time"`
-	AccessTime       string `json:"access_time"`
+	BlockSize        string `json:"blockSize,omitempty"`
+	CreationTime     string `json:"creationTime"`
+	ModificationTime string `json:"modificationTime"`
+	AccessTime       string `json:"accessTime"`
 }
 
 // ListDir given a directory, this function lists all the children (directory) inside the given directory.

@@ -31,7 +31,7 @@ import (
 )
 
 type PodSharingReference struct {
-	Reference string `json:"pod_sharing_reference"`
+	Reference string `json:"podSharingReference"`
 }
 
 // PodShareHandler godoc
@@ -123,14 +123,14 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
-//	@Param	      sharing_ref query string true "pod sharing reference"
+//	@Param	      sharingRef query string true "pod sharing reference"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  pod.ShareInfo
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/pod/receiveinfo [get]
 func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["sharing_ref"]
+	keys, ok := r.URL.Query()["sharingRef"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("pod receive info: \"sharing_ref\" argument missing")
 		jsonhttp.BadRequest(w, "pod receive info: \"sharing_ref\" argument missing")
@@ -182,15 +182,15 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
-//	@Param	      sharing_ref query string true "pod sharing reference"
-//	@Param	      shared_pod_name query string false "pod name to be saved as"
+//	@Param	      sharingRef query string true "pod sharing reference"
+//	@Param	      sharedPodName query string false "pod name to be saved as"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  response
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/pod/receive [get]
 func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["sharing_ref"]
+	keys, ok := r.URL.Query()["sharingRef"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("pod receive: \"sharing_ref\" argument missing")
 		jsonhttp.BadRequest(w, "pod receive: \"sharing_ref\" argument missing")
@@ -205,7 +205,7 @@ func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sharedPodName := ""
-	keys, ok = r.URL.Query()["shared_pod_name"]
+	keys, ok = r.URL.Query()["sharedPodName"]
 	if ok && len(keys[0]) == 1 {
 		sharedPodName = keys[0]
 	}

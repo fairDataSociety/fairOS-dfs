@@ -123,8 +123,8 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_name query string true "pod name"
-//	@Param	      table_name query string true "table name"
+//	@Param	      podName query string true "pod name"
+//	@Param	      tableName query string true "table name"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  KVResponse
 //	@Success      204  {object}  response
@@ -132,31 +132,31 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure      500  {object}  response
 //	@Router       /v1/kv/seek/next [Post]
 func (h *Handler) KVGetNextHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get_next: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get_next: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"podName\" argument missing")
 		return
 	}
 
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("kv get_next: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get_next: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"podName\" argument missing")
 		return
 	}
 
-	keys, ok = r.URL.Query()["table_name"]
+	keys, ok = r.URL.Query()["tableName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get_next: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"table_name\" argument missing")
+		h.logger.Errorf("kv get_next: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"tableName\" argument missing")
 		return
 	}
 
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("kv get_next: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"table_name\" argument missing")
+		h.logger.Errorf("kv get_next: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"tableName\" argument missing")
 		return
 	}
 

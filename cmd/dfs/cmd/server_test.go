@@ -414,19 +414,19 @@ func TestApis(t *testing.T) {
 				writer := multipart.NewWriter(body)
 				contentLength := fmt.Sprintf("%d", v.size)
 
-				err = writer.WriteField("pod_name", podRequest.PodName)
+				err = writer.WriteField("podName", podRequest.PodName)
 				if err != nil {
 					t.Fatal(err)
 				}
-				err = writer.WriteField("content_length", contentLength)
+				err = writer.WriteField("contentLength", contentLength)
 				if err != nil {
 					t.Fatal(err)
 				}
-				err = writer.WriteField("dir_path", filepath.Dir(v.path))
+				err = writer.WriteField("dirPath", filepath.Dir(v.path))
 				if err != nil {
 					t.Fatal(err)
 				}
-				err = writer.WriteField("block_size", "4kb")
+				err = writer.WriteField("blockSize", "4kb")
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -468,7 +468,7 @@ func TestApis(t *testing.T) {
 
 		for _, v := range entries {
 			if v.isDir {
-				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?pod_name=%s&dir_path=%s", basev1, string(common.DirStat), podRequest.PodName, v.path), http.NoBody)
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.DirStat), podRequest.PodName, v.path), http.NoBody)
 				if err != nil {
 					t.Fatal(err)
 
@@ -487,7 +487,7 @@ func TestApis(t *testing.T) {
 				}
 			} else {
 				if v.isDir {
-					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?pod_name=%s&dir_path=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
+					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
 					if err != nil {
 						t.Fatal(err)
 
@@ -639,7 +639,7 @@ func TestApis(t *testing.T) {
 		}
 		for _, v := range newEntries {
 			if v.isDir {
-				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?pod_name=%s&dir_path=%s", basev1, string(common.DirStat), podRequest.PodName, v.path), http.NoBody)
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.DirStat), podRequest.PodName, v.path), http.NoBody)
 				if err != nil {
 					t.Fatal(err)
 
@@ -658,7 +658,7 @@ func TestApis(t *testing.T) {
 				}
 			} else {
 				if v.isDir {
-					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?pod_name=%s&dir_path=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
+					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
 					if err != nil {
 						t.Fatal(err)
 

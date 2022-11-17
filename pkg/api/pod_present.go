@@ -15,14 +15,14 @@ import (
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_name query string true "pod name"
+//	@Param	      podName query string true "pod name"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  response
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/pod/present [get]
 func (h *Handler) PodPresentHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("doc ls: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"pod_name\" argument missing"})

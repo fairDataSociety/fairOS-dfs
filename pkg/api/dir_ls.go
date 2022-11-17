@@ -40,15 +40,15 @@ type ListFileResponse struct {
 //	@Description  DirectoryLsHandler is the api handler for listing the contents of a directory.
 //	@Tags         dir
 //	@Produce      json
-//	@Param	      pod_name query string true "pod name"
-//	@Param	      dir_path query string true "dir path"
+//	@Param	      podName query string true "pod name"
+//	@Param	      dirPath query string true "dir path"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  ListFileResponse
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/dir/ls [get]
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("ls: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "ls: \"pod_name\" argument missing"})
@@ -56,7 +56,7 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	podName := keys[0]
 
-	keys, ok = r.URL.Query()["dir_path"]
+	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("ls: \"dir_path\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "ls: \"dir_path\" argument missing"})

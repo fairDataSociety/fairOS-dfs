@@ -58,8 +58,6 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	now := time.Now().Unix()
 	meta := MetaData{
 		Version:          MetaVersion,
-		UserAddress:      f.userAddress,
-		PodName:          f.podName,
 		Path:             podPath,
 		Name:             podFileName,
 		Size:             uint64(fileSize),
@@ -117,18 +115,17 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 			wg.Add(1)
 			worker <- true
 			go func(counter, size int) {
-				blockName := fmt.Sprintf("block-%05d", counter)
 				defer func() {
 					<-worker
 					wg.Done()
 					if mainErr != nil { // skipcq: TCV-001
-						f.logger.Error("failed uploading block ", blockName)
+						f.logger.Error("failed uploading block ", counter)
 						return
 					}
-					f.logger.Info("done uploading block ", blockName)
+					f.logger.Info("done uploading block ", counter)
 				}()
 
-				f.logger.Info("Uploading ", blockName)
+				f.logger.Infof("Uploading %d block", counter)
 				// compress the data
 				uploadData := data[:size]
 				if compression != "" {
@@ -151,7 +148,6 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 					return
 				}
 				fileBlock := &BlockInfo{
-					Name:           blockName,
 					Size:           uint32(size),
 					CompressedSize: uint32(len(uploadData)),
 					Reference:      utils.NewReference(addr),

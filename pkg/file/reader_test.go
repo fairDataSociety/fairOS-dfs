@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"errors"
-	"fmt"
 	"io"
 	"math/big"
 	"testing"
@@ -406,9 +405,7 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression, po
 		if err != nil {
 			t.Fatal(err)
 		}
-		blockName := fmt.Sprintf("block-%05d", i)
 		fileBlock := &file.BlockInfo{
-			Name:           blockName,
 			Size:           bytesToWrite,
 			CompressedSize: uint32(len(buf)),
 			Reference:      utils.NewReference(addr),
@@ -536,9 +533,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 		if err != nil {
 			t.Fatal(err)
 		}
-		blockName := fmt.Sprintf("block-%05d", i)
 		fileBlock := &file.BlockInfo{
-			Name:           blockName,
 			Size:           bytesToWrite,
 			CompressedSize: uint32(len(buf)),
 			Reference:      utils.NewReference(addr),

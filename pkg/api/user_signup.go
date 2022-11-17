@@ -33,8 +33,8 @@ var (
 
 type UserSignupResponse struct {
 	Address   string `json:"address"`
-	NameHash  string `json:"name_hash,omitempty"`
-	PublicKey string `json:"public_key,omitempty"`
+	NameHash  string `json:"nameHash,omitempty"`
+	PublicKey string `json:"publicKey,omitempty"`
 	Message   string `json:"message,omitempty"`
 	Mnemonic  string `json:"mnemonic,omitempty"`
 }

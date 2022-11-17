@@ -21,7 +21,7 @@ import (
 )
 
 type UserExportResponse struct {
-	Name    string `json:"user_name"`
+	Name    string `json:"userName"`
 	Address string `json:"address"`
 }
 
