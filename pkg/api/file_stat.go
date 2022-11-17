@@ -32,8 +32,8 @@ import (
 //	@Tags         file
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_name query string true "pod name"
-//	@Param	      pod_name query string true "file path"
+//	@Param	      podName query string true "pod name"
+//	@Param	      filePath query string true "file path"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  file.Stats
 //	@Failure      400  {object}  response
@@ -42,27 +42,27 @@ import (
 func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["pod_name"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("file stat: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file stat: \"pod_name\" argument missing"})
+		h.logger.Errorf("file stat: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("file stat: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file stat: \"pod_name\" argument missing"})
+		h.logger.Errorf("file stat: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"podName\" argument missing"})
 		return
 	}
 
 	keys, ok = r.URL.Query()["file_path"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("file stat: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file stat: \"file_path\" argument missing"})
+		h.logger.Errorf("file stat: \"filePath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"filePath\" argument missing"})
 		return
 	}
 	podFileWithPath := keys[0]
 	if podFileWithPath == "" {
-		h.logger.Errorf("file stat: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file stat: \"pod_path_file\" argument missing"})
+		h.logger.Errorf("file stat: \"filePath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"filePath\" argument missing"})
 		return
 	}
 

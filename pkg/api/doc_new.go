@@ -27,15 +27,15 @@ import (
 )
 
 type DocRequest struct {
-	PodName     string `json:"pod_name,omitempty"`
-	TableName   string `json:"table_name,omitempty"`
+	PodName     string `json:"podName,omitempty"`
+	TableName   string `json:"tableName,omitempty"`
 	SimpleIndex string `json:"si,omitempty"`
 	Mutable     bool   `json:"mutable,omitempty"`
 }
 
 type SimpleDocRequest struct {
-	PodName   string `json:"pod_name,omitempty"`
-	TableName string `json:"table_name,omitempty"`
+	PodName   string `json:"podName,omitempty"`
+	TableName string `json:"tableName,omitempty"`
 }
 
 // DocCreateHandler godoc

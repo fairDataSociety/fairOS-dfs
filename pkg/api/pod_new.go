@@ -27,7 +27,7 @@ import (
 )
 
 type PodRequest struct {
-	PodName  string `json:"pod_name,omitempty"`
+	PodName  string `json:"podName,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 

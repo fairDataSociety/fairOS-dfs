@@ -21,10 +21,10 @@ var (
 )
 
 type MetaData struct {
-	Version          uint8
-	Path             string
-	Name             string
-	CreationTime     int64
-	AccessTime       int64
-	ModificationTime int64
+	Version          uint8  `json:"version"`
+	Path             string `json:"path"`
+	Name             string `json:"name"`
+	CreationTime     int64  `json:"creationTime"`
+	AccessTime       int64  `json:"accessTime"`
+	ModificationTime int64  `json:"modificationTime"`
 }

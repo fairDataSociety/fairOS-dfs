@@ -80,18 +80,18 @@ type WebsocketRequest struct {
 }
 
 type FileRequest struct {
-	PodName       string `json:"pod_name,omitempty"`
-	TableName     string `json:"table_name,omitempty"`
-	DirPath       string `json:"dir_path,omitempty"`
-	BlockSize     string `json:"block_size,omitempty"`
-	FileName      string `json:"file_name,omitempty"`
-	ContentLength string `json:"content_length,omitempty"`
+	PodName       string `json:"podName,omitempty"`
+	TableName     string `json:"tableName,omitempty"`
+	DirPath       string `json:"dirPath,omitempty"`
+	BlockSize     string `json:"blockSize,omitempty"`
+	FileName      string `json:"fileName,omitempty"`
+	ContentLength string `json:"contentLength,omitempty"`
 	Compression   string `json:"compression,omitempty"`
 }
 
 type FileDownloadRequest struct {
-	PodName  string `json:"pod_name,omitempty"`
-	Filepath string `json:"file_path,omitempty"`
+	PodName  string `json:"podName,omitempty"`
+	Filepath string `json:"filePath,omitempty"`
 }
 
 type WebsocketResponse struct {

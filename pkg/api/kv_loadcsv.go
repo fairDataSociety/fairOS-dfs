@@ -40,8 +40,8 @@ import (
 //	@Tags         kv
 //	@Accept       mpfd
 //	@Produce      json
-//	@Param	      pod_name formData string true "pod name"
-//	@Param	      table_name formData string true "table name"
+//	@Param	      podName formData string true "pod name"
+//	@Param	      tableName formData string true "table name"
 //	@Param	      memory formData string false "keep in memory"
 //	@Param	      csv formData file true "file to upload"
 //	@Param	      Cookie header string true "cookie parameter"
@@ -50,17 +50,17 @@ import (
 //	@Failure      500  {object}  response
 //	@Router       /v1/kv/loadcsv [Post]
 func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
-	podName := r.FormValue("pod_name")
+	podName := r.FormValue("podName")
 	if podName == "" {
-		h.logger.Errorf("kv loadcsv: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv loadcsv: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"podName\" argument missing"})
 		return
 	}
 
-	name := r.FormValue("table_name")
+	name := r.FormValue("tableName")
 	if name == "" {
-		h.logger.Errorf("kv loadcsv: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"table_name\" argument missing"})
+		h.logger.Errorf("kv loadcsv: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"tableName\" argument missing"})
 		return
 	}
 

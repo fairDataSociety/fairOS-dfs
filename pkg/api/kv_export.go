@@ -13,10 +13,10 @@ import (
 const MaxExportLimit = 100
 
 type KVExportRequest struct {
-	PodName     string `json:"pod_name,omitempty"`
-	TableName   string `json:"table_name,omitempty"`
-	StartPrefix string `json:"start_prefix,omitempty"`
-	EndPrefix   string `json:"end_prefix,omitempty"`
+	PodName     string `json:"podName,omitempty"`
+	TableName   string `json:"tableName,omitempty"`
+	StartPrefix string `json:"startPrefix,omitempty"`
+	EndPrefix   string `json:"endPrefix,omitempty"`
 	Limit       string `json:"limit,omitempty"`
 }
 

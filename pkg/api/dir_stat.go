@@ -32,15 +32,15 @@ import (
 //	@Description  DirectoryStatHandler is the api handler which gives the information about a directory
 //	@Tags         dir
 //	@Produce      json
-//	@Param	      pod_name query string true "pod name"
-//	@Param	      dir_path query string true "dir path"
+//	@Param	      podName query string true "pod name"
+//	@Param	      dirPath query string true "dir path"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  dir.Stats
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/dir/stat [get]
 func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("dir: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "dir: \"pod_name\" argument missing"})
@@ -48,7 +48,7 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	podName := keys[0]
 
-	keys, ok = r.URL.Query()["dir_path"]
+	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("dir present: \"dir_path\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "dir present: \"dir_path\" argument missing"})

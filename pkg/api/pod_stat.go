@@ -27,7 +27,7 @@ import (
 )
 
 type PodStatResponse struct {
-	PodName    string `json:"pod_name"`
+	PodName    string `json:"podName"`
 	PodAddress string `json:"address"`
 }
 
@@ -38,14 +38,14 @@ type PodStatResponse struct {
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_name query string true "pod name"
+//	@Param	      podName query string true "pod name"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  PodStatResponse
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/pod/stat [get]
 func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("pod stat: \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"pod_name\" argument missing"})

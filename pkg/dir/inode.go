@@ -24,8 +24,8 @@ import (
 )
 
 type Inode struct {
-	Meta           *MetaData
-	FileOrDirNames []string
+	Meta           *MetaData `json:"meta"`
+	FileOrDirNames []string  `json:"fileOrDirNames"`
 }
 
 var (

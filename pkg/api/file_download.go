@@ -67,15 +67,15 @@ func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request
 //	@Tags         file
 //	@Accept       json
 //	@Produce      */*
-//	@Param	      pod_name query string true "pod name"
-//	@Param	      file_path query string true "file path"
+//	@Param	      podName query string true "pod name"
+//	@Param	      filePath query string true "file path"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {array}  byte
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/download [get]
 func (h *Handler) FileDownloadHandlerGet(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("download \"pod_name\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "dir: \"pod_name\" argument missing"})
@@ -88,7 +88,7 @@ func (h *Handler) FileDownloadHandlerGet(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	keys, ok = r.URL.Query()["file_path"]
+	keys, ok = r.URL.Query()["filePath"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("download: \"file_path\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "download: \"file_path\" argument missing"})

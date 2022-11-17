@@ -27,9 +27,9 @@ import (
 )
 
 type KVTableRequest struct {
-	PodName   string `json:"pod_name,omitempty"`
-	TableName string `json:"table_name,omitempty"`
-	IndexType string `json:"index_type,omitempty"`
+	PodName   string `json:"podName,omitempty"`
+	TableName string `json:"tableName,omitempty"`
+	IndexType string `json:"indexType,omitempty"`
 }
 
 // KVCreateHandler godoc

@@ -25,7 +25,7 @@ const (
 
 // Reference is used for creating pod sharing references
 type Reference struct {
-	R []byte
+	R []byte `json:"swarm"`
 }
 
 // NewReference creates a Reference

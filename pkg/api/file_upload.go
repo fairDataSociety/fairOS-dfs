@@ -31,7 +31,7 @@ type UploadFileResponse struct {
 }
 
 type UploadResponse struct {
-	FileName string `json:"file_name"`
+	FileName string `json:"fileName"`
 	Message  string `json:"message,omitempty"`
 }
 
@@ -47,9 +47,9 @@ const (
 //	@Tags         file
 //	@Accept       mpfd
 //	@Produce      json
-//	@Param	      pod_name formData string true "pod name"
-//	@Param	      dir_path formData string true "location"
-//	@Param	      block_size formData string true "block size to break the file" example(4Kb, 1Mb)
+//	@Param	      podName formData string true "pod name"
+//	@Param	      dirPath formData string true "location"
+//	@Param	      blockSize formData string true "block size to break the file" example(4Kb, 1Mb)
 //	@Param	      files formData file true "file to upload"
 //	@Param	      fairOS-dfs-Compression header string false "cookie parameter" example(snappy, gzip)
 //	@Param	      Cookie header string true "cookie parameter"
@@ -58,23 +58,23 @@ const (
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/upload [Post]
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
-	podName := r.FormValue("pod_name")
+	podName := r.FormValue("podName")
 	if podName == "" {
-		h.logger.Errorf("file upload: \"pod_name\" argument missing")
+		h.logger.Errorf("file upload: \"podName\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "file upload: \"pod_name\" argument missing"})
 		return
 	}
 
-	podPath := r.FormValue("dir_path")
+	podPath := r.FormValue("dirPath")
 	if podPath == "" {
-		h.logger.Errorf("file upload: \"dir_path\" argument missing")
+		h.logger.Errorf("file upload: \"dirPath\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "file upload: \"dir_path\" argument missing"})
 		return
 	}
 
-	blockSize := r.FormValue("block_size")
+	blockSize := r.FormValue("blockSize")
 	if blockSize == "" {
-		h.logger.Errorf("file upload: \"block_size\" argument missing")
+		h.logger.Errorf("file upload: \"blockSize\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "file upload: \"block_size\" argument missing"})
 		return
 	}

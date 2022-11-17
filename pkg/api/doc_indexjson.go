@@ -26,9 +26,9 @@ import (
 )
 
 type DocIndexRequest struct {
-	PodName   string `json:"pod_name,omitempty"`
-	TableName string `json:"table_name,omitempty"`
-	FileName  string `json:"file_name,omitempty"`
+	PodName   string `json:"podName,omitempty"`
+	TableName string `json:"tableName,omitempty"`
+	FileName  string `json:"fileName,omitempty"`
 }
 
 // DocIndexJsonHandler godoc

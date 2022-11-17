@@ -34,8 +34,8 @@ import (
 //	@Tags         doc
 //	@Accept       mpfd
 //	@Produce      json
-//	@Param	      pod_name query string true "pod name"
-//	@Param	      table_name query string true "table name"
+//	@Param	      podName query string true "pod name"
+//	@Param	      tableName query string true "table name"
 //	@Param	      json formData file true "json to index"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  response
@@ -43,17 +43,17 @@ import (
 //	@Failure      500  {object}  response
 //	@Router       /v1/doc/loadjson [post]
 func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
-	podName := r.FormValue("pod_name")
+	podName := r.FormValue("podName")
 	if podName == "" {
-		h.logger.Errorf("doc loadjson: \"pod_name\" argument missing")
+		h.logger.Errorf("doc loadjson: \"podName\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"pod_name\" argument missing"})
 		return
 	}
 
-	name := r.FormValue("table_name")
+	name := r.FormValue("tableName")
 	if name == "" {
-		h.logger.Errorf("doc loadjson: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"table_name\" argument missing"})
+		h.logger.Errorf("doc loadjson: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"tableName\" argument missing"})
 		return
 	}
 

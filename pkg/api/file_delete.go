@@ -27,8 +27,8 @@ import (
 )
 
 type FileDeleteRequest struct {
-	PodName  string `json:"pod_name,omitempty"`
-	FilePath string `json:"file_path,omitempty"`
+	PodName  string `json:"podName,omitempty"`
+	FilePath string `json:"filePath,omitempty"`
 }
 
 // FileDeleteHandler godoc

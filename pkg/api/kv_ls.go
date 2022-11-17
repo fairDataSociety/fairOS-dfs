@@ -27,7 +27,7 @@ type Collections struct {
 	Tables []Collection
 }
 type Collection struct {
-	Name           string   `json:"table_name"`
+	Name           string   `json:"tableName"`
 	IndexedColumns []string `json:"indexes"`
 	CollectionType string   `json:"type"`
 }
@@ -39,17 +39,17 @@ type Collection struct {
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_name query string true "pod name"
+//	@Param	      podName query string true "pod name"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  Collections
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/kv/ls [get]
 func (h *Handler) KVListHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv ls: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv ls: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv ls: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]

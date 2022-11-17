@@ -27,7 +27,7 @@ import (
 )
 
 type PodNameRequest struct {
-	PodName string `json:"pod_name,omitempty"`
+	PodName string `json:"podName,omitempty"`
 }
 
 // PodCloseHandler godoc

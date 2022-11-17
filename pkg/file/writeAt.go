@@ -180,7 +180,6 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 			wg.Add(1)
 			worker <- true
 			go func(counter, size int) {
-				blockName := fmt.Sprintf("block-%05d", counter)
 				defer func() {
 					<-worker
 					wg.Done()
@@ -188,7 +187,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 						return
 					}
 				}()
-				f.logger.Info("Uploading ", blockName)
+				f.logger.Infof("Uploading %d block", counter)
 				// compress the data
 				uploadData := data
 				if meta.Compression != "" {
@@ -212,7 +211,6 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 				}
 
 				fileBlock := &BlockInfo{
-					Name:           blockName,
 					Size:           uint32(size),
 					CompressedSize: uint32(len(uploadData)),
 					Reference:      utils.NewReference(addr),
