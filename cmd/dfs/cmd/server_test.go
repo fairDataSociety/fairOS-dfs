@@ -952,7 +952,7 @@ func TestApis(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//Upload
+		// Upload
 		upload := &common.WebsocketRequest{
 			Event: common.FileUpload,
 			Params: common.FileRequest{
@@ -985,7 +985,7 @@ func TestApis(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//Download
+		// Download
 		download := &common.WebsocketRequest{
 			Event: common.FileDownload,
 			Params: common.FileDownloadRequest{
@@ -1071,7 +1071,7 @@ func TestApis(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//kvEntryPut
+		// kvEntryPut
 		kvEntryPut := &common.WebsocketRequest{
 			Event: common.KVEntryPut,
 			Params: common.KVRequest{

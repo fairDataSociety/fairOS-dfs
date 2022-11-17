@@ -16,8 +16,8 @@ func EncryptBytes(passphrase, message []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	//IV needs to be unique, but doesn't have to be secure.
-	//It's common to put it at the beginning of the ciphertext.
+	// IV needs to be unique, but doesn't have to be secure.
+	// It's common to put it at the beginning of the ciphertext.
 	cipherText := make([]byte, aes.BlockSize+len(message))
 	iv := cipherText[:aes.BlockSize]
 	if _, err = io.ReadFull(rand.Reader, iv); err != nil { // skipcq: TCV-001
@@ -44,8 +44,8 @@ func DecryptBytes(passphrase, cipherText []byte) ([]byte, error) {
 	temp := make([]byte, len(cipherText))
 	copy(temp, cipherText)
 
-	//IV needs to be unique, but doesn't have to be secure.
-	//It's common to put it at the beginning of the ciphertext.
+	// IV needs to be unique, but doesn't have to be secure.
+	// It's common to put it at the beginning of the ciphertext.
 	iv := temp[:aes.BlockSize]
 	temp = temp[aes.BlockSize:]
 

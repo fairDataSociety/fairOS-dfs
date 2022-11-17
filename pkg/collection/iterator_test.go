@@ -158,7 +158,7 @@ func TestIndexIterator(t *testing.T) {
 		}
 
 		// check the iteration is in order until the end key
-		//skip the first key since "0" is lexicographically smaller than "00"
+		// skip the first key since "0" is lexicographically smaller than "00"
 		for i := 1; i < 14; i++ {
 			if itr.Next() {
 				key := sortedKeys[i]

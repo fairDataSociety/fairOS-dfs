@@ -22,9 +22,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//const (
-//	wsChunkLimit = 1000000
-//)
+// const (
+//	 wsChunkLimit = 1000000
+// )
 
 var (
 	readDeadline = 4 * time.Second
@@ -839,7 +839,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			logEventDescription(string(common.DirIsPresent), to, res.StatusCode, h.logger)
-		//case common.FileDownloadStream:
+		//  case common.FileDownloadStream:
 		//	jsonBytes, _ := json.Marshal(req.Params)
 		//	args := make(map[string]string)
 		//	if err := json.Unmarshal(jsonBytes, &args); err != nil {
@@ -983,23 +983,21 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			messageType = websocket.BinaryMessage
-			//if err := conn.WriteMessage(messageType, res.Marshal()); err != nil {
+			// if err := conn.WriteMessage(messageType, res.Marshal()); err != nil {
 			//	respondWithError(res, err)
 			//	return err
-			//}
-			//fmt.Println(5)
+			// }
 			//
-			//messageType = websocket.TextMessage
-			//dlFinishedMessage := map[string]string{}
-			//dlFinishedMessage["message"] = "download finished"
-			//finishedRes, _ := json.Marshal(dlFinishedMessage)
-			//res.StatusCode = http.StatusOK
-			//_, err = res.WriteJson(finishedRes)
-			//if err := conn.WriteMessage(messageType, res.Marshal()); err != nil {
+			// messageType = websocket.TextMessage
+			// dlFinishedMessage := map[string]string{}
+			// dlFinishedMessage["message"] = "download finished"
+			// finishedRes, _ := json.Marshal(dlFinishedMessage)
+			// res.StatusCode = http.StatusOK
+			// _, err = res.WriteJson(finishedRes)
+			// if err := conn.WriteMessage(messageType, res.Marshal()); err != nil {
 			//	respondWithError(res, err)
 			//	return err
-			//}
-			//fmt.Println(6)
+			// }
 
 			logEventDescription(string(common.FileDownload), to, res.StatusCode, h.logger)
 		case common.FileUpload, common.FileUploadStream:
@@ -1573,7 +1571,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			logEventDescription(string(common.KVEntryDelete), to, res.StatusCode, h.logger)
-		//case common.KVLoadCSV, common.KVLoadCSVStream:
+		//  case common.KVLoadCSV, common.KVLoadCSVStream:
 		//	streaming := false
 		//	if req.Event == common.KVLoadCSVStream {
 		//		streaming = true
@@ -2004,7 +2002,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			logEventDescription(string(common.DocEntryDel), to, res.StatusCode, h.logger)
-		//case common.DocLoadJson, common.DocLoadJsonStream:
+		//	case common.DocLoadJson, common.DocLoadJsonStream:
 		//	streaming := false
 		//	if req.Event == common.DocLoadJsonStream {
 		//		streaming = true

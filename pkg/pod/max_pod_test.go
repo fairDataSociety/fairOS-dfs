@@ -30,7 +30,7 @@ func TestMaxPods(t *testing.T) {
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 
 	t.Run("create-max-pods", func(t *testing.T) {
-		//t.SkipNow()
+		// t.SkipNow()
 
 		maxPodId := 30
 		for i := 1; i <= maxPodId; i++ {

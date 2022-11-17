@@ -143,14 +143,14 @@ func TestDocumentStore(t *testing.T) {
 
 		checkIndex(t, schema.SimpleIndexes[0], "id", collection.StringIndex)
 
-		//second check the field in index 1
+		// second check the field in index 1
 		if schema.SimpleIndexes[1].FieldName == "field1" {
 			checkIndex(t, schema.SimpleIndexes[1], "field1", collection.StringIndex)
 		} else {
 			checkIndex(t, schema.SimpleIndexes[1], "field2", collection.NumberIndex)
 		}
 
-		//third check the field in index 2
+		// third check the field in index 2
 		if schema.SimpleIndexes[2].FieldName == "field2" {
 			checkIndex(t, schema.SimpleIndexes[2], "field2", collection.NumberIndex)
 		} else {
@@ -769,96 +769,96 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+	/*
+		t.Run("batch-immutable", func(t *testing.T) {
+			// create a document DB
+			si := make(map[string]collection.IndexType)
+			si["first_name"] = collection.StringIndex
+			si["age"] = collection.NumberIndex
+			si["tag_map"] = collection.MapIndex
+			si["tag_list"] = collection.ListIndex
+			// createDocumentDBs(t, []string{"docdb_12"}, docStore, si)
+			err := docStore.CreateDocumentDB("docdb_12", si, false)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	//t.Run("batch-immutable", func(t *testing.T) {
-	//	// create a document DB
-	//	si := make(map[string]collection.IndexType)
-	//	si["first_name"] = collection.StringIndex
-	//	si["age"] = collection.NumberIndex
-	//	si["tag_map"] = collection.MapIndex
-	//	si["tag_list"] = collection.ListIndex
-	//	// createDocumentDBs(t, []string{"docdb_12"}, docStore, si)
-	//	err := docStore.CreateDocumentDB("docdb_12", si, false)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//
-	//	err = docStore.OpenDocumentDB("docdb_12")
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//
-	//	docBatch, err := docStore.CreateDocBatch("docdb_12")
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//
-	//	tag1 := make(map[string]string)
-	//	tag1["tgf11"] = "tgv11"
-	//	tag1["tgf12"] = "tgv12"
-	//	var list1 []string
-	//	list1 = append(list1, "lst11")
-	//	list1 = append(list1, "lst12")
-	//	addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 45, tag1, list1)
-	//	tag2 := make(map[string]string)
-	//	tag2["tgf21"] = "tgv21"
-	//	tag2["tgf22"] = "tgv22"
-	//	var list2 []string
-	//	list2 = append(list2, "lst21")
-	//	list2 = append(list2, "lst22")
-	//	addBatchDocument(t, docStore, docBatch, "2", "John", "boy", 25, tag2, list2)
-	//	tag3 := make(map[string]string)
-	//	tag3["tgf31"] = "tgv31"
-	//	tag3["tgf32"] = "tgv32"
-	//	var list3 []string
-	//	list3 = append(list3, "lst31")
-	//	list3 = append(list3, "lst32")
-	//	addBatchDocument(t, docStore, docBatch, "3", "Alice", "wonderland", 20, tag3, list3)
-	//	tag4 := make(map[string]string)
-	//	tag4["tgf41"] = "tgv41"
-	//	tag4["tgf42"] = "tgv42"
-	//	var list4 []string
-	//	list4 = append(list4, "lst41")
-	//	list4 = append(list4, "lst42")
-	//	addBatchDocument(t, docStore, docBatch, "4", "John", "Doe", 35, tag4, list4) // this tests the overwriting in batch
-	//
-	//	err = docStore.DocBatchWrite(docBatch, "")
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//
-	//	// count the total docs using id field
-	//	count1, err := docStore.Count("docdb_12", "")
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//	if count1 != 4 {
-	//		t.Fatalf("expected count %d, got %d", 4, count1)
-	//	}
-	//
-	//	// count the total docs using another index to make sure we dont have it any index
-	//	docs, err := docStore.Find("docdb_12", "age=>20", -1)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//	if len(docs) != 4 {
-	//		t.Fatalf("expected count %d, got %d", 4, len(docs))
-	//	}
-	//
-	//	// tag
-	//	docs, err = docStore.Find("docdb_12", "tag_map=tgf21:tgv21", -1)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//	if len(docs) != 1 {
-	//		t.Fatalf("expected count %d, got %d", 1, len(docs))
-	//	}
-	//	err = docStore.DeleteDocumentDB("docdb_12")
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//})
+			err = docStore.OpenDocumentDB("docdb_12")
+			if err != nil {
+				t.Fatal(err)
+			}
 
+			docBatch, err := docStore.CreateDocBatch("docdb_12")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			tag1 := make(map[string]string)
+			tag1["tgf11"] = "tgv11"
+			tag1["tgf12"] = "tgv12"
+			var list1 []string
+			list1 = append(list1, "lst11")
+			list1 = append(list1, "lst12")
+			addBatchDocument(t, docStore, docBatch, "1", "John", "Doe", 45, tag1, list1)
+			tag2 := make(map[string]string)
+			tag2["tgf21"] = "tgv21"
+			tag2["tgf22"] = "tgv22"
+			var list2 []string
+			list2 = append(list2, "lst21")
+			list2 = append(list2, "lst22")
+			addBatchDocument(t, docStore, docBatch, "2", "John", "boy", 25, tag2, list2)
+			tag3 := make(map[string]string)
+			tag3["tgf31"] = "tgv31"
+			tag3["tgf32"] = "tgv32"
+			var list3 []string
+			list3 = append(list3, "lst31")
+			list3 = append(list3, "lst32")
+			addBatchDocument(t, docStore, docBatch, "3", "Alice", "wonderland", 20, tag3, list3)
+			tag4 := make(map[string]string)
+			tag4["tgf41"] = "tgv41"
+			tag4["tgf42"] = "tgv42"
+			var list4 []string
+			list4 = append(list4, "lst41")
+			list4 = append(list4, "lst42")
+			addBatchDocument(t, docStore, docBatch, "4", "John", "Doe", 35, tag4, list4) // this tests the overwriting in batch
+
+			err = docStore.DocBatchWrite(docBatch, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// count the total docs using id field
+			count1, err := docStore.Count("docdb_12", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if count1 != 4 {
+				t.Fatalf("expected count %d, got %d", 4, count1)
+			}
+
+			// count the total docs using another index to make sure we dont have it any index
+			docs, err := docStore.Find("docdb_12", "age=>20", -1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(docs) != 4 {
+				t.Fatalf("expected count %d, got %d", 4, len(docs))
+			}
+
+			// tag
+			docs, err = docStore.Find("docdb_12", "tag_map=tgf21:tgv21", -1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(docs) != 1 {
+				t.Fatalf("expected count %d, got %d", 1, len(docs))
+			}
+			err = docStore.DeleteDocumentDB("docdb_12")
+			if err != nil {
+				t.Fatal(err)
+			}
+		})
+	*/
 }
 
 func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Document, si map[string]collection.IndexType, podPassword string) {

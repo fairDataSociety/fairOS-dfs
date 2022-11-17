@@ -154,7 +154,7 @@ func TestOneUpdateAt0(t *testing.T) {
 		Payload: 79,
 		Time:    0,
 	}
-	store.Update(epoch, 0, &data) //place 1 update in t=0
+	store.Update(epoch, 0, &data) // place 1 update in t=0
 
 	// ### 2.- Test all algorithms
 	for _, algo := range algorithms {
@@ -288,7 +288,7 @@ func TestContextCancellation(t *testing.T) {
 				errc <- err
 			}()
 
-			cancel() //actually cancel the lookup
+			cancel() // actually cancel the lookup
 
 			if err := <-errc; err != context.Canceled {
 				t.Fatalf("Expected lookup to return a context canceled error, got %v", err)
