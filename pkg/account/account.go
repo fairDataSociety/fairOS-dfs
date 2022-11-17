@@ -21,7 +21,6 @@ import (
 	"crypto/aes"
 	"crypto/ecdsa"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -40,8 +39,6 @@ const (
 	// seedSize is used to determine how much padding we need for portable account SOC
 	seedSize = 64
 )
-
-var errBlankPassword = errors.New("password cannot be blank")
 
 // Account is used for keeping authenticated logged-in user info in the session
 type Account struct {
