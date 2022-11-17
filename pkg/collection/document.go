@@ -640,7 +640,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 			}
 		case NumberIndex:
 			val := v.(float64)
-			//valStr := strconv.FormatFloat(val, 'f', 6, 64)
+			// valStr := strconv.FormatFloat(val, 'f', 6, 64)
 			err := index.PutNumber(val, ref, NumberIndex, true)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("inserting in to document db: ", err.Error())
@@ -787,7 +787,7 @@ func (d *Document) Del(dbName, id string) error {
 			}
 		case NumberIndex:
 			val := v.(float64)
-			//valStr := strconv.FormatFloat(val, 'f', 6, 64)
+			// valStr := strconv.FormatFloat(val, 'f', 6, 64)
 			_, err := index.DeleteNumber(val)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("deleting from document db: ", err.Error())
@@ -1235,7 +1235,7 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 								}
 							case NumberIndex:
 								val := v1.(float64)
-								//valStr = strconv.FormatFloat(val, 'f', 6, 64)
+								// valStr = strconv.FormatFloat(val, 'f', 6, 64)
 								_, err := batchIndex.DelNumber(val)
 								if err != nil {
 									d.logger.Errorf("inserting in batch: ", err.Error())

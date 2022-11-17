@@ -51,7 +51,7 @@ func TestLogin(t *testing.T) {
 		}
 
 		_, _, _, err = userObject.LoginUserV2("not_an_username", "password1", mockClient, tm, "")
-		if !errors.Is(err, user.ErrInvalidUserName) {
+		if !errors.Is(err, user.ErrUserNameNotFound) {
 			t.Fatal(err)
 		}
 

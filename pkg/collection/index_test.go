@@ -40,7 +40,7 @@ func TestIndex(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestIndex(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//Open the index
+		// Open the index
 		_, err = collection.OpenIndex("pod1", "testdb_index_1", "key", podPassword, fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
@@ -114,7 +114,7 @@ func TestIndex(t *testing.T) {
 	})
 
 	t.Run("open_index_without_creating_it", func(t *testing.T) {
-		//Open the index
+		// Open the index
 		_, err = collection.OpenIndex("pod1", "testdb_index_4", "key", podPassword, fd, ai, user, mockClient, logger)
 		if err != collection.ErrIndexNotPresent {
 			t.Fatal(err)
@@ -128,7 +128,7 @@ func TestIndex(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//Open the index
+		// Open the index
 		idx, err := collection.OpenIndex("pod1", "testdb_index_5", "key", podPassword, fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)

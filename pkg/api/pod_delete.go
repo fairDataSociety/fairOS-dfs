@@ -33,7 +33,7 @@ import (
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_request body PodRequest true "pod name and user password"
+//	@Param	      pod_request body PodNameRequest true "pod name and user password"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  response
 //	@Failure      400  {object}  response
@@ -48,7 +48,7 @@ func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq PodRequest
+	var podReq PodNameRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod delete: could not decode arguments")
@@ -60,13 +60,6 @@ func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	if podName == "" {
 		h.logger.Errorf("pod delete: \"pod_name\" parameter missing in cookie")
 		jsonhttp.BadRequest(w, &response{Message: "pod delete: \"pod_name\" parameter missing in cookie"})
-		return
-	}
-
-	password := podReq.Password
-	if password == "" {
-		h.logger.Errorf("pod delete: \"password\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user delete: \"password\" argument missing"})
 		return
 	}
 
@@ -84,7 +77,7 @@ func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete pod
-	err = h.dfsAPI.DeletePod(podName, password, sessionId)
+	err = h.dfsAPI.DeletePod(podName, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn {
 			h.logger.Errorf("delete pod: %v", err)

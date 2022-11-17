@@ -235,7 +235,7 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 //	@Success      200  {object}  KVResponseRaw
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
-//	@Router       /v1/kv/entry/get [get]
+//	@Router       /v1/kv/entry/get-data [get]
 func (h *Handler) KVGetDataHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {

@@ -20,7 +20,7 @@ func TestMaxPods(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func TestMaxPods(t *testing.T) {
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 
 	t.Run("create-max-pods", func(t *testing.T) {
-		//t.SkipNow()
+		// t.SkipNow()
 
 		maxPodId := 30
 		for i := 1; i <= maxPodId; i++ {
@@ -39,7 +39,7 @@ func TestMaxPods(t *testing.T) {
 				t.Fatal(err)
 			}
 			podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-			_, err = pod1.CreatePod(name, "password", "", podPassword)
+			_, err = pod1.CreatePod(name, "", podPassword)
 			if err != nil {
 				t.Fatalf("error creating pod %s with index %d: %s", name, i, err)
 			}
@@ -49,7 +49,7 @@ func TestMaxPods(t *testing.T) {
 			t.Fatal(err)
 		}
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-		_, err = pod1.CreatePod(name, "password", "", podPassword)
+		_, err = pod1.CreatePod(name, "", podPassword)
 		if !errors.Is(err, pod.ErrMaximumPodLimit) {
 			t.Fatalf("maximum pod limit should have been reached")
 		}

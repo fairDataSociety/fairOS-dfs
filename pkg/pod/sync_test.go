@@ -35,7 +35,7 @@ func TestSync(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestSync(t *testing.T) {
 		}
 		// create a pod
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-		info, err := pod1.CreatePod(podName1, "password", "", podPassword)
+		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -69,7 +69,7 @@ func TestSync(t *testing.T) {
 		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
 		// open the pod ths triggers sync too
-		gotInfo, err := pod1.OpenPod(podName1, "password")
+		gotInfo, err := pod1.OpenPod(podName1)
 		if err != nil {
 			t.Fatal(err)
 		}

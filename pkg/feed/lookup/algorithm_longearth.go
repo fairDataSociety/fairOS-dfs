@@ -83,7 +83,7 @@ func LongEarthAlgorithm(ctx context.Context, now uint64, hint Epoch, read ReadFu
 			valueBMu.Unlock()
 		}
 
-		go func() { //goroutine to read the current epoch (R)
+		go func() { // goroutine to read the current epoch (R)
 			defer cancelR()
 			var err error
 			valuer, err := read(ctxR, epoch, now) // read this epoch
@@ -94,7 +94,7 @@ func LongEarthAlgorithm(ctx context.Context, now uint64, hint Epoch, read ReadFu
 				cancelA()
 			} else {
 				cancelB()
-				//cancelA() // cancel this also for faster eject
+				// cancelA() // cancel this also for faster eject
 			}
 			if err != nil && !errors.Is(err, context.Canceled) { // skipcq: TCV-001
 				gerr = err

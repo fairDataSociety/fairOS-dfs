@@ -41,7 +41,7 @@ func TestIndexIterator(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestIndexIterator(t *testing.T) {
 		}
 
 		// check the iteration is in order until the end key
-		//skip the first key since "0" is lexicographically smaller than "00"
+		// skip the first key since "0" is lexicographically smaller than "00"
 		for i := 1; i < 14; i++ {
 			if itr.Next() {
 				key := sortedKeys[i]

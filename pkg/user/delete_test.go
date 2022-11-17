@@ -47,19 +47,16 @@ func TestDelete(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		// delete user with wrong password
 		err = userObject.DeleteUserV2("user1", "password11", ui.GetSessionId(), ui)
-		if !errors.Is(err, user.ErrInvalidPassword) {
-			t.Fatal(err)
+		if err == nil {
+			t.Fatal("delete should fail")
 		}
-
 		// delete user invalid sessionid
 		err = userObject.DeleteUserV2("user1", "password1", "invalid_session", ui)
 		if !errors.Is(err, user.ErrUserNotLoggedIn) {
 			t.Fatal(err)
 		}
-
 		// delete user
 		err = userObject.DeleteUserV2("user1", "password1", ui.GetSessionId(), ui)
 		if err != nil {

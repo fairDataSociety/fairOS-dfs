@@ -59,7 +59,7 @@ type API struct {
 // request is a custom type that involves in the fairOS feed creation
 type request struct {
 	ID
-	//User   utils.Address
+	// User   utils.Address
 	idAddr swarm.Address // cached chunk address for the update (not serialized, for internal use)
 
 	data       []byte     // actual data payload

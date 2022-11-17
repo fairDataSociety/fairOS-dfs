@@ -37,7 +37,7 @@ import (
 func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sessionId string) (*Info, string, string, error) {
 	// check if username is available (user created)
 	if !u.IsUsernameAvailableV2(userName) {
-		return nil, "", "", ErrInvalidUserName
+		return nil, "", "", ErrUserNameNotFound
 	}
 
 	// get owner address from Subdomain registrar
@@ -48,13 +48,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	// create account
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
-	// load public key from public resolver
-	publicKey, nameHash, err := u.ens.GetInfo(userName)
-	if err != nil { // skipcq: TCV-001
-		return nil, "", "", err
-	}
-	pb := crypto.FromECDSAPub(publicKey)
-
 	// load encrypted private key
 	fd := feed.New(accountInfo, client, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
@@ -62,6 +55,13 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		u.logger.Errorf(err.Error())
 		return nil, "", "", ErrInvalidPassword
 	}
+
+	// load public key from public resolver
+	publicKey, nameHash, err := u.ens.GetInfo(userName)
+	if err != nil { // skipcq: TCV-001
+		return nil, "", "", err
+	}
+	pb := crypto.FromECDSAPub(publicKey)
 
 	// decrypt and remove pad from private ley
 	seed, err := accountInfo.RemovePadFromSeed(key, passPhrase)

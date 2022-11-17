@@ -31,7 +31,7 @@ import (
 // OpenPod opens a pod if it is not already opened. as part of opening the pod
 // it loads all the data structures related to the pod. Also it syncs all the
 // files and directories under this pod from the Swarm network.
-func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
+func (p *Pod) OpenPod(podName string) (*Info, error) {
 	// check if pods is present and get the index of the pod
 	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
@@ -78,7 +78,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 		}
 		// Create pod account and other data structures
 		// create a child account for the userAddress and other data structures for the pod
-		accountInfo, err = p.acc.CreatePodAccount(index, passPhrase, false)
+		accountInfo, err = p.acc.CreatePodAccount(index, false)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
@@ -119,7 +119,7 @@ func (p *Pod) OpenPod(podName, passPhrase string) (*Info, error) {
 // OpenPodAsync opens a pod if it is not already opened. as part of opening the pod
 // it loads all the data structures related to the pod. Also it syncs all the
 // files and directories under this pod from the Swarm network.
-func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*Info, error) {
+func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	// check if pods is present and get the index of the pod
 	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
@@ -168,7 +168,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName, passPhrase string) (*In
 		}
 		// Create pod account and other data structures
 		// create a child account for the userAddress and other data structures for the pod
-		accountInfo, err = p.acc.CreatePodAccount(index, passPhrase, false)
+		accountInfo, err = p.acc.CreatePodAccount(index, false)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}

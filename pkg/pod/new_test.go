@@ -39,7 +39,7 @@ func TestNew(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(os.Stdout, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func TestNew(t *testing.T) {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-		_, err = pod1.CreatePod(randomLongPOdName, "password", "", podPassword)
+		_, err = pod1.CreatePod(randomLongPOdName, "", podPassword)
 		if !errors.Is(err, pod.ErrTooLongPodName) {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -72,7 +72,7 @@ func TestNew(t *testing.T) {
 		if pod1Present {
 			t.Fatal("pod1 should not be present")
 		}
-		info, err := pod1.CreatePod(podName1, "password", "", podPassword)
+		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s: %s", podName1, err.Error())
 		}
@@ -110,7 +110,7 @@ func TestNew(t *testing.T) {
 
 	t.Run("create-second-pod", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-		info, err := pod1.CreatePod(podName2, "password", "", podPassword)
+		info, err := pod1.CreatePod(podName2, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName2)
 		}

@@ -135,5 +135,5 @@ func GetFirstEpoch(now uint64) Epoch {
 var worstHint = Epoch{Time: 0, Level: 63}
 
 var trace = func(id int32, formatString string, a ...interface{}) {
-	//fmt.Printf("Step ID #%d "+formatString+"\n", append([]interface{}{id}, a...)...)
+	// fmt.Printf("Step ID #%d "+formatString+"\n", append([]interface{}{id}, a...)...)
 }

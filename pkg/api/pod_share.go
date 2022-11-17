@@ -76,13 +76,6 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 		sharedPodName = pod
 	}
 
-	password := podReq.Password
-	if password == "" {
-		h.logger.Errorf("pod share: \"password\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "pod share: \"password\" argument missing"})
-		return
-	}
-
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
@@ -97,7 +90,7 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch pod stat
-	sharingRef, err := h.dfsAPI.PodShare(pod, sharedPodName, password, sessionId)
+	sharingRef, err := h.dfsAPI.PodShare(pod, sharedPodName, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName {
