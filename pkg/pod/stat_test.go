@@ -38,7 +38,7 @@ func TestStat(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestStat(t *testing.T) {
 			t.Fatal("stat should be nil")
 		}
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-		info, err := pod1.CreatePod(podName1, "password", "", podPassword)
+		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}

@@ -17,7 +17,6 @@ limitations under the License.
 package account
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"strings"
 
@@ -33,13 +32,13 @@ const (
 
 // Wallet is used to create root and pod accounts of user
 type Wallet struct {
-	encryptedmnemonic string
-	seed              []byte
+	seed []byte
 }
 
-func newWalletFromMnemonic(mnemonic string) *Wallet {
-	wallet := &Wallet{
-		encryptedmnemonic: mnemonic,
+func newWallet(seed []byte) *Wallet {
+	wallet := &Wallet{}
+	if seed != nil {
+		wallet.seed = seed
 	}
 	return wallet
 }
@@ -74,8 +73,12 @@ func (w *Wallet) LoadMnemonicAndCreateRootAccount(mnemonic string) (accounts.Acc
 	if err != nil { // skipcq: TCV-001
 		return accounts.Account{}, "", err
 	}
+	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
+	if err != nil { // skipcq: TCV-001
+		return accounts.Account{}, "", err
+	}
+	w.seed = seed
 	return acc, mnemonic, nil
-
 }
 
 // CreateAccount is used to create a new hd wallet using the given mnemonic and the walletPath.
@@ -118,37 +121,4 @@ func (*Wallet) IsValidMnemonic(mnemonic string) error {
 		return fmt.Errorf("one or more of the mnemonic words is not in bip39 word list")
 	}
 	return nil
-}
-
-// LoadSeedFromMnemonic loads seed of the Wallet from pre-loaded mnemonic
-func (w *Wallet) LoadSeedFromMnemonic(password string) ([]byte, error) {
-	mnemonic, err := w.decryptMnemonic(password)
-	if err != nil {
-		return nil, err
-	}
-	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
-	w.seed = seed
-	return w.seed, nil
-}
-
-func (w *Wallet) decryptMnemonic(password string) (string, error) {
-	if w.encryptedmnemonic == "" {
-		return "", fmt.Errorf("invalid encrypted mnemonic")
-	}
-	aesKey := sha256.Sum256([]byte(password))
-
-	//decrypt the message
-	mnemonic, err := decrypt(aesKey[:], w.encryptedmnemonic)
-	if err != nil { // skipcq: TCV-001
-		return "", err
-	}
-
-	err = w.IsValidMnemonic(mnemonic)
-	if err != nil {
-		return "", fmt.Errorf("invalid password")
-	}
-	return mnemonic, nil
 }

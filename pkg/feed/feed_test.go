@@ -34,7 +34,7 @@ func TestFeed(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 
 	acc1 := account.New(logger)
-	_, _, err := acc1.CreateUserAccount("password", "")
+	_, _, err := acc1.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func TestFeed(t *testing.T) {
 	t.Run("create-from-user1-read-from-user2-with-user1-address", func(t *testing.T) {
 		// create account2
 		acc2 := account.New(logger)
-		_, _, err = acc2.CreateUserAccount("password", "")
+		_, _, err = acc2.CreateUserAccount("")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -115,7 +115,7 @@ func TestFeed(t *testing.T) {
 	t.Run("create-from-user1-read-from-user2-with-user2-address", func(t *testing.T) {
 		// create account2
 		acc2 := account.New(logger)
-		_, _, err = acc2.CreateUserAccount("password", "")
+		_, _, err = acc2.CreateUserAccount("")
 		if err != nil {
 			t.Fatal(err)
 		}

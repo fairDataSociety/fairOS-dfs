@@ -40,11 +40,11 @@ func TestListFiles(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	pod1AccountInfo, err := acc.CreatePodAccount(1, "password", false)
+	pod1AccountInfo, err := acc.CreatePodAccount(1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestListFiles(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(entries)
+
 		foundIndex1 := -1
 		for i, v := range entries {
 			fmt.Println(v)
@@ -88,7 +88,6 @@ func TestListFiles(t *testing.T) {
 				foundIndex1 = i
 			}
 		}
-		fmt.Println(foundIndex1)
 
 		if foundIndex1 < 0 {
 			t.Fatal("file1 not found")

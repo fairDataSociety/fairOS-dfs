@@ -30,14 +30,6 @@ func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, ui *In
 		return ErrInvalidUserName
 	}
 
-	// check for valid password
-	userInfo := u.getUserFromMap(sessionId)
-	acc := userInfo.account
-	if !acc.Authorise(password) {
-		return ErrInvalidPassword
-	}
-
-	// skipcq: TCV-001
 	// Logout user
 	err := u.Logout(sessionId)
 	if err != nil {
@@ -77,15 +69,12 @@ func (u *Users) DeleteUserV2(userName, password, sessionId string, ui *Info) err
 	// check for valid password
 	userInfo := u.getUserFromMap(sessionId)
 	acc := userInfo.account
-	if !acc.Authorise(password) {
-		return ErrInvalidPassword
-	}
 
-	// Logout user
-	err := u.Logout(sessionId)
+	err := u.deletePortableAccount(acc.GetUserAccountInfo().GetAddress(), userName, password, ui.GetFeed())
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
-	return u.deletePortableAccount(acc.GetUserAccountInfo().GetAddress(), userName, password, ui.GetFeed())
+	// Logout user
+	return u.Logout(sessionId)
 }

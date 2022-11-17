@@ -42,11 +42,11 @@ func TestSharing(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 
 	acc1 := account.New(logger)
-	_, _, err := acc1.CreateUserAccount("password", "")
+	_, _, err := acc1.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = acc1.CreatePodAccount(1, "password", false)
+	_, err = acc1.CreatePodAccount(1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,11 +57,11 @@ func TestSharing(t *testing.T) {
 	podName1 := "test1"
 
 	acc2 := account.New(logger)
-	_, _, err = acc2.CreateUserAccount("password", "")
+	_, _, err = acc2.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = acc2.CreatePodAccount(1, "password", false)
+	_, err = acc2.CreatePodAccount(1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func TestSharing(t *testing.T) {
 		}
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		// create source pod
-		info1, err := pod1.CreatePod(podName1, "password", "", podPassword)
+		info1, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -117,7 +117,7 @@ func TestSharing(t *testing.T) {
 
 		// create destination pod
 		podPassword, _ = utils.GetRandString(pod.PodPasswordLength)
-		info2, err := pod2.CreatePod(podName2, "password", "", podPassword)
+		info2, err := pod2.CreatePod(podName2, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName2)
 		}

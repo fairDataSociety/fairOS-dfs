@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -44,6 +45,7 @@ type UserLoginResponse struct {
 //	@Param	      user_request body common.UserLoginRequest true "user name"
 //	@Success      200  {object}  UserLoginResponse
 //	@Failure      400  {object}  response
+//	@Failure      404  {object}  response
 //	@Failure      500  {object}  response
 //	@Header	      200  {string}  Set-Cookie "fairos-dfs session"
 //	@Router       /v2/user/login [post]
@@ -80,6 +82,11 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	// login user
 	ui, nameHash, publicKey, err := h.dfsAPI.LoginUserV2(user, password, "")
 	if err != nil {
+		if errors.Is(err, u.ErrUserNameNotFound) {
+			h.logger.Errorf("user login: %v", err)
+			jsonhttp.NotFound(w, &response{Message: "user login: " + err.Error()})
+			return
+		}
 		if err == u.ErrUserAlreadyLoggedIn ||
 			err == u.ErrInvalidUserName ||
 			err == u.ErrInvalidPassword {

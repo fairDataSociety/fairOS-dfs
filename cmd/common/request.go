@@ -36,7 +36,6 @@ type PodRequest struct {
 
 type PodShareRequest struct {
 	PodName       string `json:"podName,omitempty"`
-	Password      string `json:"password,omitempty"`
 	SharedPodName string `json:"sharedPodName,omitempty"`
 }
 

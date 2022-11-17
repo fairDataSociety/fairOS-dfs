@@ -35,7 +35,7 @@ const (
 )
 
 // CreatePod creates a new pod for a given user.
-func (p *Pod) CreatePod(podName, passPhrase, addressString, podPassword string) (*Info, error) {
+func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, error) {
 	podName, err := CleanPodName(podName)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (p *Pod) CreatePod(podName, passPhrase, addressString, podPassword string) 
 		}
 
 		// create a child account for the userAddress and other data structures for the pod
-		accountInfo, err = p.acc.CreatePodAccount(freeId, passPhrase, true)
+		accountInfo, err = p.acc.CreatePodAccount(freeId, true)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}

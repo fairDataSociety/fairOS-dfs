@@ -34,7 +34,7 @@ type ShareInfo struct {
 // PodShare makes a pod public by exporting all the pod related information and its
 // address. it does this by creating a sharing reference which points to the information
 // required to import this pod.
-func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error) {
+func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 	// check if pods is present and get the index of the pod
 	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
@@ -50,7 +50,7 @@ func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error
 	}
 
 	// Create pod account  and get the address
-	accountInfo, err := p.acc.CreatePodAccount(index, passPhrase, false)
+	accountInfo, err := p.acc.CreatePodAccount(index, false)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -71,7 +71,6 @@ func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-
 	ref, err := p.client.UploadBlob(data, true, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
@@ -109,7 +108,6 @@ func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, erro
 	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePod: could not download blob")
 	}
-
 	var shareInfo ShareInfo
 	err = json.Unmarshal(data, &shareInfo)
 	if err != nil { // skipcq: TCV-001
@@ -119,5 +117,5 @@ func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, erro
 	if sharedPodName != "" {
 		shareInfo.PodName = sharedPodName
 	}
-	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address, shareInfo.Password)
+	return p.CreatePod(shareInfo.PodName, shareInfo.Address, shareInfo.Password)
 }

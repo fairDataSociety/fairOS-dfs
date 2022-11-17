@@ -5,7 +5,7 @@ definitions:
         items:
           type: string
         type: array
-      table_name:
+      tableName:
         type: string
       type:
         type: string
@@ -26,9 +26,9 @@ definitions:
     type: object
   api.DirRequest:
     properties:
-      dir_path:
+      dirPath:
         type: string
-      pod_name:
+      podName:
         type: string
     type: object
   api.DocCountRequest:
@@ -37,11 +37,11 @@ definitions:
         type: string
       mutable:
         type: boolean
-      pod_name:
+      podName:
         type: string
       si:
         type: string
-      table_name:
+      tableName:
         type: string
     type: object
   api.DocFindResponse:
@@ -62,22 +62,22 @@ definitions:
     type: object
   api.DocIndexRequest:
     properties:
-      file_name:
+      fileName:
         type: string
-      pod_name:
+      podName:
         type: string
-      table_name:
+      tableName:
         type: string
     type: object
   api.DocRequest:
     properties:
       mutable:
         type: boolean
-      pod_name:
+      podName:
         type: string
       si:
         type: string
-      table_name:
+      tableName:
         type: string
     type: object
   api.DocumentDBs:
@@ -89,56 +89,56 @@ definitions:
     type: object
   api.FileDeleteRequest:
     properties:
-      file_path:
+      filePath:
         type: string
-      pod_name:
+      podName:
         type: string
     type: object
   api.FileShareRequest:
     properties:
-      dest_user:
+      destUser:
         type: string
-      file_path:
+      filePath:
         type: string
-      pod_name:
+      podName:
         type: string
     type: object
   api.FileSharingReference:
     properties:
-      file_sharing_reference:
+      fileSharingReference:
         type: string
     type: object
   api.KVEntryDeleteRequest:
     properties:
       key:
         type: string
-      pod_name:
+      podName:
         type: string
-      table_name:
+      tableName:
         type: string
     type: object
   api.KVEntryRequest:
     properties:
       key:
         type: string
-      pod_name:
+      podName:
         type: string
-      table_name:
+      tableName:
         type: string
       value:
         type: string
     type: object
   api.KVExportRequest:
     properties:
-      end_prefix:
+      endPrefix:
         type: string
       limit:
         type: string
-      pod_name:
+      podName:
         type: string
-      start_prefix:
+      startPrefix:
         type: string
-      table_name:
+      tableName:
         type: string
     type: object
   api.KVResponse:
@@ -163,11 +163,11 @@ definitions:
     type: object
   api.KVTableRequest:
     properties:
-      index_type:
+      indexType:
         type: string
-      pod_name:
+      podName:
         type: string
-      table_name:
+      tableName:
         type: string
     type: object
   api.ListFileResponse:
@@ -188,37 +188,30 @@ definitions:
     type: object
   api.PodListResponse:
     properties:
-      pod_name:
+      podName:
         items:
           type: string
         type: array
-      shared_pod_name:
+      sharedPodName:
         items:
           type: string
         type: array
     type: object
   api.PodNameRequest:
     properties:
-      pod_name:
-        type: string
-    type: object
-  api.PodRequest:
-    properties:
-      password:
-        type: string
-      pod_name:
+      podName:
         type: string
     type: object
   api.PodSharingReference:
     properties:
-      pod_sharing_reference:
+      podSharingReference:
         type: string
     type: object
   api.PodStatResponse:
     properties:
       address:
         type: string
-      pod_name:
+      podName:
         type: string
     type: object
   api.PresentResponse:
@@ -228,9 +221,9 @@ definitions:
     type: object
   api.SimpleDocRequest:
     properties:
-      pod_name:
+      podName:
         type: string
-      table_name:
+      tableName:
         type: string
     type: object
   api.UserDeleteRequest:
@@ -244,9 +237,9 @@ definitions:
         type: string
       message:
         type: string
-      name_hash:
+      nameHash:
         type: string
-      public_key:
+      publicKey:
         type: string
     type: object
   api.UserSignupResponse:
@@ -257,9 +250,9 @@ definitions:
         type: string
       mnemonic:
         type: string
-      name_hash:
+      nameHash:
         type: string
-      public_key:
+      publicKey:
         type: string
     type: object
   api.documentDB:
@@ -268,7 +261,7 @@ definitions:
         items:
           $ref: '#/definitions/collection.SIndex'
         type: array
-      table_name:
+      tableName:
         type: string
       type:
         type: string
@@ -294,27 +287,25 @@ definitions:
     type: object
   common.PodShareRequest:
     properties:
-      password:
+      podName:
         type: string
-      pod_name:
-        type: string
-      shared_pod_name:
+      sharedPodName:
         type: string
     type: object
   common.RenameRequest:
     properties:
-      new_path:
+      newPath:
         type: string
-      old_path:
+      oldPath:
         type: string
-      pod_name:
+      podName:
         type: string
     type: object
   common.UserLoginRequest:
     properties:
       password:
         type: string
-      user_name:
+      userName:
         type: string
     type: object
   common.UserSignupRequest:
@@ -323,20 +314,20 @@ definitions:
         type: string
       password:
         type: string
-      user_name:
+      userName:
         type: string
     type: object
   dir.Entry:
     properties:
-      access_time:
+      accessTime:
         type: string
-      block_size:
+      blockSize:
         type: string
-      content_type:
+      contentType:
         type: string
-      creation_time:
+      creationTime:
         type: string
-      modification_time:
+      modificationTime:
         type: string
       name:
         type: string
@@ -345,28 +336,26 @@ definitions:
     type: object
   dir.Stats:
     properties:
-      access_time:
+      accessTime:
         type: string
-      creation_time:
+      creationTime:
         type: string
-      dir_name:
+      dirName:
         type: string
-      dir_path:
+      dirPath:
         type: string
-      modification_time:
+      modificationTime:
         type: string
-      no_of_directories:
+      noOfDirectories:
         type: string
-      no_of_files:
+      noOfFiles:
         type: string
-      pod_name:
+      podName:
         type: string
     type: object
   file.Blocks:
     properties:
-      compressed_size:
-        type: string
-      name:
+      compressedSize:
         type: string
       reference:
         type: string
@@ -375,15 +364,15 @@ definitions:
     type: object
   file.Entry:
     properties:
-      access_time:
+      accessTime:
         type: string
-      block_size:
+      blockSize:
         type: string
-      content_type:
+      contentType:
         type: string
-      creation_time:
+      creationTime:
         type: string
-      modification_time:
+      modificationTime:
         type: string
       name:
         type: string
@@ -392,9 +381,9 @@ definitions:
     type: object
   file.Stats:
     properties:
-      access_time:
+      accessTime:
         type: string
-      block_size:
+      blockSize:
         type: string
       blocks:
         items:
@@ -402,60 +391,58 @@ definitions:
         type: array
       compression:
         type: string
-      content_type:
+      contentType:
         type: string
-      creation_time:
+      creationTime:
         type: string
-      file_name:
+      fileName:
         type: string
-      file_path:
+      filePath:
         type: string
-      file_size:
+      fileSize:
         type: string
-      modification_time:
+      modificationTime:
         type: string
-      pod_name:
+      podName:
         type: string
     type: object
   pod.ShareInfo:
     properties:
       password:
         type: string
-      pod_address:
+      podAddress:
         type: string
-      pod_name:
+      podName:
         type: string
-      user_address:
+      userAddress:
         type: string
     type: object
   user.ReceiveFileInfo:
     properties:
-      block_size:
+      blockSize:
         type: string
       compression:
         type: string
-      content_type:
+      contentType:
         type: string
-      dest_address:
+      destAddress:
         type: string
       name:
         type: string
-      number_of_blocks:
+      numberOfBlocks:
         type: string
-      pod_name:
-        type: string
-      shared_time:
+      sharedTime:
         type: string
       size:
         type: string
-      source_address:
+      sourceAddress:
         type: string
     type: object
   user.Stat:
     properties:
       address:
         type: string
-      user_name:
+      userName:
         type: string
     type: object
 host: localhost:9090
@@ -469,12 +456,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: dir path
         in: query
-        name: dir_path
+        name: dirPath
         required: true
         type: string
       - description: cookie parameter
@@ -542,12 +529,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: dir path
         in: query
-        name: dir_path
+        name: dirPath
         required: true
         type: string
       - description: cookie parameter
@@ -650,12 +637,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: dir path
         in: query
-        name: dir_path
+        name: dirPath
         required: true
         type: string
       - description: cookie parameter
@@ -764,10 +751,10 @@ paths:
         name: id
         type: string
       - in: query
-        name: pod_name
+        name: podName
         type: string
       - in: query
-        name: table_name
+        name: tableName
         type: string
       - description: cookie parameter
         in: header
@@ -801,12 +788,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: table name
         in: query
-        name: table_name
+        name: tableName
         required: true
         type: string
       - description: id to search for
@@ -848,10 +835,10 @@ paths:
         name: doc
         type: string
       - in: query
-        name: pod_name
+        name: podName
         type: string
       - in: query
-        name: table_name
+        name: tableName
         type: string
       - description: cookie parameter
         in: header
@@ -885,12 +872,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: table name
         in: query
-        name: table_name
+        name: tableName
         required: true
         type: string
       - description: expression to search for
@@ -925,6 +912,7 @@ paths:
       summary: Get rows from a given doc datastore
       tags:
       - doc
+  /v1/doc/indexjson:
     post:
       consumes:
       - application/json
@@ -970,12 +958,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: table name
         in: query
-        name: table_name
+        name: tableName
         required: true
         type: string
       - description: json to index
@@ -1015,7 +1003,7 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: cookie parameter
@@ -1160,12 +1148,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: file path
         in: query
-        name: file_path
+        name: filePath
         required: true
         type: string
       - description: cookie parameter
@@ -1243,17 +1231,17 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: sharing reference
         in: query
-        name: sharing_ref
+        name: sharingRef
         required: true
         type: string
       - description: file location
         in: query
-        name: dir_path
+        name: dirPath
         required: true
         type: string
       - description: cookie parameter
@@ -1285,14 +1273,9 @@ paths:
       - application/json
       description: FileReceiveInfoHandler is the api handler to receive a file info
       parameters:
-      - description: pod name
-        in: query
-        name: pod_name
-        required: true
-        type: string
       - description: sharing reference
         in: query
-        name: sharing_ref
+        name: sharingRef
         required: true
         type: string
       - description: cookie parameter
@@ -1403,12 +1386,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: file path
         in: query
-        name: pod_name
+        name: filePath
         required: true
         type: string
       - description: cookie parameter
@@ -1443,18 +1426,18 @@ paths:
       parameters:
       - description: pod name
         in: formData
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: location
         in: formData
-        name: dir_path
+        name: dirPath
         required: true
         type: string
       - description: block size to break the file
         example: 4Kb, 1Mb
         in: formData
-        name: block_size
+        name: blockSize
         required: true
         type: string
       - description: file to upload
@@ -1601,17 +1584,61 @@ paths:
     get:
       consumes:
       - application/json
+      description: KVGetHandler is the api handler to get a value from the kv table
+      parameters:
+      - description: pod name
+        in: query
+        name: podName
+        required: true
+        type: string
+      - description: table name
+        in: query
+        name: tableName
+        required: true
+        type: string
+      - description: key
+        in: query
+        name: key
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.KVResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: get value from the kv table
+      tags:
+      - kv
+  /v1/kv/entry/get-data:
+    get:
+      consumes:
+      - application/json
       description: KVGetDataHandler is the api handler to get raw value from the kv
         table
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: table name
         in: query
-        name: table_name
+        name: tableName
         required: true
         type: string
       - description: key
@@ -1656,12 +1683,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: table name
         in: query
-        name: table_name
+        name: tableName
         required: true
         type: string
       - description: key
@@ -1775,12 +1802,12 @@ paths:
       parameters:
       - description: pod name
         in: formData
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: table name
         in: formData
-        name: table_name
+        name: tableName
         required: true
         type: string
       - description: keep in memory
@@ -1824,7 +1851,7 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: cookie parameter
@@ -1965,12 +1992,12 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: table name
         in: query
-        name: table_name
+        name: tableName
         required: true
         type: string
       - description: cookie parameter
@@ -2046,7 +2073,7 @@ paths:
         name: pod_request
         required: true
         schema:
-          $ref: '#/definitions/api.PodRequest'
+          $ref: '#/definitions/api.PodNameRequest'
       - description: cookie parameter
         in: header
         name: Cookie
@@ -2110,7 +2137,7 @@ paths:
         name: pod_request
         required: true
         schema:
-          $ref: '#/definitions/api.PodRequest'
+          $ref: '#/definitions/api.PodNameRequest'
       - description: cookie parameter
         in: header
         name: Cookie
@@ -2145,7 +2172,7 @@ paths:
         name: pod_request
         required: true
         schema:
-          $ref: '#/definitions/api.PodRequest'
+          $ref: '#/definitions/api.PodNameRequest'
       - description: cookie parameter
         in: header
         name: Cookie
@@ -2180,7 +2207,7 @@ paths:
         name: pod_request
         required: true
         schema:
-          $ref: '#/definitions/api.PodRequest'
+          $ref: '#/definitions/api.PodNameRequest'
       - description: cookie parameter
         in: header
         name: Cookie
@@ -2212,7 +2239,7 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: cookie parameter
@@ -2247,12 +2274,12 @@ paths:
       parameters:
       - description: pod sharing reference
         in: query
-        name: sharing_ref
+        name: sharingRef
         required: true
         type: string
       - description: pod name to be saved as
         in: query
-        name: shared_pod_name
+        name: sharedPodName
         type: string
       - description: cookie parameter
         in: header
@@ -2286,7 +2313,7 @@ paths:
       parameters:
       - description: pod sharing reference
         in: query
-        name: sharing_ref
+        name: sharingRef
         required: true
         type: string
       - description: cookie parameter
@@ -2355,7 +2382,7 @@ paths:
       parameters:
       - description: pod name
         in: query
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: cookie parameter
@@ -2432,7 +2459,7 @@ paths:
       parameters:
       - description: user name
         in: query
-        name: user_name
+        name: userName
         required: true
         type: string
       produces:
@@ -2575,6 +2602,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.response'
         "500":
           description: Internal Server Error
           schema:
@@ -2588,7 +2619,7 @@ paths:
       parameters:
       - description: user name
         in: query
-        name: user_name
+        name: userName
         required: true
         type: string
       produces:

@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -38,7 +37,7 @@ type PodOpenResponse struct {
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_request body PodRequest true "pod name and user password"
+//	@Param	      pod_request body PodNameRequest true "pod name and user password"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  response
 //	@Failure      400  {object}  response
@@ -53,7 +52,7 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq PodRequest
+	var podReq PodNameRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod open: could not decode arguments")
@@ -61,10 +60,6 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pod := podReq.PodName
-
-	// password will be empty in case of opening a shared pod
-	// so allow even if it is not set
-	password := podReq.Password
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
@@ -80,7 +75,7 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// open pod
-	_, err = h.dfsAPI.OpenPod(pod, password, sessionId)
+	_, err = h.dfsAPI.OpenPod(pod, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName {
@@ -103,7 +98,7 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_request body PodRequest true "pod name and user password"
+//	@Param	      pod_request body PodNameRequest true "pod name and user password"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  response
 //	@Failure      400  {object}  response
@@ -118,7 +113,7 @@ func (h *Handler) PodOpenAsyncHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq common.PodRequest
+	var podReq PodNameRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod open: could not decode arguments")
@@ -126,10 +121,6 @@ func (h *Handler) PodOpenAsyncHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pod := podReq.PodName
-
-	// password will be empty in case of opening a shared pod
-	// so allow even if it is not set
-	password := podReq.Password
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
@@ -145,7 +136,7 @@ func (h *Handler) PodOpenAsyncHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// open pod
-	_, err = h.dfsAPI.OpenPodAsync(r.Context(), pod, password, sessionId)
+	_, err = h.dfsAPI.OpenPodAsync(r.Context(), pod, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName {

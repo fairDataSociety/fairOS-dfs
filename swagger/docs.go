@@ -30,14 +30,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "dir path",
-                        "name": "dir_path",
+                        "name": "dirPath",
                         "in": "query",
                         "required": true
                     },
@@ -138,14 +138,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "dir path",
-                        "name": "dir_path",
+                        "name": "dirPath",
                         "in": "query",
                         "required": true
                     },
@@ -299,14 +299,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "dir path",
-                        "name": "dir_path",
+                        "name": "dirPath",
                         "in": "query",
                         "required": true
                     },
@@ -467,12 +467,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "name": "table_name",
+                        "name": "tableName",
                         "in": "query"
                     },
                     {
@@ -522,14 +522,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "table name",
-                        "name": "table_name",
+                        "name": "tableName",
                         "in": "query",
                         "required": true
                     },
@@ -591,12 +591,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "name": "table_name",
+                        "name": "tableName",
                         "in": "query"
                     },
                     {
@@ -646,14 +646,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "table name",
-                        "name": "table_name",
+                        "name": "tableName",
                         "in": "query",
                         "required": true
                     },
@@ -698,7 +698,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/v1/doc/indexjson": {
             "post": {
                 "description": "DocIndexJsonHandler is the api handler to index a json file that is present in a pod, in to the given document database",
                 "consumes": [
@@ -768,14 +770,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "table name",
-                        "name": "table_name",
+                        "name": "tableName",
                         "in": "query",
                         "required": true
                     },
@@ -833,7 +835,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
@@ -1049,14 +1051,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "file path",
-                        "name": "file_path",
+                        "name": "filePath",
                         "in": "query",
                         "required": true
                     },
@@ -1169,21 +1171,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "sharing reference",
-                        "name": "sharing_ref",
+                        "name": "sharingRef",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "file location",
-                        "name": "dir_path",
+                        "name": "dirPath",
                         "in": "query",
                         "required": true
                     },
@@ -1233,15 +1235,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "pod name",
-                        "name": "pod_name",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "description": "sharing reference",
-                        "name": "sharing_ref",
+                        "name": "sharingRef",
                         "in": "query",
                         "required": true
                     },
@@ -1404,14 +1399,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "file path",
-                        "name": "pod_name",
+                        "name": "filePath",
                         "in": "query",
                         "required": true
                     },
@@ -1462,14 +1457,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "location",
-                        "name": "dir_path",
+                        "name": "dirPath",
                         "in": "formData",
                         "required": true
                     },
@@ -1477,7 +1472,7 @@ const docTemplate = `{
                         "type": "string",
                         "example": "4Kb, 1Mb",
                         "description": "block size to break the file",
-                        "name": "block_size",
+                        "name": "blockSize",
                         "in": "formData",
                         "required": true
                     },
@@ -1686,6 +1681,71 @@ const docTemplate = `{
         },
         "/v1/kv/entry/get": {
             "get": {
+                "description": "KVGetHandler is the api handler to get a value from the kv table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "get value from the kv table",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "podName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "tableName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "key",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.KVResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/kv/entry/get-data": {
+            "get": {
                 "description": "KVGetDataHandler is the api handler to get raw value from the kv table",
                 "consumes": [
                     "application/json"
@@ -1701,14 +1761,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "table name",
-                        "name": "table_name",
+                        "name": "tableName",
                         "in": "query",
                         "required": true
                     },
@@ -1773,14 +1833,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "table name",
-                        "name": "table_name",
+                        "name": "tableName",
                         "in": "query",
                         "required": true
                     },
@@ -1948,14 +2008,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "table name",
-                        "name": "table_name",
+                        "name": "tableName",
                         "in": "formData",
                         "required": true
                     },
@@ -2019,7 +2079,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
@@ -2229,14 +2289,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "table name",
-                        "name": "table_name",
+                        "name": "tableName",
                         "in": "query",
                         "required": true
                     },
@@ -2349,7 +2409,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.PodRequest"
+                            "$ref": "#/definitions/api.PodNameRequest"
                         }
                     },
                     {
@@ -2446,7 +2506,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.PodRequest"
+                            "$ref": "#/definitions/api.PodNameRequest"
                         }
                     },
                     {
@@ -2499,7 +2559,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.PodRequest"
+                            "$ref": "#/definitions/api.PodNameRequest"
                         }
                     },
                     {
@@ -2552,7 +2612,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.PodRequest"
+                            "$ref": "#/definitions/api.PodNameRequest"
                         }
                     },
                     {
@@ -2602,7 +2662,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
@@ -2653,14 +2713,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod sharing reference",
-                        "name": "sharing_ref",
+                        "name": "sharingRef",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "pod name to be saved as",
-                        "name": "shared_pod_name",
+                        "name": "sharedPodName",
                         "in": "query"
                     },
                     {
@@ -2710,7 +2770,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod sharing reference",
-                        "name": "sharing_ref",
+                        "name": "sharingRef",
                         "in": "query",
                         "required": true
                     },
@@ -2814,7 +2874,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "query",
                         "required": true
                     },
@@ -2930,7 +2990,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "user name",
-                        "name": "user_name",
+                        "name": "userName",
                         "in": "query",
                         "required": true
                     }
@@ -3144,6 +3204,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/api.response"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -3167,7 +3233,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "user name",
-                        "name": "user_name",
+                        "name": "userName",
                         "in": "query",
                         "required": true
                     }
@@ -3251,7 +3317,7 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 },
                 "type": {
@@ -3284,10 +3350,10 @@ const docTemplate = `{
         "api.DirRequest": {
             "type": "object",
             "properties": {
-                "dir_path": {
+                "dirPath": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 }
             }
@@ -3301,13 +3367,13 @@ const docTemplate = `{
                 "mutable": {
                     "type": "boolean"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 },
                 "si": {
                     "type": "string"
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 }
             }
@@ -3340,13 +3406,13 @@ const docTemplate = `{
         "api.DocIndexRequest": {
             "type": "object",
             "properties": {
-                "file_name": {
+                "fileName": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 }
             }
@@ -3357,13 +3423,13 @@ const docTemplate = `{
                 "mutable": {
                     "type": "boolean"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 },
                 "si": {
                     "type": "string"
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 }
             }
@@ -3382,10 +3448,10 @@ const docTemplate = `{
         "api.FileDeleteRequest": {
             "type": "object",
             "properties": {
-                "file_path": {
+                "filePath": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 }
             }
@@ -3393,13 +3459,13 @@ const docTemplate = `{
         "api.FileShareRequest": {
             "type": "object",
             "properties": {
-                "dest_user": {
+                "destUser": {
                     "type": "string"
                 },
-                "file_path": {
+                "filePath": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 }
             }
@@ -3407,7 +3473,7 @@ const docTemplate = `{
         "api.FileSharingReference": {
             "type": "object",
             "properties": {
-                "file_sharing_reference": {
+                "fileSharingReference": {
                     "type": "string"
                 }
             }
@@ -3418,10 +3484,10 @@ const docTemplate = `{
                 "key": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 }
             }
@@ -3432,10 +3498,10 @@ const docTemplate = `{
                 "key": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 },
                 "value": {
@@ -3446,19 +3512,19 @@ const docTemplate = `{
         "api.KVExportRequest": {
             "type": "object",
             "properties": {
-                "end_prefix": {
+                "endPrefix": {
                     "type": "string"
                 },
                 "limit": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 },
-                "start_prefix": {
+                "startPrefix": {
                     "type": "string"
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 }
             }
@@ -3497,13 +3563,13 @@ const docTemplate = `{
         "api.KVTableRequest": {
             "type": "object",
             "properties": {
-                "index_type": {
+                "indexType": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 }
             }
@@ -3536,13 +3602,13 @@ const docTemplate = `{
         "api.PodListResponse": {
             "type": "object",
             "properties": {
-                "pod_name": {
+                "podName": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "shared_pod_name": {
+                "sharedPodName": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3553,18 +3619,7 @@ const docTemplate = `{
         "api.PodNameRequest": {
             "type": "object",
             "properties": {
-                "pod_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.PodRequest": {
-            "type": "object",
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 }
             }
@@ -3572,7 +3627,7 @@ const docTemplate = `{
         "api.PodSharingReference": {
             "type": "object",
             "properties": {
-                "pod_sharing_reference": {
+                "podSharingReference": {
                     "type": "string"
                 }
             }
@@ -3583,7 +3638,7 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 }
             }
@@ -3599,10 +3654,10 @@ const docTemplate = `{
         "api.SimpleDocRequest": {
             "type": "object",
             "properties": {
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 }
             }
@@ -3624,10 +3679,10 @@ const docTemplate = `{
                 "message": {
                     "type": "string"
                 },
-                "name_hash": {
+                "nameHash": {
                     "type": "string"
                 },
-                "public_key": {
+                "publicKey": {
                     "type": "string"
                 }
             }
@@ -3644,10 +3699,10 @@ const docTemplate = `{
                 "mnemonic": {
                     "type": "string"
                 },
-                "name_hash": {
+                "nameHash": {
                     "type": "string"
                 },
-                "public_key": {
+                "publicKey": {
                     "type": "string"
                 }
             }
@@ -3661,7 +3716,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/collection.SIndex"
                     }
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 },
                 "type": {
@@ -3702,13 +3757,10 @@ const docTemplate = `{
         "common.PodShareRequest": {
             "type": "object",
             "properties": {
-                "password": {
+                "podName": {
                     "type": "string"
                 },
-                "pod_name": {
-                    "type": "string"
-                },
-                "shared_pod_name": {
+                "sharedPodName": {
                     "type": "string"
                 }
             }
@@ -3716,13 +3768,13 @@ const docTemplate = `{
         "common.RenameRequest": {
             "type": "object",
             "properties": {
-                "new_path": {
+                "newPath": {
                     "type": "string"
                 },
-                "old_path": {
+                "oldPath": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 }
             }
@@ -3733,7 +3785,7 @@ const docTemplate = `{
                 "password": {
                     "type": "string"
                 },
-                "user_name": {
+                "userName": {
                     "type": "string"
                 }
             }
@@ -3747,7 +3799,7 @@ const docTemplate = `{
                 "password": {
                     "type": "string"
                 },
-                "user_name": {
+                "userName": {
                     "type": "string"
                 }
             }
@@ -3755,19 +3807,19 @@ const docTemplate = `{
         "dir.Entry": {
             "type": "object",
             "properties": {
-                "access_time": {
+                "accessTime": {
                     "type": "string"
                 },
-                "block_size": {
+                "blockSize": {
                     "type": "string"
                 },
-                "content_type": {
+                "contentType": {
                     "type": "string"
                 },
-                "creation_time": {
+                "creationTime": {
                     "type": "string"
                 },
-                "modification_time": {
+                "modificationTime": {
                     "type": "string"
                 },
                 "name": {
@@ -3781,28 +3833,28 @@ const docTemplate = `{
         "dir.Stats": {
             "type": "object",
             "properties": {
-                "access_time": {
+                "accessTime": {
                     "type": "string"
                 },
-                "creation_time": {
+                "creationTime": {
                     "type": "string"
                 },
-                "dir_name": {
+                "dirName": {
                     "type": "string"
                 },
-                "dir_path": {
+                "dirPath": {
                     "type": "string"
                 },
-                "modification_time": {
+                "modificationTime": {
                     "type": "string"
                 },
-                "no_of_directories": {
+                "noOfDirectories": {
                     "type": "string"
                 },
-                "no_of_files": {
+                "noOfFiles": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 }
             }
@@ -3810,10 +3862,7 @@ const docTemplate = `{
         "file.Blocks": {
             "type": "object",
             "properties": {
-                "compressed_size": {
-                    "type": "string"
-                },
-                "name": {
+                "compressedSize": {
                     "type": "string"
                 },
                 "reference": {
@@ -3827,19 +3876,19 @@ const docTemplate = `{
         "file.Entry": {
             "type": "object",
             "properties": {
-                "access_time": {
+                "accessTime": {
                     "type": "string"
                 },
-                "block_size": {
+                "blockSize": {
                     "type": "string"
                 },
-                "content_type": {
+                "contentType": {
                     "type": "string"
                 },
-                "creation_time": {
+                "creationTime": {
                     "type": "string"
                 },
-                "modification_time": {
+                "modificationTime": {
                     "type": "string"
                 },
                 "name": {
@@ -3853,10 +3902,10 @@ const docTemplate = `{
         "file.Stats": {
             "type": "object",
             "properties": {
-                "access_time": {
+                "accessTime": {
                     "type": "string"
                 },
-                "block_size": {
+                "blockSize": {
                     "type": "string"
                 },
                 "blocks": {
@@ -3868,25 +3917,25 @@ const docTemplate = `{
                 "compression": {
                     "type": "string"
                 },
-                "content_type": {
+                "contentType": {
                     "type": "string"
                 },
-                "creation_time": {
+                "creationTime": {
                     "type": "string"
                 },
-                "file_name": {
+                "fileName": {
                     "type": "string"
                 },
-                "file_path": {
+                "filePath": {
                     "type": "string"
                 },
-                "file_size": {
+                "fileSize": {
                     "type": "string"
                 },
-                "modification_time": {
+                "modificationTime": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 }
             }
@@ -3897,13 +3946,13 @@ const docTemplate = `{
                 "password": {
                     "type": "string"
                 },
-                "pod_address": {
+                "podAddress": {
                     "type": "string"
                 },
-                "pod_name": {
+                "podName": {
                     "type": "string"
                 },
-                "user_address": {
+                "userAddress": {
                     "type": "string"
                 }
             }
@@ -3911,34 +3960,31 @@ const docTemplate = `{
         "user.ReceiveFileInfo": {
             "type": "object",
             "properties": {
-                "block_size": {
+                "blockSize": {
                     "type": "string"
                 },
                 "compression": {
                     "type": "string"
                 },
-                "content_type": {
+                "contentType": {
                     "type": "string"
                 },
-                "dest_address": {
+                "destAddress": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
-                "number_of_blocks": {
+                "numberOfBlocks": {
                     "type": "string"
                 },
-                "pod_name": {
-                    "type": "string"
-                },
-                "shared_time": {
+                "sharedTime": {
                     "type": "string"
                 },
                 "size": {
                     "type": "string"
                 },
-                "source_address": {
+                "sourceAddress": {
                     "type": "string"
                 }
             }
@@ -3949,7 +3995,7 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
-                "user_name": {
+                "userName": {
                     "type": "string"
                 }
             }

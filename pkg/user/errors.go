@@ -25,6 +25,9 @@ var (
 	// ErrInvalidUserName is returned if the username is invalid
 	ErrInvalidUserName = errors.New("invalid user name")
 
+	// ErrUserNameNotFound is returned if the username is invalid
+	ErrUserNameNotFound = errors.New("no user available")
+
 	// ErrUserAlreadyPresent is returned if user name is already taken while signup
 	ErrUserAlreadyPresent = errors.New("user name already present")
 

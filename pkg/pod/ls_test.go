@@ -39,7 +39,7 @@ func TestPod_ListPods(t *testing.T) {
 	fd := feed.New(accountInfo, mockClient, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	pod1 := NewPod(mockClient, fd, acc, tm, logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,11 +56,11 @@ func TestPod_ListPods(t *testing.T) {
 
 	t.Run("create-two-pods", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(PodPasswordLength)
-		_, err := pod1.CreatePod(podName1, "password", "", podPassword)
+		_, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod: %v", err)
 		}
-		_, err = pod1.CreatePod(podName2, "password", "", podPassword)
+		_, err = pod1.CreatePod(podName2, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}

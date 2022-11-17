@@ -410,7 +410,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 
-			_, err = h.dfsAPI.CreatePod(podReq.PodName, podReq.Password, sessionID)
+			_, err = h.dfsAPI.CreatePod(podReq.PodName, sessionID)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -443,7 +443,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 
-			_, err = h.dfsAPI.OpenPod(podReq.PodName, podReq.Password, sessionID)
+			_, err = h.dfsAPI.OpenPod(podReq.PodName, sessionID)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -545,7 +545,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 			if sharedPodName == "" {
 				sharedPodName = podReq.PodName
 			}
-			sharingRef, err := h.dfsAPI.PodShare(podReq.PodName, sharedPodName, podReq.Password, sessionID)
+			sharingRef, err := h.dfsAPI.PodShare(podReq.PodName, sharedPodName, sessionID)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -578,7 +578,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 
-			err = h.dfsAPI.DeletePod(podReq.PodName, podReq.Password, sessionID)
+			err = h.dfsAPI.DeletePod(podReq.PodName, sessionID)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -1175,7 +1175,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			receiveInfo, err := h.dfsAPI.ReceiveInfo(fsReq.PodName, sessionID, sharingRef)
+			receiveInfo, err := h.dfsAPI.ReceiveInfo(sessionID, sharingRef)
 			if err != nil {
 				respondWithError(res, err)
 				continue

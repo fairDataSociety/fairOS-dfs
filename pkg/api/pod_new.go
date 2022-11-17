@@ -26,11 +26,6 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-type PodRequest struct {
-	PodName  string `json:"podName,omitempty"`
-	Password string `json:"password,omitempty"`
-}
-
 // PodCreateHandler godoc
 //
 //	@Summary      Create pod
@@ -38,7 +33,7 @@ type PodRequest struct {
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
-//	@Param	      pod_request body PodRequest true "pod name and user password"
+//	@Param	      pod_request body PodNameRequest true "pod name and user password"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      201  {object}  response
 //	@Failure      400  {object}  response
@@ -53,7 +48,7 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq PodRequest
+	var podReq PodNameRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod new: could not decode arguments")
@@ -62,12 +57,6 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pod := podReq.PodName
-	password := podReq.Password
-	if password == "" {
-		h.logger.Errorf("pod new: \"password\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "pod new: \"password\" argument missing"})
-		return
-	}
 	if pod == "" {
 		h.logger.Errorf("pod new: \"pod\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "pod new: \"pod\" argument missing"})
@@ -88,7 +77,7 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create pod
-	_, err = h.dfsAPI.CreatePod(pod, password, sessionId)
+	_, err = h.dfsAPI.CreatePod(pod, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName ||

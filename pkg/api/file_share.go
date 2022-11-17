@@ -208,7 +208,6 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 //	@Tags         file
 //	@Accept       json
 //	@Produce      json
-//	@Param	      podName query string true "pod name"
 //	@Param	      sharingRef query string true "sharing reference"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  user.ReceiveFileInfo
@@ -216,20 +215,7 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/receiveinfo [get]
 func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["podName"]
-	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("file receive info: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file receive info: \"podName\" argument missing"})
-		return
-	}
-	podName := keys[0]
-	if podName == "" {
-		h.logger.Errorf("file receive info: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file receive info: \"podName\" argument missing"})
-		return
-	}
-
-	keys, ok = r.URL.Query()["sharingRef"]
+	keys, ok := r.URL.Query()["sharingRef"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("file receive info: \"sharingRef\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "file receive info: \"sharingRef\" argument missing"})
@@ -262,7 +248,7 @@ func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	receiveInfo, err := h.dfsAPI.ReceiveInfo(podName, sessionId, sharingRef)
+	receiveInfo, err := h.dfsAPI.ReceiveInfo(sessionId, sharingRef)
 	if err != nil {
 		h.logger.Errorf("file receive info: %v", err)
 		jsonhttp.InternalServerError(w, &response{Message: "file receive info: " + err.Error()})

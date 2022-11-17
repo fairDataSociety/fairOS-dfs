@@ -19,13 +19,12 @@ package dfs
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-func (a *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error) {
+func (a *API) CreatePod(podName, sessionId string) (*pod.Info, error) {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -34,13 +33,13 @@ func (a *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error
 	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
 	podPassword := hex.EncodeToString(podPasswordBytes)
 	// create the pod
-	_, err := ui.GetPod().CreatePod(podName, passPhrase, "", podPassword)
+	_, err := ui.GetPod().CreatePod(podName, "", podPassword)
 	if err != nil {
 		return nil, err
 	}
 
 	// open the pod
-	pi, err := ui.GetPod().OpenPod(podName, passPhrase)
+	pi, err := ui.GetPod().OpenPod(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -57,17 +56,11 @@ func (a *API) CreatePod(podName, passPhrase, sessionId string) (*pod.Info, error
 }
 
 // DeletePod deletes a pod
-func (a *API) DeletePod(podName, passphrase, sessionId string) error {
+func (a *API) DeletePod(podName, sessionId string) error {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
-	}
-
-	// check for valid password
-	acc := ui.GetAccount()
-	if !acc.Authorise(passphrase) {
-		return fmt.Errorf("invalid password")
 	}
 
 	// delete all the directory, files, and database tables under this pod from
@@ -114,7 +107,7 @@ func (a *API) DeletePod(podName, passphrase, sessionId string) error {
 	return nil
 }
 
-func (a *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) {
+func (a *API) OpenPod(podName, sessionId string) (*pod.Info, error) {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -125,7 +118,7 @@ func (a *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) 
 		return nil, errPodAlreadyOpen
 	}
 	// open the pod
-	pi, err := ui.GetPod().OpenPod(podName, passPhrase)
+	pi, err := ui.GetPod().OpenPod(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +131,7 @@ func (a *API) OpenPod(podName, passPhrase, sessionId string) (*pod.Info, error) 
 	return pi, nil
 }
 
-func (a *API) OpenPodAsync(ctx context.Context, podName, passPhrase, sessionId string) (*pod.Info, error) {
+func (a *API) OpenPodAsync(ctx context.Context, podName, sessionId string) (*pod.Info, error) {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -149,7 +142,7 @@ func (a *API) OpenPodAsync(ctx context.Context, podName, passPhrase, sessionId s
 		return nil, errPodAlreadyOpen
 	}
 	// open the pod
-	pi, err := ui.GetPod().OpenPodAsync(ctx, podName, passPhrase)
+	pi, err := ui.GetPod().OpenPodAsync(ctx, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +240,7 @@ func (a *API) PodList(sessionId string) (*pod.PodList, error) {
 	return ui.GetPod().PodList()
 }
 
-func (a *API) PodShare(podName, sharedPodName, passPhrase, sessionId string) (string, error) {
+func (a *API) PodShare(podName, sharedPodName, sessionId string) (string, error) {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -255,7 +248,7 @@ func (a *API) PodShare(podName, sharedPodName, passPhrase, sessionId string) (st
 	}
 
 	// get the pod stat
-	address, err := ui.GetPod().PodShare(podName, sharedPodName, passPhrase)
+	address, err := ui.GetPod().PodShare(podName, sharedPodName)
 	if err != nil {
 		return "", err
 	}

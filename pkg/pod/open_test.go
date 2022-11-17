@@ -41,7 +41,7 @@ func TestOpen(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,14 +56,14 @@ func TestOpen(t *testing.T) {
 
 	t.Run("open-pod", func(t *testing.T) {
 		// open non-existent the pod
-		_, err := pod1.OpenPod(podName1, "password")
+		_, err := pod1.OpenPod(podName1)
 		if !errors.Is(err, pod.ErrInvalidPodName) {
 			t.Fatal("pod should not be present")
 		}
 
 		// create a pod
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-		info, err := pod1.CreatePod(podName1, "password", "", podPassword)
+		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -78,7 +78,7 @@ func TestOpen(t *testing.T) {
 		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
 		// open the pod
-		podInfo, err := pod1.OpenPod(podName1, "password")
+		podInfo, err := pod1.OpenPod(podName1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -101,14 +101,14 @@ func TestOpen(t *testing.T) {
 
 	t.Run("open-pod-async", func(t *testing.T) {
 		// open non-existent the pod
-		_, err := pod1.OpenPod(podName2, "password")
+		_, err := pod1.OpenPod(podName2)
 		if !errors.Is(err, pod.ErrInvalidPodName) {
 			t.Fatal("pod should not be present")
 		}
 
 		// create a pod
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-		info, err := pod1.CreatePod(podName2, "password", "", podPassword)
+		info, err := pod1.CreatePod(podName2, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
@@ -123,7 +123,7 @@ func TestOpen(t *testing.T) {
 		addFilesAndDirectories(t, info, pod1, podName2, podPassword)
 
 		// open the pod
-		podInfo, err := pod1.OpenPodAsync(context.Background(), podName2, "password")
+		podInfo, err := pod1.OpenPodAsync(context.Background(), podName2)
 		if err != nil {
 			t.Fatal(err)
 		}
