@@ -73,8 +73,8 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	password := userReq.Password
 	mnemonic := userReq.Mnemonic
 	if user == "" {
-		h.logger.Errorf("user signup: \"user_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user signup: \"user_name\" argument missing"})
+		h.logger.Errorf("user signup: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user signup: \"userName\" argument missing"})
 		return
 	}
 	if password == "" {

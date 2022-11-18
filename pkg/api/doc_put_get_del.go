@@ -72,15 +72,15 @@ func (h *Handler) DocEntryPutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc put: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc put: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc put: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc put: \"podName\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc put: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc put: \"table_name\" argument missing"})
+		h.logger.Errorf("doc put: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc put: \"tableName\" argument missing"})
 		return
 	}
 
@@ -227,15 +227,15 @@ func (h *Handler) DocEntryDelHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc del: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc del: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc del: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc del: \"podName\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc del: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc del: \"table_name\" argument missing"})
+		h.logger.Errorf("doc del: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc del: \"tableName\" argument missing"})
 		return
 	}
 

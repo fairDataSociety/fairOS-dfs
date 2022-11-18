@@ -40,7 +40,7 @@ import (
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/stat [get]
 func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("file stat: \"podName\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "file stat: \"podName\" argument missing"})
@@ -53,7 +53,7 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys, ok = r.URL.Query()["file_path"]
+	keys, ok = r.URL.Query()["filePath"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("file stat: \"filePath\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "file stat: \"filePath\" argument missing"})

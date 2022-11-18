@@ -64,15 +64,15 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := fsReq.PodName
 	if podName == "" {
-		h.logger.Errorf("file delete: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file delete: \"pod_name\" argument missing"})
+		h.logger.Errorf("file delete: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file delete: \"podName\" argument missing"})
 		return
 	}
 
 	podFileWithPath := fsReq.FilePath
 	if podFileWithPath == "" {
-		h.logger.Errorf("file delete: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file delete: \"file_path\" argument missing"})
+		h.logger.Errorf("file delete: \"filePath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file delete: \"filePath\" argument missing"})
 		return
 	}
 

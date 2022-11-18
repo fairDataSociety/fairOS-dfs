@@ -64,15 +64,15 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 
 	podName := fsReq.PodName
 	if podName == "" {
-		h.logger.Errorf("mkdir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"pod_name\" argument missing"})
+		h.logger.Errorf("mkdir: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"podName\" argument missing"})
 		return
 	}
 
 	dirToCreateWithPath := fsReq.DirectoryPath
 	if dirToCreateWithPath == "" {
-		h.logger.Errorf("mkdir: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"dir_path\" argument missing"})
+		h.logger.Errorf("mkdir: \"dirPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"dirPath\" argument missing"})
 		return
 	}
 

@@ -24,14 +24,14 @@ import (
 func (h *Handler) PodPresentHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("doc ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc ls: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("doc ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc ls: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"podName\" argument missing"})
 		return
 	}
 

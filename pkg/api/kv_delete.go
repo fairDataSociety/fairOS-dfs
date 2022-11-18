@@ -56,15 +56,15 @@ func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv delete: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv delete: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv delete: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv delete: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv delete: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv delete: \"table_name\" argument missing"})
+		h.logger.Errorf("kv delete: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv delete: \"tableName\" argument missing"})
 		return
 	}
 

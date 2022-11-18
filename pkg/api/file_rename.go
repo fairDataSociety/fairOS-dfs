@@ -60,22 +60,22 @@ func (h *Handler) FileRenameHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := renameReq.PodName
 	if podName == "" {
-		h.logger.Errorf("file rename: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file rename: \"pod_name\" argument missing"})
+		h.logger.Errorf("file rename: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file rename: \"podName\" argument missing"})
 		return
 	}
 
 	podFileWithPath := renameReq.OldPath
 	if podFileWithPath == "" {
-		h.logger.Errorf("file rename: \"old_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file rename: \"old_path\" argument missing"})
+		h.logger.Errorf("file rename: \"oldPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file rename: \"oldPath\" argument missing"})
 		return
 	}
 
 	newPodFileWithPath := renameReq.NewPath
 	if newPodFileWithPath == "" {
-		h.logger.Errorf("file rename: \"new_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file rename: \"new_path\" argument missing"})
+		h.logger.Errorf("file rename: \"newPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file rename: \"newPath\" argument missing"})
 		return
 	}
 

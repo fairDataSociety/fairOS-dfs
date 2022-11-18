@@ -74,21 +74,21 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := fsReq.PodName
 	if podName == "" {
-		h.logger.Errorf("file share: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file share: \"pod_name\" argument missing"})
+		h.logger.Errorf("file share: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file share: \"podName\" argument missing"})
 		return
 	}
 
 	podFileWithPath := fsReq.FilePath
 	if podFileWithPath == "" {
-		h.logger.Errorf("file share: \"pod_path_file\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file share: \"pod_path_file\" argument missing"})
+		h.logger.Errorf("file share: \"filePath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file share: \"filePath\" argument missing"})
 		return
 	}
 	destinationRef := fsReq.Destination
 	if destinationRef == "" {
-		h.logger.Errorf("file share: \"to\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file share: \"to\" argument missing"})
+		h.logger.Errorf("file share: \"destUser\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file share: \"destUser\" argument missing"})
 		return
 	}
 
@@ -155,8 +155,8 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	sharingRefString := keys[0]
 	if sharingRefString == "" {
-		h.logger.Errorf("file receive: \"ref\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file receive: \"ref\" argument missing"})
+		h.logger.Errorf("file receive: \"sharingRef\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file receive: \"sharingRef\" argument missing"})
 		return
 	}
 
@@ -223,8 +223,8 @@ func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request)
 	}
 	sharingRefString := keys[0]
 	if sharingRefString == "" {
-		h.logger.Errorf("file receive info: \"ref\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file receive info: \"ref\" argument missing"})
+		h.logger.Errorf("file receive info: \"sharingRef\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file receive info: \"sharingRef\" argument missing"})
 		return
 	}
 

@@ -60,7 +60,11 @@ func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	podName := podReq.PodName
-
+	if podName == "" {
+		h.logger.Errorf("pod close: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod close: \"podName\" argument missing"})
+		return
+	}
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {

@@ -56,15 +56,15 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv open: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv open: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv open: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv open: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv open: \"table_name\" argument missing"})
+		h.logger.Errorf("kv open: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: \"tableName\" argument missing"})
 		return
 	}
 

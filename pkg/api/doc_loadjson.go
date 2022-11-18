@@ -46,7 +46,7 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("podName")
 	if podName == "" {
 		h.logger.Errorf("doc loadjson: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"pod_name\" argument missing"})
+		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"podName\" argument missing"})
 		return
 	}
 

@@ -50,16 +50,16 @@ type ListFileResponse struct {
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "ls: \"pod_name\" argument missing"})
+		h.logger.Errorf("ls: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "ls: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 
 	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("ls: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "ls: \"dir_path\" argument missing"})
+		h.logger.Errorf("ls: \"dirPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "ls: \"dirPath\" argument missing"})
 		return
 	}
 	directory := keys[0]

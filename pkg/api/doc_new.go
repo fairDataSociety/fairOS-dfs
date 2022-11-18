@@ -70,15 +70,15 @@ func (h *Handler) DocCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc create: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc create: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc create: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc create: \"podName\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc create: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc  create: \"table_name\" argument missing"})
+		h.logger.Errorf("doc create: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc  create: \"tableName\" argument missing"})
 		return
 	}
 

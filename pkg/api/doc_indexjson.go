@@ -63,22 +63,22 @@ func (h *Handler) DocIndexJsonHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc indexjson: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc indexjson: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"podName\" argument missing"})
 		return
 	}
 
 	tableName := docReq.TableName
 	if tableName == "" {
-		h.logger.Errorf("doc indexjson: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"table_ame\" argument missing"})
+		h.logger.Errorf("doc indexjson: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"tableAme\" argument missing"})
 		return
 	}
 
 	podFile := docReq.FileName
 	if podFile == "" {
-		h.logger.Errorf("doc indexjson: \"file_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"file_name\" argument missing"})
+		h.logger.Errorf("doc indexjson: \"fileName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc indexjson: \"fileName\" argument missing"})
 		return
 	}
 

@@ -34,25 +34,25 @@ import (
 //	@Tags         file
 //	@Accept       mpfd
 //	@Produce      */*
-//	@Param	      pod_name formData string true "pod name"
-//	@Param	      file_path formData string true "file path"
+//	@Param	      podName formData string true "pod name"
+//	@Param	      filePath formData string true "file path"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {array}  byte
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/download [post]
 func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request) {
-	podName := r.FormValue("pod_name")
+	podName := r.FormValue("podName")
 	if podName == "" {
-		h.logger.Errorf("download: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "download: \"pod_name\" argument missing"})
+		h.logger.Errorf("download: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
 		return
 	}
 
-	podFileWithPath := r.FormValue("file_path")
+	podFileWithPath := r.FormValue("filePath")
 	if podFileWithPath == "" {
-		h.logger.Errorf("download: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "download: \"file_path\" argument missing"})
+		h.logger.Errorf("download: \"filePath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "download: \"filePath\" argument missing"})
 		return
 	}
 
@@ -77,27 +77,27 @@ func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request
 func (h *Handler) FileDownloadHandlerGet(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("download \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "dir: \"pod_name\" argument missing"})
+		h.logger.Errorf("download \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("download: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "download: \"pod_name\" argument missing"})
+		h.logger.Errorf("download: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
 		return
 	}
 
 	keys, ok = r.URL.Query()["filePath"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("download: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "download: \"file_path\" argument missing"})
+		h.logger.Errorf("download: \"filePath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "download: \"filePath\" argument missing"})
 		return
 	}
 	podFileWithPath := keys[0]
 	if podFileWithPath == "" {
-		h.logger.Errorf("download: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "download: \"file_path\" argument missing"})
+		h.logger.Errorf("download: \"filePath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "download: \"filePath\" argument missing"})
 		return
 	}
 

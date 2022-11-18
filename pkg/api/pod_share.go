@@ -66,8 +66,8 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 
 	pod := podReq.PodName
 	if pod == "" {
-		h.logger.Errorf("pod share: \"pod\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "pod share: \"pod\" argument missing"})
+		h.logger.Errorf("pod share: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod share: \"podName\" argument missing"})
 		return
 	}
 
@@ -125,15 +125,15 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["sharingRef"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("pod receive info: \"sharing_ref\" argument missing")
-		jsonhttp.BadRequest(w, "pod receive info: \"sharing_ref\" argument missing")
+		h.logger.Errorf("pod receive info: \"sharingRef\" argument missing")
+		jsonhttp.BadRequest(w, "pod receive info: \"sharingRef\" argument missing")
 		return
 	}
 
 	sharingRefString := keys[0]
 	if sharingRefString == "" {
-		h.logger.Errorf("pod receive info: \"ref\" argument missing")
-		jsonhttp.BadRequest(w, "pod receive info: \"ref\" argument missing")
+		h.logger.Errorf("pod receive info: \"sharingRef\" argument missing")
+		jsonhttp.BadRequest(w, "pod receive info: \"sharingRef\" argument missing")
 		return
 	}
 
@@ -185,15 +185,15 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 func (h *Handler) PodReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["sharingRef"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("pod receive: \"sharing_ref\" argument missing")
-		jsonhttp.BadRequest(w, "pod receive: \"sharing_ref\" argument missing")
+		h.logger.Errorf("pod receive: \"sharingRef\" argument missing")
+		jsonhttp.BadRequest(w, "pod receive: \"sharingRef\" argument missing")
 		return
 	}
 
 	sharingRefString := keys[0]
 	if sharingRefString == "" {
-		h.logger.Errorf("pod receive: \"ref\" argument missing")
-		jsonhttp.BadRequest(w, "pod receive: \"ref\" argument missing")
+		h.logger.Errorf("pod receive: \"sharingRef\" argument missing")
+		jsonhttp.BadRequest(w, "pod receive: \"sharingRef\" argument missing")
 		return
 	}
 

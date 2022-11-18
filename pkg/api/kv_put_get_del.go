@@ -81,15 +81,15 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv put: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv put: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv put: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv put: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv put: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv put: \"table_name\" argument missing"})
+		h.logger.Errorf("kv put: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv put: \"tableName\" argument missing"})
 		return
 	}
 
@@ -252,7 +252,7 @@ func (h *Handler) KVGetDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	keys, ok = r.URL.Query()["tableName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"table_name\" argument missing")
+		h.logger.Errorf("kv get: \"tableName\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "kv get: \"tableName\" argument missing"})
 		return
 	}
@@ -368,15 +368,15 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv del: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv del: \"pod_name\" argument missing")
+		h.logger.Errorf("kv del: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, "kv del: \"podName\" argument missing")
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv del: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv del: \"table_name\" argument missing")
+		h.logger.Errorf("kv del: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, "kv del: \"tableName\" argument missing")
 		return
 	}
 

@@ -52,15 +52,15 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv export: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv export: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv export: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv export: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv export: \"table_name\" argument missing"})
+		h.logger.Errorf("kv export: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: \"tableName\" argument missing"})
 		return
 	}
 

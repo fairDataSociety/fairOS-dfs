@@ -58,8 +58,8 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	pod := podReq.PodName
 	if pod == "" {
-		h.logger.Errorf("pod new: \"pod\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "pod new: \"pod\" argument missing"})
+		h.logger.Errorf("pod new: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: \"podName\" argument missing"})
 		return
 	}
 

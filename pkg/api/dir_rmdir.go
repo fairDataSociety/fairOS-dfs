@@ -59,15 +59,15 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 
 	podName := fsReq.PodName
 	if podName == "" {
-		h.logger.Errorf("rmdir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"pod_name\" argument missing"})
+		h.logger.Errorf("rmdir: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"podName\" argument missing"})
 		return
 	}
 
 	dir := fsReq.DirectoryPath
 	if dir == "" {
-		h.logger.Errorf("rmdir: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"dir_path\" argument missing"})
+		h.logger.Errorf("rmdir: \"dirPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"dirPath\" argument missing"})
 		return
 	}
 

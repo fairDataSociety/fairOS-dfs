@@ -47,15 +47,15 @@ type PodStatResponse struct {
 func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("pod stat: \"pod_name\" argument missing")
+		h.logger.Errorf("pod stat: \"podName\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"pod_name\" argument missing"})
 		return
 	}
 
 	pod := keys[0]
 	if pod == "" {
-		h.logger.Errorf("pod stat: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"pod_name\" argument missing"})
+		h.logger.Errorf("pod stat: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"podName\" argument missing"})
 		return
 	}
 	// get values from cookie

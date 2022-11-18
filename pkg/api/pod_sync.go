@@ -57,7 +57,11 @@ func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	podName := podReq.PodName
-
+	if podName == "" {
+		h.logger.Errorf("pod sync: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod sync: \"podName\" argument missing"})
+		return
+	}
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {

@@ -60,6 +60,11 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pod := podReq.PodName
+	if pod == "" {
+		h.logger.Errorf("pod open: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod open: \"podName\" argument missing"})
+		return
+	}
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
@@ -121,6 +126,11 @@ func (h *Handler) PodOpenAsyncHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pod := podReq.PodName
+	if pod == "" {
+		h.logger.Errorf("pod open: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod open: \"podName\" argument missing"})
+		return
+	}
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

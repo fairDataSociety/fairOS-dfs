@@ -42,16 +42,16 @@ import (
 func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("dir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "dir: \"pod_name\" argument missing"})
+		h.logger.Errorf("dir: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 
 	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("dir present: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "dir present: \"dir_path\" argument missing"})
+		h.logger.Errorf("dir present: \"dirPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir present: \"dirPath\" argument missing"})
 		return
 	}
 	dir := keys[0]

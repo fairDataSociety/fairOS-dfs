@@ -60,15 +60,15 @@ func (h *Handler) KVCountHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv count: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv count: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv count: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv count: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv count: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv count: \"table_name\" argument missing"})
+		h.logger.Errorf("kv count: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv count: \"tableName\" argument missing"})
 		return
 	}
 

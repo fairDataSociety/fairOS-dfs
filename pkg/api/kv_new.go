@@ -64,15 +64,15 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv create: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv create: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv create: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv create: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv create: \"table_name\" argument missing"})
+		h.logger.Errorf("kv create: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: \"tableName\" argument missing"})
 		return
 	}
 

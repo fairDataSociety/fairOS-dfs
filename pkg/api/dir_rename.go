@@ -61,22 +61,22 @@ func (h *Handler) DirectoryRenameHandler(w http.ResponseWriter, r *http.Request)
 
 	podName := renameReq.PodName
 	if podName == "" {
-		h.logger.Errorf("rename-dir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "rename-dir: \"pod_name\" argument missing"})
+		h.logger.Errorf("rename-dir: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "rename-dir: \"podName\" argument missing"})
 		return
 	}
 
 	oldPath := renameReq.OldPath
 	if oldPath == "" {
-		h.logger.Errorf("rename-dir: \"old_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "rename-dir: \"old_path\" argument missing"})
+		h.logger.Errorf("rename-dir: \"oldPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "rename-dir: \"oldPath\" argument missing"})
 		return
 	}
 
 	newPath := renameReq.NewPath
 	if newPath == "" {
-		h.logger.Errorf("rename-dir: \"new_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "rename-dir: \"new_path\" argument missing"})
+		h.logger.Errorf("rename-dir: \"newPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "rename-dir: \"newPath\" argument missing"})
 		return
 	}
 

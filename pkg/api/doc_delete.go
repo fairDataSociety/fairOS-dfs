@@ -56,15 +56,15 @@ func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc delete: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc  delete: \"table_name\" argument missing"})
+		h.logger.Errorf("doc delete: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc  delete: \"tableName\" argument missing"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc delete: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc delete: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc delete: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc delete: \"podName\" argument missing"})
 		return
 	}
 

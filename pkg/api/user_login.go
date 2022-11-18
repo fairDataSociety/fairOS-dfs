@@ -69,8 +69,8 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	user := userReq.UserName
 	password := userReq.Password
 	if user == "" {
-		h.logger.Errorf("user login: \"user_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user login: \"user_name\" argument missing"})
+		h.logger.Errorf("user login: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user login: \"userName\" argument missing"})
 		return
 	}
 	if password == "" {
