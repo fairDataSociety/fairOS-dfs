@@ -3,6 +3,7 @@ package file_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"math/rand"
 	"os"
@@ -40,6 +41,25 @@ func TestWriteAt(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
+	t.Run("writeAt-non-existent-file", func(t *testing.T) {
+		filePath := string(os.PathSeparator)
+		fileName := "file1"
+
+		var offset uint64 = 3
+
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+
+		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath+fileName), "")
+
+		update := []byte("123")
+		rewrite := &bytes.Buffer{}
+		rewrite.Write(update)
+		_, err = fileObject.WriteAt(fp, podPassword, rewrite, offset, false)
+		if !errors.Is(file.ErrFileNotPresent, err) {
+			t.Fatal("file should not be present")
+		}
+	})
 
 	t.Run("upload-update-known-very-small-file", func(t *testing.T) {
 		filePath := string(os.PathSeparator)

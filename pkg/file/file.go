@@ -128,10 +128,10 @@ func newLsTask(f *File, topic []byte, path, podPassword string, l *[]Entry, mtx 
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
 	_, data, err := lt.f.fd.GetFeedData(lt.topic, lt.f.userAddress, []byte(lt.podPassword))
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("file mtdt : %v", err)
 	}
-	if string(data) == utils.DeletedFeedMagicWord {
+	if string(data) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
 		return nil
 	}
 	var meta *MetaData

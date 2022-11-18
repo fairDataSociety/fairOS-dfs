@@ -26,7 +26,7 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 		return ErrInvalidDirectoryName
 	}
 
-	if len(dirName) > nameLength {
+	if len(dirName) > nameLength { // skipcq: TCV-001
 		return ErrTooLongDirectoryName
 	}
 
@@ -35,12 +35,12 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 	}
 
 	// check if directory exists
-	if d.GetDirFromDirectoryMap(dirNameWithPath) == nil {
+	if d.GetDirFromDirectoryMap(dirNameWithPath) == nil { // skipcq: TCV-001
 		return ErrDirectoryNotPresent
 	}
 
 	// check if parent directory exists
-	if d.GetDirFromDirectoryMap(parentPath) == nil {
+	if d.GetDirFromDirectoryMap(parentPath) == nil { // skipcq: TCV-001
 		return ErrDirectoryNotPresent
 	}
 	if d.GetDirFromDirectoryMap(newDirNameWithPath) != nil {
@@ -48,7 +48,7 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 	}
 
 	err := d.mapChildrenToNewPath(dirNameWithPath, newDirNameWithPath, podPassword)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 

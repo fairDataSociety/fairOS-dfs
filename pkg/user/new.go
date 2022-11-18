@@ -51,7 +51,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	fd := feed.New(accountInfo, u.client, u.logger)
 	// create a new base user account with the mnemonic
 	mnemonic, seed, err := acc.CreateUserAccount(mnemonic)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", "", "", "", nil, err
 	}
 

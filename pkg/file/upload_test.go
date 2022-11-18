@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -267,6 +268,12 @@ func TestUpload(t *testing.T) {
 		fileSize := int64(100)
 		blockSize := uint32(164000)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, uint32(163999))
+		if !errors.Is(file.ErrGzipBlSize, err) {
+			t.Fatal("should provide higher block size")
+		}
+
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)

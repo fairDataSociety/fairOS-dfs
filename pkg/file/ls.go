@@ -43,7 +43,7 @@ func (f *File) ListFiles(files []string, podPassword string) ([]Entry, error) {
 		wg.Add(1)
 		lsTask := newLsTask(f, fileTopic, filePath, podPassword, fileEntries, mtx, wg)
 		_, err := f.syncManager.Go(lsTask)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, fmt.Errorf("list files : %v", err)
 		}
 	}

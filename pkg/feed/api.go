@@ -98,7 +98,7 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte, encrypti
 	var err error
 
 	encryptedData := data
-	if encryptionPassword != nil {
+	if encryptionPassword != nil { // skipcq: TCV-001
 		encryptedData, err = utils.EncryptBytes(encryptionPassword, data)
 		if err != nil { // skipcq: TCV-001
 			return nil, err

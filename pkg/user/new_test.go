@@ -74,8 +74,8 @@ func TestNew(t *testing.T) {
 		if ui.GetUserName() != "user1" {
 			t.Fatalf("invalid user name")
 		}
-		if ui.GetFeed() == nil || ui.GetAccount() == nil {
-			t.Fatalf("invalid feed or account")
+		if ui.GetFeed() == nil || ui.GetAccount() == nil || ui.GetPod() == nil {
+			t.Fatalf("invalid feed, account or pod")
 		}
 		err = ui.GetAccount().GetWallet().IsValidMnemonic(mnemonic)
 		if err != nil {
