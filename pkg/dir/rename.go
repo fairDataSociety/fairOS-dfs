@@ -22,7 +22,7 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 	newDirName := filepath.Base(newDirNameWithPath)
 
 	// validation checks of the arguments
-	if dirName == "" || strings.HasPrefix(dirName, utils.PathSeparator) {
+	if dirName == "" || strings.HasPrefix(dirName, utils.PathSeparator) { // skipcq: TCV-001
 		return ErrInvalidDirectoryName
 	}
 

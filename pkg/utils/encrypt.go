@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-func EncryptBytes(passphrase, message []byte) ([]byte, error) {
+func EncryptBytes(passphrase, message []byte) ([]byte, error) { // skipcq: TCV-001
 	aesKey := sha256.Sum256(passphrase)
 	block, err := aes.NewCipher(aesKey[:])
 	if err != nil { // skipcq: TCV-001
