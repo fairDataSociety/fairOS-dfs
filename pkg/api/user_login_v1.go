@@ -26,6 +26,8 @@ import (
 
 // UserLoginHandler godoc
 //
+//	@Tags         user
+//
 //	@Deprecated
 //	@Router       /v1/user/login [post]
 func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {

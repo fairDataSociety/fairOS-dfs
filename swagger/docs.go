@@ -11,6 +11,10 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {},
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -2963,12 +2967,18 @@ const docTemplate = `{
         },
         "/v1/user/delete": {
             "post": {
+                "tags": [
+                    "user"
+                ],
                 "deprecated": true,
                 "responses": {}
             }
         },
         "/v1/user/export": {
             "post": {
+                "tags": [
+                    "user"
+                ],
                 "deprecated": true,
                 "responses": {}
             }
@@ -3013,6 +3023,9 @@ const docTemplate = `{
         },
         "/v1/user/login": {
             "post": {
+                "tags": [
+                    "user"
+                ],
                 "deprecated": true,
                 "responses": {}
             }
@@ -3060,12 +3073,18 @@ const docTemplate = `{
         },
         "/v1/user/present": {
             "get": {
+                "tags": [
+                    "user"
+                ],
                 "deprecated": true,
                 "responses": {}
             }
         },
         "/v1/user/signup": {
             "post": {
+                "tags": [
+                    "user"
+                ],
                 "deprecated": true,
                 "responses": {}
             }
@@ -4005,12 +4024,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "localhost:9090",
+	Version:          "v0.9.0-rc1",
+	Host:             "http://localhost:9090",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "FairOS-dfs server",
+	Description:      "A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

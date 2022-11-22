@@ -26,6 +26,7 @@ import (
 
 // UserSignupHandler godoc
 //
+//	@Tags         user
 //	@Deprecated
 //	@Router       /v1/user/signup [post]
 func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {

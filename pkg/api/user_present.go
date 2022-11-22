@@ -28,6 +28,7 @@ type PresentResponse struct {
 
 // UserPresentHandler godoc
 //
+//	@Tags         user
 //	@Deprecated
 //	@Router       /v1/user/present [get]
 func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {

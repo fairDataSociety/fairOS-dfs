@@ -27,6 +27,7 @@ type UserExportResponse struct {
 
 // ExportUserHandler godoc
 //
+//	@Tags         user
 //	@Deprecated
 //	@Router       /v1/user/export [post]
 func (h *Handler) ExportUserHandler(w http.ResponseWriter, r *http.Request) {

@@ -32,7 +32,7 @@ linter:
 .PHONY: swagger
 swagger:
 	which swag || ( echo "install swag for your system from https://github.com/swaggo/swag" && exit 1)
-	swag init -g cmd/server.go -d cmd/dfs,pkg/api,cmd/common,pkg/dir,pkg/file,pkg/pod,pkg/user,pkg/collection -o ./swagger
+	swag init -g ./cmd/server.go -d cmd/dfs,pkg/api,cmd/common,pkg/dir,pkg/file,pkg/pod,pkg/user,pkg/collection -o ./swagger
 
 .PHONY: vet
 vet:

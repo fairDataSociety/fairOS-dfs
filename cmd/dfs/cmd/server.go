@@ -46,17 +46,14 @@ var (
 	handler        *api.Handler
 )
 
-//  @title           FairOS-dfs server
-//  @version         1.0
-//  @description     This is fairOS-dfs server api specifications
-
-//  @contact.name   Sabyasachi Patra
-//  @contact.email  sabyasachi@datafund.io
-
-//  @license.name  Apache 2.0
-//  @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host      localhost:9090
+// @title           FairOS-dfs server
+// @version         v0.9.0-rc1
+// @description     A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store
+// @host      http://localhost:9090
+// @contact.name	Sabyasachi Patra
+// @contact.email	sabyasachi@datafund.io
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "starts a HTTP server for the dfs",

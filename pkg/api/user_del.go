@@ -28,6 +28,7 @@ import (
 
 // UserDeleteHandler godoc
 //
+//	@Tags         user
 //	@Deprecated
 //	@Router       /v1/user/delete [post]
 func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
