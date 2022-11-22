@@ -285,7 +285,7 @@ func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 // UploadFile is a controller function which validates if the user is logged in,
 //
 //	pod is open and calls the upload function.
-func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32) error {
+func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32, overwrite bool) error {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -307,7 +307,8 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 
 	// check if file exists, then backup the file
 	totalPath := utils.CombinePathAndFile(podPath, podFileName)
-	if file.IsFileAlreadyPresent(totalPath) {
+	alreadyPresent := file.IsFileAlreadyPresent(totalPath)
+	if alreadyPresent && !overwrite {
 		m, err := file.BackupFromFileName(totalPath, podInfo.GetPodPassword())
 		if err != nil {
 			return err
@@ -368,7 +369,6 @@ func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, session
 	if err != nil {
 		return err
 	}
-
 	oldPrnt := filepath.ToSlash(filepath.Dir(fileNameWithPath))
 	newPrnt := filepath.ToSlash(filepath.Dir(newFileNameWithPath))
 

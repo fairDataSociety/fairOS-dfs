@@ -405,7 +405,6 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 // DeleteReference unpins a reference so that it will be garbage collected by the Swarm network.
 func (s *Client) DeleteReference(address []byte) error {
 	// TODO uncomment after unpinning is fixed
-
 	_ = address
 	/*
 		to := time.Now()

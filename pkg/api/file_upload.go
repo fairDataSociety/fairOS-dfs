@@ -19,6 +19,7 @@ package api
 import (
 	"mime/multipart"
 	"net/http"
+	"strconv"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -87,6 +88,17 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	var err error
+	overwrite := true
+	overwriteString := r.FormValue("overwrite")
+	if overwriteString != "" {
+		overwrite, err = strconv.ParseBool(overwriteString)
+		if err != nil {
+			h.logger.Errorf("file upload: \"overwrite\" argument is wrong")
+			jsonhttp.BadRequest(w, &response{Message: "file upload: \"overwrite\" argument is wrong"})
+			return
+		}
+	}
 
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
@@ -132,7 +144,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 			responses = append(responses, UploadResponse{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
-		err = h.handleFileUpload(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs))
+		err = h.handleFileUpload(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs), overwrite)
 		if err != nil {
 			if err == dfs.ErrPodNotOpen {
 				h.logger.Errorf("file upload: %v", err)
@@ -152,7 +164,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) handleFileUpload(podName, podFileName, sessionId string, fileSize int64, f multipart.File, podPath, compression string, blockSize uint32) error {
+func (h *Handler) handleFileUpload(podName, podFileName, sessionId string, fileSize int64, f multipart.File, podPath, compression string, blockSize uint32, overwrite bool) error {
 	defer f.Close()
-	return h.dfsAPI.UploadFile(podName, podFileName, sessionId, fileSize, f, podPath, compression, blockSize)
+	return h.dfsAPI.UploadFile(podName, podFileName, sessionId, fileSize, f, podPath, compression, blockSize, overwrite)
 }

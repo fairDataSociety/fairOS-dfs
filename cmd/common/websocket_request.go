@@ -87,6 +87,7 @@ type FileRequest struct {
 	FileName      string `json:"fileName,omitempty"`
 	ContentLength string `json:"contentLength,omitempty"`
 	Compression   string `json:"compression,omitempty"`
+	Overwrite     bool   `json:"overwrite,omitempty"`
 }
 
 type FileDownloadRequest struct {

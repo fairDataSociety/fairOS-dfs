@@ -18,7 +18,6 @@ package file_test
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"strconv"
 	"testing"
@@ -83,7 +82,6 @@ func TestListFiles(t *testing.T) {
 
 		foundIndex1 := -1
 		for i, v := range entries {
-			fmt.Println(v)
 			if v.Name == "file1" {
 				foundIndex1 = i
 			}

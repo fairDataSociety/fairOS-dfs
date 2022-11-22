@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"sort"
 	"testing"
@@ -45,7 +44,6 @@ func TestRenameDirectory(t *testing.T) {
 	t.Run("rename-dir-same-prnt", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-		fmt.Println(podPassword)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, fileObject, tm, logger)
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
