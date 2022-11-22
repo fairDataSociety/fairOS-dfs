@@ -1,5 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "gomod"
-directory: "/"
-interval: "weekly"
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: sunday
