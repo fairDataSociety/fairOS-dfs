@@ -1189,12 +1189,12 @@ paths:
       parameters:
       - description: pod name
         in: formData
-        name: pod_name
+        name: podName
         required: true
         type: string
       - description: file path
         in: formData
-        name: file_path
+        name: filePath
         required: true
         type: string
       - description: cookie parameter

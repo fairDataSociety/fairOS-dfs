@@ -1110,14 +1110,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "pod name",
-                        "name": "pod_name",
+                        "name": "podName",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "file path",
-                        "name": "file_path",
+                        "name": "filePath",
                         "in": "formData",
                         "required": true
                     },
