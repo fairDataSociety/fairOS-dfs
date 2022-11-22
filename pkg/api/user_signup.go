@@ -33,17 +33,25 @@ var (
 
 type UserSignupResponse struct {
 	Address   string `json:"address"`
-	Mnemonic  string `json:"mnemonic,omitempty"`
-	NameHash  string `json:"name_hash,omitempty"`
-	PublicKey string `json:"public_key,omitempty"`
+	NameHash  string `json:"nameHash,omitempty"`
+	PublicKey string `json:"publicKey,omitempty"`
 	Message   string `json:"message,omitempty"`
+	Mnemonic  string `json:"mnemonic,omitempty"`
 }
 
-// UserSignupV2Handler is the api handler to create new user
-// it takes two mandatory arguments and one optional argument
-// - user_name: the name of the user to create
-// - password: the password of the user
-// * mnemonic: a 12 word mnemonic to use to create the hd wallet of the user
+// UserSignupV2Handler godoc
+//
+//	@Summary      Register New User
+//	@Description  registers new user with the new ENS based authentication
+//	@Tags         user
+//	@Accept       json
+//	@Produce      json
+//	@Param	      user_request body common.UserSignupRequest true "user name"
+//	@Success      201  {object}  UserSignupResponse
+//	@Failure      400  {object}  response
+//	@Failure      402  {object}  UserSignupResponse
+//	@Failure      500  {object}  response
+//	@Router       /v2/user/signup [post]
 func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -53,7 +61,7 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq common.UserSignupRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user signup: could not decode arguments")
@@ -65,8 +73,8 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	password := userReq.Password
 	mnemonic := userReq.Mnemonic
 	if user == "" {
-		h.logger.Errorf("user signup: \"user\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user signup: \"user\" argument missing"})
+		h.logger.Errorf("user signup: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user signup: \"userName\" argument missing"})
 		return
 	}
 	if password == "" {

@@ -17,46 +17,36 @@ limitations under the License.
 package file
 
 import (
-	"encoding/json"
-	"strconv"
+	"fmt"
+	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type Entry struct {
 	Name             string `json:"name"`
-	ContentType      string `json:"content_type"`
+	ContentType      string `json:"contentType"`
 	Size             string `json:"size,omitempty"`
-	BlockSize        string `json:"block_size,omitempty"`
-	CreationTime     string `json:"creation_time"`
-	ModificationTime string `json:"modification_time"`
-	AccessTime       string `json:"access_time"`
+	BlockSize        string `json:"blockSize,omitempty"`
+	CreationTime     string `json:"creationTime"`
+	ModificationTime string `json:"modificationTime"`
+	AccessTime       string `json:"accessTime"`
 }
 
 // ListFiles given a list of files, list files gives back the information related to each file.
-func (f *File) ListFiles(files []string) ([]Entry, error) {
-	var fileEntries []Entry
+func (f *File) ListFiles(files []string, podPassword string) ([]Entry, error) {
+	fileEntries := &[]Entry{}
+	wg := new(sync.WaitGroup)
+	mtx := &sync.Mutex{}
 	for _, filePath := range files {
 		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
-		_, data, err := f.fd.GetFeedData(fileTopic, f.userAddress)
+		wg.Add(1)
+		lsTask := newLsTask(f, fileTopic, filePath, podPassword, fileEntries, mtx, wg)
+		_, err := f.syncManager.Go(lsTask)
 		if err != nil { // skipcq: TCV-001
-			continue
+			return nil, fmt.Errorf("list files : %v", err)
 		}
-		var meta *MetaData
-		err = json.Unmarshal(data, &meta)
-		if err != nil { // skipcq: TCV-001
-			continue
-		}
-		entry := Entry{
-			Name:             meta.Name,
-			ContentType:      meta.ContentType,
-			Size:             strconv.FormatUint(meta.Size, 10),
-			BlockSize:        strconv.FormatInt(int64(meta.BlockSize), 10),
-			CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
-			AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
-			ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
-		}
-		fileEntries = append(fileEntries, entry)
 	}
-	return fileEntries, nil
+	wg.Wait()
+	return *fileEntries, nil
 }

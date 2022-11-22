@@ -20,8 +20,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"resenje.org/jsonhttp"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -29,9 +27,19 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-// DirectoryRmdirHandler is the api handler to remove a directory
-// it takes one argument
-// - dir-path: the directory to remove along with its absolute path
+// DirectoryRmdirHandler godoc
+//
+//	@Summary      Remove directory
+//	@Description  DirectoryRmdirHandler is the api handler to remove a directory.
+//	@Tags         dir
+//	@Accept       json
+//	@Produce      json
+//	@Param	      dir_request body DirRequest true "pod name and dir path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/dir/rmdir [delete]
 func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -41,7 +49,7 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var fsReq common.FileSystemRequest
+	var fsReq DirRequest
 	err := decoder.Decode(&fsReq)
 	if err != nil {
 		h.logger.Errorf("rmdir: could not decode arguments")
@@ -51,15 +59,15 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 
 	podName := fsReq.PodName
 	if podName == "" {
-		h.logger.Errorf("rmdir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"pod_name\" argument missing"})
+		h.logger.Errorf("rmdir: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"podName\" argument missing"})
 		return
 	}
 
 	dir := fsReq.DirectoryPath
 	if dir == "" {
-		h.logger.Errorf("rmdir: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"dir_path\" argument missing"})
+		h.logger.Errorf("rmdir: \"dirPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"dirPath\" argument missing"})
 		return
 	}
 

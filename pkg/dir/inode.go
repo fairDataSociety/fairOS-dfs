@@ -24,24 +24,27 @@ import (
 )
 
 type Inode struct {
-	Meta           *MetaData
-	FileOrDirNames []string
+	Meta           *MetaData `json:"meta"`
+	FileOrDirNames []string  `json:"fileOrDirNames"`
 }
 
 var (
 	ErrResourceDeleted = errors.New("resource was deleted")
 )
 
+// GetMeta returns iNode metadata
 // skipcq: TCV-001
 func (in *Inode) GetMeta() *MetaData {
 	return in.Meta
 }
 
+// GetFileOrDirNames returns file and folder names in iNode
 // skipcq: TCV-001
 func (in *Inode) GetFileOrDirNames() []string {
 	return in.FileOrDirNames
 }
 
+// SetFileOrDirNames sets file and folder names in iNode
 // skipcq: TCV-001
 func (in *Inode) SetFileOrDirNames(fileOrDirNames []string) {
 	in.FileOrDirNames = fileOrDirNames

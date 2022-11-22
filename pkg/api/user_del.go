@@ -26,9 +26,11 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserDeleteHandler is the api handler to delete a user
-// it takes only one argument
-// - password: the password of the user
+// UserDeleteHandler godoc
+//
+//	@Tags         user
+//	@Deprecated
+//	@Router       /v1/user/delete [post]
 func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -38,7 +40,7 @@ func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq common.UserSignupRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user signup: could not decode arguments")
@@ -65,45 +67,39 @@ func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "user delete: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
-
-	// delete user
-	err = h.dfsAPI.DeleteUser(password, sessionId)
-	if err != nil {
-		if err == u.ErrInvalidUserName ||
-			err == u.ErrInvalidPassword ||
-			err == u.ErrUserNotLoggedIn {
-			h.logger.Errorf("user delete: %v", err)
-			jsonhttp.BadRequest(w, &response{Message: "user delete: " + err.Error()})
-			return
-		}
-		h.logger.Errorf("user delete: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user delete: " + err.Error()})
-		return
-	}
-
-	// clear cookie
-	cookie.ClearSession(w)
-
-	jsonhttp.OK(w, &response{Message: "user deleted successfully"})
+	jsonhttp.BadRequest(w, &response{Message: "user delete: deprecated"})
 }
 
-// UserDeleteV2Handler is the api handler to delete a user
-// it takes only one argument
-// - password: the password of the user
+type UserDeleteRequest struct {
+	Password string `json:"password,omitempty"`
+}
+
+// UserDeleteV2Handler godoc
+//
+//	@Summary      Delete user for ENS based authentication
+//	@Description  deletes user info from swarm
+//	@Tags         user
+//	@Produce      json
+//	@Param	      UserDeleteRequest body UserDeleteRequest true "user delete request"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v2/user/delete [delete]
 func (h *Handler) UserDeleteV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
-		h.logger.Errorf("user signup: invalid request body type")
-		jsonhttp.BadRequest(w, "user signup: invalid request body type")
+		h.logger.Errorf("user delete: invalid request body type")
+		jsonhttp.BadRequest(w, "user delete: invalid request body type")
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq UserDeleteRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
-		h.logger.Errorf("user signup: could not decode arguments")
-		jsonhttp.BadRequest(w, "user signup: could not decode arguments")
+		h.logger.Errorf("user delete: could not decode arguments")
+		jsonhttp.BadRequest(w, "user delete: could not decode arguments")
 		return
 	}
 
@@ -134,16 +130,16 @@ func (h *Handler) UserDeleteV2Handler(w http.ResponseWriter, r *http.Request) {
 			err == u.ErrInvalidPassword ||
 			err == u.ErrUserNotLoggedIn {
 			h.logger.Errorf("user delete: %v", err)
-			jsonhttp.BadRequest(w, "user delete: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "user delete: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("user delete: %v", err)
-		jsonhttp.InternalServerError(w, "user delete: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user delete: " + err.Error()})
 		return
 	}
 
 	// clear cookie
 	cookie.ClearSession(w)
 
-	jsonhttp.OK(w, "user deleted successfully")
+	jsonhttp.OK(w, &response{Message: "user deleted successfully"})
 }

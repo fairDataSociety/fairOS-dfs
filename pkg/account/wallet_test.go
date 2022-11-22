@@ -1,25 +1,21 @@
 package account
 
 import (
-	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
+
 	"github.com/tyler-smith/go-bip39"
 )
 
 func TestWallet(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	password := "letmein"
-	logger := logging.New(io.Discard, 0)
-	acc := New(logger)
 	entropy, err := bip39.NewEntropy(128)
 	if err != nil {
 		t.Fatal(err)
@@ -28,12 +24,11 @@ func TestWallet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	enMnemonic, err := acc.encryptMnemonic(mnemonic, password)
+	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	wallet := newWalletFromMnemonic(enMnemonic)
+	wallet := newWallet(seed)
 	_, _, err = wallet.LoadMnemonicAndCreateRootAccount("invalid mnemonic that we are passing to check create account error message")
 	if err == nil {
 		t.Fatal("invalid mnemonic")
@@ -41,16 +36,5 @@ func TestWallet(t *testing.T) {
 	err = wallet.IsValidMnemonic("invalid mnemonic that we are passing to check create account error message")
 	if err == nil {
 		t.Fatal("invalid mnemonic")
-	}
-
-	_, err = wallet.LoadSeedFromMnemonic("wrongpassword")
-	if err == nil {
-		t.Fatal("wrong password")
-	}
-
-	w := &Wallet{}
-	_, err = w.LoadSeedFromMnemonic("pass")
-	if err == nil {
-		t.Fatal("wrong password")
 	}
 }

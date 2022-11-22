@@ -123,7 +123,7 @@ func statFileOrDirectory(podName, statElement string) {
 			fmt.Println("Mo. Time	  : ", time.Unix(accTime, 0).String())
 			fmt.Println("Ac. Time	  : ", time.Unix(modTime, 0).String())
 			for _, b := range resp.Blocks {
-				blkStr := fmt.Sprintf("%s, 0x%s, %s bytes, %s bytes", b.Name, b.Reference, b.Size, b.CompressedSize)
+				blkStr := fmt.Sprintf("0x%s, %s bytes, %s bytes", b.Reference, b.Size, b.CompressedSize)
 				fmt.Println(blkStr)
 			}
 		} else {
@@ -302,7 +302,6 @@ func fileReceiveInfo(podName, sharingRef string) {
 	fmt.Println("NumberOfBlocks : ", resp.NumberOfBlocks)
 	fmt.Println("ContentType    : ", resp.ContentType)
 	fmt.Println("Compression    : ", resp.Compression)
-	fmt.Println("PodName        : ", resp.PodName)
 	fmt.Println("Sender         : ", resp.Sender)
 	fmt.Println("Receiver       : ", resp.Receiver)
 	fmt.Println("SharedTime     : ", shTime)

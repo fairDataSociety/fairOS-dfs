@@ -21,9 +21,9 @@ import (
 )
 
 // KVCreate does validation checks and calls the create KVtable function.
-func (d *API) KVCreate(sessionId, podName, name string, indexType collection.IndexType) error {
+func (a *API) KVCreate(sessionId, podName, name string, indexType collection.IndexType) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -33,18 +33,18 @@ func (d *API) KVCreate(sessionId, podName, name string, indexType collection.Ind
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
 
-	return podInfo.GetKVStore().CreateKVTable(name, indexType)
+	return podInfo.GetKVStore().CreateKVTable(name, podInfo.GetPodPassword(), indexType)
 }
 
 // KVDelete does validation checks and calls the delete KVtable function.
-func (d *API) KVDelete(sessionId, podName, name string) error {
+func (a *API) KVDelete(sessionId, podName, name string) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -54,18 +54,18 @@ func (d *API) KVDelete(sessionId, podName, name string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
 
-	return podInfo.GetKVStore().DeleteKVTable(name)
+	return podInfo.GetKVStore().DeleteKVTable(name, podInfo.GetPodPassword())
 }
 
 // KVOpen does validation checks and calls the open KVtable function.
-func (d *API) KVOpen(sessionId, podName, name string) error {
+func (a *API) KVOpen(sessionId, podName, name string) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -75,18 +75,18 @@ func (d *API) KVOpen(sessionId, podName, name string) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
 
-	return podInfo.GetKVStore().OpenKVTable(name)
+	return podInfo.GetKVStore().OpenKVTable(name, podInfo.GetPodPassword())
 }
 
 // KVList does validation checks and calls the list KVtable function.
-func (d *API) KVList(sessionId, podName string) (map[string][]string, error) {
+func (a *API) KVList(sessionId, podName string) (map[string][]string, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -95,18 +95,18 @@ func (d *API) KVList(sessionId, podName string) (map[string][]string, error) {
 	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 
-	return podInfo.GetKVStore().LoadKVTables()
+	return podInfo.GetKVStore().LoadKVTables(podInfo.GetPodPassword())
 }
 
 // KVCount does validation checks and calls the count KVtable function.
-func (d *API) KVCount(sessionId, podName, name string) (*collection.TableKeyCount, error) {
+func (a *API) KVCount(sessionId, podName, name string) (*collection.TableKeyCount, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -116,18 +116,18 @@ func (d *API) KVCount(sessionId, podName, name string) (*collection.TableKeyCoun
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
 
-	return podInfo.GetKVStore().KVCount(name)
+	return podInfo.GetKVStore().KVCount(name, podInfo.GetPodPassword())
 }
 
 // KVPut does validation checks and calls the put KVtable function.
-func (d *API) KVPut(sessionId, podName, name, key string, value []byte) error {
+func (a *API) KVPut(sessionId, podName, name, key string, value []byte) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -137,7 +137,7 @@ func (d *API) KVPut(sessionId, podName, name, key string, value []byte) error {
 		return ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return err
 	}
@@ -146,9 +146,9 @@ func (d *API) KVPut(sessionId, podName, name, key string, value []byte) error {
 }
 
 // KVGet does validation checks and calls the get KVtable function.
-func (d *API) KVGet(sessionId, podName, name, key string) ([]string, []byte, error) {
+func (a *API) KVGet(sessionId, podName, name, key string) ([]string, []byte, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, nil, ErrUserNotLoggedIn
 	}
@@ -158,7 +158,7 @@ func (d *API) KVGet(sessionId, podName, name, key string) ([]string, []byte, err
 		return nil, nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -167,9 +167,9 @@ func (d *API) KVGet(sessionId, podName, name, key string) ([]string, []byte, err
 }
 
 // KVDel does validation checks and calls the delete KVtable function.
-func (d *API) KVDel(sessionId, podName, name, key string) ([]byte, error) {
+func (a *API) KVDel(sessionId, podName, name, key string) ([]byte, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -178,7 +178,7 @@ func (d *API) KVDel(sessionId, podName, name, key string) ([]byte, error) {
 	if !ui.IsPodOpen(podName) {
 		return nil, ErrPodNotOpen
 	}
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -187,9 +187,9 @@ func (d *API) KVDel(sessionId, podName, name, key string) ([]byte, error) {
 }
 
 // KVBatch does validation checks and calls the batch KVtable function.
-func (d *API) KVBatch(sessionId, podName, name string, columns []string) (*collection.Batch, error) {
+func (a *API) KVBatch(sessionId, podName, name string, columns []string) (*collection.Batch, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -199,7 +199,7 @@ func (d *API) KVBatch(sessionId, podName, name string, columns []string) (*colle
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -208,9 +208,9 @@ func (d *API) KVBatch(sessionId, podName, name string, columns []string) (*colle
 }
 
 // KVBatchPut does validation checks and calls the batch put KVtable function.
-func (d *API) KVBatchPut(sessionId, podName, key string, value []byte, batch *collection.Batch) error {
+func (a *API) KVBatchPut(sessionId, podName, key string, value []byte, batch *collection.Batch) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -224,9 +224,9 @@ func (d *API) KVBatchPut(sessionId, podName, key string, value []byte, batch *co
 }
 
 // KVBatchWrite does validation checks and calls the batch write KVtable function.
-func (d *API) KVBatchWrite(sessionId, podName string, batch *collection.Batch) error {
+func (a *API) KVBatchWrite(sessionId, podName string, batch *collection.Batch) error {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
@@ -241,9 +241,9 @@ func (d *API) KVBatchWrite(sessionId, podName string, batch *collection.Batch) e
 }
 
 // KVSeek does validation checks and calls the seek KVtable function.
-func (d *API) KVSeek(sessionId, podName, name, start, end string, limit int64) (*collection.Iterator, error) {
+func (a *API) KVSeek(sessionId, podName, name, start, end string, limit int64) (*collection.Iterator, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
@@ -253,7 +253,7 @@ func (d *API) KVSeek(sessionId, podName, name, start, end string, limit int64) (
 		return nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -262,9 +262,9 @@ func (d *API) KVSeek(sessionId, podName, name, start, end string, limit int64) (
 }
 
 // KVGetNext does validation checks and calls the get next KVtable function.
-func (d *API) KVGetNext(sessionId, podName, name string) ([]string, string, []byte, error) {
+func (a *API) KVGetNext(sessionId, podName, name string) ([]string, string, []byte, error) {
 	// get the logged in user information
-	ui := d.users.GetLoggedInUserInfo(sessionId)
+	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, "", nil, ErrUserNotLoggedIn
 	}
@@ -274,7 +274,7 @@ func (d *API) KVGetNext(sessionId, podName, name string) ([]string, string, []by
 		return nil, "", nil, ErrPodNotOpen
 	}
 
-	podInfo, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, "", nil, err
 	}

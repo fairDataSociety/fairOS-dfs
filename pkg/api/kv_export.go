@@ -6,19 +6,33 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
 const MaxExportLimit = 100
 
-// KVExportHandler is the api handler to export from a particular key with the given prefix
-// it takes four arguments, 2 mandatory and two optional
-// - table_name: the name of the kv table
-// - start_prefix: the prefix of the key to seek
-// * end_prefix: the prefix of the end key
-// * limit: the threshold for the number of keys to go when get_next is called
+type KVExportRequest struct {
+	PodName     string `json:"podName,omitempty"`
+	TableName   string `json:"tableName,omitempty"`
+	StartPrefix string `json:"startPrefix,omitempty"`
+	EndPrefix   string `json:"endPrefix,omitempty"`
+	Limit       string `json:"limit,omitempty"`
+}
+
+// KVExportHandler godoc
+//
+//	@Summary      Export from a particular key with the given prefix
+//	@Description  KVExportHandler is the api handler to export from a particular key with the given prefix
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      export_request body KVExportRequest true "kv export info"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  []map[string]interface{}
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/export [Post]
 func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -28,7 +42,7 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var kvReq common.KVRequest
+	var kvReq KVExportRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv export: could not decode arguments")
@@ -38,15 +52,15 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv export: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv export: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv export: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv export: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv export: \"table_name\" argument missing"})
+		h.logger.Errorf("kv export: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv export: \"tableName\" argument missing"})
 		return
 	}
 

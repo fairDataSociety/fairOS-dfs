@@ -4,6 +4,9 @@ import (
 	"errors"
 	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -17,30 +20,36 @@ func TestMaxPods(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, logger)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 
 	t.Run("create-max-pods", func(t *testing.T) {
-		maxPodId := 140
+		// t.SkipNow()
+
+		maxPodId := 30
 		for i := 1; i <= maxPodId; i++ {
-			name, err := utils.GetRandString(25)
+			name, err := utils.GetRandString(utils.MaxPodNameLength)
 			if err != nil {
 				t.Fatal(err)
 			}
-			_, err = pod1.CreatePod(name, "password", "")
+			podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+			_, err = pod1.CreatePod(name, "", podPassword)
 			if err != nil {
 				t.Fatalf("error creating pod %s with index %d: %s", name, i, err)
 			}
 		}
-		name, err := utils.GetRandString(25)
+		name, err := utils.GetRandString(utils.MaxPodNameLength)
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = pod1.CreatePod(name, "password", "")
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		_, err = pod1.CreatePod(name, "", podPassword)
 		if !errors.Is(err, pod.ErrMaximumPodLimit) {
 			t.Fatalf("maximum pod limit should have been reached")
 		}

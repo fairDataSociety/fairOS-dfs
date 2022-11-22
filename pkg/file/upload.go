@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -32,20 +33,31 @@ import (
 	"github.com/klauspost/pgzip"
 )
 
+const (
+	minBlockSizeForGzip = 164000
+)
+
 var (
 	noOfParallelWorkers = runtime.NumCPU()
+
+	ErrGzipBlSize = fmt.Errorf("gzip: block size cannot be less than %d", minBlockSizeForGzip)
 )
 
 // Upload uploads a given blob of bytes as a file in the pod. It also splits the file into number of blocks. the
 // size of the block is provided during upload. This function also does compression of the blocks gzip/snappy if it is
 // requested during the upload.
-func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression string) error {
+func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression, podPassword string) error {
+	podPath = filepath.ToSlash(podPath)
+	// check compression gzip and blocksize
+	// pgzip does not allow block size lower or equal to 163840
+	// so we set block size lower bound to 164000 for
+	if compression == "gzip" && blockSize < minBlockSizeForGzip {
+		return ErrGzipBlSize
+	}
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()
 	meta := MetaData{
 		Version:          MetaVersion,
-		UserAddress:      f.userAddress,
-		PodName:          f.podName,
 		Path:             podPath,
 		Name:             podFileName,
 		Size:             uint64(fileSize),
@@ -103,18 +115,17 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 			wg.Add(1)
 			worker <- true
 			go func(counter, size int) {
-				blockName := fmt.Sprintf("block-%05d", counter)
 				defer func() {
 					<-worker
 					wg.Done()
 					if mainErr != nil { // skipcq: TCV-001
-						f.logger.Error("failed uploading block ", blockName)
+						f.logger.Error("failed uploading block ", counter)
 						return
 					}
-					f.logger.Info("done uploading block ", blockName)
+					f.logger.Info("done uploading block ", counter)
 				}()
 
-				f.logger.Info("Uploading ", blockName)
+				f.logger.Infof("Uploading %d block", counter)
 				// compress the data
 				uploadData := data[:size]
 				if compression != "" {
@@ -125,13 +136,18 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
+				encryptedData, enErr := utils.EncryptBytes([]byte(podPassword), uploadData)
+				if enErr != nil {
+					mainErr = enErr
+					return
+				}
+
+				addr, uploadErr := f.client.UploadBlob(encryptedData, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
 				}
 				fileBlock := &BlockInfo{
-					Name:           blockName,
 					Size:           uint32(size),
 					CompressedSize: uint32(len(uploadData)),
 					Reference:      utils.NewReference(addr),
@@ -169,14 +185,17 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
-	addr, err := f.client.UploadBlob(fileInodeData, true, true)
+	encryptedFileInodeBytes, err := utils.EncryptBytes([]byte(podPassword), fileInodeData)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+	addr, err := f.client.UploadBlob(encryptedFileInodeBytes, true, true)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	meta.InodeAddress = addr
-	err = f.handleMeta(&meta)
+	err = f.handleMeta(&meta, podPassword)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

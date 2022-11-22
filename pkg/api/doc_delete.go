@@ -20,15 +20,23 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// DocDeleteHandler is the api handler to delete the given document database
-// it takes only one argument
-// table_name: the document database to delete
+// DocDeleteHandler godoc
+//
+//	@Summary      Delete a doc table
+//	@Description  DocDeleteHandler is the api handler to delete the given document database
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      doc_request body SimpleDocRequest true "doc table info"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/delete [delete]
 func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -38,7 +46,7 @@ func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq SimpleDocRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc delete: could not decode arguments")
@@ -48,15 +56,15 @@ func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc delete: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc  delete: \"table_name\" argument missing"})
+		h.logger.Errorf("doc delete: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc  delete: \"tableName\" argument missing"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc delete: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc delete: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc delete: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc delete: \"podName\" argument missing"})
 		return
 	}
 

@@ -30,7 +30,7 @@ import (
 
 func userNew(userName, mnemonic string) {
 	password := getPassword()
-	newUser := common.UserRequest{
+	newUser := common.UserSignupRequest{
 		UserName: userName,
 		Password: password,
 		Mnemonic: mnemonic,
@@ -68,7 +68,7 @@ func userNew(userName, mnemonic string) {
 
 func userLogin(userName, apiEndpoint string) {
 	password := getPassword()
-	loginUser := common.UserRequest{
+	loginUser := common.UserSignupRequest{
 		UserName: userName,
 		Password: password,
 	}
@@ -89,7 +89,7 @@ func userLogin(userName, apiEndpoint string) {
 
 func deleteUser(apiEndpoint string) {
 	password := getPassword()
-	delUser := common.UserRequest{
+	delUser := common.UserSignupRequest{
 		Password: password,
 	}
 	jsonData, err := json.Marshal(delUser)
@@ -108,7 +108,7 @@ func deleteUser(apiEndpoint string) {
 
 func migrateUser() {
 	password := getPassword()
-	migrateUsr := common.UserRequest{
+	migrateUsr := common.UserSignupRequest{
 		Password: password,
 	}
 	jsonData, err := json.Marshal(migrateUsr)

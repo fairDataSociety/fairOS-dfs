@@ -21,15 +21,15 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )
 
-// UserLoginHandler is the api handler to login a user
-// it takes two arguments
-// - user_name: the name of the user to login
-// - password: the password of the user
+// UserLoginHandler godoc
+//
+//	@Tags         user
+//
+//	@Deprecated
+//	@Router       /v1/user/login [post]
 func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -39,7 +39,7 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq common.UserSignupRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user login: could not decode arguments")
@@ -59,28 +59,5 @@ func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "user login: \"password\" argument missing"})
 		return
 	}
-
-	// login user
-	ui, err := h.dfsAPI.LoginUser(user, password, "")
-	if err != nil {
-		if err == u.ErrUserAlreadyLoggedIn ||
-			err == u.ErrInvalidUserName ||
-			err == u.ErrInvalidPassword {
-			h.logger.Errorf("user login: %v", err)
-			jsonhttp.BadRequest(w, &response{Message: "user login: " + err.Error()})
-			return
-		}
-		h.logger.Errorf("user login: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
-		return
-	}
-
-	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
-	if err != nil {
-		h.logger.Errorf("user login: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
-		return
-	}
-
-	jsonhttp.OK(w, &response{Message: "user logged-in successfully"})
+	jsonhttp.BadRequest(w, &response{Message: "user login: deprecated"})
 }

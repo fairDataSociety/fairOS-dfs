@@ -30,37 +30,66 @@ import (
 )
 
 type SharingEntry struct {
-	Meta       *f.MetaData `json:"meta"`
-	Sender     string      `json:"source_address"`
-	Receiver   string      `json:"dest_address"`
-	SharedTime string      `json:"shared_time"`
+	Meta       *SharingMetaData `json:"meta"`
+	Sender     string           `json:"sourceAddress"`
+	Receiver   string           `json:"destAddress"`
+	SharedTime string           `json:"sharedTime"`
+}
+
+type SharingMetaData struct {
+	Version          uint8  `json:"version"`
+	Path             string `json:"filePath"`
+	Name             string `json:"fileName"`
+	SharedPassword   string `json:"sharedPassword"`
+	Size             uint64 `json:"fileSize"`
+	BlockSize        uint32 `json:"blockSize"`
+	ContentType      string `json:"contentType"`
+	Compression      string `json:"compression"`
+	CreationTime     int64  `json:"creationTime"`
+	AccessTime       int64  `json:"accessTime"`
+	ModificationTime int64  `json:"modificationTime"`
+	InodeAddress     []byte `json:"fileInodeReference"`
 }
 
 type ReceiveFileInfo struct {
 	FileName       string `json:"name"`
 	Size           string `json:"size"`
-	BlockSize      string `json:"block_size"`
-	NumberOfBlocks string `json:"number_of_blocks"`
-	ContentType    string `json:"content_type"`
+	BlockSize      string `json:"blockSize"`
+	NumberOfBlocks string `json:"numberOfBlocks"`
+	ContentType    string `json:"contentType"`
 	Compression    string `json:"compression"`
-	PodName        string `json:"pod_name"`
-	Sender         string `json:"source_address"`
-	Receiver       string `json:"dest_address"`
-	SharedTime     string `json:"shared_time"`
+	Sender         string `json:"sourceAddress"`
+	Receiver       string `json:"destAddress"`
+	SharedTime     string `json:"sharedTime"`
 }
 
 // ShareFileWithUser exports a file to another user by creating and uploading a new encrypted sharing file entry.
-func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
+func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
-	meta, err := userInfo.file.GetMetaFromFileName(totalFilePath, userAddress)
+	meta, err := userInfo.file.GetMetaFromFileName(totalFilePath, podPassword, userAddress)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
-	// Create a outbox entry
+	sharingMeta := &SharingMetaData{
+		Version:          meta.Version,
+		Path:             meta.Path,
+		Name:             meta.Name,
+		SharedPassword:   podPassword,
+		Size:             meta.Size,
+		BlockSize:        meta.BlockSize,
+		ContentType:      meta.ContentType,
+		Compression:      meta.Compression,
+		CreationTime:     meta.CreationTime,
+		AccessTime:       meta.AccessTime,
+		ModificationTime: meta.ModificationTime,
+		InodeAddress:     meta.InodeAddress,
+	}
+
+	// Create an outbox entry
 	now := time.Now()
 	sharingEntry := SharingEntry{
-		Meta:       meta,
+		Meta:       sharingMeta,
 		Sender:     userAddress.String(),
 		Receiver:   destinationRef,
 		SharedTime: strconv.FormatInt(now.Unix(), 10),
@@ -72,7 +101,7 @@ func (u *Users) ShareFileWithUser(podName, podFileWithPath, destinationRef strin
 		return "", err
 	}
 
-	//encrypt data
+	// encrypt data
 	encryptedData, err := encryptData(data, now.Unix())
 	if err != nil { // skipcq: TCV-001
 		return "", err
@@ -118,7 +147,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 		return "", pod.ErrPodNotOpened
 	}
 
-	podInfo, err := pd.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := pd.GetPodInfoFromPodMap(podName)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -137,8 +166,6 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	now := time.Now().Unix()
 	newMeta := f.MetaData{
 		Version:          sharingEntry.Meta.Version,
-		UserAddress:      podInfo.GetPodAddress(),
-		PodName:          podName,
 		Path:             podDir,
 		Name:             fileNameToAdd,
 		Size:             sharingEntry.Meta.Size,
@@ -152,11 +179,11 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	}
 
 	file.AddToFileMap(totalPath, &newMeta)
-	err = file.PutMetaForFile(&newMeta)
+	err = file.PutMetaForFile(&newMeta, podInfo.GetPodPassword())
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-	err = dir.AddEntryToDir(podDir, fileNameToAdd, true)
+	err = dir.AddEntryToDir(podDir, podInfo.GetPodPassword(), fileNameToAdd, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -206,8 +233,12 @@ func (u *Users) ReceiveFileInfo(sharingRef utils.SharingReference) (*ReceiveFile
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	fileInodeBytes, respCode, err := u.client.DownloadBlob(sharingEntry.Meta.InodeAddress)
+	encryptedFileInodeBytes, respCode, err := u.client.DownloadBlob(sharingEntry.Meta.InodeAddress)
 	if err != nil || respCode != http.StatusOK { // skipcq: TCV-001
+		return nil, err
+	}
+	fileInodeBytes, err := utils.DecryptBytes([]byte(sharingEntry.Meta.SharedPassword), encryptedFileInodeBytes)
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	var fileInode f.INode
@@ -223,7 +254,6 @@ func (u *Users) ReceiveFileInfo(sharingRef utils.SharingReference) (*ReceiveFile
 		NumberOfBlocks: strconv.FormatInt(int64(len(fileInode.Blocks)), 10),
 		ContentType:    sharingEntry.Meta.ContentType,
 		Compression:    sharingEntry.Meta.Compression,
-		PodName:        sharingEntry.Meta.PodName,
 		Sender:         sharingEntry.Sender,
 		Receiver:       sharingEntry.Receiver,
 		SharedTime:     sharingEntry.SharedTime,

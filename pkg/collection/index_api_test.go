@@ -23,6 +23,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -35,16 +38,16 @@ func TestIndexAPI(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("get-doc", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_api_0", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_0", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// get the expectedValue of keys and check against its actual expectedValue
@@ -63,11 +66,11 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-count", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_api_1", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_1", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// find the count
-		count, err := index.CountIndex()
+		count, err := index.CountIndex(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -79,7 +82,7 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-doc-del-doc-get-doc", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_api_2", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_2", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// get the value of the key just to check
@@ -104,7 +107,7 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-multiple_docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_api_3", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_3", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add multiple values for the same key
 		addDoc(t, "key1", []byte("value1"), index, mockClient, true)

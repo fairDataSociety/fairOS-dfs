@@ -27,23 +27,33 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// DocLoadJsonHandler is the api handler that indexes a json file that is present
-// in the local file system
-// it takes two arguments
-// table_name: the document database in which to insert the data
-// file: the json file as a multi part file
+// DocLoadJsonHandler godoc
+//
+//	@Summary      Load json file from local file system
+//	@Description  DocLoadJsonHandler is the api handler that indexes a json file that is present in the local file system
+//	@Tags         doc
+//	@Accept       mpfd
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      tableName query string true "table name"
+//	@Param	      json formData file true "json to index"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/loadjson [post]
 func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
-	podName := r.FormValue("pod_name")
+	podName := r.FormValue("podName")
 	if podName == "" {
-		h.logger.Errorf("doc loadjson: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc loadjson: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"podName\" argument missing"})
 		return
 	}
 
-	name := r.FormValue("table_name")
+	name := r.FormValue("tableName")
 	if name == "" {
-		h.logger.Errorf("doc loadjson: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"table_name\" argument missing"})
+		h.logger.Errorf("doc loadjson: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc loadjson: \"tableName\" argument missing"})
 		return
 	}
 

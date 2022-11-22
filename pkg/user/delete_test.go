@@ -17,9 +17,13 @@ limitations under the License.
 package user_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
@@ -32,26 +36,27 @@ func TestDelete(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 
 	t.Run("delete-user", func(t *testing.T) {
+		tm := taskmanager.New(1, 10, time.Second*15, logger)
+		defer func() {
+			_ = tm.Stop(context.Background())
+		}()
 		ens := mock2.NewMockNamespaceManager()
-		//create user
+		// create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "")
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		// delete user with wrong password
 		err = userObject.DeleteUserV2("user1", "password11", ui.GetSessionId(), ui)
-		if !errors.Is(err, user.ErrInvalidPassword) {
-			t.Fatal(err)
+		if err == nil {
+			t.Fatal("delete should fail")
 		}
-
 		// delete user invalid sessionid
 		err = userObject.DeleteUserV2("user1", "password1", "invalid_session", ui)
 		if !errors.Is(err, user.ErrUserNotLoggedIn) {
 			t.Fatal(err)
 		}
-
 		// delete user
 		err = userObject.DeleteUserV2("user1", "password1", ui.GetSessionId(), ui)
 		if err != nil {
