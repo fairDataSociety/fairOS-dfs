@@ -17,9 +17,17 @@ limitations under the License.
 package file_test
 
 import (
+	"context"
+	"fmt"
 	"io"
 	"strconv"
 	"testing"
+	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -32,45 +40,79 @@ func TestListFiles(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	pod1AccountInfo, err := acc.CreatePodAccount(1, "password", false)
+	pod1AccountInfo, err := acc.CreatePodAccount(1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
-
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	t.Run("list-file", func(t *testing.T) {
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// upload few files
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", 100, 10)
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", 200, 20)
+		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", podPassword, 200, 20)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file3", "", 300, 30)
+		_, err = uploadFile(t, fileObject, "/dir1", "file3", "", podPassword, 300, 30)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		//list the files
+		// list the files
 		fileList := []string{"/dir1/file1", "/dir1/file2", "/dir1/file3"}
-		entries, err := fileObject.ListFiles(fileList)
+		entries, err := fileObject.ListFiles(fileList, podPassword)
 		if err != nil {
 			t.Fatal(err)
+		}
+
+		foundIndex1 := -1
+		for i, v := range entries {
+			fmt.Println(v)
+			if v.Name == "file1" {
+				foundIndex1 = i
+			}
+		}
+
+		if foundIndex1 < 0 {
+			t.Fatal("file1 not found")
+		}
+		foundIndex2 := -1
+		for i, v := range entries {
+			if v.Name == "file2" {
+				foundIndex2 = i
+			}
+		}
+		if foundIndex2 < 0 {
+			t.Fatal("file1 not found")
+		}
+		foundIndex3 := -1
+		for i, v := range entries {
+			if v.Name == "file3" {
+				foundIndex3 = i
+			}
+		}
+		if foundIndex3 < 0 {
+			t.Fatal("file1 not found")
 		}
 
 		// validate the entries
-		entry := entries[0]
+		entry := entries[foundIndex1]
 		if entry.Name != "file1" {
 			t.Fatalf("invalid name")
 		}
@@ -80,7 +122,7 @@ func TestListFiles(t *testing.T) {
 		if entry.BlockSize != strconv.FormatUint(10, 10) {
 			t.Fatalf("invalid block size")
 		}
-		entry = entries[1]
+		entry = entries[foundIndex2]
 		if entry.Name != "file2" {
 			t.Fatalf("invalid name")
 		}
@@ -90,7 +132,7 @@ func TestListFiles(t *testing.T) {
 		if entry.BlockSize != strconv.FormatUint(20, 10) {
 			t.Fatalf("invalid block size")
 		}
-		entry = entries[2]
+		entry = entries[foundIndex3]
 		if entry.Name != "file3" {
 			t.Fatalf("invalid name")
 		}

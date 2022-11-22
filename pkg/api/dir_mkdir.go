@@ -20,8 +20,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"resenje.org/jsonhttp"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -29,9 +27,24 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-// DirectoryMkdirHandler is the api handler to create a new directory.
-// it takes one argument
-// - dir-path: the new directory to create along with its absolute path
+type DirRequest struct {
+	PodName       string `json:"podName,omitempty"`
+	DirectoryPath string `json:"dirPath,omitempty"`
+}
+
+// DirectoryMkdirHandler godoc
+//
+//	@Summary      Create directory
+//	@Description  DirectoryMkdirHandler is the api handler to create a new directory.
+//	@Tags         dir
+//	@Accept       json
+//	@Produce      json
+//	@Param	      dir_request body DirRequest true "pod name and dir path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      201  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/dir/mkdir [post]
 func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -41,7 +54,7 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var fsReq common.FileSystemRequest
+	var fsReq DirRequest
 	err := decoder.Decode(&fsReq)
 	if err != nil {
 		h.logger.Errorf("mkdir: could not decode arguments")
@@ -51,15 +64,15 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 
 	podName := fsReq.PodName
 	if podName == "" {
-		h.logger.Errorf("mkdir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"pod_name\" argument missing"})
+		h.logger.Errorf("mkdir: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"podName\" argument missing"})
 		return
 	}
 
 	dirToCreateWithPath := fsReq.DirectoryPath
 	if dirToCreateWithPath == "" {
-		h.logger.Errorf("mkdir: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"dir_path\" argument missing"})
+		h.logger.Errorf("mkdir: \"dirPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"dirPath\" argument missing"})
 		return
 	}
 

@@ -23,7 +23,7 @@ func (p *Pod) ClosePod(podName string) error {
 		return ErrPodNotOpened
 	}
 
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

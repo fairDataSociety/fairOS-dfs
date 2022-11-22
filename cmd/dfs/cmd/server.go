@@ -27,13 +27,17 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	_ "github.com/fairdatasociety/fairOS-dfs/swagger"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 var (
+	pprof          bool
+	swag           bool
 	httpPort       string
 	pprofPort      string
 	cookieDomain   string
@@ -42,7 +46,14 @@ var (
 	handler        *api.Handler
 )
 
-// startCmd represents the start command
+// @title           FairOS-dfs server
+// @version         v0.9.0-rc1
+// @description     A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store
+// @host      http://localhost:9090
+// @contact.name	Sabyasachi Patra
+// @contact.email	sabyasachi@datafund.io
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "starts a HTTP server for the dfs",
@@ -183,12 +194,17 @@ can consume it.`,
 			return err
 		}
 		handler = hdlr
+		if pprof {
+			go startPprofService(logger)
+		}
 		startHttpService(logger)
 		return nil
 	},
 }
 
 func init() {
+	serverCmd.Flags().BoolVar(&pprof, "pprof", false, "should run pprof")
+	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
@@ -217,6 +233,12 @@ func startHttpService(logger logging.Logger) {
 			return
 		}
 	})
+	if swag {
+		router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+			httpSwagger.URL("http://localhost:9090/swagger/doc.json"), // The url pointing to API definition
+		)).Methods(http.MethodGet)
+	}
+
 	apiVersion := "v1"
 
 	// v2 introduces user credentials storage on secondary location and identity storage on ens registry
@@ -268,20 +290,20 @@ func startHttpService(logger logging.Logger) {
 	userRouter.HandleFunc("/stat", handler.UserStatHandler).Methods("GET")
 
 	// pod related handlers
-	baseRouter.HandleFunc("/pod/receive", handler.PodReceiveHandler).Methods("GET")
-	baseRouter.HandleFunc("/pod/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
-
 	podRouter := baseRouter.PathPrefix("/pod/").Subrouter()
 	podRouter.Use(handler.LoginMiddleware)
 	podRouter.HandleFunc("/present", handler.PodPresentHandler).Methods("GET")
 	podRouter.HandleFunc("/new", handler.PodCreateHandler).Methods("POST")
 	podRouter.HandleFunc("/open", handler.PodOpenHandler).Methods("POST")
+	podRouter.HandleFunc("/open-async", handler.PodOpenAsyncHandler).Methods("POST")
 	podRouter.HandleFunc("/close", handler.PodCloseHandler).Methods("POST")
 	podRouter.HandleFunc("/sync", handler.PodSyncHandler).Methods("POST")
 	podRouter.HandleFunc("/share", handler.PodShareHandler).Methods("POST")
 	podRouter.HandleFunc("/delete", handler.PodDeleteHandler).Methods("DELETE")
 	podRouter.HandleFunc("/ls", handler.PodListHandler).Methods("GET")
 	podRouter.HandleFunc("/stat", handler.PodStatHandler).Methods("GET")
+	podRouter.HandleFunc("/receive", handler.PodReceiveHandler).Methods("GET")
+	podRouter.HandleFunc("/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
 
 	// directory related handlers
 	dirRouter := baseRouter.PathPrefix("/dir/").Subrouter()
@@ -291,18 +313,20 @@ func startHttpService(logger logging.Logger) {
 	dirRouter.HandleFunc("/ls", handler.DirectoryLsHandler).Methods("GET")
 	dirRouter.HandleFunc("/stat", handler.DirectoryStatHandler).Methods("GET")
 	dirRouter.HandleFunc("/present", handler.DirectoryPresentHandler).Methods("GET")
+	dirRouter.HandleFunc("/rename", handler.DirectoryRenameHandler).Methods("POST")
 
 	// file related handlers
 	fileRouter := baseRouter.PathPrefix("/file/").Subrouter()
 	fileRouter.Use(handler.LoginMiddleware)
-	fileRouter.HandleFunc("/download", handler.FileDownloadHandler).Methods("GET")
-	fileRouter.HandleFunc("/download", handler.FileDownloadHandler).Methods("POST")
+	fileRouter.HandleFunc("/download", handler.FileDownloadHandlerGet).Methods("GET")
+	fileRouter.HandleFunc("/download", handler.FileDownloadHandlerPost).Methods("POST")
 	fileRouter.HandleFunc("/upload", handler.FileUploadHandler).Methods("POST")
 	fileRouter.HandleFunc("/share", handler.FileShareHandler).Methods("POST")
 	fileRouter.HandleFunc("/receive", handler.FileReceiveHandler).Methods("GET")
 	fileRouter.HandleFunc("/receiveinfo", handler.FileReceiveInfoHandler).Methods("GET")
 	fileRouter.HandleFunc("/delete", handler.FileDeleteHandler).Methods("DELETE")
 	fileRouter.HandleFunc("/stat", handler.FileStatHandler).Methods("GET")
+	fileRouter.HandleFunc("/rename", handler.FileRenameHandler).Methods("POST")
 
 	kvRouter := baseRouter.PathPrefix("/kv/").Subrouter()
 	kvRouter.Use(handler.LoginMiddleware)
@@ -312,7 +336,7 @@ func startHttpService(logger logging.Logger) {
 	kvRouter.HandleFunc("/open", handler.KVOpenHandler).Methods("POST")
 	kvRouter.HandleFunc("/count", handler.KVCountHandler).Methods("POST")
 	kvRouter.HandleFunc("/delete", handler.KVDeleteHandler).Methods("DELETE")
-	kvRouter.HandleFunc("/present", handler.KVPresentHandler).Methods("GET")
+	kvRouter.HandleFunc("/entry/present", handler.KVPresentHandler).Methods("GET")
 	kvRouter.HandleFunc("/entry/put", handler.KVPutHandler).Methods("POST")
 	kvRouter.HandleFunc("/entry/get", handler.KVGetHandler).Methods("GET")
 	kvRouter.HandleFunc("/entry/get-data", handler.KVGetDataHandler).Methods("GET")
@@ -332,9 +356,9 @@ func startHttpService(logger logging.Logger) {
 	docRouter.HandleFunc("/find", handler.DocFindHandler).Methods("GET")
 	docRouter.HandleFunc("/loadjson", handler.DocLoadJsonHandler).Methods("POST")
 	docRouter.HandleFunc("/indexjson", handler.DocIndexJsonHandler).Methods("POST")
-	docRouter.HandleFunc("/entry/put", handler.DocPutHandler).Methods("POST")
-	docRouter.HandleFunc("/entry/get", handler.DocGetHandler).Methods("GET")
-	docRouter.HandleFunc("/entry/del", handler.DocDelHandler).Methods("DELETE")
+	docRouter.HandleFunc("/entry/put", handler.DocEntryPutHandler).Methods("POST")
+	docRouter.HandleFunc("/entry/get", handler.DocEntryGetHandler).Methods("GET")
+	docRouter.HandleFunc("/entry/del", handler.DocEntryDelHandler).Methods("DELETE")
 
 	var origins []string
 	for _, c := range corsOrigins {
@@ -353,20 +377,19 @@ func startHttpService(logger logging.Logger) {
 	// Insert the middleware
 	handler := c.Handler(router)
 
-	// starting the pprof server
-	go func() {
-		logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
-		err := http.ListenAndServe("localhost"+pprofPort, nil)
-		if err != nil {
-			logger.Errorf("pprof listenAndServe: %v ", err.Error())
-			return
-		}
-	}()
-
 	logger.Infof("fairOS-dfs API server listening on port: %v", httpPort)
 	err := http.ListenAndServe(httpPort, handler)
 	if err != nil {
 		logger.Errorf("http listenAndServe: %v ", err.Error())
+		return
+	}
+}
+
+func startPprofService(logger logging.Logger) {
+	logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
+	err := http.ListenAndServe("localhost"+pprofPort, nil)
+	if err != nil {
+		logger.Errorf("pprof listenAndServe: %v ", err.Error())
 		return
 	}
 }

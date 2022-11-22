@@ -27,7 +27,7 @@ import (
 // AddEntryToDir adds a new entry (diretory/file) do a given directory.
 // This is typically called when a new directory is created under the given directory or
 // a new file is uploaded under the given directory.
-func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) error {
+func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFile bool) error {
 	// validation checks of the arguments
 	if parentDir == "" {
 		return ErrInvalidDirectoryName
@@ -44,7 +44,7 @@ func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) erro
 
 	// get the latest meta from swarm
 	topic := utils.HashString(parentDir)
-	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
+	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry: %v", err)
 	}
@@ -69,7 +69,7 @@ func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) erro
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
-	_, err = d.fd.UpdateFeed(topic, d.userAddress, data)
+	_, err = d.fd.UpdateFeed(topic, d.userAddress, data, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
@@ -80,7 +80,7 @@ func (d *Directory) AddEntryToDir(parentDir, itemToAdd string, isFile bool) erro
 // RemoveEntryFromDir removes a entry (directory/file) under the given directory.
 // This is typically called when a  directory is deleted under the given directory or
 // a file is removed under the given directory.
-func (d *Directory) RemoveEntryFromDir(parentDir, itemToDelete string, isFile bool) error {
+func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete string, isFile bool) error {
 	// validation checks of the arguments
 	if parentDir == "" { // skipcq: TCV-001
 		return ErrInvalidDirectoryName
@@ -91,7 +91,7 @@ func (d *Directory) RemoveEntryFromDir(parentDir, itemToDelete string, isFile bo
 	}
 
 	parentHash := utils.HashString(parentDir)
-	_, parentData, err := d.fd.GetFeedData(parentHash, d.userAddress)
+	_, parentData, err := d.fd.GetFeedData(parentHash, d.userAddress, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -121,7 +121,7 @@ func (d *Directory) RemoveEntryFromDir(parentDir, itemToDelete string, isFile bo
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	_, err = d.fd.UpdateFeed(parentHash, d.userAddress, parentData)
+	_, err = d.fd.UpdateFeed(parentHash, d.userAddress, parentData, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

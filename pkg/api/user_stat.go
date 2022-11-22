@@ -23,8 +23,17 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserStatHandler is the api handler to get the information about a user
-// it takes no arguments
+// UserStatHandler godoc
+//
+//	@Summary      User stat
+//	@Description  show user stats
+//	@Tags         user
+//	@Accept       json
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  user.Stat
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/user/stat [get]
 func (h *Handler) UserStatHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)

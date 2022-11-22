@@ -21,16 +21,14 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )
 
-// UserSignupHandler is the api handler to create new user
-// it takes two mandatory arguments and one optional argument
-// - user_name: the name of the user to create
-// - password: the password of the user
-// * mnemonic: a 12 word mnemonic to use to create the hd wallet of the user
+// UserSignupHandler godoc
+//
+//	@Tags         user
+//	@Deprecated
+//	@Router       /v1/user/signup [post]
 func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -40,7 +38,7 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq common.UserSignupRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user signup: could not decode arguments")
@@ -50,7 +48,6 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	user := userReq.UserName
 	password := userReq.Password
-	mnemonic := userReq.Mnemonic
 	if user == "" {
 		h.logger.Errorf("user signup: \"user\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "user signup: \"user\" argument missing"})
@@ -61,37 +58,5 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "user signup: \"password\" argument missing"})
 		return
 	}
-
-	// create user
-	address, createdMnemonic, ui, err := h.dfsAPI.CreateUser(user, password, mnemonic, "")
-	if err != nil {
-		if err == u.ErrUserAlreadyPresent {
-			h.logger.Errorf("user signup: %v", err)
-			jsonhttp.BadRequest(w, &response{Message: "user signup: " + err.Error()})
-			return
-		}
-		h.logger.Errorf("user signup: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user signup: " + err.Error()})
-		return
-	}
-
-	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
-	if err != nil {
-		h.logger.Errorf("user signup: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user signup: " + err.Error()})
-		return
-	}
-
-	if mnemonic == "" {
-		mnemonic = createdMnemonic
-	} else {
-		mnemonic = ""
-	}
-
-	// send the response
-	w.Header().Set("Content-Type", " application/json")
-	jsonhttp.Created(w, &UserSignupResponse{
-		Address:  address,
-		Mnemonic: mnemonic,
-	})
+	jsonhttp.BadRequest(w, &response{Message: "user signup: deprecated"})
 }

@@ -25,31 +25,32 @@ import (
 )
 
 type ShareInfo struct {
-	PodName     string `json:"pod_name"`
-	Address     string `json:"pod_address"`
-	UserAddress string `json:"user_address"`
+	PodName     string `json:"podName"`
+	Address     string `json:"podAddress"`
+	Password    string `json:"password"`
+	UserAddress string `json:"userAddress"`
 }
 
 // PodShare makes a pod public by exporting all the pod related information and its
 // address. it does this by creating a sharing reference which points to the information
 // required to import this pod.
-func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error) {
+func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 	// check if pods is present and get the index of the pod
-	pods, _, err := p.loadUserPods()
+	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-	if !p.checkIfPodPresent(pods, podName) {
+	if !p.checkIfPodPresent(podList, podName) {
 		return "", ErrInvalidPodName
 	}
 
-	index := p.getIndex(pods, podName)
+	index, podPassword := p.getIndexPassword(podList, podName)
 	if index == -1 { // skipcq: TCV-001
 		return "", fmt.Errorf("pod does not exist")
 	}
 
 	// Create pod account  and get the address
-	accountInfo, err := p.acc.CreatePodAccount(index, passPhrase, false)
+	accountInfo, err := p.acc.CreatePodAccount(index, false)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -61,6 +62,7 @@ func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error
 	}
 	shareInfo := &ShareInfo{
 		PodName:     sharedPodName,
+		Password:    podPassword,
 		Address:     address.String(),
 		UserAddress: userAddress.String(),
 	}
@@ -69,7 +71,6 @@ func (p *Pod) PodShare(podName, sharedPodName, passPhrase string) (string, error
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-
 	ref, err := p.client.UploadBlob(data, true, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
@@ -107,7 +108,6 @@ func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, erro
 	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePod: could not download blob")
 	}
-
 	var shareInfo ShareInfo
 	err = json.Unmarshal(data, &shareInfo)
 	if err != nil { // skipcq: TCV-001
@@ -117,5 +117,5 @@ func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, erro
 	if sharedPodName != "" {
 		shareInfo.PodName = sharedPodName
 	}
-	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address)
+	return p.CreatePod(shareInfo.PodName, shareInfo.Address, shareInfo.Password)
 }

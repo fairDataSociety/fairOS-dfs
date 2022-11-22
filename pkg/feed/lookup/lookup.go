@@ -37,7 +37,7 @@ const HighestLevel = 31
 // DefaultLevel sets what level will be chosen to search when there is no hint
 const DefaultLevel = HighestLevel
 
-//Algorithm is the function signature of a lookup algorithm
+// Algorithm is the function signature of a lookup algorithm
 type Algorithm func(ctx context.Context, now uint64, hint Epoch, read ReadFunc) (value interface{}, err error)
 
 // Lookup finds the update with the highest timestamp that is smaller or equal than 'now'
@@ -135,5 +135,5 @@ func GetFirstEpoch(now uint64) Epoch {
 var worstHint = Epoch{Time: 0, Level: 63}
 
 var trace = func(id int32, formatString string, a ...interface{}) {
-	//fmt.Printf("Step ID #%d "+formatString+"\n", append([]interface{}{id}, a...)...)
+	// fmt.Printf("Step ID #%d "+formatString+"\n", append([]interface{}{id}, a...)...)
 }

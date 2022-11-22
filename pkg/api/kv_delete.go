@@ -20,15 +20,23 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// KVDeleteHandler is the api handler to delete a key value table
-// it has ony one argument
-// - table_name: the name of the key value table
+// KVDeleteHandler godoc
+//
+//	@Summary      Delete a key value table
+//	@Description  KVDeleteHandler is the api handler to delete a key value table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      kv_table_request body KVTableRequest true "kv table request"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/delete [delete]
 func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -38,7 +46,7 @@ func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var kvReq common.KVRequest
+	var kvReq KVTableRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv delete: could not decode arguments")
@@ -48,15 +56,15 @@ func (h *Handler) KVDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv delete: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv delete: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv delete: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv delete: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv delete: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv delete: \"table_name\" argument missing"})
+		h.logger.Errorf("kv delete: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv delete: \"tableName\" argument missing"})
 		return
 	}
 

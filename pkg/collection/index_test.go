@@ -24,6 +24,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -38,35 +40,35 @@ func TestIndex(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("create_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("pod1", "testdb_index_0", "key", collection.StringIndex, fd, user, mockClient, true)
+		err := collection.CreateIndex("pod1", "testdb_index_0", "key", podPassword, collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check if the index is created
-		if !isIndexPresent(t, "pod1", "testdb_index_0", "key", fd, user, mockClient) {
+		if !isIndexPresent(t, "pod1", "testdb_index_0", "key", podPassword, fd, user, mockClient) {
 			t.Fatalf("index not found")
 		}
 	})
 
 	t.Run("create_and_open_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("pod1", "testdb_index_1", "key", collection.StringIndex, fd, user, mockClient, true)
+		err := collection.CreateIndex("pod1", "testdb_index_1", "key", podPassword, collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		//Open the index
-		_, err = collection.OpenIndex("pod1", "testdb_index_1", "key", fd, ai, user, mockClient, logger)
+		// Open the index
+		_, err = collection.OpenIndex("pod1", "testdb_index_1", "key", podPassword, fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -74,11 +76,11 @@ func TestIndex(t *testing.T) {
 
 	t.Run("close_and_open_index_from_another_machine", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_index_2", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_index_2", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// open the index again, simulating like another instance
-		index1, err := collection.OpenIndex("pod1", "testdb_index_2", "key", fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
+		index1, err := collection.OpenIndex("pod1", "testdb_index_2", "key", podPassword, fd, acc.GetUserAccountInfo(), acc.GetAddress(account.UserAccountIndex), mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -99,21 +101,21 @@ func TestIndex(t *testing.T) {
 
 	t.Run("create_already_present_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("pod1", "testdb_index_3", "key", collection.StringIndex, fd, user, mockClient, true)
+		err := collection.CreateIndex("pod1", "testdb_index_3", "key", podPassword, collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		//  create an index
-		err = collection.CreateIndex("pod1", "testdb_index_3", "key", collection.StringIndex, fd, user, mockClient, true)
+		err = collection.CreateIndex("pod1", "testdb_index_3", "key", podPassword, collection.StringIndex, fd, user, mockClient, true)
 		if !errors.Is(err, collection.ErrIndexAlreadyPresent) {
 			t.Fatal(err)
 		}
 	})
 
 	t.Run("open_index_without_creating_it", func(t *testing.T) {
-		//Open the index
-		_, err = collection.OpenIndex("pod1", "testdb_index_4", "key", fd, ai, user, mockClient, logger)
+		// Open the index
+		_, err = collection.OpenIndex("pod1", "testdb_index_4", "key", podPassword, fd, ai, user, mockClient, logger)
 		if err != collection.ErrIndexNotPresent {
 			t.Fatal(err)
 		}
@@ -121,19 +123,19 @@ func TestIndex(t *testing.T) {
 
 	t.Run("create_and_delete_index", func(t *testing.T) {
 		//  create an index
-		err := collection.CreateIndex("pod1", "testdb_index_5", "key", collection.StringIndex, fd, user, mockClient, true)
+		err := collection.CreateIndex("pod1", "testdb_index_5", "key", podPassword, collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		//Open the index
-		idx, err := collection.OpenIndex("pod1", "testdb_index_5", "key", fd, ai, user, mockClient, logger)
+		// Open the index
+		idx, err := collection.OpenIndex("pod1", "testdb_index_5", "key", podPassword, fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// delete Index
-		err = idx.DeleteIndex()
+		err = idx.DeleteIndex(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -141,21 +143,21 @@ func TestIndex(t *testing.T) {
 
 	t.Run("delete_index_without_creating_it", func(t *testing.T) {
 		// simulate index not present by creating and deleting it
-		err := collection.CreateIndex("pod1", "testdb_index_6", "key", collection.StringIndex, fd, user, mockClient, true)
+		err := collection.CreateIndex("pod1", "testdb_index_6", "key", podPassword, collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
-		idx, err := collection.OpenIndex("pod1", "testdb_index_6", "key", fd, ai, user, mockClient, logger)
+		idx, err := collection.OpenIndex("pod1", "testdb_index_6", "key", podPassword, fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = idx.DeleteIndex()
+		err = idx.DeleteIndex(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// delete Index which is not present
-		err = idx.DeleteIndex()
+		err = idx.DeleteIndex(podPassword)
 		if err != collection.ErrIndexNotPresent {
 			t.Fatal(err)
 		}
@@ -163,12 +165,12 @@ func TestIndex(t *testing.T) {
 
 	t.Run("count_docs", func(t *testing.T) {
 		// create index and add some docs
-		err := collection.CreateIndex("pod1", "testdb_index_7", "key", collection.StringIndex, fd, user, mockClient, true)
+		err := collection.CreateIndex("pod1", "testdb_index_7", "key", podPassword, collection.StringIndex, fd, user, mockClient, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		idx, err := collection.OpenIndex("pod1", "testdb_index_7", "key", fd, ai, user, mockClient, logger)
+		idx, err := collection.OpenIndex("pod1", "testdb_index_7", "key", podPassword, fd, ai, user, mockClient, logger)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -180,7 +182,7 @@ func TestIndex(t *testing.T) {
 		}
 
 		// count and check the count
-		count, err := idx.CountIndex()
+		count, err := idx.CountIndex(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -193,10 +195,10 @@ func TestIndex(t *testing.T) {
 
 }
 
-func isIndexPresent(t *testing.T, podName, collectionName, indexName string, fd *feed.API, user utils.Address, client blockstore.Client) bool {
+func isIndexPresent(t *testing.T, podName, collectionName, indexName, encryptionPassword string, fd *feed.API, user utils.Address, client blockstore.Client) bool {
 	actualIndexName := podName + collectionName + indexName
 	topic := utils.HashString(actualIndexName)
-	_, addr, err := fd.GetFeedData(topic, user)
+	_, addr, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
 	if err == nil && len(addr) != 0 {
 		data, _, err := client.DownloadBlob(addr)
 		if err != nil {

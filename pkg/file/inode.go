@@ -19,12 +19,11 @@ package file
 import "github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 type INode struct {
-	Blocks []*BlockInfo
+	Blocks []*BlockInfo `json:"blocks"`
 }
 
 type BlockInfo struct {
-	Name           string
-	Size           uint32
-	CompressedSize uint32
-	Reference      utils.Reference
+	Size           uint32          `json:"size"`
+	CompressedSize uint32          `json:"compressedSize"`
+	Reference      utils.Reference `json:"reference"`
 }

@@ -17,12 +17,17 @@ limitations under the License.
 package pod_test
 
 import (
+	"context"
 	"crypto/rand"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
+	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -36,39 +41,44 @@ func TestOpen(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"
+	podName2 := "test2"
 
 	t.Run("open-pod", func(t *testing.T) {
-		// open non existent the pod
-		_, err := pod1.OpenPod(podName1, "password")
+		// open non-existent the pod
+		_, err := pod1.OpenPod(podName1)
 		if !errors.Is(err, pod.ErrInvalidPodName) {
 			t.Fatal("pod should not be present")
 		}
 
 		// create a pod
-		info, err := pod1.CreatePod(podName1, "password", "")
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
+		err = info.GetDirectory().MkRootDir("pod1", podPassword, info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create some dir and files
-		addFilesAndDirectories(t, info, pod1, podName1)
+		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
 		// open the pod
-		podInfo, err := pod1.OpenPod(podName1, "password")
+		podInfo, err := pod1.OpenPod(podName1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -77,7 +87,7 @@ func TestOpen(t *testing.T) {
 		if podInfo == nil {
 			t.Fatalf("pod not opened")
 		}
-		gotPodInfo, err := pod1.GetPodInfoFromPodMap(podName1)
+		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName1)
 		if err != nil {
 			t.Fatalf("pod not opened")
 		}
@@ -88,11 +98,56 @@ func TestOpen(t *testing.T) {
 			t.Fatalf("invalid pod name")
 		}
 	})
+
+	t.Run("open-pod-async", func(t *testing.T) {
+		// open non-existent the pod
+		_, err := pod1.OpenPod(podName2)
+		if !errors.Is(err, pod.ErrInvalidPodName) {
+			t.Fatal("pod should not be present")
+		}
+
+		// create a pod
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		info, err := pod1.CreatePod(podName2, "", podPassword)
+		if err != nil {
+			t.Fatalf("error creating pod %s", podName1)
+		}
+
+		// make root dir so that other directories can be added
+		err = info.GetDirectory().MkRootDir("pod1", podPassword, info.GetPodAddress(), info.GetFeed())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create some dir and files
+		addFilesAndDirectories(t, info, pod1, podName2, podPassword)
+
+		// open the pod
+		podInfo, err := pod1.OpenPodAsync(context.Background(), podName2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// validate if properly opened
+		if podInfo == nil {
+			t.Fatalf("pod not opened")
+		}
+		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName2)
+		if err != nil {
+			t.Fatalf("pod not opened")
+		}
+		if gotPodInfo == nil {
+			t.Fatalf("pod not opened")
+		}
+		if gotPodInfo.GetPodName() != podName2 {
+			t.Fatalf("invalid pod name")
+		}
+	})
 }
 
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
-	fd, err := ioutil.TempFile("", fileName)
+	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,13 +177,13 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
 }
 
-func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1 string) {
+func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1, podPassword string) {
 	t.Helper()
 	dirObject := info.GetDirectory()
-	err := dirObject.MkDir("/parentDir")
+	err := dirObject.MkDir("/parentDir", podPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,28 +197,28 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	}
 
 	// populate the directory with few directory and files
-	err = dirObject.MkDir("/parentDir/subDir1")
+	err = dirObject.MkDir("/parentDir/subDir1", podPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dirObject.MkDir("/parentDir/subDir2")
+	err = dirObject.MkDir("/parentDir/subDir2", podPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fileObject := info.GetFile()
-	_, err = uploadFile(t, fileObject, "/parentDir", "file1", "", 100, 10)
+	_, err = uploadFile(t, fileObject, "/parentDir", "file1", "", podPassword, 100, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dirObject.AddEntryToDir("/parentDir", "file1", true)
+	err = dirObject.AddEntryToDir("/parentDir", podPassword, "file1", true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = uploadFile(t, fileObject, "/parentDir", "file2", "", 200, 20)
+	_, err = uploadFile(t, fileObject, "/parentDir", "file2", "", podPassword, 200, 20)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dirObject.AddEntryToDir("/parentDir", "file2", true)
+	err = dirObject.AddEntryToDir("/parentDir", podPassword, "file2", true)
 	if err != nil {
 		t.Fatal(err)
 	}

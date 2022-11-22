@@ -168,7 +168,7 @@ func (b *Batch) Write(podFile string) (*Manifest, error) {
 	}
 
 	if b.memDb.dirtyFlag {
-		diskManifest, err := b.idx.loadManifest(b.memDb.Name)
+		diskManifest, err := b.idx.loadManifest(b.memDb.Name, b.idx.encryptionPassword)
 		if err != nil && errors.Is(err, ErrNoManifestFound) { // skipcq: TCV-001
 			return nil, err
 		}
@@ -203,7 +203,7 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Man
 
 		if diskManifest.dirtyFlag {
 			// save th disk manifest
-			err := b.idx.updateManifest(diskManifest)
+			err := b.idx.updateManifest(diskManifest, b.idx.encryptionPassword)
 			if err != nil { // skipcq: TCV-001
 				return nil, err
 			}
@@ -242,9 +242,11 @@ func (b *Batch) emptyManifestStack() error {
 
 // skipcq: TCV-001
 func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
-	//var wg sync.WaitGroup
-	//errC := make(chan error)
-	//wgDone := make(chan bool)
+	/*
+		var wg sync.WaitGroup
+		errC := make(chan error)
+		wgDone := make(chan bool)
+	*/
 
 	// store any branches in this manifest
 	for _, entry := range manifest.Entries {
@@ -255,36 +257,36 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 				entry.Manifest = nil
 				return nil
 			}
-			//wg.Add(1)
-			//go func() {
-			//	defer func() {
-			//		wg.Done()
-			//	}()
+			// wg.Add(1)
+			// go func() {
+			// defer func() {
+			//	 wg.Done()
+			// }()
 			err := b.storeMemoryManifest(entry.Manifest, depth+1)
 			if err != nil {
 				return err
 			}
-			//}()
+			// }()
 
 		}
 	}
 
-	//go func() {
-	//	wg.Wait()
-	//	close(wgDone)
-	//}()
+	// go func() {
+	//	 wg.Wait()
+	//	 close(wgDone)
+	// }()
 	//
-	//select {
-	//case <-wgDone:
-	//	break
-	//case err := <-errC:
-	//	close(errC)
-	//	return err
-	//}
+	// select {
+	// case <-wgDone:
+	//	 break
+	// case err := <-errC:
+	//	 close(errC)
+	//	 return err
+	// }
 
 	// store this manifest
-	//go func() {
-	err := b.idx.storeManifest(manifest)
+	// go func() {
+	err := b.idx.storeManifest(manifest, b.idx.encryptionPassword)
 	if err != nil {
 		return err
 	}
@@ -294,6 +296,6 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 		fmt.Println(count)
 	}
 
-	//}()
+	// }()
 	return nil
 }

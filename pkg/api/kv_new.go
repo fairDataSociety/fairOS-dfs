@@ -20,18 +20,31 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// KVCreateHandler is the api handler to create a key value table
-// it takes two arguments
-// - table_name: the name of the kv table
-// - index_type: the name of the index (ex: string, number)
+type KVTableRequest struct {
+	PodName   string `json:"podName,omitempty"`
+	TableName string `json:"tableName,omitempty"`
+	IndexType string `json:"indexType,omitempty"`
+}
+
+// KVCreateHandler godoc
+//
+//	@Summary      Create a key value table
+//	@Description  KVCreateHandler is the api handler to create a key value table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      kv_table_request body KVTableRequest true "kv table request"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      201  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/new [post]
 func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -41,7 +54,7 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var kvReq common.KVRequest
+	var kvReq KVTableRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv create: could not decode arguments")
@@ -51,15 +64,15 @@ func (h *Handler) KVCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv create: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv create: \"pod_name\" argument missing"})
+		h.logger.Errorf("kv create: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv create: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "kv create: \"table_name\" argument missing"})
+		h.logger.Errorf("kv create: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv create: \"tableName\" argument missing"})
 		return
 	}
 

@@ -21,14 +21,16 @@ import (
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 )
 
 const (
 	maxPodId = 65535
+
+	PodPasswordLength = 32
 )
 
 type Pod struct {
@@ -38,10 +40,29 @@ type Pod struct {
 	podMap map[string]*Info //  podName -> dir
 	podMu  *sync.RWMutex
 	logger logging.Logger
+	tm     taskmanager.TaskManagerGO
+}
+
+type PodListItem struct {
+	Name     string `json:"name"`
+	Index    int    `json:"index"`
+	Password string `json:"password"`
+}
+
+type SharedPodListItem struct {
+	Name     string `json:"name"`
+	Address  string `json:"address"`
+	Password string `json:"password"`
+}
+
+type PodList struct {
+	Pods       []PodListItem       `json:"pods"`
+	SharedPods []SharedPodListItem `json:"sharedPods"`
 }
 
 // NewPod creates the main pod object which has all the methods related to the pods.
-func NewPod(client blockstore.Client, feed *feed.API, account *account.Account, logger logging.Logger) *Pod {
+func NewPod(client blockstore.Client, feed *feed.API, account *account.Account,
+	m taskmanager.TaskManagerGO, logger logging.Logger) *Pod {
 	return &Pod{
 		fd:     feed,
 		acc:    account,
@@ -49,6 +70,7 @@ func NewPod(client blockstore.Client, feed *feed.API, account *account.Account, 
 		podMap: make(map[string]*Info),
 		podMu:  &sync.RWMutex{},
 		logger: logger,
+		tm:     m,
 	}
 }
 
@@ -64,13 +86,13 @@ func (p *Pod) removePodFromPodMap(podName string) {
 	delete(p.podMap, podName)
 }
 
-func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, error) {
+func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, string, error) {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
 	if podInfo, ok := p.podMap[podName]; ok {
-		return podInfo, nil
+		return podInfo, podInfo.podPassword, nil
 	}
-	return nil, fmt.Errorf("could not find pod: %s", podName)
+	return nil, "", fmt.Errorf("could not find pod: %s", podName)
 }
 
 func (p *Pod) GetFeed() *feed.API {

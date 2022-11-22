@@ -29,6 +29,11 @@ lint: linter
 linter:
 	test -f $(GOLANGCI_LINT) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$($(GO) env GOPATH)/bin $(GOLANGCI_LINT_VERSION)
 
+.PHONY: swagger
+swagger:
+	which swag || ( echo "install swag for your system from https://github.com/swaggo/swag" && exit 1)
+	swag init -g ./cmd/server.go -d cmd/dfs,pkg/api,cmd/common,pkg/dir,pkg/file,pkg/pod,pkg/user,pkg/collection -o ./swagger
+
 .PHONY: vet
 vet:
 	$(GO) vet ./...
@@ -51,7 +56,7 @@ githooks:
 
 .PHONY: protobuftools
 protobuftools:
-	which protoc || ( echo "install protoc for your system from https://github.com/protocolbuffers/protobuf/releases" && exit 1)
+	which protoac || ( echo "install protoc for your system from https://github.com/protocolbuffers/protobuf/releases" && exit 1)
 	which $(GOGOPROTOBUF) || ( cd /tmp && GO111MODULE=on $(GO) get -u github.com/gogo/protobuf/$(GOGOPROTOBUF)@$(GOGOPROTOBUF_VERSION) )
 
 .PHONY: protobuf

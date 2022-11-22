@@ -27,25 +27,35 @@ import (
 )
 
 type PodStatResponse struct {
-	PodName    string `json:"pod_name"`
+	PodName    string `json:"podName"`
 	PodAddress string `json:"address"`
 }
 
-// PodStatHandler is the api handler to get information about a pod
-// it takes only one argument
-// - pod_name: the name of the pod to get the info
+// PodStatHandler godoc
+//
+//	@Summary      Stats for pod
+//	@Description  PodStatHandler is the api handler get information about a pod
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  PodStatResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/stat [get]
 func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("pod stat: \"pod_name\" argument missing")
+		h.logger.Errorf("pod stat: \"podName\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"pod_name\" argument missing"})
 		return
 	}
 
 	pod := keys[0]
 	if pod == "" {
-		h.logger.Errorf("pod stat: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"pod_name\" argument missing"})
+		h.logger.Errorf("pod stat: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"podName\" argument missing"})
 		return
 	}
 	// get values from cookie

@@ -33,7 +33,7 @@ const (
 var (
 	minRequiredBalance = big.NewInt(10000000000000000) // 0.01 eth
 
-	//ErrWrongChainID denotes the rpc endpoint returned different chainId than the configured one
+	// ErrWrongChainID denotes the rpc endpoint returned different chainId than the configured one
 	ErrWrongChainID = fmt.Errorf("chainID does not match or not supported")
 )
 

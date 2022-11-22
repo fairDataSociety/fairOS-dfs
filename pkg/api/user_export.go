@@ -21,12 +21,15 @@ import (
 )
 
 type UserExportResponse struct {
-	Name    string `json:"user_name"`
+	Name    string `json:"userName"`
 	Address string `json:"address"`
 }
 
-// ExportUserHandler is the api handler to export a user information
-// it takes no arguments
+// ExportUserHandler godoc
+//
+//	@Tags         user
+//	@Deprecated
+//	@Router       /v1/user/export [post]
 func (h *Handler) ExportUserHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
@@ -40,16 +43,5 @@ func (h *Handler) ExportUserHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "user export: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
-
-	name, address, err := h.dfsAPI.ExportUser(sessionId)
-	if err != nil {
-		h.logger.Errorf("user export: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "user export: " + err.Error()})
-		return
-	}
-
-	jsonhttp.OK(w, &UserExportResponse{
-		Name:    name,
-		Address: address,
-	})
+	jsonhttp.BadRequest(w, &response{Message: "user export: deprecated"})
 }

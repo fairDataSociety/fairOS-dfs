@@ -20,15 +20,23 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// DocOpenHandler is the api handler to open a document database
-// it has only one argument
-// table_name: the name of the document database to open
+// DocOpenHandler godoc
+//
+//	@Summary      Open a doc table
+//	@Description  DocOpenHandler is the api handler to open a document database
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      doc_request body DocRequest true "doc table info"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  DocumentDBs
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/open [post]
 func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -38,7 +46,7 @@ func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq DocRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc open: could not decode arguments")
@@ -48,15 +56,15 @@ func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc open: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc open: \"pod_name\" argument missing"})
+		h.logger.Errorf("doc open: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: \"podName\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc open: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "doc open: \"table_name\" argument missing"})
+		h.logger.Errorf("doc open: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: \"tableName\" argument missing"})
 		return
 	}
 

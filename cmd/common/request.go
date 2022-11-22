@@ -16,44 +16,71 @@ limitations under the License.
 
 package common
 
-type UserRequest struct {
-	UserName string `json:"user_name,omitempty"`
+type UserSignupRequest struct {
+	UserName string `json:"userName,omitempty"`
 	Password string `json:"password,omitempty"`
-	Address  string `json:"address,omitempty"`
 	Mnemonic string `json:"mnemonic,omitempty"`
 }
 
+type UserLoginRequest struct {
+	UserName string `json:"userName,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
 type PodRequest struct {
-	PodName       string `json:"pod_name,omitempty"`
+	PodName       string `json:"podName,omitempty"`
 	Password      string `json:"password,omitempty"`
 	Reference     string `json:"reference,omitempty"`
-	SharedPodName string `json:"shared_pod_name,omitempty"`
+	SharedPodName string `json:"sharedPodName,omitempty"`
+}
+
+type PodShareRequest struct {
+	PodName       string `json:"podName,omitempty"`
+	SharedPodName string `json:"sharedPodName,omitempty"`
+}
+
+type PodReceiveRequest struct {
+	PodName       string `json:"podName,omitempty"`
+	Reference     string `json:"sharingRef,omitempty"`
+	SharedPodName string `json:"sharedPodName,omitempty"`
 }
 
 type FileSystemRequest struct {
-	PodName       string `json:"pod_name,omitempty"`
-	DirectoryPath string `json:"dir_path,omitempty"`
-	DirectoryName string `json:"dir_name,omitempty"`
-	FilePath      string `json:"file_path,omitempty"`
-	FileName      string `json:"file_name,omitempty"`
-	Destination   string `json:"dest_user,omitempty"`
+	PodName       string `json:"podName,omitempty"`
+	DirectoryPath string `json:"dirPath,omitempty"`
+	DirectoryName string `json:"dirName,omitempty"`
+	FilePath      string `json:"filePath,omitempty"`
+	FileName      string `json:"fileName,omitempty"`
+	Destination   string `json:"destUser,omitempty"`
+}
+
+type RenameRequest struct {
+	PodName string `json:"podName,omitempty"`
+	OldPath string `json:"oldPath,omitempty"`
+	NewPath string `json:"newPath,omitempty"`
+}
+
+type FileReceiveRequest struct {
+	PodName          string `json:"podName,omitempty"`
+	SharingReference string `json:"sharingRef,omitempty"`
+	DirectoryPath    string `json:"dirPath,omitempty"`
 }
 
 type KVRequest struct {
-	PodName     string `json:"pod_name,omitempty"`
-	TableName   string `json:"table_name,omitempty"`
-	IndexType   string `json:"index_type,omitempty"`
+	PodName     string `json:"podName,omitempty"`
+	TableName   string `json:"tableName,omitempty"`
+	IndexType   string `json:"indexType,omitempty"`
 	Key         string `json:"key,omitempty"`
 	Value       string `json:"value,omitempty"`
-	StartPrefix string `json:"start_prefix,omitempty"`
-	EndPrefix   string `json:"end_prefix,omitempty"`
+	StartPrefix string `json:"startPrefix,omitempty"`
+	EndPrefix   string `json:"endPrefix,omitempty"`
 	Limit       string `json:"limit,omitempty"`
 	Memory      string `json:"memory,omitempty"`
 }
 
 type DocRequest struct {
-	PodName       string `json:"pod_name,omitempty"`
-	TableName     string `json:"table_name,omitempty"`
+	PodName       string `json:"podName,omitempty"`
+	TableName     string `json:"tableName,omitempty"`
 	ID            string `json:"id,omitempty"`
 	Document      string `json:"doc,omitempty"`
 	SimpleIndex   string `json:"si,omitempty"`
@@ -61,5 +88,5 @@ type DocRequest struct {
 	Expression    string `json:"expr,omitempty"`
 	Mutable       bool   `json:"mutable,omitempty"`
 	Limit         string `json:"limit,omitempty"`
-	FileName      string `json:"file_name,omitempty"`
+	FileName      string `json:"fileName,omitempty"`
 }

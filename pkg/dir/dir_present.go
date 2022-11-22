@@ -21,9 +21,9 @@ import (
 )
 
 // IsDirectoryPresent this function check if a given directory is present inside the pod.
-func (d *Directory) IsDirectoryPresent(directoryNameWithPath string) bool {
+func (d *Directory) IsDirectoryPresent(directoryNameWithPath, podPassword string) bool {
 	topic := utils.HashString(directoryNameWithPath)
-	_, metaBytes, err := d.fd.GetFeedData(topic, d.userAddress)
+	_, metaBytes, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
 	if string(metaBytes) == utils.DeletedFeedMagicWord {
 		return false
 	}

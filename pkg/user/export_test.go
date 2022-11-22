@@ -1,18 +1,6 @@
 package user
 
-import (
-	"io"
-	"io/ioutil"
-	"os"
-	"testing"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-)
-
+/*
 func TestExport(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
@@ -24,7 +12,7 @@ func TestExport(t *testing.T) {
 		}
 		defer os.RemoveAll(dataDir)
 		ens := mock2.NewMockNamespaceManager()
-		//create user
+		// create user
 		userObject := NewUsers(dataDir, mockClient, ens, logger)
 		_, _, ui, err := userObject.CreateNewUser("7e4567e7cb003804992eef11fd5c757275a4a", "password1", "", "")
 		if err != nil {
@@ -45,5 +33,5 @@ func TestExport(t *testing.T) {
 			t.Fatal("address mismatch")
 		}
 	})
-
 }
+*/

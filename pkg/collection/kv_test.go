@@ -28,6 +28,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -41,21 +43,21 @@ func TestKeyValueStore(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 	kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
-
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("table_not_opened", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1314", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_1314", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = kvStore.CreateKVTable("kv_table_1314", collection.StringIndex)
+		err = kvStore.CreateKVTable("kv_table_1314", podPassword, collection.StringIndex)
 		if !errors.Is(err, collection.ErrKvTableAlreadyPresent) {
 			t.Fatal("table should be already present")
 		}
@@ -64,23 +66,23 @@ func TestKeyValueStore(t *testing.T) {
 		if !errors.Is(err, collection.ErrKVTableNotOpened) {
 			t.Fatal("open table")
 		}
-		err = kvStore.OpenKVTable("kv_table_1314")
+		err = kvStore.OpenKVTable("kv_table_1314", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// delete so that they dont show up in other testcases
-		err = kvStore.DeleteKVTable("kv_table_1314")
+		err = kvStore.DeleteKVTable("kv_table_1314", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 
 	t.Run("nil_itr", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1312", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_1312", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_1312")
+		err = kvStore.OpenKVTable("kv_table_1312", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -91,19 +93,19 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// delete so that they dont show up in other testcases
-		err = kvStore.DeleteKVTable("kv_table_1312")
+		err = kvStore.DeleteKVTable("kv_table_1312", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 
 	t.Run("create_kv_table_with_string_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_0", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_0", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		tables, err := kvStore.LoadKVTables()
+		tables, err := kvStore.LoadKVTables(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -118,19 +120,19 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// delete so that they dont show up in other testcases
-		err = kvStore.DeleteKVTable("kv_table_0")
+		err = kvStore.DeleteKVTable("kv_table_0", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 
 	t.Run("create_kv_table_with_number_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1", collection.NumberIndex)
+		err := kvStore.CreateKVTable("kv_table_1", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		tables, err := kvStore.LoadKVTables()
+		tables, err := kvStore.LoadKVTables(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -145,24 +147,24 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// delete so that they dont show up in other testcases
-		err = kvStore.DeleteKVTable("kv_table_1")
+		err = kvStore.DeleteKVTable("kv_table_1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 
 	t.Run("check_delete", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_2", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_2", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = kvStore.DeleteKVTable("kv_table_2")
+		err = kvStore.DeleteKVTable("kv_table_2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		tables, err := kvStore.LoadKVTables()
+		tables, err := kvStore.LoadKVTables(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -174,20 +176,20 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_multiple_kv_tables_and_delete", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_31", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_31", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.CreateKVTable("kv_table_32", collection.NumberIndex)
+		err = kvStore.CreateKVTable("kv_table_32", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.CreateKVTable("kv_table_33", collection.StringIndex)
+		err = kvStore.CreateKVTable("kv_table_33", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		tables, err := kvStore.LoadKVTables()
+		tables, err := kvStore.LoadKVTables(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -222,12 +224,12 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// delete the last table
-		err = kvStore.DeleteKVTable("kv_table_33")
+		err = kvStore.DeleteKVTable("kv_table_33", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		tables, err = kvStore.LoadKVTables()
+		tables, err = kvStore.LoadKVTables(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -254,19 +256,19 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_open_and_delete", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_4", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_4", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// open the table
-		err = kvStore.OpenKVTable("kv_table_4")
+		err = kvStore.OpenKVTable("kv_table_4", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// delete the opened table
-		err = kvStore.DeleteKVTable("kv_table_4")
+		err = kvStore.DeleteKVTable("kv_table_4", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -275,18 +277,18 @@ func TestKeyValueStore(t *testing.T) {
 
 	t.Run("delete_without_create", func(t *testing.T) {
 		// delete the last table
-		err = kvStore.DeleteKVTable("kv_table_5")
+		err = kvStore.DeleteKVTable("kv_table_5", podPassword)
 		if !errors.Is(err, collection.ErrKVTableNotPresent) {
 			t.Fatal("was able to delete table without creating it")
 		}
 	})
 
 	t.Run("open_table", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_6", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_6", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_6")
+		err = kvStore.OpenKVTable("kv_table_6", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -299,18 +301,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("open_without_create", func(t *testing.T) {
-		err = kvStore.OpenKVTable("kv_table_7")
+		err = kvStore.OpenKVTable("kv_table_7", podPassword)
 		if !errors.Is(err, collection.ErrKVTableNotPresent) {
 			t.Fatal("was able to open table without creating it")
 		}
 	})
 
 	t.Run("put_string_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_8", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_8", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_8")
+		err = kvStore.OpenKVTable("kv_table_8", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -331,7 +333,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		countObject, err := kvStore.KVCount("kv_table_8")
+		countObject, err := kvStore.KVCount("kv_table_8", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -341,7 +343,7 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_bytes_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_bytes", collection.BytesIndex)
+		err := kvStore.CreateKVTable("kv_table_bytes", podPassword, collection.BytesIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -349,7 +351,7 @@ func TestKeyValueStore(t *testing.T) {
 		if !errors.Is(err, collection.ErrKVTableNotOpened) {
 			t.Fatal("kv table open")
 		}
-		err = kvStore.OpenKVTable("kv_table_bytes")
+		err = kvStore.OpenKVTable("kv_table_bytes", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -370,7 +372,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		countObject, err := kvStore.KVCount("kv_table_bytes")
+		countObject, err := kvStore.KVCount("kv_table_bytes", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -380,11 +382,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_chinese_string_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_9", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_9", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_9")
+		err = kvStore.OpenKVTable("kv_table_9", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -407,11 +409,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_string_in_number_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_10", collection.NumberIndex)
+		err := kvStore.CreateKVTable("kv_table_10", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_10")
+		err = kvStore.OpenKVTable("kv_table_10", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -422,11 +424,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_get_del_get_string_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_11", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_11", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_11")
+		err = kvStore.OpenKVTable("kv_table_11", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -466,7 +468,7 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_without_opening_table", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_12", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_12", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -477,11 +479,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("delete_non_existent_string_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_13", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_13", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_13")
+		err = kvStore.OpenKVTable("kv_table_13", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -498,7 +500,7 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("batch_without_open", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_batch_1", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_batch_1", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -510,11 +512,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("batch_columns_and_get_values", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_batch_2", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_batch_2", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_batch_2")
+		err = kvStore.OpenKVTable("kv_table_batch_2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -555,11 +557,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("batch_put_columns_and_get_values", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_batch_9", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_batch_9", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_batch_9")
+		err = kvStore.OpenKVTable("kv_table_batch_9", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -605,11 +607,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("count_columns_and_get_values", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_batch_count", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_batch_count", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		countObject, err := kvStore.KVCount("kv_table_batch_count")
+		countObject, err := kvStore.KVCount("kv_table_batch_count", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -619,11 +621,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_string_keys", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_Itr_0", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_Itr_0", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_Itr_0")
+		err = kvStore.OpenKVTable("kv_table_Itr_0", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -655,11 +657,11 @@ func TestKeyValueStore(t *testing.T) {
 		tableNo := 0
 	research:
 		tableNo++
-		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_01%d", tableNo), collection.StringIndex)
+		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_01%d", tableNo), podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable(fmt.Sprintf("kv_table_Itr_01%d", tableNo))
+		err = kvStore.OpenKVTable(fmt.Sprintf("kv_table_Itr_01%d", tableNo), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -708,11 +710,11 @@ func TestKeyValueStore(t *testing.T) {
 		tableNo := 0
 	research:
 		tableNo++
-		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), collection.StringIndex)
+		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo))
+		err = kvStore.OpenKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -776,11 +778,11 @@ func TestKeyValueStore(t *testing.T) {
 
 	t.Run("Iterate_seek_start_end_string_keys_over_a_known_failing_keys", func(t *testing.T) {
 		tableNo := 486
-		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), collection.StringIndex)
+		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo))
+		err = kvStore.OpenKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -853,11 +855,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_string_of_numbers_keys", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_Itr_3", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_Itr_3", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_Itr_3")
+		err = kvStore.OpenKVTable("kv_table_Itr_3", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -886,11 +888,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_numbers_keys", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_Itr_4", collection.NumberIndex)
+		err := kvStore.CreateKVTable("kv_table_Itr_4", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_Itr_4")
+		err = kvStore.OpenKVTable("kv_table_Itr_4", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -920,11 +922,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_numbers_start_end_keys", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_Itr_5", collection.NumberIndex)
+		err := kvStore.CreateKVTable("kv_table_Itr_5", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_Itr_5")
+		err = kvStore.OpenKVTable("kv_table_Itr_5", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -973,11 +975,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_numbers_start_and_limit_keys", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_Itr_6", collection.NumberIndex)
+		err := kvStore.CreateKVTable("kv_table_Itr_6", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_Itr_6")
+		err = kvStore.OpenKVTable("kv_table_Itr_6", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1020,11 +1022,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("get_non_existent_string_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1313", collection.StringIndex)
+		err := kvStore.CreateKVTable("kv_table_1313", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_1313")
+		err = kvStore.OpenKVTable("kv_table_1313", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1050,11 +1052,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_byte_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1316", collection.BytesIndex)
+		err := kvStore.CreateKVTable("kv_table_1316", podPassword, collection.BytesIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_1316")
+		err = kvStore.OpenKVTable("kv_table_1316", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1070,11 +1072,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_seek_list_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1317", collection.ListIndex)
+		err := kvStore.CreateKVTable("kv_table_1317", podPassword, collection.ListIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_1317")
+		err = kvStore.OpenKVTable("kv_table_1317", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1086,11 +1088,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_seek_map_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1318", collection.MapIndex)
+		err := kvStore.CreateKVTable("kv_table_1318", podPassword, collection.MapIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_1318")
+		err = kvStore.OpenKVTable("kv_table_1318", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1102,11 +1104,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_seek_invalid_index", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1319", collection.InvalidIndex)
+		err := kvStore.CreateKVTable("kv_table_1319", podPassword, collection.InvalidIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = kvStore.OpenKVTable("kv_table_1319")
+		err = kvStore.OpenKVTable("kv_table_1319", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1118,7 +1120,7 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("seek_unopened_table", func(t *testing.T) {
-		err := kvStore.CreateKVTable("kv_table_1320", collection.ListIndex)
+		err := kvStore.CreateKVTable("kv_table_1320", podPassword, collection.ListIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
