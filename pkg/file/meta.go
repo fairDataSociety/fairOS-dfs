@@ -173,7 +173,7 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath, podPass
 	p.ModificationTime = time.Now().Unix()
 
 	// upload meta
-	err = f.uploadMeta(p, podPassword)
+	err = f.handleMeta(p, podPassword)
 	if err != nil {
 		return nil, err
 	}
