@@ -71,7 +71,7 @@ func kvDelete(podName, tableName string) {
 }
 
 func kvList(podName string) {
-	argString := fmt.Sprintf("pod_name=%s", podName)
+	argString := fmt.Sprintf("podName=%s", podName)
 	data, err := fdfsAPI.getReq(apiKVList, argString)
 	if err != nil {
 		fmt.Println("kv ls: ", err)
@@ -148,7 +148,7 @@ func kvPut(podName, tableName, key, value string) {
 }
 
 func kvget(podName, tableName, key string) {
-	argString := fmt.Sprintf("pod_name=%s&table_name=%s&key=%s", podName, tableName, key)
+	argString := fmt.Sprintf("podName=%s&tableName=%s&key=%s", podName, tableName, key)
 	data, err := fdfsAPI.getReq(apiKVEntryGet, argString)
 	if err != nil {
 		fmt.Println("kv get: ", err)
@@ -209,8 +209,8 @@ func loadcsv(podName, tableName, fileName, localCsvFile, memory string) {
 		return
 	}
 	args := make(map[string]string)
-	args["pod_name"] = podName
-	args["table_name"] = tableName
+	args["podName"] = podName
+	args["tableName"] = tableName
 	if memory == "true" {
 		args["memory"] = tableName
 	}
@@ -252,7 +252,7 @@ func kvSeek(podName, tableName, start, end, limit string) {
 }
 
 func kvGetNext(podName, tableName string) {
-	argString := fmt.Sprintf("pod_name=%s&table_name=%s", podName, tableName)
+	argString := fmt.Sprintf("podName=%s&tableName=%s", podName, tableName)
 	data, err := fdfsAPI.getReq(apiKVSeekNext, argString)
 	if err != nil && !errors.Is(err, collection.ErrNoNextElement) {
 		fmt.Println("kv get_next: ", err)

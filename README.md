@@ -190,7 +190,7 @@ go install github.com/swaggo/swag/cmd/swag@latest
 #### Generate
 
 ```
-swag init -g cmd/server.go -d cmd/dfs,pkg/api,cmd/common,pkg/dir,pkg/file,pkg/pod,pkg/user,pkg/collection -o ./swagger
+make swagger
 ```
 
 ### Running swagger-ui

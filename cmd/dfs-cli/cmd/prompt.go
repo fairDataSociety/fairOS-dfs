@@ -285,7 +285,7 @@ func executor(in string) {
 		switch blocks[1] {
 		case "new":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"user_name\" argument")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
@@ -307,7 +307,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "login":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"user_name\" argument")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
@@ -317,7 +317,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "loginV1":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"user_name\" argument")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
@@ -328,7 +328,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "present":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"user_name\" argument")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
@@ -336,7 +336,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "presentV1":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"user_name\" argument")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
@@ -391,7 +391,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "loggedin":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"user_name\" argument")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
@@ -420,7 +420,7 @@ func executor(in string) {
 		switch blocks[1] {
 		case "new":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"pod_name\" argument")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
@@ -428,7 +428,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"pod_name\" argument")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
@@ -438,7 +438,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"pod_name\" argument")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
@@ -457,7 +457,7 @@ func executor(in string) {
 				return
 			}
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"pod_name\" argument")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
@@ -474,7 +474,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "share":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"pod_name\" argument")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
@@ -517,7 +517,7 @@ func executor(in string) {
 		switch blocks[1] {
 		case "new":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -530,7 +530,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "delete":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -541,7 +541,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -549,7 +549,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "count":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -557,7 +557,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "put":
 			if len(blocks) < 5 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -567,7 +567,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "get":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"table_name\" or \"key\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" or \"key\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -576,7 +576,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"table_name\" or \"key\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" or \"key\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -599,7 +599,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "seek":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -620,7 +620,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "getnext":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -646,7 +646,7 @@ func executor(in string) {
 		switch blocks[1] {
 		case "new":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -669,7 +669,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -677,7 +677,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "count":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -689,7 +689,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "delete":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"table_name\" argument")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]

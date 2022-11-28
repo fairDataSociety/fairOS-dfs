@@ -62,21 +62,21 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	podName := r.FormValue("podName")
 	if podName == "" {
 		h.logger.Errorf("file upload: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file upload: \"pod_name\" argument missing"})
+		jsonhttp.BadRequest(w, &response{Message: "file upload: \"podName\" argument missing"})
 		return
 	}
 
 	podPath := r.FormValue("dirPath")
 	if podPath == "" {
 		h.logger.Errorf("file upload: \"dirPath\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file upload: \"dir_path\" argument missing"})
+		jsonhttp.BadRequest(w, &response{Message: "file upload: \"dirPath\" argument missing"})
 		return
 	}
 
 	blockSize := r.FormValue("blockSize")
 	if blockSize == "" {
 		h.logger.Errorf("file upload: \"blockSize\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file upload: \"block_size\" argument missing"})
+		jsonhttp.BadRequest(w, &response{Message: "file upload: \"blockSize\" argument missing"})
 		return
 	}
 

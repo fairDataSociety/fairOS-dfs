@@ -168,7 +168,7 @@ func StatUser() {
 }
 
 func presentUser(userName, apiEndpoint string) {
-	data, err := fdfsAPI.getReq(apiEndpoint, "user_name="+userName)
+	data, err := fdfsAPI.getReq(apiEndpoint, "userName="+userName)
 	if err != nil {
 		fmt.Println("user present: ", err)
 		return
@@ -187,7 +187,7 @@ func presentUser(userName, apiEndpoint string) {
 }
 
 func isUserLoggedIn(userName string) {
-	data, err := fdfsAPI.getReq(apiUserIsLoggedin, "user_name="+userName)
+	data, err := fdfsAPI.getReq(apiUserIsLoggedin, "userName="+userName)
 	if err != nil {
 		fmt.Println("user loggedin: ", err)
 		return

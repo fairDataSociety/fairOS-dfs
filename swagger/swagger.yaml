@@ -282,7 +282,7 @@ definitions:
     properties:
       count:
         type: integer
-      table_name:
+      tableName:
         type: string
     type: object
   common.PodShareRequest:
