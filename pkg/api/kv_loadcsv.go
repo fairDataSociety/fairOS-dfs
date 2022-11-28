@@ -28,11 +28,6 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// KVLoadCSVHandler is the api handler to load a csv file as key and value in a KV table
-// it has two arguments
-// - table_name: the name of the key value table
-// - csv: the name of the parameter which contains the file to upload in a multipart upload
-
 // KVLoadCSVHandler godoc
 //
 //	@Summary      Upload a csv file in kv table

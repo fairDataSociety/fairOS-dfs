@@ -33,7 +33,7 @@ import (
 )
 
 func isDirectoryPresent(podName, dirNameWithpath string) bool {
-	args := fmt.Sprintf("pod_name=%s&dir_path=%s", podName, dirNameWithpath)
+	args := fmt.Sprintf("podName=%s&dirPath=%s", podName, dirNameWithpath)
 	data, err := fdfsAPI.getReq(apiDirIsPresent, args)
 	if err != nil {
 		fmt.Println("dir present: ", err)
@@ -53,7 +53,7 @@ func isDirectoryPresent(podName, dirNameWithpath string) bool {
 }
 
 func listFileAndDirectories(podName, dirNameWithpath string) {
-	args := fmt.Sprintf("pod_name=%s&dir_path=%s", podName, dirNameWithpath)
+	args := fmt.Sprintf("podName=%s&dirPath=%s", podName, dirNameWithpath)
 	data, err := fdfsAPI.getReq(apiDirLs, args)
 	if err != nil {
 		fmt.Println("ls failed: ", err)
@@ -77,11 +77,11 @@ func listFileAndDirectories(podName, dirNameWithpath string) {
 }
 
 func statFileOrDirectory(podName, statElement string) {
-	args := fmt.Sprintf("pod_name=%s&dir_path=%s", podName, statElement)
+	args := fmt.Sprintf("podName=%s&dirPath=%s", podName, statElement)
 	data, err := fdfsAPI.getReq(apiDirStat, args)
 	if err != nil {
 		if strings.Contains(err.Error(), "directory not found") {
-			args := fmt.Sprintf("pod_name=%s&file_path=%s", podName, statElement)
+			args := fmt.Sprintf("podName=%s&filePath=%s", podName, statElement)
 			data, err := fdfsAPI.getReq(apiFileStat, args)
 			if err != nil {
 				fmt.Println("stat failed: ", err)
@@ -214,9 +214,9 @@ func uploadFile(fileName, podName, localFileWithPath, podDir, blockSize, compres
 	}
 
 	args := make(map[string]string)
-	args["pod_name"] = podName
-	args["dir_path"] = podDir
-	args["block_size"] = blockSize
+	args["podName"] = podName
+	args["dirPath"] = podDir
+	args["blockSize"] = blockSize
 	data, err := fdfsAPI.uploadMultipartFile(apiFileUpload, fileName, fi.Size(), fd, args, "files", compression)
 	if err != nil {
 		fmt.Println("upload failed: ", err)
@@ -243,8 +243,8 @@ func downloadFile(podName, localFileName, podFileName string) {
 	defer out.Close()
 
 	args := make(map[string]string)
-	args["pod_name"] = podName
-	args["file_path"] = podFileName
+	args["podName"] = podName
+	args["filePath"] = podFileName
 	n, err := fdfsAPI.downloadMultipartFile(http.MethodPost, apiFileDownload, args, out)
 	if err != nil {
 		fmt.Println("download failed: ", err)
@@ -279,7 +279,7 @@ func fileShare(podName, fileNameWithPath, destinationUser string) {
 }
 
 func fileReceiveInfo(podName, sharingRef string) {
-	args := fmt.Sprintf("pod_name=%s&sharing_ref=%s", podName, sharingRef)
+	args := fmt.Sprintf("sharingRef=%s", sharingRef)
 	data, err := fdfsAPI.getReq(apiFileReceiveInfo, args)
 	if err != nil {
 		fmt.Println("receive info: ", err)
@@ -308,7 +308,7 @@ func fileReceiveInfo(podName, sharingRef string) {
 }
 
 func fileReceive(podName, sharingRef, destDirectory string) {
-	argsStr := fmt.Sprintf("pod_name=%s&sharing_ref=%s&dir_path=%s", podName, sharingRef, destDirectory)
+	argsStr := fmt.Sprintf("podName=%s&sharingRef=%s&dirPath=%s", podName, sharingRef, destDirectory)
 	data, err := fdfsAPI.getReq(apiFileReceive, argsStr)
 	if err != nil {
 		fmt.Println("receive: ", err)

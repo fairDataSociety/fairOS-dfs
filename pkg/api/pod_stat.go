@@ -48,7 +48,7 @@ func (h *Handler) PodStatHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("pod stat: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"pod_name\" argument missing"})
+		jsonhttp.BadRequest(w, &response{Message: "pod stat: \"podName\" argument missing"})
 		return
 	}
 

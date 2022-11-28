@@ -32,17 +32,17 @@ type PresentResponse struct {
 //	@Deprecated
 //	@Router       /v1/user/present [get]
 func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["user_name"]
+	keys, ok := r.URL.Query()["userName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("user present: \"user_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user present: \"user_name\" argument missing"})
+		h.logger.Errorf("user present: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user present: \"userName\" argument missing"})
 		return
 	}
 
 	user := keys[0]
 	if user == "" {
-		h.logger.Errorf("user present: \"user\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user present: \"user\" argument missing"})
+		h.logger.Errorf("user present: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user present: \"userName\" argument missing"})
 		return
 	}
 	jsonhttp.BadRequest(w, &response{Message: "user present: deprecated"})
@@ -61,15 +61,15 @@ func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UserPresentV2Handler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["userName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("user present: \"user_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user present: \"user_name\" argument missing"})
+		h.logger.Errorf("user present: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user present: \"userName\" argument missing"})
 		return
 	}
 
 	user := keys[0]
 	if user == "" {
-		h.logger.Errorf("user present: \"user_name\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user present: \"user_name\" argument missing"})
+		h.logger.Errorf("user present: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user present: \"userName\" argument missing"})
 		return
 	}
 

@@ -24,10 +24,6 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// KVCountHandler is the api handler to count the number of rows in a key value table
-// it has ony one argument
-// - table_name: the name of the key value table
-
 // KVCountHandler godoc
 //
 //	@Summary      Count rows in a key value table

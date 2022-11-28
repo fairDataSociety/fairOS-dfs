@@ -58,7 +58,7 @@ type KVTable struct {
 
 type TableKeyCount struct {
 	Count     uint64 `json:"count"`
-	TableName string `json:"table_name"`
+	TableName string `json:"tableName"`
 }
 
 // NewKeyValueStore is the main object used to do all operation on the key value tables.
