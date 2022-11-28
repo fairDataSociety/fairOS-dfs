@@ -202,7 +202,7 @@ func listPod() {
 }
 
 func podStat(podName string) {
-	data, err := fdfsAPI.getReq(apiPodStat, "pod_name="+podName)
+	data, err := fdfsAPI.getReq(apiPodStat, "podName="+podName)
 	if err != nil {
 		fmt.Println("error getting stat: ", err)
 		return
@@ -219,7 +219,7 @@ func podStat(podName string) {
 }
 
 func receive(sharingRef string) {
-	data, err := fdfsAPI.getReq(apiPodReceive, "sharing_ref="+sharingRef)
+	data, err := fdfsAPI.getReq(apiPodReceive, "sharingRef="+sharingRef)
 	if err != nil {
 		fmt.Println("pod receive failed: ", err)
 		return
@@ -229,7 +229,7 @@ func receive(sharingRef string) {
 }
 
 func receiveInfo(sharingRef string) {
-	data, err := fdfsAPI.getReq(apiPodReceiveInfo, "sharing_ref="+sharingRef)
+	data, err := fdfsAPI.getReq(apiPodReceiveInfo, "sharingRef="+sharingRef)
 	if err != nil {
 		fmt.Println("pod receive info failed: ", err)
 		return

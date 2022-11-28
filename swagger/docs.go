@@ -3768,7 +3768,7 @@ const docTemplate = `{
                 "count": {
                     "type": "integer"
                 },
-                "table_name": {
+                "tableName": {
                     "type": "string"
                 }
             }
