@@ -26,14 +26,11 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 	}
 
 	// download file inode (blocks info)
-	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
-	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), encryptedFileInodeBytes)
-	if err != nil { // skipcq: TCV-001
-		return 0, err
-	}
+
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001
@@ -41,7 +38,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 	}
 
 	// create file reader
-	fd := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, podPassword, false)
+	fd := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)
 	reader := &bytes.Buffer{}
 	_, err = reader.ReadFrom(fd)
 	if err != nil {
@@ -198,13 +195,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 					}
 				}
 
-				encryptedData, enErr := utils.EncryptBytes([]byte(podPassword), uploadData)
-				if enErr != nil {
-					mainErr = enErr
-					return
-				}
-
-				addr, uploadErr := f.client.UploadBlob(encryptedData, true, true)
+				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
@@ -249,11 +240,8 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
-	encryptedFileInodeBytes, err = utils.EncryptBytes([]byte(podPassword), fileInodeData)
-	if err != nil { // skipcq: TCV-001
-		return 0, err
-	}
-	addr, err := f.client.UploadBlob(encryptedFileInodeBytes, true, true)
+
+	addr, err := f.client.UploadBlob(fileInodeData, true, true)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}

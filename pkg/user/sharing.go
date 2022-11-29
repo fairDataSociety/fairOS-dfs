@@ -30,10 +30,10 @@ import (
 )
 
 type SharingEntry struct {
-	Meta       *SharingMetaData `json:"meta"`
-	Sender     string           `json:"sourceAddress"`
-	Receiver   string           `json:"destAddress"`
-	SharedTime string           `json:"sharedTime"`
+	Meta       *f.MetaData `json:"meta"`
+	Sender     string      `json:"sourceAddress"`
+	Receiver   string      `json:"destAddress"`
+	SharedTime string      `json:"sharedTime"`
 }
 
 type SharingMetaData struct {
@@ -71,25 +71,10 @@ func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destina
 		return "", err
 	}
 
-	sharingMeta := &SharingMetaData{
-		Version:          meta.Version,
-		Path:             meta.Path,
-		Name:             meta.Name,
-		SharedPassword:   podPassword,
-		Size:             meta.Size,
-		BlockSize:        meta.BlockSize,
-		ContentType:      meta.ContentType,
-		Compression:      meta.Compression,
-		CreationTime:     meta.CreationTime,
-		AccessTime:       meta.AccessTime,
-		ModificationTime: meta.ModificationTime,
-		InodeAddress:     meta.InodeAddress,
-	}
-
 	// Create an outbox entry
 	now := time.Now()
 	sharingEntry := SharingEntry{
-		Meta:       sharingMeta,
+		Meta:       meta,
 		Sender:     userAddress.String(),
 		Receiver:   destinationRef,
 		SharedTime: strconv.FormatInt(now.Unix(), 10),
@@ -233,14 +218,11 @@ func (u *Users) ReceiveFileInfo(sharingRef utils.SharingReference) (*ReceiveFile
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	encryptedFileInodeBytes, respCode, err := u.client.DownloadBlob(sharingEntry.Meta.InodeAddress)
+	fileInodeBytes, respCode, err := u.client.DownloadBlob(sharingEntry.Meta.InodeAddress)
 	if err != nil || respCode != http.StatusOK { // skipcq: TCV-001
 		return nil, err
 	}
-	fileInodeBytes, err := utils.DecryptBytes([]byte(sharingEntry.Meta.SharedPassword), encryptedFileInodeBytes)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
+
 	var fileInode f.INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001
