@@ -36,11 +36,7 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 	if err != nil {
 		return err
 	}
-	encryptedFileInodeBytes, respCode, err := f.client.DownloadBlob(meta.InodeAddress)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), encryptedFileInodeBytes)
+	fileInodeBytes, respCode, err := f.client.DownloadBlob(meta.InodeAddress)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

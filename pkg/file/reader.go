@@ -40,18 +40,17 @@ var (
 )
 
 type Reader struct {
-	encryptionPassword string
-	readOffset         int64
-	client             blockstore.Client
-	fileInode          INode
-	fileC              chan []byte
-	lastBlock          []byte
-	fileSize           uint64
-	blockSize          uint32
-	blockCursor        uint32
-	totalSize          uint64
-	compression        string
-	blockCache         *lru.Cache
+	readOffset  int64
+	client      blockstore.Client
+	fileInode   INode
+	fileC       chan []byte
+	lastBlock   []byte
+	fileSize    uint64
+	blockSize   uint32
+	blockCursor uint32
+	totalSize   uint64
+	compression string
+	blockCache  *lru.Cache
 
 	rlBuffer      []byte
 	rlOffset      int
@@ -85,27 +84,26 @@ func (f *File) OpenFileForIndex(podFile, podPassword string) (*Reader, error) {
 		return nil, err
 	}
 
-	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, "encryptionPassword", true)
+	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, true)
 	return reader, nil
 }
 
 // NewReader create a new reader object to read a file from the pod based on its configuration.
-func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint32, compression, encryptionPassword string, cache bool) *Reader {
+func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string, cache bool) *Reader {
 	var blockCache *lru.Cache
 	if cache {
 		blockCache, _ = lru.New(blockCacheSize)
 	}
 
 	r := &Reader{
-		encryptionPassword: encryptionPassword,
-		fileInode:          fileInode,
-		client:             client,
-		fileC:              make(chan []byte),
-		fileSize:           fileSize,
-		blockSize:          blockSize,
-		compression:        compression,
-		blockCache:         blockCache,
-		rlReadNewLine:      false,
+		fileInode:     fileInode,
+		client:        client,
+		fileC:         make(chan []byte),
+		fileSize:      fileSize,
+		blockSize:     blockSize,
+		compression:   compression,
+		blockCache:    blockCache,
+		rlReadNewLine: false,
 	}
 	return r
 }
@@ -315,17 +313,11 @@ func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]b
 			return data.([]byte), nil
 		}
 	}
-	encryptedData, _, err := r.client.DownloadBlob(ref)
+	stdoutBytes, _, err := r.client.DownloadBlob(ref)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
-	temp := make([]byte, len(encryptedData))
-	copy(temp, encryptedData)
-	stdoutBytes, err := utils.DecryptBytes([]byte(r.encryptionPassword), temp)
-	if err != nil {
-		return nil, err
-	}
 	decompressedData, err := Decompress(stdoutBytes, compression, blockSize)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
