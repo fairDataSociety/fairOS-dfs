@@ -3,7 +3,10 @@
     "info": {
         "description": "A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store",
         "title": "FairOS-dfs server",
-        "contact": {},
+        "contact": {
+            "name": "Sabyasachi Patra",
+            "email": "sabyasachi@datafund.io"
+        },
         "license": {
             "name": "Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
