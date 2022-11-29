@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"math/rand"
 	"os"
@@ -104,7 +103,6 @@ func TestWriteAt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(string(rcvdBuffer.Bytes()))
 		reader.Close()
 		reader2, _, err := fileObject.Download(fp, podPassword)
 		if err != nil {
@@ -115,7 +113,6 @@ func TestWriteAt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(string(rcvdBuffer2.Bytes()))
 		reader, _, err = fileObject.Download(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -126,7 +123,6 @@ func TestWriteAt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(string(rcvdBuffer3.Bytes()))
 
 		update := []byte("123")
 		rewrite := &bytes.Buffer{}
@@ -144,7 +140,6 @@ func TestWriteAt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(string(rcvdBuffer.Bytes()))
 
 		updatedContent := append(dt[:offset], update...)
 
@@ -226,8 +221,6 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		updatedContent := append(dt[:offset], update...)
-		fmt.Println(updatedContent, string(updatedContent))
-		fmt.Println(rcvdBuffer.Bytes(), string(rcvdBuffer.Bytes()))
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
