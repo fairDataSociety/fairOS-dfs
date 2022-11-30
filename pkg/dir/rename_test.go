@@ -81,15 +81,15 @@ func TestRenameDirectory(t *testing.T) {
 		}
 
 		r := new(bytes.Buffer)
-		err = fileObject.Upload(r, "file1", 0, 100, "/parentDir", "", podPassword)
+		err = fileObject.Upload(r, "file1", 0, 1000000, "/parentDir", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.Upload(r, "file2", 0, 100, "/parentDir", "", podPassword)
+		err = fileObject.Upload(r, "file2", 0, 1000000, "/parentDir", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.Upload(r, "file2", 0, 100, "/parentDir/subDir2", "", podPassword)
+		err = fileObject.Upload(r, "file2", 0, 1000000, "/parentDir/subDir2", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -229,7 +229,7 @@ func TestRenameDirectory(t *testing.T) {
 		}
 
 		r := new(bytes.Buffer)
-		err = fileObject.Upload(r, "file1", 0, 100, "/parentDir/subDir1/subDir11/sub111", "", podPassword)
+		err = fileObject.Upload(r, "file1", 0, 1000000, "/parentDir/subDir1/subDir11/sub111", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -160,7 +160,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 						errC <- err // skipcq: TCV-001
 						return
 					}
-					data = append(data, temp...)
+					data = append(data, temp[:n]...)
 					totalLength += uint64(n)
 				}
 			}

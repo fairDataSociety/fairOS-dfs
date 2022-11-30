@@ -58,7 +58,7 @@ func TestStat(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// upload a file
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 1000000)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -82,7 +82,7 @@ func TestStat(t *testing.T) {
 		if stats.FileSize != strconv.FormatUint(100, 10) {
 			t.Fatalf("invalid file size in stats")
 		}
-		if stats.BlockSize != strconv.FormatUint(10, 10) {
+		if stats.BlockSize != strconv.FormatUint(1000000, 10) {
 			t.Fatalf("invalid block size in stats")
 		}
 	})

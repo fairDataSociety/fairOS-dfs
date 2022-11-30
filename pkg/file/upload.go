@@ -35,12 +35,13 @@ import (
 
 const (
 	minBlockSizeForGzip = 164000
+	minimumBlockSize    = 1000000
 )
 
 var (
 	noOfParallelWorkers = runtime.NumCPU()
 
-	ErrGzipBlSize = fmt.Errorf("gzip: block size cannot be less than %d", minBlockSizeForGzip)
+	ErrBlSize = fmt.Errorf("block size cannot be less than 1 MB")
 )
 
 // Upload uploads a given blob of bytes as a file in the pod. It also splits the file into number of blocks. the
@@ -48,12 +49,12 @@ var (
 // requested during the upload.
 func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression, podPassword string) error {
 	podPath = filepath.ToSlash(podPath)
-	// check compression gzip and blocksize
-	// pgzip does not allow block size lower or equal to 163840
-	// so we set block size lower bound to 164000 for
-	if compression == "gzip" && blockSize < minBlockSizeForGzip {
-		return ErrGzipBlSize
+	// check blocksize
+	// https://github.com/fairDataSociety/fairOS-dfs/issues/315
+	if blockSize < minimumBlockSize {
+		return ErrBlSize
 	}
+
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()
 	meta := MetaData{

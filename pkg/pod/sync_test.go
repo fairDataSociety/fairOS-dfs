@@ -111,7 +111,7 @@ func TestSync(t *testing.T) {
 		if fileMeta1.Size != uint64(100) {
 			t.Fatalf("invalid file size")
 		}
-		if fileMeta1.BlockSize != uint32(10) {
+		if fileMeta1.BlockSize != uint32(1000000) {
 			t.Fatalf("invalid block size")
 		}
 		fileMeta2 := fileObject.GetFromFileMap("/parentDir/file2")
@@ -127,7 +127,7 @@ func TestSync(t *testing.T) {
 		if fileMeta2.Size != uint64(200) {
 			t.Fatalf("invalid file size")
 		}
-		if fileMeta2.BlockSize != uint32(20) {
+		if fileMeta2.BlockSize != uint32(1000000) {
 			t.Fatalf("invalid block size")
 		}
 	})

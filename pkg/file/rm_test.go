@@ -62,12 +62,12 @@ func TestRemoveFile(t *testing.T) {
 			t.Fatal("file not present")
 		}
 		// upload few files
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 1000000)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", podPassword, 200, 20)
+		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", podPassword, 200, 1000000)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -104,7 +104,7 @@ func TestRemoveFile(t *testing.T) {
 
 		for i := 0; i < 80; i++ {
 			// upload file1
-			_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
+			_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 1000000)
 			if err != nil {
 				t.Fatal(err)
 			}
