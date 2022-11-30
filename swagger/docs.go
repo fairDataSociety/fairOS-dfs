@@ -4025,7 +4025,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "v0.9.0-rc1",
-	Host:             "https://fairos.dev.fairdatasociety.org",
+	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "FairOS-dfs server",

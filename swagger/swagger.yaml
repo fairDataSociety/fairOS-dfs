@@ -445,7 +445,6 @@ definitions:
       userName:
         type: string
     type: object
-host: https://fairos.dev.fairdatasociety.org
 info:
   contact: {}
   description: A list of the currently provided Interfaces to interact with FairOS

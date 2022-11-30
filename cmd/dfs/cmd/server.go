@@ -28,6 +28,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	_ "github.com/fairdatasociety/fairOS-dfs/swagger"
+	docs "github.com/fairdatasociety/fairOS-dfs/swagger"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
@@ -51,9 +52,7 @@ const (
 )
 
 // @title           FairOS-dfs server
-// @version         v0.9.0-rc1
 // @description     A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store
-// @host      		https://fairos.dev.fairdatasociety.org/
 // @contact.name	Sabyasachi Patra
 // @contact.email	sabyasachi@datafund.io
 // @license.name  	Apache 2.0
@@ -85,6 +84,11 @@ can consume it.`,
 		return config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId"))
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+
+		docs.SwaggerInfo.Host = "fairos.dev.fairdatasociety.org"
+		docs.SwaggerInfo.Schemes = []string{"https"}
+		docs.SwaggerInfo.Version = dfs.Version
+
 		httpPort = config.GetString(optionDFSHttpPort)
 		pprofPort = config.GetString(optionDFSPprofPort)
 		cookieDomain = config.GetString(optionCookieDomain)
