@@ -140,6 +140,7 @@ func TestWriteAt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		updatedContent := append(dt[:offset], update...)
 
 		if uint64(len(update))+offset < uint64(len(dt)) {
@@ -220,7 +221,6 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		updatedContent := append(dt[:offset], update...)
-
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}

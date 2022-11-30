@@ -46,6 +46,10 @@ var (
 	handler        *api.Handler
 )
 
+const (
+	zeroBatchId = "0000000000000000000000000000000000000000000000000000000000000000"
+)
+
 // @title           FairOS-dfs server
 // @version         v0.9.0-rc1
 // @description     A list of the currently provided Interfaces to interact with FairOS decentralised file system(dfs), implementing user, pod, file system, key value store and document store
@@ -88,19 +92,22 @@ can consume it.`,
 		corsOrigins = config.GetStringSlice(optionCORSAllowedOrigins)
 		verbosity = config.GetString(optionVerbosity)
 		isGatewayProxy := config.GetBool(optionIsGatewayProxy)
+
 		if !isGatewayProxy {
 			if postageBlockId == "" {
 				_ = cmd.Help()
 				fmt.Println("\npostageBlockId is required to run server")
 				return fmt.Errorf("postageBlockId is required to run server")
-			} else if len(postageBlockId) != 64 {
-				fmt.Println("\npostageBlockId is invalid")
-				return fmt.Errorf("postageBlockId is invalid")
-			}
-			_, err := hex.DecodeString(postageBlockId)
-			if err != nil {
-				fmt.Println("\npostageBlockId is invalid")
-				return fmt.Errorf("postageBlockId is invalid")
+			} else if postageBlockId != zeroBatchId && postageBlockId != "0" {
+				if len(postageBlockId) != 64 {
+					fmt.Println("\npostageBlockId is invalid")
+					return fmt.Errorf("postageBlockId is invalid")
+				}
+				_, err := hex.DecodeString(postageBlockId)
+				if err != nil {
+					fmt.Println("\npostageBlockId is invalid")
+					return fmt.Errorf("postageBlockId is invalid")
+				}
 			}
 		}
 		ensConfig := &contracts.Config{}

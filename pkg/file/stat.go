@@ -21,8 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type Stats struct {
@@ -53,14 +51,11 @@ func (f *File) GetStats(podName, podFileWithPath, podPassword string) (*Stats, e
 		return nil, fmt.Errorf("file not found")
 	}
 
-	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), encryptedFileInodeBytes)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
+
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001

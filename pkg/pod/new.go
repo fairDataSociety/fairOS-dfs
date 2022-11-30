@@ -161,7 +161,6 @@ func (p *Pod) loadUserPods() (*PodList, error) {
 			return nil, err
 		}
 	}
-
 	podList := &PodList{
 		Pods:       []PodListItem{},
 		SharedPods: []SharedPodListItem{},
@@ -169,6 +168,7 @@ func (p *Pod) loadUserPods() (*PodList, error) {
 	if len(data) == 0 {
 		return podList, nil
 	}
+
 	err = json.Unmarshal(data, podList)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
