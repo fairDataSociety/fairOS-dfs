@@ -50,7 +50,7 @@ wget -qO- https://raw.githubusercontent.com/fairDataSociety/fairOS-dfs/master/do
 
 Or download the latest release from https://github.com/fairDataSociety/fairOS-dfs/releases.
 
-Or use Docker to run the project https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/docker-installation.
+Or use Docker to run the project https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/fairos-dfs-using-docker.
 
 Or build the latest version with the instruction https://docs.fairos.fairdatasociety.org/docs/fairOS-dfs/manual-installation.
 
