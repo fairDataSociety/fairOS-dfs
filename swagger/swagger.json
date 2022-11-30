@@ -11,7 +11,7 @@
             "name": "Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-        "version": "v0.9.0-rc1"
+        "version": "v0.0.0"
     },
     "paths": {
         "/v1/dir/ls": {
@@ -3615,13 +3615,13 @@
         "api.PodListResponse": {
             "type": "object",
             "properties": {
-                "podName": {
+                "pods": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "sharedPodName": {
+                "sharedPods": {
                     "type": "array",
                     "items": {
                         "type": "string"

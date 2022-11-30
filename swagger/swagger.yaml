@@ -188,11 +188,11 @@ definitions:
     type: object
   api.PodListResponse:
     properties:
-      podName:
+      pods:
         items:
           type: string
         type: array
-      sharedPodName:
+      sharedPods:
         items:
           type: string
         type: array
@@ -454,7 +454,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   title: FairOS-dfs server
-  version: v0.9.0-rc1
+  version: v0.0.0
 paths:
   /v1/dir/ls:
     get:
