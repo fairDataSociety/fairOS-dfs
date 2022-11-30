@@ -26,7 +26,6 @@ import (
 	"hash"
 	"io"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"github.com/ethersphere/bee/pkg/swarm"
@@ -257,7 +256,7 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 		return s.getFromChunkCache(swarm.NewAddress(address).String()), nil
 	}
 
-	path := filepath.Join(chunkUploadDownloadUrl, addrString)
+	path := chunkUploadDownloadUrl + "/" + addrString
 	fullUrl := fmt.Sprintf(s.url + path)
 	req, err := http.NewRequest(http.MethodGet, fullUrl, bytes.NewBuffer(data))
 	if err != nil {

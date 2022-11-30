@@ -27,8 +27,8 @@ import (
 )
 
 type PodListResponse struct {
-	Pods       []string `json:"podName"`
-	SharedPods []string `json:"sharedPodName"`
+	Pods       []string `json:"pods"`
+	SharedPods []string `json:"sharedPods"`
 }
 
 // PodListHandler godoc

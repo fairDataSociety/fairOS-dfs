@@ -3621,13 +3621,13 @@ const docTemplate = `{
         "api.PodListResponse": {
             "type": "object",
             "properties": {
-                "podName": {
+                "pods": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "sharedPodName": {
+                "sharedPods": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -4024,7 +4024,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "v0.9.0-rc1",
+	Version:          "v0.0.0",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
