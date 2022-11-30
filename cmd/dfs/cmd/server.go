@@ -242,7 +242,7 @@ func startHttpService(logger logging.Logger) {
 	})
 	if swag {
 		router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-			httpSwagger.URL("http://localhost:9090/swagger/doc.json"), // The url pointing to API definition
+			httpSwagger.URL("./swagger/doc.json"),
 		)).Methods(http.MethodGet)
 	}
 
