@@ -115,7 +115,11 @@ func (a *API) OpenPod(podName, sessionId string) (*pod.Info, error) {
 	}
 	// return if pod already open
 	if ui.IsPodOpen(podName) {
-		return nil, errPodAlreadyOpen
+		podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+		if err != nil {
+			return nil, err
+		}
+		return podInfo, nil
 	}
 	// open the pod
 	pi, err := ui.GetPod().OpenPod(podName)
@@ -139,7 +143,11 @@ func (a *API) OpenPodAsync(ctx context.Context, podName, sessionId string) (*pod
 	}
 	// return if pod already open
 	if ui.IsPodOpen(podName) {
-		return nil, errPodAlreadyOpen
+		podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+		if err != nil {
+			return nil, err
+		}
+		return podInfo, nil
 	}
 	// open the pod
 	pi, err := ui.GetPod().OpenPodAsync(ctx, podName)
