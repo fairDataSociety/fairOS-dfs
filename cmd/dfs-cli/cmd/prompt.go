@@ -47,12 +47,8 @@ var (
 )
 
 const (
-	apiUserLogin       = APIVersion + "/user/login"
-	apiUserPresent     = APIVersion + "/user/present"
 	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
 	apiUserLogout      = APIVersion + "/user/logout"
-	apiUserExport      = APIVersion + "/user/export"
-	apiUserDelete      = APIVersion + "/user/delete"
 	apiUserStat        = APIVersion + "/user/stat"
 	apiPodNew          = APIVersion + "/pod/new"
 	apiPodOpen         = APIVersion + "/pod/open"
@@ -103,7 +99,6 @@ const (
 	apiUserLoginV2   = APIVersionV2 + "/user/login"
 	apiUserPresentV2 = APIVersionV2 + "/user/present"
 	apiUserDeleteV2  = APIVersionV2 + "/user/delete"
-	apiUserMigrateV2 = APIVersionV2 + "/user/migrate"
 )
 
 type Message struct {
