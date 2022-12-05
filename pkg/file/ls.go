@@ -17,7 +17,6 @@ limitations under the License.
 package file
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -40,12 +39,13 @@ func (f *File) ListFiles(files []string, podPassword string) ([]Entry, error) {
 	mtx := &sync.Mutex{}
 	for _, filePath := range files {
 		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
-		wg.Add(1)
 		lsTask := newLsTask(f, fileTopic, filePath, podPassword, fileEntries, mtx, wg)
 		_, err := f.syncManager.Go(lsTask)
 		if err != nil { // skipcq: TCV-001
-			return nil, fmt.Errorf("list files : %v", err)
+			f.logger.Warningf("list files : %v", err)
+			continue
 		}
+		wg.Add(1)
 	}
 	wg.Wait()
 	return *fileEntries, nil
