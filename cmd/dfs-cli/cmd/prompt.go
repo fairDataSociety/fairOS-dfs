@@ -47,12 +47,8 @@ var (
 )
 
 const (
-	apiUserLogin       = APIVersion + "/user/login"
-	apiUserPresent     = APIVersion + "/user/present"
 	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
 	apiUserLogout      = APIVersion + "/user/logout"
-	apiUserExport      = APIVersion + "/user/export"
-	apiUserDelete      = APIVersion + "/user/delete"
 	apiUserStat        = APIVersion + "/user/stat"
 	apiPodNew          = APIVersion + "/pod/new"
 	apiPodOpen         = APIVersion + "/pod/open"
@@ -103,7 +99,6 @@ const (
 	apiUserLoginV2   = APIVersionV2 + "/user/login"
 	apiUserPresentV2 = APIVersionV2 + "/user/present"
 	apiUserDeleteV2  = APIVersionV2 + "/user/delete"
-	apiUserMigrateV2 = APIVersionV2 + "/user/migrate"
 )
 
 type Message struct {
@@ -144,16 +139,10 @@ func changeLivePrefix() (string, bool) {
 var userSuggestions = []prompt.Suggest{
 	{Text: "new", Description: "create a new user (v2)"},
 	{Text: "del", Description: "delete a existing user (v2)"},
-	{Text: "delV1", Description: "delete a existing user (v1)"},
 	{Text: "login", Description: "login to a existing user (v2)"},
-	{Text: "loginV1", Description: "login to a existing user (v1)"},
 	{Text: "logout", Description: "logout from a logged in user"},
 	{Text: "present", Description: "is user present (v2)"},
-	{Text: "presentV1", Description: "is user present (v1)"},
-	{Text: "export ", Description: "exports the user"},
-	{Text: "import ", Description: "imports the user"},
 	{Text: "stat", Description: "shows information about a user"},
-	{Text: "migrate", Description: "migrate user credentials from v1 to v2"},
 }
 
 var podSuggestions = []prompt.Suggest{
@@ -315,17 +304,6 @@ func executor(in string) {
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
-		case "loginV1":
-			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"userName\" argument")
-				return
-			}
-			userName := blocks[2]
-			userLogin(userName, apiUserLogin)
-			currentUser = userName
-			currentPod = ""
-			currentDirectory = ""
-			currentPrompt = getCurrentPrompt()
 		case "present":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"userName\" argument")
@@ -334,40 +312,12 @@ func executor(in string) {
 			userName := blocks[2]
 			presentUser(userName, apiUserPresentV2)
 			currentPrompt = getCurrentPrompt()
-		case "presentV1":
-			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"userName\" argument")
-				return
-			}
-			userName := blocks[2]
-			presentUser(userName, apiUserPresent)
-			currentPrompt = getCurrentPrompt()
 		case "del":
 			if currentUser == "" {
 				fmt.Println("please login as  user to do the operation")
 				return
 			}
 			deleteUser(apiUserDeleteV2)
-			currentUser = ""
-			currentPod = ""
-			currentDirectory = ""
-			currentPrompt = getCurrentPrompt()
-		case "delV1":
-			if currentUser == "" {
-				fmt.Println("please login as  user to do the operation")
-				return
-			}
-			deleteUser(apiUserDelete)
-			currentUser = ""
-			currentPod = ""
-			currentDirectory = ""
-			currentPrompt = getCurrentPrompt()
-		case "migrate":
-			if currentUser == "" {
-				fmt.Println("please login as  user to do the operation")
-				return
-			}
-			migrateUser()
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
@@ -381,13 +331,6 @@ func executor(in string) {
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
-			currentPrompt = getCurrentPrompt()
-		case "export":
-			if currentUser == "" {
-				fmt.Println("please login as  user to do the operation")
-				return
-			}
-			exportUser()
 			currentPrompt = getCurrentPrompt()
 		case "loggedin":
 			if len(blocks) < 3 {

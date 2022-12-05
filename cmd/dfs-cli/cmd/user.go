@@ -106,25 +106,6 @@ func deleteUser(apiEndpoint string) {
 	fmt.Println(message)
 }
 
-func migrateUser() {
-	password := getPassword()
-	migrateUsr := common.UserSignupRequest{
-		Password: password,
-	}
-	jsonData, err := json.Marshal(migrateUsr)
-	if err != nil {
-		fmt.Println("migrate user: error marshalling request")
-		return
-	}
-	data, err := fdfsAPI.postReq(http.MethodPost, apiUserMigrateV2, jsonData)
-	if err != nil {
-		fmt.Println("migrate user: ", err)
-		return
-	}
-	message := strings.ReplaceAll(string(data), "\n", "")
-	fmt.Println(message)
-}
-
 func logoutUser() {
 	data, err := fdfsAPI.postReq(http.MethodPost, apiUserLogout, nil)
 	if err != nil {
@@ -133,22 +114,6 @@ func logoutUser() {
 	}
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
-}
-
-func exportUser() {
-	data, err := fdfsAPI.postReq(http.MethodPost, apiUserExport, nil)
-	if err != nil {
-		fmt.Println("export user: ", err)
-		return
-	}
-	var resp api.UserExportResponse
-	err = json.Unmarshal(data, &resp)
-	if err != nil {
-		fmt.Println("export user: ", err)
-		return
-	}
-	fmt.Println("user name:", resp.Name)
-	fmt.Println("address  :", resp.Address)
 }
 
 func StatUser() {
