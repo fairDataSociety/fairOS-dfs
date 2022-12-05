@@ -40,12 +40,12 @@ func (f *File) ListFiles(files []string, podPassword string) ([]Entry, error) {
 	for _, filePath := range files {
 		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
 		lsTask := newLsTask(f, fileTopic, filePath, podPassword, fileEntries, mtx, wg)
+		wg.Add(1)
 		_, err := f.syncManager.Go(lsTask)
 		if err != nil { // skipcq: TCV-001
 			f.logger.Warningf("list files : %v", err)
 			continue
 		}
-		wg.Add(1)
 	}
 	wg.Wait()
 	return *fileEntries, nil
