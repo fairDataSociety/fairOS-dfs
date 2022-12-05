@@ -29,10 +29,8 @@ import (
 )
 
 func podNew(podName string) {
-	password := getPassword()
 	newPod := common.PodRequest{
-		PodName:  podName,
-		Password: password,
+		PodName: podName,
 	}
 	jsonData, err := json.Marshal(newPod)
 	if err != nil {
@@ -51,10 +49,8 @@ func podNew(podName string) {
 }
 
 func deletePod(podName string) {
-	password := getPassword()
 	delPod := common.PodRequest{
-		PodName:  podName,
-		Password: password,
+		PodName: podName,
 	}
 	jsonData, err := json.Marshal(delPod)
 	if err != nil {
@@ -83,10 +79,8 @@ func openPod(podName string) {
 		return
 	}
 	invalidPodName := true
-	password := ""
 	for _, v := range resp.Pods {
 		if v == podName {
-			password = getPassword()
 			invalidPodName = false
 		}
 	}
@@ -101,8 +95,7 @@ func openPod(podName string) {
 	}
 
 	openPodReq := common.PodRequest{
-		PodName:  podName,
-		Password: password,
+		PodName: podName,
 	}
 	jsonData, err := json.Marshal(openPodReq)
 	if err != nil {
@@ -157,10 +150,8 @@ func syncPod(podName string) {
 }
 
 func sharePod(podName string) {
-	password := getPassword()
 	sharePodReq := common.PodRequest{
-		PodName:  podName,
-		Password: password,
+		PodName: podName,
 	}
 	jsonData, err := json.Marshal(sharePodReq)
 	if err != nil {
