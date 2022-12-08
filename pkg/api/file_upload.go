@@ -54,6 +54,7 @@ const (
 //	@Param	      files formData file true "file to upload"
 //	@Param	      fairOS-dfs-Compression header string false "cookie parameter" example(snappy, gzip)
 //	@Param	      Cookie header string true "cookie parameter"
+//	@Param	      overwrite formData string false "overwrite the file if already exists" example(true, false)
 //	@Success      200  {object}  response
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
