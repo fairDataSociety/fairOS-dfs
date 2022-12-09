@@ -308,14 +308,17 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 	// check if file exists, then backup the file
 	totalPath := utils.CombinePathAndFile(podPath, podFileName)
 	alreadyPresent := file.IsFileAlreadyPresent(totalPath)
-	if alreadyPresent && !overwrite {
-		m, err := file.BackupFromFileName(totalPath, podInfo.GetPodPassword())
-		if err != nil {
-			return err
-		}
-		err = directory.AddEntryToDir(podPath, podInfo.GetPodPassword(), m.Name, true)
-		if err != nil {
-			return err
+
+	if alreadyPresent {
+		if !overwrite {
+			m, err := file.BackupFromFileName(totalPath, podInfo.GetPodPassword())
+			if err != nil {
+				return err
+			}
+			err = directory.AddEntryToDir(podPath, podInfo.GetPodPassword(), m.Name, true)
+			if err != nil {
+				return err
+			}
 		}
 		err = directory.RemoveEntryFromDir(podPath, podInfo.GetPodPassword(), podFileName, true)
 		if err != nil {
