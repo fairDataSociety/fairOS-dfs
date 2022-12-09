@@ -216,5 +216,3 @@ bee:
   postage-batch-id: <BATCH>
   is-gateway-proxy: false
 ```
-
-1
