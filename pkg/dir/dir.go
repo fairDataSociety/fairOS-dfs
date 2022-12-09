@@ -120,7 +120,7 @@ func (st *syncTask) Execute(context.Context) error {
 }
 
 func (st *syncTask) Name() string {
-	return st.path
+	return st.d.userAddress.String() + st.d.podName + st.path
 }
 
 type lsTask struct {
@@ -170,5 +170,5 @@ func (lt *lsTask) Execute(context.Context) error {
 }
 
 func (lt *lsTask) Name() string {
-	return lt.path
+	return lt.d.userAddress.String() + lt.d.podName + lt.path
 }
