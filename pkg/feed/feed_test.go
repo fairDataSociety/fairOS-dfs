@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"testing"
 
@@ -154,7 +153,6 @@ func TestFeed(t *testing.T) {
 			if !bytes.Equal(buf, rcvdData) {
 				t.Fatal("data not matching", buf, rcvdData)
 			}
-			fmt.Println("update ", i, " Done")
 		}
 	})
 
@@ -196,7 +194,6 @@ func TestFeed(t *testing.T) {
 		}
 
 		_, _, err = fd.GetFeedDataFromTopic(topic, user1)
-		fmt.Println(err)
 		if err != nil && err.Error() != "error downloading data" {
 			t.Fatal("error should be \"error downloading data\"")
 		}

@@ -19,7 +19,6 @@ package file
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
@@ -40,19 +39,15 @@ var (
 // Download does all the validation for the existence of the file and creates a
 // Reader to read the contents of the file from the pod.
 func (f *File) Download(podFileWithPath, podPassword string) (io.ReadCloser, uint64, error) {
-	fmt.Println("Downloader address", f.userAddress.String())
-
 	// check if file present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
 	if !f.IsFileAlreadyPresent(totalFilePath) {
 		return nil, 0, ErrFileNotPresent
 	}
-	fmt.Println("download path", totalFilePath)
 	meta := f.GetFromFileMap(totalFilePath)
 	if meta == nil { // skipcq: TCV-001
 		return nil, 0, ErrFileNotFound
 	}
-	fmt.Println("Download meta", meta)
 	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil { // skipcq: TCV-001
 		return nil, 0, err

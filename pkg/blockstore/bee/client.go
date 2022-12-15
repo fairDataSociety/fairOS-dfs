@@ -27,7 +27,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 
 	"github.com/ethersphere/bee/pkg/swarm"
@@ -56,13 +55,6 @@ const (
 	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
 )
 
-var successWsMsg = []byte{}
-
-type putOp struct {
-	ch   swarm.Chunk
-	errc chan<- error
-}
-
 // Client is a bee http client that satisfies blockstore.Client
 type Client struct {
 	url                string
@@ -77,10 +69,6 @@ type Client struct {
 	postageBlockId     string
 	logger             logging.Logger
 	pin                bool
-	wg                 sync.WaitGroup
-
-	cancel context.CancelFunc
-	opChan chan putOp
 }
 
 func hashFunc() hash.Hash {

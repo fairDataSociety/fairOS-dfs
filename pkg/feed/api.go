@@ -18,17 +18,10 @@ package feed
 
 import (
 	"context"
-	"encoding/binary"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/ethersphere/bee/pkg/soc"
-
-	"github.com/ethersphere/bee/pkg/feeds"
-	"github.com/ethersphere/bee/pkg/feeds/factory"
 
 	"github.com/ethersphere/bee/pkg/crypto"
 	"github.com/ethersphere/bee/pkg/swarm"
@@ -41,8 +34,9 @@ import (
 )
 
 const (
-	maxuint64 = ^uint64(0)
-	idLength  = 32
+	maxuint64   = ^uint64(0)
+	idLength    = 32
+	TopicLength = 32
 )
 
 var (
@@ -61,17 +55,6 @@ type API struct {
 	handler     *Handler
 	accountInfo *account.Info
 	logger      logging.Logger
-}
-
-// request is a custom type that involves in the fairOS feed creation
-type request struct {
-	ID
-	// User   utils.Address
-	idAddr swarm.Address // cached chunk address for the update (not serialized, for internal use)
-
-	data       []byte     // actual data payload
-	Signature  *Signature // Signature of the payload
-	binaryData []byte     // cached serialized data (does not get serialized again!, for efficiency/internal use)
 }
 
 // New create the main feed object which is used to create/update/delete feeds.
@@ -146,23 +129,13 @@ func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword [
 	if len(topic) != TopicLength {
 		return nil, ErrInvalidTopicSize
 	}
-	lk, err := factory.New(a.handler).NewLookup(feeds.Sequence, feeds.New(topic, common.BytesToAddress(a.accountInfo.GetAddress().ToBytes())))
-	if err != nil {
-		return nil, fmt.Errorf("failed creating lookuper %w", err)
-	}
 
-	ch, _, _, err := lk.At(context.TODO(), time.Now().Unix(), 0)
+	encryptedData, _, _, err := a.handler.getUpdate(context.TODO(), topic, common.BytesToAddress(a.accountInfo.GetAddress().ToBytes()))
 	if err != nil {
 		a.logger.Errorf("failed looking up key %s", err.Error())
 		return nil, fmt.Errorf("feed does not exist or was not updated yet")
 	}
-	if ch == nil {
-		return nil, errors.New("invalid chunk lookup")
-	}
-	encryptedData, _, err := ParseFeedUpdate(ch)
-	if err != nil {
-		return nil, fmt.Errorf("failed parsing feed update %w", err)
-	}
+
 	if encryptionPassword == nil || string(encryptedData) == utils.DeletedFeedMagicWord {
 		return encryptedData, nil
 	}
@@ -267,14 +240,4 @@ func (a *API) DeleteFeedFromTopic(topic []byte, user utils.Address) error {
 // skipcq: TCV-001
 func (a *API) IsReadOnlyFeed() bool {
 	return a.accountInfo.GetPrivateKey() == nil
-}
-
-func ParseFeedUpdate(ch swarm.Chunk) ([]byte, int64, error) {
-	s, err := soc.FromChunk(ch)
-	if err != nil {
-		return nil, 0, fmt.Errorf("soc unmarshal: %w", err)
-	}
-	update := s.WrappedChunk().Data()
-	ts := binary.BigEndian.Uint64(update[8:16])
-	return update[16:], int64(ts), nil
 }
