@@ -203,7 +203,7 @@ can consume it.`,
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 		// datadir will be removed in some future version. it is kept for migration purpose only
-		hdlr, err := api.NewHandler(ctx, dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, logger)
+		hdlr, err := api.New(ctx, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return err
