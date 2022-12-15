@@ -40,6 +40,8 @@ const (
 var (
 	noOfParallelWorkers = runtime.NumCPU()
 
+	//ErrGzipBlSize
+	//ErrGzipBlSize
 	ErrGzipBlSize = fmt.Errorf("gzip: block size cannot be less than %d", minBlockSizeForGzip)
 )
 
@@ -49,7 +51,7 @@ var (
 func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression, podPassword string) error {
 	podPath = filepath.ToSlash(podPath)
 	// check compression gzip and blocksize
-	// pgzip does not allow block size lower or equal to 163840
+	// pgzip does not allow block size lower or equal to 163840,
 	// so we set block size lower bound to 164000 for
 	if compression == "gzip" && blockSize < minBlockSizeForGzip {
 		return ErrGzipBlSize

@@ -26,6 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// PodOpenResponse
 type PodOpenResponse struct {
 	Reference string `json:"reference"`
 }

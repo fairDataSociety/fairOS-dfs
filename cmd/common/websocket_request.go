@@ -5,80 +5,134 @@ import (
 	"encoding/json"
 )
 
+// Event
 type Event string
 
 var (
-	UserSignup         Event = "/user/signup"
-	UserSignupV2       Event = "/user/signupV2"
-	UserLogin          Event = "/user/login"
-	UserLoginV2        Event = "/user/loginV2"
-	UserImport         Event = "/user/import"
-	UserPresent        Event = "/user/present"
-	UserPresentV2      Event = "/user/presentV2"
-	UserIsLoggedin     Event = "/user/isloggedin"
-	UserLogout         Event = "/user/logout"
-	UserExport         Event = "/user/export"
-	UserDelete         Event = "/user/delete"
-	UserStat           Event = "/user/stat"
-	PodNew             Event = "/pod/new"
-	PodOpen            Event = "/pod/open"
-	PodClose           Event = "/pod/close"
-	PodSync            Event = "/pod/sync"
-	PodDelete          Event = "/pod/delete"
-	PodLs              Event = "/pod/ls"
-	PodStat            Event = "/pod/stat"
-	PodShare           Event = "/pod/share"
-	PodReceive         Event = "/pod/receive"
-	PodReceiveInfo     Event = "/pod/receiveinfo"
-	DirIsPresent       Event = "/dir/present"
-	DirMkdir           Event = "/dir/mkdir"
-	DirRename          Event = "/dir/rename"
-	DirRmdir           Event = "/dir/rmdir"
-	DirLs              Event = "/dir/ls"
-	DirStat            Event = "/dir/stat"
-	FileDownload       Event = "/file/download"
-	FileDownloadStream Event = "/file/download/stream"
-	FileUpload         Event = "/file/upload"
-	FileUploadStream   Event = "/file/upload/stream"
-	FileShare          Event = "/file/share"
-	FileReceive        Event = "/file/receive"
-	FileRename         Event = "/file/rename"
-	FileReceiveInfo    Event = "/file/receiveinfo"
-	FileDelete         Event = "/file/delete"
-	FileStat           Event = "/file/stat"
-	KVCreate           Event = "/kv/new"
-	KVList             Event = "/kv/ls"
-	KVOpen             Event = "/kv/open"
-	KVDelete           Event = "/kv/delete"
-	KVCount            Event = "/kv/count"
-	KVEntryPresent     Event = "/kv/entry/present"
-	KVEntryPut         Event = "/kv/entry/put"
-	KVEntryGet         Event = "/kv/entry/get"
-	KVEntryDelete      Event = "/kv/entry/del"
-	KVLoadCSV          Event = "/kv/loadcsv"
-	KVLoadCSVStream    Event = "/kv/loadcsv/stream"
-	KVSeek             Event = "/kv/seek"
-	KVSeekNext         Event = "/kv/seek/next"
-	DocCreate          Event = "/doc/new"
-	DocList            Event = "/doc/ls"
-	DocOpen            Event = "/doc/open"
-	DocCount           Event = "/doc/count"
-	DocDelete          Event = "/doc/delete"
-	DocFind            Event = "/doc/find"
-	DocEntryPut        Event = "/doc/entry/put"
-	DocEntryGet        Event = "/doc/entry/get"
-	DocEntryDel        Event = "/doc/entry/del"
-	DocLoadJson        Event = "/doc/loadjson"
-	DocLoadJsonStream  Event = "/doc/loadjson/stream"
-	DocIndexJson       Event = "/doc/indexjson"
+	//UserSignup
+	UserSignup Event = "/user/signup"
+
+	//UserLogin
+	UserLogin Event = "/user/login"
+	//UserLoginV2
+	UserLoginV2 Event = "/user/loginV2"
+
+	//UserPresentV2
+	UserPresentV2 Event = "/user/presentV2"
+	//UserIsLoggedin
+	UserIsLoggedin Event = "/user/isloggedin"
+	//UserLogout
+	UserLogout Event = "/user/logout"
+
+	//UserDelete
+	UserDelete Event = "/user/delete"
+	//UserStat
+	UserStat Event = "/user/stat"
+	//PodNew
+	PodNew Event = "/pod/new"
+	//PodOpen
+	PodOpen Event = "/pod/open"
+	//PodClose
+	PodClose Event = "/pod/close"
+	//PodSync
+	PodSync Event = "/pod/sync"
+	//PodDelete
+	PodDelete Event = "/pod/delete"
+	//PodLs
+	PodLs Event = "/pod/ls"
+	//PodStat
+	PodStat Event = "/pod/stat"
+	//PodShare
+	PodShare Event = "/pod/share"
+	//PodReceive
+	PodReceive Event = "/pod/receive"
+	//PodReceiveInfo
+	PodReceiveInfo Event = "/pod/receiveinfo"
+	//DirIsPresent
+	DirIsPresent Event = "/dir/present"
+	//DirMkdir
+	DirMkdir Event = "/dir/mkdir"
+	//DirRename
+	DirRename Event = "/dir/rename"
+	//DirRmdir
+	DirRmdir Event = "/dir/rmdir"
+	//DirLs
+	DirLs Event = "/dir/ls"
+	//DirStat
+	DirStat Event = "/dir/stat"
+	//FileDownload
+	FileDownload Event = "/file/download"
+
+	//FileUpload
+	FileUpload Event = "/file/upload"
+	//FileUploadStream
+	FileUploadStream Event = "/file/upload/stream"
+	//FileShare
+	FileShare Event = "/file/share"
+	//FileReceive
+	FileReceive Event = "/file/receive"
+	//FileRename
+	FileRename Event = "/file/rename"
+	//FileReceiveInfo
+	FileReceiveInfo Event = "/file/receiveinfo"
+	//FileDelete
+	FileDelete Event = "/file/delete"
+	//FileStat
+	FileStat Event = "/file/stat"
+	//KVCreate
+	KVCreate Event = "/kv/new"
+	//KVList
+	KVList Event = "/kv/ls"
+	//KVOpen
+	KVOpen Event = "/kv/open"
+	//KVDelete
+	KVDelete Event = "/kv/delete"
+	//KVCount
+	KVCount Event = "/kv/count"
+	//KVEntryPresent
+	KVEntryPresent Event = "/kv/entry/present"
+	//KVEntryPut
+	KVEntryPut Event = "/kv/entry/put"
+	//KVEntryGet
+	KVEntryGet Event = "/kv/entry/get"
+	//KVEntryDelete
+	KVEntryDelete Event = "/kv/entry/del"
+
+	//KVSeek
+	KVSeek Event = "/kv/seek"
+	//KVSeekNext
+	KVSeekNext Event = "/kv/seek/next"
+	//DocCreate
+	DocCreate Event = "/doc/new"
+	//DocList
+	DocList Event = "/doc/ls"
+	//DocOpen
+	DocOpen Event = "/doc/open"
+	//DocCount
+	DocCount Event = "/doc/count"
+	//DocDelete
+	DocDelete Event = "/doc/delete"
+	//DocFind
+	DocFind Event = "/doc/find"
+	//DocEntryPut
+	DocEntryPut Event = "/doc/entry/put"
+	//DocEntryGet
+	DocEntryGet Event = "/doc/entry/get"
+	//DocEntryDel
+	DocEntryDel Event = "/doc/entry/del"
+
+	//DocIndexJson
+	DocIndexJson Event = "/doc/indexjson"
 )
 
+// WebsocketRequest
 type WebsocketRequest struct {
 	Id     string      `json:"_id"`
 	Event  Event       `json:"event"`
 	Params interface{} `json:"params,omitempty"`
 }
 
+// FileRequest
 type FileRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	TableName     string `json:"tableName,omitempty"`
@@ -90,11 +144,13 @@ type FileRequest struct {
 	Overwrite     bool   `json:"overwrite,omitempty"`
 }
 
+// FileDownloadRequest
 type FileDownloadRequest struct {
 	PodName  string `json:"podName,omitempty"`
 	Filepath string `json:"filePath,omitempty"`
 }
 
+// WebsocketResponse
 type WebsocketResponse struct {
 	Id          string      `json:"_id"`
 	Event       Event       `json:"event"`
@@ -104,6 +160,7 @@ type WebsocketResponse struct {
 	contentType string
 }
 
+// NewWebsocketResponse
 func NewWebsocketResponse() *WebsocketResponse {
 	return &WebsocketResponse{}
 }
@@ -112,6 +169,7 @@ func (w *WebsocketResponse) Write(bytes []byte) (int, error) {
 	return w.buf.Write(bytes)
 }
 
+// WriteJson
 func (w *WebsocketResponse) WriteJson(bytes []byte) (int, error) {
 	w.contentType = "json"
 	body := map[string]interface{}{}
@@ -123,6 +181,7 @@ func (w *WebsocketResponse) WriteJson(bytes []byte) (int, error) {
 	return len(bytes), nil
 }
 
+// Marshal
 func (w *WebsocketResponse) Marshal() []byte {
 	if w.contentType == "json" {
 		data, _ := json.Marshal(w)

@@ -25,6 +25,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocIndexRequest
 type DocIndexRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`

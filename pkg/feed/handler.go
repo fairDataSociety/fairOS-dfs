@@ -192,12 +192,14 @@ func (i *index) String() string {
 	return strconv.FormatUint(i.index, 10)
 }
 
+// MarshalBinary
 func (i *index) MarshalBinary() ([]byte, error) {
 	indexBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(indexBytes, i.index)
 	return indexBytes, nil
 }
 
+// Next
 func (i *index) Next(_ int64, _ uint64) feeds.Index {
 	return &index{i.index + 1}
 }

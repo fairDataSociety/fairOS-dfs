@@ -36,6 +36,7 @@ type FileSharingReference struct {
 	Reference string `json:"fileSharingReference"`
 }
 
+// FileShareRequest
 type FileShareRequest struct {
 	PodName     string `json:"podName,omitempty"`
 	FilePath    string `json:"filePath,omitempty"`

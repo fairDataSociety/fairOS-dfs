@@ -70,7 +70,7 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 			Expires: expire,
 			//SameSite: http.SameSiteNoneMode, // Can't have SameSite || Secure on localhost or cookie will be blocked
 			//Secure:   true, // Can't have SameSite || Secure on localhost or cookie will be blocked
-			//HttpOnly: true, // Can't have this on localhost or cookie will be inaccessibe via document.cookie
+			//HttpOnly: true, // Can't have this on localhost or cookie will be inaccessible via document.cookie
 			MaxAge: 0, // to make sure that the browser does not persist it in disk
 		}
 	} else if cookieDomain == "" {
@@ -118,15 +118,6 @@ func GetSessionIdFromCookie(request *http.Request) (sessionId string, err error)
 }
 
 // GetSessionIdFromRawCookie extracts sessionId from a raw cookie string
-func GetSessionIdFromRawCookie(cookieStr string) (sessionId string, err error) {
-	cookieValue := make(map[string]string)
-	err = cookieHandler.Decode(cookieName, cookieStr, &cookieValue)
-	if err != nil {
-		return "", err
-	}
-	sessionId = cookieValue[cookieSessionId]
-	return sessionId, nil
-}
 
 // GetSessionIdAndLoginTimeFromCookie extracts sessionId and logged-in time from http.Request
 func GetSessionIdAndLoginTimeFromCookie(request *http.Request) (sessionId, loginTime string, err error) {

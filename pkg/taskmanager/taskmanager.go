@@ -2,6 +2,7 @@ package taskmanager
 
 import "github.com/plexsysio/taskmanager"
 
-type TaskManagerGO interface {
+// TaskManagerGO
+type GO interface {
 	Go(newTask taskmanager.Task) (<-chan struct{}, error)
 }

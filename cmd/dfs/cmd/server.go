@@ -86,9 +86,9 @@ can consume it.`,
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		docs.SwaggerInfo.Host = "fairos.dev.fairdatasociety.org"
-		docs.SwaggerInfo.Schemes = []string{"https"}
-		docs.SwaggerInfo.Version = dfs.Version
+		docs.Info.Host = "fairos.dev.fairdatasociety.org"
+		docs.Info.Schemes = []string{"https"}
+		docs.Info.Version = dfs.Version
 
 		httpPort = config.GetString(optionDFSHttpPort)
 		pprofPort = config.GetString(optionDFSPprofPort)

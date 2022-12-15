@@ -54,7 +54,7 @@ func TestRemoveFile(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	t.Run("delete-file", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		// remove file2
 		err = fileObject.RmFile("/dir1/file2", podPassword)
@@ -100,7 +100,7 @@ func TestRemoveFile(t *testing.T) {
 
 	t.Run("delete-file-in-loop", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 
 		for i := 0; i < 80; i++ {
 			// upload file1

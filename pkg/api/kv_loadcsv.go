@@ -78,7 +78,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//  get the files parameter from the multi part
+	//  get the files parameter from the multipart
 	err = r.ParseMultipartForm(defaultMaxMemory)
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)

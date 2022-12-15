@@ -64,7 +64,7 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 	dirInode.FileOrDirNames = append(dirInode.FileOrDirNames, itemToAdd)
 	dirInode.Meta.ModificationTime = time.Now().Unix()
 
-	// update the feed of the dir and the data structure with latest info
+	// update the feed of the dir and the data structure with the latest info
 	data, err = json.Marshal(dirInode)
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
@@ -77,7 +77,7 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 	return nil
 }
 
-// RemoveEntryFromDir removes a entry (directory/file) under the given directory.
+// RemoveEntryFromDir removes an entry (directory/file) under the given directory.
 // This is typically called when a  directory is deleted under the given directory or
 // a file is removed under the given directory.
 func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete string, isFile bool) error {

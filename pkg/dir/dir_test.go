@@ -36,7 +36,7 @@ func TestDirRmAllFromMap(t *testing.T) {
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 
 	t.Run("dir-rm-all-from-map", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added

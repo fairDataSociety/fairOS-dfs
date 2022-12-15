@@ -63,7 +63,7 @@ func TestDocumentStore(t *testing.T) {
 	}()
 	file := f.NewFile("pod1", mockClient, fd, user, tm, logger)
 	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, mockClient, logger)
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("create_document_db_errors", func(t *testing.T) {
 		nilFd := feed.New(&account.Info{}, mockClient, logger)
 		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, mockClient, logger)
@@ -679,7 +679,7 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatalf("expected count %d, got %d", 1, count1)
 		}
 
-		// count the total docs using another index to make sure we dont have it any index
+		// count the total docs using another index to make sure we don't have it any index
 		docs, err := docStore.Find("docdb_10", "age=>20", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
@@ -747,7 +747,7 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatalf("expected count %d, got %d", 4, count1)
 		}
 
-		// count the total docs using another index to make sure we dont have it any index
+		// count the total docs using another index to make sure we don't have it any index
 		docs, err := docStore.Find("docdb_11", "age=>20", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
@@ -836,7 +836,7 @@ func TestDocumentStore(t *testing.T) {
 				t.Fatalf("expected count %d, got %d", 4, count1)
 			}
 
-			// count the total docs using another index to make sure we dont have it any index
+			// count the total docs using another index to make sure we don't have it any index
 			docs, err := docStore.Find("docdb_12", "age=>20", -1)
 			if err != nil {
 				t.Fatal(err)

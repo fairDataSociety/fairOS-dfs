@@ -26,6 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// FileDeleteRequest
 type FileDeleteRequest struct {
 	PodName  string `json:"podName,omitempty"`
 	FilePath string `json:"filePath,omitempty"`

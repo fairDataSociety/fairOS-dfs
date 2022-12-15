@@ -30,6 +30,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// PodSharingReference
 type PodSharingReference struct {
 	Reference string `json:"podSharingReference"`
 }

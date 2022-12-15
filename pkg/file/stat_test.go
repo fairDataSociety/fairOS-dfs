@@ -53,7 +53,7 @@ func TestStat(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("stat-file", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 

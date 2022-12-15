@@ -32,14 +32,21 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// IndexType
 type IndexType int
 
 const (
+	//InvalidIndex
 	InvalidIndex IndexType = iota
+	//BytesIndex
 	BytesIndex
+	//StringIndex
 	StringIndex
+	//NumberIndex
 	NumberIndex
+	//MapIndex
 	MapIndex
+	//ListIndex
 	ListIndex
 )
 
@@ -77,6 +84,7 @@ func toIndexTypeEnum(s string) IndexType {
 	}
 }
 
+// Index
 type Index struct {
 	name               string
 	mutable            bool
@@ -93,6 +101,7 @@ type Index struct {
 }
 
 var (
+	//NoOfParallelWorkers
 	NoOfParallelWorkers = runtime.NumCPU() * 4
 )
 
@@ -105,7 +114,7 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	topic := utils.HashString(actualIndexName)
 	oldData, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
 	if err == nil && len(oldData) != 0 && string(oldData) != utils.DeletedFeedMagicWord {
-		// if the feed is present and it has some data means there index is still valid
+		// if the feed is present, and it has some data means there index is still valid
 		return ErrIndexAlreadyPresent
 	}
 
@@ -136,7 +145,7 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	return nil
 }
 
-// OpenIndex open the index and loas any index in to the memory.
+// OpenIndex open the index and loads any index in to the memory.
 func OpenIndex(podName, collectionName, indexName, podPassword string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
 	actualIndexName := podName + collectionName + indexName
 	manifest := getRootManifestOfIndex(actualIndexName, podPassword, fd, user, client) // this will load the entire Manifest for immutable indexes
@@ -207,7 +216,7 @@ func (idx *Index) CountIndex(encryptionPassword string) (uint64, error) {
 			idx.count = 0
 			return 0, err
 		}
-	default: // Default is must to avoid blocking
+	default: // Default is must avoid blocking
 	}
 	return idx.count, nil
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/ethersphere/bee/pkg/swarm"
 )
 
+// Get
 func (h *Handler) Get(ctx context.Context, _ storage.ModeGet, address swarm.Address) (ch swarm.Chunk, err error) {
 	chunkData, err := h.client.DownloadChunk(ctx, address.Bytes())
 	if err != nil {
@@ -20,6 +21,7 @@ func (h *Handler) Get(ctx context.Context, _ storage.ModeGet, address swarm.Addr
 	return ch, nil
 }
 
+// Put
 func (h *Handler) Put(ctx context.Context, _ storage.ModePut, chs ...swarm.Chunk) (exists []bool, err error) {
 	for _, ch := range chs {
 		if !soc.Valid(ch) {

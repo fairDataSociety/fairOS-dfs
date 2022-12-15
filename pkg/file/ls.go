@@ -22,6 +22,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// Entry
 type Entry struct {
 	Name             string `json:"name"`
 	ContentType      string `json:"contentType"`

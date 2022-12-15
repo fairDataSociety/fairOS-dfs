@@ -22,8 +22,6 @@ jobs:
       with:
         go-version: ${{ matrix.go }}
     - name: Set git to use LF
-      # make sure that line endings are not converted on windows
-      # as gofmt linter will report that they need to be changed
       run: git config --global core.autocrlf false
     - name: Checkout
       uses: actions/checkout@v2

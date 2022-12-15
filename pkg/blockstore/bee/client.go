@@ -141,13 +141,13 @@ func socResource(owner, id, sig string) string {
 
 // CheckConnection is used to check if the nbe client is up and running.
 func (c *Client) CheckConnection(isProxy bool) bool {
-	url := c.url
+	u := c.url
 	matchString := "Ethereum Swarm Bee\n"
 	if isProxy {
-		url += healthUrl
+		u += healthUrl
 		matchString = "OK"
 	}
-	req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
+	req, err := http.NewRequest(http.MethodGet, u, http.NoBody)
 	if err != nil {
 		return false
 	}

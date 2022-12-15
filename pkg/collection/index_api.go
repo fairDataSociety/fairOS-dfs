@@ -27,11 +27,13 @@ import (
 )
 
 const (
-	LeafEntry         = "L"
+	//LeafEntry
+	LeafEntry = "L"
+	//IntermediateEntry
 	IntermediateEntry = "I"
 )
 
-// PutNumber inserts an entry in to index with a number as key.
+// PutNumber inserts an entry in to index with a number as the key.
 func (idx *Index) PutNumber(key float64, refValue []byte, idxType IndexType, apnd bool) error {
 	stringKey := fmt.Sprintf("%020.20g", key)
 	return idx.Put(stringKey, refValue, idxType, apnd)
@@ -131,7 +133,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 	entryAdded := false
 
 	for i := range manifest.Entries {
-		entry := manifest.Entries[i] // we change the entry so dont simplify this
+		entry := manifest.Entries[i] // we change the entry so don't simplify this
 
 		// add new entry with key equal to the Manifest name
 		if key == "" {
@@ -338,7 +340,7 @@ func (*Index) addEntryToManifestSortedLexicographically(manifest *Manifest, entr
 
 	entryAdded := false
 	for _, entry := range manifest.Entries {
-		// if the enty is already there, just return
+		// if the entry is already there, just return
 		if entry.Name == entryToAdd.Name &&
 			entry.EType == entryToAdd.EType {
 			if len(entry.Ref) == len(entryToAdd.Ref) {
@@ -395,7 +397,7 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 	if parentManifest != nil {
 		for i, entry := range parentManifest.Entries {
 
-			// if the first char is > keys first char, then the key wont be found
+			// if the first char is > keys first char, then the key won't be found
 			if len(entry.Name) > 0 {
 				if key == "" { // to check for empty entry
 					return nil, nil, 0, ErrEntryNotFound

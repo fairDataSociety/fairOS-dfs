@@ -26,9 +26,11 @@ import (
 )
 
 const (
+	//MineTypeDirectory
 	MineTypeDirectory = "inode/directory"
 )
 
+// Entry
 type Entry struct {
 	Name             string `json:"name"`
 	ContentType      string `json:"contentType"`

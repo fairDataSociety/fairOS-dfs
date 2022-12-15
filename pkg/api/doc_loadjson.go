@@ -70,7 +70,7 @@ func (h *Handler) DocLoadJsonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//  get the files parameter from the multi part
+	//  get the files parameter from the multipart
 	err = r.ParseMultipartForm(defaultMaxMemory)
 	if err != nil {
 		h.logger.Errorf("doc loadjson: %v", err)

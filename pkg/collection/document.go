@@ -44,6 +44,8 @@ const (
 	DefaultIndexFieldName = "id"
 )
 
+// Document
+// Document
 type Document struct {
 	podName     string
 	fd          *feed.API
@@ -56,6 +58,8 @@ type Document struct {
 	logger      logging.Logger
 }
 
+// DocumentDB
+// DocumentDB
 type DocumentDB struct {
 	name          string
 	mutable       bool
@@ -64,6 +68,8 @@ type DocumentDB struct {
 	listIndexes   map[string]*Index
 }
 
+// DBSchema
+// DBSchema
 type DBSchema struct {
 	Name            string   `json:"name"`
 	Mutable         bool     `json:"mutable"`
@@ -73,15 +79,21 @@ type DBSchema struct {
 	CompoundIndexes []CIndex `json:"compound_indexes,omitempty"`
 }
 
+// SIndex
+// SIndex
 type SIndex struct {
 	FieldName string    `json:"name"`
 	FieldType IndexType `json:"type"`
 }
 
+// CIndex
+// CIndex
 type CIndex struct {
 	SimpleIndexes []SIndex
 }
 
+// DocBatch
+// DocBatch
 type DocBatch struct {
 	db      *DocumentDB
 	batches map[string]*Batch
@@ -1378,7 +1390,7 @@ func (d *Document) DocBatchWrite(docBatch *DocBatch, podFile string) error {
 	return nil
 }
 
-// DocFileIndex indexes a existing json file in the pod with the document DB.
+// DocFileIndex indexes an existing json file in the pod with the document DB.
 // skipcq: TCV-001
 func (d *Document) DocFileIndex(dbName, podFile, podPassword string) error {
 	d.logger.Info("Indexing file to db: ", podFile, dbName)

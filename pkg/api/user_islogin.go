@@ -22,6 +22,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// LoginStatus
 type LoginStatus struct {
 	LoggedIn bool `json:"loggedin"`
 }
@@ -33,7 +34,7 @@ type LoginStatus struct {
 //	@Tags         user
 //	@Accept       json
 //	@Produce      json
-//	@Param	      userName query string true "user name"
+//	@Param	      userName query string true "username"
 //	@Success      200  {object}  LoginStatus
 //	@Failure      400  {object}  response
 //	@Router       /v1/user/isloggedin [get]

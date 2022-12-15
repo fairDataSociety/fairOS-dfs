@@ -34,7 +34,7 @@ import (
 
 // LoginUserV2 checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sessionId string) (*Info, string, string, error) {
+func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.GO, sessionId string) (*Info, string, string, error) {
 	// check if username is available (user created)
 	if !u.IsUsernameAvailableV2(userName) {
 		return nil, "", "", ErrUserNameNotFound
@@ -119,7 +119,7 @@ func (u *Users) Logout(sessionId string) error {
 	return nil
 }
 
-// IsUserLoggedIn checks if the user is logged in from sessionID
+// IsUserLoggedIn checks if the user is logged-in from sessionID
 func (u *Users) IsUserLoggedIn(sessionId string) bool {
 	return u.isUserPresentInMap(sessionId)
 }
@@ -129,7 +129,7 @@ func (u *Users) GetLoggedInUserInfo(sessionId string) *Info {
 	return u.getUserFromMap(sessionId)
 }
 
-// IsUserNameLoggedIn checks if the user is logged in from username
+// IsUserNameLoggedIn checks if the user is logged-in from username
 func (u *Users) IsUserNameLoggedIn(userName string) bool {
 	return u.isUserNameInMap(userName)
 }

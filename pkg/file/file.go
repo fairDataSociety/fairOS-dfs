@@ -40,12 +40,12 @@ type File struct {
 	fileMap     map[string]*MetaData
 	fileMu      *sync.RWMutex
 	logger      logging.Logger
-	syncManager taskmanager.TaskManagerGO
+	syncManager taskmanager.GO
 }
 
 // NewFile creates the base file object which has all the methods related to file manipulation.
 func NewFile(podName string, client blockstore.Client, fd *feed.API, user utils.Address,
-	m taskmanager.TaskManagerGO, logger logging.Logger) *File {
+	m taskmanager.GO, logger logging.Logger) *File {
 	return &File{
 		podName:     podName,
 		userAddress: user,
@@ -125,6 +125,7 @@ func newLsTask(f *File, topic []byte, path, podPassword string, l *[]Entry, mtx 
 	}
 }
 
+// Execute
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
 	data, err := lt.f.fd.GetFeedData(lt.topic, lt.f.userAddress, []byte(lt.podPassword))
@@ -154,6 +155,7 @@ func (lt *lsTask) Execute(context.Context) error {
 	return nil
 }
 
+// Name
 func (lt *lsTask) Name() string {
 	return lt.f.userAddress.String() + lt.f.podName + lt.path
 }

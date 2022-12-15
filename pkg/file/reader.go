@@ -36,9 +36,11 @@ const (
 )
 
 var (
+	//ErrInvalidOffset
 	ErrInvalidOffset = errors.New("invalid offset")
 )
 
+// Reader
 type Reader struct {
 	readOffset  int64
 	client      blockstore.Client
@@ -143,7 +145,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 				return bytesRead, io.EOF
 			}
 
-			// read spans across block.. so flow down and read the next block
+			// read spans across block. so flow down and read the next block
 		}
 	}
 
@@ -195,6 +197,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 	return 0, nil // skipcq: TCV-001
 }
 
+// Seek
 func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
 	// TODO: use whence
 	if seekOffset < 0 || seekOffset > int64(r.fileSize) {
@@ -234,6 +237,7 @@ func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
 	return seekOffset, nil
 }
 
+// ReadLine
 func (r *Reader) ReadLine() ([]byte, error) {
 	if r.rlBuffer == nil {
 		buf := make([]byte, r.blockSize)
@@ -296,6 +300,7 @@ READ:
 	return destBuf, nil
 }
 
+// Close
 func (r *Reader) Close() error {
 	if r.blockCache != nil {
 		r.blockCache.Purge()
@@ -329,6 +334,7 @@ func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]b
 	return decompressedData, nil
 }
 
+// Decompress
 func Decompress(dataToDecompress []byte, compression string, blockSize uint32) ([]byte, error) {
 	switch compression {
 	case "gzip":

@@ -100,7 +100,7 @@ func TestShare(t *testing.T) {
 			t.Fatal("pod share should fail, not exists")
 		}
 		// create a pod
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
@@ -130,7 +130,7 @@ func TestShare(t *testing.T) {
 	t.Run("share-pod-with-new-name", func(t *testing.T) {
 		// create a pod
 		podName01 := "test_1"
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		info, err := pod1.CreatePod(podName01, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName01)
@@ -178,7 +178,7 @@ func TestShare(t *testing.T) {
 
 	t.Run("receive-pod-info", func(t *testing.T) {
 		// create a pod
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		info, err := pod2.CreatePod(podName2, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName2)
@@ -220,7 +220,7 @@ func TestShare(t *testing.T) {
 
 	t.Run("receive-pod", func(t *testing.T) {
 		// create sending pod and receiving pod
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		info, err := pod3.CreatePod(podName3, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName3)
@@ -309,22 +309,22 @@ func TestShare(t *testing.T) {
 		if len(sharedPods) != 1 && sharedPods[0] != podName4 {
 			t.Fatalf("invalid pod name")
 		}
-		podPassword, _ = utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ = utils.GetRandString(pod.PasswordLength)
 		_, err = pod4.CreatePod(podName4, ref.String(), podPassword)
 		if !errors.Is(err, pod.ErrPodAlreadyExists) {
 			t.Fatal("pod should exist")
 		}
-		podPassword, _ = utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ = utils.GetRandString(pod.PasswordLength)
 		_, err = pod4.CreatePod(podName3, ref.String(), podPassword)
 		if !errors.Is(err, pod.ErrPodAlreadyExists) {
 			t.Fatal("shared pod should exist")
 		}
-		podPassword, _ = utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ = utils.GetRandString(pod.PasswordLength)
 		_, err = pod4.CreatePod(podName4, "", podPassword)
 		if !errors.Is(err, pod.ErrPodAlreadyExists) {
 			t.Fatal("pod should exist")
 		}
-		podPassword, _ = utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ = utils.GetRandString(pod.PasswordLength)
 		_, err = pod4.CreatePod(podName3, "", podPassword)
 		if !errors.Is(err, pod.ErrPodAlreadyExists) {
 			t.Fatal("shared pod should exist")
@@ -343,12 +343,12 @@ func TestShare(t *testing.T) {
 
 	t.Run("receive-pod-with-new-name", func(t *testing.T) {
 		// create sending pod and receiving pod
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		info, err := pod5.CreatePod(podName5, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName3)
 		}
-		podPassword, _ = utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ = utils.GetRandString(pod.PasswordLength)
 		_, err = pod6.CreatePod(podName6, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName4)

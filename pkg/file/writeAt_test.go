@@ -40,7 +40,7 @@ func TestWriteAt(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 
 	t.Run("writeAt-non-existent-file", func(t *testing.T) {
 		filePath := string(os.PathSeparator)

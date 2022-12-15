@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	//AuthVersion
 	AuthVersion = "FDP-login-v1.0"
 )
 

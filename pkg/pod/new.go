@@ -119,7 +119,7 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 
 		// store the pod file
 		pods[freeId] = podName
-		pod := &PodListItem{
+		pod := &ListItem{
 			Name:     podName,
 			Index:    freeId,
 			Password: podPassword,
@@ -151,7 +151,7 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 	return podInfo, nil
 }
 
-func (p *Pod) loadUserPods() (*PodList, error) {
+func (p *Pod) loadUserPods() (*List, error) {
 	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
@@ -161,8 +161,8 @@ func (p *Pod) loadUserPods() (*PodList, error) {
 			return nil, err
 		}
 	}
-	podList := &PodList{
-		Pods:       []PodListItem{},
+	podList := &List{
+		Pods:       []ListItem{},
 		SharedPods: []SharedPodListItem{},
 	}
 	if len(data) == 0 {
@@ -177,7 +177,7 @@ func (p *Pod) loadUserPods() (*PodList, error) {
 	return podList, nil
 }
 
-func (p *Pod) storeUserPods(podList *PodList) error {
+func (p *Pod) storeUserPods(podList *List) error {
 	data, err := json.Marshal(podList)
 	if err != nil {
 		return err
@@ -209,7 +209,7 @@ func (*Pod) getFreeId(pods map[int]string) (int, error) {
 	return 0, ErrMaxPodsReached // skipcq: TCV-001
 }
 
-func (*Pod) checkIfPodPresent(pods *PodList, podName string) bool {
+func (*Pod) checkIfPodPresent(pods *List, podName string) bool {
 	for _, pod := range pods.Pods {
 		if pod.Name == podName {
 			return true
@@ -218,7 +218,7 @@ func (*Pod) checkIfPodPresent(pods *PodList, podName string) bool {
 	return false
 }
 
-func (*Pod) checkIfSharedPodPresent(pods *PodList, podName string) bool {
+func (*Pod) checkIfSharedPodPresent(pods *List, podName string) bool {
 	for _, pod := range pods.SharedPods {
 		if pod.Name == podName {
 			return true

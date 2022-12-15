@@ -22,6 +22,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
+// Handler
 type Handler struct {
 	dfsAPI *dfs.API
 	logger logging.Logger

@@ -58,7 +58,7 @@ func TestRmdir(t *testing.T) {
 	mockFile := fm.NewMockFile()
 
 	t.Run("simple-rmdir", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
@@ -108,7 +108,7 @@ func TestRmdir(t *testing.T) {
 		}
 	})
 	t.Run("nested-rmdir", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
@@ -186,7 +186,7 @@ func TestRmRootDirByPath(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	t.Run("rmrootdir", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
@@ -277,7 +277,7 @@ func TestRmRootDir(t *testing.T) {
 	mockFile := fm.NewMockFile()
 
 	t.Run("rmrootdir", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added

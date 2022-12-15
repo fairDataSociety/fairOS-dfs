@@ -37,6 +37,6 @@ func (p *Pod) ListPods() ([]string, []string, error) {
 }
 
 // PodList List all the available pods belonging to a user in json format.
-func (p *Pod) PodList() (*PodList, error) {
+func (p *Pod) PodList() (*List, error) {
 	return p.loadUserPods()
 }

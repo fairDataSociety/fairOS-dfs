@@ -19,7 +19,7 @@ It is a stateless thin layer which uses the building blocks provided by Swarm to
 - Creation of logical drives
 - User and Permission management
 - Charging and Payments
-- Mutable, Indexed data structures over immmutable file system
+- Mutable, Indexed data structures over immutable file system
 
 dfs can be used for the following use cases
 1) Personal data store

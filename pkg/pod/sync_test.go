@@ -54,7 +54,7 @@ func TestSync(t *testing.T) {
 			t.Fatal("sync should fail, pod not opened")
 		}
 		// create a pod
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)

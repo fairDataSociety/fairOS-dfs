@@ -19,5 +19,6 @@ package api
 import "errors"
 
 var (
+	//ErrInvalidCookie
 	ErrInvalidCookie = errors.New("invalid cookie")
 )

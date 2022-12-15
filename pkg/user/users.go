@@ -24,6 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
+// Users
 type Users struct {
 	client  blockstore.Client
 	userMap map[string]*Info
@@ -32,7 +33,7 @@ type Users struct {
 	ens     ensm.ENSManager
 }
 
-// NewUsers creates the main user object which stores all the logged in users and there respective
+// NewUsers creates the main user object which stores all the logged-in users and there respective
 // other data structures.
 func NewUsers(client blockstore.Client, ens ensm.ENSManager, logger logging.Logger) *Users {
 	return &Users{

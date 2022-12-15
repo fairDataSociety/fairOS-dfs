@@ -28,6 +28,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// UserLoginResponse
 type UserLoginResponse struct {
 	Address   string `json:"address"`
 	NameHash  string `json:"nameHash,omitempty"`
@@ -42,7 +43,7 @@ type UserLoginResponse struct {
 //	@Tags         user
 //	@Accept       json
 //	@Produce      json
-//	@Param	      user_request body common.UserLoginRequest true "user name"
+//	@Param	      user_request body common.UserLoginRequest true "username"
 //	@Success      200  {object}  UserLoginResponse
 //	@Failure      400  {object}  response
 //	@Failure      404  {object}  response

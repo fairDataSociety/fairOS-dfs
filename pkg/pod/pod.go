@@ -30,9 +30,11 @@ import (
 const (
 	maxPodId = 65535
 
-	PodPasswordLength = 32
+	//PodPasswordLength
+	PasswordLength = 32
 )
 
+// Pod
 type Pod struct {
 	fd     *feed.API
 	acc    *account.Account
@@ -40,29 +42,32 @@ type Pod struct {
 	podMap map[string]*Info //  podName -> dir
 	podMu  *sync.RWMutex
 	logger logging.Logger
-	tm     taskmanager.TaskManagerGO
+	tm     taskmanager.GO
 }
 
-type PodListItem struct {
+// PodListItem
+type ListItem struct {
 	Name     string `json:"name"`
 	Index    int    `json:"index"`
 	Password string `json:"password"`
 }
 
+// SharedPodListItem
 type SharedPodListItem struct {
 	Name     string `json:"name"`
 	Address  string `json:"address"`
 	Password string `json:"password"`
 }
 
-type PodList struct {
-	Pods       []PodListItem       `json:"pods"`
+// PodList
+type List struct {
+	Pods       []ListItem          `json:"pods"`
 	SharedPods []SharedPodListItem `json:"sharedPods"`
 }
 
 // NewPod creates the main pod object which has all the methods related to the pods.
 func NewPod(client blockstore.Client, feed *feed.API, account *account.Account,
-	m taskmanager.TaskManagerGO, logger logging.Logger) *Pod {
+	m taskmanager.GO, logger logging.Logger) *Pod {
 	return &Pod{
 		fd:     feed,
 		acc:    account,
@@ -86,6 +91,7 @@ func (p *Pod) removePodFromPodMap(podName string) {
 	delete(p.podMap, podName)
 }
 
+// GetPodInfoFromPodMap
 func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, string, error) {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
@@ -95,9 +101,12 @@ func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, string, error) {
 	return nil, "", fmt.Errorf("could not find pod: %s", podName)
 }
 
+// GetFeed
 func (p *Pod) GetFeed() *feed.API {
 	return p.fd
 }
+
+// GetAccount
 func (p *Pod) GetAccount() *account.Account {
 	return p.acc
 }

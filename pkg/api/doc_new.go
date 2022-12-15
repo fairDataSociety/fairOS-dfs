@@ -26,6 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocRequest
 type DocRequest struct {
 	PodName     string `json:"podName,omitempty"`
 	TableName   string `json:"tableName,omitempty"`
@@ -33,6 +34,7 @@ type DocRequest struct {
 	Mutable     bool   `json:"mutable,omitempty"`
 }
 
+// SimpleDocRequest
 type SimpleDocRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`

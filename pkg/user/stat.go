@@ -18,12 +18,13 @@ package user
 
 import "github.com/fairdatasociety/fairOS-dfs/pkg/account"
 
+// Stat
 type Stat struct {
 	Name      string `json:"userName"`
 	Reference string `json:"address"`
 }
 
-// GetUserStat shows the user information like user name and his address.
+// GetUserStat shows the user information like username and his address.
 func (u *Users) GetUserStat(userInfo *Info) (*Stat, error) {
 	if !u.IsUsernameAvailableV2(userInfo.name) {
 		return nil, ErrInvalidUserName
