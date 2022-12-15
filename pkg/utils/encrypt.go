@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-// EncryptBytes
+// EncryptBytes encrypts a message given a passphrase
 func EncryptBytes(passphrase, message []byte) ([]byte, error) { // skipcq: TCV-001
 	aesKey := sha256.Sum256(passphrase)
 	block, err := aes.NewCipher(aesKey[:])
@@ -30,7 +30,7 @@ func EncryptBytes(passphrase, message []byte) ([]byte, error) { // skipcq: TCV-0
 	return cipherText, nil
 }
 
-// DecryptBytes
+// DecryptBytes decrypts a message given a passphrase
 func DecryptBytes(passphrase, cipherText []byte) ([]byte, error) {
 	aesKey := sha256.Sum256(passphrase)
 	block, err := aes.NewCipher(aesKey[:])

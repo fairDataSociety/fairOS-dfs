@@ -23,12 +23,11 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 

@@ -19,23 +19,23 @@ package pod
 import "errors"
 
 var (
-	//ErrInvalidPodName
+	//ErrInvalidPodName indicates pod does not exist
 	ErrInvalidPodName = errors.New("pod does not exist")
-	//ErrTooLongPodName
+	//ErrTooLongPodName indicates pod name is too long
 	ErrTooLongPodName = errors.New("pod name too long")
-	//ErrPodAlreadyExists
+	//ErrPodAlreadyExists indicates pod already exist
 	ErrPodAlreadyExists = errors.New("pod already exists")
-	//ErrMaxPodsReached
+	//ErrMaxPodsReached indicates maximum number of pod has been created
 	ErrMaxPodsReached = errors.New("max number of pods reached")
-	//ErrPodNotOpened
+	//ErrPodNotOpened indicates pod is not yet opened
 	ErrPodNotOpened = errors.New("pod not opened")
-	//ErrInvalidDirectory
+	//ErrInvalidDirectory indicates invalid directory name
 	ErrInvalidDirectory = errors.New("invalid directory name")
-	//ErrTooLongDirectoryName
+	//ErrTooLongDirectoryName indicates directory name is too long
 	ErrTooLongDirectoryName = errors.New("directory name too long")
 
-	//ErrInvalidFile
+	//ErrInvalidFile indicates that the file does not exist
 	ErrInvalidFile = errors.New("file does not exist")
-	//ErrMaximumPodLimit
+	//ErrMaximumPodLimit maximum number of pod has been created
 	ErrMaximumPodLimit = errors.New("maximum number of pods has reached")
 )

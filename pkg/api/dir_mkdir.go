@@ -27,7 +27,7 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-// DirRequest
+// DirRequest represents request structure for make directory
 type DirRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	DirectoryPath string `json:"dirPath,omitempty"`

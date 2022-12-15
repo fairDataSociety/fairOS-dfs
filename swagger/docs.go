@@ -4022,7 +4022,7 @@ const docTemplate = `{
     }
 }`
 
-// SwaggerInfo holds exported Swagger Info so clients can modify it
+// Info holds exported Swagger Info so clients can modify it
 var Info = &swag.Spec{
 	Version:          "v0.0.0",
 	Host:             "",

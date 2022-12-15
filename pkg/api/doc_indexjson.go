@@ -25,7 +25,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// DocIndexRequest
+// DocIndexRequest represents request structure for indexing document store
 type DocIndexRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`

@@ -19,15 +19,15 @@ package dir
 import "errors"
 
 var (
-	//ErrInvalidDirectoryName
+	//ErrInvalidDirectoryName indicates invalid directory name
 	ErrInvalidDirectoryName = errors.New("invalid directory name")
-	//ErrTooLongDirectoryName
+	//ErrTooLongDirectoryName indicates directory name is too long
 	ErrTooLongDirectoryName = errors.New("too long directory name")
-	//ErrDirectoryAlreadyPresent
+	//ErrDirectoryAlreadyPresent indicates directory is already present
 	ErrDirectoryAlreadyPresent = errors.New("directory name already present")
-	//ErrDirectoryNotPresent
+	//ErrDirectoryNotPresent indicates directory is not present
 	ErrDirectoryNotPresent = errors.New("directory not present")
 
-	//ErrInvalidFileOrDirectoryName
+	//ErrInvalidFileOrDirectoryName indicates directory name or filename is invalid
 	ErrInvalidFileOrDirectoryName = errors.New("invalid file or directory name")
 )

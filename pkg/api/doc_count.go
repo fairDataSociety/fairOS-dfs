@@ -24,7 +24,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// DocCountRequest
+// DocCountRequest represents request structure for document count
 type DocCountRequest struct {
 	PodName     string `json:"podName,omitempty"`
 	TableName   string `json:"tableName,omitempty"`

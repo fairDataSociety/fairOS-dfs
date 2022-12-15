@@ -26,7 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// DocRequest
+// DocRequest represents request structure for make document store
 type DocRequest struct {
 	PodName     string `json:"podName,omitempty"`
 	TableName   string `json:"tableName,omitempty"`
@@ -34,7 +34,7 @@ type DocRequest struct {
 	Mutable     bool   `json:"mutable,omitempty"`
 }
 
-// SimpleDocRequest
+// SimpleDocRequest represents request structure for simple document store requests
 type SimpleDocRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`
