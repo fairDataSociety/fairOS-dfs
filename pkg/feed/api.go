@@ -34,14 +34,13 @@ import (
 )
 
 const (
-	maxuint64   = ^uint64(0)
 	idLength    = 32
-	TopicLength = 32
+	topicLength = 32
 )
 
 var (
-	// ErrInvalidTopicSize is returned when a topic is not equal to TopicLength
-	ErrInvalidTopicSize = fmt.Errorf("topic is not equal to %d", TopicLength)
+	// ErrInvalidTopicSize is returned when a topic is not equal to topicLength
+	ErrInvalidTopicSize = fmt.Errorf("topic is not equal to %d", topicLength)
 
 	// ErrInvalidPayloadSize is returned when the payload is greater than the chunk size
 	ErrInvalidPayloadSize = fmt.Errorf("payload size is too large. maximum payload size is %d bytes", utils.MaxChunkLength)
@@ -78,7 +77,7 @@ func (a *API) CreateFeedFromTopic(topic []byte, user utils.Address, data []byte)
 		return ErrReadOnlyFeed
 	}
 
-	if len(topic) != TopicLength {
+	if len(topic) != topicLength {
 		return ErrInvalidTopicSize
 	}
 
@@ -126,7 +125,7 @@ func (a *API) GetSOCFromAddress(address []byte) ([]byte, error) {
 
 // GetFeedData looks up feed from swarm
 func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword []byte) ([]byte, error) {
-	if len(topic) != TopicLength {
+	if len(topic) != topicLength {
 		return nil, ErrInvalidTopicSize
 	}
 
@@ -148,7 +147,7 @@ func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword [
 
 // GetFeedDataFromTopic will generate keccak256 reference of the topic+address and download soc
 func (a *API) GetFeedDataFromTopic(topic []byte, user utils.Address) ([]byte, []byte, error) {
-	if len(topic) != TopicLength {
+	if len(topic) != topicLength {
 		return nil, nil, ErrInvalidTopicSize
 	}
 	// generate reference
@@ -177,7 +176,7 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encrypti
 		return ErrReadOnlyFeed
 	}
 
-	if len(topic) != TopicLength {
+	if len(topic) != topicLength {
 		return ErrInvalidTopicSize
 	}
 
