@@ -6,10 +6,7 @@ import (
 )
 
 var (
-	optionCORSAllowedOrigins = "cors-allowed-origins"
-	// FOR MIGRATION PURPOSE ONLY
-	optionDFSDataDir = "dfs.data-dir"
-
+	optionCORSAllowedOrigins    = "cors-allowed-origins"
 	optionDFSHttpPort           = "dfs.ports.http-port"
 	optionDFSPprofPort          = "dfs.ports.pprof-port"
 	optionVerbosity             = "verbosity"

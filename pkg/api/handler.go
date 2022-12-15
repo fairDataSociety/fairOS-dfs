@@ -30,7 +30,8 @@ type Handler struct {
 	cookieDomain       string
 }
 
-func NewHandler(dataDir, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*Handler, error) {
+// New handler is the main handler for fairOS-dfs
+func New(beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*Handler, error) {
 	api, err := dfs.NewDfsAPI(beeApi, postageBlockId, isGatewayProxy, ensConfig, logger)
 	if err != nil {
 		return nil, err
