@@ -39,8 +39,7 @@ func Test_ExecuteCommand(t *testing.T) {
 		defer os.RemoveAll(tempDir)
 		b := bytes.NewBufferString("")
 		rootCmd.SetOut(b)
-		rootCmd.SetArgs([]string{"server", "--config", tempDir + string(os.PathSeparator) + ".dfs.yaml",
-			"--dataDir", tempDir + string(os.PathSeparator) + ".fairOS/dfs"})
+		rootCmd.SetArgs([]string{"server", "--config", tempDir + string(os.PathSeparator) + ".dfs.yaml"})
 		err = rootCmd.Execute()
 		if err != nil && err.Error() != "postageBlockId is required to run server" {
 			t.Fatal("server should fail")
@@ -58,8 +57,7 @@ func Test_ExecuteCommand(t *testing.T) {
 
 		rootCmd.SetArgs([]string{"server", "--postageBlockId",
 			"postageBlockId is required to run server, postageBlockId is required to run server", "--config",
-			filepath.Join(tempDir, ".dfs.yaml"), "--dataDir",
-			filepath.Join(tempDir, ".fairOS/dfs")})
+			filepath.Join(tempDir, ".dfs.yaml")})
 
 		err = rootCmd.Execute()
 		if err != nil && err.Error() != "postageBlockId is invalid" {
@@ -78,8 +76,7 @@ func Test_ExecuteCommand(t *testing.T) {
 
 		rootCmd.SetArgs([]string{"server", "--postageBlockId",
 			"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552", "--config",
-			filepath.Join(tempDir, ".dfs.yaml"), "--dataDir",
-			filepath.Join(tempDir, ".fairOS/dfs")})
+			filepath.Join(tempDir, ".dfs.yaml")})
 
 		err = rootCmd.Execute()
 		if err != nil && err.Error() != "rpc endpoint is missing" {
@@ -98,8 +95,7 @@ func Test_ExecuteCommand(t *testing.T) {
 
 		rootCmd.SetArgs([]string{"server", "--rpc", "http://localhost:1633", "--postageBlockId",
 			"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552", "--config",
-			filepath.Join(tempDir, ".dfs.yaml"), "--dataDir",
-			filepath.Join(tempDir, ".fairOS/dfs")})
+			filepath.Join(tempDir, ".dfs.yaml")})
 		err = rootCmd.Execute()
 		if err != nil && err.Error() != "ens provider domain is missing" {
 			t.Fatal("server should fail")
@@ -125,8 +121,6 @@ func Test_ExecuteCommand(t *testing.T) {
 			"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552",
 			"--config",
 			filepath.Join(tempDir, ".dfs.yaml"),
-			"--dataDir",
-			filepath.Join(tempDir, ".fairOS/dfs"),
 		})
 		err = rootCmd.Execute()
 		if err != nil && err.Error() != "could not connect to eth backend" {

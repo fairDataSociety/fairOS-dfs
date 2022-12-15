@@ -68,7 +68,6 @@ bee:
 ##### Configuration for FairOS-dfs
 ```
 dfs:
-  data-dir: /Users/fairos/.fairOS/dfs
   ports:
     http-port: :9090
     pprof-port: :9091
@@ -114,7 +113,6 @@ bee:
 cookie-domain: localhost
 cors-allowed-origins: []
 dfs:
-  data-dir: /Users/username/.fairOS/dfs
   ports:
     http-port: :9090
     pprof-port: :9091
@@ -158,7 +156,6 @@ Flags:
 Global Flags:
       --beeApi string      full bee api endpoint (default "localhost:1633")
       --config string      config file (default "/Users/sabyasachipatra/.dfs.yaml")
-      --dataDir string     store data in this dir (default "dataDirPath")
       --verbosity string   verbosity level (default "trace")
 ```
 
