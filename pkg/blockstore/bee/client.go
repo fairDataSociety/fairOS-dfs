@@ -26,6 +26,8 @@ import (
 	"hash"
 	"io"
 	"net/http"
+	"net/url"
+	"sync"
 	"time"
 
 	"github.com/ethersphere/bee/pkg/swarm"
@@ -47,15 +49,26 @@ const (
 	chunkUploadDownloadUrl = "/chunks"
 	bytesUploadDownloadUrl = "/bytes"
 	pinsUrl                = "/pins/"
+	streamUrl              = "chunks/stream"
 	_                      = pinsUrl
 	swarmPinHeader         = "Swarm-Pin"
 	swarmEncryptHeader     = "Swarm-Encrypt"
 	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
 )
 
+var successWsMsg = []byte{}
+
+type putOp struct {
+	ch   swarm.Chunk
+	errc chan<- error
+}
+
 // Client is a bee http client that satisfies blockstore.Client
 type Client struct {
 	url                string
+	streamUrl          string
+	chunkUrl           string
+	bytesUrl           string
 	client             *http.Client
 	hasher             *bmtlegacy.Hasher
 	chunkCache         *lru.Cache
@@ -63,6 +76,11 @@ type Client struct {
 	downloadBlockCache *lru.Cache
 	postageBlockId     string
 	logger             logging.Logger
+	pin                bool
+	wg                 sync.WaitGroup
+
+	cancel context.CancelFunc
+	opChan chan putOp
 }
 
 func hashFunc() hash.Hash {
@@ -74,7 +92,7 @@ type bytesPostResponse struct {
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
-func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *Client {
+func NewBeeClient(apiUrl, postageBlockId string, pin bool, logger logging.Logger) (*Client, error) {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache, err := lru.New(chunkCacheSize)
 	if err != nil {
@@ -89,6 +107,26 @@ func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *Client 
 		logger.Warningf("could not initialise blockCache. system will be slow")
 	}
 
+	u, err := url.Parse(apiUrl)
+	if err != nil {
+		logger.Errorf("failed to parse bee api endpoint: %s", err.Error())
+		return nil, err
+	}
+	st := &url.URL{
+		Host:   u.Host,
+		Scheme: "ws",
+		Path:   streamUrl,
+	}
+	c := &url.URL{
+		Host:   u.Host,
+		Scheme: u.Scheme,
+		Path:   chunkUploadDownloadUrl,
+	}
+	b := &url.URL{
+		Host:   u.Host,
+		Scheme: u.Scheme,
+		Path:   bytesUploadDownloadUrl,
+	}
 	return &Client{
 		url:                apiUrl,
 		client:             createHTTPClient(),
@@ -98,7 +136,11 @@ func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *Client 
 		downloadBlockCache: downloadBlockCache,
 		postageBlockId:     postageBlockId,
 		logger:             logger,
-	}
+		pin:                pin,
+		streamUrl:          st.String(),
+		chunkUrl:           c.String(),
+		bytesUrl:           b.String(),
+	}, nil
 }
 
 type chunkAddressResponse struct {
@@ -110,8 +152,8 @@ func socResource(owner, id, sig string) string {
 }
 
 // CheckConnection is used to check if the nbe client is up and running.
-func (s *Client) CheckConnection(isProxy bool) bool {
-	url := s.url
+func (c *Client) CheckConnection(isProxy bool) bool {
+	url := c.url
 	matchString := "Ethereum Swarm Bee\n"
 	if isProxy {
 		url += healthUrl
@@ -122,7 +164,7 @@ func (s *Client) CheckConnection(isProxy bool) bool {
 		return false
 	}
 
-	response, err := s.client.Do(req)
+	response, err := c.client.Do(req)
 	if err != nil {
 		return false
 	}
@@ -146,10 +188,10 @@ func (s *Client) CheckConnection(isProxy bool) bool {
 }
 
 // UploadSOC is used construct and send a Single Owner Chunk to the Swarm bee client.
-func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
+func (c *Client) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
 	to := time.Now()
 	socResStr := socResource(owner, id, signature)
-	fullUrl := fmt.Sprintf(s.url + socResStr)
+	fullUrl := fmt.Sprintf(c.url + socResStr)
 
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
 	if err != nil {
@@ -157,27 +199,29 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 	}
 
 	// the postage block id to store the SOC chunk
-	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
+	req.Header.Set(swarmPostageBatchId, c.postageBlockId)
 
 	// TODO change this in the future when we have some alternative to pin SOC
 	// This is a temporary fix to force soc pinning
-	req.Header.Set(swarmPinHeader, "true")
+	if c.pin {
+		req.Header.Set(swarmPinHeader, "true")
+	}
 
-	response, err := s.client.Do(req)
+	response, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
+	addrData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, errors.New("error uploading data")
+	}
+
 	req.Close = true
 
 	if response.StatusCode != http.StatusCreated {
 		return nil, errors.New("error uploading data")
-	}
-
-	addrData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, errors.New("error downloading data")
 	}
 
 	var addrResp *chunkAddressResponse
@@ -186,34 +230,33 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 		return nil, err
 	}
 
-	if s.inChunkCache(addrResp.Reference.String()) {
-		s.addToChunkCache(addrResp.Reference.String(), data)
+	if c.inChunkCache(addrResp.Reference.String()) {
+		c.addToChunkCache(addrResp.Reference.String(), data)
 	}
 	fields := logrus.Fields{
 		"reference": addrResp.Reference.String(),
 		"duration":  time.Since(to).String(),
 	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
+	c.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
 	return addrResp.Reference.Bytes(), nil
 }
 
 // UploadChunk uploads a chunk to Swarm network.
-func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error) {
+func (c *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	to := time.Now()
-	fullUrl := fmt.Sprintf(s.url + chunkUploadDownloadUrl)
-	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(ch.Data()))
+	req, err := http.NewRequest(http.MethodPost, c.chunkUrl, bytes.NewBuffer(ch.Data()))
 	if err != nil {
 		return nil, err
 	}
 
-	if pin {
+	if c.pin {
 		req.Header.Set(swarmPinHeader, "true")
 	}
 
 	// the postage block id to store the chunk
-	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
+	req.Header.Set(swarmPostageBatchId, c.postageBlockId)
 
-	response, err := s.client.Do(req)
+	response, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -236,28 +279,27 @@ func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err erro
 		return nil, err
 	}
 
-	if s.inChunkCache(ch.Address().String()) {
-		s.addToChunkCache(ch.Address().String(), ch.Data())
+	if c.inChunkCache(ch.Address().String()) {
+		c.addToChunkCache(ch.Address().String(), ch.Data())
 	}
 	fields := logrus.Fields{
 		"reference": ch.Address().String(),
 		"duration":  time.Since(to).String(),
 	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
+	c.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
 
 	return addrResp.Reference.Bytes(), nil
 }
 
 // DownloadChunk downloads a chunk with given address from the Swarm network
-func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte, err error) {
+func (c *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte, err error) {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
-	if s.inChunkCache(addrString) {
-		return s.getFromChunkCache(swarm.NewAddress(address).String()), nil
+	if c.inChunkCache(addrString) {
+		return c.getFromChunkCache(swarm.NewAddress(address).String()), nil
 	}
 
-	path := chunkUploadDownloadUrl + "/" + addrString
-	fullUrl := fmt.Sprintf(s.url + path)
+	fullUrl := c.chunkUrl + "/" + addrString
 	req, err := http.NewRequest(http.MethodGet, fullUrl, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
@@ -265,7 +307,7 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 
 	req = req.WithContext(ctx)
 
-	response, err := s.client.Do(req)
+	response, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -282,31 +324,30 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 		return nil, errors.New("error downloading data")
 	}
 
-	s.addToChunkCache(addrString, data)
+	c.addToChunkCache(addrString, data)
 	fields := logrus.Fields{
 		"reference": addrString,
 		"duration":  time.Since(to).String(),
 	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "download chunk: ")
+	c.logger.WithFields(fields).Log(logrus.DebugLevel, "download chunk: ")
 	return data, nil
 }
 
 // UploadBlob uploads a binary blob of data to Swarm network. It also optionally pins and encrypts the data.
-func (s *Client) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err error) {
+func (c *Client) UploadBlob(data []byte, encrypt bool) (address []byte, err error) {
 	to := time.Now()
 
 	// return the ref if this data is already in swarm
-	if s.inBlockCache(s.uploadBlockCache, string(data)) {
-		return s.getFromBlockCache(s.uploadBlockCache, string(data)), nil
+	if c.inBlockCache(c.uploadBlockCache, string(data)) {
+		return c.getFromBlockCache(c.uploadBlockCache, string(data)), nil
 	}
 
-	fullUrl := s.url + bytesUploadDownloadUrl
-	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
+	req, err := http.NewRequest(http.MethodPost, c.bytesUrl, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
 	}
 
-	if pin {
+	if c.pin {
 		req.Header.Set(swarmPinHeader, "true")
 	}
 
@@ -315,9 +356,9 @@ func (s *Client) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err
 	}
 
 	// the postage block id to store the blob
-	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
+	req.Header.Set(swarmPostageBatchId, c.postageBlockId)
 
-	response, err := s.client.Do(req)
+	response, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -344,33 +385,33 @@ func (s *Client) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err
 		"size":      len(data),
 		"duration":  time.Since(to).String(),
 	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload blob: ")
+	c.logger.WithFields(fields).Log(logrus.DebugLevel, "upload blob: ")
 
 	// add the data and ref if itis not in cache
-	if !s.inBlockCache(s.uploadBlockCache, string(data)) {
-		s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
+	if !c.inBlockCache(c.uploadBlockCache, string(data)) {
+		c.addToBlockCache(c.uploadBlockCache, string(data), resp.Reference.Bytes())
 	}
 
 	return resp.Reference.Bytes(), nil
 }
 
 // DownloadBlob downloads a blob of binary data from the Swarm network.
-func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
+func (c *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 	to := time.Now()
 
 	// return the data if this address is already in cache
 	addrString := swarm.NewAddress(address).String()
-	if s.inBlockCache(s.downloadBlockCache, addrString) {
-		return s.getFromBlockCache(s.downloadBlockCache, addrString), 200, nil
+	if c.inBlockCache(c.downloadBlockCache, addrString) {
+		return c.getFromBlockCache(c.downloadBlockCache, addrString), 200, nil
 	}
 
-	fullUrl := s.url + bytesUploadDownloadUrl + "/" + addrString
+	fullUrl := c.bytesUrl + "/" + addrString
 	req, err := http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
 
-	response, err := s.client.Do(req)
+	response, err := c.client.Do(req)
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
@@ -392,30 +433,30 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 		"size":      len(respData),
 		"duration":  time.Since(to).String(),
 	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "download blob: ")
+	c.logger.WithFields(fields).Log(logrus.DebugLevel, "download blob: ")
 
 	// add the data and ref if it is not in cache
-	if !s.inBlockCache(s.downloadBlockCache, addrString) {
-		s.addToBlockCache(s.downloadBlockCache, addrString, respData)
+	if !c.inBlockCache(c.downloadBlockCache, addrString) {
+		c.addToBlockCache(c.downloadBlockCache, addrString, respData)
 	}
 	return respData, response.StatusCode, nil
 }
 
 // DeleteReference unpins a reference so that it will be garbage collected by the Swarm network.
-func (s *Client) DeleteReference(address []byte) error {
+func (c *Client) DeleteReference(address []byte) error {
 	// TODO uncomment after unpinning is fixed
 	_ = address
 	/*
 		to := time.Now()
 		addrString := swarm.NewAddress(address).String()
 
-		fullUrl := s.url + pinsUrl + addrString
+		fullUrl := c.url + pinsUrl + addrString
 		req, err := http.NewRequest(http.MethodDelete, fullUrl, http.NoBody)
 		if err != nil {
 			return err
 		}
 
-		response, err := s.client.Do(req)
+		response, err := c.client.Do(req)
 		if err != nil {
 			return err
 		}
@@ -427,14 +468,14 @@ func (s *Client) DeleteReference(address []byte) error {
 			if err != nil {
 				return err
 			}
-			return fmt.Errorf("failed to unpin reference : %s", respData)
+			return fmt.Errorf("failed to unpin reference : %c", respData)
 		}
 
 		fields := logrus.Fields{
 			"reference": addrString,
 			"duration":  time.Since(to).String(),
 		}
-		s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete chunk: ")
+		c.logger.WithFields(fields).Log(logrus.DebugLevel, "delete chunk: ")
 	*/
 	return nil
 }
@@ -451,22 +492,22 @@ func createHTTPClient() *http.Client {
 	return client
 }
 
-func (s *Client) addToChunkCache(key string, value []byte) {
-	if s.chunkCache != nil {
-		s.chunkCache.Add(key, hex.EncodeToString(value))
+func (c *Client) addToChunkCache(key string, value []byte) {
+	if c.chunkCache != nil {
+		c.chunkCache.Add(key, hex.EncodeToString(value))
 	}
 }
 
-func (s *Client) inChunkCache(key string) bool {
-	if s.chunkCache != nil {
-		return s.chunkCache.Contains(key)
+func (c *Client) inChunkCache(key string) bool {
+	if c.chunkCache != nil {
+		return c.chunkCache.Contains(key)
 	}
 	return false
 }
 
-func (s *Client) getFromChunkCache(key string) []byte {
-	if s.chunkCache != nil {
-		value, ok := s.chunkCache.Get(key)
+func (c *Client) getFromChunkCache(key string) []byte {
+	if c.chunkCache != nil {
+		value, ok := c.chunkCache.Get(key)
 		if ok {
 			data, err := hex.DecodeString(fmt.Sprintf("%v", value))
 			if err != nil {

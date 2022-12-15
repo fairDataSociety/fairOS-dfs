@@ -37,7 +37,7 @@ func TestStat(t *testing.T) {
 	t.Run("stat-nonexistent-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := NewUsers("", mockClient, ens, logger)
+		userObject := NewUsers(mockClient, ens, logger)
 		ui := &Info{
 			name: "user1123123",
 		}
@@ -51,12 +51,11 @@ func TestStat(t *testing.T) {
 	t.Run("stat-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := NewUsers("", mockClient, ens, logger)
+		userObject := NewUsers(mockClient, ens, logger)
 		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		//  stat the user
 		stat, err := userObject.GetUserStat(ui)
 		if err != nil {

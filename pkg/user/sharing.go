@@ -65,10 +65,17 @@ type ReceiveFileInfo struct {
 
 // ShareFileWithUser exports a file to another user by creating and uploading a new encrypted sharing file entry.
 func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destinationRef string, userInfo *Info, pod *pod.Pod, userAddress utils.Address) (string, error) {
-	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
-	meta, err := userInfo.file.GetMetaFromFileName(totalFilePath, podPassword, userAddress)
+	pi, _, err := pod.GetPodInfoFromPodMap(podName)
 	if err != nil { // skipcq: TCV-001
 		return "", err
+	}
+
+	meta, err := pi.GetFile().GetMetaFromFileName(podFileWithPath, podPassword, pi.GetPodAddress())
+	if err != nil { // skipcq: TCV-001
+		return "", err
+	}
+	if meta == nil { // skipcq: TCV-001
+		return "", f.ErrFileNotFound
 	}
 
 	// Create an outbox entry
@@ -93,7 +100,7 @@ func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destina
 	}
 
 	// upload the encrypted data and get the reference
-	ref, err := u.client.UploadBlob(encryptedData, true, true)
+	ref, err := u.client.UploadBlob(encryptedData, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}

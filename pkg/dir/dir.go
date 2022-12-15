@@ -147,7 +147,7 @@ func newLsTask(d *Directory, topic []byte, path, podPassword string, l *[]Entry,
 
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
-	_, data, err := lt.d.fd.GetFeedData(lt.topic, lt.d.getAddress(), []byte(lt.podPassword))
+	data, err := lt.d.fd.GetFeedData(lt.topic, lt.d.getAddress(), []byte(lt.podPassword))
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("list dir : %v", err)
 	}

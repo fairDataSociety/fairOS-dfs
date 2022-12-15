@@ -44,7 +44,7 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 
 	// get the latest meta from swarm
 	topic := utils.HashString(parentDir)
-	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
+	data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry: %v", err)
 	}
@@ -69,7 +69,7 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
-	_, err = d.fd.UpdateFeed(topic, d.userAddress, data, []byte(podPassword))
+	err = d.fd.UpdateFeed(topic, d.userAddress, data, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
@@ -91,7 +91,7 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 	}
 
 	parentHash := utils.HashString(parentDir)
-	_, parentData, err := d.fd.GetFeedData(parentHash, d.userAddress, []byte(podPassword))
+	parentData, err := d.fd.GetFeedData(parentHash, d.userAddress, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -121,7 +121,7 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	_, err = d.fd.UpdateFeed(parentHash, d.userAddress, parentData, []byte(podPassword))
+	err = d.fd.UpdateFeed(parentHash, d.userAddress, parentData, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

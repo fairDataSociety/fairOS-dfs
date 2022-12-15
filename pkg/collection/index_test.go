@@ -198,7 +198,7 @@ func TestIndex(t *testing.T) {
 func isIndexPresent(t *testing.T, podName, collectionName, indexName, encryptionPassword string, fd *feed.API, user utils.Address, client blockstore.Client) bool {
 	actualIndexName := podName + collectionName + indexName
 	topic := utils.HashString(actualIndexName)
-	_, addr, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
+	addr, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
 	if err == nil && len(addr) != 0 {
 		data, _, err := client.DownloadBlob(addr)
 		if err != nil {

@@ -38,7 +38,7 @@ func TestLogin(t *testing.T) {
 
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, logger)
 		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)

@@ -45,7 +45,7 @@ type Entry struct {
 func (d *Directory) ListDir(dirNameWithPath, podPassword string) ([]Entry, []string, error) {
 	dirNameWithPath = filepath.ToSlash(dirNameWithPath)
 	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword))
+	data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		if dirNameWithPath == utils.PathSeparator {
 			return nil, nil, nil

@@ -34,20 +34,20 @@ import (
 
 const (
 	defaultMaxWorkers = 100
+	pin               = true
 )
 
 // API is the go api for fairOS
 type API struct {
-	client  blockstore.Client
-	users   *user.Users
-	logger  logging.Logger
-	dataDir string
-	tm      *taskmanager.TaskManager
+	client blockstore.Client
+	users  *user.Users
+	logger logging.Logger
+	tm     *taskmanager.TaskManager
 	io.Closer
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*API, error) {
+func NewDfsAPI(apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*API, error) {
 	ens, err := ethClient.New(ensConfig, logger)
 	if err != nil {
 		if errors.Is(err, ethClient.ErrWrongChainID) {
@@ -55,29 +55,30 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensC
 		}
 		return nil, errEthClient
 	}
-	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)
+	c, err := bee.NewBeeClient(apiUrl, postageBlockId, pin, logger)
+	if err != nil {
+		return nil, ErrBeeClient
+	}
 	if !c.CheckConnection(isGatewayProxy) {
 		return nil, ErrBeeClient
 	}
-	users := user.NewUsers(dataDir, c, ens, logger)
+	users := user.NewUsers(c, ens, logger)
 
 	return &API{
-		client:  c,
-		users:   users,
-		logger:  logger,
-		dataDir: dataDir,
-		tm:      taskmanager.New(1, defaultMaxWorkers, time.Second*15, logger),
+		client: c,
+		users:  users,
+		logger: logger,
+		tm:     taskmanager.New(1, defaultMaxWorkers, time.Second*15, logger),
 	}, nil
 }
 
 // NewMockDfsAPI is used for tests only
-func NewMockDfsAPI(client blockstore.Client, users *user.Users, logger logging.Logger, dataDir string) *API {
+func NewMockDfsAPI(client blockstore.Client, users *user.Users, logger logging.Logger) *API {
 	return &API{
-		client:  client,
-		users:   users,
-		logger:  logger,
-		dataDir: dataDir,
-		tm:      taskmanager.New(1, 100, time.Second*15, logger),
+		client: client,
+		users:  users,
+		logger: logger,
+		tm:     taskmanager.New(1, 100, time.Second*15, logger),
 	}
 }
 

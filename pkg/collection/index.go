@@ -103,7 +103,7 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	}
 	actualIndexName := podName + collectionName + indexName
 	topic := utils.HashString(actualIndexName)
-	_, oldData, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
+	oldData, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
 	if err == nil && len(oldData) != 0 && string(oldData) != utils.DeletedFeedMagicWord {
 		// if the feed is present and it has some data means there index is still valid
 		return ErrIndexAlreadyPresent
@@ -117,19 +117,19 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 		return ErrManifestUnmarshall
 	}
 
-	ref, err := client.UploadBlob(data, true, true)
+	ref, err := client.UploadBlob(data, true)
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
 
 	if string(oldData) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
-		_, err = fd.UpdateFeed(topic, user, ref, []byte(encryptionPassword))
+		err = fd.UpdateFeed(topic, user, ref, []byte(encryptionPassword))
 		if err != nil {
 			return ErrManifestCreate
 		}
 		return nil
 	}
-	_, err = fd.CreateFeed(topic, user, ref, []byte(encryptionPassword))
+	err = fd.UpdateFeed(topic, user, ref, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -173,7 +173,7 @@ func (idx *Index) DeleteIndex(encryptionPassword string) error {
 
 	// erase the top Manifest
 	topic := utils.HashString(idx.name)
-	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword))
+	err := idx.feed.UpdateFeed(topic, idx.user, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrDeleteingIndex
 	}
@@ -243,7 +243,7 @@ func (idx *Index) loadManifest(manifestPath, encryptionPassword string) (*Manife
 	// get feed data and unmarshall the Manifest
 	idx.logger.Info("loading Manifest: ", manifestPath)
 	topic := utils.HashString(manifestPath)
-	_, refData, err := idx.feed.GetFeedData(topic, idx.user, []byte(encryptionPassword))
+	refData, err := idx.feed.GetFeedData(topic, idx.user, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return nil, ErrNoManifestFound
 	}
@@ -272,13 +272,13 @@ func (idx *Index) updateManifest(manifest *Manifest, encryptionPassword string) 
 		return ErrManifestUnmarshall
 	}
 
-	ref, err := idx.client.UploadBlob(data, true, true)
+	ref, err := idx.client.UploadBlob(data, true)
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.UpdateFeed(topic, idx.user, ref, []byte(encryptionPassword))
+	err = idx.feed.UpdateFeed(topic, idx.user, ref, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -294,7 +294,7 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 	logStr := fmt.Sprintf("storing Manifest: %s, data len = %d", manifest.Name, len(data))
 	idx.logger.Debug(logStr)
 
-	ref, err := idx.client.UploadBlob(data, true, true)
+	ref, err := idx.client.UploadBlob(data, true)
 	//TODO: once the tags issue is fixed i bytes..
 	// remove the error string check
 	if err != nil { // skipcq: TCV-001
@@ -303,7 +303,7 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.CreateFeed(topic, idx.user, ref, []byte(encryptionPassword))
+	err = idx.feed.UpdateFeed(topic, idx.user, ref, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -339,7 +339,7 @@ func longestCommonPrefix(str1, str2 string) (string, string, string) {
 func getRootManifestOfIndex(actualIndexName, encryptionPassword string, fd *feed.API, user utils.Address, client blockstore.Client) *Manifest {
 	var manifest Manifest
 	topic := utils.HashString(actualIndexName)
-	_, addr, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
+	addr, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
 	if err != nil {
 		return nil
 	}

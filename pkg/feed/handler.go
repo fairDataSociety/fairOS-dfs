@@ -24,8 +24,17 @@ import (
 	"errors"
 	"fmt"
 	"hash"
+	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethersphere/bee/pkg/feeds"
+	"github.com/ethersphere/bee/pkg/feeds/factory"
+	"github.com/ethersphere/bee/pkg/soc"
+
+	beeCrypto "github.com/ethersphere/bee/pkg/crypto"
 
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
@@ -83,6 +92,65 @@ func (h *Handler) update(id, owner, signature, data []byte) ([]byte, error) {
 		return nil, err
 	}
 	return addr, nil
+}
+
+func (h *Handler) putterUpdate(id []byte, data []byte, signer beeCrypto.Signer) error {
+	//upd, err := sequence.NewUpdater(h, signer, id)
+	//if err != nil {
+	//	return err
+	//}
+	//return upd.Update(context.TODO(), time.Now().Unix(), data)
+	ctx := context.TODO()
+	version := time.Now().Unix()
+	var nxtIndex feeds.Index
+	owner, err := signer.EthereumAddress()
+	if err != nil {
+		return err
+	}
+	_, currIndex, at, err := h.getUpdate(ctx, id, owner)
+	if err == nil {
+		nxtIndex = currIndex.Next(at, uint64(version))
+	} else {
+		nxtIndex = new(index)
+	}
+
+	putter, err := feeds.NewPutter(h, signer, id)
+	if err != nil {
+		return err
+	}
+
+	err = putter.Put(ctx, nxtIndex, version, data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *Handler) getUpdate(ctx context.Context, id []byte, owner common.Address) ([]byte, feeds.Index, int64, error) {
+	lk, err := factory.New(h).NewLookup(feeds.Sequence, feeds.New(id, owner))
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	ch, current, _, err := lk.At(ctx, time.Now().Unix(), 0)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	data, ts, err := parseFeedUpdate(ch)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	return data, current, ts, err
+}
+
+func parseFeedUpdate(ch swarm.Chunk) ([]byte, int64, error) {
+	s, err := soc.FromChunk(ch)
+	if err != nil {
+		return nil, 0, fmt.Errorf("soc unmarshal: %w", err)
+	}
+	update := s.WrappedChunk().Data()
+	ts := binary.BigEndian.Uint64(update[8:16])
+	return update[16:], int64(ts), nil
 }
 
 func (h *Handler) deleteChunk(ref []byte) error {
@@ -402,4 +470,26 @@ func toSignDigest(id, sum []byte) ([]byte, error) {
 		return nil, err
 	}
 	return h.Sum(nil), nil
+}
+
+// index replicates the feeds.sequence.Index. This index creation is not exported from
+// the package as a result loader doesn't know how to return the first feeds.Index.
+// This index will be used to return which will provide a compatible interface to
+// feeds.sequence.Index.
+type index struct {
+	index uint64
+}
+
+func (i *index) String() string {
+	return strconv.FormatUint(i.index, 10)
+}
+
+func (i *index) MarshalBinary() ([]byte, error) {
+	indexBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(indexBytes, i.index)
+	return indexBytes, nil
+}
+
+func (i *index) Next(last int64, at uint64) feeds.Index {
+	return &index{i.index + 1}
 }

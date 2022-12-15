@@ -12,7 +12,7 @@ const (
 
 func (*Users) uploadPortableAccount(accountInfo *account.Info, username, password string, data []byte, fd *feed.API) error {
 	topic := utils.HashString(AuthVersion + username + password)
-	_, err := fd.CreateFeedFromTopic(topic, accountInfo.GetAddress(), data)
+	err := fd.CreateFeedFromTopic(topic, accountInfo.GetAddress(), data)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

@@ -260,7 +260,7 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 			}
 			return table.index.PutNumber(fkey, value, NumberIndex, false)
 		case BytesIndex:
-			ref, err := kv.client.UploadBlob(value, true, true)
+			ref, err := kv.client.UploadBlob(value, true)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
@@ -409,7 +409,7 @@ func (kv *KeyValue) KVGetNext(name string) ([]string, string, []byte, error) {
 func (kv *KeyValue) LoadKVTables(encryptionPassword string) (map[string][]string, error) {
 	collections := make(map[string][]string)
 	topic := utils.HashString(kvFile)
-	_, data, err := kv.fd.GetFeedData(topic, kv.user, []byte(encryptionPassword))
+	data, err := kv.fd.GetFeedData(topic, kv.user, []byte(encryptionPassword))
 	if err != nil {
 		if err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 			return collections, err
@@ -448,7 +448,7 @@ func (kv *KeyValue) storeKVTables(collections map[string][]string, encryptionPas
 	if buf.Len() == 0 {
 		data = []byte(utils.DeletedFeedMagicWord)
 	}
-	_, err := kv.fd.UpdateFeed(topic, kv.user, data, []byte(encryptionPassword))
+	err := kv.fd.UpdateFeed(topic, kv.user, data, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

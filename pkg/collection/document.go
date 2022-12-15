@@ -584,7 +584,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	}
 
 	// upload the document
-	ref, err := d.client.UploadBlob(doc, true, true)
+	ref, err := d.client.UploadBlob(doc, true)
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("inserting in to document db: ", err.Error())
 		return err
@@ -971,7 +971,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 func (d *Document) LoadDocumentDBSchemas(encryptionPassword string) (map[string]DBSchema, error) {
 	collections := make(map[string]DBSchema)
 	topic := utils.HashString(documentFile)
-	_, data, err := d.fd.GetFeedData(topic, d.user, []byte(encryptionPassword))
+	data, err := d.fd.GetFeedData(topic, d.user, []byte(encryptionPassword))
 	if err != nil {
 		if err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 			return collections, err
@@ -1023,7 +1023,7 @@ func (d *Document) storeDocumentDBSchemas(encryptionPassword string, collections
 		}
 	}
 	topic := utils.HashString(documentFile)
-	_, err := d.fd.UpdateFeed(topic, d.user, buf.Bytes(), []byte(encryptionPassword))
+	err := d.fd.UpdateFeed(topic, d.user, buf.Bytes(), []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -1261,7 +1261,7 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 			}
 
 			// upload the document
-			ref, err = d.client.UploadBlob(doc, true, true)
+			ref, err = d.client.UploadBlob(doc, true)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("inserting in batch: ", err.Error())
 				return err

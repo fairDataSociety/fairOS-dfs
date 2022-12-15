@@ -155,7 +155,7 @@ func (p *Pod) loadUserPods() (*PodList, error) {
 	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex), []byte(hex.EncodeToString(privKeyBytes)))
+	data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex), []byte(hex.EncodeToString(privKeyBytes)))
 	if err != nil { // skipcq: TCV-001
 		if err.Error() != "feed does not exist or was not updated yet" {
 			return nil, err
@@ -189,7 +189,7 @@ func (p *Pod) storeUserPods(podList *PodList) error {
 	topic := utils.HashString(podFile)
 
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	_, err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), data, []byte(hex.EncodeToString(privKeyBytes)))
+	err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), data, []byte(hex.EncodeToString(privKeyBytes)))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
