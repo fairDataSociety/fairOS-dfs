@@ -23,7 +23,7 @@ func TestLite(t *testing.T) {
 
 		// create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, _, err := userObject.LoadLiteUser("", "password1", "", "", tm)
+		_, _, _, err := userObject.LoadLiteUser("", "password1", "", "", tm)
 		if !errors.Is(err, user.ErrInvalidUserName) {
 			t.Fatal(err)
 		}
@@ -34,7 +34,7 @@ func TestLite(t *testing.T) {
 
 		// create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
-		mnemonic, ui, err := userObject.LoadLiteUser("user1", "password1", "", "", tm)
+		mnemonic, _, ui, err := userObject.LoadLiteUser("user1", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -56,13 +56,5 @@ func TestLite(t *testing.T) {
 		if err != nil {
 			t.Fatalf("invalid mnemonic")
 		}
-	})
-
-	t.Run("stat-nonexistent-user", func(t *testing.T) {
-
-	})
-
-	t.Run("stat-user", func(t *testing.T) {
-
 	})
 }

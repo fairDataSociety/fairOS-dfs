@@ -31,7 +31,7 @@ func (a *API) LoginUserV2(userName, passPhrase, sessionId string) (*user.Info, s
 }
 
 // LoadLiteUser is a controller function which loads user from mnemonic and doesnot store any user info on chain
-func (a *API) LoadLiteUser(userName, passPhrase, mnemonic, sessionId string) (string, *user.Info, error) {
+func (a *API) LoadLiteUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *user.Info, error) {
 	return a.users.LoadLiteUser(userName, passPhrase, mnemonic, sessionId, a.tm)
 }
 

@@ -3,6 +3,8 @@ package user
 import (
 	"sync"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -14,9 +16,9 @@ import (
 
 // LoadLiteUser creates an off chain user, that has no ens or soc in the swarm.
 // It only creates the required information to execute user function and stores it in memory.
-func (u *Users) LoadLiteUser(userName, _, mnemonic, sessionId string, tm taskmanager.TaskManagerGO) (string, *Info, error) {
+func (u *Users) LoadLiteUser(userName, _, mnemonic, sessionId string, tm taskmanager.TaskManagerGO) (string, string, *Info, error) {
 	if !isUserNameValid(userName) {
-		return "", nil, ErrInvalidUserName
+		return "", "", nil, ErrInvalidUserName
 	}
 
 	acc := account.New(u.logger)
@@ -25,7 +27,7 @@ func (u *Users) LoadLiteUser(userName, _, mnemonic, sessionId string, tm taskman
 	// create a new base user account with the mnemonic
 	mnemonic, _, err := acc.CreateUserAccount(mnemonic)
 	if err != nil { // skipcq: TCV-001
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	// Instantiate pod, dir & file objects
@@ -51,8 +53,9 @@ func (u *Users) LoadLiteUser(userName, _, mnemonic, sessionId string, tm taskman
 	// set cookie and add user to map
 	err = u.addUserAndSessionToMap(ui)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
-	return mnemonic, ui, nil
+	privateKeyBytes := crypto.FromECDSA(accountInfo.GetPrivateKey())
+	return mnemonic, hexutil.Encode(privateKeyBytes)[2:], ui, nil
 }

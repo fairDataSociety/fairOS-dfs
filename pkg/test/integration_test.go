@@ -50,7 +50,7 @@ func TestLiteUser(t *testing.T) {
 			Password: randStringRunes(8),
 		}
 
-		mnemonic, ui, err := dfsApi.LoadLiteUser(userRequest.UserName, userRequest.Password, "", "")
+		mnemonic, _, ui, err := dfsApi.LoadLiteUser(userRequest.UserName, userRequest.Password, "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -290,7 +290,7 @@ func TestLiteUser(t *testing.T) {
 		<-time.After(time.Second)
 
 		for i := 0; i < 20; i++ {
-			_, ui, err = dfsApi.LoadLiteUser(userRequest.UserName, userRequest.Password, mnemonic, "")
+			_, _, ui, err = dfsApi.LoadLiteUser(userRequest.UserName, userRequest.Password, mnemonic, "")
 			if err != nil {
 				t.Fatal(err)
 			}
