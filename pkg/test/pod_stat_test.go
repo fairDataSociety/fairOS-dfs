@@ -14,10 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pod
+package test_test
 
 import (
-	"os"
+	"context"
+	"io"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,52 +31,55 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-func TestPod_ListPods(t *testing.T) {
+func TestStat(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(os.Stdout, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	accountInfo := acc.GetUserAccountInfo()
-	fd := feed.New(accountInfo, mockClient, logger)
-	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	pod1 := NewPod(mockClient, fd, acc, tm, logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"
-	podName2 := "test2"
 
-	t.Run("list-without-pods", func(t *testing.T) {
-		_, _, err = pod1.ListPods()
-		if err != nil {
-			t.Fatal(err)
+	t.Run("pod-stat", func(t *testing.T) {
+		_, err := pod1.PodStat(podName1)
+		if err == nil {
+			t.Fatal("stat should be nil")
 		}
-	})
-
-	t.Run("create-two-pods", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(PodPasswordLength)
-		_, err := pod1.CreatePod(podName1, "", podPassword)
-		if err != nil {
-			t.Fatalf("error creating pod: %v", err)
-		}
-		_, err = pod1.CreatePod(podName2, "", podPassword)
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
-		pods, _, err := pod1.ListPods()
+		// get pod stat
+		podStat, err := pod1.PodStat(podName1)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if pods[0] != podName1 && pods[1] != podName1 {
-			t.Fatalf("pod not found")
+		// verify if the stat is right
+		if podStat == nil {
+			t.Fatalf("invalid pod stat")
 		}
-		if pods[0] != podName2 && pods[1] != podName2 {
-			t.Fatalf("pod not found")
+		if podStat.PodName != podName1 {
+			t.Fatalf("invalid pod name: expected %s got %s", podName1, podStat.PodName)
 		}
+		addr := info.GetAccountInfo().GetAddress().Hex()[2:]
+		addr = strings.ToLower(addr)
+		if podStat.PodAddress != addr {
+			t.Fatalf("invalid pod address")
+		}
+
 	})
+
 }

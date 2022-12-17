@@ -96,7 +96,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
-	// store encrypted soc address in secondary location
+
 	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
 	return userAddressString, mnemonic, nameHash, utils.Encode(pb), ui, nil
 }

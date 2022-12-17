@@ -14,13 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package user_test
+package test_test
 
 import (
-	"crypto/rand"
 	"errors"
 	"io"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -205,39 +203,4 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("pod should have been deleted")
 		}
 	})
-}
-
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint32) ([]byte, error) {
-	// create a temp file
-	fd, err := os.CreateTemp("", fileName)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(fd.Name())
-
-	// write contents to file
-	content := make([]byte, fileSize)
-	_, err = rand.Read(content)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = fd.Write(content); err != nil {
-		t.Fatal(err)
-	}
-
-	// close file
-	uploadFileName := fd.Name()
-	err = fd.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// open file to upload
-	f1, err := os.Open(uploadFileName)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
 }

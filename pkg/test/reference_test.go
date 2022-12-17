@@ -1,12 +1,14 @@
-package utils
+package test_test
 
 import (
 	"encoding/hex"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestNewReference(t *testing.T) {
-	_, err := ParseHexReference("any ref")
+	_, err := utils.ParseHexReference("any ref")
 	if err == nil {
 		t.Fatal("parse should fail")
 	}
@@ -16,8 +18,8 @@ func TestNewReference(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ref := NewReference(b)
-	swarmRef2, err := ParseHexReference(ref.String())
+	ref := utils.NewReference(b)
+	swarmRef2, err := utils.ParseHexReference(ref.String())
 	if err != nil {
 		t.Fatal(err)
 	}

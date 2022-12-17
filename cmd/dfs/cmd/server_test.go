@@ -486,24 +486,22 @@ func TestApis(t *testing.T) {
 					t.Fatal("dir stat failed")
 				}
 			} else {
-				if v.isDir {
-					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
-					if err != nil {
-						t.Fatal(err)
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&filePath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
 
-					}
-					statReq.Header.Set("Cookie", cookie[0])
-					statResp, err := c.Do(statReq)
-					if err != nil {
-						t.Fatal(err)
-					}
-					err = statResp.Body.Close()
-					if err != nil {
-						t.Fatal(err)
-					}
-					if statResp.StatusCode != 200 {
-						t.Fatal("file stat failed")
-					}
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("file stat failed")
 				}
 			}
 		}
@@ -657,24 +655,22 @@ func TestApis(t *testing.T) {
 					t.Fatal("dir stat failed")
 				}
 			} else {
-				if v.isDir {
-					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
-					if err != nil {
-						t.Fatal(err)
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&filePath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
 
-					}
-					statReq.Header.Set("Cookie", cookie[0])
-					statResp, err := c.Do(statReq)
-					if err != nil {
-						t.Fatal(err)
-					}
-					err = statResp.Body.Close()
-					if err != nil {
-						t.Fatal(err)
-					}
-					if statResp.StatusCode != 200 {
-						t.Fatal("file stat failed")
-					}
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("file stat failed")
 				}
 			}
 		}
