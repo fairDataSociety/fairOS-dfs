@@ -1,4 +1,4 @@
-package pod_test
+package test_test
 
 import (
 	"errors"

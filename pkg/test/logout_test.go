@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package user
+package test_test
 
 import (
 	"errors"
@@ -27,48 +27,43 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
-func TestStat(t *testing.T) {
+func TestLogout(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
-	tm := taskmanager.New(1, 10, time.Second*15, logger)
 
-	t.Run("stat-nonexistent-user", func(t *testing.T) {
+	t.Run("logout-user", func(t *testing.T) {
+		tm := taskmanager.New(1, 10, time.Second*15, logger)
+
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := NewUsers("", mockClient, ens, logger)
-		ui := &Info{
-			name: "user1123123",
-		}
-		//  stat the user
-		_, err := userObject.GetUserStat(ui)
-		if !errors.Is(err, ErrInvalidUserName) {
-			t.Fatal("should be invalid user")
-		}
-	})
-
-	t.Run("stat-user", func(t *testing.T) {
-		ens := mock2.NewMockNamespaceManager()
-		// create user
-		userObject := NewUsers("", mockClient, ens, logger)
+		userObject := user.NewUsers("", mockClient, ens, logger)
 		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		//  stat the user
-		stat, err := userObject.GetUserStat(ui)
+		// Logout user
+		err = userObject.LogoutUser(ui.GetUserName(), "invalid sessionID")
+		if !errors.Is(err, user.ErrUserNotLoggedIn) {
+			t.Fatal(err)
+		}
+
+		// Logout user
+		err = userObject.LogoutUser(ui.GetUserName(), ui.GetSessionId())
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// verification
-		if stat == nil {
-			t.Fatalf("invalid stat")
+		// Validate logout
+		if userObject.IsUserNameLoggedIn(ui.GetUserName()) {
+			t.Fatalf("user still loggin in")
 		}
-		if stat.Name != "user1" {
-			t.Fatalf("invalid user name")
+		if !userObject.IsUsernameAvailableV2(ui.GetUserName()) {
+			t.Fatalf("user not created")
 		}
 	})
+
 }

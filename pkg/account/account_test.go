@@ -19,7 +19,6 @@ package account
 import (
 	"bytes"
 	"io"
-	"os"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -28,15 +27,11 @@ import (
 )
 
 func TestAccount_CreateRootAccount(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pod")
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
 
-	_, _, err = acc.CreateUserAccount("invalid mnemonic that we are passing to check create account error message")
+	_, _, err := acc.CreateUserAccount("invalid mnemonic that we are passing to check create account error message")
 	if err == nil {
 		t.Fatal("invalid mnemonic passed")
 	}
@@ -53,26 +48,12 @@ func TestAccount_CreateRootAccount(t *testing.T) {
 	if acc.userAccount.GetPrivateKey() == nil || acc.userAccount.GetPublicKey() == nil || len(acc.userAccount.address[:]) != utils.AddressLength {
 		t.Fatalf("keys not intialised")
 	}
-
-	err = os.RemoveAll(tempDir)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func TestAuthorise(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pod")
-	if err != nil {
-		t.Fatal(err)
-	}
 	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
-	_, _, err = acc.CreateUserAccount("")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = os.RemoveAll(tempDir)
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,10 +74,6 @@ func TestCreateRandomKeyPair(t *testing.T) {
 }
 
 func TestLoadUserAccountFromSeed(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pod")
-	if err != nil {
-		t.Fatal(err)
-	}
 	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
 	_, seed, err := acc.CreateUserAccount("")
@@ -119,18 +96,9 @@ func TestLoadUserAccountFromSeed(t *testing.T) {
 	if acc.userAccount.address != acc2.userAccount.address {
 		t.Fatal("address do not match")
 	}
-	err = os.RemoveAll(tempDir)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func TestPadUnpadSeed(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pod")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tempDir)
 	password := "letmein"
 	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
@@ -160,10 +128,6 @@ func TestPadUnpadSeed(t *testing.T) {
 }
 
 func TestCreatePodAccount(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pod")
-	if err != nil {
-		t.Fatal(err)
-	}
 	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
 	_, seed, err := acc.CreateUserAccount("")
@@ -185,17 +149,9 @@ func TestCreatePodAccount(t *testing.T) {
 	if pod1AccountInfo.address == pod2AccountInfo.address {
 		t.Fatal("address should not be same")
 	}
-	err = os.RemoveAll(tempDir)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func TestCreatePodAccountWithSeed(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pod")
-	if err != nil {
-		t.Fatal(err)
-	}
 	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
 	_, seed, err := acc.CreateUserAccount("")
@@ -223,17 +179,9 @@ func TestCreatePodAccountWithSeed(t *testing.T) {
 	if pod1AccountInfo.address == pod2AccountInfo.address {
 		t.Fatal("address should not be same")
 	}
-	err = os.RemoveAll(tempDir)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func TestGetAddress(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pod")
-	if err != nil {
-		t.Fatal(err)
-	}
 	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
 	m, seed, err := acc.CreateUserAccount("")
@@ -271,9 +219,5 @@ func TestGetAddress(t *testing.T) {
 	pod2Address := acc2.GetAddress(2)
 	if pod2AccountInfo.address != pod2Address {
 		t.Fatal("pod2 address do not match")
-	}
-	err = os.RemoveAll(tempDir)
-	if err != nil {
-		t.Fatal(err)
 	}
 }

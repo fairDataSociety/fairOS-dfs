@@ -57,10 +57,10 @@ type decError struct{ msg string }
 func (err decError) Error() string { return err.msg }
 
 var (
-	errEmptyString   = &decError{"empty hex string"}
-	errMissingPrefix = &decError{"hex string without 0x prefix"}
+	ErrEmptyString   = &decError{"empty hex string"}
+	ErrMissingPrefix = &decError{"hex string without 0x prefix"}
 	errSyntax        = &decError{"invalid hex string"}
-	errOddLength     = &decError{"hex string of odd length"}
+	ErrOddLength     = &decError{"hex string of odd length"}
 	errUint64Range   = &decError{"hex number > 64 bits"}
 )
 
@@ -75,10 +75,10 @@ func Encode(b []byte) string {
 // Decode decodes a hex string with 0x prefix.
 func Decode(input string) ([]byte, error) {
 	if input == "" {
-		return nil, errEmptyString
+		return nil, ErrEmptyString
 	}
 	if !has0xPrefix(input) {
-		return nil, errMissingPrefix
+		return nil, ErrMissingPrefix
 	}
 	b, err := hex.DecodeString(input[2:])
 	if err != nil {
@@ -104,7 +104,7 @@ func mapError(err error) error {
 		return errSyntax
 	}
 	if err == hex.ErrLength {
-		return errOddLength
+		return ErrOddLength
 	}
 	return err // skipcq: TCV-001
 }
