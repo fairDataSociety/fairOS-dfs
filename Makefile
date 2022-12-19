@@ -56,7 +56,7 @@ githooks:
 
 .PHONY: protobuftools
 protobuftools:
-	which protoac || ( echo "install protoc for your system from https://github.com/protocolbuffers/protobuf/releases" && exit 1)
+	which protoc || ( echo "install protoc for your system from https://github.com/protocolbuffers/protobuf/releases" && exit 1)
 	which $(GOGOPROTOBUF) || ( cd /tmp && GO111MODULE=on $(GO) get -u github.com/gogo/protobuf/$(GOGOPROTOBUF)@$(GOGOPROTOBUF_VERSION) )
 
 .PHONY: protobuf
