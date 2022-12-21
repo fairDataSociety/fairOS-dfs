@@ -20,43 +20,51 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// DocDeleteHandler is the api handler to delete the given document database
-// it takes only one argument
-// table_name: the document database to delete
+// DocDeleteHandler godoc
+//
+//	@Summary      Delete a doc table
+//	@Description  DocDeleteHandler is the api handler to delete the given document database
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      doc_request body SimpleDocRequest true "doc table info"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/delete [delete]
 func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc delete: invalid request body type")
-		jsonhttp.BadRequest(w, "doc delete: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "doc delete: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq SimpleDocRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc delete: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc delete: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "doc delete: could not decode arguments"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc delete: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc  delete: \"name\" argument missing")
+		h.logger.Errorf("doc delete: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc  delete: \"tableName\" argument missing"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc delete: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc delete: \"pod_name\" argument missing")
+		h.logger.Errorf("doc delete: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc delete: \"podName\" argument missing"})
 		return
 	}
 
@@ -64,20 +72,20 @@ func (h *Handler) DocDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc delete: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc delete: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc delete: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc delete: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.DocDelete(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("doc delete: %v", err)
-		jsonhttp.InternalServerError(w, "doc delete: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc delete: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "document store deleted")
+	jsonhttp.OK(w, &response{Message: "document store deleted"})
 }

@@ -25,22 +25,23 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-type DirStats struct {
-	PodName          string `json:"pod_name"`
-	DirPath          string `json:"dir_path"`
-	DirName          string `json:"dir_name"`
-	CreationTime     string `json:"creation_time"`
-	ModificationTime string `json:"modification_time"`
-	AccessTime       string `json:"access_time"`
-	NoOfDirectories  string `json:"no_of_directories"`
-	NoOfFiles        string `json:"no_of_files"`
+// Stats represents a given directory
+type Stats struct {
+	PodName          string `json:"podName"`
+	DirPath          string `json:"dirPath"`
+	DirName          string `json:"dirName"`
+	CreationTime     string `json:"creationTime"`
+	ModificationTime string `json:"modificationTime"`
+	AccessTime       string `json:"accessTime"`
+	NoOfDirectories  string `json:"noOfDirectories"`
+	NoOfFiles        string `json:"noOfFiles"`
 }
 
 // DirStat returns all the information related to a given directory.
-func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) {
+func (d *Directory) DirStat(podName, podPassword, dirNameWithPath string) (*Stats, error) {
 	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress())
-	if err != nil {
+	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword))
+	if err != nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("dir stat: %v", err)
 	}
 	if string(data) == utils.DeletedFeedMagicWord {
@@ -49,11 +50,11 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) 
 
 	var dirInode Inode
 	err = json.Unmarshal(data, &dirInode)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, fmt.Errorf("dir stat: %v", err)
 	}
 
-	if dirInode.Meta == nil && dirInode.FileOrDirNames == nil {
+	if dirInode.Meta == nil && dirInode.FileOrDirNames == nil { // skipcq: TCV-001
 		return nil, ErrDirectoryNotPresent
 	}
 
@@ -68,7 +69,7 @@ func (d *Directory) DirStat(podName, dirNameWithPath string) (*DirStats, error) 
 	}
 
 	meta := dirInode.Meta
-	return &DirStats{
+	return &Stats{
 		PodName:          podName,
 		DirPath:          meta.Path,
 		DirName:          meta.Name,

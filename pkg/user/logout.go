@@ -16,22 +16,15 @@ limitations under the License.
 
 package user
 
-import "net/http"
-
 // LogoutUser logs out a giver user from the system and clean him from all the data structures.
-func (u *Users) LogoutUser(userName, dataDir, sessionId string, response http.ResponseWriter) error {
-	// basic validations
-	if !u.IsUsernameAvailable(userName, dataDir) {
-		return ErrInvalidUserName
-	}
-
+func (u *Users) LogoutUser(userName, sessionId string) error {
 	// unset cookie and remove user from map
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
 	}
 
-	err := u.Logout(sessionId, response)
-	if err != nil {
+	err := u.Logout(sessionId)
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 

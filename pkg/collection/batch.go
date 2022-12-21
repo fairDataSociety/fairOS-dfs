@@ -30,6 +30,7 @@ const (
 	maxManifestDepth = 3
 )
 
+// Batch is to be used in KV table or a Document database
 type Batch struct {
 	idx           *Index
 	memDb         *Manifest
@@ -50,9 +51,9 @@ func (b *Batch) PutNumber(key float64, refValue []byte, apnd, memory bool) error
 	return b.Put(stringKey, refValue, apnd, memory)
 }
 
-// Put creates a index entry given a key string and value.
+// Put creates an index entry given a key string and value.
 func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
-	if b.idx.isReadOnlyFeed() {
+	if b.idx.isReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 
@@ -70,7 +71,7 @@ func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 	stringKey := key
 	if b.idx.indexType == NumberIndex {
 		i, err := strconv.ParseInt(stringKey, 10, 64)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return ErrKVKeyNotANumber
 		}
 		stringKey = fmt.Sprintf("%020d", i)
@@ -85,7 +86,7 @@ func (b *Batch) Get(key string) ([][]byte, error) {
 	}
 	if len(b.memDb.Entries) > 0 {
 		stringKey := key
-		if b.idx.indexType == NumberIndex {
+		if b.idx.indexType == NumberIndex { // skipcq: TCV-001
 			i, err := strconv.ParseInt(stringKey, 10, 64)
 			if err != nil {
 				return nil, ErrKVKeyNotANumber
@@ -97,12 +98,13 @@ func (b *Batch) Get(key string) ([][]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		return manifest.Entries[i].Ref, nil
+		return manifest.Entries[i].Ref, nil // skipcq: TCV-001
 	}
-	return nil, ErrEntryNotFound
+	return nil, ErrEntryNotFound // skipcq: TCV-001
 }
 
 // DelNumber deletes a number index key and value.
+// skipcq: TCV-001
 func (b *Batch) DelNumber(key float64) ([][]byte, error) {
 	stringKey := fmt.Sprintf("%020.20g", key)
 	return b.Del(stringKey)
@@ -110,20 +112,20 @@ func (b *Batch) DelNumber(key float64) ([][]byte, error) {
 
 // Del deletes a index entry.
 func (b *Batch) Del(key string) ([][]byte, error) {
-	if b.idx.isReadOnlyFeed() {
+	if b.idx.isReadOnlyFeed() { // skipcq: TCV-001
 		return nil, ErrReadOnlyIndex
 	}
 
-	if !b.idx.mutable {
+	if !b.idx.mutable { // skipcq: TCV-001
 		return nil, ErrCannotModifyImmutableIndex
 	}
 
-	if b.memDb == nil {
+	if b.memDb == nil { // skipcq: TCV-001
 		return nil, ErrEntryNotFound
 	}
 	if len(b.memDb.Entries) > 0 {
 		stringKey := key
-		if b.idx.indexType == NumberIndex {
+		if b.idx.indexType == NumberIndex { // skipcq: TCV-001
 			i, err := strconv.ParseInt(stringKey, 10, 64)
 			if err != nil {
 				return nil, ErrKVKeyNotANumber
@@ -131,13 +133,13 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 			stringKey = fmt.Sprintf("%020d", i)
 		}
 		parentManifest, manifest, i, err := b.idx.findManifest(nil, b.memDb, stringKey)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 
 		deletedRef := manifest.Entries[i].Ref
 
-		if parentManifest != nil && len(manifest.Entries) == 1 && manifest.Entries[0].Name == "" {
+		if parentManifest != nil && len(manifest.Entries) == 1 && manifest.Entries[0].Name == "" { // skipcq: TCV-001
 			// then we have to remove the intermediate node in the parent Manifest
 			// so that the entire branch goes kaboom
 			parentEntryKey := filepath.Base(manifest.Name)
@@ -153,21 +155,21 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 		manifest.Entries = append(manifest.Entries[:i], manifest.Entries[i+1:]...)
 		return deletedRef, nil
 	}
-	return nil, ErrEntryNotFound
+	return nil, ErrEntryNotFound // skipcq: TCV-001
 }
 
 // Write commits the raw index file in to the Swarm network.
 func (b *Batch) Write(podFile string) (*Manifest, error) {
-	if b.idx.isReadOnlyFeed() {
+	if b.idx.isReadOnlyFeed() { // skipcq: TCV-001
 		return nil, ErrReadOnlyIndex
 	}
-	if b.memDb == nil {
+	if b.memDb == nil { // skipcq: TCV-001
 		return nil, ErrEntryNotFound
 	}
 
 	if b.memDb.dirtyFlag {
-		diskManifest, err := b.idx.loadManifest(b.memDb.Name)
-		if err != nil && errors.Is(err, ErrNoManifestFound) {
+		diskManifest, err := b.idx.loadManifest(b.memDb.Name, b.idx.encryptionPassword)
+		if err != nil && errors.Is(err, ErrNoManifestFound) { // skipcq: TCV-001
 			return nil, err
 		}
 		diskManifest.PodFile = podFile
@@ -175,7 +177,7 @@ func (b *Batch) Write(podFile string) (*Manifest, error) {
 		b.idx.podFile = podFile
 		return b.mergeAndWriteManifest(diskManifest, b.memDb)
 	}
-	return b.memDb, nil
+	return b.memDb, nil // skipcq: TCV-001
 }
 
 func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Manifest, error) {
@@ -184,7 +186,7 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Man
 		for _, dirtyEntry := range memManifest.Entries {
 			diskManifest.dirtyFlag = true
 			b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
-			if dirtyEntry.EType == IntermediateEntry && dirtyEntry.Manifest != nil {
+			if dirtyEntry.EType == IntermediateEntry && dirtyEntry.Manifest != nil { // skipcq: TCV-001
 				err := b.storeMemoryManifest(dirtyEntry.Manifest, 0)
 				if err != nil {
 					return nil, err
@@ -201,14 +203,14 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Man
 
 		if diskManifest.dirtyFlag {
 			// save th disk manifest
-			err := b.idx.updateManifest(diskManifest)
-			if err != nil {
+			err := b.idx.updateManifest(diskManifest, b.idx.encryptionPassword)
+			if err != nil { // skipcq: TCV-001
 				return nil, err
 			}
 		}
 
 		err := b.emptyManifestStack()
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 
@@ -224,24 +226,27 @@ func (b *Batch) emptyManifestStack() error {
 	tempStack = append(tempStack, b.manifestStack...)
 	b.manifestStack = nil
 
-	for _, man := range tempStack {
+	for _, man := range tempStack { // skipcq: TCV-001
 		err := b.storeMemoryManifest(man, 0)
 		if err != nil {
 			return err
 		}
 	}
 
-	if len(b.manifestStack) > 0 {
+	if len(b.manifestStack) > 0 { // skipcq: TCV-001
 		return b.emptyManifestStack()
 	}
 
 	return nil
 }
 
+// skipcq: TCV-001
 func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
-	//var wg sync.WaitGroup
-	//errC := make(chan error)
-	//wgDone := make(chan bool)
+	/*
+		var wg sync.WaitGroup
+		errC := make(chan error)
+		wgDone := make(chan bool)
+	*/
 
 	// store any branches in this manifest
 	for _, entry := range manifest.Entries {
@@ -252,36 +257,36 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 				entry.Manifest = nil
 				return nil
 			}
-			//wg.Add(1)
-			//go func() {
-			//	defer func() {
-			//		wg.Done()
-			//	}()
+			// wg.Add(1)
+			// go func() {
+			// defer func() {
+			//	 wg.Done()
+			// }()
 			err := b.storeMemoryManifest(entry.Manifest, depth+1)
 			if err != nil {
 				return err
 			}
-			//}()
+			// }()
 
 		}
 	}
 
-	//go func() {
-	//	wg.Wait()
-	//	close(wgDone)
-	//}()
+	// go func() {
+	//	 wg.Wait()
+	//	 close(wgDone)
+	// }()
 	//
-	//select {
-	//case <-wgDone:
-	//	break
-	//case err := <-errC:
-	//	close(errC)
-	//	return err
-	//}
+	// select {
+	// case <-wgDone:
+	//	 break
+	// case err := <-errC:
+	//	 close(errC)
+	//	 return err
+	// }
 
 	// store this manifest
-	//go func() {
-	err := b.idx.storeManifest(manifest)
+	// go func() {
+	err := b.idx.storeManifest(manifest, b.idx.encryptionPassword)
 	if err != nil {
 		return err
 	}
@@ -291,6 +296,6 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 		fmt.Println(count)
 	}
 
-	//}()
+	// }()
 	return nil
 }

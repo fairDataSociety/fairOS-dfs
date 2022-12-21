@@ -39,17 +39,17 @@ func (idx *Index) PutNumber(key float64, refValue []byte, idxType IndexType, apn
 
 // Put inserts an entry in to index with a string as key.
 func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool) error {
-	if idx.isReadOnlyFeed() {
+	if idx.isReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
 
-	if !idx.mutable {
+	if !idx.mutable { // skipcq: TCV-001
 		return ErrCannotModifyImmutableIndex
 	}
 
 	// get the first feed of the Index
-	manifest, err := idx.loadManifest(idx.name)
-	if err != nil {
+	manifest, err := idx.loadManifest(idx.name, idx.encryptionPassword)
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
@@ -58,6 +58,7 @@ func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool)
 }
 
 // GetNumber retrieves an element from the index where the key is of type number.
+// skipcq: TCV-001
 func (idx *Index) GetNumber(key float64) ([][]byte, error) {
 	stringKey := fmt.Sprintf("%020.20g", key)
 	return idx.Get(stringKey)
@@ -81,11 +82,11 @@ func (idx *Index) DeleteNumber(key float64) ([][]byte, error) {
 
 // Delete removes an entry from index where the key is of type string.
 func (idx *Index) Delete(key string) ([][]byte, error) {
-	if idx.isReadOnlyFeed() {
+	if idx.isReadOnlyFeed() { // skipcq: TCV-001
 		return nil, ErrReadOnlyIndex
 	}
 
-	if !idx.mutable {
+	if !idx.mutable { // skipcq: TCV-001v
 		return nil, ErrCannotModifyImmutableIndex
 	}
 
@@ -96,11 +97,11 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 
 	deletedRef := manifest.Entries[i].Ref
 
-	if len(manifest.Entries) == 1 && manifest.Entries[0].Name == "" {
+	if len(manifest.Entries) == 1 && manifest.Entries[0].Name == "" { // skipcq: TCV-001
 		// then we have to remove the intermediate node in the parent Manifest
 		// so that the entire branch goes kaboom
 		parentEntryKey := filepath.Base(manifest.Name)
-		parentManifest, err := idx.loadManifest(filepath.Dir(manifest.Name))
+		parentManifest, err := idx.loadManifest(filepath.Dir(manifest.Name), idx.encryptionPassword)
 		if err != nil {
 			return nil, err
 		}
@@ -111,15 +112,15 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 				break
 			}
 		}
-		err = idx.updateManifest(parentManifest)
-		if err != nil {
+		err = idx.updateManifest(parentManifest, idx.encryptionPassword)
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		return deletedRef, nil
 	}
 
 	manifest.Entries = append(manifest.Entries[:i], manifest.Entries[i+1:]...)
-	err = idx.updateManifest(manifest)
+	err = idx.updateManifest(manifest, idx.encryptionPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +144,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 			if apnd {
 				refs = entry.Ref
 			}
-			entry.Ref = append(refs, value)
+			entry.Ref = append(refs, value) // skipcq: CRT-D0001
 			manifest.dirtyFlag = true
 			entryAdded = true
 			break
@@ -177,11 +178,11 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 
 			// store the new Manifest with two leaves
 			if !memory {
-				err := idx.storeManifest(&newManifest)
-				if err != nil {
+				err := idx.storeManifest(&newManifest, idx.encryptionPassword)
+				if err != nil { // skipcq: TCV-001
 					return err
 				}
-			} else {
+			} else { // skipcq: TCV-001
 				entry.Manifest = &newManifest
 				manifest.dirtyFlag = true
 			}
@@ -217,11 +218,11 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
 				if !memory {
-					err := idx.storeManifest(&newManifest)
-					if err != nil {
+					err := idx.storeManifest(&newManifest, idx.encryptionPassword)
+					if err != nil { // skipcq: TCV-001
 						return err
 					}
-				} else {
+				} else { // skipcq: TCV-001
 					// update the old Manifest name and add the new Manifest to the existing entry
 					oldManifest := entry.Manifest
 					entry2.Manifest = oldManifest
@@ -237,24 +238,24 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 			} else if len(keySuffix) > 0 {
 				// load the entry's Manifest and add the keySuffix as a new leaf
 				if !memory {
-					intermediateManifest, err := idx.loadManifest(manifest.Name + entry.Name)
-					if err != nil {
+					intermediateManifest, err := idx.loadManifest(manifest.Name+entry.Name, idx.encryptionPassword)
+					if err != nil { // skipcq: TCV-001
 						return err
 					}
 					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory, apnd)
-				} else {
+				} else { // skipcq: TCV-001
 					return idx.addOrUpdateStringEntry(ctx, entry.Manifest, keySuffix, idxType, value, memory, apnd)
 				}
 
 			} else if entrySuffix == "" && keySuffix == "" {
 				// load the entry's Manifest and add the keySuffix as a new leaf
 				if !memory {
-					intermediateManifest, err := idx.loadManifest(manifest.Name + prefix)
-					if err != nil {
+					intermediateManifest, err := idx.loadManifest(manifest.Name+prefix, idx.encryptionPassword)
+					if err != nil { // skipcq: TCV-001
 						return err
 					}
 					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory, apnd)
-				} else {
+				} else { // skipcq: TCV-001
 					return idx.addOrUpdateStringEntry(ctx, entry.Manifest, keySuffix, idxType, value, memory, apnd)
 				}
 
@@ -280,11 +281,11 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
 				if !memory {
-					err := idx.storeManifest(&newManifest)
-					if err != nil {
+					err := idx.storeManifest(&newManifest, idx.encryptionPassword)
+					if err != nil { // skipcq: TCV-001
 						return err
 					}
-				} else {
+				} else { // skipcq: TCV-001
 					oldManifest := entry.Manifest
 					entry2.Manifest = oldManifest
 					entry.Manifest = &newManifest
@@ -314,9 +315,9 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 	}
 
 	if entryAdded && !memory {
-		return idx.updateManifest(manifest)
+		return idx.updateManifest(manifest, idx.encryptionPassword)
 	}
-	return nil
+	return nil // skipcq: TCV-001
 }
 
 func (*Index) addEntryToManifestSortedLexicographically(manifest *Manifest, entryToAdd *Entry) {
@@ -343,7 +344,7 @@ func (*Index) addEntryToManifestSortedLexicographically(manifest *Manifest, entr
 			if len(entry.Ref) == len(entryToAdd.Ref) {
 				equal := true
 				for kk, r := range entry.Ref {
-					if !bytes.Equal(r, entryToAdd.Ref[kk]) {
+					if !bytes.Equal(r, entryToAdd.Ref[kk]) { // skipcq: TCV-001
 						equal = false
 					}
 				}
@@ -378,13 +379,13 @@ func (*Index) addEntryToManifestSortedLexicographically(manifest *Manifest, entr
 func (idx *Index) seekManifestAndEntry(key string) (*Manifest, *Manifest, int, error) {
 
 	// load the first Manifest of the index
-	fm, err := idx.loadManifest(idx.name)
-	if err != nil && !errors.Is(err, ErrNoManifestFound) {
+	fm, err := idx.loadManifest(idx.name, idx.encryptionPassword)
+	if err != nil && !errors.Is(err, ErrNoManifestFound) { // skipcq: TCV-001
 		return nil, nil, 0, err
 	}
 
 	// if there are any elements in the index, then search for the entry
-	if len(fm.Entries) > 0 {
+	if fm.Entries != nil && len(fm.Entries) > 0 {
 		return idx.findManifest(nil, fm, key)
 	}
 	return nil, nil, 0, ErrEntryNotFound
@@ -414,11 +415,11 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 				if entry.Manifest == nil {
 					childManifestPath := parentManifest.Name + entry.Name
 					var err error
-					childManifest, err = idx.loadManifest(childManifestPath)
-					if err != nil {
+					childManifest, err = idx.loadManifest(childManifestPath, idx.encryptionPassword)
+					if err != nil { // skipcq: TCV-001
 						return nil, nil, 0, err
 					}
-				} else {
+				} else { // skipcq: TCV-001
 					childManifest = entry.Manifest
 				}
 				return idx.findManifest(parentManifest, childManifest, childKey)

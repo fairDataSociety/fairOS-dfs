@@ -26,27 +26,56 @@ type PresentResponse struct {
 	Present bool `json:"present"`
 }
 
-// UserPresentHandler is the api handler to check if a gien user name is present
-// it takes only one argument
-// - user_name: the name of the user to check
+// UserPresentHandler godoc
+//
+//	@Tags         user
+//	@Deprecated
+//	@Router       /v1/user/present [get]
 func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["user_name"]
+	keys, ok := r.URL.Query()["userName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("user present: \"user_name\" argument missing")
-		jsonhttp.BadRequest(w, "user present: \"user_name\" argument missing")
+		h.logger.Errorf("user present: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user present: \"userName\" argument missing"})
 		return
 	}
 
 	user := keys[0]
 	if user == "" {
-		h.logger.Errorf("user present: \"user\" argument missing")
-		jsonhttp.BadRequest(w, "user present: \"user\" argument missing")
+		h.logger.Errorf("user present: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user present: \"userName\" argument missing"})
+		return
+	}
+	jsonhttp.BadRequest(w, &response{Message: "user present: deprecated"})
+}
+
+// UserPresentV2Handler godoc
+//
+//	@Summary      Check if user is present
+//	@Description  checks if the new user is present in the new ENS based authentication
+//	@Tags         user
+//	@Produce      json
+//	@Param	      userName query string true "user name"
+//	@Success      200  {object}  PresentResponse
+//	@Failure      400  {object}  response
+//	@Router       /v2/user/present [get]
+func (h *Handler) UserPresentV2Handler(w http.ResponseWriter, r *http.Request) {
+	keys, ok := r.URL.Query()["userName"]
+	if !ok || len(keys[0]) < 1 {
+		h.logger.Errorf("user present: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user present: \"userName\" argument missing"})
+		return
+	}
+
+	user := keys[0]
+	if user == "" {
+		h.logger.Errorf("user present: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user present: \"userName\" argument missing"})
 		return
 	}
 
 	w.Header().Set("Content-Type", " application/json")
 	// check if user is present
-	if h.dfsAPI.IsUserNameAvailable(user) {
+	if h.dfsAPI.IsUserNameAvailableV2(user) {
 		jsonhttp.OK(w, &PresentResponse{
 			Present: true,
 		})

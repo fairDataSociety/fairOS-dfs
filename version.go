@@ -5,13 +5,14 @@
 package dfs
 
 var (
-	version = "0.7.3" // manually set semantic version number
-	commit  string    // automatically set git commit hash
+	version = "dev"
+	commit  string
 
+	// Version is used to print dfs version
 	Version = func() string {
 		if commit != "" {
 			return version + "-" + commit
 		}
-		return version + "-dev"
+		return version
 	}()
 )

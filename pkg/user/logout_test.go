@@ -17,35 +17,42 @@ limitations under the License.
 package user_test
 
 import (
-	"io/ioutil"
-	"os"
+	"errors"
+	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func TestLogout(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 
 	t.Run("logout-user", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "logout")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dataDir)
+		tm := taskmanager.New(1, 10, time.Second*15, logger)
 
-		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", logger)
-		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
+		ens := mock2.NewMockNamespaceManager()
+		// create user
+		userObject := user.NewUsers("", mockClient, ens, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Logout user
-		err = userObject.LogoutUser(ui.GetUserName(), dataDir, ui.GetSessionId(), nil)
+		err = userObject.LogoutUser(ui.GetUserName(), "invalid sessionID")
+		if !errors.Is(err, user.ErrUserNotLoggedIn) {
+			t.Fatal(err)
+		}
+
+		// Logout user
+		err = userObject.LogoutUser(ui.GetUserName(), ui.GetSessionId())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -54,7 +61,7 @@ func TestLogout(t *testing.T) {
 		if userObject.IsUserNameLoggedIn(ui.GetUserName()) {
 			t.Fatalf("user still loggin in")
 		}
-		if !userObject.IsUsernameAvailable(ui.GetUserName(), dataDir) {
+		if !userObject.IsUsernameAvailableV2(ui.GetUserName()) {
 			t.Fatalf("user not created")
 		}
 	})

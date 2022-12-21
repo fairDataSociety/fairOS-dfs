@@ -20,43 +20,51 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// KVOpenHandler is the api handler to open a key value table
-// it takes only one argument
-// - table_name: the name of the kv table
+// KVOpenHandler godoc
+//
+//	@Summary      Open a key value table
+//	@Description  KVOpenHandler is the api handler to open a key value table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      kv_table_request body KVTableRequest true "kv table request"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      201  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/open [post]
 func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("kv open: invalid request body type")
-		jsonhttp.BadRequest(w, "kv open: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var kvReq common.KVRequest
+	var kvReq KVTableRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv open: could not decode arguments")
-		jsonhttp.BadRequest(w, "kv open: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: could not decode arguments"})
 		return
 	}
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv open: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv open: \"pod_name\" argument missing")
+		h.logger.Errorf("kv open: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv open: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv open: \"name\" argument missing")
+		h.logger.Errorf("kv open: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: \"tableName\" argument missing"})
 		return
 	}
 
@@ -64,20 +72,20 @@ func (h *Handler) KVOpenHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv open: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv open: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv open: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv open: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.KVOpen(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("kv open: %v", err)
-		jsonhttp.InternalServerError(w, "kv open: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv open: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "kv store opened")
+	jsonhttp.OK(w, &response{Message: "kv store opened"})
 }

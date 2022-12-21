@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	hasherCount            = 8
-	defaultRetrieveTimeout = 100 * time.Millisecond
+	hasherCount = 8
+
+	defaultRetrieveTimeout = 2 * time.Second
 )
 
 // CacheEntry caches the last known update of a specific Swarm feed.
@@ -35,11 +36,13 @@ type CacheEntry struct {
 }
 
 // Size implements storage.LazySectionReader
+// skipcq: TCV-001
 func (r *CacheEntry) Size(ctx context.Context, _ chan bool) (int64, error) {
 	return int64(len(r.Update.data)), nil
 }
 
 // Topic returns the feed's topic
+// skipcq: TCV-001
 func (r *CacheEntry) Topic() Topic {
 	return r.Feed.Topic
 }

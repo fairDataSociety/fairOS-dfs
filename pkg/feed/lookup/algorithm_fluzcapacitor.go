@@ -54,7 +54,7 @@ func FluzCapacitorAlgorithm(ctx context.Context, now uint64, hint Epoch, read Re
 			continue
 		}
 		base := epoch.Base()
-		if base == 0 {
+		if base == 0 { // skipcq: TCV-001
 			return nil, nil
 		}
 		t = base - 1

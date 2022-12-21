@@ -18,10 +18,10 @@ package file_test
 
 import (
 	"bytes"
+	"crypto/rand"
 	"errors"
-	"fmt"
 	"io"
-	"math/rand"
+	"math/big"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -32,13 +32,110 @@ import (
 func TestFileReader(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 
+	t.Run("read-entire-file-shorter-than-block", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+
+		_, fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(10, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		outputBytes := make([]byte, 3)
+		n, err := reader.Read(outputBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != 3 {
+			t.Fatal("file not read properly")
+		}
+	})
+
+	t.Run("read-entire-file-shorter-than-block-2", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+
+		_, fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(10, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		outputBytes := make([]byte, 10)
+		_, err = reader.Read(outputBytes)
+		if !errors.Is(err, io.EOF) {
+			t.Fatal("should be EOF")
+		}
+	})
+
+	t.Run("read-entire-file-shorter-than-block-3", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+
+		_, fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(10, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		outputBytes := make([]byte, 5)
+		n, err := reader.Read(outputBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != 5 {
+			t.Fatal("file not read properly")
+		}
+	})
+
+	t.Run("read-seek", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+
+		_, fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(16, 0)
+		if !errors.Is(err, file.ErrInvalidOffset) {
+			t.Fatal("offset is invalid")
+		}
+	})
+
+	t.Run("read-seek-offset-zero", func(t *testing.T) {
+		fileSize := uint64(15)
+		blockSize := uint32(20)
+
+		_, fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+		_, err := reader.Seek(0, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		outputBytes := make([]byte, 15)
+		n, err := reader.Read(outputBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != 15 {
+			t.Fatal("file not read properly")
+		}
+	})
+
 	t.Run("read-entire-file", func(t *testing.T) {
 		fileSize := uint64(100)
 		blockSize := uint32(10)
-		fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+
+		b, fileInode := createFile(t, fileSize, blockSize, "", mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
+
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !checkFileContents(t, fileInode, outputBytes, mockClient, "") {
+		if !bytes.Equal(b, outputBytes) {
 			t.Fatalf("file contents are not same")
 		}
 	})
@@ -46,10 +143,12 @@ func TestFileReader(t *testing.T) {
 	t.Run("read-file-with-last-block-shorter", func(t *testing.T) {
 		fileSize := uint64(93)
 		blockSize := uint32(10)
-		fileInode := createFile(t, fileSize, blockSize, "", mockClient)
+
+		b, fileInode := createFile(t, fileSize, blockSize, "", mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !checkFileContents(t, fileInode, outputBytes, mockClient, "") {
+		if !bytes.Equal(b, outputBytes) {
 			t.Fatalf("file contents are not same")
 		}
 	})
@@ -58,10 +157,12 @@ func TestFileReader(t *testing.T) {
 		fileSize := uint64(1638500)
 		blockSize := uint32(163850)
 		compression := "gzip"
-		fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
+
+		b, fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
+		if !bytes.Equal(b, outputBytes) {
 			t.Fatalf("file contents are not same")
 		}
 	})
@@ -70,10 +171,12 @@ func TestFileReader(t *testing.T) {
 		fileSize := uint64(1999000)
 		blockSize := uint32(200000)
 		compression := "gzip"
-		fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
+
+		b, fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
+		if !bytes.Equal(b, outputBytes) {
 			t.Fatalf("file contents are not same")
 		}
 	})
@@ -82,10 +185,12 @@ func TestFileReader(t *testing.T) {
 		fileSize := uint64(100)
 		blockSize := uint32(10)
 		compression := "snappy"
-		fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
+
+		b, fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
+		if !bytes.Equal(b, outputBytes) {
 			t.Fatalf("file contents are not same")
 		}
 	})
@@ -94,10 +199,12 @@ func TestFileReader(t *testing.T) {
 		fileSize := uint64(93)
 		blockSize := uint32(10)
 		compression := "snappy"
-		fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
+
+		b, fileInode := createFile(t, fileSize, blockSize, compression, mockClient)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
+		if !bytes.Equal(b, outputBytes) {
 			t.Fatalf("file contents are not same")
 		}
 	})
@@ -106,10 +213,12 @@ func TestFileReader(t *testing.T) {
 		fileSize := uint64(100)
 		blockSize := uint32(10)
 		linesPerBlock := uint32(2)
-		fileInode, _, _, _, _ := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
+
+		b, fileInode, _, _, _, _ := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		outputBytes := readFileContentsUsingReadline(t, fileSize, reader)
-		if !checkFileContents(t, fileInode, outputBytes, mockClient, "") {
+		if !bytes.Equal(b, outputBytes) {
 			t.Fatalf("file contents are not same")
 		}
 	})
@@ -118,10 +227,12 @@ func TestFileReader(t *testing.T) {
 		fileSize := uint64(97)
 		blockSize := uint32(10)
 		linesPerBlock := uint32(2)
-		fileInode, _, _, _, _ := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
+
+		b, fileInode, _, _, _, _ := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		outputBytes := readFileContentsUsingReadline(t, fileSize, reader)
-		if !checkFileContents(t, fileInode, outputBytes, mockClient, "") {
+		if !bytes.Equal(b, outputBytes) {
 			t.Fatalf("file contents are not same")
 		}
 	})
@@ -131,10 +242,12 @@ func TestFileReader(t *testing.T) {
 		blockSize := uint32(10)
 		linesPerBlock := uint32(2)
 		compression := "snappy"
-		fileInode, _, _, _, _ := createFileWithNewlines(t, fileSize, blockSize, compression, mockClient, linesPerBlock)
+
+		b, fileInode, _, _, _, _ := createFileWithNewlines(t, fileSize, blockSize, compression, mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		outputBytes := readFileContentsUsingReadline(t, fileSize, reader)
-		if !checkFileContents(t, fileInode, outputBytes, mockClient, compression) {
+		if !bytes.Equal(b, outputBytes) {
 			t.Fatalf("file contents are not same")
 		}
 	})
@@ -143,8 +256,10 @@ func TestFileReader(t *testing.T) {
 		fileSize := uint64(100)
 		blockSize := uint32(10)
 		linesPerBlock := uint32(2)
-		fileInode, lineStart, line, _, _ := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
+
+		_, fileInode, lineStart, line, _, _ := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
 		if err != nil {
 			t.Fatal(err)
@@ -165,8 +280,10 @@ func TestFileReader(t *testing.T) {
 		fileSize := uint64(100)
 		blockSize := uint32(10)
 		linesPerBlock := uint32(2)
-		fileInode, _, _, lineStart, line := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
+
+		_, fileInode, _, _, lineStart, line := createFileWithNewlines(t, fileSize, blockSize, "", mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
+		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
 		if err != nil {
 			t.Fatal(err)
@@ -188,8 +305,10 @@ func TestFileReader(t *testing.T) {
 		blockSize := uint32(10)
 		linesPerBlock := uint32(2)
 		compression := "snappy"
-		fileInode, _, _, lineStart, line := createFileWithNewlines(t, fileSize, blockSize, compression, mockClient, linesPerBlock)
+
+		_, fileInode, _, _, lineStart, line := createFileWithNewlines(t, fileSize, blockSize, compression, mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
+		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
 		if err != nil {
 			t.Fatal(err)
@@ -211,8 +330,10 @@ func TestFileReader(t *testing.T) {
 		blockSize := uint32(10)
 		linesPerBlock := uint32(2)
 		compression := "snappy"
-		fileInode, _, _, lineStart, line := createFileWithNewlines(t, fileSize, blockSize, compression, mockClient, linesPerBlock)
+
+		_, fileInode, _, _, lineStart, line := createFileWithNewlines(t, fileSize, blockSize, compression, mockClient, linesPerBlock)
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, true)
+		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
 		if err != nil {
 			t.Fatal(err)
@@ -220,6 +341,7 @@ func TestFileReader(t *testing.T) {
 		if seekN != int64(lineStart) {
 			t.Fatalf("did not seek to proper line start")
 		}
+
 		buf, err := reader.ReadLine()
 		if err != nil {
 			t.Fatal(err)
@@ -246,12 +368,13 @@ func TestFileReader(t *testing.T) {
 	})
 }
 
-func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.MockBeeClient) file.INode {
+func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.BeeClient) ([]byte, file.INode) {
 	var fileBlocks []*file.BlockInfo
 	noOfBlocks := fileSize / uint64(blockSize)
 	if fileSize%uint64(blockSize) != 0 {
 		noOfBlocks += 1
 	}
+	content := []byte{}
 	bytesRemaining := fileSize
 	for i := uint64(0); i < noOfBlocks; i++ {
 		bytesToWrite := blockSize
@@ -259,7 +382,11 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 			bytesToWrite = uint32(bytesRemaining)
 		}
 		buf := make([]byte, bytesToWrite)
-		rand.Read(buf)
+		_, err := rand.Read(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		content = append(content, buf...)
 		if compression != "" {
 			compressedData, err := file.Compress(buf, compression, bytesToWrite)
 			if err != nil {
@@ -272,9 +399,7 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 		if err != nil {
 			t.Fatal(err)
 		}
-		blockName := fmt.Sprintf("block-%05d", i)
 		fileBlock := &file.BlockInfo{
-			Name:           blockName,
 			Size:           bytesToWrite,
 			CompressedSize: uint32(len(buf)),
 			Reference:      utils.NewReference(addr),
@@ -283,12 +408,12 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 		bytesRemaining -= uint64(bytesToWrite)
 	}
 
-	return file.INode{
+	return content, file.INode{
 		Blocks: fileBlocks,
 	}
 }
 
-func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.MockBeeClient, linesPerBlock uint32) (file.INode, int, []byte, int, []byte) {
+func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.BeeClient, linesPerBlock uint32) ([]byte, file.INode, int, []byte, int, []byte) {
 	var fileBlocks []*file.BlockInfo
 	noOfBlocks := fileSize / uint64(blockSize)
 	if fileSize%uint64(blockSize) != 0 {
@@ -303,22 +428,36 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 	var borderCrossingLine []byte
 
 	bytesWritten := 0
+	content := []byte{}
+
 	for i := uint64(0); i < noOfBlocks; i++ {
 		bytesToWrite := blockSize
 		if bytesRemaining < uint64(blockSize) {
 			bytesToWrite = uint32(bytesRemaining)
 		}
 		buf := make([]byte, bytesToWrite)
-		rand.Read(buf)
-
+		_, err := rand.Read(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
 		for j := uint32(0); j < linesPerBlock; j++ {
-			idx := rand.Intn(int(bytesToWrite))
+			bi, err := rand.Int(rand.Reader, big.NewInt(int64(bytesToWrite)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			idx := bi.Int64()
 			if buf[idx] == '\n' {
-				idx = rand.Intn(int(bytesToWrite))
+				bi, err = rand.Int(rand.Reader, big.NewInt(int64(bytesToWrite)))
+				if err != nil {
+					t.Fatal(err)
+				}
+				idx = bi.Int64()
 			}
 			buf[idx] = '\n'
 		}
-
+		if buf[int64(bytesToWrite)-1] == 10 {
+			buf[int64(bytesToWrite)-1] = 11
+		}
 		if i == 2 {
 			start := false
 			startIndex := 0
@@ -326,6 +465,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			for k, ch := range buf {
 				if ch == '\n' && start {
 					endIndex = k + 1
+					break
 				}
 				if ch == '\n' && !start {
 					startIndex = k + 1
@@ -335,6 +475,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			}
 			if startIndex > endIndex {
 				startIndex, endIndex = endIndex, startIndex
+				randomLineStartPoint = (int(blockSize) * int(i)) + startIndex
 			}
 			randomLine = append(randomLine, buf[startIndex:endIndex]...)
 		}
@@ -353,8 +494,10 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 					borderCrossingLineStartingPoint = (int(blockSize) * int(i)) + startIndex
 				}
 			}
-			borderCrossingLine = append(borderCrossingLine, buf[startIndex:]...)
-			gotFromFirstBlock = true
+			if borderCrossingLineStartingPoint != 0 {
+				borderCrossingLine = append(borderCrossingLine, buf[startIndex:]...)
+				gotFromFirstBlock = true
+			}
 		}
 
 		if i >= 4 && !gotFromFirstBlock && borderCrossingLine != nil && borderCrossingLine[len(borderCrossingLine)-1] != '\n' {
@@ -367,7 +510,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 				}
 			}
 		}
-
+		content = append(content, buf...)
 		if compression != "" {
 			compressedData, err := file.Compress(buf, compression, bytesToWrite)
 			if err != nil {
@@ -380,9 +523,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 		if err != nil {
 			t.Fatal(err)
 		}
-		blockName := fmt.Sprintf("block-%05d", i)
 		fileBlock := &file.BlockInfo{
-			Name:           blockName,
 			Size:           bytesToWrite,
 			CompressedSize: uint32(len(buf)),
 			Reference:      utils.NewReference(addr),
@@ -391,38 +532,9 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 		bytesRemaining -= uint64(bytesToWrite)
 		bytesWritten += int(bytesToWrite)
 	}
-
-	return file.INode{
+	return content, file.INode{
 		Blocks: fileBlocks,
 	}, randomLineStartPoint, randomLine, borderCrossingLineStartingPoint, borderCrossingLine
-}
-
-func checkFileContents(t *testing.T, fileInode file.INode, outputBytes []byte, mockClient *mock.MockBeeClient, compression string) bool {
-	var inpBuf []byte
-	fileSize := uint32(0)
-	for _, block := range fileInode.Blocks {
-		buf, _, err := mockClient.DownloadBlob(block.Reference.Bytes())
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		deflatedBuf, err := file.Decompress(buf, compression, block.Size)
-		if err != nil {
-			t.Fatal(err)
-		}
-		fileSize += block.Size
-		inpBuf = append(inpBuf, deflatedBuf...)
-	}
-
-	inputBytes := make([]byte, fileSize)
-	copy(inputBytes, inpBuf[:fileSize])
-
-	for i := range inputBytes {
-		if inputBytes[i] != outputBytes[i] {
-			fmt.Println(i)
-		}
-	}
-	return bytes.Equal(inputBytes, outputBytes)
 }
 
 func readFileContents(t *testing.T, fileSize uint64, reader *file.Reader) []byte {

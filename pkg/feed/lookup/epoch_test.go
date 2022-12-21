@@ -21,6 +21,10 @@ func TestMarshallers(t *testing.T) {
 		if err := e2.UnmarshalBinary(b); err != nil {
 			t.Fatal(err)
 		}
+		// test invalid epoch length
+		if err := e2.UnmarshalBinary([]byte("123456789")); err == nil {
+			t.Fatal("invalid epoch length")
+		}
 		if e != e2 {
 			t.Fatal("Expected unmarshalled epoch to be equal to marshalled onet.Fatal(err)")
 		}

@@ -1,12 +1,9 @@
 /*
 Copyright © 2020 FairOS Authors
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
 http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,35 +21,27 @@ import (
 )
 
 type UserExportResponse struct {
-	Name    string `json:"user_name"`
+	Name    string `json:"userName"`
 	Address string `json:"address"`
 }
 
-// ExportUserHandler is the api handler to export a user information
-// it takes no arguments
+// ExportUserHandler godoc
+//
+//	@Tags         user
+//	@Deprecated
+//	@Router       /v1/user/export [post]
 func (h *Handler) ExportUserHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("user export: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("user export: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "save contact: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "user export: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
-
-	name, address, err := h.dfsAPI.ExportUser(sessionId)
-	if err != nil {
-		h.logger.Errorf("user export: %v", err)
-		jsonhttp.InternalServerError(w, "user export: "+err.Error())
-		return
-	}
-
-	jsonhttp.OK(w, &UserExportResponse{
-		Name:    name,
-		Address: address,
-	})
+	jsonhttp.BadRequest(w, &response{Message: "user export: deprecated"})
 }

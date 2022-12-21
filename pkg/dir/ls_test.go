@@ -17,8 +17,18 @@ limitations under the License.
 package dir_test
 
 import (
-	"io/ioutil"
+	"context"
+	"errors"
+	"io"
+	"sort"
 	"testing"
+	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
+	"github.com/plexsysio/taskmanager"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -30,67 +40,110 @@ import (
 
 func TestListDirectory(t *testing.T) {
 	mockClient := bm.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	pod1AccountInfo, err := acc.CreatePodAccount(1, "password", false)
+	pod1AccountInfo, err := acc.CreatePodAccount(1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("list-dirr", func(t *testing.T) {
-		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, logger)
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
-		err = dirObject.MkRootDir("pod1", user, fd)
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
 			t.Fatal(err)
+		}
+		err := dirObject.MkDir("/", podPassword)
+		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
+			t.Fatal("invalid dir name", err)
+		}
+		longDirName, err := utils.GetRandString(101)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/"+longDirName, podPassword)
+		if !errors.Is(err, dir.ErrTooLongDirectoryName) {
+			t.Fatal("dir name too long")
 		}
 
 		// create some dir and files
-		err := dirObject.MkDir("/parentDir")
+		err = dirObject.MkDir("/parentDir", podPassword)
 		if err != nil {
 			t.Fatal(err)
+		}
+		err = dirObject.MkDir("/parentDir", podPassword)
+		if !errors.Is(err, dir.ErrDirectoryAlreadyPresent) {
+			t.Fatal("dir already present")
 		}
 		// populate the directory with few directory and files
-		err = dirObject.MkDir("/parentDir/subDir1")
+		err = dirObject.MkDir("/parentDir/subDir1", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/parentDir/subDir2")
+		err = dirObject.MkDir("/parentDir/subDir2", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		err = dirObject.AddEntryToDir("", podPassword, "file1", true)
+		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
+			t.Fatal("invalid dir name")
+		}
+		err = dirObject.AddEntryToDir("/parentDir", podPassword, "", true)
+		if !errors.Is(err, dir.ErrInvalidFileOrDirectoryName) {
+			t.Fatal("invalid file or dir name")
+		}
+		err = dirObject.AddEntryToDir("/parentDir-not-available", podPassword, "file1", true)
+		if !errors.Is(err, dir.ErrDirectoryNotPresent) {
+			t.Fatal("parent not available")
+		}
+
 		// just add dummy file enty as file listing is not tested here
-		err = dirObject.AddEntryToDir("/parentDir", "file1", true)
+		err = dirObject.AddEntryToDir("/parentDir", podPassword, "file1", true)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.AddEntryToDir("/parentDir", "file2", true)
+		err = dirObject.AddEntryToDir("/parentDir", podPassword, "file2", true)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// validate dir listing
-		dirs, files, err := dirObject.ListDir("/parentDir")
+		dirEntries, files, err := dirObject.ListDir("/parentDir", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
+		dirs := []string{}
+
+		for _, v := range dirEntries {
+			dirs = append(dirs, v.Name)
+		}
+
 		if len(dirs) != 2 {
 			t.Fatalf("invalid directory entry count")
 		}
 
+		sort.Strings(dirs)
+		sort.Strings(files)
 		// validate entry names
-		if dirs[0].Name != "subDir1" {
+		if dirs[0] != "subDir1" {
 			t.Fatalf("invalid directory name")
 		}
-		if dirs[1].Name != "subDir2" {
+		if dirs[1] != "subDir2" {
 			t.Fatalf("invalid directory name")
 		}
 		if files[0] != "/parentDir/file1" {
@@ -98,6 +151,46 @@ func TestListDirectory(t *testing.T) {
 		}
 		if files[1] != "/parentDir/file2" {
 			t.Fatalf("invalid file name")
+		}
+	})
+
+	t.Run("list-dir-from-different-dir-object", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
+
+		// make root dir so that other directories can be added
+		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create dir
+		err = dirObject.MkDir("/parentDir", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// populate the directory with few directory and files
+		err = dirObject.MkDir("/parentDir/subDir1", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		dirObject2 := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
+		err = dirObject2.AddRootDir("pod1", podPassword, user, fd)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// validate dir listing
+		dirs, _, err := dirObject2.ListDir("/parentDir", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(dirs) != 1 {
+			t.Fatalf("invalid directory entry count")
+		}
+
+		// validate entry names
+		if dirs[0].Name != "subDir1" {
+			t.Fatalf("invalid directory name")
 		}
 	})
 }

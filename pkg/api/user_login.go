@@ -18,60 +18,97 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )
 
-// UserLoginHandler is the api handler to login a user
-// it takes two arguments
-// - user_name: the name of the user to login
-// - password: the password of the user
-func (h *Handler) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
+type UserLoginResponse struct {
+	Address   string `json:"address"`
+	NameHash  string `json:"nameHash,omitempty"`
+	PublicKey string `json:"publicKey,omitempty"`
+	Message   string `json:"message,omitempty"`
+}
+
+// UserLoginV2Handler godoc
+//
+//	@Summary      Login User
+//	@Description  login user with the new ENS based authentication
+//	@Tags         user
+//	@Accept       json
+//	@Produce      json
+//	@Param	      user_request body common.UserLoginRequest true "user name"
+//	@Success      200  {object}  UserLoginResponse
+//	@Failure      400  {object}  response
+//	@Failure      404  {object}  response
+//	@Failure      500  {object}  response
+//	@Header	      200  {string}  Set-Cookie "fairos-dfs session"
+//	@Router       /v2/user/login [post]
+func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("user login: invalid request body type")
-		jsonhttp.BadRequest(w, "user login: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "user login: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var userReq common.UserRequest
+	var userReq common.UserLoginRequest
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		h.logger.Errorf("user login: could not decode arguments")
-		jsonhttp.BadRequest(w, "user login: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "user login: could not decode arguments"})
 		return
 	}
 
 	user := userReq.UserName
 	password := userReq.Password
 	if user == "" {
-		h.logger.Errorf("user login: \"user_name\" argument missing")
-		jsonhttp.BadRequest(w, "user login: \"user_name\" argument missing")
+		h.logger.Errorf("user login: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user login: \"userName\" argument missing"})
 		return
 	}
 	if password == "" {
 		h.logger.Errorf("user login: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "user login: \"password\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user login: \"password\" argument missing"})
 		return
 	}
 
 	// login user
-	err = h.dfsAPI.LoginUser(user, password, w, "")
+	ui, nameHash, publicKey, err := h.dfsAPI.LoginUserV2(user, password, "")
 	if err != nil {
+		if errors.Is(err, u.ErrUserNameNotFound) {
+			h.logger.Errorf("user login: %v", err)
+			jsonhttp.NotFound(w, &response{Message: "user login: " + err.Error()})
+			return
+		}
 		if err == u.ErrUserAlreadyLoggedIn ||
 			err == u.ErrInvalidUserName ||
 			err == u.ErrInvalidPassword {
 			h.logger.Errorf("user login: %v", err)
-			jsonhttp.BadRequest(w, "user login: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "user login: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("user login: %v", err)
-		jsonhttp.InternalServerError(w, "user login: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "user logged-in successfully")
+	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
+	if err != nil {
+		h.logger.Errorf("user login: %v", err)
+		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
+		return
+	}
+
+	jsonhttp.OK(w, &UserSignupResponse{
+		Address:   ui.GetAccount().GetUserAccountInfo().GetAddress().Hex(),
+		NameHash:  "0x" + nameHash,
+		PublicKey: publicKey,
+		Message:   "user logged-in successfully",
+	})
 }

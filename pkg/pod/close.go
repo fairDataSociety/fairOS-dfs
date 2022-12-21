@@ -16,20 +16,20 @@ limitations under the License.
 
 package pod
 
-// ClosePod closed a already opened pod and removes its information from directory and file
+// ClosePod closed an already opened pod and removes its information from directory and file
 // data structures.
 func (p *Pod) ClosePod(podName string) error {
 	if !p.IsPodOpened(podName) {
 		return ErrPodNotOpened
 	}
 
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
+	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
 	podIndex, err := p.getPodIndex(podName)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 

@@ -22,8 +22,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
@@ -33,47 +31,54 @@ const (
 	DefaultSeekLimit = "10"
 )
 
-// KVSeekHandler is the api handler to seek to a particular key with the given prefix
-// it takes four arguments, 2 mandatory and two optional
-// - table_name: the name of the kv table
-// - start_prefix: the prefix of the key to seek
-// * end_prefix: the prefix of the end key
-// * limit: the threshold for the number of keys to go when get_next is called
+// KVSeekHandler godoc
+//
+//	@Summary      Seek in kv table
+//	@Description  KVSeekHandler is the api handler to seek to a particular key with the given prefix
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      export_request body KVExportRequest true "kv seek info"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/seek [Post]
 func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
-		h.logger.Errorf("kv delete: invalid request body type")
-		jsonhttp.BadRequest(w, "kv delete: invalid request body type")
+		h.logger.Errorf("kv seek: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var kvReq common.KVRequest
+	var kvReq KVExportRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
-		h.logger.Errorf("kv delete: could not decode arguments")
-		jsonhttp.BadRequest(w, "kv delete: could not decode arguments")
+		h.logger.Errorf("kv seek: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: could not decode arguments"})
 		return
 	}
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv seek: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv seek: \"pod_name\" argument missing")
+		h.logger.Errorf("kv seek: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv seek: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv seek: \"table_name\" argument missing")
+		h.logger.Errorf("kv seek: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: \"tableName\" argument missing"})
 		return
 	}
 
 	start := kvReq.StartPrefix
 	if start == "" {
 		h.logger.Errorf("kv seek: \"start\" argument missing")
-		jsonhttp.BadRequest(w, "kv seek: \"start\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: \"start\" argument missing"})
 		return
 	}
 
@@ -85,7 +90,7 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	noOfRows, err := strconv.ParseInt(limit, 10, 64)
 	if err != nil {
 		h.logger.Errorf("kv seek: invalid limit")
-		jsonhttp.BadRequest(w, "kv seek: invalid limit")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: invalid limit"})
 		return
 	}
 
@@ -93,53 +98,65 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv seek: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv seek: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv seek: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv seek: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	_, err = h.dfsAPI.KVSeek(sessionId, podName, name, start, end, noOfRows)
 	if err != nil {
 		h.logger.Errorf("kv seek: %v", err)
-		jsonhttp.InternalServerError(w, "kv seek: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv seek: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "seeked closest to the start key")
+	jsonhttp.OK(w, &response{Message: "seeked closest to the start key"})
 }
 
-// KVGetNextHandler is the api handler to get the key and value from the current seek position
-// it takes only oneargument
-// - table_name: the name of the kv table
+// KVGetNextHandler godoc
+//
+//	@Summary      Get next value from last seek in kv table
+//	@Description  KVGetNextHandler is the api handler to get the key and value from the current seek position
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      tableName query string true "table name"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  KVResponse
+//	@Success      204  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/seek/next [Post]
 func (h *Handler) KVGetNextHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get_next: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get_next: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"podName\" argument missing")
 		return
 	}
 
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("kv get_next: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get_next: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"podName\" argument missing")
 		return
 	}
 
-	keys, ok = r.URL.Query()["table_name"]
+	keys, ok = r.URL.Query()["tableName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get_next: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"table_name\" argument missing")
+		h.logger.Errorf("kv get_next: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"tableName\" argument missing")
 		return
 	}
 
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("kv get_next: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get_next: \"table_name\" argument missing")
+		h.logger.Errorf("kv get_next: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get_next: \"tableName\" argument missing")
 		return
 	}
 

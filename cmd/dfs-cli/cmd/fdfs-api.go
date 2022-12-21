@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
@@ -36,23 +35,24 @@ import (
 )
 
 const (
-	MaxIdleConnections    = 20
-	MaxConnectionsPerHost = 256
-	RequestTimeout        = 6000
+	maxIdleConnections    = 20
+	maxConnectionsPerHost = 256
+	requestTimeout        = 6000
 )
 
-type FdfsClient struct {
+// fdfsClient is the http client for dfs
+type fdfsClient struct {
 	url    string
 	client *http.Client
 	cookie *http.Cookie
 }
 
-func NewFdfsClient(fdfsServer string) (*FdfsClient, error) {
+func newFdfsClient(fdfsServer string) (*fdfsClient, error) {
 	client, err := createHTTPClient()
 	if err != nil {
 		return nil, err
 	}
-	return &FdfsClient{
+	return &fdfsClient{
 		url:    fdfsServer,
 		client: client,
 	}, nil
@@ -64,18 +64,19 @@ func createHTTPClient() (*http.Client, error) {
 		return nil, err
 	}
 	client := &http.Client{
-		Timeout: time.Second * RequestTimeout,
+		Timeout: time.Second * requestTimeout,
 		Jar:     jar,
 		Transport: &http.Transport{
-			MaxIdleConnsPerHost: MaxIdleConnections,
-			MaxConnsPerHost:     MaxConnectionsPerHost,
+			MaxIdleConnsPerHost: maxIdleConnections,
+			MaxConnsPerHost:     maxConnectionsPerHost,
 		},
 	}
 	return client, nil
 }
 
-func (s *FdfsClient) CheckConnection() bool {
-	req, err := http.NewRequest(http.MethodGet, s.url, nil)
+// CheckConnection checks if it can connect to dfs server
+func (s *fdfsClient) CheckConnection() bool {
+	req, err := http.NewRequest(http.MethodGet, s.url, http.NoBody)
 	if err != nil {
 		return false
 	}
@@ -91,11 +92,11 @@ func (s *FdfsClient) CheckConnection() bool {
 		return false
 	}
 
-	_, err = ioutil.ReadAll(response.Body)
+	_, err = io.ReadAll(response.Body)
 	return err == nil
 }
 
-func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, error) {
+func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, error) {
 	// prepare the  request
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
@@ -110,7 +111,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("Content-Length", strconv.Itoa(len(jsonBytes)))
 	} else {
-		req, err = http.NewRequest(method, fullUrl, nil)
+		req, err = http.NewRequest(method, fullUrl, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +133,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		if response.StatusCode == http.StatusNoContent {
 			return nil, errors.New("no content")
 		}
-		data, err := ioutil.ReadAll(response.Body)
+		data, err := io.ReadAll(response.Body)
 		if err != nil {
 			return nil, errors.New("error downloading data")
 		}
@@ -141,6 +142,9 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		if err != nil {
 			return nil, errors.New("error unmarshalling error response")
 		}
+		if response.StatusCode == http.StatusPaymentRequired {
+			return data, nil
+		}
 		return nil, errors.New(resp.Message)
 	}
 
@@ -148,7 +152,7 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		s.cookie = response.Cookies()[0]
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -167,18 +171,18 @@ func (s *FdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 	return []byte(resp.Message), nil
 }
 
-func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
+func (s *fdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request
 	var err error
 	if argsString != "" {
 		fullUrl = fullUrl + "?" + argsString
-		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
+		req, err = http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		req, err = http.NewRequest(http.MethodGet, fullUrl, nil)
+		req, err = http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
@@ -200,7 +204,7 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 		if response.StatusCode == http.StatusNoContent {
 			return nil, errors.New("no content")
 		}
-		data, err := ioutil.ReadAll(response.Body)
+		data, err := io.ReadAll(response.Body)
 		if err != nil {
 			return nil, errors.New("error downloading data")
 		}
@@ -216,7 +220,7 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 		s.cookie = response.Cookies()[0]
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -234,7 +238,7 @@ func (s *FdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	return []byte(resp.Message), nil
 }
 
-func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, arguments map[string]string, formFileArgument, compression string) ([]byte, error) {
+func (s *fdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int64, fd *os.File, arguments map[string]string, formFileArgument, compression string) ([]byte, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 
@@ -293,7 +297,7 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 		return nil, errors.New(errStr)
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
@@ -302,7 +306,7 @@ func (s *FdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 
 }
 
-func (s *FdfsClient) downloadMultipartFile(method, urlPath string, arguments map[string]string, out *os.File) (int64, error) {
+func (s *fdfsClient) downloadMultipartFile(method, urlPath string, arguments map[string]string, out *os.File) (int64, error) {
 	// prepare the  request
 	fullUrl := fmt.Sprintf(s.url + urlPath)
 	var req *http.Request

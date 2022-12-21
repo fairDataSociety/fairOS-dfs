@@ -19,47 +19,60 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
-
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// DocCountHandler is the api handler to count the number of documents in
-// a given document database
-// it takes two arguments
-// - table_name: the name of the table to count the rows
-// - expr: the expression for selecting certain rows
+type DocCountRequest struct {
+	PodName     string `json:"podName,omitempty"`
+	TableName   string `json:"tableName,omitempty"`
+	SimpleIndex string `json:"si,omitempty"`
+	Mutable     bool   `json:"mutable,omitempty"`
+	Expression  string `json:"expr,omitempty"`
+}
+
+// DocCountHandler godoc
+//
+//	@Summary      Count number of document in a table
+//	@Description  DocCountHandler is the api handler to count the number of documents in a given document database
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      doc_request body DocCountRequest true "doc table info"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  collection.TableKeyCount
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/count [post]
 func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc count: invalid request body type")
-		jsonhttp.BadRequest(w, "doc count: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq DocCountRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc count: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc count: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: could not decode arguments"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc count: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc count: \"pod_name\" argument missing")
+		h.logger.Errorf("doc count: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: \"podName\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc count: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc count: \"name\" argument missing")
+		h.logger.Errorf("doc count: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: \"tableName\" argument missing"})
 		return
 	}
 
@@ -69,21 +82,21 @@ func (h *Handler) DocCountHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc count: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc count: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc count: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc count: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	count, err := h.dfsAPI.DocCount(sessionId, podName, name, expr)
 	if err != nil {
 		h.logger.Errorf("doc count: %v", err)
-		jsonhttp.InternalServerError(w, "doc count: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc count: " + err.Error()})
 		return
 	}
 
-	jsonhttp.OK(w, strconv.FormatUint(count, 10))
+	jsonhttp.OK(w, count)
 }

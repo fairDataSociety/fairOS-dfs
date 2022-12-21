@@ -23,26 +23,35 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserStatHandler is the api handler to get the information about a user
-// it takes no arguments
+// UserStatHandler godoc
+//
+//	@Summary      User stat
+//	@Description  show user stats
+//	@Tags         user
+//	@Accept       json
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  user.Stat
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/user/stat [get]
 func (h *Handler) UserStatHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("user stat: invalid cookie: ", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Error("user stat: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "user stat: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "user stat: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	userStat, err := h.dfsAPI.GetUserStat(sessionId)
 	if err != nil {
 		h.logger.Errorf("user stat: %v", err)
-		jsonhttp.InternalServerError(w, "user stat: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user stat: " + err.Error()})
 		return
 	}
 

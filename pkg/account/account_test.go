@@ -17,44 +17,40 @@ limitations under the License.
 package account
 
 import (
-	"io/ioutil"
+	"bytes"
+	"io"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
 
 func TestAccount_CreateRootAccount(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	password := "letmein"
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
-	_, _, err = acc.CreateUserAccount(password, "")
+
+	_, _, err = acc.CreateUserAccount("invalid mnemonic that we are passing to check create account error message")
+	if err == nil {
+		t.Fatal("invalid mnemonic passed")
+	}
+
+	_, _, err = acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if acc.wallet == nil || acc.wallet.encryptedmnemonic == "" {
+	if acc.wallet == nil || acc.wallet.seed == nil {
 		t.Fatal("wallet creation error")
 	}
 
-	plainMnemonic, err := acc.wallet.decryptMnemonic(password)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	words := strings.Split(plainMnemonic, " ")
-	if len(words) != 12 {
-		t.Fatal("mnemonic is not 12 words")
-	}
-
-	if acc.userAcount.GetPrivateKey() == nil || acc.userAcount.GetPublicKey() == nil || len(acc.userAcount.address[:]) != utils.AddressLength {
+	if acc.userAccount.GetPrivateKey() == nil || acc.userAccount.GetPublicKey() == nil || len(acc.userAccount.address[:]) != utils.AddressLength {
 		t.Fatalf("keys not intialised")
 	}
 
@@ -64,35 +60,218 @@ func TestAccount_CreateRootAccount(t *testing.T) {
 	}
 }
 
-func TestLoadAndStoreMnemonic(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "pod")
+func TestAuthorise(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "pod")
 	if err != nil {
 		t.Fatal(err)
 	}
-	password := "letmein"
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := New(logger)
-	_, em, err := acc.CreateUserAccount(password, "")
+	_, _, err = acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expectedMnemonic, err := acc.wallet.decryptMnemonic(password)
+	err = os.RemoveAll(tempDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCreateRandomKeyPair(t *testing.T) {
+	pk1, err := CreateRandomKeyPair(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pk2, err := CreateRandomKeyPair(2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pk1.Equal(pk2) {
+		t.Fatal("keys should be different")
+	}
+}
+
+func TestLoadUserAccountFromSeed(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "pod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	logger := logging.New(io.Discard, 0)
+	acc := New(logger)
+	_, seed, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	acc.wallet.encryptedmnemonic = em
+	acc.wallet.seed = seed
 
-	gotMnemonic, err := acc.wallet.decryptMnemonic(password)
+	acc2 := New(logger)
+	err = acc2.LoadUserAccountFromSeed([]byte{})
+	if err == nil {
+		t.Fatal("nil seed provided")
+	}
+
+	err = acc2.LoadUserAccountFromSeed(seed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if acc.userAccount.address != acc2.userAccount.address {
+		t.Fatal("address do not match")
+	}
+	err = os.RemoveAll(tempDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestPadUnpadSeed(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "pod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tempDir)
+	password := "letmein"
+	logger := logging.New(io.Discard, 0)
+	acc := New(logger)
+	_, seed, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if gotMnemonic != expectedMnemonic {
-		t.Fatalf("mnemonics does not match. expected %s and got %s", expectedMnemonic, gotMnemonic)
+	acc.wallet.seed = seed
+	r, err := acc.userAccount.PadSeed(seed, password)
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	if len(r) != utils.MaxChunkLength {
+		t.Fatal("padded string does not match chunk size")
+	}
+
+	seed2, err := acc.userAccount.RemovePadFromSeed(r, password)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(seed, seed2) {
+		t.Fatal("seed and padding removed seed do not match")
+	}
+}
+
+func TestCreatePodAccount(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "pod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	logger := logging.New(io.Discard, 0)
+	acc := New(logger)
+	_, seed, err := acc.CreateUserAccount("")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	acc.wallet.seed = seed
+	pod1AccountInfo, err := acc.CreatePodAccount(1, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pod2AccountInfo, err := acc.CreatePodAccount(2, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// check if different pod accounts are generated for different index
+	if pod1AccountInfo.address == pod2AccountInfo.address {
+		t.Fatal("address should not be same")
+	}
+	err = os.RemoveAll(tempDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCreatePodAccountWithSeed(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "pod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	logger := logging.New(io.Discard, 0)
+	acc := New(logger)
+	_, seed, err := acc.CreateUserAccount("")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	acc.wallet.seed = seed
+
+	acc2 := New(logger)
+	err = acc2.LoadUserAccountFromSeed(seed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pod1AccountInfo, err := acc2.CreatePodAccount(1, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pod2AccountInfo, err := acc2.CreatePodAccount(2, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// check if different pod accounts are generated for different index
+	if pod1AccountInfo.address == pod2AccountInfo.address {
+		t.Fatal("address should not be same")
+	}
+	err = os.RemoveAll(tempDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetAddress(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "pod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	logger := logging.New(io.Discard, 0)
+	acc := New(logger)
+	m, seed, err := acc.CreateUserAccount("")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	acc.wallet.seed = seed
+	seed2, err := hdwallet.NewSeedFromMnemonic(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	acc2 := New(logger)
+	err = acc2.LoadUserAccountFromSeed(seed2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pod1AccountInfo, err := acc2.CreatePodAccount(1, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pod2AccountInfo, err := acc2.CreatePodAccount(2, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	userAddress := acc2.GetAddress(UserAccountIndex)
+	if acc2.userAccount.address != userAddress {
+		t.Fatal("user address do not match")
+	}
+	pod1Address := acc2.GetAddress(1)
+	if pod1AccountInfo.address != pod1Address {
+		t.Fatal("pod1 address do not match")
+	}
+	pod2Address := acc2.GetAddress(2)
+	if pod2AccountInfo.address != pod2Address {
+		t.Fatal("pod2 address do not match")
+	}
 	err = os.RemoveAll(tempDir)
 	if err != nil {
 		t.Fatal(err)

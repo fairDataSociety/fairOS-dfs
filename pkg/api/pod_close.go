@@ -20,44 +20,61 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-	"resenje.org/jsonhttp"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"resenje.org/jsonhttp"
 )
 
-// PodCloseHandler is the api handler to close a open pod
-// it takes no arguments
+type PodNameRequest struct {
+	PodName string `json:"podName,omitempty"`
+}
+
+// PodCloseHandler godoc
+//
+//	@Summary      Close pod
+//	@Description  PodCloseHandler is the api handler to close an open pod
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_request body PodNameRequest true "pod name"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/close [post]
 func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("pod close: invalid request body type")
-		jsonhttp.BadRequest(w, "pod close: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "pod close: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq common.PodRequest
+	var podReq PodNameRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod close: could not decode arguments")
-		jsonhttp.BadRequest(w, "pod close: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "pod close: could not decode arguments"})
 		return
 	}
 	podName := podReq.PodName
-
+	if podName == "" {
+		h.logger.Errorf("pod close: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod close: \"podName\" argument missing"})
+		return
+	}
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("pod close: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("pod close: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "pod close: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "pod close: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -67,12 +84,12 @@ func (h *Handler) PodCloseHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
 			h.logger.Errorf("pod close: %v", err)
-			jsonhttp.BadRequest(w, "pod close: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "pod close: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("pod close: %v", err)
-		jsonhttp.InternalServerError(w, "pod close: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "pod close: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "pod closed successfully")
+	jsonhttp.OK(w, &response{Message: "pod closed successfully"})
 }

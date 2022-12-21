@@ -25,13 +25,12 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func podNew(podName string) {
-	password := getPassword()
 	newPod := common.PodRequest{
-		PodName:  podName,
-		Password: password,
+		PodName: podName,
 	}
 	jsonData, err := json.Marshal(newPod)
 	if err != nil {
@@ -43,15 +42,15 @@ func podNew(podName string) {
 		fmt.Println("could not create pod: ", err)
 		return
 	}
+	currentPod = podName
+	currentDirectory = utils.PathSeparator
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }
 
 func deletePod(podName string) {
-	password := getPassword()
 	delPod := common.PodRequest{
-		PodName:  podName,
-		Password: password,
+		PodName: podName,
 	}
 	jsonData, err := json.Marshal(delPod)
 	if err != nil {
@@ -80,15 +79,13 @@ func openPod(podName string) {
 		return
 	}
 	invalidPodName := true
-	password := ""
-	for _, pod := range resp.Pods {
-		if pod == podName {
-			password = getPassword()
+	for _, v := range resp.Pods {
+		if v == podName {
 			invalidPodName = false
 		}
 	}
-	for _, pod := range resp.SharedPods {
-		if pod == podName {
+	for _, v := range resp.SharedPods {
+		if v == podName {
 			invalidPodName = false
 		}
 	}
@@ -98,8 +95,7 @@ func openPod(podName string) {
 	}
 
 	openPodReq := common.PodRequest{
-		PodName:  podName,
-		Password: password,
+		PodName: podName,
 	}
 	jsonData, err := json.Marshal(openPodReq)
 	if err != nil {
@@ -111,6 +107,8 @@ func openPod(podName string) {
 		fmt.Println("pod open failed: ", err)
 		return
 	}
+	currentPod = podName
+	currentDirectory = utils.PathSeparator
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
 }
@@ -152,10 +150,8 @@ func syncPod(podName string) {
 }
 
 func sharePod(podName string) {
-	password := getPassword()
 	sharePodReq := common.PodRequest{
-		PodName:  podName,
-		Password: password,
+		PodName: podName,
 	}
 	jsonData, err := json.Marshal(sharePodReq)
 	if err != nil {
@@ -188,16 +184,16 @@ func listPod() {
 		fmt.Println("pod list: ", err)
 		return
 	}
-	for _, pod := range resp.Pods {
-		fmt.Println("<Pod>: ", pod)
+	for _, v := range resp.Pods {
+		fmt.Println("<Pod>: ", v)
 	}
-	for _, pod := range resp.SharedPods {
-		fmt.Println("<Shared Pod>: ", pod)
+	for _, v := range resp.SharedPods {
+		fmt.Println("<Shared Pod>: ", v)
 	}
 }
 
 func podStat(podName string) {
-	data, err := fdfsAPI.getReq(apiPodStat, "pod_name="+podName)
+	data, err := fdfsAPI.getReq(apiPodStat, "podName="+podName)
 	if err != nil {
 		fmt.Println("error getting stat: ", err)
 		return
@@ -214,7 +210,7 @@ func podStat(podName string) {
 }
 
 func receive(sharingRef string) {
-	data, err := fdfsAPI.getReq(apiPodReceive, "sharing_ref="+sharingRef)
+	data, err := fdfsAPI.getReq(apiPodReceive, "sharingRef="+sharingRef)
 	if err != nil {
 		fmt.Println("pod receive failed: ", err)
 		return
@@ -224,7 +220,7 @@ func receive(sharingRef string) {
 }
 
 func receiveInfo(sharingRef string) {
-	data, err := fdfsAPI.getReq(apiPodReceiveInfo, "sharing_ref="+sharingRef)
+	data, err := fdfsAPI.getReq(apiPodReceiveInfo, "sharingRef="+sharingRef)
 	if err != nil {
 		fmt.Println("pod receive info failed: ", err)
 		return
@@ -237,7 +233,5 @@ func receiveInfo(sharingRef string) {
 	}
 	fmt.Println("Pod Name  : ", podSharingInfo.PodName)
 	fmt.Println("Pod Ref.  : ", podSharingInfo.Address)
-	fmt.Println("User Name : ", podSharingInfo.UserName)
 	fmt.Println("User Ref. : ", podSharingInfo.UserAddress)
-	fmt.Println("Shared Time : ", podSharingInfo.SharedTime)
 }

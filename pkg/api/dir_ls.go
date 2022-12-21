@@ -28,27 +28,38 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// ListFileResponse is used to list directories and files
 type ListFileResponse struct {
 	Directories []dir.Entry  `json:"dirs,omitempty"`
 	Files       []file.Entry `json:"files,omitempty"`
 }
 
-// DirectoryLsHandler is the api handler for listing the contents of a directory.
-// it takes only one argument
-// - dir_path: the path of the directory to list it contents
+// DirectoryLsHandler godoc
+//
+//	@Summary      List directory
+//	@Description  DirectoryLsHandler is the api handler for listing the contents of a directory.
+//	@Tags         dir
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      dirPath query string true "dir path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  ListFileResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/dir/ls [get]
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "ls: \"pod_name\" argument missing")
+		h.logger.Errorf("ls: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "ls: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 
-	keys, ok = r.URL.Query()["dir_path"]
+	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("ls: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, "ls: \"dir_path\" argument missing")
+		h.logger.Errorf("ls: \"dirPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "ls: \"dirPath\" argument missing"})
 		return
 	}
 	directory := keys[0]
@@ -57,12 +68,12 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("ls: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("ls: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "ls: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "ls: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -72,16 +83,16 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
 			h.logger.Errorf("ls: %v", err)
-			jsonhttp.BadRequest(w, "ls: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "ls: " + err.Error()})
 			return
 		}
 		if err == dir.ErrDirectoryNotPresent {
 			h.logger.Errorf("ls: %v", err)
-			jsonhttp.NotFound(w, "ls: "+err.Error())
+			jsonhttp.NotFound(w, &response{Message: "ls: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("ls: %v", err)
-		jsonhttp.InternalServerError(w, "ls: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "ls: " + err.Error()})
 		return
 	}
 
@@ -91,7 +102,7 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	if fEntries == nil {
 		fEntries = make([]file.Entry, 0)
 	}
-	w.Header().Set("Content-Type", " application/json")
+	w.Header().Set("Content-Type", "application/json")
 	jsonhttp.OK(w, &ListFileResponse{
 		Directories: dEntries,
 		Files:       fEntries,

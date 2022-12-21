@@ -20,43 +20,51 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
-// DocOpenHandler is the api handler to open a document database
-// it has only one argument
-// table_name: the name of the document database to open
+// DocOpenHandler godoc
+//
+//	@Summary      Open a doc table
+//	@Description  DocOpenHandler is the api handler to open a document database
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      doc_request body DocRequest true "doc table info"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  DocumentDBs
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/open [post]
 func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("doc open: invalid request body type")
-		jsonhttp.BadRequest(w, "doc open: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var docReq common.DocRequest
+	var docReq DocRequest
 	err := decoder.Decode(&docReq)
 	if err != nil {
 		h.logger.Errorf("doc open: could not decode arguments")
-		jsonhttp.BadRequest(w, "doc open: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: could not decode arguments"})
 		return
 	}
 
 	podName := docReq.PodName
 	if podName == "" {
-		h.logger.Errorf("doc open: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc open: \"pod_name\" argument missing")
+		h.logger.Errorf("doc open: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: \"podName\" argument missing"})
 		return
 	}
 
 	name := docReq.TableName
 	if name == "" {
-		h.logger.Errorf("doc open: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "doc open: \"name\" argument missing")
+		h.logger.Errorf("doc open: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: \"tableName\" argument missing"})
 		return
 	}
 
@@ -64,20 +72,20 @@ func (h *Handler) DocOpenHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc open: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc open: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc open: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc open: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.DocOpen(sessionId, podName, name)
 	if err != nil {
 		h.logger.Errorf("doc open: %v", err)
-		jsonhttp.InternalServerError(w, "doc open: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc open: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "document store opened")
+	jsonhttp.OK(w, &response{Message: "document store opened"})
 }

@@ -14,32 +14,45 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package user_test
+package user
 
 import (
-	"io/ioutil"
-	"os"
+	"errors"
+	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func TestStat(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+
+	t.Run("stat-nonexistent-user", func(t *testing.T) {
+		ens := mock2.NewMockNamespaceManager()
+		// create user
+		userObject := NewUsers("", mockClient, ens, logger)
+		ui := &Info{
+			name: "user1123123",
+		}
+		//  stat the user
+		_, err := userObject.GetUserStat(ui)
+		if !errors.Is(err, ErrInvalidUserName) {
+			t.Fatal("should be invalid user")
+		}
+	})
 
 	t.Run("stat-user", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "new")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dataDir)
-
-		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", logger)
-		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
+		ens := mock2.NewMockNamespaceManager()
+		// create user
+		userObject := NewUsers("", mockClient, ens, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -57,6 +70,5 @@ func TestStat(t *testing.T) {
 		if stat.Name != "user1" {
 			t.Fatalf("invalid user name")
 		}
-
 	})
 }

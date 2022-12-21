@@ -25,33 +25,44 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 )
 
-// FileStatHandler is the api handler to get the information of a file
-// it takes only one argument
-// file_path: the absolute path of the file in the pod
+// FileStatHandler godoc
+//
+//	@Summary      Info of a file
+//	@Description  FileStatHandler is the api handler to get the information of a file
+//	@Tags         file
+//	@Accept       json
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      filePath query string true "file path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  file.Stats
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/file/stat [get]
 func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("file stat: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "file stat: \"pod_name\" argument missing")
+		h.logger.Errorf("file stat: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("file stat: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "file stat: \"pod_name\" argument missing")
+		h.logger.Errorf("file stat: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"podName\" argument missing"})
 		return
 	}
 
-	keys, ok = r.URL.Query()["file_path"]
+	keys, ok = r.URL.Query()["filePath"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("file stat: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, "file stat: \"file_path\" argument missing")
+		h.logger.Errorf("file stat: \"filePath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"filePath\" argument missing"})
 		return
 	}
 	podFileWithPath := keys[0]
 	if podFileWithPath == "" {
-		h.logger.Errorf("file stat: \"file_path\" argument missing")
-		jsonhttp.BadRequest(w, "file stat: \"pod_path_file\" argument missing")
+		h.logger.Errorf("file stat: \"filePath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"filePath\" argument missing"})
 		return
 	}
 
@@ -59,12 +70,12 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("file stat: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("file stat: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "file stat: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "file stat: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -73,11 +84,11 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("file stat: %v", err)
-			jsonhttp.BadRequest(w, "file stat: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "file stat: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("file stat: %v", err)
-		jsonhttp.InternalServerError(w, "file stat: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "file stat: " + err.Error()})
 		return
 	}
 

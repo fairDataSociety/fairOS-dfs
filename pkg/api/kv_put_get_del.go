@@ -21,11 +21,23 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
+
+type KVEntryRequest struct {
+	PodName   string `json:"podName,omitempty"`
+	TableName string `json:"tableName,omitempty"`
+	Key       string `json:"key,omitempty"`
+	Value     string `json:"value,omitempty"`
+}
+
+type KVEntryDeleteRequest struct {
+	PodName   string `json:"podName,omitempty"`
+	TableName string `json:"tableName,omitempty"`
+	Key       string `json:"key,omitempty"`
+}
 
 type KVResponse struct {
 	Keys   []string `json:"keys,omitempty"`
@@ -37,53 +49,61 @@ type KVResponseRaw struct {
 	Values string   `json:"values"`
 }
 
-// KVPutHandler is the api handler to insert a key and value in to the kv table
-// it takes three arguments
-// - table_name: the name of the kv table
-// - key: the key string
-// - value: the value to insert in bytes
+// KVPutHandler godoc
+//
+//	@Summary      put key and value in the kv table
+//	@Description  KVPutHandler is the api handler to put a key-value  in the kv table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      kv_entry body KVEntryRequest true "kv entry"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/entry/put [post]
 func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("kv put: invalid request body type")
-		jsonhttp.BadRequest(w, "kv put: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "kv put: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var kvReq common.KVRequest
+	var kvReq KVEntryRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv put: could not decode arguments")
-		jsonhttp.BadRequest(w, "kv put: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "kv put: could not decode arguments"})
 		return
 	}
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv put: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv put: \"pod_name\" argument missing")
+		h.logger.Errorf("kv put: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv put: \"podName\" argument missing"})
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv put: \"name\" argument missing")
-		jsonhttp.BadRequest(w, "kv put: \"name\" argument missing")
+		h.logger.Errorf("kv put: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv put: \"tableName\" argument missing"})
 		return
 	}
 
 	key := kvReq.Key
 	if name == "" {
 		h.logger.Errorf("kv put: \"key\" argument missing")
-		jsonhttp.BadRequest(w, "kv put: \"key\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv put: \"key\" argument missing"})
 		return
 	}
 
 	value := kvReq.Value
 	if value == "" {
 		h.logger.Errorf("kv put: \"value\" argument missing")
-		jsonhttp.BadRequest(w, "kv put: \"value\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv put: \"value\" argument missing"})
 		return
 	}
 
@@ -91,66 +111,76 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv put: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv put: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv put: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv put: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	err = h.dfsAPI.KVPut(sessionId, podName, name, key, []byte(value))
 	if err != nil {
 		h.logger.Errorf("kv put: %v", err)
-		jsonhttp.InternalServerError(w, "kv put: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv put: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "key added")
+	jsonhttp.OK(w, &response{Message: "key added"})
 }
 
-// KVGetHandler is the api handler to get a value from the kv table
-// it takes three arguments
-// - pod_name: the name of the pod
-// - table_name: the name of the kv table
-// - key: the key string
+// KVGetHandler godoc
+//
+//	@Summary      get value from the kv table
+//	@Description  KVGetHandler is the api handler to get a value from the kv table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      tableName query string true "table name"
+//	@Param	      key query string true "key"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  KVResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/entry/get [get]
 func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("kv get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"podName\" argument missing"})
 		return
 	}
 
-	keys, ok = r.URL.Query()["table_name"]
+	keys, ok = r.URL.Query()["tableName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
+		h.logger.Errorf("kv get: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"tableName\" argument missing"})
 		return
 	}
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("kv get: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
+		h.logger.Errorf("kv get: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"tableName\" argument missing"})
 		return
 	}
 
 	keys, ok = r.URL.Query()["key"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"sharing_ref\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"sharing_ref\" argument missing")
+		h.logger.Errorf("kv get: \"key\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"key\" argument missing"})
 		return
 	}
 	key := keys[0]
 	if key == "" {
 		h.logger.Errorf("kv get: \"key\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"key\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"key\" argument missing"})
 		return
 	}
 
@@ -158,12 +188,12 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv get: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv get: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv get: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -171,10 +201,10 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Errorf("kv get: %v", err)
 		if err == collection.ErrEntryNotFound {
-			jsonhttp.NotFound(w, "kv get: "+err.Error())
+			jsonhttp.NotFound(w, &response{Message: "kv get: " + err.Error()})
 			return
 		}
-		jsonhttp.InternalServerError(w, "kv get: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv get: " + err.Error()})
 		return
 	}
 
@@ -190,68 +220,78 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &resp)
 }
 
-// KVGetDataHandler is the api handler to get a value from the kv table
-// it takes four arguments
-// - pod_name: the name of the pod
-// - table_name: the name of the kv table
-// - key: the key string
-// - format: whether the data should be string or byte-string
+// KVGetDataHandler godoc
+//
+//	@Summary      get value from the kv table
+//	@Description  KVGetDataHandler is the api handler to get raw value from the kv table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      tableName query string true "table name"
+//	@Param	      key query string true "key"
+//	@Param	      format query string false "format of the value" example(byte-string, string)
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  KVResponseRaw
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/entry/get-data [get]
 func (h *Handler) KVGetDataHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("kv get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"podName\" argument missing"})
 		return
 	}
 
-	keys, ok = r.URL.Query()["table_name"]
+	keys, ok = r.URL.Query()["tableName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
+		h.logger.Errorf("kv get: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"tableName\" argument missing"})
 		return
 	}
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("kv get: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
+		h.logger.Errorf("kv get: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"tableName\" argument missing"})
 		return
 	}
 
 	keys, ok = r.URL.Query()["key"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"sharing_ref\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"sharing_ref\" argument missing")
+		h.logger.Errorf("kv get: \"key\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"key\" argument missing"})
 		return
 	}
 	key := keys[0]
 	if key == "" {
 		h.logger.Errorf("kv get: \"key\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"key\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"key\" argument missing"})
 		return
 	}
 
 	formats, ok := r.URL.Query()["format"]
 	if !ok || len(formats[0]) < 1 {
 		h.logger.Errorf("kv get: \"format\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"format\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"format\" argument missing"})
 		return
 	}
 	format := formats[0]
 	if format == "" {
 		h.logger.Errorf("kv get: \"format\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"format\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"format\" argument missing"})
 		return
 	}
 
 	if format != "string" && format != "byte-string" {
 		h.logger.Errorf("kv get: \"format\" argument is unknown")
-		jsonhttp.BadRequest(w, "kv get: \"format\" argument is unknown")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"format\" argument is unknown"})
 		return
 	}
 
@@ -259,12 +299,12 @@ func (h *Handler) KVGetDataHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv get: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv get: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv get: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv get: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -272,10 +312,10 @@ func (h *Handler) KVGetDataHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Errorf("kv get: %v", err)
 		if err == collection.ErrEntryNotFound {
-			jsonhttp.NotFound(w, "kv get: "+err.Error())
+			jsonhttp.NotFound(w, &response{Message: "kv get: " + err.Error()})
 			return
 		}
-		jsonhttp.InternalServerError(w, "kv get: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv get: " + err.Error()})
 		return
 	}
 
@@ -296,10 +336,19 @@ func (h *Handler) KVGetDataHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &resp)
 }
 
-// KVDelHandler is the api handler to delete a key and value from the kv table
-// it takes two arguments
-// - table_name: the name of the kv table
-// - key: the key string
+// KVDelHandler godoc
+//
+//	@Summary      Delete key-value from the kv table
+//	@Description  KVDelHandler is the api handler to delete a key and value from the kv table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      delete_request body KVEntryDeleteRequest true "delete request"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  KVResponseRaw
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/entry/del [delete]
 func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -309,7 +358,7 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var kvReq common.KVRequest
+	var kvReq KVEntryDeleteRequest
 	err := decoder.Decode(&kvReq)
 	if err != nil {
 		h.logger.Errorf("kv delete: could not decode arguments")
@@ -319,15 +368,15 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 
 	podName := kvReq.PodName
 	if podName == "" {
-		h.logger.Errorf("kv del: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv del: \"pod_name\" argument missing")
+		h.logger.Errorf("kv del: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, "kv del: \"podName\" argument missing")
 		return
 	}
 
 	name := kvReq.TableName
 	if name == "" {
-		h.logger.Errorf("kv del: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv del: \"table_name\" argument missing")
+		h.logger.Errorf("kv del: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, "kv del: \"tableName\" argument missing")
 		return
 	}
 
@@ -360,42 +409,52 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, "key deleted")
 }
 
-// KVPresentHandler is the api handler to check if a value exists in the kv table
-// it takes three arguments
-// - pod_name: the name of the pod
-// - table_name: the name of the kv table
-// - key: the key string
+// KVPresentHandler godoc
+//
+//	@Summary      Check if a value exists in the kv table
+//	@Description  KVPresentHandler is the api handler to check if a value exists in the kv table
+//	@Tags         kv
+//	@Accept       json
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      tableName query string true "table name"
+//	@Param	      key query string true "key"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/entry/present [get]
 func (h *Handler) KVPresentHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"podName\" argument missing")
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("kv get: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"pod_name\" argument missing")
+		h.logger.Errorf("kv get: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"podName\" argument missing")
 		return
 	}
 
-	keys, ok = r.URL.Query()["table_name"]
+	keys, ok = r.URL.Query()["tableName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
+		h.logger.Errorf("kv get: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"tableName\" argument missing")
 		return
 	}
 	name := keys[0]
 	if name == "" {
-		h.logger.Errorf("kv get: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"table_name\" argument missing")
+		h.logger.Errorf("kv get: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"tableName\" argument missing")
 		return
 	}
 
 	keys, ok = r.URL.Query()["key"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("kv get: \"sharing_ref\" argument missing")
-		jsonhttp.BadRequest(w, "kv get: \"sharing_ref\" argument missing")
+		h.logger.Errorf("kv get: \"key\" argument missing")
+		jsonhttp.BadRequest(w, "kv get: \"key\" argument missing")
 		return
 	}
 	key := keys[0]

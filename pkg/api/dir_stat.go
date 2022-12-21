@@ -26,22 +26,32 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-// DirectoryStatHandler is the api handler which gives the information about a directory
-// it takes one argument
-// dir_path: the directory to give info about along with its absolute path
+// DirectoryStatHandler godoc
+//
+//	@Summary      Directory stat
+//	@Description  DirectoryStatHandler is the api handler which gives the information about a directory
+//	@Tags         dir
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      dirPath query string true "dir path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  dir.Stats
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/dir/stat [get]
 func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("dir: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "dir: \"pod_name\" argument missing")
+		h.logger.Errorf("dir: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 
-	keys, ok = r.URL.Query()["dir_path"]
+	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("dir present: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, "dir present: \"dir_path\" argument missing")
+		h.logger.Errorf("dir present: \"dirPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir present: \"dirPath\" argument missing"})
 		return
 	}
 	dir := keys[0]
@@ -50,12 +60,12 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("dir stat: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("dir stat: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "dir stat: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "dir stat: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -65,11 +75,11 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrPodNotOpened {
 			h.logger.Errorf("dir stat: %v", err)
-			jsonhttp.BadRequest(w, "dir stat: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "dir stat: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("dir stat: %v", err)
-		jsonhttp.InternalServerError(w, "dir stat: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "dir stat: " + err.Error()})
 		return
 	}
 

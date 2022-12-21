@@ -16,18 +16,19 @@ limitations under the License.
 
 package pod
 
-type PodStat struct {
+// Stat represents a pod name and address
+type Stat struct {
 	PodName    string
 	PodAddress string
 }
 
 // PodStat shows all the pod related information like podname and its current address.
-func (p *Pod) PodStat(podName string) (*PodStat, error) {
-	podInfo, err := p.GetPodInfoFromPodMap(podName)
+func (p *Pod) PodStat(podName string) (*Stat, error) {
+	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
 	if err != nil {
 		return nil, ErrInvalidPodName
 	}
-	return &PodStat{
+	return &Stat{
 		PodName:    podInfo.GetPodName(),
 		PodAddress: podInfo.userAddress.String(),
 	}, nil

@@ -11,10 +11,10 @@ import (
 type stepFunc func(ctx context.Context, t uint64, hint Epoch) interface{}
 
 // LongEarthLookaheadDelay is the headstart the lookahead gives R before it launches
-var LongEarthLookaheadDelay = 250 * time.Millisecond
+var LongEarthLookaheadDelay = 500 * time.Millisecond
 
 // LongEarthLookbackDelay is the headstart the lookback gives R before it launches
-var LongEarthLookbackDelay = 250 * time.Millisecond
+var LongEarthLookbackDelay = 500 * time.Millisecond
 
 // LongEarthAlgorithm explores possible lookup paths in parallel, pruning paths as soon
 // as a more promising lookup path is found. As a result, this lookup algorithm is an order
@@ -74,7 +74,7 @@ func LongEarthAlgorithm(ctx context.Context, now uint64, hint Epoch, read ReadFu
 				return
 			}
 			base := epoch.Base()
-			if base == 0 {
+			if base == 0 { // skipcq: TCV-001
 				return
 			}
 			valueb := step(ctxB, base-1, last)
@@ -83,7 +83,7 @@ func LongEarthAlgorithm(ctx context.Context, now uint64, hint Epoch, read ReadFu
 			valueBMu.Unlock()
 		}
 
-		go func() { //goroutine to read the current epoch (R)
+		go func() { // goroutine to read the current epoch (R)
 			defer cancelR()
 			var err error
 			valuer, err := read(ctxR, epoch, now) // read this epoch
@@ -94,9 +94,9 @@ func LongEarthAlgorithm(ctx context.Context, now uint64, hint Epoch, read ReadFu
 				cancelA()
 			} else {
 				cancelB()
-				//cancelA() // cancel this also for faster eject
+				// cancelA() // cancel this also for faster eject
 			}
-			if err != nil && !errors.Is(err, context.Canceled) {
+			if err != nil && !errors.Is(err, context.Canceled) { // skipcq: TCV-001
 				gerr = err
 				close(errc)
 			}
@@ -113,7 +113,7 @@ func LongEarthAlgorithm(ctx context.Context, now uint64, hint Epoch, read ReadFu
 			}
 			// give a head start to R, or launch immediately if R finishes early enough
 			select {
-			case <-TimeAfter(LongEarthLookaheadDelay):
+			case <-TimeAfter(LongEarthLookaheadDelay): // skipcq: TCV-001
 				lookAhead()
 			case <-ctxR.Done():
 				valueRMu.Lock()
@@ -130,7 +130,7 @@ func LongEarthAlgorithm(ctx context.Context, now uint64, hint Epoch, read ReadFu
 			defer cancelB()
 			// give a head start to R, or launch immediately if R finishes early enough
 			select {
-			case <-TimeAfter(LongEarthLookbackDelay):
+			case <-TimeAfter(LongEarthLookbackDelay): // skipcq: TCV-001
 				lookBack()
 			case <-ctxR.Done():
 				valueRMu.Lock()
@@ -181,7 +181,7 @@ func LongEarthAlgorithm(ctx context.Context, now uint64, hint Epoch, read ReadFu
 	// of errors
 	select {
 	case <-stepCtx.Done():
-	case <-errc:
+	case <-errc: // skipcq: TCV-001
 		cancel()
 		return nil, gerr
 	}
@@ -207,7 +207,7 @@ func LongEarthAlgorithm(ctx context.Context, now uint64, hint Epoch, read ReadFu
 	// hint is invalid. Invoke the algorithm
 	// without hint.
 	now = hint.Base()
-	if hint.Level == HighestLevel {
+	if hint.Level == HighestLevel { // skipcq: TCV-001
 		now--
 	}
 

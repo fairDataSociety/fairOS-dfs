@@ -72,7 +72,7 @@ func TestLookup(t *testing.T) {
 	for i := uint64(0); i < 12; i++ {
 		t := now - Year*3 + i*Month
 		data := Data{
-			Payload: t, //our "payload" will be the timestamp itself.
+			Payload: t, // our "payload" will be the timestamp itself.
 			Time:    t,
 		}
 		epoch = store.Update(epoch, t, &data)
@@ -154,7 +154,7 @@ func TestOneUpdateAt0(t *testing.T) {
 		Payload: 79,
 		Time:    0,
 	}
-	store.Update(epoch, 0, &data) //place 1 update in t=0
+	store.Update(epoch, 0, &data) // place 1 update in t=0
 
 	// ### 2.- Test all algorithms
 	for _, algo := range algorithms {
@@ -288,7 +288,7 @@ func TestContextCancellation(t *testing.T) {
 				errc <- err
 			}()
 
-			cancel() //actually cancel the lookup
+			cancel() // actually cancel the lookup
 
 			if err := <-errc; err != context.Canceled {
 				t.Fatalf("Expected lookup to return a context canceled error, got %v", err)
@@ -366,7 +366,7 @@ func TestHighFreqUpdates(t *testing.T) {
 	for i := uint64(0); i <= 994; i++ {
 		T := now - 1000 + i
 		data := Data{
-			Payload: T, //our "payload" will be the timestamp itself.
+			Payload: T, // our "payload" will be the timestamp itself.
 			Time:    T,
 		}
 		epoch = store.Update(epoch, T, &data)
@@ -448,7 +448,7 @@ func TestSparseUpdates(t *testing.T) {
 		for j := uint64(0); j < 10; j++ {
 			T := Year*5*i + j // write a burst of 10 updates every 5 years 3 times starting in Jan 1st 1970 and then silence
 			data := Data{
-				Payload: T, //our "payload" will be the timestamp itself.
+				Payload: T, // our "payload" will be the timestamp itself.
 				Time:    T,
 			}
 			epoch = store.Update(epoch, T, &data)

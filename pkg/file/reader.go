@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
@@ -58,16 +57,27 @@ type Reader struct {
 	rlReadNewLine bool
 }
 
-func (f *File) OpenFileForIndex(podFile string) (*Reader, error) {
+// OpenFileForIndex opens file for indexing for document db from pod filepath
+// TODO test
+// skipcq: TCV-001
+func (f *File) OpenFileForIndex(podFile, podPassword string) (*Reader, error) {
 	meta := f.GetFromFileMap(podFile)
 	if meta == nil {
 		return nil, fmt.Errorf("file not found in dfs")
 	}
 
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil {
 		return nil, err
 	}
+
+	temp := make([]byte, len(encryptedFileInodeBytes))
+	copy(temp, encryptedFileInodeBytes)
+	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), temp)
+	if err != nil {
+		return nil, err
+	}
+
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil {
@@ -113,7 +123,6 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 			r.blockCursor += bytesToRead
 			r.readOffset += int64(bytesToRead)
 			bytesRead = int(bytesToRead)
-			//bytesToRead = 0
 			if r.blockCursor == r.blockSize {
 				r.lastBlock = nil
 				r.blockCursor = 0
@@ -142,26 +151,26 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 		noOfBlocks := int((bytesToRead / r.blockSize) + 1)
 		for i := 0; i < noOfBlocks; i++ {
 			if r.lastBlock == nil {
-				blockIndex := (r.readOffset / int64(r.blockSize))
+				blockIndex := r.readOffset / int64(r.blockSize)
 				if blockIndex > int64(len(r.fileInode.Blocks)) {
 					return bytesRead, io.EOF
 				}
-				if blockIndex >= int64(len(r.fileInode.Blocks)) {
+				if blockIndex >= int64(len(r.fileInode.Blocks)) { // skipcq: TCV-001
 					return bytesRead, io.EOF
 				}
 				r.lastBlock, err = r.getBlock(r.fileInode.Blocks[blockIndex].Reference.Bytes(), r.compression, r.blockSize)
-				if err != nil {
+				if err != nil { // skipcq: TCV-001
 					return bytesRead, err
 				}
 				r.blockSize = uint32(len(r.lastBlock))
 			}
 
-			//if length of bytes to read is greater than block size
+			// if length of bytes to read is greater than block size
 			if bytesToRead > r.blockSize {
 				bytesToRead = r.blockSize
 			}
 
-			if uint32(len(r.lastBlock)) < bytesToRead {
+			if uint32(len(r.lastBlock)) < bytesToRead { // skipcq: TCV-001
 				bytesToRead = uint32(len(r.lastBlock))
 			}
 
@@ -183,7 +192,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 			}
 		}
 	}
-	return 0, nil
+	return 0, nil // skipcq: TCV-001
 }
 
 func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
@@ -195,7 +204,7 @@ func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
 	// seek to start if offset is zero
 	if seekOffset == 0 {
 		blockData, err := r.getBlock(r.fileInode.Blocks[0].Reference.Bytes(), r.compression, r.blockSize)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return 0, err
 		}
 		r.lastBlock = blockData
@@ -229,7 +238,7 @@ func (r *Reader) ReadLine() ([]byte, error) {
 	if r.rlBuffer == nil {
 		buf := make([]byte, r.blockSize)
 		n, err := r.Read(buf)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			if errors.Is(err, io.EOF) {
 				if n == 0 || buf[n-1] != '\n' {
 					return nil, err
@@ -277,7 +286,7 @@ READ:
 		}
 		buf := make([]byte, r.blockSize)
 		_, err := r.Read(buf)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		r.rlBuffer = buf
@@ -305,13 +314,15 @@ func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]b
 		}
 	}
 	stdoutBytes, _, err := r.client.DownloadBlob(ref)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
+
 	decompressedData, err := Decompress(stdoutBytes, compression, blockSize)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
+
 	if r.blockCache != nil {
 		r.blockCache.Add(refStr, decompressedData)
 	}
@@ -324,21 +335,21 @@ func Decompress(dataToDecompress []byte, compression string, blockSize uint32) (
 		br := bytes.NewReader(dataToDecompress)
 		block := int(blockSize / 10)
 		r, err := pgzip.NewReaderN(br, block, 10)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-		s, err := ioutil.ReadAll(r)
-		if err != nil {
+		s, err := io.ReadAll(r)
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		err = r.Close()
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		return s, nil
 	case "snappy":
 		decoded, err := snappy.Decode(nil, dataToDecompress)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
 		return decoded, nil

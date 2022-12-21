@@ -79,9 +79,10 @@ func docList() {
 	}
 }
 
-func docOpen(tableName string) {
+func docOpen(podName, tableName string) {
 	docOpenReq := common.DocRequest{
 		TableName: tableName,
+		PodName:   podName,
 	}
 	jsonData, err := json.Marshal(docOpenReq)
 	if err != nil {
@@ -97,8 +98,9 @@ func docOpen(tableName string) {
 	fmt.Println(message)
 }
 
-func docCount(tableName, expression string) {
+func docCount(podName, tableName, expression string) {
 	docCountReq := common.DocRequest{
+		PodName:    podName,
 		TableName:  tableName,
 		Expression: expression,
 	}
@@ -120,8 +122,9 @@ func docCount(tableName, expression string) {
 	fmt.Println("Count = ", count)
 }
 
-func docDelete(tableName string) {
+func docDelete(podName, tableName string) {
 	docDeleteReq := common.DocRequest{
+		PodName:   podName,
 		TableName: tableName,
 	}
 	jsonData, err := json.Marshal(docDeleteReq)
@@ -138,8 +141,8 @@ func docDelete(tableName string) {
 	fmt.Println(message)
 }
 
-func docFind(tableName, expression, limit string) {
-	argString := fmt.Sprintf("table_name=%s&expr=%s&limit=%s", tableName, expression, limit)
+func docFind(podName, tableName, expression, limit string) {
+	argString := fmt.Sprintf("podName=%s&tableName=%s&expr=%s&limit=%s", podName, tableName, expression, limit)
 	data, err := fdfsAPI.getReq(apiDocFind, argString)
 	if err != nil {
 		fmt.Println("doc find: ", err)
@@ -187,8 +190,9 @@ func docFind(tableName, expression, limit string) {
 	}
 }
 
-func docPut(tableName, document string) {
+func docPut(podName, tableName, document string) {
 	docPutReq := common.DocRequest{
+		PodName:   podName,
 		TableName: tableName,
 		Document:  document,
 	}
@@ -206,14 +210,13 @@ func docPut(tableName, document string) {
 	fmt.Println(message)
 }
 
-func docGet(tableName, id string) {
-	argString := fmt.Sprintf("table_name=%s&id=%s", tableName, id)
+func docGet(podName, tableName, id string) {
+	argString := fmt.Sprintf("podName=%s&tableName=%s&id=%s", podName, tableName, id)
 	data, err := fdfsAPI.getReq(apiDocEntryGet, argString)
 	if err != nil {
 		fmt.Println("doc get: ", err)
 		return
 	}
-
 	var doc api.DocGetResponse
 	err = json.Unmarshal(data, &doc)
 	if err != nil {
@@ -231,8 +234,9 @@ func docGet(tableName, id string) {
 	}
 }
 
-func docDel(tableName, id string) {
+func docDel(podName, tableName, id string) {
 	docDelReq := common.DocRequest{
+		PodName:   podName,
 		TableName: tableName,
 		ID:        id,
 	}
@@ -250,7 +254,7 @@ func docDel(tableName, id string) {
 	fmt.Println(message)
 }
 
-func docLoadJson(localJsonFile, tableName, fileName string) {
+func docLoadJson(podName, localJsonFile, tableName, fileName string) {
 	fd, err := os.Open(localJsonFile)
 	if err != nil {
 		fmt.Println("loadjson failed: ", err)
@@ -263,7 +267,8 @@ func docLoadJson(localJsonFile, tableName, fileName string) {
 	}
 
 	args := make(map[string]string)
-	args["name"] = tableName
+	args["podName"] = podName
+	args["tableName"] = tableName
 	data, err := fdfsAPI.uploadMultipartFile(apiDocLoadJson, fileName, fi.Size(), fd, args, "json", "false")
 	if err != nil {
 		fmt.Println("loadjson: ", err)
@@ -279,8 +284,9 @@ func docLoadJson(localJsonFile, tableName, fileName string) {
 	fmt.Println(message)
 }
 
-func docIndexJson(tableName, fileName string) {
+func docIndexJson(podName, tableName, fileName string) {
 	docIndexJsonReq := common.DocRequest{
+		PodName:   podName,
 		TableName: tableName,
 		FileName:  fileName,
 	}

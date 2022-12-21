@@ -28,4 +28,5 @@ var (
 	ErrTooLongDirectoryName = errors.New("directory name too long")
 	ErrReadOnlyPod          = errors.New("operation not permitted: read only pod")
 	ErrInvalidFile          = errors.New("file does not exist")
+	ErrMaximumPodLimit      = errors.New("maximum number of pods has reached")
 )

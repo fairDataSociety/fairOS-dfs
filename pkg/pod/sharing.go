@@ -20,60 +20,59 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 type ShareInfo struct {
-	PodName     string `json:"pod_name"`
-	Address     string `json:"pod_address"`
-	UserName    string `json:"user_name"`
-	UserAddress string `json:"user_address"`
-	SharedTime  string `json:"shared_time"`
+	PodName     string `json:"podName"`
+	Address     string `json:"podAddress"`
+	Password    string `json:"password"`
+	UserAddress string `json:"userAddress"`
 }
 
 // PodShare makes a pod public by exporting all the pod related information and its
 // address. it does this by creating a sharing reference which points to the information
 // required to import this pod.
-func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
+func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 	// check if pods is present and get the index of the pod
-	pods, _, err := p.loadUserPods()
-	if err != nil {
+	podList, err := p.loadUserPods()
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-	if !p.checkIfPodPresent(pods, podName) {
+	if !p.checkIfPodPresent(podList, podName) {
 		return "", ErrInvalidPodName
 	}
 
-	index := p.getIndex(pods, podName)
-	if index == -1 {
+	index, podPassword := p.getIndexPassword(podList, podName)
+	if index == -1 { // skipcq: TCV-001
 		return "", fmt.Errorf("pod does not exist")
 	}
 
 	// Create pod account  and get the address
-	accountInfo, err := p.acc.CreatePodAccount(index, passPhrase, false)
-	if err != nil {
+	accountInfo, err := p.acc.CreatePodAccount(index, false)
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
 	address := accountInfo.GetAddress()
 	userAddress := p.acc.GetUserAccountInfo().GetAddress()
+	if sharedPodName == "" {
+		sharedPodName = podName
+	}
 	shareInfo := &ShareInfo{
-		PodName:     podName,
+		PodName:     sharedPodName,
+		Password:    podPassword,
 		Address:     address.String(),
-		UserName:    userName,
 		UserAddress: userAddress.String(),
-		SharedTime:  time.Now().String(),
 	}
 
 	data, err := json.Marshal(shareInfo)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-
 	ref, err := p.client.UploadBlob(data, true, true)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
@@ -83,11 +82,11 @@ func (p *Pod) PodShare(podName, passPhrase, userName string) (string, error) {
 
 func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
-	if resp != http.StatusOK {
+	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
 	}
 
@@ -101,20 +100,22 @@ func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 
 }
 
-func (p *Pod) ReceivePod(ref utils.Reference) (*Info, error) {
+func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	if resp != http.StatusOK {
+	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePod: could not download blob")
 	}
-
 	var shareInfo ShareInfo
 	err = json.Unmarshal(data, &shareInfo)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
-	return p.CreatePod(shareInfo.PodName, "", shareInfo.Address)
+	if sharedPodName != "" {
+		shareInfo.PodName = sharedPodName
+	}
+	return p.CreatePod(shareInfo.PodName, shareInfo.Address, shareInfo.Password)
 }

@@ -17,35 +17,48 @@ limitations under the License.
 package user_test
 
 import (
-	"io/ioutil"
-	"os"
+	"context"
+	"errors"
+	"io"
 	"testing"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
 func TestDelete(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 
 	t.Run("delete-user", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "delete")
+		tm := taskmanager.New(1, 10, time.Second*15, logger)
+		defer func() {
+			_ = tm.Stop(context.Background())
+		}()
+		ens := mock2.NewMockNamespaceManager()
+		// create user
+		userObject := user.NewUsers("", mockClient, ens, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer os.RemoveAll(dataDir)
-
-		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", logger)
-		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
-		if err != nil {
+		// delete user with wrong password
+		err = userObject.DeleteUserV2("user1", "password11", ui.GetSessionId(), ui)
+		if err == nil {
+			t.Fatal("delete should fail")
+		}
+		// delete user invalid sessionid
+		err = userObject.DeleteUserV2("user1", "password1", "invalid_session", ui)
+		if !errors.Is(err, user.ErrUserNotLoggedIn) {
 			t.Fatal(err)
 		}
-
 		// delete user
-		err = userObject.DeleteUser("user1", dataDir, "password1", ui.GetSessionId(), nil, ui)
+		err = userObject.DeleteUserV2("user1", "password1", ui.GetSessionId(), ui)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -54,9 +67,5 @@ func TestDelete(t *testing.T) {
 		if userObject.IsUserNameLoggedIn("user1") {
 			t.Fatalf("user not deleted")
 		}
-		if userObject.IsUsernameAvailable("user1", dataDir) {
-			t.Fatalf("user not deleted")
-		}
-
 	})
 }

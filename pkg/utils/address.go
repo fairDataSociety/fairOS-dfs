@@ -23,11 +23,14 @@ import (
 )
 
 const (
+	// AddressLength defines the length for the address
 	AddressLength = 20
 )
 
+// Address is a simplified implementation of eth address
 type Address [AddressLength]byte
 
+// NewAddress returns a new address from the given byte address
 func NewAddress(b []byte) Address {
 	var a Address
 	a.SetBytes(b)
@@ -38,19 +41,12 @@ func (a *Address) String() string {
 	return hex.EncodeToString(a[:])
 }
 
-func (*Address) ParseAddress(s string) (Address, error) {
-	b, err := hex.DecodeString(s)
-	if err != nil {
-		return ZeroAddress, err
-	}
-	return NewAddress(b), nil
-}
-
+// Hex returns the hex of the corresponding address
 func (a Address) Hex() string {
 	unchecksummed := hex.EncodeToString(a[:])
 	sha := sha3.NewLegacyKeccak256()
 	_, err := sha.Write([]byte(unchecksummed))
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return ""
 	}
 	sumHash := sha.Sum(nil)
@@ -70,19 +66,12 @@ func (a Address) Hex() string {
 	return "0x" + string(result)
 }
 
-func (a Address) StringToAddress(addr string) error {
-	addrByte, err := hex.DecodeString(addr)
-	if err != nil {
-		return err
-	}
-	copy(a[:], addrByte)
-	return nil
-}
-
+// ToBytes returns the address bytes
 func (a Address) ToBytes() []byte {
 	return a[:]
 }
 
+// SetBytes sets address bytes
 func (a *Address) SetBytes(b []byte) {
 	if len(b) > len(a) {
 		b = b[len(b)-AddressLength:]
@@ -90,16 +79,20 @@ func (a *Address) SetBytes(b []byte) {
 	copy(a[AddressLength-len(b):], b)
 }
 
-func BytesToAddress(b []byte) Address {
+// bytesToAddress creates a new address from given bytes
+func bytesToAddress(b []byte) Address {
 	var a Address
 	a.SetBytes(b)
 	return a
 }
 
+// ZeroAddress returns a zero address
 var ZeroAddress = NewAddress(nil)
 
-func HexToAddress(s string) Address { return BytesToAddress(FromHex(s)) }
-func FromHex(s string) []byte {
+// HexToAddress creates a new address from given hex string
+func HexToAddress(s string) Address { return bytesToAddress(fromHex(s)) }
+
+func fromHex(s string) []byte {
 	if len(s) > 1 {
 		if s[0:2] == "0x" || s[0:2] == "0X" {
 			s = s[2:]
@@ -108,9 +101,10 @@ func FromHex(s string) []byte {
 	if len(s)%2 == 1 {
 		s = "0" + s
 	}
-	return Hex2Bytes(s)
+	return hex2Bytes(s)
 }
-func Hex2Bytes(str string) []byte {
+
+func hex2Bytes(str string) []byte {
 	h, _ := hex.DecodeString(str)
 	return h
 }

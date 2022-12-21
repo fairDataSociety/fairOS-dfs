@@ -17,10 +17,17 @@ limitations under the License.
 package file_test
 
 import (
+	"bytes"
+	"context"
 	"crypto/rand"
-	"io/ioutil"
+	"errors"
+	"io"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -28,36 +35,43 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
 )
 
 func TestUpload(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	pod1AccountInfo, err := acc.CreatePodAccount(1, "password", false)
+	pod1AccountInfo, err := acc.CreatePodAccount(1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	t.Run("upload-small-file", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
 		filePath := "/dir1"
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
-		fileObject := file.NewFile("pod1", mockClient, fd, user, logger)
-		_, err = uploadFile(t, fileObject, filePath, fileName, compression, fileSize, blockSize)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("pod1", filePath, fileName))
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, fileName))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -75,12 +89,237 @@ func TestUpload(t *testing.T) {
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
 		}
+
+		err := fileObject.LoadFileMeta(filePath+"/"+fileName, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = fileObject.LoadFileMeta(filePath+"/asd"+fileName, podPassword)
+		if err == nil {
+			t.Fatal("local file meta should fail")
+		}
+
+		meat2, err := fileObject.BackupFromFileName(filePath+"/"+fileName, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if meta.Name == meat2.Name {
+			t.Fatal("name should not be same after backup")
+		}
+	})
+
+	t.Run("upload-small-file-at-root", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
+		filePath := string(os.PathSeparator)
+		fileName := "file1"
+		compression := ""
+		fileSize := int64(100)
+		blockSize := uint32(10)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check for meta
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName))
+		if meta == nil {
+			t.Fatalf("file not added in file map")
+		}
+
+		// validate meta items
+		if meta.Path != filepath.ToSlash(filePath) {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(fileSize) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
+	})
+
+	t.Run("upload-small-file-at-root-with-blank-filename", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
+		filePath := string(os.PathSeparator)
+		fileName := "file1"
+		compression := ""
+		fileSize := int64(100)
+		blockSize := uint32(10)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check for meta
+		meta := fileObject.GetFromFileMap(filepath.ToSlash(utils.CombinePathAndFile(filePath+fileName, "")))
+		if meta == nil {
+			t.Fatalf("file not added in file map")
+		}
+
+		// validate meta items
+		if meta.Path != filepath.ToSlash(filePath) {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(fileSize) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
+	})
+
+	t.Run("upload-small-file-at-root-with-prefix", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		filePath := string(os.PathSeparator)
+		fileName := "file1"
+		compression := ""
+		fileSize := int64(100)
+		blockSize := uint32(10)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check for meta
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
+		if meta == nil {
+			t.Fatalf("file not added in file map")
+		}
+
+		// validate meta items
+		if meta.Path != filepath.ToSlash(filePath) {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(fileSize) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
+
+		fileObject.RemoveAllFromFileMap()
+
+		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		if meta2 != nil {
+			t.Fatal("meta2 should be nil")
+		}
+	})
+
+	t.Run("upload-small-file-at-root-with-prefix-snappy", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		filePath := string(os.PathSeparator)
+		fileName := "file2"
+		compression := "snappy"
+		fileSize := int64(100)
+		blockSize := uint32(10)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check for meta
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
+		if meta == nil {
+			t.Fatalf("file not added in file map")
+		}
+
+		// validate meta items
+		if meta.Path != filepath.ToSlash(filePath) {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(fileSize) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
+
+		fileObject.RemoveAllFromFileMap()
+
+		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		if meta2 != nil {
+			t.Fatal("meta2 should be nil")
+		}
+	})
+
+	t.Run("upload-small-file-at-root-with-prefix-gzip", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		filePath := string(os.PathSeparator)
+		fileName := "file2"
+		compression := "gzip"
+		fileSize := int64(100)
+		blockSize := uint32(164000)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, uint32(163999))
+		if !errors.Is(file.ErrGzipBlSize, err) {
+			t.Fatal("should provide higher block size")
+		}
+
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check for meta
+		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName))
+		meta := fileObject.GetFromFileMap(fp)
+		if meta == nil {
+			t.Fatalf("file not added in file map")
+		}
+
+		// validate meta items
+		if meta.Path != filepath.ToSlash(filePath) {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(fileSize) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
+		reader, _, err := fileObject.Download(fp, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer := new(bytes.Buffer)
+		_, err = rcvdBuffer.ReadFrom(reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fileObject.RemoveAllFromFileMap()
+
+		meta2 := fileObject.GetFromFileMap(fp)
+		if meta2 != nil {
+			t.Fatal("meta2 should be nil")
+		}
 	})
 }
 
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression string, fileSize int64, blockSize uint32) ([]byte, error) {
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint32) ([]byte, error) {
 	// create a temp file
-	fd, err := ioutil.TempFile("", fileName)
+	fd, err := os.CreateTemp("", fileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,5 +349,5 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
 }

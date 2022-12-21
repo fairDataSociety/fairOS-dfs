@@ -18,20 +18,19 @@ package pod
 
 import (
 	"fmt"
-	"strings"
 )
 
 // DeleteOwnPod removed a pod and the list of pods belonging to a user.
 func (p *Pod) DeleteOwnPod(podName string) error {
-	pods, sharedPods, err := p.loadUserPods()
-	if err != nil {
+	podList, err := p.loadUserPods()
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	found := false
 	var podIndex int
-	for index, pod := range pods {
-		if strings.Trim(pod, "\n") == podName {
-			delete(pods, index)
+	for index, pod := range podList.Pods {
+		if pod.Name == podName {
+			podList.Pods = append(podList.Pods[:index], podList.Pods[index+1:]...)
 			podIndex = index
 			found = true
 		}
@@ -40,30 +39,41 @@ func (p *Pod) DeleteOwnPod(podName string) error {
 		return fmt.Errorf("pod not found")
 	}
 
+	// delete tables
+	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return err
+	}
+
+	err = podInfo.GetDocStore().DeleteAllDocumentDBs(podInfo.GetPodPassword())
+	if err != nil {
+		return err
+	}
+
+	err = podInfo.GetKVStore().DeleteAllKVTables(podInfo.GetPodPassword())
+	if err != nil {
+		return err
+	}
+
 	// remove it from other data structures
 	p.removePodFromPodMap(podName)
 	p.acc.DeletePodAccount(podIndex)
 
-	// if last pod is deleted.. something should be there to update the feed
-	if pods == nil {
-		pods = make(map[int]string)
-		pods[0] = ""
-	}
-
 	// remove the pod finally
-	return p.storeUserPods(pods, sharedPods)
+	return p.storeUserPods(podList)
 }
 
 // DeleteSharedPod removed a pod and the list of pods shared by other users.
 func (p *Pod) DeleteSharedPod(podName string) error {
-	pods, sharedPods, err := p.loadUserPods()
-	if err != nil {
+	podList, err := p.loadUserPods()
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
+
 	found := false
-	for index, pod := range sharedPods {
-		if strings.Trim(pod, "\n") == podName {
-			delete(sharedPods, index)
+	for index, pod := range podList.SharedPods {
+		if pod.Name == podName {
+			podList.SharedPods = append(podList.SharedPods[:index], podList.SharedPods[index+1:]...)
 			found = true
 		}
 	}
@@ -74,11 +84,6 @@ func (p *Pod) DeleteSharedPod(podName string) error {
 	// remove it from other data structures
 	p.removePodFromPodMap(podName)
 
-	// if last sharedPods is deleted.. something should be there to update the feed
-	if sharedPods == nil {
-		sharedPods = make(map[string]string)
-	}
-
 	// remove the pod finally
-	return p.storeUserPods(pods, sharedPods)
+	return p.storeUserPods(podList)
 }

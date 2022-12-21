@@ -17,9 +17,15 @@ limitations under the License.
 package pod_test
 
 import (
-	"io/ioutil"
+	"context"
+	"io"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
+	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -30,18 +36,27 @@ import (
 
 func TestStat(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, logger)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"
 
 	t.Run("pod-stat", func(t *testing.T) {
-		info, err := pod1.CreatePod(podName1, "password", "")
+		_, err := pod1.PodStat(podName1)
+		if err == nil {
+			t.Fatal("stat should be nil")
+		}
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}

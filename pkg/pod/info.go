@@ -28,6 +28,7 @@ import (
 
 type Info struct {
 	podName     string
+	podPassword string
 	userAddress utils.Address
 	dir         *di.Directory
 	file        *f.File
@@ -43,6 +44,10 @@ func (i *Info) GetPodName() string {
 
 func (i *Info) GetPodAddress() utils.Address {
 	return i.userAddress
+}
+
+func (i *Info) GetPodPassword() string {
+	return i.podPassword
 }
 
 func (i *Info) GetDirectory() *di.Directory {
@@ -61,10 +66,14 @@ func (i *Info) GetFeed() *feed.API {
 	return i.feed
 }
 
+// GetKVStore returns kvStore
+// skipcq: TCV-001
 func (i *Info) GetKVStore() *collection.KeyValue {
 	return i.kvStore
 }
 
+// GetDocStore returns docStore
+// skipcq: TCV-001
 func (i *Info) GetDocStore() *collection.Document {
 	return i.docStore
 }

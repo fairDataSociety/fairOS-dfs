@@ -24,28 +24,41 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocumentDBs represent a list of documentDB
 type DocumentDBs struct {
-	Tables []DocumentDB
+	Tables []documentDB
 }
-type DocumentDB struct {
-	Name           string              `json:"table_name"`
+
+type documentDB struct {
+	Name           string              `json:"tableName"`
 	IndexedColumns []collection.SIndex `json:"indexes"`
 	CollectionType string              `json:"type"`
 }
 
-// DocListHandler is the api handler which lists all the document database in a pod
-// it takes no arguments
+// DocListHandler godoc
+//
+//	@Summary      List all doc table
+//	@Description  DocListHandler is the api handler which lists all the document database in a pod
+//	@Tags         doc
+//	@Accept       json
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  DocumentDBs
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/doc/ls [get]
 func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("doc ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc ls: \"pod_name\" argument missing")
+		h.logger.Errorf("doc ls: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 	if podName == "" {
-		h.logger.Errorf("doc ls: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "doc ls: \"pod_name\" argument missing")
+		h.logger.Errorf("doc ls: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"podName\" argument missing"})
 		return
 	}
 
@@ -53,19 +66,19 @@ func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("doc ls: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("doc ls: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "doc ls: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	collections, err := h.dfsAPI.DocList(sessionId, podName)
 	if err != nil {
 		h.logger.Errorf("doc ls: %v", err)
-		jsonhttp.InternalServerError(w, "doc ls: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "doc ls: " + err.Error()})
 		return
 	}
 
@@ -75,7 +88,7 @@ func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 		indexes = append(indexes, dbSchema.SimpleIndexes...)
 		indexes = append(indexes, dbSchema.MapIndexes...)
 		indexes = append(indexes, dbSchema.ListIndexes...)
-		m := DocumentDB{
+		m := documentDB{
 			Name:           name,
 			IndexedColumns: indexes,
 			CollectionType: "Document Store",

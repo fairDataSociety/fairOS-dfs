@@ -17,50 +17,73 @@ limitations under the License.
 package user_test
 
 import (
-	"io/ioutil"
-	"os"
+	"errors"
+	"io"
 	"testing"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/plexsysio/taskmanager"
 )
 
 func TestLogin(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 
 	t.Run("login-user", func(t *testing.T) {
-		dataDir, err := ioutil.TempDir("", "login")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dataDir)
+		tm := taskmanager.New(1, 10, time.Second*15, logger)
 
-		//create user
-		userObject := user.NewUsers(dataDir, mockClient, "", logger)
-		_, _, ui, err := userObject.CreateNewUser("user1", "password1", "", nil, "")
+		ens := mock2.NewMockNamespaceManager()
+		// create user
+		userObject := user.NewUsers("", mockClient, ens, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Logout user
-		err = userObject.LogoutUser(ui.GetUserName(), dataDir, ui.GetSessionId(), nil)
+		err = userObject.LogoutUser(ui.GetUserName(), ui.GetSessionId())
 		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _, _, err = userObject.LoginUserV2("not_an_username", "password1", mockClient, tm, "")
+		if !errors.Is(err, user.ErrUserNameNotFound) {
+			t.Fatal(err)
+		}
+
+		_, _, _, err = userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "wrong_password", mockClient, tm, "")
+		if !errors.Is(err, user.ErrInvalidPassword) {
 			t.Fatal(err)
 		}
 
 		// addUserAndSessionToMap user again
-		err = userObject.LoginUser("user1", "password1", dataDir, mockClient, nil, "")
+		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", mockClient, tm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
+		ui2 := userObject.GetLoggedInUserInfo(ui1.GetSessionId())
+
 		// Validate login
-		if !userObject.IsUserNameLoggedIn("user1") {
+		if !userObject.IsUserNameLoggedIn("7e4567e7cb003804992eef11fd5c757275a4c") {
 			t.Fatalf("user not loggin in")
 		}
 
+		if ui.GetAccount().GetUserAccountInfo().GetAddress().Hex() != ui1.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+			t.Fatal("loaded with different account")
+		}
+
+		if ui.GetAccount().GetUserAccountInfo().GetAddress().Hex() != ui2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+			t.Fatal("got different userinfo")
+		}
+
+		if ui.GetUserDirectory() == nil {
+			t.Fatal("user directory handler should not be nil")
+		}
 	})
 
 }

@@ -18,8 +18,11 @@ package collection_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -30,19 +33,19 @@ import (
 
 func TestBatchIndex(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("batch-add-docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_batch_0", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_batch_0", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		// batch load and delete
 
 		batch, err := collection.NewBatch(index)
@@ -77,9 +80,9 @@ func TestBatchIndex(t *testing.T) {
 		}
 	})
 
-	t.Run("batch-add-del-docs", func(t *testing.T) {
+	t.Run("batch-add-docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_batch_1", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_batch_1", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// batch load and delete
 		batch, err := collection.NewBatch(index)
@@ -111,6 +114,51 @@ func TestBatchIndex(t *testing.T) {
 
 		if len(batchDocs) != count {
 			t.Fatalf("number of elements mismatch in iteration")
+		}
+	})
+
+	t.Run("batch-add-del-docs", func(t *testing.T) {
+		// create a DB and open it
+		index := createAndOpenIndex(t, "pod1", "testdb_batch_2", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
+
+		// batch load and delete
+		batch, err := collection.NewBatch(index)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = addBatchDocs(t, batch, mockClient)
+		_, err = batch.Write("")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create the iterator
+		itr, err := index.NewStringIterator("", "", 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// iterate through the keys and check for the values returned
+		for itr.Next() {
+			_, err = batch.Del(itr.StringKey())
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		_, err = batch.Write("")
+		if err != nil {
+			t.Fatal(err)
+		}
+		index2, err := collection.OpenIndex("pod1", "testdb_batch_2", "key", podPassword, fd, ai, user, mockClient, logger)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// create the iterator
+		itr2, err := index2.NewStringIterator("", "", 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if itr2.Next() {
+			t.Fatal("should be not element")
 		}
 	})
 }

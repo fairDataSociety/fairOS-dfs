@@ -24,33 +24,44 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserLogoutHandler is the api handler to logout a user
-// it takes no arguments
+// UserLogoutHandler godoc
+//
+//	@Summary      Logout
+//	@Description  logs-out user
+//	@Tags         user
+//	@Accept       json
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/user/logout [post]
 func (h *Handler) UserLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("user logout: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("user logout: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "user logout: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "user logout: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	// logout user
-	err = h.dfsAPI.LogoutUser(sessionId, w)
+	err = h.dfsAPI.LogoutUser(sessionId)
 	if err != nil {
 		if err == u.ErrUserNotLoggedIn || err == u.ErrInvalidUserName {
 			h.logger.Errorf("user logout: %v", err)
-			jsonhttp.BadRequest(w, "user logout: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "user logout: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("user logout: %v", err)
-		jsonhttp.InternalServerError(w, "user logout: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "user logout: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "user logged out successfully")
+
+	cookie.ClearSession(w)
+	jsonhttp.OK(w, &response{Message: "user logged out successfully"})
 }

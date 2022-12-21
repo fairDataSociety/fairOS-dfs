@@ -16,48 +16,28 @@ limitations under the License.
 
 package user
 
-import (
-	"net/http"
-)
-
-// DeleteUser deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
+// DeleteUserV2 deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
 // data structures.
-func (u *Users) DeleteUser(userName, dataDir, password, sessionId string, response http.ResponseWriter, ui *Info) error {
+func (u *Users) DeleteUserV2(userName, password, sessionId string, ui *Info) error {
 	// check if session id and user address present in map
 	if !u.IsUserLoggedIn(sessionId) {
 		return ErrUserNotLoggedIn
 	}
 
 	// username validation
-	if !u.IsUsernameAvailable(userName, dataDir) {
+	if !u.IsUsernameAvailableV2(userName) { // skipcq: TCV-001
 		return ErrInvalidUserName
 	}
 
 	// check for valid password
 	userInfo := u.getUserFromMap(sessionId)
 	acc := userInfo.account
-	if !acc.Authorise(password) {
-		return ErrInvalidPassword
+
+	err := u.deletePortableAccount(acc.GetUserAccountInfo().GetAddress(), userName, password, ui.GetFeed())
+	if err != nil { // skipcq: TCV-001
+		return err
 	}
 
 	// Logout user
-	err := u.Logout(sessionId, response)
-	if err != nil {
-		return err
-	}
-
-	// remove the user mnemonic file and the user-address mapping file
-	address, err := u.getAddressFromUserName(userName, dataDir)
-	if err != nil {
-		return err
-	}
-	err = u.deleteMnemonic(userName, address, ui.GetFeed(), u.client)
-	if err != nil {
-		return err
-	}
-	err = u.deleteUserMapping(userName, dataDir)
-	if err != nil {
-		return err
-	}
-	return nil
+	return u.Logout(sessionId)
 }

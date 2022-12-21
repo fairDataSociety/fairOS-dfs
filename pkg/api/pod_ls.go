@@ -27,23 +27,33 @@ import (
 )
 
 type PodListResponse struct {
-	Pods       []string `json:"pod_name"`
-	SharedPods []string `json:"shared_pod_name"`
+	Pods       []string `json:"pods"`
+	SharedPods []string `json:"sharedPods"`
 }
 
-// PodListHandler is the api handler to list all pods
-// it takes no arguments
+// PodListHandler godoc
+//
+//	@Summary      List pods
+//	@Description  PodListHandler is the api handler to list all pods
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  PodListResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/ls [get]
 func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 	// get values from cookie
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("ls pod: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("ls pod: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "ls pod: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "ls pod: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -53,21 +63,19 @@ func (h *Handler) PodListHandler(w http.ResponseWriter, r *http.Request) {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == pod.ErrPodNotOpened {
 			h.logger.Errorf("ls pod: %v", err)
-			jsonhttp.BadRequest(w, "ls pod: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "ls pod: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("ls pod: %v", err)
-		jsonhttp.InternalServerError(w, "ls pod: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "ls pod: " + err.Error()})
 		return
 	}
-
 	if pods == nil {
 		pods = make([]string, 0)
 	}
 	if sharedPods == nil {
 		sharedPods = make([]string, 0)
 	}
-
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, &PodListResponse{
 		Pods:       pods,

@@ -22,8 +22,7 @@ import (
 	"path/filepath"
 
 	dfs "github.com/fairdatasociety/fairOS-dfs"
-
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -58,8 +57,7 @@ func Execute() {
 | $$  | $$| $$_/  |  $$$$$$|______/| $$      | $$| $$
 | $$  | $$| $$     \____  $$       | $$      | $$| $$
 |  $$$$$$$| $$     /$$$$$$$/       |  $$$$$$$| $$| $$
- \_______/|__/    |_______/         \_______/|__/|__/
-`
+ \_______/|__/    |_______/         \_______/|__/|__/`
 	fmt.Println(fdfsCli)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -79,7 +77,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	defaultConfig := filepath.Join(home, ".fairOS/dfs-cli.yml")
+	defaultConfig := filepath.Join(home, ".fairOS", "dfs-cli.yml")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", defaultConfig, "config file")
 
 	rootCmd.PersistentFlags().String("fdfsHost", "127.0.0.1", "fdfs host")

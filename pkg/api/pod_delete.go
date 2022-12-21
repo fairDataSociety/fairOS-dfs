@@ -20,45 +20,46 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"resenje.org/jsonhttp"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 )
 
-// PodDeleteHandler is the api handler to delete a pod
-// it takes only one argument
-// - pod_name: the name of the pod to delete
+// PodDeleteHandler godoc
+//
+//	@Summary      Delete pod
+//	@Description  PodDeleteHandler is the api handler to delete a pod
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_request body PodNameRequest true "pod name and user password"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/delete [delete]
 func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("pod delete: invalid request body type")
-		jsonhttp.BadRequest(w, "pod delete: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "pod delete: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq common.PodRequest
+	var podReq PodNameRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod delete: could not decode arguments")
-		jsonhttp.BadRequest(w, "pod delete: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "pod delete: could not decode arguments"})
 		return
 	}
 
 	podName := podReq.PodName
 	if podName == "" {
-		h.logger.Errorf("pod delete: \"pod_name\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "pod delete: \"pod_name\" parameter missing in cookie")
-		return
-	}
-
-	password := podReq.Password
-	if password == "" {
-		h.logger.Errorf("user delete: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "user delete: \"password\" argument missing")
+		h.logger.Errorf("pod delete: \"podName\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "pod delete: \"podName\" parameter missing in cookie"})
 		return
 	}
 
@@ -66,26 +67,26 @@ func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("delete pod: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("delete pod: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "delete pod: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "delete pod: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	// delete pod
-	err = h.dfsAPI.DeletePod(podName, password, sessionId)
+	err = h.dfsAPI.DeletePod(podName, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn {
 			h.logger.Errorf("delete pod: %v", err)
-			jsonhttp.BadRequest(w, "delete pod: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "delete pod: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("delete pod: %v", err)
-		jsonhttp.InternalServerError(w, "delete pod: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "delete pod: " + err.Error()})
 		return
 	}
-	jsonhttp.OK(w, "pod deleted successfully")
+	jsonhttp.OK(w, &response{Message: "pod deleted successfully"})
 }

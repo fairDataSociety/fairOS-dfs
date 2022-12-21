@@ -19,9 +19,12 @@ package collection_test
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -32,19 +35,19 @@ import (
 
 func TestIndexAPI(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("get-doc", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_api_0", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_0", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// get the expectedValue of keys and check against its actual expectedValue
@@ -63,11 +66,11 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-count", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_api_1", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_1", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// find the count
-		count, err := index.CountIndex()
+		count, err := index.CountIndex(podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -79,7 +82,7 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-doc-del-doc-get-doc", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_api_2", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_2", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		kvMap := addLotOfDocs(t, index, mockClient)
 
 		// get the value of the key just to check
@@ -104,7 +107,7 @@ func TestIndexAPI(t *testing.T) {
 
 	t.Run("get-multiple_docs", func(t *testing.T) {
 		// create a DB and open it
-		index := createAndOpenIndex(t, "pod1", "testdb_api_3", collection.StringIndex, fd, user, mockClient, ai, logger)
+		index := createAndOpenIndex(t, "pod1", "testdb_api_3", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add multiple values for the same key
 		addDoc(t, "key1", []byte("value1"), index, mockClient, true)
@@ -137,7 +140,7 @@ func TestIndexAPI(t *testing.T) {
 
 }
 
-func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.MockBeeClient, apnd bool) {
+func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.BeeClient, apnd bool) {
 	ref, err := client.UploadBlob(value, false, false)
 	if err != nil {
 		t.Fatalf("could not add doc %s:%s, %v", key, value, err)
@@ -148,7 +151,7 @@ func addDoc(t *testing.T, key string, value []byte, index *collection.Index, cli
 	}
 }
 
-func getDoc(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient) []byte {
+func getDoc(t *testing.T, key string, index *collection.Index, client *mock.BeeClient) []byte {
 	ref, err := index.Get(key)
 	if err != nil {
 		if errors.Is(err, collection.ErrEntryNotFound) {
@@ -165,7 +168,7 @@ func getDoc(t *testing.T, key string, index *collection.Index, client *mock.Mock
 	}
 	return data
 }
-func getAllDocs(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient) [][]byte {
+func getAllDocs(t *testing.T, key string, index *collection.Index, client *mock.BeeClient) [][]byte {
 	refs, err := index.Get(key)
 	if err != nil {
 		if errors.Is(err, collection.ErrEntryNotFound) {
@@ -188,7 +191,7 @@ func getAllDocs(t *testing.T, key string, index *collection.Index, client *mock.
 	return data
 }
 
-func getValue(t *testing.T, ref []byte, client *mock.MockBeeClient) []byte {
+func getValue(t *testing.T, ref []byte, client *mock.BeeClient) []byte {
 	data, respCode, err := client.DownloadBlob(ref)
 	if err != nil {
 		t.Fatal(err)
@@ -199,7 +202,7 @@ func getValue(t *testing.T, ref []byte, client *mock.MockBeeClient) []byte {
 	return data
 }
 
-func delDoc(t *testing.T, key string, index *collection.Index, client *mock.MockBeeClient) []byte {
+func delDoc(t *testing.T, key string, index *collection.Index, client *mock.BeeClient) []byte {
 	ref, err := index.Delete(key)
 	if err != nil {
 		t.Fatal(err)
@@ -215,7 +218,7 @@ func delDoc(t *testing.T, key string, index *collection.Index, client *mock.Mock
 
 }
 
-func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeClient) map[string][]byte {
+func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.BeeClient) map[string][]byte {
 	// Initialize the values
 	kvMap := make(map[string][]byte)
 	kvMap["key1"] = []byte("value1")
@@ -249,7 +252,7 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.MockBeeCli
 	return kvMap
 }
 
-func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.MockBeeClient) map[string][]byte {
+func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.BeeClient) map[string][]byte {
 	kvMap := make(map[string][]byte)
 	kvMap["key1"] = []byte("value1")
 	kvMap["key11"] = []byte("value11")

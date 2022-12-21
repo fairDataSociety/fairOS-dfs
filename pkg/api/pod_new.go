@@ -20,50 +20,46 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
-	"resenje.org/jsonhttp"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"resenje.org/jsonhttp"
 )
 
-type PodCreateResponse struct {
-	Reference string `json:"reference"`
-}
-
-// PodCreateHandler is the api handler to create a new pod
-// it takes two arguments
-// - pod_name: the name of the pod to create
-// - password: the password of the user
+// PodCreateHandler godoc
+//
+//	@Summary      Create pod
+//	@Description  PodCreateHandler is the api handler to create a new pod
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      pod_request body PodNameRequest true "pod name and user password"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      201  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/new [post]
 func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
 		h.logger.Errorf("pod new: invalid request body type")
-		jsonhttp.BadRequest(w, "pod new: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: invalid request body type"})
 		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var podReq common.PodRequest
+	var podReq PodNameRequest
 	err := decoder.Decode(&podReq)
 	if err != nil {
 		h.logger.Errorf("pod new: could not decode arguments")
-		jsonhttp.BadRequest(w, "pod new: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: could not decode arguments"})
 		return
 	}
 
 	pod := podReq.PodName
-	password := podReq.Password
-	if password == "" {
-		h.logger.Errorf("pod new: \"password\" argument missing")
-		jsonhttp.BadRequest(w, "pod new: \"password\" argument missing")
-		return
-	}
 	if pod == "" {
-		h.logger.Errorf("pod new: \"pod\" argument missing")
-		jsonhttp.BadRequest(w, "pod new: \"pod\" argument missing")
+		h.logger.Errorf("pod new: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: \"podName\" argument missing"})
 		return
 	}
 
@@ -71,17 +67,17 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("pod new: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("pod new: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "pod new: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "pod new: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
 	// create pod
-	_, err = h.dfsAPI.CreatePod(pod, password, sessionId)
+	_, err = h.dfsAPI.CreatePod(pod, sessionId)
 	if err != nil {
 		if err == dfs.ErrUserNotLoggedIn ||
 			err == p.ErrInvalidPodName ||
@@ -89,13 +85,13 @@ func (h *Handler) PodCreateHandler(w http.ResponseWriter, r *http.Request) {
 			err == p.ErrPodAlreadyExists ||
 			err == p.ErrMaxPodsReached {
 			h.logger.Errorf("pod new: %v", err)
-			jsonhttp.BadRequest(w, "pod new: "+err.Error())
+			jsonhttp.BadRequest(w, &response{Message: "pod new: " + err.Error()})
 			return
 		}
 		h.logger.Errorf("pod new: %v", err)
-		jsonhttp.InternalServerError(w, "pod new: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "pod new: " + err.Error()})
 		return
 	}
 
-	jsonhttp.Created(w, "pod created successfully")
+	jsonhttp.Created(w, &response{Message: "pod created successfully"})
 }

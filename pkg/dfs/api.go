@@ -17,30 +17,73 @@ limitations under the License.
 package dfs
 
 import (
+	"context"
+	"errors"
+	"io"
+	"time"
+
+	"github.com/plexsysio/taskmanager"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
+	ethClient "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 )
 
-type DfsAPI struct {
-	dataDir string
+const (
+	defaultMaxWorkers = 100
+)
+
+// API is the go api for fairOS
+type API struct {
 	client  blockstore.Client
 	users   *user.Users
 	logger  logging.Logger
+	dataDir string
+	tm      *taskmanager.TaskManager
+	io.Closer
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(dataDir, apiUrl, debugApiUrl, cookieDomain, postageBlockId string, logger logging.Logger) (*DfsAPI, error) {
-	c := bee.NewBeeClient(apiUrl, debugApiUrl, postageBlockId, logger)
-	if !c.CheckConnection() {
+func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*API, error) {
+	ens, err := ethClient.New(ensConfig, logger)
+	if err != nil {
+		if errors.Is(err, ethClient.ErrWrongChainID) {
+			return nil, err
+		}
+		return nil, errEthClient
+	}
+	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)
+	if !c.CheckConnection(isGatewayProxy) {
 		return nil, ErrBeeClient
 	}
-	users := user.NewUsers(dataDir, c, cookieDomain, logger)
-	return &DfsAPI{
-		dataDir: dataDir,
+	users := user.NewUsers(dataDir, c, ens, logger)
+
+	return &API{
 		client:  c,
 		users:   users,
 		logger:  logger,
+		dataDir: dataDir,
+		tm:      taskmanager.New(1, defaultMaxWorkers, time.Second*15, logger),
 	}, nil
+}
+
+// NewMockDfsAPI is used for tests only
+func NewMockDfsAPI(client blockstore.Client, users *user.Users, logger logging.Logger, dataDir string) *API {
+	return &API{
+		client:  client,
+		users:   users,
+		logger:  logger,
+		dataDir: dataDir,
+		tm:      taskmanager.New(1, 100, time.Second*15, logger),
+	}
+}
+
+// Close stops the taskmanager
+func (a *API) Close() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	return a.tm.Stop(ctx)
 }

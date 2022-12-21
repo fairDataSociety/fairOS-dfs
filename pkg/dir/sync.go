@@ -17,22 +17,24 @@ limitations under the License.
 package dir
 
 import (
+	"context"
 	"strings"
+	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 // SyncDirectory syncs all the latest entries under a given directory.
-func (d *Directory) SyncDirectory(dirNameWithPath string) error {
-	topic := utils.HashString(utils.CombinePathAndFile(d.podName, dirNameWithPath, ""))
-	_, data, err := d.fd.GetFeedData(topic, d.userAddress)
-	if err != nil {
+func (d *Directory) SyncDirectory(dirNameWithPath, podPassword string) error {
+	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
+	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
+	if err != nil { // skipcq: TCV-001
 		return nil // pod is empty
 	}
 
 	var dirInode Inode
 	err = dirInode.Unmarshal(data)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("dir sync: %v", err)
 		return err
 	}
@@ -40,19 +42,58 @@ func (d *Directory) SyncDirectory(dirNameWithPath string) error {
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
-			filePath := utils.CombinePathAndFile(d.podName, dirNameWithPath, fileName)
-			err := d.file.LoadFileMeta(filePath)
-			if err != nil {
-				return err
+			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
+			err := d.file.LoadFileMeta(filePath, podPassword)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("loading metadata failed %s: %s", filePath, err.Error())
 			}
-
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
-			path := utils.CombinePathAndFile(d.podName, dirNameWithPath, dirName)
+			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			d.logger.Infof(dirNameWithPath)
 
-			err = d.SyncDirectory(path)
-			if err != nil {
+			err = d.SyncDirectory(path, podPassword)
+			if err != nil { // skipcq: TCV-001
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// SyncDirectoryAsync syncs all the latest entries under a given directory concurrently.
+func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath, podPassword string, wg *sync.WaitGroup) error {
+	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
+	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
+	if err != nil { // skipcq: TCV-001
+		return nil // pod is empty
+	}
+
+	var dirInode Inode
+	err = dirInode.Unmarshal(data)
+	if err != nil { // skipcq: TCV-001
+		d.logger.Errorf("dir sync: %v", err)
+		return err
+	}
+
+	d.AddToDirectoryMap(dirNameWithPath, &dirInode)
+	for _, fileOrDirName := range dirInode.FileOrDirNames {
+		if strings.HasPrefix(fileOrDirName, "_F_") {
+			wg.Add(1)
+			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
+			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
+			syncTask := newSyncTask(d, filePath, podPassword, wg)
+			_, err = d.syncManager.Go(syncTask)
+			if err != nil { // skipcq: TCV-001
+				return err
+			}
+		} else if strings.HasPrefix(fileOrDirName, "_D_") {
+			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
+			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
+			d.logger.Infof(dirNameWithPath)
+
+			err = d.SyncDirectoryAsync(ctx, path, podPassword, wg)
+			if err != nil { // skipcq: TCV-001
 				return err
 			}
 		}

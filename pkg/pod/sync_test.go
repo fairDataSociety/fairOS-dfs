@@ -17,47 +17,59 @@ limitations under the License.
 package pod_test
 
 import (
-	"io/ioutil"
+	"context"
+	"io"
 	"testing"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
 )
 
 func TestSync(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"
 
 	t.Run("sync-pod", func(t *testing.T) {
+
+		err := pod1.SyncPod(podName1)
+		if err == nil {
+			t.Fatal("sync should fail, pod not opened")
+		}
 		// create a pod
-		info, err := pod1.CreatePod(podName1, "password", "")
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
 		}
-
 		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir("pod1", info.GetPodAddress(), info.GetFeed())
+		err = info.GetDirectory().MkRootDir("pod1", podPassword, info.GetPodAddress(), info.GetFeed())
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// create some dir and files
-		addFilesAndDirectories(t, info, pod1, podName1)
+		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
-		// open the pod ( ths triggers sync too
-		gotInfo, err := pod1.OpenPod(podName1, "password")
+		// open the pod ths triggers sync too
+		gotInfo, err := pod1.OpenPod(podName1)
 		if err != nil {
 			t.Fatal(err)
 		}

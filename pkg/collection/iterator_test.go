@@ -17,38 +17,40 @@ limitations under the License.
 package collection_test
 
 import (
+	"crypto/rand"
 	"fmt"
-	"io/ioutil"
-	"math/rand"
+	"io"
+	"math/big"
 	"sort"
 	"strconv"
 	"testing"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestIndexIterator(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
-	_, _, err := acc.CreateUserAccount("password", "")
+	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-
+	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("iterate_all_string_keys", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_0", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_0", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -78,7 +80,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_all_random_string_keys", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_1", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_1", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -108,7 +110,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_string_end_key", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_2", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_2", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -143,7 +145,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_string_end_key", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_3", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_3", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
 		keys, values := addDocsForStringIteration(t, idx, actualCount)
@@ -156,7 +158,7 @@ func TestIndexIterator(t *testing.T) {
 		}
 
 		// check the iteration is in order until the end key
-		//skip the first key since "0" is lexicographically smaller than "00"
+		// skip the first key since "0" is lexicographically smaller than "00"
 		for i := 1; i < 14; i++ {
 			if itr.Next() {
 				key := sortedKeys[i]
@@ -178,7 +180,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_string_keys_with_limit", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_4", collection.StringIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_4", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -213,7 +215,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_all_number_keys", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_5", collection.NumberIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_5", podPassword, collection.NumberIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -242,7 +244,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_all_number_random_keys", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_6", collection.NumberIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_6", podPassword, collection.NumberIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -277,7 +279,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_numbers_end_key", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_7", collection.NumberIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_7", podPassword, collection.NumberIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -311,7 +313,7 @@ func TestIndexIterator(t *testing.T) {
 
 	t.Run("iterate_with_numbers_keys_with_limit", func(t *testing.T) {
 		// create a DB and open it
-		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_8", collection.NumberIndex, fd, user, mockClient, ai, logger)
+		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_8", podPassword, collection.NumberIndex, fd, user, mockClient, ai, logger)
 
 		// add some documents and sort them lexicograpically
 		actualCount := uint64(100)
@@ -374,9 +376,15 @@ func addDocsForNumberIteration(t *testing.T, idx *collection.Index, actualCount 
 func addDocsForRandomStringIteration(t *testing.T, idx *collection.Index, actualCount uint64) ([]string, []string) {
 	var keys []int
 	var values []int
+	var stringKeys []string
+	var stringValues []string
 	for i := 0; len(keys) < int(actualCount); i++ {
 	DUPLICATE:
-		a := rand.Intn(1000)
+		bi, err := rand.Int(rand.Reader, big.NewInt(10000))
+		if err != nil {
+			return stringKeys, stringValues
+		}
+		a := int(bi.Int64())
 		for _, k := range keys {
 			if k == a {
 				goto DUPLICATE
@@ -389,8 +397,6 @@ func addDocsForRandomStringIteration(t *testing.T, idx *collection.Index, actual
 		values = append(values, a)
 	}
 
-	var stringKeys []string
-	var stringValues []string
 	for _, k := range keys {
 		stringKeys = append(stringKeys, strconv.Itoa(k))
 	}
@@ -405,7 +411,11 @@ func addDocsForRandomNumberIteration(t *testing.T, idx *collection.Index, actual
 	var values []int
 	for i := 0; len(keys) < int(actualCount); i++ {
 	DUPLICATE:
-		a := rand.Intn(1000)
+		bi, err := rand.Int(rand.Reader, big.NewInt(10000))
+		if err != nil {
+			return keys, values
+		}
+		a := int(bi.Int64())
 		for _, k := range keys {
 			if k == a {
 				goto DUPLICATE
@@ -430,13 +440,13 @@ func sortLexicographically(t *testing.T, keys, values []string) ([]string, []str
 	return keys, values
 }
 
-func createAndOpenIndex(t *testing.T, podName, collectionName string, indexType collection.IndexType, fd *feed.API, user utils.Address,
+func createAndOpenIndex(t *testing.T, podName, collectionName, podPassword string, indexType collection.IndexType, fd *feed.API, user utils.Address,
 	client blockstore.Client, ai *account.Info, logger logging.Logger) *collection.Index {
-	err := collection.CreateIndex(podName, collectionName, "key", indexType, fd, user, client, true)
+	err := collection.CreateIndex(podName, collectionName, "key", podPassword, indexType, fd, user, client, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	idx, err := collection.OpenIndex(podName, collectionName, "key", fd, ai, user, client, logger)
+	idx, err := collection.OpenIndex(podName, collectionName, "key", podPassword, fd, ai, user, client, logger)
 	if err != nil {
 		t.Fatal(err)
 	}

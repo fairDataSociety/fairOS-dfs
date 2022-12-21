@@ -23,27 +23,38 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DirPresentResponse is used to represent if a directory is present
 type DirPresentResponse struct {
 	Present bool   `json:"present"`
 	Error   string `json:"error,omitempty"`
 }
 
-// DirectoryPresentHandler is the api handler which says if a a directory is present or not
-// it takes only one argument
-// - dir-path: the directory to check along with its absolute path
+// DirectoryPresentHandler godoc
+//
+//	@Summary      Is directory present
+//	@Description  DirectoryPresentHandler is the api handler which says if a directory is present or not
+//	@Tags         dir
+//	@Produce      json
+//	@Param	      podName query string true "pod name"
+//	@Param	      dirPath query string true "dir path"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  DirPresentResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/dir/present [get]
 func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["pod_name"]
+	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("dir present: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "dir present: \"pod_name\" argument missing")
+		h.logger.Errorf("dir present: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir present: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]
 
-	keys, ok = r.URL.Query()["dir_path"]
+	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("dir present: \"dir_path\" argument missing")
-		jsonhttp.BadRequest(w, "dir present: \"dir_path\" argument missing")
+		h.logger.Errorf("dir present: \"dirPath\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "dir present: \"dirPath\" argument missing"})
 		return
 	}
 	dirToCheck := keys[0]
@@ -52,12 +63,12 @@ func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("dir present: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("dir present: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "dir present: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "dir present: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 

@@ -17,51 +17,63 @@ limitations under the License.
 package user
 
 import (
-	"net/http"
+	"regexp"
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// CreateNewUser creates a new user with the given user name and password. if a mnemonic is passed
+// CreateNewUserV2 creates a new user with the given username and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
-func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response http.ResponseWriter, sessionId string) (string, string, *Info, error) {
-	// username validation
-	if u.IsUsernameAvailable(userName, u.dataDir) {
-		return "", "", nil, ErrUserAlreadyPresent
+func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string, tm taskmanager.TaskManagerGO) (string, string, string, string, *Info, error) {
+	// Check username validity
+	if !isUserNameValid(userName) {
+		return "", "", "", "", nil, ErrInvalidUserName
+	}
+	// username availability
+	if u.IsUsernameAvailableV2(userName) {
+		return "", "", "", "", nil, ErrUserAlreadyPresent
 	}
 
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, u.client, u.logger)
-
-	//create a new base user account with the mnemonic
-	mnemonic, encryptedMnemonic, err := acc.CreateUserAccount(passPhrase, mnemonic)
-	if err != nil {
-		return "", "", nil, err
+	// create a new base user account with the mnemonic
+	mnemonic, seed, err := acc.CreateUserAccount(mnemonic)
+	if err != nil { // skipcq: TCV-001
+		return "", "", "", "", nil, err
 	}
 
-	// store the ecnrypted mnemonic in Swarm
-	err = u.uploadEncryptedMnemonic(userName, accountInfo.GetAddress(), encryptedMnemonic, fd)
-	if err != nil {
-		return "", "", nil, err
+	// create ens subdomain and store mnemonic
+	nameHash, err := u.createENS(userName, accountInfo)
+	if err != nil { // skipcq: TCV-001
+		if err == eth.ErrInsufficientBalance { // skipcq: TCV-001
+			return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
+		}
+		return "", "", "", "", nil, err // skipcq: TCV-001
 	}
-
-	// store the username -> address mapping locally
-	err = u.storeUserNameToAddressFileMapping(userName, u.dataDir, accountInfo.GetAddress())
-	if err != nil {
-		return "", "", nil, err
+	key, err := accountInfo.PadSeed(seed, passPhrase)
+	if err != nil { // skipcq: TCV-001
+		return "", "", "", "", nil, err
 	}
-
+	if err := u.uploadPortableAccount(accountInfo, userName, passPhrase, key, fd); err != nil { // skipcq: TCV-001
+		return "", "", "", "", nil, err
+	}
 	// Instantiate pod, dir & file objects
-	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), u.logger)
-	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, u.logger)
-	pod := p.NewPod(u.client, fd, acc, u.logger)
+	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), tm, u.logger)
+	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, tm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}
@@ -80,10 +92,50 @@ func (u *Users) CreateNewUser(userName, passPhrase, mnemonic string, response ht
 	}
 
 	// set cookie and add user to map
-	err = u.addUserAndSessionToMap(ui, response)
+	err = u.addUserAndSessionToMap(ui)
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", "", nil, err
+	}
+	// store encrypted soc address in secondary location
+	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
+	return userAddressString, mnemonic, nameHash, utils.Encode(pb), ui, nil
+}
+
+func isUserNameValid(username string) bool {
+	if username == "" {
+		return false
+	}
+	pattern := `^[a-z0-9_-]*$`
+	matches, err := regexp.MatchString(pattern, username)
+	if err != nil { // skipcq: TCV-001
+		return false
+	}
+	pattern2 := `^[A-Z]*$`
+	matches2, err := regexp.MatchString(pattern2, username)
+	if err != nil {
+		return false
+	}
+	if matches && !matches2 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (u *Users) createENS(userName string, accountInfo *account.Info) (string, error) {
+	err := u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	if err != nil { // skipcq: TCV-001
+		return "", err
 	}
 
-	return userAddressString, mnemonic, ui, nil
+	nameHash, err := u.ens.SetResolver(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	if err != nil { // skipcq: TCV-001
+		return "", err
+	}
+
+	err = u.ens.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	if err != nil { // skipcq: TCV-001
+		return "", err
+	}
+	return nameHash, nil
 }

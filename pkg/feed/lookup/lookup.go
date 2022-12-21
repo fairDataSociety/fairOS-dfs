@@ -37,7 +37,7 @@ const HighestLevel = 31
 // DefaultLevel sets what level will be chosen to search when there is no hint
 const DefaultLevel = HighestLevel
 
-//Algorithm is the function signature of a lookup algorithm
+// Algorithm is the function signature of a lookup algorithm
 type Algorithm func(ctx context.Context, now uint64, hint Epoch, read ReadFunc) (value interface{}, err error)
 
 // Lookup finds the update with the highest timestamp that is smaller or equal than 'now'
@@ -73,6 +73,7 @@ func getBaseTime(t uint64, level uint8) uint64 {
 }
 
 // Hint creates a hint based only on the last known update time
+// skipcq: TCV-001
 func Hint(last uint64) Epoch {
 	return Epoch{
 		Time:  last,
@@ -87,12 +88,12 @@ func Hint(last uint64) Epoch {
 func GetNextLevel(last Epoch, now uint64) uint8 {
 	// First XOR the last epoch base time with the current clock.
 	// This will set all the FairOS most significant bits to zero.
-	mix := (last.Base() ^ now)
+	mix := last.Base() ^ now
 
 	// Then, make sure we stop the below loop before one level below the current, by setting
 	// that level's bit to 1.
 	// If the next level is lower than the current one, it must be exactly level-1 and not lower.
-	mix |= (1 << (last.Level - 1))
+	mix |= 1 << (last.Level - 1)
 
 	// if the last update was more than 2^highestLevel seconds ago, choose the highest level
 	if mix > (maxuint64 >> (64 - HighestLevel - 1)) {
@@ -134,5 +135,5 @@ func GetFirstEpoch(now uint64) Epoch {
 var worstHint = Epoch{Time: 0, Level: 63}
 
 var trace = func(id int32, formatString string, a ...interface{}) {
-	//fmt.Printf("Step ID #%d "+formatString+"\n", append([]interface{}{id}, a...)...)
+	// fmt.Printf("Step ID #%d "+formatString+"\n", append([]interface{}{id}, a...)...)
 }

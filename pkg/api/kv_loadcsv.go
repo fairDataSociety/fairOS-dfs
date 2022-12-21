@@ -28,22 +28,34 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// KVLoadCSVHandler is the api handler to load a csv file as key and value in a KV table
-// it has two arguments
-// - table_name: the name of the key value table
-// - csv: the name of the parameter which contains the file to upload in a multipart upload
+// KVLoadCSVHandler godoc
+//
+//	@Summary      Upload a csv file in kv table
+//	@Description  KVLoadCSVHandler is the api handler to load a csv file as key and value in a KV table
+//	@Tags         kv
+//	@Accept       mpfd
+//	@Produce      json
+//	@Param	      podName formData string true "pod name"
+//	@Param	      tableName formData string true "table name"
+//	@Param	      memory formData string false "keep in memory"
+//	@Param	      csv formData file true "file to upload"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  response
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/kv/loadcsv [Post]
 func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
-	podName := r.FormValue("pod_name")
+	podName := r.FormValue("podName")
 	if podName == "" {
-		h.logger.Errorf("kv loadcsv: \"pod_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv loadcsv: \"pod_name\" argument missing")
+		h.logger.Errorf("kv loadcsv: \"podName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"podName\" argument missing"})
 		return
 	}
 
-	name := r.FormValue("table_name")
+	name := r.FormValue("tableName")
 	if name == "" {
-		h.logger.Errorf("kv loadcsv: \"table_name\" argument missing")
-		jsonhttp.BadRequest(w, "kv loadcsv: \"table_name\" argument missing")
+		h.logger.Errorf("kv loadcsv: \"tableName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"tableName\" argument missing"})
 		return
 	}
 
@@ -57,12 +69,12 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, ErrInvalidCookie)
+		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
 		return
 	}
 	if sessionId == "" {
 		h.logger.Errorf("kv loadcsv: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, "kv loadcsv: \"cookie-id\" parameter missing in cookie")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
 
@@ -70,13 +82,13 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseMultipartForm(defaultMaxMemory)
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)
-		jsonhttp.BadRequest(w, "kv loadcsv: "+err.Error())
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: " + err.Error()})
 		return
 	}
 	files := r.MultipartForm.File["csv"]
 	if len(files) == 0 {
 		h.logger.Errorf("kv loadcsv: parameter \"csv\" missing")
-		jsonhttp.BadRequest(w, "kv loadcsv: parameter \"csv\" missing")
+		jsonhttp.BadRequest(w, &response{Message: "kv loadcsv: parameter \"csv\" missing"})
 		return
 	}
 
@@ -84,10 +96,11 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	fd, err := file.Open()
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)
-		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv loadcsv: " + err.Error()})
 		return
 	}
 	defer fd.Close()
+
 	reader := bufio.NewReader(fd)
 	readHeader := false
 	rowCount := 0
@@ -114,7 +127,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 			batch, err = h.dfsAPI.KVBatch(sessionId, podName, name, columns)
 			if err != nil {
 				h.logger.Errorf("kv loadcsv: %v", err)
-				jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
+				jsonhttp.InternalServerError(w, &response{Message: "kv loadcsv: " + err.Error()})
 				return
 			}
 
@@ -142,10 +155,10 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = batch.Write("")
 	if err != nil {
 		h.logger.Errorf("kv loadcsv: %v", err)
-		jsonhttp.InternalServerError(w, "kv loadcsv: "+err.Error())
+		jsonhttp.InternalServerError(w, &response{Message: "kv loadcsv: " + err.Error()})
 		return
 	}
 
 	sendStr := fmt.Sprintf("csv file loaded in to kv table (%s) with total:%d, success: %d, failure: %d rows", name, rowCount, successCount, failureCount)
-	jsonhttp.OK(w, sendStr)
+	jsonhttp.OK(w, &response{Message: sendStr})
 }

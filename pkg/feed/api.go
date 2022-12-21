@@ -30,6 +30,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"golang.org/x/crypto/sha3"
 )
 
 const (
@@ -39,23 +40,26 @@ const (
 
 var (
 	// ErrInvalidTopicSize is returned when a topic is not equal to TopicLength
-	ErrInvalidTopicSize = fmt.Errorf("Topic is not equal to %d", TopicLength)
+	ErrInvalidTopicSize = fmt.Errorf("topic is not equal to %d", TopicLength)
 
 	// ErrInvalidPayloadSize is returned when the payload is greater than the chunk size
-	ErrInvalidPayloadSize = fmt.Errorf("payload is greater than %d", utils.MaxChunkLength)
+	ErrInvalidPayloadSize = fmt.Errorf("payload size is too large. maximum payload size is %d bytes", utils.MaxChunkLength)
 
+	// ErrReadOnlyFeed is returned when a feed is read only for a user
 	ErrReadOnlyFeed = fmt.Errorf("read only feed")
 )
 
+// API handles feed operations
 type API struct {
 	handler     *Handler
 	accountInfo *account.Info
 	logger      logging.Logger
 }
 
-type Request struct {
+// request is a custom type that involves in the fairOS feed creation
+type request struct {
 	ID
-	//User   utils.Address
+	// User   utils.Address
 	idAddr swarm.Address // cached chunk address for the update (not serialized, for internal use)
 
 	data       []byte     // actual data payload
@@ -74,10 +78,10 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 }
 
 // CreateFeed creates a feed by constructing a single owner chunk. This chunk
-// can only be accessed if the pod address is known. Also no one else can spoof this
+// can only be accessed if the pod address is known. Also, no one else can spoof this
 // chunk since this is signed by the pod.
-func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
-	var req Request
+func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte, encryptionPassword []byte) ([]byte, error) {
+	var req request
 
 	if a.accountInfo.GetPrivateKey() == nil {
 		return nil, ErrReadOnlyFeed
@@ -91,6 +95,16 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 		return nil, ErrInvalidPayloadSize
 	}
 
+	var err error
+
+	encryptedData := data
+	if encryptionPassword != nil { // skipcq: TCV-001
+		encryptedData, err = utils.EncryptBytes(encryptionPassword, data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+	}
+
 	// fill Feed and Epoc related details
 	copy(req.ID.Topic[:], topic)
 	req.ID.User = user
@@ -98,40 +112,41 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 	req.Epoch.Time = uint64(time.Now().Unix())
 
 	// Add initial feed data
-	req.data = data
+	req.data = encryptedData
 
 	// create the id, hash(topic, epoc)
 	id, err := a.handler.getId(req.Topic, req.Time, req.Level)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// get the payload id BMT(span, payload)
-	payloadId, err := a.handler.getPayloadId(data)
-	if err != nil {
+	payloadId, err := a.handler.getPayloadId(encryptedData)
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
-	ch, err := utils.NewChunkWithSpan(data)
-	if err != nil {
+	ch, err := utils.NewChunkWithSpan(encryptedData)
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	sch, err := soc.NewChunk(id, ch, signer)
-	if err != nil {
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// generate the data to sign
 	toSignBytes, err := toSignDigest(id, ch.Address().Bytes())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// sign the chunk
 	signature, err := signer.Sign(toSignBytes)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
@@ -141,24 +156,77 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 
 	// set signature and binary data fields
 	_, err = a.handler.toChunkContent(&req, id, payloadId)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// send the updated soc chunk to bee
 	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	return address, nil
 }
 
-func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, error) {
+// CreateFeedFromTopic creates a soc with the topic as identifier
+func (a *API) CreateFeedFromTopic(topic []byte, user utils.Address, data []byte) ([]byte, error) {
+	if a.accountInfo.GetPrivateKey() == nil {
+		return nil, ErrReadOnlyFeed
+	}
+
+	if len(topic) != TopicLength {
+		return nil, ErrInvalidTopicSize
+	}
+
+	if len(data) > utils.MaxChunkLength {
+		return nil, ErrInvalidPayloadSize
+	}
+
+	// create the signer and the content addressed chunk
+	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
+	ch, err := utils.NewChunkWithSpan(data)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	// generate the data to sign
+	toSignBytes, err := toSignDigest(topic, ch.Address().Bytes())
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	// sign the chunk
+	signature, err := signer.Sign(toSignBytes)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	// send the updated soc chunk to bee
+	address, err := a.handler.update(topic, user.ToBytes(), signature, ch.Data())
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	return address, nil
+}
+
+// GetSOCFromAddress will download the soc chunk for the given reference
+func (a *API) GetSOCFromAddress(address []byte) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	data, err := a.handler.client.DownloadChunk(ctx, address)
+	if err != nil {
+		return nil, err
+	}
+	ch := swarm.NewChunk(swarm.NewAddress(address), data)
+	return a.handler.rawSignedChunkData(ch)
+}
+
+// GetFeedData looks up feed from swarm
+func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword []byte) ([]byte, []byte, error) {
 	if len(topic) != TopicLength {
 		return nil, nil, ErrInvalidTopicSize
 	}
-
 	ctx := context.Background()
 	f := new(Feed)
 	f.User = user
@@ -172,17 +240,47 @@ func (a *API) GetFeedData(topic []byte, user utils.Address) ([]byte, []byte, err
 	if err != nil {
 		return nil, nil, err
 	}
-	var data []byte
-	addr, data, err := a.handler.GetContent(&q.Feed)
-	if err != nil {
+	addr, encryptedData, err := a.handler.GetContent(&q.Feed)
+	if err != nil { // skipcq: TCV-001
+		return nil, nil, err
+	}
+	if encryptionPassword == nil || string(encryptedData) == utils.DeletedFeedMagicWord {
+		return addr.Bytes(), encryptedData, nil
+	}
+	data, err := utils.DecryptBytes(encryptionPassword, encryptedData)
+	if err != nil { // skipcq: TCV-001
 		return nil, nil, err
 	}
 	return addr.Bytes(), data, nil
+}
 
+// GetFeedDataFromTopic will generate keccak256 reference of the topic+address and download soc
+func (a *API) GetFeedDataFromTopic(topic []byte, user utils.Address) ([]byte, []byte, error) {
+	if len(topic) != TopicLength {
+		return nil, nil, ErrInvalidTopicSize
+	}
+	// generate reference
+	h := sha3.NewLegacyKeccak256()
+	_, err := h.Write(topic)
+	if err != nil { // skipcq: TCV-001
+		return nil, nil, err
+	}
+	_, err = h.Write(user.ToBytes())
+	if err != nil { // skipcq: TCV-001
+		return nil, nil, err
+	}
+	hash := h.Sum(nil)
+
+	// download soc from generated reference
+	data, err := a.GetSOCFromAddress(hash)
+	if err != nil {
+		return nil, nil, err
+	}
+	return hash, data, nil
 }
 
 // UpdateFeed updates the contents of an already created feed.
-func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte, error) {
+func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encryptionPassword []byte) ([]byte, error) {
 	if a.accountInfo.GetPrivateKey() == nil {
 		return nil, ErrReadOnlyFeed
 	}
@@ -195,6 +293,16 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 		return nil, ErrInvalidPayloadSize
 	}
 
+	var err error
+
+	encryptedData := data
+	if encryptionPassword != nil && string(data) != utils.DeletedFeedMagicWord {
+		encryptedData, err = utils.EncryptBytes(encryptionPassword, data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+	}
+
 	ctx := context.Background()
 	f := new(Feed)
 	f.User = user
@@ -202,44 +310,45 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 
 	// get the existing request from DB
 	req, err := a.handler.NewRequest(ctx, f)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	req.Time = uint64(time.Now().Unix())
-	req.data = data
+	req.data = encryptedData
 
 	// create the id, hash(topic, epoc)
 	id, err := a.handler.getId(req.Topic, req.Time, req.Level)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// get the payload id BMT(span, payload)
-	payloadId, err := a.handler.getPayloadId(data)
-	if err != nil {
+	payloadId, err := a.handler.getPayloadId(encryptedData)
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
-	ch, err := utils.NewChunkWithSpan(data)
-	if err != nil {
+	ch, err := utils.NewChunkWithSpan(encryptedData)
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	sch, err := soc.NewChunk(id, ch, signer)
-	if err != nil {
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// generate the data to sign
 	toSignBytes, err := toSignDigest(id, ch.Address().Bytes())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// sign the chunk
 	signature, err := signer.Sign(toSignBytes)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
@@ -249,12 +358,12 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte) ([]byte,
 
 	// set signature and binary data fields
 	_, err = a.handler.toChunkContent(req, id, payloadId)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 
 	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	return address, nil
@@ -266,13 +375,32 @@ func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 		return ErrReadOnlyFeed
 	}
 
-	delRef, _, err := a.GetFeedData(topic, user)
-	if err != nil && err.Error() != "no feed updates found" {
+	delRef, _, err := a.GetFeedData(topic, user, nil)
+	if err != nil && err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 		return err
 	}
 	if delRef != nil {
 		err = a.handler.deleteChunk(delRef)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
+			return err
+		}
+	}
+	return nil
+}
+
+// DeleteFeedFromTopic deleted the feed by updating with no data inside the SOC chunk.
+func (a *API) DeleteFeedFromTopic(topic []byte, user utils.Address) error {
+	if a.accountInfo.GetPrivateKey() == nil {
+		return ErrReadOnlyFeed
+	}
+
+	delRef, _, err := a.GetFeedDataFromTopic(topic, user)
+	if err != nil && err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
+		return err
+	}
+	if delRef != nil {
+		err = a.handler.deleteChunk(delRef)
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	}
@@ -281,6 +409,7 @@ func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 
 // IsReadOnlyFeed if a public pod is imported, the feed can only be read.
 // this function check the feed is read only.
+// skipcq: TCV-001
 func (a *API) IsReadOnlyFeed() bool {
 	return a.accountInfo.GetPrivateKey() == nil
 }

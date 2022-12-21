@@ -17,28 +17,39 @@ limitations under the License.
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash"
-	"os"
+	"math/big"
 	"strconv"
 	"strings"
 
 	"github.com/ethersphere/bee/pkg/bmtpool"
-
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"golang.org/x/crypto/sha3"
 )
 
 const (
-	MaxChunkLength       = 4096
-	PathSeperator        = string(os.PathSeparator)
-	MaxPodNameLength     = 25
-	SpanLength           = 8
+	// MaxChunkLength is the maximum size of a chunk
+	MaxChunkLength = 4096
+
+	// PathSeparator is string of unix filesystem
+	PathSeparator = "/"
+
+	// MaxPodNameLength defines how long a pod name can be
+	MaxPodNameLength = 64
+
+	// SpanLength of a chunk
+	SpanLength = 8
+
+	// DeletedFeedMagicWord is written in a feed after it gets deleted from fairOS
 	DeletedFeedMagicWord = "__Fair__"
+
+	letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 type decError struct{ msg string }
@@ -46,14 +57,15 @@ type decError struct{ msg string }
 func (err decError) Error() string { return err.msg }
 
 var (
-	ErrEmptyString   = &decError{"empty hex string"}
-	ErrMissingPrefix = &decError{"hex string without 0x prefix"}
-	ErrSyntax        = &decError{"invalid hex string"}
-	ErrOddLength     = &decError{"hex string of odd length"}
-	ErrUint64Range   = &decError{"hex number > 64 bits"}
+	errEmptyString   = &decError{"empty hex string"}
+	errMissingPrefix = &decError{"hex string without 0x prefix"}
+	errSyntax        = &decError{"invalid hex string"}
+	errOddLength     = &decError{"hex string of odd length"}
+	errUint64Range   = &decError{"hex number > 64 bits"}
 )
 
 // Encode encodes b as a hex string with 0x prefix.
+// skipcq: TCV-001
 func Encode(b []byte) string {
 	enc := make([]byte, len(b)*2)
 	hex.Encode(enc, b)
@@ -63,10 +75,10 @@ func Encode(b []byte) string {
 // Decode decodes a hex string with 0x prefix.
 func Decode(input string) ([]byte, error) {
 	if input == "" {
-		return nil, ErrEmptyString
+		return nil, errEmptyString
 	}
 	if !has0xPrefix(input) {
-		return nil, ErrMissingPrefix
+		return nil, errMissingPrefix
 	}
 	b, err := hex.DecodeString(input[2:])
 	if err != nil {
@@ -83,35 +95,39 @@ func mapError(err error) error {
 	if err, ok := err.(*strconv.NumError); ok {
 		switch err.Err {
 		case strconv.ErrRange:
-			return ErrUint64Range
+			return errUint64Range
 		case strconv.ErrSyntax:
-			return ErrSyntax
+			return errSyntax
 		}
 	}
 	if _, ok := err.(hex.InvalidByteError); ok {
-		return ErrSyntax
+		return errSyntax
 	}
 	if err == hex.ErrLength {
-		return ErrOddLength
+		return errOddLength
 	}
-	return err
+	return err // skipcq: TCV-001
 }
 
+// skipcq: TCV-001
 func hashFunc() hash.Hash {
 	return sha3.NewLegacyKeccak256()
 }
 
+// HashString returns the bmt hash of a string
+// skipcq: TCV-001
 func HashString(path string) []byte {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	hasher := bmtlegacy.New(p)
 	hasher.Reset()
 	_, err := hasher.Write([]byte(path))
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return []byte{0}
 	}
-	return hasher.Sum(nil)
+	return hasher.Sum(nil) // skipcq: TCV-001
 }
 
+// NewChunkWithSpan returns a chunk with span
 func NewChunkWithSpan(data []byte) (swarm.Chunk, error) {
 	span := int64(len(data))
 
@@ -128,21 +144,19 @@ func NewChunkWithSpan(data []byte) (swarm.Chunk, error) {
 	// execute hash, compare and return result
 	spanBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(spanBytes, uint64(span))
-	err := hasher.SetSpanBytes(spanBytes)
-	if err != nil {
-		return nil, err
-	}
-	_, err = hasher.Write(data)
+	hasher.SetHeader(spanBytes)
+	_, err := hasher.Write(data)
 	if err != nil {
 		return nil, err
 	}
 	s := hasher.Sum(nil)
 
-	payload := append(spanBytes, data...)
+	payload := append(spanBytes, data...) // skipcq: CRT-D0001
 	address := swarm.NewAddress(s)
 	return swarm.NewChunk(address, payload), nil
 }
 
+// NewChunkWithoutSpan returns a chunk without span
 func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 	if len(data) > swarm.ChunkSize+swarm.SpanSize {
 		return nil, errors.New("max chunk size exceeded")
@@ -151,12 +165,9 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 	defer bmtpool.Put(hasher)
 
 	// execute hash, compare and return result
-	err := hasher.SetSpanBytes(data[:swarm.SpanSize])
-	if err != nil {
-		return nil, err
-	}
-	_, err = hasher.Write(data[swarm.SpanSize:])
-	if err != nil {
+	hasher.SetHeader(data[:swarm.SpanSize])
+	_, err := hasher.Write(data[swarm.SpanSize:])
+	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	s := hasher.Sum(nil)
@@ -165,33 +176,49 @@ func NewChunkWithoutSpan(data []byte) (swarm.Chunk, error) {
 	return swarm.NewChunk(address, data), nil
 }
 
-func CombinePathAndFile(podName, path, fileName string) string {
+// CombinePathAndFile joins filename with provided path
+func CombinePathAndFile(path, fileName string) string {
+	if path == PathSeparator && fileName == PathSeparator {
+		return PathSeparator
+	}
 	var totalPath string
-
-	if path == PathSeperator || path == "" {
-		totalPath = path + fileName
+	if path == PathSeparator || path == "" {
+		fileName = strings.TrimPrefix(fileName, PathSeparator)
+		totalPath = PathSeparator + fileName
 	} else {
 		if fileName == "" {
 			totalPath = path
 		} else {
-			fileName = strings.TrimPrefix(fileName, PathSeperator)
-			path = strings.TrimPrefix(path, PathSeperator)
-			totalPath = PathSeperator + path + PathSeperator + fileName
+			fileName = strings.TrimPrefix(fileName, PathSeparator)
+			path = strings.TrimPrefix(path, PathSeparator)
+			totalPath = PathSeparator + path + PathSeparator + fileName
 		}
 	}
 	return totalPath
 }
 
-//func CombinePathAndFile(podName, path, fileName string) string {
-//	var totalPath string
-//	if path == PathSeperator || path == "" {
-//		totalPath = PathSeperator + podName + path + fileName
-//	} else {
-//		if fileName != "" {
-//			totalPath = PathSeperator + podName + PathSeperator + path + PathSeperator + fileName
-//		} else {
-//			totalPath = PathSeperator + podName + PathSeperator + path
-//		}
-//	}
-//	return totalPath
-//}
+// GetRandString return random string of length n
+func GetRandString(n int) (string, error) {
+	b := make([]byte, n)
+	for i := range b {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterBytes))))
+		if err != nil { // skipcq: TCV-001
+			return "", err
+		}
+		b[i] = letterBytes[num.Int64()]
+	}
+	return string(b), nil
+}
+
+// GetRandBytes return random bytes array of length n
+func GetRandBytes(n int) ([]byte, error) {
+	b := make([]byte, n)
+	for i := range b {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterBytes))))
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+		b[i] = letterBytes[num.Int64()]
+	}
+	return b, nil
+}

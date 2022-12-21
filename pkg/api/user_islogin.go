@@ -26,21 +26,29 @@ type LoginStatus struct {
 	LoggedIn bool `json:"loggedin"`
 }
 
-// IsUserLoggedInHandler is the api handler to check if a user is logged in or not
-// it takes one argument
-// -user_name: the user name to check if it logged in or not
+// IsUserLoggedInHandler godoc
+//
+//	@Summary      Is user logged-in
+//	@Description  Check if the given user is logged-in
+//	@Tags         user
+//	@Accept       json
+//	@Produce      json
+//	@Param	      userName query string true "user name"
+//	@Success      200  {object}  LoginStatus
+//	@Failure      400  {object}  response
+//	@Router       /v1/user/isloggedin [get]
 func (h *Handler) IsUserLoggedInHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["user_name"]
+	keys, ok := r.URL.Query()["userName"]
 	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("user isloggedin: \"user_name\" argument missing")
-		jsonhttp.BadRequest(w, "user isloggedin: \"user_name\" argument missing")
+		h.logger.Errorf("user isloggedin: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user isloggedin: \"userName\" argument missing"})
 		return
 	}
 
 	user := keys[0]
 	if user == "" {
-		h.logger.Errorf("user isloggedin: \"user\" argument missing")
-		jsonhttp.BadRequest(w, "user isloggedin: \"user\" argument missing")
+		h.logger.Errorf("user isloggedin: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user isloggedin: \"userName\" argument missing"})
 		return
 	}
 

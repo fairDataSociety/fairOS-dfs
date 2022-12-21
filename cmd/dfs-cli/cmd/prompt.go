@@ -35,6 +35,7 @@ const (
 	PodSeperator    = ">>"
 	PromptSeperator = "> "
 	APIVersion      = "/v1"
+	APIVersionV2    = "/v2"
 )
 
 var (
@@ -42,18 +43,12 @@ var (
 	currentPod       string
 	currentPrompt    string
 	currentDirectory string
-	fdfsAPI          *FdfsClient
+	fdfsAPI          *fdfsClient
 )
 
 const (
-	apiUserSignup      = APIVersion + "/user/signup"
-	apiUserLogin       = APIVersion + "/user/login"
-	apiUserImport      = APIVersion + "/user/import"
-	apiUserPresent     = APIVersion + "/user/present"
 	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
 	apiUserLogout      = APIVersion + "/user/logout"
-	apiUserExport      = APIVersion + "/user/export"
-	apiUserDelete      = APIVersion + "/user/delete"
 	apiUserStat        = APIVersion + "/user/stat"
 	apiPodNew          = APIVersion + "/pod/new"
 	apiPodOpen         = APIVersion + "/pod/open"
@@ -95,10 +90,15 @@ const (
 	apiDocDelete       = APIVersion + "/doc/delete"
 	apiDocFind         = APIVersion + "/doc/find"
 	apiDocEntryPut     = APIVersion + "/doc/entry/put"
-	apiDocEntryGet     = APIVersion + "/doc/entry/newget"
+	apiDocEntryGet     = APIVersion + "/doc/entry/get"
 	apiDocEntryDel     = APIVersion + "/doc/entry/del"
 	apiDocLoadJson     = APIVersion + "/doc/loadjson"
 	apiDocIndexJson    = APIVersion + "/doc/indexjson"
+
+	apiUserSignupV2  = APIVersionV2 + "/user/signup"
+	apiUserLoginV2   = APIVersionV2 + "/user/login"
+	apiUserPresentV2 = APIVersionV2 + "/user/present"
+	apiUserDeleteV2  = APIVersionV2 + "/user/delete"
 )
 
 type Message struct {
@@ -109,7 +109,7 @@ type Message struct {
 // NewPrompt spawns dfs-client and checks if the it is connected to it.
 func NewPrompt() {
 	var err error
-	fdfsAPI, err = NewFdfsClient(fdfsServer)
+	fdfsAPI, err = newFdfsClient(fdfsServer)
 	if err != nil {
 		fmt.Println("could not create fdfs client")
 		os.Exit(1)
@@ -137,14 +137,12 @@ func changeLivePrefix() (string, bool) {
 }
 
 var userSuggestions = []prompt.Suggest{
-	{Text: "new", Description: "create a new user"},
-	{Text: "del", Description: "delete a existing user"},
-	{Text: "login", Description: "login to a existing user"},
+	{Text: "new", Description: "create a new user (v2)"},
+	{Text: "del", Description: "delete a existing user (v2)"},
+	{Text: "login", Description: "login to a existing user (v2)"},
 	{Text: "logout", Description: "logout from a logged in user"},
-	{Text: "present", Description: "is user present"},
-	{Text: "export ", Description: "exports the user"},
-	{Text: "import ", Description: "imports the user"},
-	{Text: "stat ", Description: "shows information about a user"},
+	{Text: "present", Description: "is user present (v2)"},
+	{Text: "stat", Description: "shows information about a user"},
 }
 
 var podSuggestions = []prompt.Suggest{
@@ -206,6 +204,7 @@ var suggestions = []prompt.Suggest{
 	{Text: "kv get", Description: "get value from key"},
 	{Text: "kv put", Description: "put key and value in kv store"},
 	{Text: "kv del", Description: "delete key and value from the store"},
+	{Text: "kv count", Description: "number of records in the store"},
 	{Text: "kv loadcsv", Description: "loads the csv file in to kv store"},
 	{Text: "kv seek", Description: "seek to the given start prefix"},
 	{Text: "kv getnext", Description: "get the next element"},
@@ -275,74 +274,50 @@ func executor(in string) {
 		switch blocks[1] {
 		case "new":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
-			userNew(userName)
-			currentUser = userName
-			currentPod = ""
-			currentDirectory = ""
-			currentPrompt = getCurrentPrompt()
-		case "import":
-			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
-				return
-			}
-			if len(blocks) == 3 {
-				fmt.Println("invalid command. Missing \"address\" or \"mnemonic\" argument ")
-				return
-			}
-			userName := blocks[2]
-			if len(blocks) == 4 {
-				address := blocks[3]
-				userImportUsingAddress(userName, address)
-				currentUser = userName
-				currentPod = ""
-				currentDirectory = ""
-				currentPrompt = getCurrentPrompt()
-				return
-			} else {
-				if len(blocks) > 4 && len(blocks) < 15 {
+			mnemonic := ""
+			if len(blocks) > 4 {
+				if len(blocks) < 15 {
 					fmt.Println("invalid command. Missing arguments")
 					return
 				}
-				var mnemonic string
 				for i := 3; i < 15; i++ {
 					mnemonic = mnemonic + " " + blocks[i]
 				}
 				mnemonic = strings.TrimPrefix(mnemonic, " ")
-				userImportUsingMnemonic(userName, mnemonic)
 			}
+			userNew(userName, mnemonic)
 			currentUser = userName
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
 		case "login":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
-			userLogin(userName)
-			currentUser = userName
+			userLogin(userName, apiUserLoginV2)
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
 		case "present":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
-			presentUser(userName)
+			presentUser(userName, apiUserPresentV2)
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if currentUser == "" {
 				fmt.Println("please login as  user to do the operation")
 				return
 			}
-			deleteUser()
+			deleteUser(apiUserDeleteV2)
 			currentUser = ""
 			currentPod = ""
 			currentDirectory = ""
@@ -357,16 +332,9 @@ func executor(in string) {
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
-		case "export":
-			if currentUser == "" {
-				fmt.Println("please login as  user to do the operation")
-				return
-			}
-			exportUser()
-			currentPrompt = getCurrentPrompt()
 		case "loggedin":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"userName\" argument")
 				return
 			}
 			userName := blocks[2]
@@ -395,17 +363,15 @@ func executor(in string) {
 		switch blocks[1] {
 		case "new":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
 			podNew(podName)
-			currentPod = podName
-			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
@@ -415,13 +381,11 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
 			openPod(podName)
-			currentPod = podName
-			currentDirectory = utils.PathSeperator
 			currentPrompt = getCurrentPrompt()
 		case "close":
 			if !isPodOpened() {
@@ -436,7 +400,7 @@ func executor(in string) {
 				return
 			}
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
@@ -453,7 +417,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "share":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"podName\" argument")
 				return
 			}
 			podName := blocks[2]
@@ -461,7 +425,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "receive":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"reference\" argument")
 				return
 			}
 			podSharingReference := blocks[2]
@@ -469,7 +433,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "receiveinfo":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"reference\" argument")
 				return
 			}
 			podSharingReference := blocks[2]
@@ -496,7 +460,7 @@ func executor(in string) {
 		switch blocks[1] {
 		case "new":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -509,7 +473,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "delete":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -520,7 +484,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -528,7 +492,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "count":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -536,7 +500,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "put":
 			if len(blocks) < 5 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -546,7 +510,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "get":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" or \"key\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -555,7 +519,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" or \"key\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -564,7 +528,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "loadcsv":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more argumentss")
 				return
 			}
 			tableName := blocks[2]
@@ -578,7 +542,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "seek":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -599,7 +563,7 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "getnext":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -625,7 +589,7 @@ func executor(in string) {
 		switch blocks[1] {
 		case "new":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -648,15 +612,15 @@ func executor(in string) {
 			currentPrompt = getCurrentPrompt()
 		case "open":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
-			docOpen(tableName)
+			docOpen(currentPod, tableName)
 			currentPrompt = getCurrentPrompt()
 		case "count":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
@@ -664,19 +628,19 @@ func executor(in string) {
 			if len(blocks) == 4 {
 				expr = blocks[3]
 			}
-			docCount(tableName, expr)
+			docCount(currentPod, tableName, expr)
 			currentPrompt = getCurrentPrompt()
 		case "delete":
 			if len(blocks) < 3 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing \"tableName\" argument")
 				return
 			}
 			tableName := blocks[2]
-			docDelete(tableName)
+			docDelete(currentPod, tableName)
 			currentPrompt = getCurrentPrompt()
 		case "find":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
@@ -685,53 +649,53 @@ func executor(in string) {
 			if len(blocks) == 5 {
 				limit = blocks[4]
 			}
-			docFind(tableName, expr, limit)
+			docFind(currentPod, tableName, expr, limit)
 			currentPrompt = getCurrentPrompt()
 		case "put":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			value := blocks[3]
-			docPut(tableName, value)
+			docPut(currentPod, tableName, value)
 			currentPrompt = getCurrentPrompt()
 		case "get":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			idValue := blocks[3]
-			docGet(tableName, idValue)
+			docGet(currentPod, tableName, idValue)
 			currentPrompt = getCurrentPrompt()
 		case "del":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			idValue := blocks[3]
-			docDel(tableName, idValue)
+			docDel(currentPod, tableName, idValue)
 			currentPrompt = getCurrentPrompt()
 		case "loadjson":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			fileName := filepath.Base(blocks[3])
 			localJsonFile := blocks[3]
-			docLoadJson(localJsonFile, tableName, fileName)
+			docLoadJson(currentPod, localJsonFile, tableName, fileName)
 			currentPrompt = getCurrentPrompt()
 		case "indexjson":
 			if len(blocks) < 4 {
-				fmt.Println("invalid command. Missing \"name\" argument ")
+				fmt.Println("invalid command. Missing one or more arguments")
 				return
 			}
 			tableName := blocks[2]
 			podJsonFile := blocks[3]
-			docIndexJson(tableName, podJsonFile)
+			docIndexJson(currentPod, tableName, podJsonFile)
 			currentPrompt = getCurrentPrompt()
 		default:
 			fmt.Println("Invalid doc coammand")
@@ -748,25 +712,25 @@ func executor(in string) {
 		dirTocd := blocks[1]
 
 		// if cd'ing to previous dir, just do it
-		if dirTocd == ".." && currentDirectory != utils.PathSeperator {
+		if dirTocd == ".." && currentDirectory != utils.PathSeparator {
 			currentDirectory = filepath.Dir(currentDirectory)
 			currentPrompt = getCurrentPrompt()
 			return
 		}
 
 		// if cd'ing to root dir, just do it
-		if dirTocd == utils.PathSeperator {
-			currentDirectory = utils.PathSeperator
+		if dirTocd == utils.PathSeparator {
+			currentDirectory = utils.PathSeparator
 			currentPrompt = getCurrentPrompt()
 			return
 		}
 
 		// if cd'ing forward, we have to check if that dir is present
-		if dirTocd != utils.PathSeperator {
-			if currentDirectory == utils.PathSeperator {
+		if dirTocd != utils.PathSeparator {
+			if currentDirectory == utils.PathSeparator {
 				dirTocd = currentDirectory + dirTocd
 			} else {
-				dirTocd = currentDirectory + utils.PathSeperator + dirTocd
+				dirTocd = currentDirectory + utils.PathSeparator + dirTocd
 			}
 		}
 
@@ -794,11 +758,11 @@ func executor(in string) {
 			fmt.Println("invalid dir")
 			return
 		}
-		if !strings.HasPrefix(dirToMk, utils.PathSeperator) {
+		if !strings.HasPrefix(dirToMk, utils.PathSeparator) {
 			// then this path is not from root
-			dirToMk = utils.PathSeperator + dirToMk
-			if currentDirectory != utils.PathSeperator {
-				dirToMk = currentDirectory + utils.PathSeperator + dirToMk
+			dirToMk = utils.PathSeparator + dirToMk
+			if currentDirectory != utils.PathSeparator {
+				dirToMk = currentDirectory + utils.PathSeparator + dirToMk
 			}
 		}
 		mkdir(currentPod, dirToMk)
@@ -816,12 +780,12 @@ func executor(in string) {
 			fmt.Println("invalid dir")
 			return
 		}
-		if !strings.HasPrefix(dirToRm, utils.PathSeperator) {
+		if !strings.HasPrefix(dirToRm, utils.PathSeparator) {
 			// then this path is not from root
-			if currentDirectory == utils.PathSeperator {
+			if currentDirectory == utils.PathSeparator {
 				dirToRm = currentDirectory + dirToRm
 			} else {
-				dirToRm = currentDirectory + utils.PathSeperator + dirToRm
+				dirToRm = currentDirectory + utils.PathSeparator + dirToRm
 			}
 		}
 		rmDir(currentPod, dirToRm)
@@ -870,13 +834,13 @@ func executor(in string) {
 			return
 		}
 
-		loalFile := filepath.Join(localDir + utils.PathSeperator + filepath.Base(blocks[2]))
+		loalFile := filepath.Join(localDir + utils.PathSeparator + filepath.Base(blocks[2]))
 		podFile := blocks[2]
-		if !strings.HasPrefix(podFile, utils.PathSeperator) {
-			if currentDirectory == utils.PathSeperator {
+		if !strings.HasPrefix(podFile, utils.PathSeparator) {
+			if currentDirectory == utils.PathSeparator {
 				podFile = currentDirectory + podFile
 			} else {
-				podFile = currentDirectory + utils.PathSeperator + podFile
+				podFile = currentDirectory + utils.PathSeparator + podFile
 			}
 		}
 
@@ -894,11 +858,11 @@ func executor(in string) {
 		if statElement == "" {
 			return
 		}
-		if !strings.HasPrefix(statElement, utils.PathSeperator) {
-			if currentDirectory == utils.PathSeperator {
+		if !strings.HasPrefix(statElement, utils.PathSeparator) {
+			if currentDirectory == utils.PathSeparator {
 				statElement = currentDirectory + statElement
 			} else {
-				statElement = currentDirectory + utils.PathSeperator + statElement
+				statElement = currentDirectory + utils.PathSeparator + statElement
 			}
 		}
 		statFileOrDirectory(currentPod, statElement)
@@ -921,11 +885,11 @@ func executor(in string) {
 		if rmFile == "" {
 			return
 		}
-		if !strings.HasPrefix(rmFile, utils.PathSeperator) {
-			if currentDirectory == utils.PathSeperator {
+		if !strings.HasPrefix(rmFile, utils.PathSeparator) {
+			if currentDirectory == utils.PathSeparator {
 				rmFile = currentDirectory + rmFile
 			} else {
-				rmFile = currentDirectory + utils.PathSeperator + rmFile
+				rmFile = currentDirectory + utils.PathSeparator + rmFile
 			}
 		}
 		deleteFile(currentPod, rmFile)
@@ -940,11 +904,11 @@ func executor(in string) {
 		if podFile == "" {
 			return
 		}
-		if !strings.HasPrefix(podFile, utils.PathSeperator) {
-			if currentDirectory == utils.PathSeperator {
+		if !strings.HasPrefix(podFile, utils.PathSeparator) {
+			if currentDirectory == utils.PathSeparator {
 				podFile = currentDirectory + podFile
 			} else {
-				podFile = currentDirectory + utils.PathSeperator + podFile
+				podFile = currentDirectory + utils.PathSeparator + podFile
 			}
 		}
 		fileShare(currentPod, podFile, "TODO: add dest. user address")
@@ -974,14 +938,11 @@ func executor(in string) {
 func help() {
 	fmt.Println("Usage: <command> <sub-command> (args1) (args2) ...")
 	fmt.Println("commands:")
-	fmt.Println(" - user <new> (user-name) - create a new user and login as that user")
+	fmt.Println(" - user <new> (user-name) (mnemonic) - create a new user and login as that user")
 	fmt.Println(" - user <del> - deletes a logged in user")
 	fmt.Println(" - user <login> (user-name) - login as a given user")
 	fmt.Println(" - user <logout> - logout a logged in user")
 	fmt.Println(" - user <present> (user-name) - returns true if the user is present, false otherwise")
-	fmt.Println(" - user <export> - exports the given user")
-	fmt.Println(" - user <import> (user-name) (address) - imports the user to another device")
-	fmt.Println(" - user <import> (user-name) (12 word mnemonic) - imports the user if the device is lost")
 	fmt.Println(" - user <stat> - shows information about a user")
 
 	fmt.Println(" - pod <new> (pod-name) - create a new pod for the logged in user and opens the pod")
@@ -996,12 +957,13 @@ func help() {
 	fmt.Println(" - kv <delete> (table-name) - deletes the key value store")
 	fmt.Println(" - kv <open> (table-name) - open the key value store")
 	fmt.Println(" - kv <ls>  - list all collections")
-	fmt.Println(" - kv <put> (table-name) (key) (value) - insertkey and value in to kv store")
+	fmt.Println(" - kv <put> (table-name) (key) (value) - insert key and value in to kv store")
 	fmt.Println(" - kv <get> (table-name) (key) - get the value of the given key from the store")
 	fmt.Println(" - kv <del> (table-name) (key) - remove the key and value from the store")
-	fmt.Println(" - kv <loadcsv> (table-name) (local csv file) - load the csv file in to the newy created table")
-	fmt.Println(" - kv <seek> (table-name) (start-key) (end-key) (limit) - seek nearst to start key")
+	fmt.Println(" - kv <loadcsv> (table-name) (local csv file) - load the csv file in to a newly created table")
+	fmt.Println(" - kv <seek> (table-name) (start-key) (end-key) (limit) - seek nearest to start key")
 	fmt.Println(" - kv <getnext> (table-name) - get the next element after seek")
+	fmt.Println(" - kv <count> (table-name) - number of records in the store")
 
 	fmt.Println(" - doc <new> (table-name) (si=indexes) - creates a new document store")
 	fmt.Println(" - doc <delete> (table-name) - deletes a document store")
@@ -1017,8 +979,8 @@ func help() {
 
 	fmt.Println(" - cd <directory name>")
 	fmt.Println(" - ls ")
-	fmt.Println(" - download <destination dir in local fs, relative path of source file in pod>")
-	fmt.Println(" - upload <source file in local fs, destination directory in pod, block size (ex: 1Mb, 64Mb)>, compression snappy/gzip")
+	fmt.Println(" - download <destination dir in local fs> <relative path of source file in pod>")
+	fmt.Println(" - upload <source file in local fs> <destination directory in pod> <block size (ex: 1Mb, 64Mb)>, <compression (snappy/gzip)>")
 	fmt.Println(" - share <file name> -  shares a file with another user")
 	fmt.Println(" - receive <sharing reference> <pod dir> - receives a file from another user")
 	fmt.Println(" - receiveinfo <sharing reference> - shows the received file info before accepting the receive")
