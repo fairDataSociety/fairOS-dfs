@@ -43,7 +43,7 @@ func TestDelete(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -58,7 +58,7 @@ func TestDelete(t *testing.T) {
 			t.Fatal(err)
 		}
 		// delete user
-		err = userObject.DeleteUserV2("user1", "password1", ui.GetSessionId(), ui)
+		err = userObject.DeleteUserV2("user1", "password1twelve", ui.GetSessionId(), ui)
 		if err != nil {
 			t.Fatal(err)
 		}

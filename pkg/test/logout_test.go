@@ -40,7 +40,7 @@ func TestLogout(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}

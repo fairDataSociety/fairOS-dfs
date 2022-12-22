@@ -39,7 +39,7 @@ func TestLogin(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", "", "", tm)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -61,7 +61,7 @@ func TestLogin(t *testing.T) {
 		}
 
 		// addUserAndSessionToMap user again
-		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", mockClient, tm, "")
+		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", mockClient, tm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
