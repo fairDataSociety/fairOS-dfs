@@ -484,7 +484,9 @@ func TestShare(t *testing.T) {
 		}
 		fileObject := gotInfo.GetFile()
 		_, err = fileObject.RenameFromFileName("/parentDir/file1", "/parentDir/renamedFile1", podPassword)
-
+		if err != nil {
+			t.Fatal(err)
+		}
 		// check shared pod entry
 		gotSharedPodInfo, err := pod8.OpenPod(podName7)
 		if err != nil {
