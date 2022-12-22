@@ -51,12 +51,17 @@ func TestNew(t *testing.T) {
 
 		// create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
+		_, _, _, _, _, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
+		if err != nil && !errors.Is(err, user.ErrPasswordTooSmall) {
+			t.Fatal(err)
+		}
+
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2("user1", "password1", "", "", tm)
+		_, _, _, _, _, err = userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
 		if !errors.Is(err, user.ErrUserAlreadyPresent) {
 			t.Fatal(err)
 		}

@@ -66,7 +66,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 		userBytes, err := json.Marshal(userRequest)
 		if err != nil {
@@ -96,7 +96,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)
@@ -147,7 +147,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)
@@ -243,7 +243,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)
@@ -742,7 +742,7 @@ func TestApis(t *testing.T) {
 
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)

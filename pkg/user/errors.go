@@ -37,6 +37,9 @@ var (
 	// ErrInvalidPassword is returned if password is invalid
 	ErrInvalidPassword = errors.New("invalid password")
 
+	// ErrPasswordTooSmall is returned if password is invalid
+	ErrPasswordTooSmall = errors.New("password should be at least 12 characters long")
+
 	// ErrBlankPassword is returned if dfs.API CreateAccountV2 is called with a blank password
 	ErrBlankPassword = errors.New("password is blank")
 
