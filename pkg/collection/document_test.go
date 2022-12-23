@@ -62,11 +62,11 @@ func TestDocumentStore(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	file := f.NewFile("pod1", mockClient, fd, user, tm, logger)
-	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, mockClient, logger)
+	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, tm, mockClient, logger)
 	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("create_document_db_errors", func(t *testing.T) {
 		nilFd := feed.New(&account.Info{}, mockClient, logger)
-		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, mockClient, logger)
+		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, tm, mockClient, logger)
 		err := nilDocStore.CreateDocumentDB("docdb_err", podPassword, nil, true)
 		if !errors.Is(err, collection.ErrReadOnlyIndex) {
 			t.Fatal("should be readonly index")
@@ -436,7 +436,7 @@ func TestDocumentStore(t *testing.T) {
 		createTestDocuments(t, docStore, "docdb_8")
 
 		// String =
-		docs, err := docStore.Find("docdb_8", "first_name=John", podPassword, -1)
+		docs, err := docStore.Find("docdb_8", "first_name=>John", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
