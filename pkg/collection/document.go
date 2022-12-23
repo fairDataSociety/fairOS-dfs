@@ -24,15 +24,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -439,7 +439,44 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 	}
 
 	switch idx.indexType {
-	case StringIndex, MapIndex, ListIndex:
+	case StringIndex:
+		itr, err := idx.NewStringIterator(fieldValue, "", -1)
+		if err != nil { // skipcq: TCV-001
+			d.logger.Errorf("counting document db: ", err.Error())
+			return 0, err
+		}
+		switch operator {
+		case "=":
+			itr.Next()
+			re, err := regexp.Compile(fieldValue)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("counting document db: %v", err.Error())
+				return 0, err
+			}
+			matched := re.Match([]byte(itr.StringKey()))
+			if matched {
+				refs := itr.ValueAll()
+				return uint64(len(refs)), nil
+			}
+		case "=>", ">": // skipcq: TCV-001
+			var count uint64
+			re, err := regexp.Compile(fieldValue)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("counting document db: %v", err.Error())
+				return 0, err
+			}
+
+			for itr.Next() {
+				matched := re.Match([]byte(itr.StringKey()))
+				if matched {
+					refs := itr.ValueAll()
+					count = count + uint64(len(refs))
+				}
+			}
+			d.logger.Info("counting document db: ", dbName, expr, count)
+			return count, nil
+		}
+	case MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", -1)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("counting document db: ", err.Error())
@@ -855,7 +892,40 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 
 	var references [][]byte
 	switch idx.indexType {
-	case StringIndex, MapIndex, ListIndex:
+	case StringIndex:
+		itr, err := idx.NewStringIterator(fieldValue, "", -1)
+		if err != nil { // skipcq: TCV-001
+			d.logger.Errorf("finding from document db: ", err.Error())
+			return nil, err
+		}
+		switch operator {
+		case "=":
+			itr.Next()
+			re, err := regexp.Compile(fieldValue)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("finding from document db: %v", err.Error())
+				return nil, err
+			}
+			matched := re.Match([]byte(itr.StringKey()))
+			if matched {
+				references = itr.ValueAll()
+			}
+		case "=>", ">": // skipcq: TCV-001
+			re, err := regexp.Compile(fieldValue)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("finding from document db: %v", err.Error())
+				return nil, err
+			}
+
+			for itr.Next() {
+				matched := re.Match([]byte(itr.StringKey()))
+				if matched {
+					refs := itr.ValueAll()
+					references = append(references, refs...)
+				}
+			}
+		}
+	case MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", int64(limit))
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("finding from document db: ", err.Error())
