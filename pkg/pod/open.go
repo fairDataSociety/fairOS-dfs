@@ -91,7 +91,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	}
 
 	kvStore := c.NewKeyValueStore(podName, fd, accountInfo, user, p.client, p.logger)
-	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.client, p.logger)
+	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.tm, p.client, p.logger)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
@@ -181,7 +181,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	}
 
 	kvStore := c.NewKeyValueStore(podName, fd, accountInfo, user, p.client, p.logger)
-	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.client, p.logger)
+	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.tm, p.client, p.logger)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
