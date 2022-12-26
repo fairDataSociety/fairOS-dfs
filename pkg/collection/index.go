@@ -136,7 +136,7 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	return nil
 }
 
-// OpenIndex open the index and loas any index in to the memory.
+// OpenIndex open the index and load any index in to the memory.
 func OpenIndex(podName, collectionName, indexName, podPassword string, fd *feed.API, ai *account.Info, user utils.Address, client blockstore.Client, logger logging.Logger) (*Index, error) {
 	actualIndexName := podName + collectionName + indexName
 	manifest := getRootManifestOfIndex(actualIndexName, podPassword, fd, user, client) // this will load the entire Manifest for immutable indexes

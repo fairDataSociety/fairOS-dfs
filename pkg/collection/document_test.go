@@ -62,11 +62,11 @@ func TestDocumentStore(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	file := f.NewFile("pod1", mockClient, fd, user, tm, logger)
-	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, mockClient, logger)
+	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, tm, mockClient, logger)
 	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("create_document_db_errors", func(t *testing.T) {
 		nilFd := feed.New(&account.Info{}, mockClient, logger)
-		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, mockClient, logger)
+		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, tm, mockClient, logger)
 		err := nilDocStore.CreateDocumentDB("docdb_err", podPassword, nil, true)
 		if !errors.Is(err, collection.ErrReadOnlyIndex) {
 			t.Fatal("should be readonly index")
@@ -350,8 +350,8 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if count1 != 5 {
-			t.Fatalf("expected count %d, got %d", 5, count1)
+		if count1 != 6 {
+			t.Fatalf("expected count %d, got %d", 6, count1)
 		}
 
 	})
@@ -374,7 +374,7 @@ func TestDocumentStore(t *testing.T) {
 		createTestDocuments(t, docStore, "docdb_7")
 
 		// String count
-		count1, err := docStore.Count("docdb_7", "first_name=John")
+		count1, err := docStore.Count("docdb_7", "first_name=>John")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -404,8 +404,8 @@ func TestDocumentStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if count3 != 2 {
-			t.Fatalf("expected count %d, got %d", 2, count3)
+		if count3 != 3 {
+			t.Fatalf("expected count %d, got %d", 3, count3)
 		}
 
 		// Number >
@@ -413,8 +413,8 @@ func TestDocumentStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if count4 != 1 {
-			t.Fatalf("expected count %d, got %d", 1, count4)
+		if count4 != 2 {
+			t.Fatalf("expected count %d, got %d", 2, count4)
 		}
 	})
 
@@ -436,7 +436,7 @@ func TestDocumentStore(t *testing.T) {
 		createTestDocuments(t, docStore, "docdb_8")
 
 		// String =
-		docs, err := docStore.Find("docdb_8", "first_name=John", podPassword, -1)
+		docs, err := docStore.Find("docdb_8", "first_name=>John", podPassword, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -560,8 +560,8 @@ func TestDocumentStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(docs) != 2 {
-			t.Fatalf("expected count %d, got %d", 2, len(docs))
+		if len(docs) != 3 {
+			t.Fatalf("expected count %d, got %d", 3, len(docs))
 		}
 		err = json.Unmarshal(docs[0], &gotDoc1)
 		if err != nil {
@@ -573,7 +573,7 @@ func TestDocumentStore(t *testing.T) {
 			gotDoc1.Age != 30 {
 			t.Fatalf("invalid json data received")
 		}
-		err = json.Unmarshal(docs[1], &gotDoc2)
+		err = json.Unmarshal(docs[2], &gotDoc2)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -589,10 +589,10 @@ func TestDocumentStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(docs) != 1 {
-			t.Fatalf("expected count %d, got %d", 1, len(docs))
+		if len(docs) != 2 {
+			t.Fatalf("expected count %d, got %d", 2, len(docs))
 		}
-		err = json.Unmarshal(docs[0], &gotDoc1)
+		err = json.Unmarshal(docs[1], &gotDoc1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -953,6 +953,12 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 	var list5 []string
 	list5 = append(list5, "lst51", "lst52")
 	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25, tag5, list5)
+	tag6 := make(map[string]string)
+	tag6["tgf61"] = "tgv61"
+	tag6["tgf62"] = "tgv62"
+	var list6 []string
+	list6 = append(list6, "lst61", "lst62")
+	addDocument(t, docStore, dbName, "6", "Zuri", "wonder", 52, tag6, list6)
 }
 
 func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age float64, tagMap map[string]string, tagList []string) {
