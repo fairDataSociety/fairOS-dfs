@@ -957,7 +957,7 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 	tag6["tgf61"] = "tgv61"
 	tag6["tgf62"] = "tgv62"
 	var list6 []string
-	list6 = append(list5, "lst61", "lst62")
+	list6 = append(list6, "lst61", "lst62")
 	addDocument(t, docStore, dbName, "6", "Zuri", "wonder", 52, tag6, list6)
 }
 
