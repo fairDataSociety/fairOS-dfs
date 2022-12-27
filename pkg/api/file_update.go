@@ -85,7 +85,7 @@ func (h *Handler) FileUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	file, _, err := r.FormFile("file")
 	if err != nil {
 		h.logger.Errorf("file update: parameter \"file\" missing")
-		jsonhttp.BadRequest(w, &response{Message: "file update: parameter \"files\" missing"})
+		jsonhttp.BadRequest(w, &response{Message: "file update: parameter \"file\" missing"})
 		return
 	}
 	defer file.Close()
