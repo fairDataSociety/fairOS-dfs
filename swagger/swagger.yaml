@@ -1424,6 +1424,56 @@ paths:
       summary: Info of a file
       tags:
       - file
+  /v1/file/update:
+    post:
+      consumes:
+      - multipart/form-data
+      description: FileUpdateHandler is the api handler to update a file from a given
+        offset
+      parameters:
+      - description: pod name
+        in: formData
+        name: podName
+        required: true
+        type: string
+      - description: location
+        in: formData
+        name: filePath
+        required: true
+        type: string
+      - description: file content to update
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: file offset
+        in: formData
+        name: offset
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Update a file
+      tags:
+      - file
   /v1/file/upload:
     post:
       consumes:
@@ -1461,6 +1511,11 @@ paths:
         in: header
         name: Cookie
         required: true
+        type: string
+      - description: overwrite the file if already exists
+        example: true, false
+        in: formData
+        name: overwrite
         type: string
       produces:
       - application/json
