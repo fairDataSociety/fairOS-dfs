@@ -176,7 +176,6 @@ func writeConfig() {
 	c.Set(optionBeeApi, defaultBeeApi)
 	c.Set(optionBeePostageBatchId, "")
 	c.Set(optionCookieDomain, defaultCookieDomain)
-	c.Set(optionIsGatewayProxy, defaultIsGatewayProxy)
 
 	// FOR MIGRATION PURPOSE ONLY
 	c.Set(optionDFSDataDir, dataDirPath)

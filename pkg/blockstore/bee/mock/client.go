@@ -46,7 +46,7 @@ func NewMockBeeClient() *BeeClient {
 }
 
 // CheckConnection checks connection
-func (*BeeClient) CheckConnection(_ bool) bool {
+func (*BeeClient) CheckConnection() bool {
 	return true
 }
 

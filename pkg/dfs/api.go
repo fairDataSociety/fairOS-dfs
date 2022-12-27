@@ -47,7 +47,7 @@ type API struct {
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensConfig *contracts.Config, logger logging.Logger) (*API, error) {
+func NewDfsAPI(dataDir, apiUrl, postageBlockId string, ensConfig *contracts.Config, logger logging.Logger) (*API, error) {
 	ens, err := ethClient.New(ensConfig, logger)
 	if err != nil {
 		if errors.Is(err, ethClient.ErrWrongChainID) {
@@ -56,7 +56,7 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, isGatewayProxy bool, ensC
 		return nil, errEthClient
 	}
 	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)
-	if !c.CheckConnection(isGatewayProxy) {
+	if !c.CheckConnection() {
 		return nil, ErrBeeClient
 	}
 	users := user.NewUsers(dataDir, c, ens, logger)

@@ -96,23 +96,20 @@ can consume it.`,
 		postageBlockId = config.GetString(optionBeePostageBatchId)
 		corsOrigins = config.GetStringSlice(optionCORSAllowedOrigins)
 		verbosity = config.GetString(optionVerbosity)
-		isGatewayProxy := config.GetBool(optionIsGatewayProxy)
 
-		if !isGatewayProxy {
-			if postageBlockId == "" {
-				_ = cmd.Help()
-				fmt.Println("\npostageBlockId is required to run server")
-				return fmt.Errorf("postageBlockId is required to run server")
-			} else if postageBlockId != zeroBatchId && postageBlockId != "0" {
-				if len(postageBlockId) != 64 {
-					fmt.Println("\npostageBlockId is invalid")
-					return fmt.Errorf("postageBlockId is invalid")
-				}
-				_, err := hex.DecodeString(postageBlockId)
-				if err != nil {
-					fmt.Println("\npostageBlockId is invalid")
-					return fmt.Errorf("postageBlockId is invalid")
-				}
+		if postageBlockId == "" {
+			_ = cmd.Help()
+			fmt.Println("\npostageBlockId is required to run server")
+			return fmt.Errorf("postageBlockId is required to run server")
+		} else if postageBlockId != zeroBatchId && postageBlockId != "0" {
+			if len(postageBlockId) != 64 {
+				fmt.Println("\npostageBlockId is invalid")
+				return fmt.Errorf("postageBlockId is invalid")
+			}
+			_, err := hex.DecodeString(postageBlockId)
+			if err != nil {
+				fmt.Println("\npostageBlockId is invalid")
+				return fmt.Errorf("postageBlockId is invalid")
 			}
 		}
 		ensConfig := &contracts.Config{}
@@ -191,7 +188,6 @@ can consume it.`,
 		logger.Info("version        : ", dfs.Version)
 		logger.Info("network        : ", network)
 		logger.Info("beeApi         : ", beeApi)
-		logger.Info("isGatewayProxy : ", isGatewayProxy)
 		logger.Info("verbosity      : ", verbosity)
 		logger.Info("httpPort       : ", httpPort)
 		logger.Info("pprofPort      : ", pprofPort)
@@ -200,7 +196,7 @@ can consume it.`,
 		logger.Info("corsOrigins    : ", corsOrigins)
 
 		// datadir will be removed in some future version. it is kept for migration purpose only
-		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, ensConfig, logger)
+		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return err

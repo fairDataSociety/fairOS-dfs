@@ -24,7 +24,7 @@ import (
 
 // Client is the interface for block store
 type Client interface {
-	CheckConnection(isProxy bool) bool
+	CheckConnection() bool
 	UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error)
 	UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error)
 	UploadBlob(data []byte, pin bool, encrypt bool) (address []byte, err error)
