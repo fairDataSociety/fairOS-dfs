@@ -57,7 +57,6 @@ func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request
 	}
 
 	h.handleDownload(w, r, podName, podFileWithPath)
-
 }
 
 // FileDownloadHandlerGet godoc
@@ -136,6 +135,7 @@ func (h *Handler) handleDownload(w http.ResponseWriter, r *http.Request, podName
 		return
 	}
 	defer reader.Close()
+
 	sizeString := strconv.FormatUint(size, 10)
 	w.Header().Set("Content-Length", sizeString)
 

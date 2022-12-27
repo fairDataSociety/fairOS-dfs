@@ -1444,6 +1444,78 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/file/update": {
+            "post": {
+                "description": "FileUpdateHandler is the api handler to update a file from a given offset",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "file"
+                ],
+                "summary": "Update a file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "podName",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "location",
+                        "name": "filePath",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "file content to update",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "file offset",
+                        "name": "offset",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/file/upload": {
             "post": {
                 "description": "FileUploadHandler is the api handler to upload a file from a local file system to the dfs",
@@ -1500,6 +1572,13 @@ const docTemplate = `{
                         "name": "Cookie",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "true, false",
+                        "description": "overwrite the file if already exists",
+                        "name": "overwrite",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
