@@ -109,40 +109,44 @@ func socResource(owner, id, sig string) string {
 	return fmt.Sprintf("/soc/%s/%s?sig=%s", owner, id, sig)
 }
 
-// CheckConnection is used to check if the nbe client is up and running.
-func (s *Client) CheckConnection(isProxy bool) bool {
-	url := s.url
+// CheckConnection is used to check if the bee client is up and running.
+func (s *Client) CheckConnection() bool {
+	// check if node is standalone bee
 	matchString := "Ethereum Swarm Bee\n"
+	data, _ := s.checkBee(false)
+	if data == matchString {
+		return true
+	}
+
+	// check if node is gateway-proxy
+	data, err := s.checkBee(true)
+	if err != nil {
+		return false
+	}
+	matchString = "OK"
+	return data == matchString
+}
+
+func (s *Client) checkBee(isProxy bool) (string, error) {
+	url := s.url
 	if isProxy {
 		url += healthUrl
-		matchString = "OK"
 	}
 	req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if err != nil {
-		return false
+		return "", err
 	}
-
 	response, err := s.client.Do(req)
 	if err != nil {
-		return false
+		return "", err
 	}
 	defer response.Body.Close()
-
 	req.Close = true
-
-	if response.StatusCode != http.StatusOK {
-		return false
-	}
-
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return false
+		return "", err
 	}
-
-	if string(data) != matchString {
-		return false
-	}
-	return true
+	return string(data), nil
 }
 
 // UploadSOC is used construct and send a Single Owner Chunk to the Swarm bee client.
