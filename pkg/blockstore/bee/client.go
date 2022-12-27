@@ -37,20 +37,21 @@ import (
 )
 
 const (
-	maxIdleConnections     = 20
-	maxConnectionsPerHost  = 256
-	requestTimeout         = 6000
-	chunkCacheSize         = 1024
-	uploadBlockCacheSize   = 100
-	downloadBlockCacheSize = 100
-	healthUrl              = "/health"
-	chunkUploadDownloadUrl = "/chunks"
-	bytesUploadDownloadUrl = "/bytes"
-	pinsUrl                = "/pins/"
-	_                      = pinsUrl
-	swarmPinHeader         = "Swarm-Pin"
-	swarmEncryptHeader     = "Swarm-Encrypt"
-	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
+	maxIdleConnections        = 20
+	maxConnectionsPerHost     = 256
+	requestTimeout            = 6000
+	chunkCacheSize            = 1024
+	uploadBlockCacheSize      = 100
+	downloadBlockCacheSize    = 100
+	healthUrl                 = "/health"
+	chunkUploadDownloadUrl    = "/chunks"
+	bytesUploadDownloadUrl    = "/bytes"
+	pinsUrl                   = "/pins/"
+	_                         = pinsUrl
+	swarmPinHeader            = "Swarm-Pin"
+	swarmEncryptHeader        = "Swarm-Encrypt"
+	swarmPostageBatchId       = "Swarm-Postage-Batch-Id"
+	swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
 )
 
 // Client is a bee http client that satisfies blockstore.Client
@@ -163,6 +164,8 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 	// the postage block id to store the SOC chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
+	req.Header.Set(swarmDeferredUploadHeader, "false")
+
 	// TODO change this in the future when we have some alternative to pin SOC
 	// This is a temporary fix to force soc pinning
 	req.Header.Set(swarmPinHeader, "true")
@@ -216,6 +219,8 @@ func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err erro
 
 	// the postage block id to store the chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
+
+	req.Header.Set(swarmDeferredUploadHeader, "false")
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -320,6 +325,8 @@ func (s *Client) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err
 
 	// the postage block id to store the blob
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
+
+	req.Header.Set(swarmDeferredUploadHeader, "false")
 
 	response, err := s.client.Do(req)
 	if err != nil {
