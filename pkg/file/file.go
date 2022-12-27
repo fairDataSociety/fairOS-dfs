@@ -148,6 +148,7 @@ func (lt *lsTask) Execute(context.Context) error {
 		AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
 		ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
 	}
+	lt.f.AddToFileMap(utils.CombinePathAndFile(meta.Path, meta.Name), meta)
 	lt.mtx.Lock()
 	defer lt.mtx.Unlock()
 	*lt.entries = append(*lt.entries, entry)
