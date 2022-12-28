@@ -61,12 +61,15 @@ func NewDfsAPI(dataDir, apiUrl, postageBlockId string, ensConfig *contracts.Conf
 	}
 	users := user.NewUsers(dataDir, c, ens, logger)
 
+	// discard tm logs as it creates too much noise
+	tmLogger := logging.New(io.Discard, 0)
+
 	return &API{
 		client:  c,
 		users:   users,
 		logger:  logger,
 		dataDir: dataDir,
-		tm:      taskmanager.New(1, defaultMaxWorkers, time.Second*15, logger),
+		tm:      taskmanager.New(10, defaultMaxWorkers, time.Second*15, tmLogger),
 	}, nil
 }
 
