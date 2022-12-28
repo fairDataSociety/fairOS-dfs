@@ -46,12 +46,14 @@ const (
 	healthUrl                 = "/health"
 	chunkUploadDownloadUrl    = "/chunks"
 	bytesUploadDownloadUrl    = "/bytes"
+	tagsUrl                   = "/tags"
 	pinsUrl                   = "/pins/"
 	_                         = pinsUrl
 	swarmPinHeader            = "Swarm-Pin"
 	swarmEncryptHeader        = "Swarm-Encrypt"
 	swarmPostageBatchId       = "Swarm-Postage-Batch-Id"
 	swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
+	swarmTagHeader            = "Swarm-Tag"
 )
 
 // Client is a bee http client that satisfies blockstore.Client
@@ -64,6 +66,7 @@ type Client struct {
 	downloadBlockCache *lru.Cache
 	postageBlockId     string
 	logger             logging.Logger
+	isProxy            bool
 }
 
 func hashFunc() hash.Hash {
@@ -72,6 +75,18 @@ func hashFunc() hash.Hash {
 
 type bytesPostResponse struct {
 	Reference swarm.Address `json:"reference"`
+}
+
+type tagPostRequest struct {
+	Address string `json:"address"`
+}
+
+type tagPostResponse struct {
+	UID       uint32    `json:"uid"`
+	StartedAt time.Time `json:"startedAt"`
+	Total     int64     `json:"total"`
+	Processed int64     `json:"processed"`
+	Synced    int64     `json:"synced"`
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
@@ -125,7 +140,8 @@ func (s *Client) CheckConnection() bool {
 		return false
 	}
 	matchString = "OK"
-	return data == matchString
+	s.isProxy = data == matchString
+	return s.isProxy
 }
 
 func (s *Client) checkBee(isProxy bool) (string, error) {
@@ -301,7 +317,7 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 }
 
 // UploadBlob uploads a binary blob of data to Swarm network. It also optionally pins and encrypts the data.
-func (s *Client) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err error) {
+func (s *Client) UploadBlob(data []byte, tag uint32, pin, encrypt bool) (address []byte, err error) {
 	to := time.Now()
 
 	// return the ref if this data is already in swarm
@@ -321,6 +337,10 @@ func (s *Client) UploadBlob(data []byte, pin, encrypt bool) (address []byte, err
 
 	if encrypt {
 		req.Header.Set(swarmEncryptHeader, "true")
+	}
+
+	if tag > 0 {
+		req.Header.Set(swarmTagHeader, fmt.Sprintf("%d", tag))
 	}
 
 	// the postage block id to store the blob
@@ -448,6 +468,109 @@ func (s *Client) DeleteReference(address []byte) error {
 		s.logger.WithFields(fields).Log(logrus.DebugLevel, "delete chunk: ")
 	*/
 	return nil
+}
+
+// CreateTag creates a tag for given address
+func (s *Client) CreateTag(address []byte) (uint32, error) {
+	// gateway proxy does not have tags api exposed
+	if s.isProxy {
+		return 0, nil
+	}
+	to := time.Now()
+
+	fullUrl := s.url + tagsUrl
+	data := []byte{}
+	var err error
+	if len(address) > 0 {
+		addrString := swarm.NewAddress(address).String()
+		b := &tagPostRequest{Address: addrString}
+		data, err = json.Marshal(b)
+		if err != nil {
+			return 0, err
+		}
+	}
+	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
+	if err != nil {
+		return 0, err
+	}
+
+	response, err := s.client.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer response.Body.Close()
+
+	req.Close = true
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		return 0, errors.New("error create tag")
+	}
+
+	respData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return 0, errors.New("error create tag")
+	}
+
+	var resp tagPostResponse
+	err = json.Unmarshal(respData, &resp)
+	if err != nil {
+		return 0, fmt.Errorf("error unmarshalling response")
+	}
+	fields := logrus.Fields{
+		"reference": address,
+		"tag":       resp.UID,
+		"duration":  time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "create tag: ")
+
+	return resp.UID, nil
+}
+
+// GetTag gets sync status of a given tag
+func (s *Client) GetTag(tag uint32) (int64, int64, int64, error) {
+	// gateway proxy does not have tags api exposed
+	if s.isProxy {
+		return 0, 0, 0, nil
+	}
+
+	to := time.Now()
+
+	fullUrl := s.url + tagsUrl + fmt.Sprintf("/%d", tag)
+
+	req, err := http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	response, err := s.client.Do(req)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	defer response.Body.Close()
+
+	req.Close = true
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		return 0, 0, 0, errors.New("error getting tag")
+	}
+
+	respData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return 0, 0, 0, errors.New("error getting tag")
+	}
+
+	var resp tagPostResponse
+	err = json.Unmarshal(respData, &resp)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("error unmarshalling response")
+	}
+	fields := logrus.Fields{
+		"tag":      resp.UID,
+		"duration": time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "get tag: ")
+
+	return resp.Total, resp.Processed, resp.Synced, nil
 }
 
 // createHTTPClient for connection re-use

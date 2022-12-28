@@ -141,6 +141,7 @@ func (lt *lsTask) Execute(context.Context) error {
 	}
 	entry := Entry{
 		Name:             meta.Name,
+		Tag:              meta.Tag,
 		ContentType:      meta.ContentType,
 		Size:             strconv.FormatUint(meta.Size, 10),
 		BlockSize:        strconv.FormatInt(int64(meta.BlockSize), 10),

@@ -77,7 +77,7 @@ func (h *Handler) FileDownloadHandlerGet(w http.ResponseWriter, r *http.Request)
 	keys, ok := r.URL.Query()["podName"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("download \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "dir: \"podName\" argument missing"})
+		jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
 		return
 	}
 	podName := keys[0]

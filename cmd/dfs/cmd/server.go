@@ -326,6 +326,7 @@ func startHttpService(logger logging.Logger) {
 	// file related handlers
 	fileRouter := baseRouter.PathPrefix("/file/").Subrouter()
 	fileRouter.Use(handler.LoginMiddleware)
+	fileRouter.HandleFunc("/status", handler.FileStatusHandler).Methods("GET")
 	fileRouter.HandleFunc("/download", handler.FileDownloadHandlerGet).Methods("GET")
 	fileRouter.HandleFunc("/download", handler.FileDownloadHandlerPost).Methods("POST")
 	fileRouter.HandleFunc("/update", handler.FileUpdateHandler).Methods("POST")

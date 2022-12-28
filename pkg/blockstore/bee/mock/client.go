@@ -104,7 +104,7 @@ func (m *BeeClient) DownloadChunk(_ context.Context, address []byte) (data []byt
 }
 
 // UploadBlob into swarm
-func (m *BeeClient) UploadBlob(data []byte, _, _ bool) (address []byte, err error) {
+func (m *BeeClient) UploadBlob(data []byte, _ uint32, _, _ bool) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	address = make([]byte, 32)
@@ -132,4 +132,12 @@ func (m *BeeClient) DeleteReference(address []byte) error {
 		return nil
 	}
 	return errors.New("chunk not found")
+}
+
+func (m *BeeClient) CreateTag(_ []byte) (uint32, error) {
+	return 0, nil
+}
+
+func (m *BeeClient) GetTag(_ uint32) (int64, int64, int64, error) {
+	return 0, 0, 0, nil
 }

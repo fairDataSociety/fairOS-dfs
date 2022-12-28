@@ -538,3 +538,33 @@ func (a *API) ReceiveInfo(sessionId string, sharingRef utils.SharingReference) (
 
 	return a.users.ReceiveFileInfo(sharingRef)
 }
+
+// StatusFile is a controller function which validates if the user is logged in,
+// pod is open and calls the sync status of file function.
+func (a *API) StatusFile(podName, podFileWithPath, sessionId string) (int64, int64, int64, error) {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return 0, 0, 0, ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return 0, 0, 0, ErrPodNotOpen
+	}
+
+	// check if logged in to pod
+	if !ui.GetPod().IsPodOpened(podName) {
+		return 0, 0, 0, fmt.Errorf("login to pod to do this operation")
+	}
+
+	// get podInfo and construct the path
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	// get status of the file
+	file := podInfo.GetFile()
+	return file.Status(podFileWithPath, podInfo.GetPodPassword())
+}

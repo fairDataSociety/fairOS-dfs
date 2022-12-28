@@ -93,7 +93,7 @@ func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destina
 	}
 
 	// upload the encrypted data and get the reference
-	ref, err := u.client.UploadBlob(encryptedData, true, true)
+	ref, err := u.client.UploadBlob(encryptedData, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}

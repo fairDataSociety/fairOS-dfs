@@ -24,6 +24,7 @@ import (
 
 type Entry struct {
 	Name             string `json:"name"`
+	Tag              uint32 `json:"tag,omitempty"`
 	ContentType      string `json:"contentType"`
 	Size             string `json:"size,omitempty"`
 	BlockSize        string `json:"blockSize,omitempty"`

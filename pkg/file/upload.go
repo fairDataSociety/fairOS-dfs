@@ -56,6 +56,11 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	}
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()
+
+	tag, err := f.client.CreateTag(nil)
+	if err != nil {
+		return err
+	}
 	meta := MetaData{
 		Version:          MetaVersion,
 		Path:             podPath,
@@ -66,6 +71,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		CreationTime:     now,
 		AccessTime:       now,
 		ModificationTime: now,
+		Tag:              tag,
 	}
 
 	var totalLength uint64
@@ -136,11 +142,12 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
+				addr, uploadErr := f.client.UploadBlob(uploadData, tag, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
 				}
+
 				fileBlock := &BlockInfo{
 					Size:           uint32(size),
 					CompressedSize: uint32(len(uploadData)),
@@ -180,7 +187,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		return err
 	}
 
-	addr, err := f.client.UploadBlob(fileInodeData, true, true)
+	addr, err := f.client.UploadBlob(fileInodeData, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
