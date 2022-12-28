@@ -27,4 +27,5 @@ type MetaData struct {
 	CreationTime     int64  `json:"creationTime"`
 	AccessTime       int64  `json:"accessTime"`
 	ModificationTime int64  `json:"modificationTime"`
+	Mode             uint32 `json:"mode"`
 }

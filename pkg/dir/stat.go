@@ -30,6 +30,7 @@ type Stats struct {
 	PodName          string `json:"podName"`
 	DirPath          string `json:"dirPath"`
 	DirName          string `json:"dirName"`
+	Mode             uint32 `json:"mode"`
 	CreationTime     string `json:"creationTime"`
 	ModificationTime string `json:"modificationTime"`
 	AccessTime       string `json:"accessTime"`
@@ -73,6 +74,7 @@ func (d *Directory) DirStat(podName, podPassword, dirNameWithPath string) (*Stat
 		PodName:          podName,
 		DirPath:          meta.Path,
 		DirName:          meta.Name,
+		Mode:             meta.Mode,
 		CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
 		ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
 		AccessTime:       strconv.FormatInt(meta.AccessTime, 10),

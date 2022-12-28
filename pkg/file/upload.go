@@ -35,6 +35,7 @@ import (
 
 const (
 	minBlockSizeForGzip = 164000
+	S_IFREG             = 0100000
 )
 
 var (
@@ -72,6 +73,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		AccessTime:       now,
 		ModificationTime: now,
 		Tag:              tag,
+		Mode:             S_IFREG | 0666,
 	}
 
 	var totalLength uint64

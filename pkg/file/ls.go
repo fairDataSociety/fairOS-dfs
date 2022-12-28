@@ -31,6 +31,7 @@ type Entry struct {
 	CreationTime     string `json:"creationTime"`
 	ModificationTime string `json:"modificationTime"`
 	AccessTime       string `json:"accessTime"`
+	Mode             uint32 `json:"mode"`
 }
 
 // ListFiles given a list of files, list files gives back the information related to each file.
