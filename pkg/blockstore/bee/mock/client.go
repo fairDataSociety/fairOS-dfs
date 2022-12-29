@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
@@ -33,15 +34,17 @@ import (
 
 // BeeClient is a mock bee client
 type BeeClient struct {
-	storer   map[string][]byte
-	storerMu sync.RWMutex
+	storer    map[string][]byte
+	tagStorer map[uint32]int64
+	storerMu  sync.RWMutex
 }
 
 // NewMockBeeClient returns a mock bee client
 func NewMockBeeClient() *BeeClient {
 	return &BeeClient{
-		storer:   make(map[string][]byte),
-		storerMu: sync.RWMutex{},
+		storer:    make(map[string][]byte),
+		tagStorer: make(map[uint32]int64),
+		storerMu:  sync.RWMutex{},
 	}
 }
 
@@ -104,11 +107,17 @@ func (m *BeeClient) DownloadChunk(_ context.Context, address []byte) (data []byt
 }
 
 // UploadBlob into swarm
-func (m *BeeClient) UploadBlob(data []byte, _ uint32, _, _ bool) (address []byte, err error) {
+func (m *BeeClient) UploadBlob(data []byte, tag uint32, _, _ bool) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	address = make([]byte, 32)
 	_, err = rand.Read(address)
+	newChunks := int64(len(data) / 4096000)
+	if newChunks == 0 {
+		newChunks = 1
+	}
+	chunks := newChunks + m.tagStorer[tag] + 1
+	m.tagStorer[tag] = chunks
 	m.storer[swarm.NewAddress(address).String()] = data
 	return address, nil
 }
@@ -135,9 +144,15 @@ func (m *BeeClient) DeleteReference(address []byte) error {
 }
 
 func (m *BeeClient) CreateTag(_ []byte) (uint32, error) {
-	return 0, nil
+	tag := time.Now().UnixNano()
+	m.storerMu.Lock()
+	defer m.storerMu.Unlock()
+	m.tagStorer[uint32(tag)] = 0
+	return uint32(tag), nil
 }
 
-func (m *BeeClient) GetTag(_ uint32) (int64, int64, int64, error) {
-	return 0, 0, 0, nil
+func (m *BeeClient) GetTag(tag uint32) (int64, int64, int64, error) {
+	m.storerMu.Lock()
+	defer m.storerMu.Unlock()
+	return m.tagStorer[tag], m.tagStorer[tag], m.tagStorer[tag], nil
 }

@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 
 	"github.com/plexsysio/taskmanager"
@@ -40,13 +42,11 @@ func TestRemoveFile(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	pod1AccountInfo, err := acc.CreatePodAccount(1, false)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
@@ -58,44 +58,37 @@ func TestRemoveFile(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		// remove file2
 		err = fileObject.RmFile("/dir1/file2", podPassword)
-		if err == nil {
-			t.Fatal("file not present")
-		}
-		// upload few files
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.Equal(t, err.Error(), "feed does not exist or was not updated yet")
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", podPassword, 200, 20)
-		if err != nil {
-			t.Fatal(err)
-		}
+		file1, _ := utils.GetRandString(12)
+		file2, _ := utils.GetRandString(12)
+		// upload few files
+		_, err = uploadFile(t, fileObject, "/dir1", file1, "", podPassword, 100, 10)
+		require.NoError(t, err)
+
+		_, err = uploadFile(t, fileObject, "/dir1", file2, "", podPassword, 200, 20)
+		require.NoError(t, err)
 
 		// remove file2
-		err = fileObject.RmFile("/dir1/file2", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		err = fileObject.RmFile("/dir1/"+file2, podPassword)
+		require.NoError(t, err)
 
 		// validate file deletion
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file2"))
+		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", file2))
 		if meta != nil {
 			t.Fatalf("file is not removed")
 		}
 
 		// check if other file is present
-		meta = fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file1"))
+		meta = fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", file1))
 		if meta == nil {
 			t.Fatalf("file is not present")
 		}
-		if meta.Name != "file1" {
+		if meta.Name != file1 {
 			t.Fatalf("retrieved invalid file name")
 		}
-		err := fileObject.LoadFileMeta(utils.CombinePathAndFile("/dir1", "file1"), podPassword)
-		if err != nil {
-			t.Fatal("loading deleted file meta should be nil")
-		}
+		err := fileObject.LoadFileMeta(utils.CombinePathAndFile("/dir1", file1), podPassword)
+		require.NoError(t, err)
 	})
 
 	t.Run("delete-file-in-loop", func(t *testing.T) {
@@ -103,20 +96,17 @@ func TestRemoveFile(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 
 		for i := 0; i < 80; i++ {
+			filename, _ := utils.GetRandString(12)
 			// upload file1
-			_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
-			if err != nil {
-				t.Fatal(err)
-			}
+			_, err = uploadFile(t, fileObject, "/dir1", filename, "", podPassword, 100, 10)
+			require.NoError(t, err)
 
 			// remove file1
-			err = fileObject.RmFile("/dir1/file1", podPassword)
-			if err != nil {
-				t.Fatal(err)
-			}
+			err = fileObject.RmFile("/dir1/"+filename, podPassword)
+			require.NoError(t, err)
 
 			// validate file deletion
-			meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", "file1"))
+			meta := fileObject.GetFromFileMap("/dir1/" + filename)
 			if meta != nil {
 				t.Fatalf("file is not removed")
 			}

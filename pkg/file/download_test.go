@@ -19,20 +19,21 @@ package file_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"testing"
 	"time"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-
-	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDownload(t *testing.T) {
@@ -40,13 +41,11 @@ func TestDownload(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	pod1AccountInfo, err := acc.CreatePodAccount(1, false)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
@@ -65,48 +64,36 @@ func TestDownload(t *testing.T) {
 
 		// file existent check
 		podFile := utils.CombinePathAndFile(filePath, fileName)
-		if fileObject.IsFileAlreadyPresent(podFile) {
-			t.Fatal("file should not be present")
-		}
+		assert.Equal(t, fileObject.IsFileAlreadyPresent(podFile), false)
+
 		_, _, err = fileObject.Download(podFile, podPassword)
-		if err == nil {
-			t.Fatal("file should not be present for download")
-		}
+		assert.Equal(t, err, file.ErrFileNotPresent)
+
 		// upload a file
 		content, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// Download the file and read from reader
 		reader, _, err := fileObject.Download(podFile, podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		rcvdBuffer := new(bytes.Buffer)
 		_, err = rcvdBuffer.ReadFrom(reader)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// Download the file and read from reader
 		reader2, rcvdSize2, err := fileObject.Download(podFile, podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		rcvdBuffer2 := new(bytes.Buffer)
 		_, err = rcvdBuffer2.ReadFrom(reader2)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// validate the result
 		if len(rcvdBuffer2.Bytes()) != len(content) || int(rcvdSize2) != len(content) {
 			t.Fatalf("downloaded content size is invalid")
 		}
-		if !bytes.Equal(content, rcvdBuffer2.Bytes()) {
-			t.Fatalf("downloaded content is not equal")
-		}
+		assert.Equal(t, content, rcvdBuffer2.Bytes())
 
 	})
 
@@ -121,37 +108,66 @@ func TestDownload(t *testing.T) {
 
 		// file existent check
 		podFile := utils.CombinePathAndFile(filePath, fileName)
-		if fileObject.IsFileAlreadyPresent(podFile) {
-			t.Fatal("file should not be present")
-		}
+		assert.Equal(t, fileObject.IsFileAlreadyPresent(podFile), false)
+
 		_, _, err = fileObject.Download(podFile, podPassword)
-		if err == nil {
-			t.Fatal("file should not be present for download")
-		}
+		assert.Equal(t, err, file.ErrFileNotPresent)
+
 		// upload a file
 		content, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// Download the file and read from reader
 		reader, rcvdSize, err := fileObject.Download(podFile, podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		rcvdBuffer := new(bytes.Buffer)
 		_, err = rcvdBuffer.ReadFrom(reader)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// validate the result
 		if len(rcvdBuffer.Bytes()) != len(content) || int(rcvdSize) != len(content) {
 			t.Fatalf("downloaded content size is invalid")
 		}
-		if !bytes.Equal(content, rcvdBuffer.Bytes()) {
-			t.Fatalf("downloaded content is not equal")
-		}
+		assert.Equal(t, content, rcvdBuffer.Bytes())
+	})
 
+	t.Run("read-seeker-small", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
+		filePath := "/dir1"
+		fileName := "file1"
+		compression := ""
+		fileSize := int64(100)
+		blockSize := uint32(10)
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+
+		// file existent check
+		podFile := utils.CombinePathAndFile(filePath, fileName)
+		assert.Equal(t, fileObject.IsFileAlreadyPresent(podFile), false)
+
+		_, _, err = fileObject.Download(podFile, podPassword)
+		assert.Equal(t, err, file.ErrFileNotPresent)
+
+		// upload a file
+		content, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
+		require.NoError(t, err)
+
+		reader, size, err := fileObject.ReadSeeker(podFile, podPassword)
+		require.NoError(t, err)
+
+		point := size / 2
+		half := content[point:]
+
+		n, err := reader.Seek(int64(point), 0)
+		require.NoError(t, err)
+
+		assert.Equal(t, fmt.Sprintf("%d", n), fmt.Sprintf("%d", point))
+
+		rcvdBuffer := new(bytes.Buffer)
+		_, err = rcvdBuffer.ReadFrom(reader)
+		require.NoError(t, err)
+
+		assert.Equal(t, half, rcvdBuffer.Bytes())
 	})
 }

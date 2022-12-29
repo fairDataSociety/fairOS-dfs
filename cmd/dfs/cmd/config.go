@@ -42,7 +42,7 @@ var configCmd = &cobra.Command{
 
 		d := config.AllSettings()
 		ym, err := yaml.Marshal(d)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 		cmd.Println(string(ym))
