@@ -320,6 +320,7 @@ func startHttpService(logger logging.Logger) {
 	dirRouter.HandleFunc("/rmdir", handler.DirectoryRmdirHandler).Methods("DELETE")
 	dirRouter.HandleFunc("/ls", handler.DirectoryLsHandler).Methods("GET")
 	dirRouter.HandleFunc("/stat", handler.DirectoryStatHandler).Methods("GET")
+	dirRouter.HandleFunc("/chmod", handler.DirectoryModeHandler).Methods("POST")
 	dirRouter.HandleFunc("/present", handler.DirectoryPresentHandler).Methods("GET")
 	dirRouter.HandleFunc("/rename", handler.DirectoryRenameHandler).Methods("POST")
 
@@ -336,6 +337,7 @@ func startHttpService(logger logging.Logger) {
 	fileRouter.HandleFunc("/receiveinfo", handler.FileReceiveInfoHandler).Methods("GET")
 	fileRouter.HandleFunc("/delete", handler.FileDeleteHandler).Methods("DELETE")
 	fileRouter.HandleFunc("/stat", handler.FileStatHandler).Methods("GET")
+	fileRouter.HandleFunc("/chmod", handler.FileModeHandler).Methods("POST")
 	fileRouter.HandleFunc("/rename", handler.FileRenameHandler).Methods("POST")
 
 	kvRouter := baseRouter.PathPrefix("/kv/").Subrouter()

@@ -215,6 +215,36 @@ func (a *API) DirectoryInode(podName, directoryName, sessionId string) (*dir.Ino
 	return inode, nil
 }
 
+// ChmodDir is a controller function which validates if the user is logged in,
+// pod is open and calls changes mode of a directory
+func (a *API) ChmodDir(podName, directoryNameWithPath, sessionId string, mode uint32) error {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return ErrPodNotOpen
+	}
+
+	// check if logged in to pod
+	if !ui.GetPod().IsPodOpened(podName) {
+		return fmt.Errorf("login to pod to do this operation")
+	}
+
+	// get podInfo and construct the path
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return err
+	}
+
+	// get status of the file
+	directory := podInfo.GetDirectory()
+	return directory.Chmod(directoryNameWithPath, podInfo.GetPodPassword(), mode)
+}
+
 // DeleteFile is a controller function which validates if the user is logged in,
 // pod is open and delete the file. It also remove the file entry from the parent
 // directory.
@@ -567,4 +597,34 @@ func (a *API) StatusFile(podName, podFileWithPath, sessionId string) (int64, int
 	// get status of the file
 	file := podInfo.GetFile()
 	return file.Status(podFileWithPath, podInfo.GetPodPassword())
+}
+
+// ChmodFile is a controller function which validates if the user is logged in,
+// pod is open and calls changes mode of a file
+func (a *API) ChmodFile(podName, podFileWithPath, sessionId string, mode uint32) error {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return ErrPodNotOpen
+	}
+
+	// check if logged in to pod
+	if !ui.GetPod().IsPodOpened(podName) {
+		return fmt.Errorf("login to pod to do this operation")
+	}
+
+	// get podInfo and construct the path
+	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	if err != nil {
+		return err
+	}
+
+	// get status of the file
+	file := podInfo.GetFile()
+	return file.Chmod(podFileWithPath, podInfo.GetPodPassword(), mode)
 }

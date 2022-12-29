@@ -86,5 +86,4 @@ func TestStat(t *testing.T) {
 			t.Fatalf("invalid block size in stats")
 		}
 	})
-
 }

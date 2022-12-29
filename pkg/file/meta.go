@@ -45,6 +45,7 @@ type MetaData struct {
 	ModificationTime int64  `json:"modificationTime"`
 	InodeAddress     []byte `json:"fileInodeReference"`
 	Tag              uint32 `json:"tag"`
+	Mode             uint32 `json:"mode"`
 }
 
 // LoadFileMeta is used in syncing
