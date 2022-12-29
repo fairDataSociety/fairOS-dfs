@@ -162,6 +162,7 @@ func (lt *lsTask) Execute(context.Context) error {
 		CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
 		AccessTime:       strconv.FormatInt(dirInode.Meta.AccessTime, 10),
 		ModificationTime: strconv.FormatInt(dirInode.Meta.ModificationTime, 10),
+		Mode:             dirInode.Meta.Mode,
 	}
 	lt.d.AddToDirectoryMap(lt.path, dirInode)
 	lt.mtx.Lock()

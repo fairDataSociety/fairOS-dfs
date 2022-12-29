@@ -5,19 +5,33 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ExecuteCommand(t *testing.T) {
+	t.Run("config-help", func(t *testing.T) {
+		configHelpPrefix := `Print default or provided configuration in yaml format`
+		b := bytes.NewBufferString("")
+		rootCmd.SetOut(b)
+		rootCmd.SetArgs([]string{"config", "extra"})
+		Execute()
+		dt, err := io.ReadAll(b)
+		require.NoError(t, err)
+
+		assert.Equal(t, strings.HasPrefix(string(dt), configHelpPrefix), true)
+	})
+
 	t.Run("config", func(t *testing.T) {
 		b := bytes.NewBufferString("")
 		rootCmd.SetOut(b)
 		rootCmd.SetArgs([]string{"config"})
 		Execute()
 		_, err := io.ReadAll(b)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	})
 
 	t.Run("version", func(t *testing.T) {
@@ -26,16 +40,14 @@ func Test_ExecuteCommand(t *testing.T) {
 		rootCmd.SetArgs([]string{"version"})
 		Execute()
 		_, err := io.ReadAll(b)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 	})
 
 	t.Run("server-postageBlockId-required", func(t *testing.T) {
 		tempDir, err := os.MkdirTemp("", ".dfs")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		defer os.RemoveAll(tempDir)
 		b := bytes.NewBufferString("")
 		rootCmd.SetOut(b)
@@ -49,9 +61,8 @@ func Test_ExecuteCommand(t *testing.T) {
 
 	t.Run("server-postageBlockId-invalid", func(t *testing.T) {
 		tempDir, err := os.MkdirTemp("", ".dfs")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		defer os.RemoveAll(tempDir)
 		b := bytes.NewBufferString("")
 		rootCmd.SetOut(b)
@@ -69,9 +80,8 @@ func Test_ExecuteCommand(t *testing.T) {
 
 	t.Run("server-rpc-err", func(t *testing.T) {
 		tempDir, err := os.MkdirTemp("", ".dfs")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		defer os.RemoveAll(tempDir)
 		b := bytes.NewBufferString("")
 		rootCmd.SetOut(b)
@@ -89,9 +99,8 @@ func Test_ExecuteCommand(t *testing.T) {
 
 	t.Run("server-ens-err", func(t *testing.T) {
 		tempDir, err := os.MkdirTemp("", ".dfs")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		defer os.RemoveAll(tempDir)
 		b := bytes.NewBufferString("")
 		rootCmd.SetOut(b)
@@ -108,9 +117,8 @@ func Test_ExecuteCommand(t *testing.T) {
 
 	t.Run("server-network-err", func(t *testing.T) {
 		tempDir, err := os.MkdirTemp("", ".dfs")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		defer os.RemoveAll(tempDir)
 		b := bytes.NewBufferString("")
 		rootCmd.SetOut(b)

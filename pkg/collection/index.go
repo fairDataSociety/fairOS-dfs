@@ -117,7 +117,7 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 		return ErrManifestUnmarshall
 	}
 
-	ref, err := client.UploadBlob(data, true, true)
+	ref, err := client.UploadBlob(data, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
@@ -272,7 +272,7 @@ func (idx *Index) updateManifest(manifest *Manifest, encryptionPassword string) 
 		return ErrManifestUnmarshall
 	}
 
-	ref, err := idx.client.UploadBlob(data, true, true)
+	ref, err := idx.client.UploadBlob(data, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
@@ -294,7 +294,7 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 	logStr := fmt.Sprintf("storing Manifest: %s, data len = %d", manifest.Name, len(data))
 	idx.logger.Debug(logStr)
 
-	ref, err := idx.client.UploadBlob(data, true, true)
+	ref, err := idx.client.UploadBlob(data, 0, true, true)
 	//TODO: once the tags issue is fixed i bytes..
 	// remove the error string check
 	if err != nil { // skipcq: TCV-001

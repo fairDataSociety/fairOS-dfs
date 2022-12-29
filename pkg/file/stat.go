@@ -25,6 +25,8 @@ import (
 
 type Stats struct {
 	PodName          string   `json:"podName"`
+	Tag              uint32   `json:"tag"`
+	Mode             uint32   `json:"mode"`
 	FilePath         string   `json:"filePath"`
 	FileName         string   `json:"fileName"`
 	FileSize         string   `json:"fileSize"`
@@ -74,7 +76,9 @@ func (f *File) GetStats(podName, podFileWithPath, podPassword string) (*Stats, e
 	return &Stats{
 		PodName:          podName,
 		FilePath:         meta.Path,
+		Tag:              meta.Tag,
 		FileName:         meta.Name,
+		Mode:             meta.Mode,
 		FileSize:         strconv.FormatUint(meta.Size, 10),
 		BlockSize:        strconv.Itoa(int(meta.BlockSize)),
 		Compression:      meta.Compression,
