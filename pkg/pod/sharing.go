@@ -71,7 +71,7 @@ func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-	ref, err := p.client.UploadBlob(data, true, true)
+	ref, err := p.client.UploadBlob(data, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}

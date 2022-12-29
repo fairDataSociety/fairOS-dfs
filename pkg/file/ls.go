@@ -24,12 +24,14 @@ import (
 
 type Entry struct {
 	Name             string `json:"name"`
+	Tag              uint32 `json:"tag,omitempty"`
 	ContentType      string `json:"contentType"`
 	Size             string `json:"size,omitempty"`
 	BlockSize        string `json:"blockSize,omitempty"`
 	CreationTime     string `json:"creationTime"`
 	ModificationTime string `json:"modificationTime"`
 	AccessTime       string `json:"accessTime"`
+	Mode             uint32 `json:"mode"`
 }
 
 // ListFiles given a list of files, list files gives back the information related to each file.

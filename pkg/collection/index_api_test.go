@@ -141,7 +141,7 @@ func TestIndexAPI(t *testing.T) {
 }
 
 func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.BeeClient, apnd bool) {
-	ref, err := client.UploadBlob(value, false, false)
+	ref, err := client.UploadBlob(value, 0, false, false)
 	if err != nil {
 		t.Fatalf("could not add doc %s:%s, %v", key, value, err)
 	}
@@ -277,7 +277,7 @@ func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.BeeClient)
 
 	// add the documents
 	for k, v := range kvMap {
-		ref, err := client.UploadBlob(v, false, false)
+		ref, err := client.UploadBlob(v, 0, false, false)
 		if err != nil {
 			t.Fatalf("could not add doc %s:%s, %v", k, ref, err)
 		}
