@@ -15,6 +15,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestChmod(t *testing.T) {
@@ -41,33 +43,23 @@ func TestChmod(t *testing.T) {
 
 		// upload a file
 		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// stat the file
 		stats, err := fileObject.GetStats("pod1", "/dir1/file1", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
-		// check default permission
-		if fmt.Sprintf("%o", file.S_IFREG|0666) != fmt.Sprintf("%o", stats.Mode) {
-			t.Fatal("default mode mismatch")
-		}
+		assert.Equal(t, fmt.Sprintf("%o", file.S_IFREG|0666), fmt.Sprintf("%o", stats.Mode))
+
+		err = fileObject.Chmod("/dir1/file2", podPassword, 0777)
+		assert.Equal(t, err, file.ErrFileNotPresent)
 
 		err = fileObject.Chmod("/dir1/file1", podPassword, 0777)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		stats, err = fileObject.GetStats("pod1", "/dir1/file1", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
-		if fmt.Sprintf("%o", file.S_IFREG|0777) != fmt.Sprintf("%o", stats.Mode) {
-			t.Fatal("mode mismatch after chmod")
-		}
+		assert.Equal(t, fmt.Sprintf("%o", file.S_IFREG|0777), fmt.Sprintf("%o", stats.Mode))
 	})
 }

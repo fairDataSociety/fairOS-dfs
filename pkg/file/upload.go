@@ -59,7 +59,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	now := time.Now().Unix()
 
 	tag, err := f.client.CreateTag(nil)
-	if err != nil {
+	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	meta := MetaData{
