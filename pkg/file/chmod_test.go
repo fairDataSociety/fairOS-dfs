@@ -1,41 +1,23 @@
-/*
-Copyright © 2020 FairOS Authors
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package file_test
 
 import (
 	"context"
+	"fmt"
 	"io"
-	"strconv"
 	"testing"
 	"time"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
-	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
 )
 
-func TestStat(t *testing.T) {
+func TestChmod(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
@@ -54,7 +36,7 @@ func TestStat(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
-	t.Run("stat-file", func(t *testing.T) {
+	t.Run("chmod-file", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// upload a file
@@ -69,21 +51,23 @@ func TestStat(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// validate state
-		if stats.PodName != "pod1" {
-			t.Fatalf("invalid pod name in stats")
+		// check default permission
+		if fmt.Sprintf("%o", file.S_IFREG|0666) != fmt.Sprintf("%o", stats.Mode) {
+			t.Fatal("default mode mismatch")
 		}
-		if stats.FilePath != "/dir1" {
-			t.Fatalf("invalid file path in stats")
+
+		err = fileObject.Chmod("/dir1/file1", podPassword, 0777)
+		if err != nil {
+			t.Fatal(err)
 		}
-		if stats.FileName != "file1" {
-			t.Fatalf("invalid file name in stats")
+
+		stats, err = fileObject.GetStats("pod1", "/dir1/file1", podPassword)
+		if err != nil {
+			t.Fatal(err)
 		}
-		if stats.FileSize != strconv.FormatUint(100, 10) {
-			t.Fatalf("invalid file size in stats")
-		}
-		if stats.BlockSize != strconv.FormatUint(10, 10) {
-			t.Fatalf("invalid block size in stats")
+
+		if fmt.Sprintf("%o", file.S_IFREG|0777) != fmt.Sprintf("%o", stats.Mode) {
+			t.Fatal("mode mismatch after chmod")
 		}
 	})
 }
