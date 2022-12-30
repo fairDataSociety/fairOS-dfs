@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -59,7 +60,8 @@ func TestApis(t *testing.T) {
 	base := "localhost:9090"
 	basev1 := "http://localhost:9090/v1"
 	basev2 := "http://localhost:9090/v2"
-	go startHttpService(logger)
+	srv := startHttpService(logger)
+	defer srv.Shutdown(context.TODO())
 
 	// wait 10 seconds for the server to start
 	<-time.After(time.Second * 10)

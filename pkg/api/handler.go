@@ -17,12 +17,16 @@ limitations under the License.
 package api
 
 import (
+	"context"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
 type Handler struct {
+	ctx    context.Context
+	cancel context.CancelFunc
 	dfsAPI *dfs.API
 	logger logging.Logger
 
@@ -30,28 +34,35 @@ type Handler struct {
 	cookieDomain       string
 }
 
-func NewHandler(dataDir, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, ensConfig *contracts.Config, logger logging.Logger) (*Handler, error) {
+func NewHandler(ctx context.Context, dataDir, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, ensConfig *contracts.Config, logger logging.Logger) (*Handler, error) {
 	api, err := dfs.NewDfsAPI(dataDir, beeApi, postageBlockId, ensConfig, logger)
 	if err != nil {
 		return nil, err
 	}
+	newContext, cancel := context.WithCancel(ctx)
 	return &Handler{
 		dfsAPI:             api,
 		logger:             logger,
 		whitelistedOrigins: whitelistedOrigins,
 		cookieDomain:       cookieDomain,
+		ctx:                newContext,
+		cancel:             cancel,
 	}, nil
 }
 
 // NewMockHandler is used for tests only
 func NewMockHandler(dfsAPI *dfs.API, logger logging.Logger, whitelistedOrigins []string) *Handler {
+	newContext, cancel := context.WithCancel(context.Background())
 	return &Handler{
 		dfsAPI:             dfsAPI,
 		logger:             logger,
 		whitelistedOrigins: whitelistedOrigins,
+		ctx:                newContext,
+		cancel:             cancel,
 	}
 }
 
 func (h *Handler) Close() error {
+	h.cancel()
 	return h.dfsAPI.Close()
 }

@@ -9,15 +9,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/stretchr/testify/require"
-	"go.uber.org/goleak"
 )
 
 func TestMain(m *testing.M) {
-	goleak.VerifyTestMain(m)
+	//goleak.VerifyTestMain(m)
 }
 
 func Test_ExecuteCommand(t *testing.T) {
+
 	t.Run("config-help", func(t *testing.T) {
 		configHelpPrefix := `Print default or provided configuration in yaml format`
 		b := bytes.NewBufferString("")
@@ -132,8 +133,10 @@ func Test_ExecuteCommand(t *testing.T) {
 			"server",
 			"--network",
 			"play",
-			"--rpc",
+			"--beeHost",
 			"http://localhost:1633",
+			"--rpc",
+			"http://localhost:9545",
 			"--postageBlockId",
 			"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552",
 			"--config",

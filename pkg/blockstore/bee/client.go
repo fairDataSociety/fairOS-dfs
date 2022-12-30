@@ -146,6 +146,7 @@ func (s *Client) CheckConnection() bool {
 	}
 	matchString = "OK"
 	s.isProxy = data == matchString
+
 	return s.isProxy
 }
 

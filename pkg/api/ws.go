@@ -73,14 +73,20 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		ticker := time.NewTicker(pingPeriod)
 		defer ticker.Stop()
 
-		for range ticker.C {
-			if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
+		for {
+			select {
+			case <-h.ctx.Done():
+				h.logger.Debug("stopping server")
 				return
-			}
-			if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-				h.logger.Debugf("ws event handler: failed to send ping: %v", err)
-				h.logger.Error("ws event handler: failed to send ping")
-				return
+			case <-ticker.C:
+				if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
+					return
+				}
+				if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+					h.logger.Debugf("ws event handler: failed to send ping: %v", err)
+					h.logger.Error("ws event handler: failed to send ping")
+					return
+				}
 			}
 		}
 	}()
