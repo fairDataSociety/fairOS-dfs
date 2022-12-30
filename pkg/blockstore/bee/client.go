@@ -89,6 +89,11 @@ type tagPostResponse struct {
 	Synced    int64     `json:"synced"`
 }
 
+type beeError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
 func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *Client {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
@@ -194,13 +199,18 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusCreated {
+	addrData, err := io.ReadAll(response.Body)
+	if err != nil {
 		return nil, errors.New("error uploading data")
 	}
 
-	addrData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, errors.New("error downloading data")
+	if response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(addrData, &beeErr)
+		if err != nil {
+			return nil, errors.New(string(addrData))
+		}
+		return nil, errors.New(beeErr.Message)
 	}
 
 	var addrResp *chunkAddressResponse
@@ -246,13 +256,18 @@ func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err erro
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
+	addrData, err := io.ReadAll(response.Body)
+	if err != nil {
 		return nil, errors.New("error uploading data")
 	}
 
-	addrData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, errors.New("error downloading data")
+	if response.StatusCode != http.StatusOK {
+		var beeErr *beeError
+		err = json.Unmarshal(addrData, &beeErr)
+		if err != nil {
+			return nil, errors.New(string(addrData))
+		}
+		return nil, errors.New(beeErr.Message)
 	}
 
 	var addrResp *chunkAddressResponse
@@ -298,13 +313,18 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
-		return nil, errors.New("error downloading data")
-	}
-
 	data, err = io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		var beeErr *beeError
+		err = json.Unmarshal(data, &beeErr)
+		if err != nil {
+			return nil, errors.New(string(data))
+		}
+		return nil, errors.New(beeErr.Message)
 	}
 
 	s.addToChunkCache(addrString, data)
@@ -356,13 +376,18 @@ func (s *Client) UploadBlob(data []byte, tag uint32, pin, encrypt bool) (address
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
-		return nil, errors.New("error uploading blob")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error uploading blob")
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return nil, errors.New(string(respData))
+		}
+		return nil, errors.New(beeErr.Message)
 	}
 
 	var resp bytesPostResponse
@@ -409,13 +434,18 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
-		return nil, response.StatusCode, errors.New("error downloading blob ")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, response.StatusCode, errors.New("error downloading blob")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return nil, response.StatusCode, errors.New(string(respData))
+		}
+		return nil, response.StatusCode, errors.New(beeErr.Message)
 	}
 
 	fields := logrus.Fields{
@@ -502,13 +532,18 @@ func (s *Client) CreateTag(address []byte) (uint32, error) {
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
-		return 0, errors.New("error create tag")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return 0, errors.New("error create tag")
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return 0, errors.New(string(respData))
+		}
+		return 0, errors.New(beeErr.Message)
 	}
 
 	var resp tagPostResponse
@@ -550,13 +585,18 @@ func (s *Client) GetTag(tag uint32) (int64, int64, int64, error) {
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
-		return 0, 0, 0, errors.New("error getting tag")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return 0, 0, 0, errors.New("error getting tag")
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return 0, 0, 0, errors.New(string(respData))
+		}
+		return 0, 0, 0, errors.New(beeErr.Message)
 	}
 
 	var resp tagPostResponse
