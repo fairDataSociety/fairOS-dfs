@@ -53,6 +53,7 @@ func TestApis(t *testing.T) {
 	users := user.NewUsers(dataDir, mockClient, ens, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger, dataDir)
 	handler = api.NewMockHandler(dfsApi, logger, []string{"http://localhost:3000"})
+	defer handler.Close()
 	httpPort = ":9090"
 	pprofPort = ":9091"
 	base := "localhost:9090"

@@ -50,9 +50,8 @@ func TestRemoveFile(t *testing.T) {
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer func() {
-		_ = tm.Stop(context.Background())
-	}()
+	defer tm.Stop(context.Background())
+
 	t.Run("delete-file", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)

@@ -50,9 +50,8 @@ func TestRmdir(t *testing.T) {
 		t.Fatal(err)
 	}
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer func() {
-		_ = tm.Stop(context.Background())
-	}()
+	defer tm.Stop(context.Background())
+
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
@@ -182,9 +181,8 @@ func TestRmRootDirByPath(t *testing.T) {
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer func() {
-		_ = tm.Stop(context.Background())
-	}()
+	defer tm.Stop(context.Background())
+
 	t.Run("rmrootdir", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
@@ -269,9 +267,8 @@ func TestRmRootDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer func() {
-		_ = tm.Stop(context.Background())
-	}()
+	defer tm.Stop(context.Background())
+
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()

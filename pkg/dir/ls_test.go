@@ -54,9 +54,7 @@ func TestListDirectory(t *testing.T) {
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer func() {
-		_ = tm.Stop(context.Background())
-	}()
+	defer tm.Stop(context.Background())
 
 	t.Run("list-dirr", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)

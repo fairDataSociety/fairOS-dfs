@@ -36,6 +36,7 @@ func TestLogout(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer tm.Stop(context.Background())
+
 	t.Run("logout-user", func(t *testing.T) {
 
 		ens := mock2.NewMockNamespaceManager()
