@@ -215,8 +215,14 @@ can consume it.`,
 		}
 
 		srv := startHttpService(logger)
-		shutdownCtx, _ := context.WithTimeout(context.Background(), time.Minute)
-		defer srv.Shutdown(shutdownCtx)
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Minute)
+		defer func() {
+			err = srv.Shutdown(shutdownCtx)
+			if err != nil {
+				logger.Error("failed to shutdown server", err.Error())
+			}
+			shutdownCancel()
+		}()
 
 		done := make(chan os.Signal, 1)
 		signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)

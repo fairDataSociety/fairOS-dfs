@@ -61,7 +61,12 @@ func TestApis(t *testing.T) {
 	basev1 := "http://localhost:9090/v1"
 	basev2 := "http://localhost:9090/v2"
 	srv := startHttpService(logger)
-	defer srv.Shutdown(context.TODO())
+	defer func() {
+		err = srv.Shutdown(context.TODO())
+		if err != nil {
+			logger.Error("failed to shutdown server", err.Error())
+		}
+	}()
 
 	// wait 10 seconds for the server to start
 	<-time.After(time.Second * 10)
