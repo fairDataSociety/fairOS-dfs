@@ -17,6 +17,7 @@ limitations under the License.
 package test_test
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -40,6 +41,8 @@ func TestPod_ListPods(t *testing.T) {
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, mockClient, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer tm.Stop(context.Background())
+
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {

@@ -17,6 +17,7 @@ limitations under the License.
 package test_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"testing"
@@ -33,9 +34,9 @@ import (
 func TestLogout(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
-
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer tm.Stop(context.Background())
 	t.Run("logout-user", func(t *testing.T) {
-		tm := taskmanager.New(1, 10, time.Second*15, logger)
 
 		ens := mock2.NewMockNamespaceManager()
 		// create user
@@ -65,5 +66,4 @@ func TestLogout(t *testing.T) {
 			t.Fatalf("user not created")
 		}
 	})
-
 }

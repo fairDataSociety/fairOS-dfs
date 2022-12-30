@@ -17,6 +17,7 @@ limitations under the License.
 package test_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"testing"
@@ -32,10 +33,9 @@ import (
 func TestLogin(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
-
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer tm.Stop(context.Background())
 	t.Run("login-user", func(t *testing.T) {
-		tm := taskmanager.New(1, 10, time.Second*15, logger)
-
 		ens := mock2.NewMockNamespaceManager()
 		// create user
 		userObject := user.NewUsers("", mockClient, ens, logger)
@@ -85,5 +85,4 @@ func TestLogin(t *testing.T) {
 			t.Fatal("user directory handler should not be nil")
 		}
 	})
-
 }

@@ -43,7 +43,7 @@ func TestLiteUser(t *testing.T) {
 	defer os.RemoveAll(dataDir)
 	users := user.NewUsers(dataDir, mockClient, ens, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger, dataDir)
-
+	defer dfsApi.Close()
 	t.Run("signup-login-pod-dir-file-rename", func(t *testing.T) {
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),

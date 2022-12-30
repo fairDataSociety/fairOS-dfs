@@ -51,3 +51,7 @@ func NewMockHandler(dfsAPI *dfs.API, logger logging.Logger, whitelistedOrigins [
 		whitelistedOrigins: whitelistedOrigins,
 	}
 }
+
+func (h *Handler) Close() error {
+	return h.dfsAPI.Close()
+}

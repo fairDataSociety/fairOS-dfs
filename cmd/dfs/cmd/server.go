@@ -201,6 +201,7 @@ can consume it.`,
 			logger.Error(err.Error())
 			return err
 		}
+		defer hdlr.Close()
 		handler = hdlr
 		if pprof {
 			go startPprofService(logger)
