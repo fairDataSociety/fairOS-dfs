@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -45,13 +46,9 @@ func TestApis(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	ens := mock2.NewMockNamespaceManager()
 	logger := logging.New(io.Discard, logrus.ErrorLevel)
-	dataDir, err := os.MkdirTemp("", "new")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dataDir)
-	users := user.NewUsers(dataDir, mockClient, ens, logger)
-	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger, dataDir)
+
+	users := user.NewUsers(mockClient, ens, logger)
+	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
 	handler = api.NewMockHandler(dfsApi, logger, []string{"http://localhost:3000"})
 	defer handler.Close()
 	httpPort = ":9090"
@@ -59,7 +56,13 @@ func TestApis(t *testing.T) {
 	base := "localhost:9090"
 	basev1 := "http://localhost:9090/v1"
 	basev2 := "http://localhost:9090/v2"
-	go startHttpService(logger)
+	srv := startHttpService(logger)
+	defer func() {
+		err := srv.Shutdown(context.TODO())
+		if err != nil {
+			logger.Error("failed to shutdown server", err.Error())
+		}
+	}()
 
 	// wait 10 seconds for the server to start
 	<-time.After(time.Second * 10)

@@ -43,7 +43,7 @@ func TestNew(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, logger)
 		_, _, _, _, _, err := userObject.CreateNewUserV2("", "password1", "", "", tm)
 		if !errors.Is(err, user.ErrInvalidUserName) {
 			t.Fatal(err)
@@ -54,7 +54,7 @@ func TestNew(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, logger)
 		_, _, _, _, _, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil && !errors.Is(err, user.ErrPasswordTooSmall) {
 			t.Fatal(err)
