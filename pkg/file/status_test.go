@@ -31,7 +31,9 @@ func TestStatus(t *testing.T) {
 	fd := feed.New(pod1AccountInfo, mockClient, logger)
 	user := acc.GetAddress(1)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer tm.Stop(context.Background())
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("sync-status-file", func(t *testing.T) {

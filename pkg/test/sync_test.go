@@ -40,7 +40,9 @@ func TestSync(t *testing.T) {
 		t.Fatal(err)
 	}
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer tm.Stop(context.Background())
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"

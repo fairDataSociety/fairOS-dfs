@@ -50,7 +50,9 @@ func TestSharing(t *testing.T) {
 		t.Fatal(err)
 	}
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer tm.Stop(context.Background())
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	fd1 := feed.New(acc1.GetUserAccountInfo(), mockClient, logger)
 	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, logger)

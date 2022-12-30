@@ -34,7 +34,9 @@ func TestLogin(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer tm.Stop(context.Background())
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("login-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()

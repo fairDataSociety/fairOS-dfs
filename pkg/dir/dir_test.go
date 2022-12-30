@@ -35,7 +35,9 @@ func TestDirRmAllFromMap(t *testing.T) {
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer tm.Stop(context.Background())
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("dir-rm-all-from-map", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
