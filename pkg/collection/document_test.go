@@ -61,6 +61,7 @@ func TestDocumentStore(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	file := f.NewFile("pod1", mockClient, fd, user, tm, logger)
 	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, tm, mockClient, logger)
 	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)

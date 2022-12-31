@@ -192,10 +192,10 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 					}
 				}()
 				f.logger.Infof("Uploading %d block", counter)
-				// compress the data
+				// Compress the data
 				uploadData := data
 				if meta.Compression != "" {
-					uploadData, err = compress(data, meta.Compression, meta.BlockSize)
+					uploadData, err = Compress(data, meta.Compression, meta.BlockSize)
 					if err != nil { // skipcq: TCV-001
 						mainErr = err
 						return

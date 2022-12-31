@@ -11,16 +11,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func TestWriteAt(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
@@ -40,6 +44,7 @@ func TestWriteAt(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 
 	t.Run("writeAt-non-existent-file", func(t *testing.T) {

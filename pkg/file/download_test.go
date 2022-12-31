@@ -52,6 +52,7 @@ func TestDownload(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	t.Run("download-small-file", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 

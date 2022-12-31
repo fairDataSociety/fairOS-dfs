@@ -49,6 +49,7 @@ func TestOpen(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"

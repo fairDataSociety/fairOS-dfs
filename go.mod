@@ -3,13 +3,13 @@ module github.com/fairdatasociety/fairOS-dfs
 go 1.18
 
 require (
-	github.com/btcsuite/btcd v0.22.1
+	github.com/btcsuite/btcd v0.22.3
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/ethersphere/bee v1.10.0
 	github.com/ethersphere/bmt v0.1.4
-	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20220208153721-e0f8b5b25222
+	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d
 	github.com/golang/snappy v0.0.4
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/mux v1.8.0
@@ -30,7 +30,8 @@ require (
 	github.com/tinygrasshopper/bettercsv v0.0.1
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/wealdtech/go-ens/v3 v3.5.5
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
+	go.uber.org/goleak v1.2.0
+	golang.org/x/crypto v0.1.0
 	golang.org/x/term v0.3.0
 	gopkg.in/yaml.v2 v2.4.0
 	resenje.org/jsonhttp v0.2.0

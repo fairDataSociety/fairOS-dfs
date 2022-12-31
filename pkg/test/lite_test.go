@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"testing"
@@ -17,12 +18,15 @@ func TestLite(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("new-blank-username", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, logger)
 		_, _, _, err := userObject.LoadLiteUser("", "password1", "", "", tm)
 		if !errors.Is(err, user.ErrInvalidUserName) {
 			t.Fatal(err)
@@ -33,7 +37,7 @@ func TestLite(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, logger)
 		mnemonic, _, ui, err := userObject.LoadLiteUser("user1", "password1", "", "", tm)
 		if err != nil {
 			t.Fatal(err)

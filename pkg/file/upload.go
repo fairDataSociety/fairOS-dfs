@@ -134,10 +134,10 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 				}()
 
 				f.logger.Infof("Uploading %d block", counter)
-				// compress the data
+				// Compress the data
 				uploadData := data[:size]
 				if compression != "" {
-					uploadData, err = compress(data[:size], compression, blockSize)
+					uploadData, err = Compress(data[:size], compression, blockSize)
 					if err != nil { // skipcq: TCV-001
 						mainErr = err
 						return
@@ -212,7 +212,8 @@ func (*File) getContentType(bufferReader *bufio.Reader) string {
 	return http.DetectContentType(buffer)
 }
 
-func compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
+// Compress data
+func Compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
 	switch compression {
 	case "gzip":
 		var b bytes.Buffer

@@ -37,6 +37,7 @@ func TestChmod(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 	t.Run("chmod-file", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)

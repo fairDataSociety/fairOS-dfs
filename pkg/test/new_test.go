@@ -17,6 +17,7 @@ limitations under the License.
 package test_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"testing"
@@ -34,12 +35,15 @@ func TestNew(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("new-blank-username", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, logger)
 		_, _, _, _, _, err := userObject.CreateNewUserV2("", "password1", "", "", tm)
 		if !errors.Is(err, user.ErrInvalidUserName) {
 			t.Fatal(err)
@@ -50,7 +54,7 @@ func TestNew(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, logger)
 		_, _, _, _, _, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
 		if err != nil && !errors.Is(err, user.ErrPasswordTooSmall) {
 			t.Fatal(err)
@@ -87,5 +91,4 @@ func TestNew(t *testing.T) {
 			t.Fatalf("invalid mnemonic")
 		}
 	})
-
 }

@@ -37,6 +37,7 @@ func TestRename(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	t.Run("upload-rename-same-dir-download-small-file", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		filePath := "/dir1"

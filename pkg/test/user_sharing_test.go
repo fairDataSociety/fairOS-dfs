@@ -17,6 +17,7 @@ limitations under the License.
 package test_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"strconv"
@@ -49,6 +50,9 @@ func TestSharing(t *testing.T) {
 		t.Fatal(err)
 	}
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	fd1 := feed.New(acc1.GetUserAccountInfo(), mockClient, logger)
 	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, logger)
@@ -70,7 +74,7 @@ func TestSharing(t *testing.T) {
 	t.Run("sharing-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create source user
-		userObject1 := user.NewUsers("", mockClient, ens, logger)
+		userObject1 := user.NewUsers(mockClient, ens, logger)
 		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
@@ -107,7 +111,7 @@ func TestSharing(t *testing.T) {
 		}
 
 		// create destination user
-		userObject2 := user.NewUsers("", mockClient, ens, logger)
+		userObject2 := user.NewUsers(mockClient, ens, logger)
 		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)

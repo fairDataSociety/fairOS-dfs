@@ -37,23 +37,23 @@ import (
 )
 
 const (
-	maxIdleConnections        = 20
-	maxConnectionsPerHost     = 256
-	requestTimeout            = 6000
-	chunkCacheSize            = 1024
-	uploadBlockCacheSize      = 100
-	downloadBlockCacheSize    = 100
-	healthUrl                 = "/health"
-	chunkUploadDownloadUrl    = "/chunks"
-	bytesUploadDownloadUrl    = "/bytes"
-	tagsUrl                   = "/tags"
-	pinsUrl                   = "/pins/"
-	_                         = pinsUrl
-	swarmPinHeader            = "Swarm-Pin"
-	swarmEncryptHeader        = "Swarm-Encrypt"
-	swarmPostageBatchId       = "Swarm-Postage-Batch-Id"
-	swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
-	swarmTagHeader            = "Swarm-Tag"
+	maxIdleConnections     = 20
+	maxConnectionsPerHost  = 256
+	requestTimeout         = 6000
+	chunkCacheSize         = 1024
+	uploadBlockCacheSize   = 100
+	downloadBlockCacheSize = 100
+	healthUrl              = "/health"
+	chunkUploadDownloadUrl = "/chunks"
+	bytesUploadDownloadUrl = "/bytes"
+	tagsUrl                = "/tags"
+	pinsUrl                = "/pins/"
+	_                      = pinsUrl
+	swarmPinHeader         = "Swarm-Pin"
+	swarmEncryptHeader     = "Swarm-Encrypt"
+	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
+	//swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
+	swarmTagHeader = "Swarm-Tag"
 )
 
 // Client is a bee http client that satisfies blockstore.Client
@@ -87,6 +87,11 @@ type tagPostResponse struct {
 	Total     int64     `json:"total"`
 	Processed int64     `json:"processed"`
 	Synced    int64     `json:"synced"`
+}
+
+type beeError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
@@ -141,6 +146,7 @@ func (s *Client) CheckConnection() bool {
 	}
 	matchString = "OK"
 	s.isProxy = data == matchString
+
 	return s.isProxy
 }
 
@@ -180,7 +186,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 	// the postage block id to store the SOC chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
-	req.Header.Set(swarmDeferredUploadHeader, "false")
+	//req.Header.Set(swarmDeferredUploadHeader, "false")
 
 	// TODO change this in the future when we have some alternative to pin SOC
 	// This is a temporary fix to force soc pinning
@@ -194,13 +200,18 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusCreated {
+	addrData, err := io.ReadAll(response.Body)
+	if err != nil {
 		return nil, errors.New("error uploading data")
 	}
 
-	addrData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, errors.New("error downloading data")
+	if response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(addrData, &beeErr)
+		if err != nil {
+			return nil, errors.New(string(addrData))
+		}
+		return nil, errors.New(beeErr.Message)
 	}
 
 	var addrResp *chunkAddressResponse
@@ -236,7 +247,7 @@ func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err erro
 	// the postage block id to store the chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
-	req.Header.Set(swarmDeferredUploadHeader, "false")
+	//req.Header.Set(swarmDeferredUploadHeader, "false")
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -246,13 +257,18 @@ func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err erro
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
+	addrData, err := io.ReadAll(response.Body)
+	if err != nil {
 		return nil, errors.New("error uploading data")
 	}
 
-	addrData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, errors.New("error downloading data")
+	if response.StatusCode != http.StatusOK {
+		var beeErr *beeError
+		err = json.Unmarshal(addrData, &beeErr)
+		if err != nil {
+			return nil, errors.New(string(addrData))
+		}
+		return nil, errors.New(beeErr.Message)
 	}
 
 	var addrResp *chunkAddressResponse
@@ -298,13 +314,18 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
-		return nil, errors.New("error downloading data")
-	}
-
 	data, err = io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error downloading data")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		var beeErr *beeError
+		err = json.Unmarshal(data, &beeErr)
+		if err != nil {
+			return nil, errors.New(string(data))
+		}
+		return nil, errors.New(beeErr.Message)
 	}
 
 	s.addToChunkCache(addrString, data)
@@ -346,7 +367,7 @@ func (s *Client) UploadBlob(data []byte, tag uint32, pin, encrypt bool) (address
 	// the postage block id to store the blob
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
-	req.Header.Set(swarmDeferredUploadHeader, "false")
+	//req.Header.Set(swarmDeferredUploadHeader, "false")
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -356,13 +377,18 @@ func (s *Client) UploadBlob(data []byte, tag uint32, pin, encrypt bool) (address
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
-		return nil, errors.New("error uploading blob")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.New("error uploading blob")
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return nil, errors.New(string(respData))
+		}
+		return nil, errors.New(beeErr.Message)
 	}
 
 	var resp bytesPostResponse
@@ -409,13 +435,18 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK {
-		return nil, response.StatusCode, errors.New("error downloading blob ")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, response.StatusCode, errors.New("error downloading blob")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return nil, response.StatusCode, errors.New(string(respData))
+		}
+		return nil, response.StatusCode, errors.New(beeErr.Message)
 	}
 
 	fields := logrus.Fields{
@@ -502,13 +533,18 @@ func (s *Client) CreateTag(address []byte) (uint32, error) {
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
-		return 0, errors.New("error create tag")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return 0, errors.New("error create tag")
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return 0, errors.New(string(respData))
+		}
+		return 0, errors.New(beeErr.Message)
 	}
 
 	var resp tagPostResponse
@@ -550,13 +586,18 @@ func (s *Client) GetTag(tag uint32) (int64, int64, int64, error) {
 
 	req.Close = true
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
-		return 0, 0, 0, errors.New("error getting tag")
-	}
-
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return 0, 0, 0, errors.New("error getting tag")
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return 0, 0, 0, errors.New(string(respData))
+		}
+		return 0, 0, 0, errors.New(beeErr.Message)
 	}
 
 	var resp tagPostResponse
