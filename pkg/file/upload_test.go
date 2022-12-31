@@ -56,6 +56,7 @@ func TestUpload(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	t.Run("upload-small-file", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 

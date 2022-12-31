@@ -34,11 +34,14 @@ func TestLogin(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer tm.Stop(context.Background())
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
+
 	t.Run("login-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, logger)
 		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)

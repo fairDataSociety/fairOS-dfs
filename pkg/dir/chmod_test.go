@@ -37,6 +37,7 @@ func TestChmod(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	t.Run("chmod-dir", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
