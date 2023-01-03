@@ -17,6 +17,15 @@ definitions:
           $ref: '#/definitions/api.Collection'
         type: array
     type: object
+  api.DirModeRequest:
+    properties:
+      dirPath:
+        type: string
+      mode:
+        type: string
+      podName:
+        type: string
+    type: object
   api.DirPresentResponse:
     properties:
       error:
@@ -90,6 +99,15 @@ definitions:
   api.FileDeleteRequest:
     properties:
       filePath:
+        type: string
+      podName:
+        type: string
+    type: object
+  api.FileModeRequest:
+    properties:
+      filePath:
+        type: string
+      mode:
         type: string
       podName:
         type: string
@@ -226,6 +244,15 @@ definitions:
       tableName:
         type: string
     type: object
+  api.StatusResponse:
+    properties:
+      processed:
+        type: integer
+      synced:
+        type: integer
+      total:
+        type: integer
+    type: object
   api.UserDeleteRequest:
     properties:
       password:
@@ -327,6 +354,8 @@ definitions:
         type: string
       creationTime:
         type: string
+      mode:
+        type: integer
       modificationTime:
         type: string
       name:
@@ -344,6 +373,8 @@ definitions:
         type: string
       dirPath:
         type: string
+      mode:
+        type: integer
       modificationTime:
         type: string
       noOfDirectories:
@@ -372,12 +403,16 @@ definitions:
         type: string
       creationTime:
         type: string
+      mode:
+        type: integer
       modificationTime:
         type: string
       name:
         type: string
       size:
         type: string
+      tag:
+        type: integer
     type: object
   file.Stats:
     properties:
@@ -401,10 +436,14 @@ definitions:
         type: string
       fileSize:
         type: string
+      mode:
+        type: integer
       modificationTime:
         type: string
       podName:
         type: string
+      tag:
+        type: integer
     type: object
   pod.ShareInfo:
     properties:
@@ -456,6 +495,41 @@ info:
   title: FairOS-dfs server
   version: v0.0.0
 paths:
+  /v1/dir/chmod:
+    post:
+      consumes:
+      - application/json
+      description: DirectoryModeHandler is the api handler to change mode of a directory
+      parameters:
+      - description: dir mode request
+        in: body
+        name: dir_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DirModeRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: change mode of a directory
+      tags:
+      - dir
   /v1/dir/ls:
     get:
       description: DirectoryLsHandler is the api handler for listing the contents
@@ -1106,6 +1180,41 @@ paths:
       summary: Open a doc table
       tags:
       - doc
+  /v1/file/chmod:
+    post:
+      consumes:
+      - multipart/form-data
+      description: FileModeHandler is the api handler to change mode of a file
+      parameters:
+      - description: file mode request
+        in: body
+        name: file_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.FileModeRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: chmod a file
+      tags:
+      - file
   /v1/file/delete:
     delete:
       consumes:
@@ -1422,6 +1531,48 @@ paths:
           schema:
             $ref: '#/definitions/api.response'
       summary: Info of a file
+      tags:
+      - file
+  /v1/file/status:
+    get:
+      consumes:
+      - application/json
+      description: FileStatusHandler is the api handler to check sync status of a
+        file from a given pod
+      parameters:
+      - description: pod name
+        in: query
+        name: podName
+        required: true
+        type: string
+      - description: file path
+        in: query
+        name: filePath
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - '*/*'
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.StatusResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Sync status of a file
       tags:
       - file
   /v1/file/update:
