@@ -314,18 +314,13 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 
 	req.Close = true
 
-	data, err = io.ReadAll(response.Body)
-	if err != nil {
+	if response.StatusCode != http.StatusOK {
 		return nil, errors.New("error downloading data")
 	}
 
-	if response.StatusCode != http.StatusOK {
-		var beeErr *beeError
-		err = json.Unmarshal(data, &beeErr)
-		if err != nil {
-			return nil, errors.New(string(data))
-		}
-		return nil, errors.New(beeErr.Message)
+	data, err = io.ReadAll(response.Body)
+	if err != nil {
+		return nil, errors.New("error downloading data")
 	}
 
 	s.addToChunkCache(addrString, data)
