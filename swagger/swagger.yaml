@@ -2656,6 +2656,41 @@ paths:
       summary: Sync pod
       tags:
       - pod
+  /v1/pod/sync-async:
+    post:
+      consumes:
+      - application/json
+      description: PodSyncAsyncHandler is the api handler to sync a pod's content
+      parameters:
+      - description: pod name
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodNameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Sync pod asynchronously
+      tags:
+      - pod
   /v1/user/delete:
     post:
       deprecated: true

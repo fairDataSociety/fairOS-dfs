@@ -331,6 +331,7 @@ func startHttpService(logger logging.Logger) *http.Server {
 	podRouter.HandleFunc("/open-async", handler.PodOpenAsyncHandler).Methods("POST")
 	podRouter.HandleFunc("/close", handler.PodCloseHandler).Methods("POST")
 	podRouter.HandleFunc("/sync", handler.PodSyncHandler).Methods("POST")
+	podRouter.HandleFunc("/sync-async", handler.PodSyncAsyncHandler).Methods("POST")
 	podRouter.HandleFunc("/share", handler.PodShareHandler).Methods("POST")
 	podRouter.HandleFunc("/delete", handler.PodDeleteHandler).Methods("DELETE")
 	podRouter.HandleFunc("/ls", handler.PodListHandler).Methods("GET")
