@@ -62,13 +62,11 @@ To get the most out of your FairOS-dfs it is important that you configure FairOS
 bee:
   bee-api-endpoint: http://localhost:1633
   postage-batch-id: ""
-  is-gateway-proxy: false
 ```
 
 ##### Configuration for FairOS-dfs
 ```
 dfs:
-  data-dir: /Users/fairos/.fairOS/dfs
   ports:
     http-port: :9090
     pprof-port: :9091
@@ -110,11 +108,9 @@ This is how a config file should look like
 bee:
   bee-api-endpoint: http://localhost:1633
   postage-batch-id: <BATCH>
-  is-gateway-proxy: false
 cookie-domain: localhost
 cors-allowed-origins: []
 dfs:
-  data-dir: /Users/username/.fairOS/dfs
   ports:
     http-port: :9090
     pprof-port: :9091
@@ -158,7 +154,6 @@ Flags:
 Global Flags:
       --beeApi string      full bee api endpoint (default "localhost:1633")
       --config string      config file (default "/Users/sabyasachipatra/.dfs.yaml")
-      --dataDir string     store data in this dir (default "dataDirPath")
       --verbosity string   verbosity level (default "trace")
 ```
 
@@ -211,5 +206,4 @@ network: "testnet"
 bee:
   bee-api-endpoint: http://localhost:1633 # bee running on mainnet  
   postage-batch-id: <BATCH>
-  is-gateway-proxy: false
 ```
