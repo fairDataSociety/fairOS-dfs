@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -45,20 +46,23 @@ func TestApis(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	ens := mock2.NewMockNamespaceManager()
 	logger := logging.New(io.Discard, logrus.ErrorLevel)
-	dataDir, err := os.MkdirTemp("", "new")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dataDir)
-	users := user.NewUsers(dataDir, mockClient, ens, logger)
-	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger, dataDir)
+
+	users := user.NewUsers(mockClient, ens, logger)
+	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
 	handler = api.NewMockHandler(dfsApi, logger, []string{"http://localhost:3000"})
+	defer handler.Close()
 	httpPort = ":9090"
 	pprofPort = ":9091"
 	base := "localhost:9090"
 	basev1 := "http://localhost:9090/v1"
 	basev2 := "http://localhost:9090/v2"
-	go startHttpService(logger)
+	srv := startHttpService(logger)
+	defer func() {
+		err := srv.Shutdown(context.TODO())
+		if err != nil {
+			logger.Error("failed to shutdown server", err.Error())
+		}
+	}()
 
 	// wait 10 seconds for the server to start
 	<-time.After(time.Second * 10)
@@ -66,7 +70,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 		userBytes, err := json.Marshal(userRequest)
 		if err != nil {
@@ -96,7 +100,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)
@@ -147,7 +151,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)
@@ -243,7 +247,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)
@@ -486,24 +490,22 @@ func TestApis(t *testing.T) {
 					t.Fatal("dir stat failed")
 				}
 			} else {
-				if v.isDir {
-					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
-					if err != nil {
-						t.Fatal(err)
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&filePath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
 
-					}
-					statReq.Header.Set("Cookie", cookie[0])
-					statResp, err := c.Do(statReq)
-					if err != nil {
-						t.Fatal(err)
-					}
-					err = statResp.Body.Close()
-					if err != nil {
-						t.Fatal(err)
-					}
-					if statResp.StatusCode != 200 {
-						t.Fatal("file stat failed")
-					}
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("file stat failed")
 				}
 			}
 		}
@@ -657,24 +659,22 @@ func TestApis(t *testing.T) {
 					t.Fatal("dir stat failed")
 				}
 			} else {
-				if v.isDir {
-					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
-					if err != nil {
-						t.Fatal(err)
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&filePath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
 
-					}
-					statReq.Header.Set("Cookie", cookie[0])
-					statResp, err := c.Do(statReq)
-					if err != nil {
-						t.Fatal(err)
-					}
-					err = statResp.Body.Close()
-					if err != nil {
-						t.Fatal(err)
-					}
-					if statResp.StatusCode != 200 {
-						t.Fatal("file stat failed")
-					}
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("file stat failed")
 				}
 			}
 		}
@@ -746,7 +746,7 @@ func TestApis(t *testing.T) {
 
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)

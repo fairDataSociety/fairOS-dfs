@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pod_test
+package test_test
 
 import (
 	"context"
@@ -346,12 +346,12 @@ func TestShare(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		info, err := pod5.CreatePod(podName5, "", podPassword)
 		if err != nil {
-			t.Fatalf("error creating pod %s", podName3)
+			t.Fatalf("error creating pod %s", podName5)
 		}
 		podPassword, _ = utils.GetRandString(pod.PodPasswordLength)
 		_, err = pod6.CreatePod(podName6, "", podPassword)
 		if err != nil {
-			t.Fatalf("error creating pod %s", podName4)
+			t.Fatalf("error creating pod %s", podName6)
 		}
 
 		// make root dir so that other directories can be added
@@ -406,6 +406,154 @@ func TestShare(t *testing.T) {
 		}
 		if sharedPods[0] != sharedPodName2 {
 			t.Fatalf("invalid shared pod name")
+		}
+	})
+
+	t.Run("check-updates-on-received-pod", func(t *testing.T) {
+		acc7 := account.New(logger)
+		_, _, err = acc7.CreateUserAccount("")
+		if err != nil {
+			t.Fatal(err)
+		}
+		fd7 := feed.New(acc7.GetUserAccountInfo(), mockClient, logger)
+		pod7 := pod.NewPod(mockClient, fd7, acc7, tm, logger)
+		podName7 := "test7"
+
+		acc8 := account.New(logger)
+		_, _, err = acc8.CreateUserAccount("")
+		if err != nil {
+			t.Fatal(err)
+		}
+		fd8 := feed.New(acc8.GetUserAccountInfo(), mockClient, logger)
+		pod8 := pod.NewPod(mockClient, fd8, acc8, tm, logger)
+
+		// create sending pod and receiving pod
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		info, err := pod7.CreatePod(podName7, "", podPassword)
+		if err != nil {
+			t.Fatalf("error creating pod %s", podName7)
+		}
+
+		// make root dir so that other directories can be added
+		err = info.GetDirectory().MkRootDir("", podPassword, info.GetPodAddress(), info.GetFeed())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create some dir and files
+		addFilesAndDirectories(t, info, pod7, podName7, podPassword)
+
+		// share pod
+		sharingRef, err := pod7.PodShare(podName7, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// receive pod info
+		ref, err := utils.ParseHexReference(sharingRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		podInfo, err := pod8.ReceivePod("", ref)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// verify the pod info
+		if podInfo == nil {
+			t.Fatalf("could not receive sharing info")
+		}
+		if podInfo.GetPodName() != podName7 {
+			t.Fatalf("invalid pod name received")
+		}
+
+		// now change original pod content
+
+		// open the pod ths triggers sync too
+		gotInfo, err := pod7.OpenPod(podName7)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// validate if the directory and files are synced
+		dirObject := gotInfo.GetDirectory()
+		err = dirObject.RenameDir("/parentDir/subDir1", "/parentDir/newSubDir1", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fileObject := gotInfo.GetFile()
+		_, err = fileObject.RenameFromFileName("/parentDir/file1", "/parentDir/renamedFile1", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// check shared pod entry
+		gotSharedPodInfo, err := pod8.OpenPod(podName7)
+		if err != nil {
+			t.Fatal(err)
+		}
+		dirObject8 := gotSharedPodInfo.GetDirectory()
+		dirInode1 := dirObject8.GetDirFromDirectoryMap("/parentDir/subDir1")
+		if dirInode1 != nil {
+			t.Fatalf("invalid dir entry")
+		}
+		dirInode1 = dirObject8.GetDirFromDirectoryMap("/parentDir/newSubDir1")
+		if dirInode1 == nil {
+			t.Fatalf("invalid dir entry")
+		}
+		if dirInode1.Meta.Path != "/parentDir" {
+			t.Fatalf("invalid path entry")
+		}
+		if dirInode1.Meta.Name != "newSubDir1" {
+			t.Fatalf("invalid dir entry")
+		}
+		dirInode2 := dirObject8.GetDirFromDirectoryMap("/parentDir/subDir2")
+		if dirInode2 == nil {
+			t.Fatalf("invalid dir entry")
+		}
+		if dirInode2.Meta.Path != "/parentDir" {
+			t.Fatalf("invalid path entry")
+		}
+		if dirInode2.Meta.Name != "subDir2" {
+			t.Fatalf("invalid dir entry")
+		}
+
+		fileObject8 := gotInfo.GetFile()
+		fileMeta1 := fileObject8.GetFromFileMap("/parentDir/file1")
+		if fileMeta1 != nil {
+			t.Fatalf("invalid file meta")
+		}
+		fileMeta1 = fileObject8.GetFromFileMap("/parentDir/renamedFile1")
+		if fileMeta1 == nil {
+			t.Fatalf("invalid file meta")
+		}
+		if fileMeta1.Path != "/parentDir" {
+			t.Fatalf("invalid path entry")
+		}
+		if fileMeta1.Name != "renamedFile1" {
+			t.Fatalf("invalid file entry")
+		}
+		if fileMeta1.Size != uint64(100) {
+			t.Fatalf("invalid file size")
+		}
+		if fileMeta1.BlockSize != uint32(10) {
+			t.Fatalf("invalid block size")
+		}
+		fileMeta2 := fileObject.GetFromFileMap("/parentDir/file2")
+		if fileMeta2 == nil {
+			t.Fatalf("invalid file meta")
+		}
+		if fileMeta2.Path != "/parentDir" {
+			t.Fatalf("invalid path entry")
+		}
+		if fileMeta2.Name != "file2" {
+			t.Fatalf("invalid file entry")
+		}
+		if fileMeta2.Size != uint64(200) {
+			t.Fatalf("invalid file size")
+		}
+		if fileMeta2.BlockSize != uint32(20) {
+			t.Fatalf("invalid block size")
 		}
 	})
 }

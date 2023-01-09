@@ -221,6 +221,26 @@ func (a *API) SyncPod(podName, sessionId string) error {
 	return nil
 }
 
+func (a *API) SyncPodAsync(ctx context.Context, podName, sessionId string) error {
+	// get the logged in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return ErrPodNotOpen
+	}
+
+	// sync the pod
+	err := ui.GetPod().SyncPodAsync(ctx, podName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *API) ListPods(sessionId string) ([]string, []string, error) {
 	// get the logged in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)

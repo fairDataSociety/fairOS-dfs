@@ -1,13 +1,15 @@
-package utils
+package test_test
 
 import (
 	"encoding/hex"
 	"testing"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestNewSharingReference(t *testing.T) {
-	_, err := ParseSharingReference("any ref")
+	_, err := utils.ParseSharingReference("any ref")
 	if err == nil {
 		t.Fatal("parse should fail")
 	}
@@ -18,8 +20,8 @@ func TestNewSharingReference(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ref := NewSharingReference(b, now)
-	swarmRef2, err := ParseSharingReference(ref.String())
+	ref := utils.NewSharingReference(b, now)
+	swarmRef2, err := utils.ParseSharingReference(ref.String())
 	if err != nil {
 		t.Fatal(err)
 	}

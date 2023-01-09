@@ -14,13 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package user
+package test_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"testing"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 
 	"github.com/plexsysio/taskmanager"
 
@@ -29,21 +32,22 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
-func TestStat(t *testing.T) {
+func TestUserStat(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("stat-nonexistent-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := NewUsers("", mockClient, ens, logger)
-		ui := &Info{
-			name: "user1123123",
-		}
+		userObject := user.NewUsers(mockClient, ens, logger)
+		ui := &user.Info{}
 		//  stat the user
 		_, err := userObject.GetUserStat(ui)
-		if !errors.Is(err, ErrInvalidUserName) {
+		if !errors.Is(err, user.ErrInvalidUserName) {
 			t.Fatal("should be invalid user")
 		}
 	})
@@ -51,8 +55,8 @@ func TestStat(t *testing.T) {
 	t.Run("stat-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
+		userObject := user.NewUsers(mockClient, ens, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}

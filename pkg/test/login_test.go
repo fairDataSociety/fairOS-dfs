@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package user_test
+package test_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"testing"
@@ -32,14 +33,16 @@ import (
 func TestLogin(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("login-user", func(t *testing.T) {
-		tm := taskmanager.New(1, 10, time.Second*15, logger)
-
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", "", "", tm)
+		userObject := user.NewUsers(mockClient, ens, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -61,7 +64,7 @@ func TestLogin(t *testing.T) {
 		}
 
 		// addUserAndSessionToMap user again
-		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1", mockClient, tm, "")
+		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", mockClient, tm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -85,5 +88,4 @@ func TestLogin(t *testing.T) {
 			t.Fatal("user directory handler should not be nil")
 		}
 	})
-
 }

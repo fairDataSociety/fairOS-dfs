@@ -19,20 +19,23 @@ package collection
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -52,8 +55,9 @@ type Document struct {
 	file        *file.File
 	client      blockstore.Client
 	openDocDBs  map[string]*DocumentDB
-	openDOcDBMu sync.RWMutex
+	openDocDBMu sync.RWMutex
 	logger      logging.Logger
+	entryGetter taskmanager.TaskManagerGO
 }
 
 type DocumentDB struct {
@@ -88,16 +92,18 @@ type DocBatch struct {
 }
 
 // NewDocumentStore instantiates a document DB object through which all document DB are spawned.
-func NewDocumentStore(podName string, fd *feed.API, ai *account.Info, user utils.Address, file *file.File, client blockstore.Client, logger logging.Logger) *Document {
+func NewDocumentStore(podName string, fd *feed.API, ai *account.Info, user utils.Address, file *file.File,
+	tm taskmanager.TaskManagerGO, client blockstore.Client, logger logging.Logger) *Document {
 	return &Document{
-		podName:    podName,
-		fd:         fd,
-		ai:         ai,
-		user:       user,
-		file:       file,
-		client:     client,
-		openDocDBs: make(map[string]*DocumentDB),
-		logger:     logger,
+		podName:     podName,
+		fd:          fd,
+		ai:          ai,
+		user:        user,
+		file:        file,
+		client:      client,
+		openDocDBs:  make(map[string]*DocumentDB),
+		logger:      logger,
+		entryGetter: tm,
 	}
 }
 
@@ -439,7 +445,44 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 	}
 
 	switch idx.indexType {
-	case StringIndex, MapIndex, ListIndex:
+	case StringIndex:
+		itr, err := idx.NewStringIterator(fieldValue, "", -1)
+		if err != nil { // skipcq: TCV-001
+			d.logger.Errorf("counting document db: ", err.Error())
+			return 0, err
+		}
+		switch operator {
+		case "=":
+			itr.Next()
+			re, err := regexp.Compile(fieldValue)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("counting document db: %v", err.Error())
+				return 0, err
+			}
+			matched := re.Match([]byte(itr.StringKey()))
+			if matched {
+				refs := itr.ValueAll()
+				return uint64(len(refs)), nil
+			}
+		case "=>", ">": // skipcq: TCV-001
+			var count uint64
+			re, err := regexp.Compile(fieldValue)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("counting document db: %v", err.Error())
+				return 0, err
+			}
+
+			for itr.Next() {
+				matched := re.Match([]byte(itr.StringKey()))
+				if matched {
+					refs := itr.ValueAll()
+					count = count + uint64(len(refs))
+				}
+			}
+			d.logger.Info("counting document db: ", dbName, expr, count)
+			return count, nil
+		}
+	case MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", -1)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("counting document db: ", err.Error())
@@ -584,7 +627,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	}
 
 	// upload the document
-	ref, err := d.client.UploadBlob(doc, true, true)
+	ref, err := d.client.UploadBlob(doc, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("inserting in to document db: ", err.Error())
 		return err
@@ -855,7 +898,40 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 
 	var references [][]byte
 	switch idx.indexType {
-	case StringIndex, MapIndex, ListIndex:
+	case StringIndex:
+		itr, err := idx.NewStringIterator(fieldValue, "", -1)
+		if err != nil { // skipcq: TCV-001
+			d.logger.Errorf("finding from document db: ", err.Error())
+			return nil, err
+		}
+		switch operator {
+		case "=":
+			itr.Next()
+			re, err := regexp.Compile(fieldValue)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("finding from document db: %v", err.Error())
+				return nil, err
+			}
+			matched := re.Match([]byte(itr.StringKey()))
+			if matched {
+				references = itr.ValueAll()
+			}
+		case "=>", ">": // skipcq: TCV-001
+			re, err := regexp.Compile(fieldValue)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("finding from document db: %v", err.Error())
+				return nil, err
+			}
+
+			for itr.Next() {
+				matched := re.Match([]byte(itr.StringKey()))
+				if matched {
+					refs := itr.ValueAll()
+					references = append(references, refs...)
+				}
+			}
+		}
+	case MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", int64(limit))
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("finding from document db: ", err.Error())
@@ -930,17 +1006,21 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 
 	if idx.mutable {
 		var docs [][]byte
+		wg := new(sync.WaitGroup)
+		mtx := &sync.Mutex{}
 		for _, ref := range references {
 			if limit > 0 && len(docs) >= limit {
 				break
 			}
-			data, _, err := d.client.DownloadBlob(ref)
+			wg.Add(1)
+			et := newEntryTask(d.client, &docs, ref, mtx)
+			err := et.Execute(context.TODO())
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("finding from document db: ", err.Error())
-				return nil, err
 			}
-			docs = append(docs, data)
+			wg.Done()
 		}
+		wg.Wait()
 		d.logger.Info("found document from document db: ", dbName, expr, len(docs))
 		return docs, nil
 	} else { // skipcq: TCV-001
@@ -1002,8 +1082,8 @@ func (d *Document) LoadDocumentDBSchemas(encryptionPassword string) (map[string]
 
 // IsDBOpened is used to check if a document DB is opened or not.
 func (d *Document) IsDBOpened(dbName string) bool {
-	d.openDOcDBMu.Lock()
-	defer d.openDOcDBMu.Unlock()
+	d.openDocDBMu.Lock()
+	defer d.openDocDBMu.Unlock()
 	if _, found := d.openDocDBs[dbName]; found {
 		return true
 	}
@@ -1031,8 +1111,8 @@ func (d *Document) storeDocumentDBSchemas(encryptionPassword string, collections
 }
 
 func (d *Document) getOpenedDb(dbName string) *DocumentDB {
-	d.openDOcDBMu.Lock()
-	defer d.openDOcDBMu.Unlock()
+	d.openDocDBMu.Lock()
+	defer d.openDocDBMu.Unlock()
 	db, found := d.openDocDBs[dbName]
 	if !found { // skipcq: TCV-001
 		return nil
@@ -1041,14 +1121,14 @@ func (d *Document) getOpenedDb(dbName string) *DocumentDB {
 }
 
 func (d *Document) addToOpenedDb(dbName string, docDB *DocumentDB) {
-	d.openDOcDBMu.Lock()
-	defer d.openDOcDBMu.Unlock()
+	d.openDocDBMu.Lock()
+	defer d.openDocDBMu.Unlock()
 	d.openDocDBs[dbName] = docDB
 }
 
 func (d *Document) removeFromOpenedDB(dbName string) {
-	d.openDOcDBMu.Lock()
-	defer d.openDOcDBMu.Unlock()
+	d.openDocDBMu.Lock()
+	defer d.openDocDBMu.Unlock()
 	delete(d.openDocDBs, dbName)
 }
 
@@ -1094,8 +1174,8 @@ func (d *Document) CreateDocBatch(dbName, podPassword string) (*DocBatch, error)
 		return nil, ErrModifyingImmutableDocDB
 	}
 
-	d.openDOcDBMu.Lock()
-	defer d.openDOcDBMu.Unlock()
+	d.openDocDBMu.Lock()
+	defer d.openDocDBMu.Unlock()
 	if db, ok := d.openDocDBs[dbName]; ok {
 		var docBatch DocBatch
 		docBatch.db = db
@@ -1143,8 +1223,8 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 		return ErrReadOnlyIndex
 	}
 
-	d.openDOcDBMu.Lock()
-	defer d.openDOcDBMu.Unlock()
+	d.openDocDBMu.Lock()
+	defer d.openDocDBMu.Unlock()
 
 	var t interface{}
 	err := json.Unmarshal(doc, &t)
@@ -1261,7 +1341,7 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 			}
 
 			// upload the document
-			ref, err = d.client.UploadBlob(doc, true, true)
+			ref, err = d.client.UploadBlob(doc, 0, true, true)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("inserting in batch: ", err.Error())
 				return err
@@ -1451,4 +1531,35 @@ func (d *Document) getLineFromFile(podFile, podPassword string, seekOffset uint6
 		return nil, err
 	}
 	return data, nil
+}
+
+type entryTask struct {
+	c       blockstore.Client
+	ref     []byte
+	allData *[][]byte
+	mtx     sync.Locker
+}
+
+func newEntryTask(c blockstore.Client, allData *[][]byte, ref []byte, mtx sync.Locker) *entryTask {
+	return &entryTask{
+		c:       c,
+		ref:     ref,
+		allData: allData,
+		mtx:     mtx,
+	}
+}
+
+func (et *entryTask) Execute(context.Context) error {
+	data, _, err := et.c.DownloadBlob(et.ref)
+	if err != nil {
+		return err
+	}
+	et.mtx.Lock()
+	defer et.mtx.Unlock()
+	*et.allData = append(*et.allData, data)
+	return nil
+}
+
+func (et *entryTask) Name() string {
+	return string(et.ref)
 }

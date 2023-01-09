@@ -14,13 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package test_test
 
 import (
 	"bytes"
 	"crypto/rand"
 	"errors"
 	"testing"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 func TestAddress(t *testing.T) {
@@ -29,15 +31,15 @@ func TestAddress(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ch, err := NewChunkWithSpan(buf)
+	ch, err := utils.NewChunkWithSpan(buf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	refBytes := ch.Address().Bytes()
-	ref := NewReference(refBytes)
+	ref := utils.NewReference(refBytes)
 	refHexString := ref.String()
-	newRef, err := ParseHexReference(refHexString)
+	newRef, err := utils.ParseHexReference(refHexString)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +54,7 @@ func TestChunkLengthWithSpan(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = NewChunkWithSpan(buf)
+	_, err = utils.NewChunkWithSpan(buf)
 	if err != nil && err.Error() != "max chunk size exceeded" {
 		t.Fatal("error should be \"max chunk size exceeded\"")
 	}
@@ -64,51 +66,51 @@ func TestChunkLengthWithoutSpan(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = NewChunkWithoutSpan(buf)
+	_, err = utils.NewChunkWithoutSpan(buf)
 	if err != nil && err.Error() != "max chunk size exceeded" {
 		t.Fatal("error should be \"max chunk size exceeded\"")
 	}
 }
 
 func TestDecode(t *testing.T) {
-	_, err := Decode("")
-	if !errors.Is(err, errEmptyString) {
+	_, err := utils.Decode("")
+	if !errors.Is(err, utils.ErrEmptyString) {
 		t.Fatal("err should be empty string")
 	}
 
-	_, err = Decode("hello")
-	if !errors.Is(err, errMissingPrefix) {
+	_, err = utils.Decode("hello")
+	if !errors.Is(err, utils.ErrMissingPrefix) {
 		t.Fatal("err should be missing prefix")
 	}
 
 	addr := "0xhello"
-	_, err = Decode(addr)
+	_, err = utils.Decode(addr)
 	if err == nil {
 		t.Fatal("err should be \"invalid hex string\"")
 	}
 
 	addr = "0x6F55fbFE6770A6b8d353a14045dc69fF1EF"
-	_, err = Decode(addr)
-	if err != nil && err.Error() != errOddLength.Error() {
+	_, err = utils.Decode(addr)
+	if err != nil && err.Error() != utils.ErrOddLength.Error() {
 		t.Fatal("err should be odd length")
 	}
 
 	addr = "0x6F55fbFE6770A6b8d353a14045dc69fF1EFa094b"
-	_, err = Decode(addr)
+	_, err = utils.Decode(addr)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestGetRandBytes(t *testing.T) {
-	b1, err := GetRandBytes(10)
+	b1, err := utils.GetRandBytes(10)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(b1) != 10 {
 		t.Fatal("b1 length should be 10")
 	}
-	b2, err := GetRandBytes(10)
+	b2, err := utils.GetRandBytes(10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,14 +123,14 @@ func TestGetRandBytes(t *testing.T) {
 }
 
 func TestGetRandString(t *testing.T) {
-	s1, err := GetRandString(10)
+	s1, err := utils.GetRandString(10)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(s1) != 10 {
 		t.Fatal("s1 length should be 10")
 	}
-	s2, err := GetRandString(10)
+	s2, err := utils.GetRandString(10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,17 +147,17 @@ func TestCombinePathAndFile(t *testing.T) {
 	root2 := "/root"
 	filename := "test.txt"
 
-	path1 := CombinePathAndFile(root1, filename)
+	path1 := utils.CombinePathAndFile(root1, filename)
 	if path1 != "/"+filename {
 		t.Fatal("path1 is wrong")
 	}
 
-	path2 := CombinePathAndFile(root2, "")
+	path2 := utils.CombinePathAndFile(root2, "")
 	if path2 != root2 {
 		t.Fatal("path2 is wrong")
 	}
 
-	path3 := CombinePathAndFile(root2, filename)
+	path3 := utils.CombinePathAndFile(root2, filename)
 	if path3 != "/root/test.txt" {
 		t.Fatal("path3 is wrong")
 	}

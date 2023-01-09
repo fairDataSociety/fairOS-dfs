@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package user_test
+package test_test
 
 import (
 	"context"
@@ -34,16 +34,16 @@ import (
 func TestDelete(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
+	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("delete-user", func(t *testing.T) {
-		tm := taskmanager.New(1, 10, time.Second*15, logger)
-		defer func() {
-			_ = tm.Stop(context.Background())
-		}()
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
+		userObject := user.NewUsers(mockClient, ens, logger)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -58,7 +58,7 @@ func TestDelete(t *testing.T) {
 			t.Fatal(err)
 		}
 		// delete user
-		err = userObject.DeleteUserV2("user1", "password1", ui.GetSessionId(), ui)
+		err = userObject.DeleteUserV2("user1", "password1twelve", ui.GetSessionId(), ui)
 		if err != nil {
 			t.Fatal(err)
 		}

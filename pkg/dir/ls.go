@@ -33,6 +33,7 @@ type Entry struct {
 	Name             string `json:"name"`
 	ContentType      string `json:"contentType"`
 	Size             string `json:"size,omitempty"`
+	Mode             uint32 `json:"mode"`
 	BlockSize        string `json:"blockSize,omitempty"`
 	CreationTime     string `json:"creationTime"`
 	ModificationTime string `json:"modificationTime"`

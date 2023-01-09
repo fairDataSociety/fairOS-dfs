@@ -14,13 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package user_test
+package test_test
 
 import (
-	"crypto/rand"
+	"context"
 	"errors"
 	"io"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -51,6 +50,9 @@ func TestSharing(t *testing.T) {
 		t.Fatal(err)
 	}
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	fd1 := feed.New(acc1.GetUserAccountInfo(), mockClient, logger)
 	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, logger)
@@ -72,8 +74,8 @@ func TestSharing(t *testing.T) {
 	t.Run("sharing-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create source user
-		userObject1 := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1", "", "", tm)
+		userObject1 := user.NewUsers(mockClient, ens, logger)
+		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -109,8 +111,8 @@ func TestSharing(t *testing.T) {
 		}
 
 		// create destination user
-		userObject2 := user.NewUsers("", mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password2", "", "", tm)
+		userObject2 := user.NewUsers(mockClient, ens, logger)
+		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password1twelve", "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -205,39 +207,4 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("pod should have been deleted")
 		}
 	})
-}
-
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint32) ([]byte, error) {
-	// create a temp file
-	fd, err := os.CreateTemp("", fileName)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(fd.Name())
-
-	// write contents to file
-	content := make([]byte, fileSize)
-	_, err = rand.Read(content)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = fd.Write(content); err != nil {
-		t.Fatal(err)
-	}
-
-	// close file
-	uploadFileName := fd.Name()
-	err = fd.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// open file to upload
-	f1, err := os.Open(uploadFileName)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
 }

@@ -23,18 +23,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-
-	"github.com/plexsysio/taskmanager"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func TestSync(t *testing.T) {
 	mockClient := bm.NewMockBeeClient()
@@ -52,6 +55,9 @@ func TestSync(t *testing.T) {
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
+	defer func() {
+		_ = tm.Stop(context.Background())
+	}()
 
 	t.Run("sync-dir", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pod_test
+package test_test
 
 import (
 	"context"
@@ -36,7 +36,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-func TestDelete(t *testing.T) {
+func TestPodDelete(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
@@ -50,6 +50,7 @@ func TestDelete(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 
 	podName1 := "test1"

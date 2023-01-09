@@ -26,7 +26,7 @@ import (
 
 // DocumentDBs represent a list of documentDB
 type DocumentDBs struct {
-	Tables []documentDB
+	Tables []documentDB `json:"tables"`
 }
 
 type documentDB struct {
@@ -82,7 +82,9 @@ func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var col DocumentDBs
+	col := DocumentDBs{
+		Tables: []documentDB{},
+	}
 	for name, dbSchema := range collections {
 		var indexes []collection.SIndex
 		indexes = append(indexes, dbSchema.SimpleIndexes...)
