@@ -24,11 +24,13 @@ import (
 
 // Client is the interface for block store
 type Client interface {
-	CheckConnection(isProxy bool) bool
+	CheckConnection() bool
 	UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error)
 	UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error)
-	UploadBlob(data []byte, pin bool, encrypt bool) (address []byte, err error)
+	UploadBlob(data []byte, tag uint32, pin bool, encrypt bool) (address []byte, err error)
 	DownloadChunk(ctx context.Context, address []byte) (data []byte, err error)
 	DownloadBlob(address []byte) (data []byte, respCode int, err error)
 	DeleteReference(address []byte) error
+	CreateTag(address []byte) (uint32, error)
+	GetTag(tag uint32) (int64, int64, int64, error)
 }

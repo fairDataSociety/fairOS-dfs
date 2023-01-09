@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"io"
 	"math/big"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -36,14 +35,10 @@ func TestLiteUser(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	ens := mock2.NewMockNamespaceManager()
 	logger := logging.New(io.Discard, logrus.ErrorLevel)
-	dataDir, err := os.MkdirTemp("", "new")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dataDir)
-	users := user.NewUsers(dataDir, mockClient, ens, logger)
-	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger, dataDir)
 
+	users := user.NewUsers(mockClient, ens, logger)
+	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
+	defer dfsApi.Close()
 	t.Run("signup-login-pod-dir-file-rename", func(t *testing.T) {
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),

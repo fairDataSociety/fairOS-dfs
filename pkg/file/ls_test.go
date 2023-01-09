@@ -51,6 +51,7 @@ func TestListFiles(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	t.Run("list-file", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)

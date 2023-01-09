@@ -47,6 +47,7 @@ func TestClose(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"
 

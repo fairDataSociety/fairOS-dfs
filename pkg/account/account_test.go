@@ -24,7 +24,12 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func TestAccount_CreateRootAccount(t *testing.T) {
 

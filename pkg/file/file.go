@@ -141,13 +141,16 @@ func (lt *lsTask) Execute(context.Context) error {
 	}
 	entry := Entry{
 		Name:             meta.Name,
+		Tag:              meta.Tag,
 		ContentType:      meta.ContentType,
 		Size:             strconv.FormatUint(meta.Size, 10),
 		BlockSize:        strconv.FormatInt(int64(meta.BlockSize), 10),
 		CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
 		AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
 		ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
+		Mode:             meta.Mode,
 	}
+	lt.f.AddToFileMap(utils.CombinePathAndFile(meta.Path, meta.Name), meta)
 	lt.mtx.Lock()
 	defer lt.mtx.Unlock()
 	*lt.entries = append(*lt.entries, entry)

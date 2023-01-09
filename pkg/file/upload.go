@@ -35,6 +35,7 @@ import (
 
 const (
 	minBlockSizeForGzip = 164000
+	S_IFREG             = 0100000
 )
 
 var (
@@ -56,6 +57,11 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	}
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()
+
+	tag, err := f.client.CreateTag(nil)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
 	meta := MetaData{
 		Version:          MetaVersion,
 		Path:             podPath,
@@ -66,6 +72,8 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		CreationTime:     now,
 		AccessTime:       now,
 		ModificationTime: now,
+		Tag:              tag,
+		Mode:             S_IFREG | 0666,
 	}
 
 	var totalLength uint64
@@ -126,21 +134,22 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 				}()
 
 				f.logger.Infof("Uploading %d block", counter)
-				// compress the data
+				// Compress the data
 				uploadData := data[:size]
 				if compression != "" {
-					uploadData, err = compress(data[:size], compression, blockSize)
+					uploadData, err = Compress(data[:size], compression, blockSize)
 					if err != nil { // skipcq: TCV-001
 						mainErr = err
 						return
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
+				addr, uploadErr := f.client.UploadBlob(uploadData, tag, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
 				}
+
 				fileBlock := &BlockInfo{
 					Size:           uint32(size),
 					CompressedSize: uint32(len(uploadData)),
@@ -180,7 +189,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		return err
 	}
 
-	addr, err := f.client.UploadBlob(fileInodeData, true, true)
+	addr, err := f.client.UploadBlob(fileInodeData, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -203,7 +212,8 @@ func (*File) getContentType(bufferReader *bufio.Reader) string {
 	return http.DetectContentType(buffer)
 }
 
-func compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
+// Compress data
+func Compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
 	switch compression {
 	case "gzip":
 		var b bytes.Buffer
