@@ -5,3 +5,4 @@ updates:
     schedule:
       interval: weekly
       day: sunday
+    target-branch: "staging"
