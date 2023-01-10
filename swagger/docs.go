@@ -503,7 +503,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/doc/entry/delete": {
+        "/v1/doc/entry/del": {
             "delete": {
                 "description": "DocEntryDelHandler is the api handler to delete a document from a document datastore",
                 "consumes": [

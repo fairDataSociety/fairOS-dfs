@@ -821,7 +821,7 @@ paths:
       summary: Delete a doc table
       tags:
       - doc
-  /v1/doc/entry/delete:
+  /v1/doc/entry/del:
     delete:
       consumes:
       - application/json
