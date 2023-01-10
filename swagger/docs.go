@@ -941,7 +941,7 @@ const docTemplate = `{
                 "summary": "Create in doc table",
                 "parameters": [
                     {
-                        "description": "doc table info",
+                        "description": "doc table info. si or simple index is a comma seperated list of keys and their types. eg: 'first_name=string,age=number'. valid index types can be 'string', 'number', 'map', 'list'. default index is 'id' and it should be of type string",
                         "name": "doc_request",
                         "in": "body",
                         "required": true,

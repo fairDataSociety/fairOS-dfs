@@ -1112,7 +1112,10 @@ paths:
       - application/json
       description: DocCreateHandler is the api handler to create a new document database
       parameters:
-      - description: doc table info
+      - description: 'doc table info. si or simple index is a comma seperated list
+          of keys and their types. eg: ''first_name=string,age=number''. valid index
+          types can be ''string'', ''number'', ''map'', ''list''. default index is
+          ''id'' and it should be of type string'
         in: body
         name: doc_request
         required: true
