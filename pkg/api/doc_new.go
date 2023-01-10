@@ -45,7 +45,7 @@ type SimpleDocRequest struct {
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json
-//	@Param	      doc_request body DocRequest true "doc table info. si or simple index is a comma seperated list of keys and their types. eg: 'first_name=string,age=number'. valid index types can be 'string', 'number', 'map', 'list'. default index is 'id' and it should be of type string"
+//	@Param	      doc_request body DocRequest true "doc table info. si or simple index is a comma separated list of keys and their types. eg: 'first_name=string,age=number'. valid index types can be 'string', 'number', 'map', 'list'. default index is 'id' and it should be of type string"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      201  {object}  response
 //	@Failure      400  {object}  response
