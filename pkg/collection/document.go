@@ -1047,9 +1047,8 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		d.logger.Errorf("finding from document db: ", ErrInvalidIndexType)
 		return nil, ErrInvalidIndexType
 	}
-
+	docs := [][]byte{}
 	if idx.mutable {
-		var docs [][]byte
 		wg := new(sync.WaitGroup)
 		mtx := &sync.Mutex{}
 		for _, ref := range references {
@@ -1068,7 +1067,6 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		d.logger.Info("found document from document db: ", dbName, expr, len(docs))
 		return docs, nil
 	} else { // skipcq: TCV-001
-		var docs [][]byte
 		for _, ref := range references {
 			if limit > 0 && len(docs) >= limit {
 				break
