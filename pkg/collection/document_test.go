@@ -572,6 +572,16 @@ func TestDocumentStore(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, len(docs), 5)
+
+		docs, err = docStore.Find("docdb_8", "age<=30", podPassword, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, len(docs), 4)
+
+		docs, err = docStore.Find("docdb_8", "age<30", podPassword, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, len(docs), 3)
 	})
 
 	t.Run("del", func(t *testing.T) {

@@ -503,7 +503,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/doc/entry/delete": {
+        "/v1/doc/entry/del": {
             "delete": {
                 "description": "DocEntryDelHandler is the api handler to delete a document from a document datastore",
                 "consumes": [
@@ -607,9 +607,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "base64 encoded string",
                         "schema": {
-                            "$ref": "#/definitions/api.DocGetResponse"
+                            "$ref": "#/definitions/api.DocGet"
                         }
                     },
                     "400": {
@@ -716,7 +716,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "expression to search for",
+                        "description": "expression to search for. allowed operators in expr are =, \u003e, =\u003e, \u003c=, \u003c. eg: 'first_name=\u003eJohn', 'first_name=\u003eJ.', 'first_name=\u003e.', 'age=\u003e30', 'age\u003c=30'. if index is string, expr supports regex. we do not have support for multiple conditions in expr yet",
                         "name": "expr",
                         "in": "query",
                         "required": true
@@ -737,9 +737,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "array of base64 encoded string",
                         "schema": {
-                            "$ref": "#/definitions/api.DocFindResponse"
+                            "$ref": "#/definitions/api.DocFind"
                         }
                     },
                     "400": {
@@ -941,7 +941,7 @@ const docTemplate = `{
                 "summary": "Create in doc table",
                 "parameters": [
                     {
-                        "description": "doc table info",
+                        "description": "doc table info. si or simple index is a comma separated list of keys and their types. eg: 'first_name=string,age=number'. valid index types can be 'string', 'number', 'map', 'list'. default index is 'id' and it should be of type string",
                         "name": "doc_request",
                         "in": "body",
                         "required": true,
@@ -3710,28 +3710,22 @@ const docTemplate = `{
                 }
             }
         },
-        "api.DocFindResponse": {
+        "api.DocFind": {
             "type": "object",
             "properties": {
                 "docs": {
                     "type": "array",
                     "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
+                        "type": "string"
                     }
                 }
             }
         },
-        "api.DocGetResponse": {
+        "api.DocGet": {
             "type": "object",
             "properties": {
                 "doc": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "string"
                 }
             }
         },

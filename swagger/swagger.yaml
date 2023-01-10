@@ -53,21 +53,17 @@ definitions:
       tableName:
         type: string
     type: object
-  api.DocFindResponse:
+  api.DocFind:
     properties:
       docs:
         items:
-          items:
-            type: integer
-          type: array
+          type: string
         type: array
     type: object
-  api.DocGetResponse:
+  api.DocGet:
     properties:
       doc:
-        items:
-          type: integer
-        type: array
+        type: string
     type: object
   api.DocIndexRequest:
     properties:
@@ -821,7 +817,7 @@ paths:
       summary: Delete a doc table
       tags:
       - doc
-  /v1/doc/entry/delete:
+  /v1/doc/entry/del:
     delete:
       consumes:
       - application/json
@@ -891,9 +887,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: base64 encoded string
           schema:
-            $ref: '#/definitions/api.DocGetResponse'
+            $ref: '#/definitions/api.DocGet'
         "400":
           description: Bad Request
           schema:
@@ -961,7 +957,10 @@ paths:
         name: tableName
         required: true
         type: string
-      - description: expression to search for
+      - description: 'expression to search for. allowed operators in expr are =, >,
+          =>, <=, <. eg: ''first_name=>John'', ''first_name=>J.'', ''first_name=>.'',
+          ''age=>30'', ''age<=30''. if index is string, expr supports regex. we do
+          not have support for multiple conditions in expr yet'
         in: query
         name: expr
         required: true
@@ -979,9 +978,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: array of base64 encoded string
           schema:
-            $ref: '#/definitions/api.DocFindResponse'
+            $ref: '#/definitions/api.DocFind'
         "400":
           description: Bad Request
           schema:
@@ -1116,7 +1115,10 @@ paths:
       - application/json
       description: DocCreateHandler is the api handler to create a new document database
       parameters:
-      - description: doc table info
+      - description: 'doc table info. si or simple index is a comma separated list
+          of keys and their types. eg: ''first_name=string,age=number''. valid index
+          types can be ''string'', ''number'', ''map'', ''list''. default index is
+          ''id'' and it should be of type string'
         in: body
         name: doc_request
         required: true
