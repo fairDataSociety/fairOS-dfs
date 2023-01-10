@@ -962,11 +962,15 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 			}
 		}
 	case NumberIndex:
-		start, err := strconv.ParseInt(fieldValue, 10, 64)
-		if err != nil { // skipcq: TCV-001
-			d.logger.Errorf("finding from document db: ", err.Error())
-			return nil, err
+		var start int64 = 0
+		if operator != "<" && operator != "<=" {
+			start, err = strconv.ParseInt(fieldValue, 10, 64)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("finding from document db: ", err.Error())
+				return nil, err
+			}
 		}
+
 		itr, err := idx.NewIntIterator(start, -1, int64(limit))
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("finding from document db: ", err.Error())
@@ -979,6 +983,46 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		case "=>":
 			for itr.Next() {
 				if limit > 0 && references != nil && len(references) > limit { // skipcq: TCV-001
+					break
+				}
+				refs := itr.ValueAll()
+				references = append(references, refs...)
+			}
+		case "<":
+			end, err := strconv.ParseInt(fieldValue, 10, 64)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("finding from document db: ", err.Error())
+				break
+			}
+			for itr.Next() {
+				if limit > 0 && references != nil && len(references) > limit { // skipcq: TCV-001
+					break
+				}
+				val, err := strconv.ParseInt(itr.StringKey(), 10, 64)
+				if err != nil { // skipcq: TCV-001
+					continue
+				}
+				if val >= end {
+					break
+				}
+				refs := itr.ValueAll()
+				references = append(references, refs...)
+			}
+		case "<=":
+			end, err := strconv.ParseInt(fieldValue, 10, 64)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("finding from document db: ", err.Error())
+				break
+			}
+			for itr.Next() {
+				if limit > 0 && references != nil && len(references) > limit { // skipcq: TCV-001
+					break
+				}
+				val, err := strconv.ParseInt(itr.StringKey(), 10, 64)
+				if err != nil { // skipcq: TCV-001
+					continue
+				}
+				if val > end {
 					break
 				}
 				refs := itr.ValueAll()
@@ -1138,6 +1182,8 @@ func (*Document) resolveExpression(expr string) (string, string, string, error) 
 		operator = "=>"
 	} else if strings.Contains(expr, "<=") { // skipcq: TCV-001
 		operator = "<="
+	} else if strings.Contains(expr, "<") { // skipcq: TCV-001
+		operator = "<"
 	} else if strings.Contains(expr, ">") {
 		operator = ">"
 	} else if strings.Contains(expr, "=") {
@@ -1145,7 +1191,6 @@ func (*Document) resolveExpression(expr string) (string, string, string, error) 
 	} else { // skipcq: TCV-001
 		return "", "", "", ErrInvalidOperator
 	}
-
 	f := strings.Split(expr, operator)
 	fieldName := f[0]
 	fieldValue := f[1]
