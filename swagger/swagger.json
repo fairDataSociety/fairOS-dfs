@@ -707,7 +707,7 @@
                     },
                     {
                         "type": "string",
-                        "description": "expression to search for",
+                        "description": "expression to search for. allowed operators in expr are =, \u003e, =\u003e, \u003c=, \u003c. eg: 'first_name=\u003eJohn', 'first_name=\u003eJ.', 'first_name=\u003e.', 'age=\u003e30', 'age\u003c=30'. if index is string, expr supports regex. we do not have support for multiple conditions in expr yet",
                         "name": "expr",
                         "in": "query",
                         "required": true

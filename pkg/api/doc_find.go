@@ -43,7 +43,7 @@ type DocFind struct {
 //	@Produce      json
 //	@Param	      podName query string true "pod name"
 //	@Param	      tableName query string true "table name"
-//	@Param	      expr query string true "expression to search for"
+//	@Param	      expr query string true "expression to search for. allowed operators in expr are =, >, =>, <=, <. eg: 'first_name=>John', 'first_name=>J.', 'first_name=>.', 'age=>30', 'age<=30'. if index is string, expr supports regex. we do not have support for multiple conditions in expr yet"
 //	@Param	      limit query string false "number od documents"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {object}  DocFind "array of base64 encoded string"
