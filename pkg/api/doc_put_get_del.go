@@ -41,6 +41,11 @@ type DocGetResponse struct {
 	Doc []byte `json:"doc"`
 }
 
+// DocGet represents a single document row
+type DocGet struct {
+	Doc string `json:"doc"`
+}
+
 // DocEntryPutHandler godoc
 //
 //	@Summary      Add a record in document datastore
@@ -124,7 +129,7 @@ func (h *Handler) DocEntryPutHandler(w http.ResponseWriter, r *http.Request) {
 //	@Param	      tableName query string true "table name"
 //	@Param	      id query string true "id to search for"
 //	@Param	      Cookie header string true "cookie parameter"
-//	@Success      200  {object}  DocGetResponse
+//	@Success      200  {object}  DocGet "base64 encoded string"
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/doc/entry/get [get]

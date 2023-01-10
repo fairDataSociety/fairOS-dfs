@@ -29,6 +29,11 @@ type DocFindResponse struct {
 	Docs [][]byte `json:"docs"`
 }
 
+// DocFind is used for listing rows from a document database
+type DocFind struct {
+	Docs []string `json:"docs"`
+}
+
 // DocFindHandler godoc
 //
 //	@Summary      Get rows from a given doc datastore
@@ -41,7 +46,7 @@ type DocFindResponse struct {
 //	@Param	      expr query string true "expression to search for"
 //	@Param	      limit query string false "number od documents"
 //	@Param	      Cookie header string true "cookie parameter"
-//	@Success      200  {object}  DocFindResponse
+//	@Success      200  {object}  DocFind "array of base64 encoded string"
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/doc/find [get]

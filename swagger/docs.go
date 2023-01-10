@@ -607,9 +607,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "base64 encoded string",
                         "schema": {
-                            "$ref": "#/definitions/api.DocGetResponse"
+                            "$ref": "#/definitions/api.DocGet"
                         }
                     },
                     "400": {
@@ -737,9 +737,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "array of base64 encoded string",
                         "schema": {
-                            "$ref": "#/definitions/api.DocFindResponse"
+                            "$ref": "#/definitions/api.DocFind"
                         }
                     },
                     "400": {
@@ -3710,28 +3710,22 @@ const docTemplate = `{
                 }
             }
         },
-        "api.DocFindResponse": {
+        "api.DocFind": {
             "type": "object",
             "properties": {
                 "docs": {
                     "type": "array",
                     "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
+                        "type": "string"
                     }
                 }
             }
         },
-        "api.DocGetResponse": {
+        "api.DocGet": {
             "type": "object",
             "properties": {
                 "doc": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "string"
                 }
             }
         },

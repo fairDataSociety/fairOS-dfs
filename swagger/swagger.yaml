@@ -53,21 +53,17 @@ definitions:
       tableName:
         type: string
     type: object
-  api.DocFindResponse:
+  api.DocFind:
     properties:
       docs:
         items:
-          items:
-            type: integer
-          type: array
+          type: string
         type: array
     type: object
-  api.DocGetResponse:
+  api.DocGet:
     properties:
       doc:
-        items:
-          type: integer
-        type: array
+        type: string
     type: object
   api.DocIndexRequest:
     properties:
@@ -891,9 +887,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: base64 encoded string
           schema:
-            $ref: '#/definitions/api.DocGetResponse'
+            $ref: '#/definitions/api.DocGet'
         "400":
           description: Bad Request
           schema:
@@ -979,9 +975,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: array of base64 encoded string
           schema:
-            $ref: '#/definitions/api.DocFindResponse'
+            $ref: '#/definitions/api.DocFind'
         "400":
           description: Bad Request
           schema:
