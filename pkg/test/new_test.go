@@ -91,4 +91,46 @@ func TestNew(t *testing.T) {
 			t.Fatalf("invalid mnemonic")
 		}
 	})
+
+	t.Run("new-user-multi-cred", func(t *testing.T) {
+		ens := mock2.NewMockNamespaceManager()
+		user1 := "multicredtester"
+		//create user
+		userObject := user.NewUsers(mockClient, ens, logger)
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, "password1", "", "", tm)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, "password1", "", "", tm)
+		if !errors.Is(err, user.ErrUserAlreadyPresent) {
+			t.Fatal(err)
+		}
+
+		// validate user
+		if !userObject.IsUsernameAvailableV2(ui.GetUserName()) {
+			t.Fatalf("user not created")
+		}
+		if !userObject.IsUserNameLoggedIn(ui.GetUserName()) {
+			t.Fatalf("user not loggin in")
+		}
+		if ui == nil {
+			t.Fatalf("invalid user info")
+		}
+		if ui.GetUserName() != user1 {
+			t.Fatalf("invalid user name")
+		}
+		if ui.GetFeed() == nil || ui.GetAccount() == nil {
+			t.Fatalf("invalid feed or account")
+		}
+		err = ui.GetAccount().GetWallet().IsValidMnemonic(mnemonic)
+		if err != nil {
+			t.Fatalf("invalid mnemonic")
+		}
+
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, "password2", mnemonic, "", tm)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 }
