@@ -23,9 +23,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/golang/snappy"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/klauspost/pgzip"
@@ -143,7 +142,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 				return bytesRead, io.EOF
 			}
 
-			// read spans across block.. so flow down and read the next block
+			// read spans across block. so flow down and read the next block
 		}
 	}
 
@@ -192,6 +191,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 			}
 		}
 	}
+
 	return 0, nil // skipcq: TCV-001
 }
 

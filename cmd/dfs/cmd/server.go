@@ -338,6 +338,7 @@ func startHttpService(logger logging.Logger) *http.Server {
 	podRouter.HandleFunc("/stat", handler.PodStatHandler).Methods("GET")
 	podRouter.HandleFunc("/receive", handler.PodReceiveHandler).Methods("GET")
 	podRouter.HandleFunc("/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
+	podRouter.HandleFunc("/fork", handler.PodForkHandler).Methods("POST")
 
 	// directory related handlers
 	dirRouter := baseRouter.PathPrefix("/dir/").Subrouter()

@@ -25,7 +25,7 @@ import (
 )
 
 func (a *API) CreatePod(podName, sessionId string) (*pod.Info, error) {
-	// get the logged in user information
+	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -57,7 +57,7 @@ func (a *API) CreatePod(podName, sessionId string) (*pod.Info, error) {
 
 // DeletePod deletes a pod
 func (a *API) DeletePod(podName, sessionId string) error {
-	// get the logged in user information
+	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -108,7 +108,7 @@ func (a *API) DeletePod(podName, sessionId string) error {
 }
 
 func (a *API) OpenPod(podName, sessionId string) (*pod.Info, error) {
-	// get the logged in user information
+	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -309,4 +309,53 @@ func (a *API) IsPodExist(podName, sessionId string) bool {
 		return false
 	}
 	return ui.GetPod().IsPodPresent(podName)
+}
+
+func (a *API) ForkPod(podName, forkName, sessionId string) error {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	// check if pod open
+	if !ui.IsPodOpen(podName) {
+		return ErrPodNotOpen
+	}
+
+	if forkName == "" {
+		return pod.ErrBlankPodName
+	}
+
+	forkPresent := ui.GetPod().IsPodPresent(forkName)
+	if forkPresent {
+		return pod.ErrForkAlreadyExists
+	}
+
+	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
+	podPassword := hex.EncodeToString(podPasswordBytes)
+	// create the pod
+	_, err := ui.GetPod().CreatePod(forkName, "", podPassword)
+	if err != nil {
+		return err
+	}
+
+	// open the pod
+	pi, err := ui.GetPod().OpenPod(forkName)
+	if err != nil {
+		return err
+	}
+
+	// create the root directory
+	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), podPassword, pi.GetPodAddress(), pi.GetFeed())
+	if err != nil {
+		return err
+	}
+
+	err = ui.GetPod().PodFork(podName, forkName)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -19,9 +19,11 @@ package pod
 import "errors"
 
 var (
+	ErrBlankPodName         = errors.New("pod name cannot be blank")
 	ErrInvalidPodName       = errors.New("pod does not exist")
 	ErrTooLongPodName       = errors.New("pod name too long")
 	ErrPodAlreadyExists     = errors.New("pod already exists")
+	ErrForkAlreadyExists    = errors.New("pod with fork name already exists")
 	ErrMaxPodsReached       = errors.New("max number of pods reached")
 	ErrPodNotOpened         = errors.New("pod not opened")
 	ErrInvalidDirectory     = errors.New("invalid directory name")
