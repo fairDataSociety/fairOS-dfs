@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/btcsuite/btcd v0.22.1
 	github.com/c-bata/go-prompt v0.2.3
-	github.com/dustin/go-humanize v1.0.0
+	github.com/dustin/go-humanize v1.0.1
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/ethersphere/bee v1.9.0
 	github.com/ethersphere/bmt v0.1.4
