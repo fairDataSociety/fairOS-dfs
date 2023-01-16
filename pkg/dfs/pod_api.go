@@ -21,6 +21,7 @@ import (
 	"encoding/hex"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -30,22 +31,9 @@ func (a *API) CreatePod(podName, sessionId string) (*pod.Info, error) {
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
-	podPassword := hex.EncodeToString(podPasswordBytes)
-	// create the pod
-	_, err := ui.GetPod().CreatePod(podName, "", podPassword)
-	if err != nil {
-		return nil, err
-	}
 
 	// open the pod
-	pi, err := ui.GetPod().OpenPod(podName)
-	if err != nil {
-		return nil, err
-	}
-
-	// create the root directory
-	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), podPassword, pi.GetPodAddress(), pi.GetFeed())
+	pi, err := a.prepareOwnPod(ui, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +306,6 @@ func (a *API) ForkPod(podName, forkName, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
 	if !ui.IsPodOpen(podName) {
 		return ErrPodNotOpen
 	}
@@ -327,35 +314,65 @@ func (a *API) ForkPod(podName, forkName, sessionId string) error {
 		return pod.ErrBlankPodName
 	}
 
-	forkPresent := ui.GetPod().IsPodPresent(forkName)
-	if forkPresent {
+	if ui.GetPod().IsPodPresent(forkName) {
 		return pod.ErrForkAlreadyExists
 	}
 
-	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
-	podPassword := hex.EncodeToString(podPasswordBytes)
-	// create the pod
-	_, err := ui.GetPod().CreatePod(forkName, "", podPassword)
+	_, err := a.prepareOwnPod(ui, forkName)
 	if err != nil {
 		return err
 	}
 
-	// open the pod
-	pi, err := ui.GetPod().OpenPod(forkName)
+	return ui.GetPod().PodFork(podName, forkName)
+}
+
+func (a *API) ForkPodFromRef(forkName, refString, sessionId string) error {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	if refString == "" {
+		return pod.ErrBlankPodSharingReference
+	}
+	if forkName == "" {
+		return pod.ErrBlankPodName
+	}
+
+	if ui.GetPod().IsPodPresent(forkName) {
+		return pod.ErrForkAlreadyExists
+	}
+
+	_, err := a.prepareOwnPod(ui, forkName)
 	if err != nil {
 		return err
+	}
+
+	return ui.GetPod().PodForkFromRef(forkName, refString)
+}
+
+func (a *API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
+	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
+	podPassword := hex.EncodeToString(podPasswordBytes)
+
+	// create the pod
+	_, err := ui.GetPod().CreatePod(podName, "", podPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	// open the pod
+	pi, err := ui.GetPod().OpenPod(podName)
+	if err != nil {
+		return nil, err
 	}
 
 	// create the root directory
 	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), podPassword, pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = ui.GetPod().PodFork(podName, forkName)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return pi, nil
 }

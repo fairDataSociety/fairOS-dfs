@@ -1,15 +1,29 @@
 package pod
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"strings"
 
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// PodFork creates a new pod with all the contents of a given pod
+// PodFork forks a pod with a different given name
 func (p *Pod) PodFork(podName, forkName string) error {
 	podName, err := CleanPodName(podName)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
+	if !p.IsPodOpened(podName) {
+		return ErrPodNotOpened
+	}
+
+	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -19,17 +33,71 @@ func (p *Pod) PodFork(podName, forkName string) error {
 		return err
 	}
 
-	if !p.IsPodOpened(podName) {
-		return ErrPodNotOpened
-	}
-
 	if !p.IsPodOpened(forkName) {
 		return ErrPodNotOpened
 	}
 
-	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
+	forkInfo, _, err := p.GetPodInfoFromPodMap(forkName)
 	if err != nil { // skipcq: TCV-001
 		return err
+	}
+
+	rootInode := podInfo.GetDirectory().GetDirFromDirectoryMap("/")
+	return cloneFolder(podInfo, forkInfo, "/", rootInode)
+}
+
+// PodForkFromRef forks a pof from a given pod sharing reference
+func (p *Pod) PodForkFromRef(forkName, refString string) error {
+	ref, err := utils.ParseHexReference(refString)
+	if err != nil {
+		return nil
+	}
+	data, resp, err := p.client.DownloadBlob(ref.Bytes())
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+	if resp != http.StatusOK { // skipcq: TCV-001
+		return fmt.Errorf("ReceivePod: could not download blob")
+	}
+	var shareInfo ShareInfo
+	err = json.Unmarshal(data, &shareInfo)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+	accountInfo := p.acc.GetEmptyAccountInfo()
+	address := utils.HexToAddress(shareInfo.Address)
+	accountInfo.SetAddress(address)
+
+	fd := feed.New(accountInfo, p.client, p.logger)
+	file := f.NewFile(shareInfo.PodName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
+	dir := d.NewDirectory(shareInfo.PodName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
+	podInfo := &Info{
+		podName:     shareInfo.PodName,
+		podPassword: shareInfo.Password,
+		userAddress: address,
+		dir:         dir,
+		file:        file,
+		accountInfo: accountInfo,
+		feed:        fd,
+	}
+
+	return p.forkPod(podInfo, forkName)
+}
+
+// PodForkCore creates a new pod with all the contents of a given pod
+func (p *Pod) forkPod(podInfo *Info, forkName string) error {
+	err := podInfo.GetDirectory().SyncDirectory("/", podInfo.GetPodPassword())
+	if err != nil {
+		return err
+	}
+
+	forkName, err = CleanPodName(forkName)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
+	if !p.IsPodOpened(forkName) {
+		return ErrPodNotOpened
 	}
 
 	forkInfo, _, err := p.GetPodInfoFromPodMap(forkName)
