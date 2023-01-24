@@ -44,7 +44,6 @@ type MetaData struct {
 	AccessTime       int64  `json:"accessTime"`
 	ModificationTime int64  `json:"modificationTime"`
 	InodeAddress     []byte `json:"fileInodeReference"`
-	Tag              uint32 `json:"tag"`
 	Mode             uint32 `json:"mode"`
 }
 

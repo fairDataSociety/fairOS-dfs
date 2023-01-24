@@ -12,10 +12,10 @@ func (f *File) Status(podFileWithPath, podPassword string) (int64, int64, int64,
 		return 0, 0, 0, ErrFileNotPresent
 	}
 
-	meta := f.GetFromFileMap(totalFilePath)
-	if meta == nil { // skipcq: TCV-001
-		return 0, 0, 0, ErrFileNotFound
+	tag := f.LoadFromTagMap(totalFilePath)
+	if tag == 0 { // skipcq: TCV-001
+		return 0, 0, 0, ErrFileTagPresent
 	}
 
-	return f.client.GetTag(meta.Tag)
+	return f.client.GetTag(tag)
 }
