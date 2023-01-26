@@ -61,7 +61,7 @@ func TestChmod(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// just add dummy file enty as file listing is not tested here
+		// just add dummy file entry as file listing is not tested here
 		err = dirObject.AddEntryToDir("/dirToChmod", podPassword, "file1", true)
 		if err != nil {
 			t.Fatal(err)

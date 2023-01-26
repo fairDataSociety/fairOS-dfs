@@ -1501,7 +1501,7 @@ func (d *Document) DocBatchWrite(docBatch *DocBatch, podFile string) error {
 	return nil
 }
 
-// DocFileIndex indexes a existing json file in the pod with the document DB.
+// DocFileIndex indexes an existing json file in the pod with the document DB.
 // skipcq: TCV-001
 func (d *Document) DocFileIndex(dbName, podFile, podPassword string) error {
 	d.logger.Info("Indexing file to db: ", podFile, dbName)

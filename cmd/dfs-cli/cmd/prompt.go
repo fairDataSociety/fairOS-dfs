@@ -106,7 +106,7 @@ type Message struct {
 	Code    int
 }
 
-// NewPrompt spawns dfs-client and checks if the it is connected to it.
+// NewPrompt spawns dfs-client and checks if it is connected to it.
 func NewPrompt() {
 	var err error
 	fdfsAPI, err = newFdfsClient(fdfsServer)
@@ -140,7 +140,7 @@ var userSuggestions = []prompt.Suggest{
 	{Text: "new", Description: "create a new user (v2)"},
 	{Text: "del", Description: "delete a existing user (v2)"},
 	{Text: "login", Description: "login to a existing user (v2)"},
-	{Text: "logout", Description: "logout from a logged in user"},
+	{Text: "logout", Description: "logout from a logged-in user"},
 	{Text: "present", Description: "is user present (v2)"},
 	{Text: "stat", Description: "shows information about a user"},
 }
@@ -185,7 +185,7 @@ var suggestions = []prompt.Suggest{
 	{Text: "user new", Description: "create a new user"},
 	{Text: "user del", Description: "delete a existing user"},
 	{Text: "user login", Description: "login to a existing user"},
-	{Text: "user logout", Description: "logout from a logged in user"},
+	{Text: "user logout", Description: "logout from a logged-in user"},
 	{Text: "user present", Description: "is user present"},
 	{Text: "user export ", Description: "exports the user"},
 	{Text: "user import ", Description: "imports the user"},
@@ -939,17 +939,17 @@ func help() {
 	fmt.Println("Usage: <command> <sub-command> (args1) (args2) ...")
 	fmt.Println("commands:")
 	fmt.Println(" - user <new> (user-name) (mnemonic) - create a new user and login as that user")
-	fmt.Println(" - user <del> - deletes a logged in user")
+	fmt.Println(" - user <del> - deletes a logged-in user")
 	fmt.Println(" - user <login> (user-name) - login as a given user")
-	fmt.Println(" - user <logout> - logout a logged in user")
+	fmt.Println(" - user <logout> - logout a logged-in user")
 	fmt.Println(" - user <present> (user-name) - returns true if the user is present, false otherwise")
 	fmt.Println(" - user <stat> - shows information about a user")
 
-	fmt.Println(" - pod <new> (pod-name) - create a new pod for the logged in user and opens the pod")
+	fmt.Println(" - pod <new> (pod-name) - create a new pod for the logged-in user and opens the pod")
 	fmt.Println(" - pod <del> (pod-name) - deletes a already created pod of the user")
 	fmt.Println(" - pod <open> (pod-name) - open a already created pod")
 	fmt.Println(" - pod <stat> (pod-name) - display meta information about a pod")
-	fmt.Println(" - pod <sync> (pod-name) - sync the contents of a logged in pod from Swarm")
+	fmt.Println(" - pod <sync> (pod-name) - sync the contents of a logged-in pod from Swarm")
 	fmt.Println(" - pod <close>  - close a opened pod")
 	fmt.Println(" - pod <ls> - lists all the pods created for this account")
 

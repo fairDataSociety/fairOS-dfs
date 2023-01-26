@@ -103,7 +103,7 @@ func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destina
 	return sharingRef.String(), nil
 }
 
-// ReceiveFileFromUser imports a exported file in to the current user and pod by reading the sharing file entry.
+// ReceiveFileFromUser imports an exported file in to the current user and pod by reading the sharing file entry.
 func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingReference, userInfo *Info, pd *pod.Pod, podDir string) (string, error) {
 	metaRef := sharingRef.GetRef()
 	unixTime := sharingRef.GetNonce()

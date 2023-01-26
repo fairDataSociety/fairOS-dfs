@@ -23,7 +23,7 @@ type Stat struct {
 	Reference string `json:"address"`
 }
 
-// GetUserStat shows the user information like user name and his address.
+// GetUserStat shows the user information like username and his address.
 func (u *Users) GetUserStat(userInfo *Info) (*Stat, error) {
 	if !u.IsUsernameAvailableV2(userInfo.name) {
 		return nil, ErrInvalidUserName

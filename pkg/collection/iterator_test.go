@@ -52,7 +52,7 @@ func TestIndexIterator(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_0", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
-		// add some documents and sort them lexicograpically
+		// add some documents and sort them lexicographically
 		actualCount := uint64(100)
 		keys, values := addDocsForStringIteration(t, idx, actualCount)
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
@@ -82,7 +82,7 @@ func TestIndexIterator(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_1", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
-		// add some documents and sort them lexicograpically
+		// add some documents and sort them lexicographically
 		actualCount := uint64(100)
 		keys, values := addDocsForRandomStringIteration(t, idx, actualCount)
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
@@ -112,7 +112,7 @@ func TestIndexIterator(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_2", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
-		// add some documents and sort them lexicograpically
+		// add some documents and sort them lexicographically
 		actualCount := uint64(100)
 		keys, values := addDocsForStringIteration(t, idx, actualCount)
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
@@ -137,7 +137,7 @@ func TestIndexIterator(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after end key..to see that it should not return anything
+		// do ite.Next() after end key to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyond end key")
 		}
@@ -146,7 +146,7 @@ func TestIndexIterator(t *testing.T) {
 	t.Run("iterate_with_string_end_key", func(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_3", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
-		// add some documents and sort them lexicograpically
+		// add some documents and sort them lexicographically
 		actualCount := uint64(100)
 		keys, values := addDocsForStringIteration(t, idx, actualCount)
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
@@ -172,7 +172,7 @@ func TestIndexIterator(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after end key..to see that it should not return anything
+		// do ite.Next() after end key to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyond end key")
 		}
@@ -182,7 +182,7 @@ func TestIndexIterator(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_4", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)
 
-		// add some documents and sort them lexicograpically
+		// add some documents and sort them lexicographically
 		actualCount := uint64(100)
 		keys, values := addDocsForStringIteration(t, idx, actualCount)
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
@@ -207,7 +207,7 @@ func TestIndexIterator(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after end key..to see that it should not return anything
+		// do ite.Next() after end key to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyng limit")
 		}
@@ -217,7 +217,7 @@ func TestIndexIterator(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_5", podPassword, collection.NumberIndex, fd, user, mockClient, ai, logger)
 
-		// add some documents and sort them lexicograpically
+		// add some documents and sort them lexicographically
 		actualCount := uint64(100)
 		_, _ = addDocsForNumberIteration(t, idx, actualCount)
 
@@ -246,7 +246,7 @@ func TestIndexIterator(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_6", podPassword, collection.NumberIndex, fd, user, mockClient, ai, logger)
 
-		// add some documents and sort them lexicograpically
+		// add some documents and sort them lexicographically
 		actualCount := uint64(100)
 		keys, values := addDocsForRandomNumberIteration(t, idx, actualCount)
 		sort.Ints(keys)
@@ -281,7 +281,7 @@ func TestIndexIterator(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_7", podPassword, collection.NumberIndex, fd, user, mockClient, ai, logger)
 
-		// add some documents and sort them lexicograpically
+		// add some documents and sort them lexicographically
 		actualCount := uint64(100)
 		_, _ = addDocsForNumberIteration(t, idx, actualCount)
 
@@ -305,7 +305,7 @@ func TestIndexIterator(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after end key..to see that it should not return anything
+		// do ite.Next() after end key to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyond end key")
 		}
@@ -315,7 +315,7 @@ func TestIndexIterator(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_8", podPassword, collection.NumberIndex, fd, user, mockClient, ai, logger)
 
-		// add some documents and sort them lexicograpically
+		// add some documents and sort them lexicographically
 		actualCount := uint64(100)
 		_, _ = addDocsForNumberIteration(t, idx, actualCount)
 
@@ -339,7 +339,7 @@ func TestIndexIterator(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after end key..to see that it should not return anything
+		// do ite.Next() after end key to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyond end key")
 		}

@@ -152,7 +152,7 @@ func (a *API) OpenPodAsync(ctx context.Context, podName, sessionId string) (*pod
 }
 
 func (a *API) ClosePod(podName, sessionId string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -175,7 +175,7 @@ func (a *API) ClosePod(podName, sessionId string) error {
 }
 
 func (a *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -190,7 +190,7 @@ func (a *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
 }
 
 func (a *API) SyncPod(podName, sessionId string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -210,7 +210,7 @@ func (a *API) SyncPod(podName, sessionId string) error {
 }
 
 func (a *API) SyncPodAsync(ctx context.Context, podName, sessionId string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -230,7 +230,7 @@ func (a *API) SyncPodAsync(ctx context.Context, podName, sessionId string) error
 }
 
 func (a *API) ListPods(sessionId string) ([]string, []string, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, nil, ErrUserNotLoggedIn
@@ -246,7 +246,7 @@ func (a *API) ListPods(sessionId string) ([]string, []string, error) {
 
 // PodList lists all available pods in json format
 func (a *API) PodList(sessionId string) (*pod.PodList, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -257,7 +257,7 @@ func (a *API) PodList(sessionId string) (*pod.PodList, error) {
 }
 
 func (a *API) PodShare(podName, sharedPodName, sessionId string) (string, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return "", ErrUserNotLoggedIn
@@ -272,7 +272,7 @@ func (a *API) PodShare(podName, sharedPodName, sessionId string) (string, error)
 }
 
 func (a *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareInfo, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -282,7 +282,7 @@ func (a *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareI
 }
 
 func (a *API) PodReceive(sessionId, sharedPodName string, ref utils.Reference) (*pod.Info, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn

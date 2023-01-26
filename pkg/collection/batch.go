@@ -79,7 +79,7 @@ func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, refValue, memory, apnd)
 }
 
-// Get extracts a index value from an index givena key.
+// Get extracts an index value from an index given a key.
 func (b *Batch) Get(key string) ([][]byte, error) {
 	if b.memDb == nil {
 		return nil, ErrEntryNotFound

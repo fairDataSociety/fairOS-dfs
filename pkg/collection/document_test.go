@@ -687,7 +687,7 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatalf("expected count %d, got %d", 1, count1)
 		}
 
-		// count the total docs using another index to make sure we dont have it any index
+		// count the total docs using another index to make sure we don't have it any index
 		docs, err := docStore.Find("docdb_10", "age=>20", podPassword, -1)
 		require.NoError(t, err)
 		if len(docs) != 1 {
@@ -745,7 +745,7 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatalf("expected count %d, got %d", 4, count1)
 		}
 
-		// count the total docs using another index to make sure we dont have it any index
+		// count the total docs using another index to make sure we don't have it any index
 		docs, err := docStore.Find("docdb_11", "age=>20", podPassword, -1)
 		require.NoError(t, err)
 		if len(docs) != 4 {

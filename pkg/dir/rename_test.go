@@ -93,7 +93,7 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// just add dummy file enty as file listing is not tested here
+		// just add dummy file entry as file listing is not tested here
 		err = dirObject.AddEntryToDir("/parentDir", podPassword, "file1", true)
 		if err != nil {
 			t.Fatal(err)
@@ -234,7 +234,7 @@ func TestRenameDirectory(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// just add dummy file enty as file listing is not tested here
+		// just add dummy file entry as file listing is not tested here
 		err = dirObject.AddEntryToDir("/parentDir/subDir1/subDir11/sub111", podPassword, "file1", true)
 		if err != nil {
 			t.Fatal(err)

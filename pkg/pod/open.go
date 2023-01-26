@@ -29,7 +29,7 @@ import (
 )
 
 // OpenPod opens a pod if it is not already opened. as part of opening the pod
-// it loads all the data structures related to the pod. Also it syncs all the
+// it loads all the data structures related to the pod. Also, it syncs all the
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPod(podName string) (*Info, error) {
 	// check if pods is present and get the index of the pod
@@ -117,7 +117,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 }
 
 // OpenPodAsync opens a pod if it is not already opened. as part of opening the pod
-// it loads all the data structures related to the pod. Also it syncs all the
+// it loads all the data structures related to the pod. Also, it syncs all the
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	// check if pods is present and get the index of the pod

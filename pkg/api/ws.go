@@ -661,12 +661,12 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			podStatRenponse := &PodStatResponse{
+			podStatResponse := &PodStatResponse{
 				PodName:    stat.PodName,
 				PodAddress: stat.PodAddress,
 			}
 
-			messageBytes, err := json.Marshal(podStatRenponse)
+			messageBytes, err := json.Marshal(podStatResponse)
 			if err != nil {
 				respondWithError(res, err)
 				continue

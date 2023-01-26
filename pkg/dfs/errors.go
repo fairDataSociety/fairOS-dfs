@@ -20,7 +20,7 @@ import "errors"
 
 var (
 	// ErrUserNotLoggedIn indicate the user is not logged-in
-	ErrUserNotLoggedIn = errors.New("user not logged in")
+	ErrUserNotLoggedIn = errors.New("user not logged-in")
 	// ErrPodNotOpen indicates pod is not open
 	ErrPodNotOpen = errors.New("pod not open")
 	// ErrFileNotPresent indicates file is not present

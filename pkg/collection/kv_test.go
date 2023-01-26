@@ -74,7 +74,7 @@ func TestKeyValueStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// delete so that they dont show up in other testcases
+		// delete so that they don't show up in other testcases
 		err = kvStore.DeleteKVTable("kv_table_1314", podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -96,7 +96,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal("found iterator")
 		}
 
-		// delete so that they dont show up in other testcases
+		// delete so that they don't show up in other testcases
 		err = kvStore.DeleteKVTable("kv_table_1312", podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -123,7 +123,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatalf("invalid index type")
 		}
 
-		// delete so that they dont show up in other testcases
+		// delete so that they don't show up in other testcases
 		err = kvStore.DeleteKVTable("kv_table_0", podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -150,7 +150,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatalf("invalid index type")
 		}
 
-		// delete so that they dont show up in other testcases
+		// delete so that they don't show up in other testcases
 		err = kvStore.DeleteKVTable("kv_table_1", podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -703,7 +703,7 @@ func TestKeyValueStore(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after limit..to see that it should not return anything
+		// do ite.Next() after limit to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyond limit")
 		}
@@ -773,7 +773,7 @@ func TestKeyValueStore(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after end..to see that it should not return anything
+		// do ite.Next() after end to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyond end %s %v", itr.StringKey(), string(itr.Value()))
 		}
@@ -851,7 +851,7 @@ func TestKeyValueStore(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after end..to see that it should not return anything
+		// do ite.Next() after end to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyond end %s %v", itr.StringKey(), string(itr.Value()))
 		}
@@ -972,7 +972,7 @@ func TestKeyValueStore(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after end..to see that it should not return anything
+		// do ite.Next() after end to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyond end")
 		}
@@ -1019,7 +1019,7 @@ func TestKeyValueStore(t *testing.T) {
 			}
 		}
 
-		// do a ite.Next() after limit..to see that it should not return anything
+		// do ite.Next() after limit to see that it should not return anything
 		if itr.Next() {
 			t.Fatalf("iterating beyond limit")
 		}

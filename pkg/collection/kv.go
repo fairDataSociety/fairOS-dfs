@@ -100,7 +100,7 @@ func (kv *KeyValue) CreateKVTable(name, encryptionPassword string, indexType Ind
 	return kv.storeKVTables(kvtables, encryptionPassword)
 }
 
-// DeleteKVTable deletes a given key value table with all it index and data entries.
+// DeleteKVTable deletes a given key value table with all it's index and data entries.
 func (kv *KeyValue) DeleteKVTable(name, encryptionPassword string) error {
 	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex

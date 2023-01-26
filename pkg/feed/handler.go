@@ -224,7 +224,7 @@ func (h *Handler) updateCache(request *request) (*CacheEntry, error) {
 		}
 	}
 
-	// update our rsrcs entry map
+	// update our source entry map
 	entry.lastKey = updateAddr
 	entry.Update.ID = request.ID
 	entry.data = request.data

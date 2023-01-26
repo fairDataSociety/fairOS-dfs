@@ -62,9 +62,9 @@ func (a *API) IsUserNameAvailableV2(userName string) bool {
 	return a.users.IsUsernameAvailableV2(userName)
 }
 
-// IsUserLoggedIn checks if the given user is logged in
+// IsUserLoggedIn checks if the given user is logged-in
 func (a *API) IsUserLoggedIn(userName string) bool {
-	// check if a given user is logged in
+	// check if a given user is logged-in
 	return a.users.IsUserNameLoggedIn(userName)
 }
 

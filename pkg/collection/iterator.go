@@ -294,7 +294,7 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 }
 
 func (itr *Iterator) nextStringKey() bool {
-	// dont go beyond the limit
+	// don't go beyond the limit
 	if itr.limit >= 0 {
 		if itr.givenUntilNow >= itr.limit {
 			return false

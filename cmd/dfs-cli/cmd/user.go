@@ -164,8 +164,8 @@ func isUserLoggedIn(userName string) {
 		return
 	}
 	if resp.LoggedIn {
-		fmt.Println("user is logged in")
+		fmt.Println("user is logged-in")
 	} else {
-		fmt.Println("user is NOT logged in")
+		fmt.Println("user is NOT logged-in")
 	}
 }
