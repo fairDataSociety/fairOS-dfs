@@ -45,7 +45,7 @@ func TestNew(t *testing.T) {
 		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
 		_, _, _, _, _, err := userObject.CreateNewUserV2("", "password1", "", "", tm)
-		if !errors.Is(err, user.ErrInvalidUserName) {
+		if !errors.Is(err, user.ErrBlankUsername) {
 			t.Fatal(err)
 		}
 	})
