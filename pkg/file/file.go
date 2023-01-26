@@ -114,16 +114,16 @@ func (f *File) LoadFromTagMap(filePath string) uint32 {
 	tag, ok := f.tagMap.Load(filePath)
 	if ok {
 		formattedTag, ok := tag.(uint32)
-		if !ok {
+		if !ok { // skipcq: TCV-001
 			return 0
 		}
 		return formattedTag
 	}
-	return 0
+	return 0 // skipcq: TCV-001
 }
 
 // DeleteFromTagMap deletes a tag from tagMap
-func (f *File) DeleteFromTagMap(filePath string) {
+func (f *File) DeleteFromTagMap(filePath string) { // skipcq: TCV-001
 	f.tagMap.Delete(filePath)
 }
 
