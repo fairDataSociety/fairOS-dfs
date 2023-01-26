@@ -34,6 +34,8 @@ var (
 
 	// ErrFileNotFound denotes file is not found in dfs
 	ErrFileNotFound = errors.New("file not found in dfs")
+
+	ErrFileTagPresent = errors.New("file status is not available")
 )
 
 // Download does all the validation for the existence of the file and creates a
