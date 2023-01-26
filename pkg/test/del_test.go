@@ -57,7 +57,7 @@ func TestPodDelete(t *testing.T) {
 	podName2 := "test2"
 
 	t.Run("create-one-pod-and-del", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		_, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
@@ -101,7 +101,7 @@ func TestPodDelete(t *testing.T) {
 	})
 
 	t.Run("create-two-pod-and-del", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		_, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)
@@ -161,7 +161,7 @@ func TestPodDelete(t *testing.T) {
 	t.Run("create-pod-and-del-with-tables", func(t *testing.T) {
 		podName := "delPod"
 		for i := 0; i < 10; i++ {
-			podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+			podPassword, _ := utils.GetRandString(pod.PasswordLength)
 			pi, err := pod1.CreatePod(podName, "", podPassword)
 			if err != nil {
 				t.Fatalf("error creating pod %s", podName)

@@ -27,8 +27,6 @@ var (
 	ErrDirectoryAlreadyPresent = errors.New("directory name already present")
 	//ErrDirectoryNotPresent
 	ErrDirectoryNotPresent = errors.New("directory not present")
-	//ErrDirectoryNotEmpty
-	ErrDirectoryNotEmpty = errors.New("directory not empty")
 	//ErrInvalidFileOrDirectoryName
 	ErrInvalidFileOrDirectoryName = errors.New("invalid file or directory name")
 )

@@ -253,7 +253,7 @@ func (a *API) ListPods(sessionId string) ([]string, []string, error) {
 }
 
 // PodList lists all available pods in json format
-func (a *API) PodList(sessionId string) (*pod.PodList, error) {
+func (a *API) PodList(sessionId string) (*pod.List, error) {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -367,7 +367,7 @@ func (a *API) ForkPodFromRef(forkName, refString, sessionId string) error {
 }
 
 func (a *API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
-	podPasswordBytes, _ := utils.GetRandBytes(pod.PodPasswordLength)
+	podPasswordBytes, _ := utils.GetRandBytes(pod.PasswordLength)
 	podPassword := hex.EncodeToString(podPasswordBytes)
 
 	// create the pod

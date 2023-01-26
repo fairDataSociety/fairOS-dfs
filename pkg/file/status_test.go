@@ -35,7 +35,7 @@ func TestStatus(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("sync-status-file", func(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		numberOfChunks := int64(10)

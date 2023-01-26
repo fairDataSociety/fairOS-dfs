@@ -205,7 +205,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	return podInfo, nil
 }
 
-func (*Pod) getIndexPassword(podList *PodList, podName string) (int, string) {
+func (*Pod) getIndexPassword(podList *List, podName string) (int, string) {
 	for _, pod := range podList.Pods {
 		if pod.Name == podName {
 			return pod.Index, pod.Password
@@ -214,7 +214,7 @@ func (*Pod) getIndexPassword(podList *PodList, podName string) (int, string) {
 	return -1, "" // skipcq: TCV-001
 }
 
-func (*Pod) getAddressPassword(podList *PodList, podName string) (string, string) {
+func (*Pod) getAddressPassword(podList *List, podName string) (string, string) {
 	for _, pod := range podList.SharedPods {
 		if pod.Name == podName {
 			return pod.Address, pod.Password

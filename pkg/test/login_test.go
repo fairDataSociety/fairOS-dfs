@@ -189,7 +189,7 @@ func TestLogin(t *testing.T) {
 		pod1 := ui.GetPod()
 		podName1 := "test1"
 		podName2 := "test2"
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		_, err = pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s : %s", podName1, err.Error())

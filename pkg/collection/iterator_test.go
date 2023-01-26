@@ -47,7 +47,7 @@ func TestIndexIterator(t *testing.T) {
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("iterate_all_string_keys", func(t *testing.T) {
 		// create a DB and open it
 		idx := createAndOpenIndex(t, "pod1", "testdb_iterator_0", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)

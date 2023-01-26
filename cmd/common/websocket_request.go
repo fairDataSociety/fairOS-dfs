@@ -11,24 +11,16 @@ type Event string
 var (
 	//UserSignup
 	UserSignup Event = "/user/signup"
-	//UserSignupV2
-	UserSignupV2 Event = "/user/signupV2"
 	//UserLogin
 	UserLogin Event = "/user/login"
 	//UserLoginV2
 	UserLoginV2 Event = "/user/loginV2"
-	//UserImport
-	UserImport Event = "/user/import"
-	//UserPresent
-	UserPresent Event = "/user/present"
 	//UserPresentV2
 	UserPresentV2 Event = "/user/presentV2"
 	//UserIsLoggedin
 	UserIsLoggedin Event = "/user/isloggedin"
 	//UserLogout
 	UserLogout Event = "/user/logout"
-	//UserExport
-	UserExport Event = "/user/export"
 	//UserDelete
 	UserDelete Event = "/user/delete"
 	//UserStat

@@ -64,7 +64,7 @@ func TestDocumentStore(t *testing.T) {
 
 	file := f.NewFile("pod1", mockClient, fd, user, tm, logger)
 	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, tm, mockClient, logger)
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("create_document_db_errors", func(t *testing.T) {
 		nilFd := feed.New(&account.Info{}, mockClient, logger)
 		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, tm, mockClient, logger)

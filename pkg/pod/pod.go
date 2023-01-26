@@ -30,8 +30,8 @@ import (
 const (
 	maxPodId = 65535
 
-	//PodPasswordLength
-	PodPasswordLength = 32
+	// PasswordLength defines the pod password length
+	PasswordLength = 32
 )
 
 // Pod
@@ -45,24 +45,24 @@ type Pod struct {
 	tm     taskmanager.TaskManagerGO
 }
 
-// PodListItem
-type PodListItem struct {
+// ListItem defines the structure for pod item
+type ListItem struct {
 	Name     string `json:"name"`
 	Index    int    `json:"index"`
 	Password string `json:"password"`
 }
 
-// SharedPodListItem
-type SharedPodListItem struct {
+// SharedListItem defines the structure for shared pod item
+type SharedListItem struct {
 	Name     string `json:"name"`
 	Address  string `json:"address"`
 	Password string `json:"password"`
 }
 
-// PodList
-type PodList struct {
-	Pods       []PodListItem       `json:"pods"`
-	SharedPods []SharedPodListItem `json:"sharedPods"`
+// List lists all the pods
+type List struct {
+	Pods       []ListItem       `json:"pods"`
+	SharedPods []SharedListItem `json:"sharedPods"`
 }
 
 // NewPod creates the main pod object which has all the methods related to the pods.

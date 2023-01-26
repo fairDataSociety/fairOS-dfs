@@ -37,8 +37,6 @@ var (
 	ErrInvalidDirectory = errors.New("invalid directory name")
 	//ErrTooLongDirectoryName
 	ErrTooLongDirectoryName = errors.New("directory name too long")
-	//ErrReadOnlyPod
-	ErrReadOnlyPod = errors.New("operation not permitted: read only pod")
 	//ErrInvalidFile
 	ErrInvalidFile = errors.New("file does not exist")
 	//ErrMaximumPodLimit

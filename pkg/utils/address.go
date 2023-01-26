@@ -86,9 +86,6 @@ func bytesToAddress(b []byte) Address {
 	return a
 }
 
-// ZeroAddress returns a zero address
-var ZeroAddress = NewAddress(nil)
-
 // HexToAddress creates a new address from given hex string
 func HexToAddress(s string) Address { return bytesToAddress(fromHex(s)) }
 

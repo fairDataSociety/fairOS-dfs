@@ -54,7 +54,7 @@ func TestKeyValueStore(t *testing.T) {
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 	kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("table_not_opened", func(t *testing.T) {
 		err := kvStore.CreateKVTable("kv_table_1314", podPassword, collection.StringIndex)
 		if err != nil {
