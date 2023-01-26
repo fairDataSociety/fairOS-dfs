@@ -35,9 +35,11 @@ import (
 const (
 	kvFile                = "key_value_tables"
 	defaultCollectionName = "KV"
-	CSVHeaderKey          = "__csv_header__"
+	//CSVHeaderKey
+	CSVHeaderKey = "__csv_header__"
 )
 
+// KeyValue
 type KeyValue struct {
 	podName      string
 	fd           *feed.API
@@ -50,12 +52,14 @@ type KeyValue struct {
 	logger       logging.Logger
 }
 
+// KVTable
 type KVTable struct {
 	index     *Index
 	indexType IndexType
 	columns   []string
 }
 
+// TableKeyCount
 type TableKeyCount struct {
 	Count     uint64 `json:"count"`
 	TableName string `json:"tableName"`
@@ -100,7 +104,7 @@ func (kv *KeyValue) CreateKVTable(name, encryptionPassword string, indexType Ind
 	return kv.storeKVTables(kvtables, encryptionPassword)
 }
 
-// DeleteKVTable deletes a given key value table with all it index and data entries.
+// DeleteKVTable deletes a given key value table with all it's index and data entries.
 func (kv *KeyValue) DeleteKVTable(name, encryptionPassword string) error {
 	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex

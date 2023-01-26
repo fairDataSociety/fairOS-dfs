@@ -27,11 +27,13 @@ import (
 )
 
 const (
-	nameLength  = 100
+	nameLength = 100
+	//S_IFDIR
 	S_IFDIR     = 0040000
 	defaultMode = 0700
 )
 
+// MkDir
 func (d *Directory) MkDir(dirToCreateWithPath, podPassword string) error {
 	parentPath := filepath.ToSlash(filepath.Dir(dirToCreateWithPath))
 	dirName := filepath.Base(dirToCreateWithPath)
@@ -123,6 +125,7 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string) error {
 	return nil
 }
 
+// MkRootDir
 func (d *Directory) MkRootDir(podName, podPassword string, podAddress utils.Address, fd *feed.API) error {
 	// create the root parent dir
 	now := time.Now().Unix()
@@ -160,6 +163,7 @@ func (d *Directory) MkRootDir(podName, podPassword string, podAddress utils.Addr
 	return nil
 }
 
+// AddRootDir
 func (d *Directory) AddRootDir(podName, podPassword string, podAddress utils.Address, fd *feed.API) error {
 	parentPath := utils.CombinePathAndFile(utils.PathSeparator, "")
 	parentHash := utils.HashString(parentPath)

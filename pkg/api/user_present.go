@@ -22,6 +22,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// PresentResponse
 type PresentResponse struct {
 	Present bool `json:"present"`
 }
@@ -54,7 +55,7 @@ func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
 //	@Description  checks if the new user is present in the new ENS based authentication
 //	@Tags         user
 //	@Produce      json
-//	@Param	      userName query string true "user name"
+//	@Param	      userName query string true "username"
 //	@Success      200  {object}  PresentResponse
 //	@Failure      400  {object}  response
 //	@Router       /v2/user/present [get]

@@ -26,6 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// KVTableRequest
 type KVTableRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`

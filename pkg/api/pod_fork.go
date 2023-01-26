@@ -10,11 +10,13 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// PodForkRequest
 type PodForkRequest struct {
 	PodName  string `json:"podName,omitempty"`
 	ForkName string `json:"forkName,omitempty"`
 }
 
+// PodForkFromReferenceRequest
 type PodForkFromReferenceRequest struct {
 	ForkName  string `json:"forkName,omitempty"`
 	Reference string `json:"podSharingReference"`
@@ -97,7 +99,7 @@ func (h *Handler) PodForkHandler(w http.ResponseWriter, r *http.Request) {
 // PodForkFromReferenceHandler godoc
 //
 //	@Summary      Fork a pod from sharing reference
-//	@Description  PodForkFromReferenceHandler is the api handler to fork a pod frmo a given sharing reference
+//	@Description  PodForkFromReferenceHandler is the api handler to fork a pod from a given sharing reference
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

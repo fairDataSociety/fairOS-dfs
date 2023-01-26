@@ -44,7 +44,7 @@ func TestIndexAPI(t *testing.T) {
 	}
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("get-doc", func(t *testing.T) {
 		// create a DB and open it
 		index := createAndOpenIndex(t, "pod1", "testdb_api_0", podPassword, collection.StringIndex, fd, user, mockClient, ai, logger)

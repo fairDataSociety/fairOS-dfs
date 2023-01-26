@@ -149,6 +149,7 @@ func newLsTask(f *File, topic []byte, path, podPassword string, l *[]Entry, mtx 
 	}
 }
 
+// Execute
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
 	_, data, err := lt.f.fd.GetFeedData(lt.topic, lt.f.userAddress, []byte(lt.podPassword))
@@ -180,6 +181,7 @@ func (lt *lsTask) Execute(context.Context) error {
 	return nil
 }
 
+// Name
 func (lt *lsTask) Name() string {
 	return lt.f.userAddress.String() + lt.f.podName + lt.path
 }

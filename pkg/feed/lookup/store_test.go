@@ -56,7 +56,7 @@ func NewStore(config *StoreConfig) *Store {
 	return store
 }
 
-// Reset reset performance counters and clears the cache
+// Reset performance counters and clears the cache
 func (s *Store) Reset() {
 	s.lock.Lock()
 	defer s.lock.Unlock()

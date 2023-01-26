@@ -58,7 +58,7 @@ func TestUpload(t *testing.T) {
 	}()
 
 	t.Run("upload-small-file", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 
 		filePath := "/dir1"
 		fileName := "file1"
@@ -110,7 +110,7 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
@@ -145,7 +145,7 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root-with-blank-filename", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
@@ -180,7 +180,7 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root-with-prefix", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
 		compression := ""
@@ -221,7 +221,7 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root-with-prefix-snappy", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		filePath := string(os.PathSeparator)
 		fileName := "file2"
 		compression := "snappy"
@@ -262,7 +262,7 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("upload-small-file-at-root-with-prefix-gzip", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		filePath := string(os.PathSeparator)
 		fileName := "file2"
 		compression := "gzip"

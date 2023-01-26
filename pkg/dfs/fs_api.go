@@ -28,10 +28,10 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// Mkdir is a controller function which validates if the user is logged in,
+// Mkdir is a controller function which validates if the user is logged-in,
 // pod is open and calls the make directory function in the dir object.
 func (a *API) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -51,10 +51,10 @@ func (a *API) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
 	return directory.MkDir(dirToCreateWithPath, podPassword)
 }
 
-// RenameDir is a controller function which validates if the user is logged in,
+// RenameDir is a controller function which validates if the user is logged-in,
 // pod is open and calls the rename directory function in the dir object.
 func (a *API) RenameDir(podName, dirToRenameWithPath, newName, sessionId string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -74,10 +74,10 @@ func (a *API) RenameDir(podName, dirToRenameWithPath, newName, sessionId string)
 	return directory.RenameDir(dirToRenameWithPath, newName, podInfo.GetPodPassword())
 }
 
-// IsDirPresent is acontroller function which validates if the user is logged in,
+// IsDirPresent is a controller function which validates if the user is logged-in,
 // pod is open and calls the dir object to check if the directory is present.
 func (a *API) IsDirPresent(podName, directoryNameWithPath, sessionId string) (bool, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return false, ErrUserNotLoggedIn
@@ -99,10 +99,10 @@ func (a *API) IsDirPresent(podName, directoryNameWithPath, sessionId string) (bo
 	return dirPresent, nil
 }
 
-// RmDir is a controller function which validates if the user is logged in,
+// RmDir is a controller function which validates if the user is logged-in,
 // pod is open and calls the dir object to remove the supplied directory.
 func (a *API) RmDir(podName, directoryNameWithPath, sessionId string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -122,10 +122,10 @@ func (a *API) RmDir(podName, directoryNameWithPath, sessionId string) error {
 	return directory.RmDir(directoryNameWithPath, podInfo.GetPodPassword())
 }
 
-// ListDir is a controller function which validates if the user is logged in,
+// ListDir is a controller function which validates if the user is logged-in,
 // pod is open and calls the dir object to list the contents of the supplied directory.
 func (a *API) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.Entry, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, nil, ErrUserNotLoggedIn
@@ -160,10 +160,10 @@ func (a *API) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.E
 	return dEntries, fEntries, nil
 }
 
-// DirectoryStat is a controller function which validates if the user is logged in,
+// DirectoryStat is a controller function which validates if the user is logged-in,
 // pod is open and calls the dir object to get the information about the given directory.
 func (a *API) DirectoryStat(podName, directoryName, sessionId string) (*dir.Stats, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -187,10 +187,10 @@ func (a *API) DirectoryStat(podName, directoryName, sessionId string) (*dir.Stat
 	return ds, nil
 }
 
-// DirectoryInode is a controller function which validates if the user is logged in,
+// DirectoryInode is a controller function which validates if the user is logged-in,
 // pod is open and calls the dir object to get the inode info about the given directory.
 func (a *API) DirectoryInode(podName, directoryName, sessionId string) (*dir.Inode, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -215,10 +215,10 @@ func (a *API) DirectoryInode(podName, directoryName, sessionId string) (*dir.Ino
 	return inode, nil
 }
 
-// ChmodDir is a controller function which validates if the user is logged in,
+// ChmodDir is a controller function which validates if the user is logged-in,
 // pod is open and calls changes mode of a directory
 func (a *API) ChmodDir(podName, directoryNameWithPath, sessionId string, mode uint32) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -229,7 +229,7 @@ func (a *API) ChmodDir(podName, directoryNameWithPath, sessionId string, mode ui
 		return ErrPodNotOpen
 	}
 
-	// check if logged in to pod
+	// check if logged-in to pod
 	if !ui.GetPod().IsPodOpened(podName) {
 		return fmt.Errorf("login to pod to do this operation")
 	}
@@ -245,8 +245,8 @@ func (a *API) ChmodDir(podName, directoryNameWithPath, sessionId string, mode ui
 	return directory.Chmod(directoryNameWithPath, podInfo.GetPodPassword(), mode)
 }
 
-// DeleteFile is a controller function which validates if the user is logged in,
-// pod is open and delete the file. It also remove the file entry from the parent
+// DeleteFile is a controller function which validates if the user is logged-in,
+// pod is open and delete the file. It also removes the file entry from the parent
 // directory.
 func (a *API) DeleteFile(podName, podFileWithPath, sessionId string) error {
 	// get the loggedin user information
@@ -286,10 +286,10 @@ func (a *API) DeleteFile(podName, podFileWithPath, sessionId string) error {
 	return directory.RemoveEntryFromDir(fileDir, podInfo.GetPodPassword(), fileName, true)
 }
 
-// FileStat is a controller function which validates if the user is logged in,
+// FileStat is a controller function which validates if the user is logged-in,
 // pod is open and gets the information about the file.
 func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -312,11 +312,11 @@ func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 	return ds, nil
 }
 
-// UploadFile is a controller function which validates if the user is logged in,
+// UploadFile is a controller function which validates if the user is logged-in,
 //
 //	pod is open and calls the upload function.
 func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32, overwrite bool) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -365,11 +365,11 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 	return directory.AddEntryToDir(podPath, podInfo.GetPodPassword(), podFileName, true)
 }
 
-// RenameFile is a controller function which validates if the user is logged in,
+// RenameFile is a controller function which validates if the user is logged-in,
 //
 //	pod is open and calls renaming of a file
 func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, sessionId string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -414,10 +414,10 @@ func (a *API) RenameFile(podName, fileNameWithPath, newFileNameWithPath, session
 	return directory.RemoveEntryFromDir(oldPrnt, podInfo.GetPodPassword(), filepath.Base(fileNameWithPath), true)
 }
 
-// DownloadFile is a controller function which validates if the user is logged in,
+// DownloadFile is a controller function which validates if the user is logged-in,
 // pod is open and calls the download function.
 func (a *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadCloser, uint64, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, 0, ErrUserNotLoggedIn
@@ -428,7 +428,7 @@ func (a *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadC
 		return nil, 0, ErrPodNotOpen
 	}
 
-	// check if logged in to pod
+	// check if logged-in to pod
 	if !ui.GetPod().IsPodOpened(podName) {
 		return nil, 0, fmt.Errorf("login to pod to do this operation")
 	}
@@ -452,7 +452,7 @@ func (a *API) DownloadFile(podName, podFileWithPath, sessionId string) (io.ReadC
 //
 //	pod is open and calls writeAt of a file
 func (a *API) WriteAtFile(podName, fileNameWithPath, sessionId string, update io.Reader, offset uint64, truncate bool) (int, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return 0, ErrUserNotLoggedIn
@@ -477,10 +477,10 @@ func (a *API) WriteAtFile(podName, fileNameWithPath, sessionId string, update io
 	return file.WriteAt(fileNameWithPath, podInfo.GetPodPassword(), update, offset, truncate)
 }
 
-// ReadSeekCloser is a controller function which validates if the user is logged in,
+// ReadSeekCloser is a controller function which validates if the user is logged-in,
 // pod is open and calls the download function.
 func (a *API) ReadSeekCloser(podName, podFileWithPath, sessionId string) (io.ReadSeekCloser, uint64, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, 0, ErrUserNotLoggedIn
@@ -491,7 +491,7 @@ func (a *API) ReadSeekCloser(podName, podFileWithPath, sessionId string) (io.Rea
 		return nil, 0, ErrPodNotOpen
 	}
 
-	// check if logged in to pod
+	// check if logged-in to pod
 	if !ui.GetPod().IsPodOpened(podName) {
 		return nil, 0, fmt.Errorf("login to pod to do this operation")
 	}
@@ -511,10 +511,10 @@ func (a *API) ReadSeekCloser(podName, podFileWithPath, sessionId string) (io.Rea
 	return reader, size, nil
 }
 
-// ShareFile is a controller function which validates if the user is logged in,
-// pod is open and calls the sharefile function.
+// ShareFile is a controller function which validates if the user is logged-in,
+// pod is open and calls the shareFile function.
 func (a *API) ShareFile(podName, podFileWithPath, destinationUser, sessionId string) (string, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return "", ErrUserNotLoggedIn
@@ -538,11 +538,11 @@ func (a *API) ShareFile(podName, podFileWithPath, destinationUser, sessionId str
 	return sharingRef, nil
 }
 
-// ReceiveFile is a controller function which validates if the user is logged in,
+// ReceiveFile is a controller function which validates if the user is logged-in,
 // pod is open and calls the ReceiveFile function to get the shared file in to the
 // given pod.
 func (a *API) ReceiveFile(podName, sessionId string, sharingRef utils.SharingReference, dir string) (string, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return "", ErrUserNotLoggedIn
@@ -556,11 +556,10 @@ func (a *API) ReceiveFile(podName, sessionId string, sharingRef utils.SharingRef
 	return a.users.ReceiveFileFromUser(podName, sharingRef, ui, ui.GetPod(), dir)
 }
 
-// ReceiveInfo is a controller function which validates if the user is logged in,
-// calls the ReceiveInfo function to display the shared files
-// information.
+// ReceiveInfo is a controller function which validates if the user is logged-in,
+// calls the ReceiveInfo function to display the shared file's information.
 func (a *API) ReceiveInfo(sessionId string, sharingRef utils.SharingReference) (*user.ReceiveFileInfo, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -569,10 +568,10 @@ func (a *API) ReceiveInfo(sessionId string, sharingRef utils.SharingReference) (
 	return a.users.ReceiveFileInfo(sharingRef)
 }
 
-// StatusFile is a controller function which validates if the user is logged in,
+// StatusFile is a controller function which validates if the user is logged-in,
 // pod is open and calls the sync status of file function.
 func (a *API) StatusFile(podName, podFileWithPath, sessionId string) (int64, int64, int64, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return 0, 0, 0, ErrUserNotLoggedIn
@@ -583,7 +582,7 @@ func (a *API) StatusFile(podName, podFileWithPath, sessionId string) (int64, int
 		return 0, 0, 0, ErrPodNotOpen
 	}
 
-	// check if logged in to pod
+	// check if logged-in to pod
 	if !ui.GetPod().IsPodOpened(podName) {
 		return 0, 0, 0, fmt.Errorf("login to pod to do this operation")
 	}
@@ -599,10 +598,10 @@ func (a *API) StatusFile(podName, podFileWithPath, sessionId string) (int64, int
 	return file.Status(podFileWithPath, podInfo.GetPodPassword())
 }
 
-// ChmodFile is a controller function which validates if the user is logged in,
+// ChmodFile is a controller function which validates if the user is logged-in,
 // pod is open and calls changes mode of a file
 func (a *API) ChmodFile(podName, podFileWithPath, sessionId string, mode uint32) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -613,7 +612,7 @@ func (a *API) ChmodFile(podName, podFileWithPath, sessionId string, mode uint32)
 		return ErrPodNotOpen
 	}
 
-	// check if logged in to pod
+	// check if logged-in to pod
 	if !ui.GetPod().IsPodOpened(podName) {
 		return fmt.Errorf("login to pod to do this operation")
 	}

@@ -555,11 +555,11 @@ func TestApis(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			url := common.FileRename
+			u := common.FileRename
 			if v.isDir {
-				url = common.DirRename
+				u = common.DirRename
 			}
-			renameHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(url)), bytes.NewBuffer(renameBytes))
+			renameHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(u)), bytes.NewBuffer(renameBytes))
 			if err != nil {
 				t.Fatal(err)
 
@@ -576,7 +576,7 @@ func TestApis(t *testing.T) {
 				t.Fatal(err)
 			}
 			if renameResp.StatusCode != 200 {
-				t.Fatal("rename failed", url)
+				t.Fatal("rename failed", u)
 			}
 		}
 

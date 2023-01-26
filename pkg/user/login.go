@@ -119,7 +119,7 @@ func (u *Users) Logout(sessionId string) error {
 	return nil
 }
 
-// IsUserLoggedIn checks if the user is logged in from sessionID
+// IsUserLoggedIn checks if the user is logged-in from sessionID
 func (u *Users) IsUserLoggedIn(sessionId string) bool {
 	return u.isUserPresentInMap(sessionId)
 }
@@ -129,7 +129,7 @@ func (u *Users) GetLoggedInUserInfo(sessionId string) *Info {
 	return u.getUserFromMap(sessionId)
 }
 
-// IsUserNameLoggedIn checks if the user is logged in from username
+// IsUserNameLoggedIn checks if the user is logged-in from username
 func (u *Users) IsUserNameLoggedIn(userName string) bool {
 	return u.isUserNameInMap(userName)
 }

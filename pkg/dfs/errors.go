@@ -20,13 +20,15 @@ import "errors"
 
 var (
 	// ErrUserNotLoggedIn indicate the user is not logged-in
-	ErrUserNotLoggedIn = errors.New("user not logged in")
+	ErrUserNotLoggedIn = errors.New("user not logged-in")
 	// ErrPodNotOpen indicates pod is not open
 	ErrPodNotOpen = errors.New("pod not open")
 	// ErrFileNotPresent indicates file is not present
-	ErrFileNotPresent     = errors.New("file not present")
+	ErrFileNotPresent = errors.New("file not present")
+	//ErrFileAlreadyPresent
 	ErrFileAlreadyPresent = errors.New("file already exist with new name")
 
+	//ErrBeeClient
 	ErrBeeClient   = errors.New("could not connect to bee client")
 	errEthClient   = errors.New("could not connect to eth backend")
 	errReadOnlyPod = errors.New("operation not permitted: read only pod")

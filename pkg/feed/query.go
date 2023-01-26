@@ -28,7 +28,7 @@ type Query struct {
 	TimeLimit uint64
 }
 
-// NewQuery constructs an Query structure to find updates on or before `time`
+// NewQuery constructs a Query structure to find updates on or before `time`
 // if time == 0, the latest update will be looked up
 func NewQuery(feed *Feed, time uint64, hint lookup.Epoch) *Query {
 	return &Query{

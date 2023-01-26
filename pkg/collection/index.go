@@ -32,14 +32,21 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// IndexType
 type IndexType int
 
 const (
+	//InvalidIndex
 	InvalidIndex IndexType = iota
+	//BytesIndex
 	BytesIndex
+	//StringIndex
 	StringIndex
+	//NumberIndex
 	NumberIndex
+	//MapIndex
 	MapIndex
+	//ListIndex
 	ListIndex
 )
 
@@ -77,6 +84,7 @@ func toIndexTypeEnum(s string) IndexType {
 	}
 }
 
+// Index
 type Index struct {
 	name               string
 	mutable            bool
@@ -93,6 +101,7 @@ type Index struct {
 }
 
 var (
+	//NoOfParallelWorkers
 	NoOfParallelWorkers = runtime.NumCPU() * 4
 )
 
@@ -105,7 +114,7 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	topic := utils.HashString(actualIndexName)
 	_, oldData, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
 	if err == nil && len(oldData) != 0 && string(oldData) != utils.DeletedFeedMagicWord {
-		// if the feed is present and it has some data means there index is still valid
+		// if the feed is present, and it has some data means there index is still valid
 		return ErrIndexAlreadyPresent
 	}
 
@@ -207,7 +216,7 @@ func (idx *Index) CountIndex(encryptionPassword string) (uint64, error) {
 			idx.count = 0
 			return 0, err
 		}
-	default: // Default is must to avoid blocking
+	default: // Default is must avoid blocking
 	}
 	return idx.count, nil
 }
@@ -295,7 +304,7 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 	idx.logger.Debug(logStr)
 
 	ref, err := idx.client.UploadBlob(data, 0, true, true)
-	//TODO: once the tags issue is fixed i bytes..
+	//TODO: once the tags issue is fixed i bytes.
 	// remove the error string check
 	if err != nil { // skipcq: TCV-001
 		idx.logger.Errorf("uploadBlob failed in storeManifest : %s", err.Error())
