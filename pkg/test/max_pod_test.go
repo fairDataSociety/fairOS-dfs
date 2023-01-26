@@ -42,7 +42,7 @@ func TestMaxPods(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+			podPassword, _ := utils.GetRandString(pod.PasswordLength)
 			_, err = pod1.CreatePod(name, "", podPassword)
 			if err != nil {
 				t.Fatalf("error creating pod %s with index %d: %s", name, i, err)
@@ -52,7 +52,7 @@ func TestMaxPods(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		_, err = pod1.CreatePod(name, "", podPassword)
 		if !errors.Is(err, pod.ErrMaximumPodLimit) {
 			t.Fatalf("maximum pod limit should have been reached")

@@ -20,13 +20,16 @@ import (
 	"context"
 	"errors"
 	"io"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
 )
 
@@ -86,6 +89,160 @@ func TestLogin(t *testing.T) {
 
 		if ui.GetUserDirectory() == nil {
 			t.Fatal("user directory handler should not be nil")
+		}
+	})
+
+	t.Run("new-user-multi-cred", func(t *testing.T) {
+		ens := mock2.NewMockNamespaceManager()
+		user1 := "multicredtester"
+		pass := "password1password1"
+		//create user
+		userObject := user.NewUsers(mockClient, ens, logger)
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, pass, "", "", tm)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass, "", "", tm)
+		if !errors.Is(err, user.ErrUserAlreadyPresent) {
+			t.Fatal(err)
+		}
+
+		// validate user
+		if !userObject.IsUsernameAvailableV2(ui.GetUserName()) {
+			t.Fatalf("user not created")
+		}
+		if !userObject.IsUserNameLoggedIn(ui.GetUserName()) {
+			t.Fatalf("user not loggin in")
+		}
+		if ui == nil {
+			t.Fatalf("invalid user info")
+		}
+		if ui.GetUserName() != user1 {
+			t.Fatalf("invalid user name")
+		}
+		if ui.GetFeed() == nil || ui.GetAccount() == nil {
+			t.Fatalf("invalid feed or account")
+		}
+		err = ui.GetAccount().GetWallet().IsValidMnemonic(mnemonic)
+		if err != nil {
+			t.Fatalf("invalid mnemonic")
+		}
+
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass+pass, mnemonic, "", tm)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		login1, _, _, err := userObject.LoginUserV2(user1, pass, mockClient, tm, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		login2, _, _, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if login1.GetAccount().GetUserAccountInfo().GetAddress().Hex() !=
+			login2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+			t.Fatal("got different accounts with same login")
+		}
+	})
+
+	t.Run("new-user-multi-cred-with-pods", func(t *testing.T) {
+		ens := mock2.NewMockNamespaceManager()
+		user1 := "multicredtester"
+		//create user
+		userObject := user.NewUsers(mockClient, ens, logger)
+		pass := "password1password1"
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, pass, "", "", tm)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass, "", "", tm)
+		if !errors.Is(err, user.ErrUserAlreadyPresent) {
+			t.Fatal(err)
+		}
+
+		// validate user
+		if !userObject.IsUsernameAvailableV2(ui.GetUserName()) {
+			t.Fatalf("user not created")
+		}
+		if !userObject.IsUserNameLoggedIn(ui.GetUserName()) {
+			t.Fatalf("user not loggin in")
+		}
+		if ui == nil {
+			t.Fatalf("invalid user info")
+		}
+		if ui.GetUserName() != user1 {
+			t.Fatalf("invalid user name")
+		}
+		if ui.GetFeed() == nil || ui.GetAccount() == nil {
+			t.Fatalf("invalid feed or account")
+		}
+		err = ui.GetAccount().GetWallet().IsValidMnemonic(mnemonic)
+		if err != nil {
+			t.Fatalf("invalid mnemonic")
+		}
+		pod1 := ui.GetPod()
+		podName1 := "test1"
+		podName2 := "test2"
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
+		_, err = pod1.CreatePod(podName1, "", podPassword)
+		if err != nil {
+			t.Fatalf("error creating pod %s : %s", podName1, err.Error())
+		}
+		_, err = pod1.CreatePod(podName2, "", podPassword)
+		if err != nil {
+			t.Fatalf("error creating pod %s : %s", podName1, err.Error())
+		}
+
+		_, _, _, _, ui2, err := userObject.CreateNewUserV2(user1, pass+pass, mnemonic, "", tm)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		login1, _, _, err := userObject.LoginUserV2(user1, pass, mockClient, tm, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		login2, _, _, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if login1.GetAccount().GetUserAccountInfo().GetAddress().Hex() !=
+			login2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+			t.Fatal("got different accounts with same login")
+		}
+
+		login1Pods, _, err := login1.GetPod().ListPods()
+		if err != nil {
+			t.Fatal(err)
+		}
+		login2Pods, _, err := login2.GetPod().ListPods()
+		if err != nil {
+			t.Fatal(err)
+		}
+		ui2Pods, _, err := ui2.GetPod().ListPods()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		sort.Strings(login1Pods)
+		sort.Strings(login2Pods)
+		sort.Strings(ui2Pods)
+
+		for i, v := range login1Pods {
+			if login2Pods[i] != v {
+				t.Fatal("login two pod are different", login2Pods[i], v)
+			}
+			if ui2Pods[i] != v {
+				t.Fatal("login two pod are different", ui2Pods[i], v)
+			}
 		}
 	})
 }

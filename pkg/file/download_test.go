@@ -54,7 +54,7 @@ func TestDownload(t *testing.T) {
 	}()
 
 	t.Run("download-small-file", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 
 		filePath := "/dir1"
 		fileName := "file1"
@@ -99,7 +99,7 @@ func TestDownload(t *testing.T) {
 	})
 
 	t.Run("download-small-file-gzip", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		filePath := "/dir1"
 		fileName := "file1"
 		compression := "gzip"
@@ -134,7 +134,7 @@ func TestDownload(t *testing.T) {
 	})
 
 	t.Run("read-seeker-small", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 
 		filePath := "/dir1"
 		fileName := "file1"

@@ -16,17 +16,20 @@ limitations under the License.
 
 package common
 
+// UserSignupRequest
 type UserSignupRequest struct {
 	UserName string `json:"userName,omitempty"`
 	Password string `json:"password,omitempty"`
 	Mnemonic string `json:"mnemonic,omitempty"`
 }
 
+// UserLoginRequest
 type UserLoginRequest struct {
 	UserName string `json:"userName,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
+// PodRequest
 type PodRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	Password      string `json:"password,omitempty"`
@@ -34,17 +37,20 @@ type PodRequest struct {
 	SharedPodName string `json:"sharedPodName,omitempty"`
 }
 
+// PodShareRequest
 type PodShareRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	SharedPodName string `json:"sharedPodName,omitempty"`
 }
 
+// PodReceiveRequest
 type PodReceiveRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	Reference     string `json:"sharingRef,omitempty"`
 	SharedPodName string `json:"sharedPodName,omitempty"`
 }
 
+// FileSystemRequest
 type FileSystemRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	DirectoryPath string `json:"dirPath,omitempty"`
@@ -54,18 +60,21 @@ type FileSystemRequest struct {
 	Destination   string `json:"destUser,omitempty"`
 }
 
+// RenameRequest
 type RenameRequest struct {
 	PodName string `json:"podName,omitempty"`
 	OldPath string `json:"oldPath,omitempty"`
 	NewPath string `json:"newPath,omitempty"`
 }
 
+// FileReceiveRequest
 type FileReceiveRequest struct {
 	PodName          string `json:"podName,omitempty"`
 	SharingReference string `json:"sharingRef,omitempty"`
 	DirectoryPath    string `json:"dirPath,omitempty"`
 }
 
+// KVRequest
 type KVRequest struct {
 	PodName     string `json:"podName,omitempty"`
 	TableName   string `json:"tableName,omitempty"`
@@ -78,6 +87,7 @@ type KVRequest struct {
 	Memory      string `json:"memory,omitempty"`
 }
 
+// DocRequest
 type DocRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	TableName     string `json:"tableName,omitempty"`

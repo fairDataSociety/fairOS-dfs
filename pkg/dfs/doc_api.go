@@ -20,7 +20,7 @@ import "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
 // DocCreate is a controller function which does all the checks before creating a documentDB.
 func (a *API) DocCreate(sessionId, podName, name string, indexes map[string]collection.IndexType, mutable bool) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -41,7 +41,7 @@ func (a *API) DocCreate(sessionId, podName, name string, indexes map[string]coll
 
 // DocOpen is a controller function which does all the checks before opening a documentDB.
 func (a *API) DocOpen(sessionId, podName, name string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -62,7 +62,7 @@ func (a *API) DocOpen(sessionId, podName, name string) error {
 
 // DocDelete is a controller function which does all the checks before deleting a documentDB.
 func (a *API) DocDelete(sessionId, podName, name string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -84,7 +84,7 @@ func (a *API) DocDelete(sessionId, podName, name string) error {
 // DocList is a controller function which does all the checks before listing all the
 // documentDB available in the pod.
 func (a *API) DocList(sessionId, podName string) (map[string]collection.DBSchema, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -107,7 +107,7 @@ func (a *API) DocList(sessionId, podName string) (map[string]collection.DBSchema
 // all the documents ina documentDB.
 func (a *API) DocCount(sessionId, podName, name, expr string) (*collection.TableKeyCount, error) {
 	keyCount := &collection.TableKeyCount{TableName: name}
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return keyCount, ErrUserNotLoggedIn
@@ -134,7 +134,7 @@ func (a *API) DocCount(sessionId, podName, name, expr string) (*collection.Table
 // DocPut is a controller function which does all the checks before inserting
 // a document in the documentDB.
 func (a *API) DocPut(sessionId, podName, name string, value []byte) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -156,7 +156,7 @@ func (a *API) DocPut(sessionId, podName, name string, value []byte) error {
 // DocGet is a controller function which does all the checks before retrieving
 // // a document in the documentDB.
 func (a *API) DocGet(sessionId, podName, name, id string) ([]byte, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -178,7 +178,7 @@ func (a *API) DocGet(sessionId, podName, name, id string) ([]byte, error) {
 // DocDel is a controller function which does all the checks before deleting
 // a documentDB.
 func (a *API) DocDel(sessionId, podName, name, id string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -200,7 +200,7 @@ func (a *API) DocDel(sessionId, podName, name, id string) error {
 // DocFind is a controller function which does all the checks before finding
 // records from a documentDB.
 func (a *API) DocFind(sessionId, podName, name, expr string, limit int) ([][]byte, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -221,7 +221,7 @@ func (a *API) DocFind(sessionId, podName, name, expr string, limit int) ([][]byt
 
 // DocBatch initiates a batch inserting session.
 func (a *API) DocBatch(sessionId, podName, name string) (*collection.DocBatch, error) {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
@@ -242,7 +242,7 @@ func (a *API) DocBatch(sessionId, podName, name string) (*collection.DocBatch, e
 
 // DocBatchPut inserts records in to a document batch.
 func (a *API) DocBatchPut(sessionId, podName string, doc []byte, docBatch *collection.DocBatch) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -263,7 +263,7 @@ func (a *API) DocBatchPut(sessionId, podName string, doc []byte, docBatch *colle
 
 // DocBatchWrite commits the batch document insert.
 func (a *API) DocBatchWrite(sessionId, podName string, docBatch *collection.DocBatch) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
@@ -284,7 +284,7 @@ func (a *API) DocBatchWrite(sessionId, podName string, docBatch *collection.DocB
 
 // DocIndexJson indexes a json files in to the document DB.
 func (a *API) DocIndexJson(sessionId, podName, name, podFileWithPath string) error {
-	// get the logged in user information
+	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn

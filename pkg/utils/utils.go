@@ -57,11 +57,14 @@ type decError struct{ msg string }
 func (err decError) Error() string { return err.msg }
 
 var (
-	ErrEmptyString   = &decError{"empty hex string"}
+	//ErrEmptyString
+	ErrEmptyString = &decError{"empty hex string"}
+	//ErrMissingPrefix
 	ErrMissingPrefix = &decError{"hex string without 0x prefix"}
 	errSyntax        = &decError{"invalid hex string"}
-	ErrOddLength     = &decError{"hex string of odd length"}
-	errUint64Range   = &decError{"hex number > 64 bits"}
+	//ErrOddLength
+	ErrOddLength   = &decError{"hex string of odd length"}
+	errUint64Range = &decError{"hex number > 64 bits"}
 )
 
 // Encode encodes b as a hex string with 0x prefix.

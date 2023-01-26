@@ -15,7 +15,7 @@
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 /*
-Package lookup defines feed lookup algorithms and provides tools to place updates
+Package lookup defines feed lookup algorithms and provides tools to place updates,
 so they can be found
 */
 package lookup
@@ -50,7 +50,7 @@ var Lookup Algorithm = LongEarthAlgorithm
 
 // TimeAfter must point to a function that returns a timer
 // This is here so that tests can replace it with
-// a mock up timer factory to simulate time deterministically
+// a mock-up timer factory to simulate time deterministically
 var TimeAfter = time.After
 
 // ReadFunc is a handler called by Lookup each time it attempts to find a value
@@ -60,6 +60,7 @@ var TimeAfter = time.After
 // lookup process entirely.
 // If the context is canceled, it must return context.Canceled
 
+// ReadFunc
 type ReadFunc func(ctx context.Context, epoch Epoch, now uint64) (interface{}, error)
 
 // NoClue is a hint that can be provided when the Lookup caller does not have

@@ -31,7 +31,7 @@ import (
 	"github.com/plexsysio/taskmanager"
 )
 
-func TestSync(t *testing.T) {
+func TestFork(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	logger := logging.New(io.Discard, 0)
 	acc := account.New(logger)
@@ -47,12 +47,7 @@ func TestSync(t *testing.T) {
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
 	podName1 := "test1"
 
-	t.Run("sync-pod", func(t *testing.T) {
-
-		err := pod1.SyncPod(podName1)
-		if err == nil {
-			t.Fatal("sync should fail, pod not opened")
-		}
+	t.Run("fork-pod", func(t *testing.T) {
 		// create a pod
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		info, err := pod1.CreatePod(podName1, "", podPassword)
@@ -68,8 +63,38 @@ func TestSync(t *testing.T) {
 		// create some dir and files
 		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
+		// open the pod
+		_, err = pod1.OpenPod(podName1)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create fork pod
+		forkName := "pod1fork"
+		_, err = pod1.CreatePod(forkName, "", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// open fork pod
+		pi, err := pod1.OpenPod(forkName)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// create the root directory
+		err = pi.GetDirectory().MkRootDir(pi.GetPodName(), podPassword, pi.GetPodAddress(), pi.GetFeed())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = pod1.PodFork(podName1, forkName)
+		if err != nil {
+			t.Fatal(err)
+
+		}
 		// open the pod ths triggers sync too
-		gotInfo, err := pod1.OpenPod(podName1)
+		gotInfo, err := pod1.OpenPod(forkName)
 		if err != nil {
 			t.Fatal(err)
 		}

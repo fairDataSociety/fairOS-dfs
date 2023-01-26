@@ -53,7 +53,7 @@ func TestListFiles(t *testing.T) {
 	}()
 
 	t.Run("list-file", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// upload few files

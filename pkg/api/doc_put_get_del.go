@@ -24,12 +24,14 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocPutRequest is used to put entry in doc store
 type DocPutRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`
 	Document  string `json:"doc,omitempty"`
 }
 
+// DocDeleteRequest is used to delete entry in doc store
 type DocDeleteRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`

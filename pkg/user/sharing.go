@@ -29,6 +29,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// SharingEntry
 type SharingEntry struct {
 	Meta       *f.MetaData `json:"meta"`
 	Sender     string      `json:"sourceAddress"`
@@ -36,6 +37,7 @@ type SharingEntry struct {
 	SharedTime string      `json:"sharedTime"`
 }
 
+// SharingMetaData
 type SharingMetaData struct {
 	Version          uint8  `json:"version"`
 	Path             string `json:"filePath"`
@@ -51,6 +53,7 @@ type SharingMetaData struct {
 	InodeAddress     []byte `json:"fileInodeReference"`
 }
 
+// ReceiveFileInfo
 type ReceiveFileInfo struct {
 	FileName       string `json:"name"`
 	Size           string `json:"size"`
@@ -103,7 +106,7 @@ func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destina
 	return sharingRef.String(), nil
 }
 
-// ReceiveFileFromUser imports a exported file in to the current user and pod by reading the sharing file entry.
+// ReceiveFileFromUser imports an exported file in to the current user and pod by reading the sharing file entry.
 func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingReference, userInfo *Info, pd *pod.Pod, podDir string) (string, error) {
 	metaRef := sharingRef.GetRef()
 	unixTime := sharingRef.GetNonce()

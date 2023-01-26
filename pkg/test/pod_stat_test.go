@@ -55,7 +55,7 @@ func TestStat(t *testing.T) {
 		if err == nil {
 			t.Fatal("stat should be nil")
 		}
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		info, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s", podName1)

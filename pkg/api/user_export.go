@@ -20,6 +20,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// UserExportResponse
 type UserExportResponse struct {
 	Name    string `json:"userName"`
 	Address string `json:"address"`

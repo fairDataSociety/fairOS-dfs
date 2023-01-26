@@ -31,6 +31,7 @@ var (
 	jsonContentType = "application/json"
 )
 
+// UserSignupResponse
 type UserSignupResponse struct {
 	Address   string `json:"address"`
 	NameHash  string `json:"nameHash,omitempty"`
@@ -46,7 +47,7 @@ type UserSignupResponse struct {
 //	@Tags         user
 //	@Accept       json
 //	@Produce      json
-//	@Param	      user_request body common.UserSignupRequest true "user name"
+//	@Param	      user_request body common.UserSignupRequest true "username"
 //	@Success      201  {object}  UserSignupResponse
 //	@Failure      400  {object}  response
 //	@Failure      402  {object}  UserSignupResponse

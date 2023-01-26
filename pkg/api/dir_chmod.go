@@ -10,6 +10,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DirModeRequest is used for changing dir mode
 type DirModeRequest struct {
 	PodName string `json:"podName,omitempty"`
 	DirPath string `json:"dirPath,omitempty"`

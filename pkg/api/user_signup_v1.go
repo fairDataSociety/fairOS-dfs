@@ -49,8 +49,8 @@ func (h *Handler) UserSignupHandler(w http.ResponseWriter, r *http.Request) {
 	user := userReq.UserName
 	password := userReq.Password
 	if user == "" {
-		h.logger.Errorf("user signup: \"user\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "user signup: \"user\" argument missing"})
+		h.logger.Errorf("user signup: \"userName\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user signup: \"userName\" argument missing"})
 		return
 	}
 	if password == "" {

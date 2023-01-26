@@ -16,6 +16,7 @@ limitations under the License.
 
 package collection
 
+// Manifest
 type Manifest struct {
 	Name         string    `json:"name"`
 	Mutable      bool      `json:"mutable"`
@@ -26,6 +27,7 @@ type Manifest struct {
 	dirtyFlag    bool
 }
 
+// Entry
 type Entry struct {
 	Name     string    `json:"name"`
 	EType    string    `json:"type"`
@@ -33,6 +35,7 @@ type Entry struct {
 	Manifest *Manifest `json:"Manifest,omitempty"`
 }
 
+// NewManifest
 func NewManifest(name string, time int64, idxType IndexType, mutable bool) *Manifest {
 	var entries []*Entry
 	return &Manifest{

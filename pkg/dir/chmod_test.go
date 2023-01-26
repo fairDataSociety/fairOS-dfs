@@ -39,7 +39,7 @@ func TestChmod(t *testing.T) {
 	}()
 
 	t.Run("chmod-dir", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
@@ -61,7 +61,7 @@ func TestChmod(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// just add dummy file enty as file listing is not tested here
+		// just add dummy file entry as file listing is not tested here
 		err = dirObject.AddEntryToDir("/dirToChmod", podPassword, "file1", true)
 		if err != nil {
 			t.Fatal(err)
@@ -77,7 +77,7 @@ func TestChmod(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if fmt.Sprintf("%o", dir.S_IFDIR|0777) != fmt.Sprintf("%o", dirStats.Mode) {
+		if fmt.Sprintf("%o", dir.S_IFDIR|0700) != fmt.Sprintf("%o", dirStats.Mode) {
 			t.Fatal("default mode mismatch")
 		}
 

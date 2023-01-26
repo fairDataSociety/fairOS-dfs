@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Logger
 type Logger interface {
 	Tracef(format string, args ...interface{})
 	Trace(args ...interface{})
@@ -31,6 +32,7 @@ type logger struct {
 	*logrus.Logger
 }
 
+// New
 func New(w io.Writer, level logrus.Level) Logger {
 	l := logrus.New()
 	l.SetOutput(w)
@@ -43,6 +45,7 @@ func New(w io.Writer, level logrus.Level) Logger {
 	}
 }
 
+// NewEntry
 func (l *logger) NewEntry() *logrus.Entry {
 	return logrus.NewEntry(l.Logger)
 }
