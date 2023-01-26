@@ -77,7 +77,7 @@ func TestChmod(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if fmt.Sprintf("%o", dir.S_IFDIR|0777) != fmt.Sprintf("%o", dirStats.Mode) {
+		if fmt.Sprintf("%o", dir.S_IFDIR|0700) != fmt.Sprintf("%o", dirStats.Mode) {
 			t.Fatal("default mode mismatch")
 		}
 

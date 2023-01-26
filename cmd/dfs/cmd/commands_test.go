@@ -9,13 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
-
-func TestMain(m *testing.M) {
-	//goleak.VerifyTestMain(m)
-}
 
 func Test_ExecuteCommand(t *testing.T) {
 

@@ -27,7 +27,9 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
 )
 
@@ -93,14 +95,15 @@ func TestLogin(t *testing.T) {
 	t.Run("new-user-multi-cred", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		user1 := "multicredtester"
+		pass := "password1password1"
 		//create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, "password1", "", "", tm)
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, pass, "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, "password1", "", "", tm)
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass, "", "", tm)
 		if !errors.Is(err, user.ErrUserAlreadyPresent) {
 			t.Fatal(err)
 		}
@@ -126,17 +129,17 @@ func TestLogin(t *testing.T) {
 			t.Fatalf("invalid mnemonic")
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, "password2", mnemonic, "", tm)
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass+pass, mnemonic, "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		login1, _, _, err := userObject.LoginUserV2(user1, "password1", mockClient, tm, "")
+		login1, _, _, err := userObject.LoginUserV2(user1, pass, mockClient, tm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		login2, _, _, err := userObject.LoginUserV2(user1, "password2", mockClient, tm, "")
+		login2, _, _, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -152,12 +155,13 @@ func TestLogin(t *testing.T) {
 		user1 := "multicredtester"
 		//create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, "password1", "", "", tm)
+		pass := "password1password1"
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, pass, "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, "password1", "", "", tm)
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass, "", "", tm)
 		if !errors.Is(err, user.ErrUserAlreadyPresent) {
 			t.Fatal(err)
 		}
@@ -185,27 +189,27 @@ func TestLogin(t *testing.T) {
 		pod1 := ui.GetPod()
 		podName1 := "test1"
 		podName2 := "test2"
-
-		_, err = pod1.CreatePod(podName1, "password1", "")
+		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		_, err = pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s : %s", podName1, err.Error())
 		}
-		_, err = pod1.CreatePod(podName2, "password1", "")
+		_, err = pod1.CreatePod(podName2, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod %s : %s", podName1, err.Error())
 		}
 
-		_, _, _, _, ui2, err := userObject.CreateNewUserV2(user1, "password2", mnemonic, "", tm)
+		_, _, _, _, ui2, err := userObject.CreateNewUserV2(user1, pass+pass, mnemonic, "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		login1, _, _, err := userObject.LoginUserV2(user1, "password1", mockClient, tm, "")
+		login1, _, _, err := userObject.LoginUserV2(user1, pass, mockClient, tm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		login2, _, _, err := userObject.LoginUserV2(user1, "password2", mockClient, tm, "")
+		login2, _, _, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, "")
 		if err != nil {
 			t.Fatal(err)
 		}

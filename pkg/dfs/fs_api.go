@@ -249,7 +249,7 @@ func (a *API) ChmodDir(podName, directoryNameWithPath, sessionId string, mode ui
 // pod is open and delete the file. It also remove the file entry from the parent
 // directory.
 func (a *API) DeleteFile(podName, podFileWithPath, sessionId string) error {
-	// get the logged in user information
+	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn

@@ -38,6 +38,7 @@ type File struct {
 	client      blockstore.Client
 	fd          *feed.API
 	fileMap     map[string]*MetaData
+	tagMap      sync.Map
 	fileMu      *sync.RWMutex
 	logger      logging.Logger
 	syncManager taskmanager.TaskManagerGO
@@ -103,6 +104,29 @@ func (f *File) RemoveAllFromFileMap() {
 	f.fileMap = make(map[string]*MetaData)
 }
 
+// AddToTagMap adds a mapping filename and tag into tagMap
+func (f *File) AddToTagMap(filePath string, tag uint32) {
+	f.tagMap.Store(filePath, tag)
+}
+
+// LoadFromTagMap gets a tag from tagMap
+func (f *File) LoadFromTagMap(filePath string) uint32 {
+	tag, ok := f.tagMap.Load(filePath)
+	if ok {
+		formattedTag, ok := tag.(uint32)
+		if !ok {
+			return 0
+		}
+		return formattedTag
+	}
+	return 0
+}
+
+// DeleteFromTagMap deletes a tag from tagMap
+func (f *File) DeleteFromTagMap(filePath string) {
+	f.tagMap.Delete(filePath)
+}
+
 type lsTask struct {
 	f           *File
 	topic       []byte
@@ -141,7 +165,6 @@ func (lt *lsTask) Execute(context.Context) error {
 	}
 	entry := Entry{
 		Name:             meta.Name,
-		Tag:              meta.Tag,
 		ContentType:      meta.ContentType,
 		Size:             strconv.FormatUint(meta.Size, 10),
 		BlockSize:        strconv.FormatInt(int64(meta.BlockSize), 10),

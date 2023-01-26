@@ -50,7 +50,7 @@ func TestChmod(t *testing.T) {
 		stats, err := fileObject.GetStats("pod1", "/dir1/file1", podPassword)
 		require.NoError(t, err)
 
-		assert.Equal(t, fmt.Sprintf("%o", file.S_IFREG|0666), fmt.Sprintf("%o", stats.Mode))
+		assert.Equal(t, fmt.Sprintf("%o", file.S_IFREG|0600), fmt.Sprintf("%o", stats.Mode))
 
 		err = fileObject.Chmod("/dir1/file2", podPassword, 0777)
 		assert.Equal(t, err, file.ErrFileNotPresent)

@@ -97,12 +97,13 @@ func TestNew(t *testing.T) {
 		user1 := "multicredtester"
 		//create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, "password1", "", "", tm)
+		pass := "password1password1"
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, pass, "", "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, "password1", "", "", tm)
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass, "", "", tm)
 		if !errors.Is(err, user.ErrUserAlreadyPresent) {
 			t.Fatal(err)
 		}
@@ -128,7 +129,7 @@ func TestNew(t *testing.T) {
 			t.Fatalf("invalid mnemonic")
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, "password2", mnemonic, "", tm)
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass+pass, mnemonic, "", tm)
 		if err != nil {
 			t.Fatal(err)
 		}

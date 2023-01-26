@@ -36,6 +36,7 @@ import (
 const (
 	minBlockSizeForGzip = 164000
 	S_IFREG             = 0100000
+	defaultMode         = 0600
 )
 
 var (
@@ -62,6 +63,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
+
 	meta := MetaData{
 		Version:          MetaVersion,
 		Path:             podPath,
@@ -72,8 +74,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		CreationTime:     now,
 		AccessTime:       now,
 		ModificationTime: now,
-		Tag:              tag,
-		Mode:             S_IFREG | 0666,
+		Mode:             S_IFREG | defaultMode,
 	}
 
 	var totalLength uint64
@@ -199,7 +200,12 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	f.AddToFileMap(utils.CombinePathAndFile(meta.Path, meta.Name), &meta)
+
+	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
+	f.AddToFileMap(totalPath, &meta)
+	if tag > 0 {
+		f.AddToTagMap(totalPath, tag)
+	}
 	return nil
 }
 

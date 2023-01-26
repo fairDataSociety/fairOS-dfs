@@ -106,7 +106,7 @@ func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, erro
 		return nil, err
 	}
 	if resp != http.StatusOK { // skipcq: TCV-001
-		return nil, fmt.Errorf("ReceivePod: could not download blob")
+		return nil, fmt.Errorf("receivePod: could not download blob")
 	}
 	var shareInfo ShareInfo
 	err = json.Unmarshal(data, &shareInfo)

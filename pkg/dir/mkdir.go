@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	nameLength = 100
-	S_IFDIR    = 0040000
+	nameLength  = 100
+	S_IFDIR     = 0040000
+	defaultMode = 0700
 )
 
 func (d *Directory) MkDir(dirToCreateWithPath, podPassword string) error {
@@ -66,7 +67,7 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string) error {
 		CreationTime:     now,
 		ModificationTime: now,
 		AccessTime:       now,
-		Mode:             S_IFDIR | 0777,
+		Mode:             S_IFDIR | defaultMode,
 	}
 	dirInode := &Inode{
 		Meta: &meta,
