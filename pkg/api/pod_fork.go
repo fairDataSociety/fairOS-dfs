@@ -10,11 +10,13 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// PodForkRequest
 type PodForkRequest struct {
 	PodName  string `json:"podName,omitempty"`
 	ForkName string `json:"forkName,omitempty"`
 }
 
+// PodForkFromReferenceRequest
 type PodForkFromReferenceRequest struct {
 	ForkName  string `json:"forkName,omitempty"`
 	Reference string `json:"podSharingReference"`

@@ -35,13 +35,15 @@ import (
 
 const (
 	minBlockSizeForGzip = 164000
-	S_IFREG             = 0100000
-	defaultMode         = 0600
+	//S_IFREG
+	S_IFREG     = 0100000
+	defaultMode = 0600
 )
 
 var (
 	noOfParallelWorkers = runtime.NumCPU()
 
+	//ErrGzipBlSize
 	ErrGzipBlSize = fmt.Errorf("gzip: block size cannot be less than %d", minBlockSizeForGzip)
 )
 

@@ -9,6 +9,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// StatusResponse
 type StatusResponse struct {
 	Total     int64 `json:"total"`
 	Processed int64 `json:"processed"`

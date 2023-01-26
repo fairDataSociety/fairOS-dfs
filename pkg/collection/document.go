@@ -47,6 +47,7 @@ const (
 	DefaultIndexFieldName = "id"
 )
 
+// Document
 type Document struct {
 	podName     string
 	fd          *feed.API
@@ -60,6 +61,7 @@ type Document struct {
 	entryGetter taskmanager.TaskManagerGO
 }
 
+// DocumentDB
 type DocumentDB struct {
 	name          string
 	mutable       bool
@@ -68,6 +70,7 @@ type DocumentDB struct {
 	listIndexes   map[string]*Index
 }
 
+// DBSchema
 type DBSchema struct {
 	Name            string   `json:"name"`
 	Mutable         bool     `json:"mutable"`
@@ -77,15 +80,18 @@ type DBSchema struct {
 	CompoundIndexes []CIndex `json:"compound_indexes,omitempty"`
 }
 
+// SIndex
 type SIndex struct {
 	FieldName string    `json:"name"`
 	FieldType IndexType `json:"type"`
 }
 
+// CIndex
 type CIndex struct {
 	SimpleIndexes []SIndex
 }
 
+// DocBatch
 type DocBatch struct {
 	db      *DocumentDB
 	batches map[string]*Batch
@@ -1592,6 +1598,7 @@ func newEntryTask(c blockstore.Client, allData *[][]byte, ref []byte, mtx sync.L
 	}
 }
 
+// Execute
 func (et *entryTask) Execute(context.Context) error {
 	data, _, err := et.c.DownloadBlob(et.ref)
 	if err != nil {
@@ -1603,6 +1610,7 @@ func (et *entryTask) Execute(context.Context) error {
 	return nil
 }
 
+// Name
 func (et *entryTask) Name() string {
 	return string(et.ref)
 }

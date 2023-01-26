@@ -24,6 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
+// Users
 type Users struct {
 	client  blockstore.Client
 	userMap map[string]*Info

@@ -32,6 +32,7 @@ var (
 	writeDeadline = 4 * time.Second
 )
 
+// WebsocketHandler
 func (h *Handler) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{} // use default options
 	upgrader.CheckOrigin = func(r *http.Request) bool {

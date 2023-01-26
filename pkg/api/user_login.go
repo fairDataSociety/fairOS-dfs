@@ -28,6 +28,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// UserLoginResponse
 type UserLoginResponse struct {
 	Address   string `json:"address"`
 	NameHash  string `json:"nameHash,omitempty"`

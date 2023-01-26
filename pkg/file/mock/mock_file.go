@@ -22,29 +22,36 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 )
 
+// File
 type File struct {
 }
 
+// NewMockFile
 func NewMockFile() *File {
 	return &File{}
 }
 
+// Upload
 func (*File) Upload(_ io.Reader, _ string, _ int64, _ uint32, _, _, _ string) error {
 	return nil
 }
 
+// Download
 func (*File) Download(_, _ string) (io.ReadCloser, uint64, error) {
 	return nil, 0, nil
 }
 
+// ListFiles
 func (*File) ListFiles(_ []string, _ string) ([]file.Entry, error) {
 	return nil, nil
 }
 
+// GetStats
 func (*File) GetStats(_, _, _ string) (*file.Stats, error) {
 	return nil, nil
 }
 
+// RmFile
 func (*File) RmFile(_, _ string) error {
 	return nil
 }
@@ -53,10 +60,12 @@ func (*File) Read(_ []byte) (n int, err error) {
 	return 0, nil
 }
 
+// AddFileToPath
 func (*File) AddFileToPath(_, _ string) error {
 	return nil
 }
 
+// LoadFileMeta
 func (*File) LoadFileMeta(_, _ string) error {
 	return nil
 }

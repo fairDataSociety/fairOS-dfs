@@ -116,6 +116,7 @@ func logoutUser() {
 	fmt.Println(message)
 }
 
+// StatUser
 func StatUser() {
 	data, err := fdfsAPI.getReq(apiUserStat, "")
 	if err != nil {

@@ -30,12 +30,18 @@ import (
 )
 
 const (
-	DefaultPrompt   = "dfs"
-	UserSeperator   = ">>>"
-	PodSeperator    = ">>"
+	//DefaultPrompt
+	DefaultPrompt = "dfs"
+	//UserSeperator
+	UserSeperator = ">>>"
+	//PodSeperator
+	PodSeperator = ">>"
+	//PromptSeperator
 	PromptSeperator = "> "
-	APIVersion      = "/v1"
-	APIVersionV2    = "/v2"
+	//APIVersion
+	APIVersion = "/v1"
+	//APIVersionV2
+	APIVersionV2 = "/v2"
 )
 
 var (
@@ -101,6 +107,7 @@ const (
 	apiUserDeleteV2  = APIVersionV2 + "/user/delete"
 )
 
+// Message
 type Message struct {
 	Message string
 	Code    int

@@ -29,6 +29,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// SharingEntry
 type SharingEntry struct {
 	Meta       *f.MetaData `json:"meta"`
 	Sender     string      `json:"sourceAddress"`
@@ -36,6 +37,7 @@ type SharingEntry struct {
 	SharedTime string      `json:"sharedTime"`
 }
 
+// SharingMetaData
 type SharingMetaData struct {
 	Version          uint8  `json:"version"`
 	Path             string `json:"filePath"`
@@ -51,6 +53,7 @@ type SharingMetaData struct {
 	InodeAddress     []byte `json:"fileInodeReference"`
 }
 
+// ReceiveFileInfo
 type ReceiveFileInfo struct {
 	FileName       string `json:"name"`
 	Size           string `json:"size"`

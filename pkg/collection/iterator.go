@@ -23,6 +23,7 @@ import (
 	"strings"
 )
 
+// Iterator
 type Iterator struct {
 	index         *Index
 	indexType     IndexType
@@ -37,6 +38,7 @@ type Iterator struct {
 	error         error
 }
 
+// ManifestState
 type ManifestState struct {
 	currentManifest *Manifest
 	currentIndex    int
@@ -165,10 +167,12 @@ func (itr *Iterator) Next() bool {
 	return itr.nextStringKey()
 }
 
+// StringKey
 func (itr *Iterator) StringKey() string {
 	return itr.currentKey
 }
 
+// IntegerKey
 func (itr *Iterator) IntegerKey() int64 {
 	gotKey, err := strconv.ParseInt(itr.currentKey, 10, 64)
 	if err != nil {
@@ -177,10 +181,12 @@ func (itr *Iterator) IntegerKey() int64 {
 	return gotKey
 }
 
+// Value
 func (itr *Iterator) Value() []byte {
 	return itr.currentValue[0]
 }
 
+// ValueAll
 func (itr *Iterator) ValueAll() [][]byte {
 	return itr.currentValue
 }

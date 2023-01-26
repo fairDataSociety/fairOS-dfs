@@ -19,17 +19,30 @@ package pod
 import "errors"
 
 var (
-	ErrBlankPodName             = errors.New("pod name cannot be blank")
-	ErrInvalidPodName           = errors.New("pod does not exist")
-	ErrTooLongPodName           = errors.New("pod name too long")
-	ErrPodAlreadyExists         = errors.New("pod already exists")
-	ErrForkAlreadyExists        = errors.New("pod with fork name already exists")
-	ErrMaxPodsReached           = errors.New("max number of pods reached")
-	ErrPodNotOpened             = errors.New("pod not opened")
-	ErrInvalidDirectory         = errors.New("invalid directory name")
-	ErrTooLongDirectoryName     = errors.New("directory name too long")
-	ErrReadOnlyPod              = errors.New("operation not permitted: read only pod")
-	ErrInvalidFile              = errors.New("file does not exist")
-	ErrMaximumPodLimit          = errors.New("maximum number of pods has reached")
+	//ErrBlankPodName
+	ErrBlankPodName = errors.New("pod name cannot be blank")
+	//ErrInvalidPodName
+	ErrInvalidPodName = errors.New("pod does not exist")
+	//ErrTooLongPodName
+	ErrTooLongPodName = errors.New("pod name too long")
+	//ErrPodAlreadyExists
+	ErrPodAlreadyExists = errors.New("pod already exists")
+	//ErrForkAlreadyExists
+	ErrForkAlreadyExists = errors.New("pod with fork name already exists")
+	//ErrMaxPodsReached
+	ErrMaxPodsReached = errors.New("max number of pods reached")
+	//ErrPodNotOpened
+	ErrPodNotOpened = errors.New("pod not opened")
+	//ErrInvalidDirectory
+	ErrInvalidDirectory = errors.New("invalid directory name")
+	//ErrTooLongDirectoryName
+	ErrTooLongDirectoryName = errors.New("directory name too long")
+	//ErrReadOnlyPod
+	ErrReadOnlyPod = errors.New("operation not permitted: read only pod")
+	//ErrInvalidFile
+	ErrInvalidFile = errors.New("file does not exist")
+	//ErrMaximumPodLimit
+	ErrMaximumPodLimit = errors.New("maximum number of pods has reached")
+	//ErrBlankPodSharingReference
 	ErrBlankPodSharingReference = errors.New("pod sharing reference cannot be blank")
 )

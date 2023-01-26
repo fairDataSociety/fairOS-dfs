@@ -22,6 +22,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// PresentResponse
 type PresentResponse struct {
 	Present bool `json:"present"`
 }

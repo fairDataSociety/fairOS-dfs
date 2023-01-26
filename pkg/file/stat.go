@@ -23,6 +23,7 @@ import (
 	"strconv"
 )
 
+// Stats
 type Stats struct {
 	PodName          string   `json:"podName"`
 	Mode             uint32   `json:"mode"`
@@ -38,6 +39,7 @@ type Stats struct {
 	Blocks           []Blocks `json:"blocks"`
 }
 
+// Blocks
 type Blocks struct {
 	Reference      string `json:"reference"`
 	Size           string `json:"size"`

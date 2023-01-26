@@ -143,6 +143,7 @@ func (m *BeeClient) DeleteReference(address []byte) error {
 	return errors.New("chunk not found")
 }
 
+// CreateTag
 func (m *BeeClient) CreateTag(_ []byte) (uint32, error) {
 	tag := time.Now().UnixNano()
 	m.storerMu.Lock()
@@ -151,6 +152,7 @@ func (m *BeeClient) CreateTag(_ []byte) (uint32, error) {
 	return uint32(tag), nil
 }
 
+// GetTag
 func (m *BeeClient) GetTag(tag uint32) (int64, int64, int64, error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()

@@ -19,37 +19,70 @@ package collection
 import "errors"
 
 var (
-	ErrEmptyIndex                     = errors.New("empty Index")
-	ErrEntryNotFound                  = errors.New("entry not found")
-	ErrNoNextElement                  = errors.New("no next element")
-	ErrNoManifestFound                = errors.New("no Manifest found")
-	ErrManifestUnmarshall             = errors.New("could not unmarshall Manifest")
-	ErrManifestCreate                 = errors.New("could not create new Manifest")
-	ErrDeleteingIndex                 = errors.New("could not delete index")
-	ErrIndexAlreadyPresent            = errors.New("index already present")
-	ErrIndexNotPresent                = errors.New("index not present")
-	ErrIndexNotSupported              = errors.New("index not supported")
-	ErrInvalidIndexType               = errors.New("invalid index type")
-	ErrKvTableAlreadyPresent          = errors.New("kv table already present")
-	ErrKVTableNotPresent              = errors.New("kv table not present")
-	ErrKVTableNotOpened               = errors.New("kv table not opened")
-	ErrKVInvalidIndexType             = errors.New("kv invalid index type")
-	ErrKVNilIterator                  = errors.New("iterator not set, seek first")
-	ErrKVIndexTypeNotSupported        = errors.New("kv index type not supported yet")
-	ErrKVKeyNotANumber                = errors.New("kv key not a number")
-	ErrUnmarshallingDBSchema          = errors.New("could not unmarshall document db schema")
-	ErrMarshallingDBSchema            = errors.New("could not marshall document db schema")
-	ErrDocumentDBAlreadyPresent       = errors.New("document db already present")
-	ErrDocumentDBNotPresent           = errors.New("document db  not present")
-	ErrDocumentDBNotOpened            = errors.New("document db not opened")
-	ErrDocumentDBAlreadyOpened        = errors.New("document db already opened")
+	//ErrEmptyIndex
+	ErrEmptyIndex = errors.New("empty Index")
+	//ErrEntryNotFound
+	ErrEntryNotFound = errors.New("entry not found")
+	//ErrNoNextElement
+	ErrNoNextElement = errors.New("no next element")
+	//ErrNoManifestFound
+	ErrNoManifestFound = errors.New("no Manifest found")
+	//ErrManifestUnmarshall
+	ErrManifestUnmarshall = errors.New("could not unmarshall Manifest")
+	//ErrManifestCreate
+	ErrManifestCreate = errors.New("could not create new Manifest")
+	//ErrDeleteingIndex
+	ErrDeleteingIndex = errors.New("could not delete index")
+	//ErrIndexAlreadyPresent
+	ErrIndexAlreadyPresent = errors.New("index already present")
+	//ErrIndexNotPresent
+	ErrIndexNotPresent = errors.New("index not present")
+	//ErrIndexNotSupported
+	ErrIndexNotSupported = errors.New("index not supported")
+	//ErrInvalidIndexType
+	ErrInvalidIndexType = errors.New("invalid index type")
+	//ErrKvTableAlreadyPresent
+	ErrKvTableAlreadyPresent = errors.New("kv table already present")
+	//ErrKVTableNotPresent
+	ErrKVTableNotPresent = errors.New("kv table not present")
+	//ErrKVTableNotOpened
+	ErrKVTableNotOpened = errors.New("kv table not opened")
+	//ErrKVInvalidIndexType
+	ErrKVInvalidIndexType = errors.New("kv invalid index type")
+	//ErrKVNilIterator
+	ErrKVNilIterator = errors.New("iterator not set, seek first")
+	//ErrKVIndexTypeNotSupported
+	ErrKVIndexTypeNotSupported = errors.New("kv index type not supported yet")
+	//ErrKVKeyNotANumber
+	ErrKVKeyNotANumber = errors.New("kv key not a number")
+	//ErrUnmarshallingDBSchema
+	ErrUnmarshallingDBSchema = errors.New("could not unmarshall document db schema")
+	//ErrMarshallingDBSchema
+	ErrMarshallingDBSchema = errors.New("could not marshall document db schema")
+	//ErrDocumentDBAlreadyPresent
+	ErrDocumentDBAlreadyPresent = errors.New("document db already present")
+	//ErrDocumentDBNotPresent
+	ErrDocumentDBNotPresent = errors.New("document db  not present")
+	//ErrDocumentDBNotOpened
+	ErrDocumentDBNotOpened = errors.New("document db not opened")
+	//ErrDocumentDBAlreadyOpened
+	ErrDocumentDBAlreadyOpened = errors.New("document db already opened")
+	//ErrDocumentDBIndexFieldNotPresent
 	ErrDocumentDBIndexFieldNotPresent = errors.New("document db index field not present")
-	ErrModifyingImmutableDocDB        = errors.New("trying to modify immutable document db")
-	ErrInvalidOperator                = errors.New("invalid operator")
-	ErrDocumentNotPresent             = errors.New("document not present")
-	ErrInvalidDocumentId              = errors.New("invalid document id")
-	ErrReadOnlyIndex                  = errors.New("read only index")
-	ErrCannotModifyImmutableIndex     = errors.New("trying to modify immutable index")
-	ErrCouldNotUpdatePostageBatch     = errors.New("could not procure new postage batch")
-	ErrUnknownJsonFormat              = errors.New("unknown json format")
+	//ErrModifyingImmutableDocDB
+	ErrModifyingImmutableDocDB = errors.New("trying to modify immutable document db")
+	//ErrInvalidOperator
+	ErrInvalidOperator = errors.New("invalid operator")
+	//ErrDocumentNotPresent
+	ErrDocumentNotPresent = errors.New("document not present")
+	//ErrInvalidDocumentId
+	ErrInvalidDocumentId = errors.New("invalid document id")
+	//ErrReadOnlyIndex
+	ErrReadOnlyIndex = errors.New("read only index")
+	//ErrCannotModifyImmutableIndex
+	ErrCannotModifyImmutableIndex = errors.New("trying to modify immutable index")
+	//ErrCouldNotUpdatePostageBatch
+	ErrCouldNotUpdatePostageBatch = errors.New("could not procure new postage batch")
+	//ErrUnknownJsonFormat
+	ErrUnknownJsonFormat = errors.New("unknown json format")
 )

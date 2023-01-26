@@ -22,6 +22,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// LoginStatus
 type LoginStatus struct {
 	LoggedIn bool `json:"loggedin"`
 }

@@ -31,6 +31,7 @@ var (
 	jsonContentType = "application/json"
 )
 
+// UserSignupResponse
 type UserSignupResponse struct {
 	Address   string `json:"address"`
 	NameHash  string `json:"nameHash,omitempty"`

@@ -114,11 +114,13 @@ func newSyncTask(d *Directory, path, podPassword string, wg *sync.WaitGroup) *sy
 	}
 }
 
+// Execute
 func (st *syncTask) Execute(context.Context) error {
 	defer st.wg.Done()
 	return st.d.file.LoadFileMeta(st.path, st.podPassword)
 }
 
+// Name
 func (st *syncTask) Name() string {
 	return st.d.userAddress.String() + st.d.podName + st.path
 }
@@ -145,6 +147,7 @@ func newLsTask(d *Directory, topic []byte, path, podPassword string, l *[]Entry,
 	}
 }
 
+// Execute
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
 	_, data, err := lt.d.fd.GetFeedData(lt.topic, lt.d.getAddress(), []byte(lt.podPassword))
@@ -171,6 +174,7 @@ func (lt *lsTask) Execute(context.Context) error {
 	return nil
 }
 
+// Name
 func (lt *lsTask) Name() string {
 	return lt.d.userAddress.String() + lt.d.podName + lt.path
 }

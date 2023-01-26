@@ -32,14 +32,21 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// IndexType
 type IndexType int
 
 const (
+	//InvalidIndex
 	InvalidIndex IndexType = iota
+	//BytesIndex
 	BytesIndex
+	//StringIndex
 	StringIndex
+	//NumberIndex
 	NumberIndex
+	//MapIndex
 	MapIndex
+	//ListIndex
 	ListIndex
 )
 
@@ -77,6 +84,7 @@ func toIndexTypeEnum(s string) IndexType {
 	}
 }
 
+// Index
 type Index struct {
 	name               string
 	mutable            bool
@@ -93,6 +101,7 @@ type Index struct {
 }
 
 var (
+	//NoOfParallelWorkers
 	NoOfParallelWorkers = runtime.NumCPU() * 4
 )
 

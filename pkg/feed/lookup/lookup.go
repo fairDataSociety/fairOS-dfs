@@ -60,6 +60,7 @@ var TimeAfter = time.After
 // lookup process entirely.
 // If the context is canceled, it must return context.Canceled
 
+// ReadFunc
 type ReadFunc func(ctx context.Context, epoch Epoch, now uint64) (interface{}, error)
 
 // NoClue is a hint that can be provided when the Lookup caller does not have

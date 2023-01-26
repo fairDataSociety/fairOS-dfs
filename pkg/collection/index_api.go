@@ -27,7 +27,9 @@ import (
 )
 
 const (
-	LeafEntry         = "L"
+	//LeafEntry
+	LeafEntry = "L"
+	//IntermediateEntry
 	IntermediateEntry = "I"
 )
 

@@ -74,20 +74,24 @@ type responseLogger struct {
 	level  logrus.Level
 }
 
+// Header
 func (l *responseLogger) Header() http.Header {
 	return l.w.Header()
 }
 
+// Flush
 func (l *responseLogger) Flush() {
 	l.w.(http.Flusher).Flush()
 }
 
+// CloseNotify
 func (l *responseLogger) CloseNotify() <-chan bool {
 	// staticcheck SA1019 CloseNotifier interface is required by gorilla compress handler
 	// nolint:staticcheck
 	return l.w.(http.CloseNotifier).CloseNotify() // skipcq: SCC-SA1019
 }
 
+// Push
 func (l *responseLogger) Push(target string, opts *http.PushOptions) error {
 	return l.w.(http.Pusher).Push(target, opts)
 }
@@ -98,6 +102,7 @@ func (l *responseLogger) Write(b []byte) (int, error) {
 	return size, err
 }
 
+// WriteHeader
 func (l *responseLogger) WriteHeader(s int) {
 	l.w.WriteHeader(s)
 	if l.status == 0 {
