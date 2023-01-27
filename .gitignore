@@ -33,3 +33,6 @@ cover.out
 # goreleaser environment resources
 .release-env
 .docker-creds
+
+fairos.aar
+fairos-sources.jar

@@ -54,7 +54,7 @@ build:
 android:
 	$(GO) get golang.org/x/mobile/bind
 	gomobile init
-	gomobile bind -androidapi 21 -o dist/fairos.aar -target=android -ldflags "$(LDFLAGS)" github.com/fairdatasociety/fairOS-dfs/mobile
+	gomobile bind -androidapi 21 -o fairos.aar -target=android -ldflags "$(LDFLAGS)" github.com/fairdatasociety/fairOS-dfs/gomobile
 	$(GO) mod tidy
 
 .PHONY: githooks
