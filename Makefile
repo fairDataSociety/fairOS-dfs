@@ -50,6 +50,13 @@ test:
 build:
 	$(GO) build  ./...
 
+.PHONY: android
+android:
+	$(GO) get golang.org/x/mobile/bind
+	gomobile init
+	gomobile bind -androidapi 21 -o dist/fairos.aar -target=android -ldflags "$(LDFLAGS)" github.com/fairdatasociety/fairOS-dfs/mobile
+	$(GO) mod tidy
+
 .PHONY: githooks
 githooks:
 	ln -f -s ../../.githooks/pre-push.bash .git/hooks/pre-push
@@ -77,16 +84,17 @@ release:
 		-v `pwd`:/go/src/github.com/fairDataSociety/fairOS-dfs \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/fairDataSociety/fairOS-dfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.19.0 release --rm-dist
+		ghcr.io/goreleaser/goreleaser-cross:v1.19.5 release --rm-dist
 
 .PHONY: release-dry-run
 release-dry-run:
 	docker run --rm --privileged \
 		-v ~/go/pkg/mod:/go/pkg/mod \
+		-v ~/go/bin:/go/bin \
 		-v `pwd`:/go/src/github.com/fairDataSociety/fairOS-dfs \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/fairDataSociety/fairOS-dfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.19.0 release --rm-dist \
+		ghcr.io/goreleaser/goreleaser-cross:v1.19.5 release --rm-dist \
 		--skip-validate=true \
 		--skip-publish
 
