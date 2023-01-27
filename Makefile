@@ -50,13 +50,6 @@ test:
 build:
 	$(GO) build  ./...
 
-.PHONY: android
-android:
-	$(GO) get golang.org/x/mobile/bind
-	gomobile init
-	gomobile bind -androidapi 21 -o fairos.aar -target=android -ldflags "$(LDFLAGS)" github.com/fairdatasociety/fairOS-dfs/gomobile
-	$(GO) mod tidy
-
 .PHONY: githooks
 githooks:
 	ln -f -s ../../.githooks/pre-push.bash .git/hooks/pre-push
@@ -97,5 +90,23 @@ release-dry-run:
 		ghcr.io/goreleaser/goreleaser-cross:v1.19.5 release --rm-dist \
 		--skip-validate=true \
 		--skip-publish
+
+
+BUILD_DIR := $(PWD)
+BIN_PATH := $(BUILD_DIR)/dist
+EXEC_NAME := fairos.wasm
+GZIP_EXEC_NAME := $(EXEC_NAME).gz
+
+.PHONY: wasm
+wasm:
+	@GOOS=js GOARCH=wasm $(GO) build -ldflags="-s -w" -o $(BIN_PATH)/$(EXEC_NAME)
+	@gzip -9 -v -c $(BIN_PATH)/$(EXEC_NAME) > $(BIN_PATH)/$(GZIP_EXEC_NAME)
+
+.PHONY: android
+android:
+	$(GO) get golang.org/x/mobile/bind
+	gomobile init
+	gomobile bind -androidapi 21 -o fairos.aar -target=android -ldflags "$(LDFLAGS)" github.com/fairdatasociety/fairOS-dfs/gomobile
+	$(GO) mod tidy
 
 FORCE:

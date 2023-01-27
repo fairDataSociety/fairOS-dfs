@@ -59,17 +59,6 @@ jobs:
       - name: Build android aar
         run: |
           make android
-      - uses: actions/upload-artifact@v3
-        with:
-          name: fairos.aar
-          path: fairos.aar
-
-  release-mobile:
-    needs: build-mobile
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v3
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -78,3 +67,19 @@ jobs:
           args: release --rm-dist --config .goreleaser-mobile.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build wasm
+        run: |
+          make wasm
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist --config .goreleaser-wasm.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
