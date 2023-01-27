@@ -597,6 +597,9 @@ func DocLoadJson(podName, tableName, filePath string) (string, error) {
 	successCount := 0
 	failureCount := 0
 	docBatch, err := api.DocBatch(sessionId, podName, tableName)
+	if err != nil {
+		return "", err
+	}
 	for {
 		// read one row from csv (assuming
 		record, err := reader.ReadString('\n')
