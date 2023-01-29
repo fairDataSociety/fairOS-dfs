@@ -25,7 +25,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
 	github.com/swaggo/http-swagger v1.3.3
-	github.com/swaggo/swag v1.8.7
+	github.com/swaggo/swag v1.8.10
 	github.com/tinygrasshopper/bettercsv v0.0.1
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/wealdtech/go-ens/v3 v3.5.3
