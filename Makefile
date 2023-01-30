@@ -10,7 +10,7 @@ LDFLAGS ?= -s -w -X github.com/fairdatasociety/fairOS-dfs.commit="$(COMMIT)" -X 
 DEST ?= "$(shell (go list ./... | grep -v wasm))"
 
 .PHONY: all
-all: build lint vet test-race binary
+all: lint vet test-race binary
 
 .PHONY: binary
 binary: export CGO_ENABLED=1
@@ -46,10 +46,6 @@ test-race:
 .PHONY: test
 test:
 	$(GO) test -v "$(DEST)"
-
-.PHONY: build
-build:
-	$(GO) build  "$(DEST)"
 
 .PHONY: githooks
 githooks:
