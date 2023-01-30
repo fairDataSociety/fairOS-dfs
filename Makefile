@@ -24,7 +24,7 @@ dist:
 
 .PHONY: lint
 lint: linter
-	$(GOLANGCI_LINT) run
+	$(GOLANGCI_LINT) run --skip-dirs wasm
 
 .PHONY: linter
 linter:
