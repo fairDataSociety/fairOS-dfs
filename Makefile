@@ -7,6 +7,7 @@ GOGOPROTOBUF_VERSION ?= v1.3.1
 COMMIT ?= "$(shell git describe --long --dirty --always --match "" || true)"
 VERSION ?= "$(shell git describe --tags --abbrev=0 || true)"
 LDFLAGS ?= -s -w -X github.com/fairdatasociety/fairOS-dfs.commit="$(COMMIT)" -X github.com/fairdatasociety/fairOS-dfs.version="$(VERSION)"
+TEST_DEST ?= "$(shell (go list ./... | grep -v wasm))"
 
 .PHONY: all
 all: build lint vet test-race binary
@@ -40,11 +41,11 @@ vet:
 
 .PHONY: test-race
 test-race:
-	$(GO) test -race -timeout 300000ms -v ./...
+	$(GO) test -race -timeout 300000ms -v "$(TEST_DEST)"
 
 .PHONY: test
 test:
-	$(GO) test -v ./...
+	$(GO) test -v "$(TEST_DEST)"
 
 .PHONY: build
 build:
