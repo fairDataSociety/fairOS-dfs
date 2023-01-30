@@ -49,7 +49,7 @@ test:
 
 .PHONY: build
 build:
-	$(GO) build  ./...
+	$(GO) build  "$(DEST)"
 
 .PHONY: githooks
 githooks:
@@ -63,7 +63,7 @@ protobuftools:
 .PHONY: protobuf
 protobuf: GOFLAGS=-mod=mod # use modules for protobuf file include option
 protobuf: protobuftools
-	$(GO) generate -run protoc ./...
+	$(GO) generate -run protoc "$(DEST)"
 
 .PHONY: clean
 clean:
