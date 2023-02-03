@@ -936,6 +936,8 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 					references = append(references, refs...)
 				}
 			}
+		default:
+			return nil, fmt.Errorf("operator is not available: %s", operator)
 		}
 	case MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", int64(limit))
@@ -966,6 +968,8 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 				refs := itr.ValueAll()
 				references = append(references, refs...)
 			}
+		default:
+			return nil, fmt.Errorf("operator is not available: %s", operator)
 		}
 	case NumberIndex:
 		var start int64 = 0
@@ -975,8 +979,9 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 				d.logger.Errorf("finding from document db: ", err.Error())
 				return nil, err
 			}
+		} else if operator == "!=" {
+			start = -1
 		}
-
 		itr, err := idx.NewIntIterator(start, -1, int64(limit))
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("finding from document db: ", err.Error())
@@ -986,6 +991,26 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		case "=":
 			itr.Next()
 			references = itr.ValueAll()
+		case "!=":
+			for itr.Next() {
+				if limit > 0 && references != nil && len(references) > limit { // skipcq: TCV-001
+					break
+				}
+				val, err := strconv.ParseFloat(itr.StringKey(), 64)
+				if err != nil { // skipcq: TCV-001
+					break
+				}
+				end, err := strconv.ParseFloat(fieldValue, 64)
+				if err != nil { // skipcq: TCV-001
+					break
+				}
+
+				if val == end {
+					continue
+				}
+				refs := itr.ValueAll()
+				references = append(references, refs...)
+			}
 		case "=>":
 			for itr.Next() {
 				if limit > 0 && references != nil && len(references) > limit { // skipcq: TCV-001
@@ -1045,6 +1070,8 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 				refs := itr.ValueAll()
 				references = append(references, refs...)
 			}
+		default:
+			return nil, fmt.Errorf("operator is not available: %s", operator)
 		}
 	case BytesIndex: // skipcq: TCV-001
 		d.logger.Errorf("finding from document db: ", ErrIndexNotSupported)
@@ -1190,6 +1217,8 @@ func (*Document) resolveExpression(expr string) (string, string, string, error) 
 		operator = "<"
 	} else if strings.Contains(expr, ">") {
 		operator = ">"
+	} else if strings.Contains(expr, "!=") {
+		operator = "!="
 	} else if strings.Contains(expr, "=") {
 		operator = "="
 	} else { // skipcq: TCV-001

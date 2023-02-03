@@ -409,7 +409,7 @@ func TestDocumentStore(t *testing.T) {
 		// Add documents
 		createTestDocuments(t, docStore, "docdb_8")
 
-		// String =
+		// String =>
 		docs, err := docStore.Find("docdb_8", "first_name=>John", podPassword, -1)
 		require.NoError(t, err)
 
@@ -582,6 +582,29 @@ func TestDocumentStore(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, len(docs), 3)
+
+		// Number !=
+		docs, err = docStore.Find("docdb_8", "age!=25", podPassword, -1)
+		require.NoError(t, err)
+		if len(docs) != 3 {
+			t.Fatalf("expected count %d, got %d", 3, len(docs))
+		}
+		for _, v := range docs {
+			var doc TestDocument
+			err = json.Unmarshal(v, &doc)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if doc.Age == 25 {
+				t.Fatal("age should not be 25")
+			}
+		}
+
+		// String !=
+		_, err = docStore.Find("docdb_8", "first_name!=Bob", podPassword, -1)
+		if err == nil {
+			t.Fatal("should not be err ", err)
+		}
 	})
 
 	t.Run("del", func(t *testing.T) {
