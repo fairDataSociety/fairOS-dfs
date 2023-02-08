@@ -7,9 +7,10 @@ GOGOPROTOBUF_VERSION ?= v1.3.1
 COMMIT ?= "$(shell git describe --long --dirty --always --match "" || true)"
 VERSION ?= "$(shell git describe --tags --abbrev=0 || true)"
 LDFLAGS ?= -s -w -X github.com/fairdatasociety/fairOS-dfs.commit="$(COMMIT)" -X github.com/fairdatasociety/fairOS-dfs.version="$(VERSION)"
+DEST ?= "$(shell (go list ./... | grep -v wasm))"
 
 .PHONY: all
-all: build lint vet test-race binary
+all: lint vet test-race binary
 
 .PHONY: binary
 binary: export CGO_ENABLED=1
@@ -23,7 +24,7 @@ dist:
 
 .PHONY: lint
 lint: linter
-	$(GOLANGCI_LINT) run
+	$(GOLANGCI_LINT) run --skip-dirs wasm
 
 .PHONY: linter
 linter:
@@ -36,19 +37,15 @@ swagger:
 
 .PHONY: vet
 vet:
-	$(GO) vet ./...
+	$(GO) vet "$(DEST)"
 
 .PHONY: test-race
 test-race:
-	$(GO) test -race -timeout 300000ms -v ./...
+	$(GO) test -race -timeout 300000ms -v "$(DEST)"
 
 .PHONY: test
 test:
-	$(GO) test -v ./...
-
-.PHONY: build
-build:
-	$(GO) build  ./...
+	$(GO) test -v "$(DEST)"
 
 .PHONY: githooks
 githooks:
@@ -62,7 +59,7 @@ protobuftools:
 .PHONY: protobuf
 protobuf: GOFLAGS=-mod=mod # use modules for protobuf file include option
 protobuf: protobuftools
-	$(GO) generate -run protoc ./...
+	$(GO) generate -run protoc "$(DEST)"
 
 .PHONY: clean
 clean:
@@ -77,17 +74,36 @@ release:
 		-v `pwd`:/go/src/github.com/fairDataSociety/fairOS-dfs \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/fairDataSociety/fairOS-dfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.19.0 release --rm-dist
+		ghcr.io/goreleaser/goreleaser-cross:v1.19.5 release --rm-dist
 
 .PHONY: release-dry-run
 release-dry-run:
 	docker run --rm --privileged \
 		-v ~/go/pkg/mod:/go/pkg/mod \
+		-v ~/go/bin:/go/bin \
 		-v `pwd`:/go/src/github.com/fairDataSociety/fairOS-dfs \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/fairDataSociety/fairOS-dfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.19.0 release --rm-dist \
+		ghcr.io/goreleaser/goreleaser-cross:v1.19.5 release --rm-dist \
 		--skip-validate=true \
 		--skip-publish
+
+
+BUILD_DIR := $(PWD)
+BIN_PATH := $(BUILD_DIR)/dist
+EXEC_NAME := fairos.wasm
+GZIP_EXEC_NAME := $(EXEC_NAME).gz
+
+.PHONY: wasm
+wasm:
+	@GOOS=js GOARCH=wasm $(GO) build -ldflags="-s -w" -o $(BIN_PATH)/$(EXEC_NAME)
+	@gzip -9 -v -c $(BIN_PATH)/$(EXEC_NAME) > $(BIN_PATH)/$(GZIP_EXEC_NAME)
+
+.PHONY: android
+android:
+	$(GO) get golang.org/x/mobile/bind
+	gomobile init
+	gomobile bind -androidapi 21 -o fairos.aar -target=android -ldflags "$(LDFLAGS)" github.com/fairdatasociety/fairOS-dfs/gomobile
+	$(GO) mod tidy
 
 FORCE:
