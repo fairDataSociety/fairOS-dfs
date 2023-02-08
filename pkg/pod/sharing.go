@@ -50,7 +50,7 @@ func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 		return "", fmt.Errorf("pod does not exist")
 	}
 
-	// Create pod account  and get the address
+	// Create pod account and get the address
 	accountInfo, err := p.acc.CreatePodAccount(index, false)
 	if err != nil { // skipcq: TCV-001
 		return "", err

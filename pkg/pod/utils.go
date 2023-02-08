@@ -34,6 +34,23 @@ func (p *Pod) IsPodOpened(podName string) bool {
 	return false
 }
 
+// IsOwnPodPresent checks if a pod is already present for user
+func (p *Pod) IsOwnPodPresent(podName string) bool {
+	podName, err := CleanPodName(podName)
+	if err != nil {
+		return false
+	}
+	// check if pods is present and get free index
+	podList, err := p.loadUserPods()
+	if err != nil { // skipcq: TCV-001
+		return false
+	}
+	if p.checkIfPodPresent(podList, podName) {
+		return true
+	}
+	return false
+}
+
 // IsPodPresent checks if a pod is already present for user
 func (p *Pod) IsPodPresent(podName string) bool {
 	podName, err := CleanPodName(podName)
