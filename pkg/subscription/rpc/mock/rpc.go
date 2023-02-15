@@ -32,6 +32,7 @@ func NewMockSubscriptionManager() *SubscriptionManager {
 	return &SubscriptionManager{
 		listMap:         make(map[string]*PodItem),
 		subscriptionMap: make(map[string]*PodItem),
+		requestMap:      make(map[string]requestInfo),
 	}
 }
 
@@ -114,7 +115,9 @@ func (s *SubscriptionManager) GetSubscriptions(subscriber common.Address) []*Pod
 func (s *SubscriptionManager) GetAllSubscribablePods() []*PodItem {
 	pods := []*PodItem{}
 	for _, v := range s.listMap {
-		pods = append(pods, v)
+		if v.IsListed {
+			pods = append(pods, v)
+		}
 	}
 	return pods
 }

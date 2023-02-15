@@ -3,6 +3,8 @@ package subscription
 import (
 	"fmt"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscription/rpc/mock"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/ensm"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -47,31 +49,22 @@ func (m *Manager) DelistPod(podname string) error {
 }
 
 // ApproveSubscription will send a subscription request to the owner of the pod
-func (m *Manager) ApproveSubscription(podname string, subscriber string) error {
-	subscriberAddr, err := m.ens.GetOwner(subscriber)
-	if err != nil {
-		return err
-	}
-	return m.sm.AllowAccess(podname, m.addr, subscriberAddr)
+func (m *Manager) ApproveSubscription(podname string, subscriber common.Address) error {
+	return m.sm.AllowAccess(podname, m.addr, subscriber)
 }
 
 // RequestSubscription will send a subscription request to the owner of the pod
 // will create an escrow account and deposit the `price`
-func (m *Manager) RequestSubscription(pod string, owner string) error {
-	ownerAddr, err := m.ens.GetOwner(owner)
-	if err != nil {
-		return err
-	}
-
-	return m.sm.RequestAccess(pod, ownerAddr, m.addr)
+func (m *Manager) RequestSubscription(pod string, owner common.Address) error {
+	return m.sm.RequestAccess(pod, owner, m.addr)
 }
 
-func (*Manager) GetSubscriptions() ([]PodItem, error) {
-	// This will query the smart contract and list my subscriptions
-	return nil, nil
+// GetSubscriptions will query the smart contract and list my subscriptions
+func (m *Manager) GetSubscriptions() ([]*mock.PodItem, error) {
+	return m.sm.GetSubscriptions(m.addr), nil
 }
 
-func (*Manager) GetMarketplace() ([]PodItem, error) {
-	// This will query the smart contract make the `list` all the pod from the marketplace
-	return nil, nil
+// GetMarketplace will query the smart contract make the `list` all the pod from the marketplace
+func (m *Manager) GetMarketplace() ([]*mock.PodItem, error) {
+	return m.sm.GetAllSubscribablePods(), nil
 }
