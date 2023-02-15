@@ -39,7 +39,7 @@ func TestRename(t *testing.T) {
 	}()
 
 	t.Run("upload-rename-same-dir-download-small-file", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		filePath := "/dir1"
 		fileName := "file1"
 		newFileName := "file_new"
@@ -105,7 +105,7 @@ func TestRename(t *testing.T) {
 		blockSize := uint32(10)
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, fileObject, tm, logger)
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", podPassword, user, fd)

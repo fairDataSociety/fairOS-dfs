@@ -309,7 +309,7 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encrypti
 	copy(f.Topic[:], topic)
 
 	// get the existing request from DB
-	req, err := a.handler.NewRequest(ctx, f)
+	req, err := a.handler.newRequest(ctx, f)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}

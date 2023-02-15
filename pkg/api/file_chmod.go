@@ -10,6 +10,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// FileModeRequest is used to change file permission mode
 type FileModeRequest struct {
 	PodName  string `json:"podName,omitempty"`
 	FilePath string `json:"filePath,omitempty"`

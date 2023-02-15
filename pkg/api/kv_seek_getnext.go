@@ -28,6 +28,7 @@ import (
 )
 
 const (
+	//DefaultSeekLimit
 	DefaultSeekLimit = "10"
 )
 

@@ -26,6 +26,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
+// PodListResponse
 type PodListResponse struct {
 	Pods       []string `json:"pods"`
 	SharedPods []string `json:"sharedPods"`

@@ -23,9 +23,9 @@ import (
 	"strconv"
 )
 
+// Stats
 type Stats struct {
 	PodName          string   `json:"podName"`
-	Tag              uint32   `json:"tag"`
 	Mode             uint32   `json:"mode"`
 	FilePath         string   `json:"filePath"`
 	FileName         string   `json:"fileName"`
@@ -39,6 +39,7 @@ type Stats struct {
 	Blocks           []Blocks `json:"blocks"`
 }
 
+// Blocks
 type Blocks struct {
 	Reference      string `json:"reference"`
 	Size           string `json:"size"`
@@ -76,7 +77,6 @@ func (f *File) GetStats(podName, podFileWithPath, podPassword string) (*Stats, e
 	return &Stats{
 		PodName:          podName,
 		FilePath:         meta.Path,
-		Tag:              meta.Tag,
 		FileName:         meta.Name,
 		Mode:             meta.Mode,
 		FileSize:         strconv.FormatUint(meta.Size, 10),

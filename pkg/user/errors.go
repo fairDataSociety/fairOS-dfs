@@ -20,7 +20,7 @@ import "errors"
 
 var (
 	// ErrUserAlreadyLoggedIn is returned if username is already logged-in
-	ErrUserAlreadyLoggedIn = errors.New("user already logged in")
+	ErrUserAlreadyLoggedIn = errors.New("user already logged-in")
 
 	// ErrInvalidUserName is returned if the username is invalid
 	ErrInvalidUserName = errors.New("invalid user name")
@@ -28,11 +28,11 @@ var (
 	// ErrUserNameNotFound is returned if the username is invalid
 	ErrUserNameNotFound = errors.New("no user available")
 
-	// ErrUserAlreadyPresent is returned if user name is already taken while signup
+	// ErrUserAlreadyPresent is returned if username is already taken while signup
 	ErrUserAlreadyPresent = errors.New("user name already present")
 
-	// ErrUserNotLoggedIn is returned if user is not logged in
-	ErrUserNotLoggedIn = errors.New("user not logged in")
+	// ErrUserNotLoggedIn is returned if user is not logged-in
+	ErrUserNotLoggedIn = errors.New("user not logged-in")
 
 	// ErrInvalidPassword is returned if password is invalid
 	ErrInvalidPassword = errors.New("invalid password")

@@ -89,6 +89,8 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 	refMapMu := sync.RWMutex{}
 	var contentBytes []byte
 	wg.Add(1)
+
+	tag := f.LoadFromTagMap(totalFilePath)
 	go func() {
 		var mainErr error
 		for {
@@ -202,7 +204,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, meta.Tag, true, true)
+				addr, uploadErr := f.client.UploadBlob(uploadData, tag, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return

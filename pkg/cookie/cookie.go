@@ -70,7 +70,7 @@ func SetSession(sessionId string, response http.ResponseWriter, cookieDomain str
 			Expires: expire,
 			//SameSite: http.SameSiteNoneMode, // Can't have SameSite || Secure on localhost or cookie will be blocked
 			//Secure:   true, // Can't have SameSite || Secure on localhost or cookie will be blocked
-			//HttpOnly: true, // Can't have this on localhost or cookie will be inaccessibe via document.cookie
+			//HttpOnly: true, // Can't have this on localhost or cookie will be inaccessible via document.cookie
 			MaxAge: 0, // to make sure that the browser does not persist it in disk
 		}
 	} else if cookieDomain == "" {

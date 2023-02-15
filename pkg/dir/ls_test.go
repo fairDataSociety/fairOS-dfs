@@ -58,8 +58,8 @@ func TestListDirectory(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 
-	t.Run("list-dirr", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	t.Run("list-dir", func(t *testing.T) {
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
@@ -112,7 +112,7 @@ func TestListDirectory(t *testing.T) {
 			t.Fatal("parent not available")
 		}
 
-		// just add dummy file enty as file listing is not tested here
+		// just add dummy file entry as file listing is not tested here
 		err = dirObject.AddEntryToDir("/parentDir", podPassword, "file1", true)
 		if err != nil {
 			t.Fatal(err)
@@ -155,7 +155,7 @@ func TestListDirectory(t *testing.T) {
 	})
 
 	t.Run("list-dir-from-different-dir-object", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added

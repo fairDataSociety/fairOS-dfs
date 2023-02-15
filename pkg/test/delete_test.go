@@ -52,7 +52,7 @@ func TestDelete(t *testing.T) {
 		if err == nil {
 			t.Fatal("delete should fail")
 		}
-		// delete user invalid sessionid
+		// delete user invalid sessionId
 		err = userObject.DeleteUserV2("user1", "password1", "invalid_session", ui)
 		if !errors.Is(err, user.ErrUserNotLoggedIn) {
 			t.Fatal(err)

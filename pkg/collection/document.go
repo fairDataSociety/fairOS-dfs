@@ -47,6 +47,7 @@ const (
 	DefaultIndexFieldName = "id"
 )
 
+// Document
 type Document struct {
 	podName     string
 	fd          *feed.API
@@ -60,6 +61,7 @@ type Document struct {
 	entryGetter taskmanager.TaskManagerGO
 }
 
+// DocumentDB
 type DocumentDB struct {
 	name          string
 	mutable       bool
@@ -68,6 +70,7 @@ type DocumentDB struct {
 	listIndexes   map[string]*Index
 }
 
+// DBSchema
 type DBSchema struct {
 	Name            string   `json:"name"`
 	Mutable         bool     `json:"mutable"`
@@ -77,15 +80,18 @@ type DBSchema struct {
 	CompoundIndexes []CIndex `json:"compound_indexes,omitempty"`
 }
 
+// SIndex
 type SIndex struct {
 	FieldName string    `json:"name"`
 	FieldType IndexType `json:"type"`
 }
 
+// CIndex
 type CIndex struct {
 	SimpleIndexes []SIndex
 }
 
+// DocBatch
 type DocBatch struct {
 	db      *DocumentDB
 	batches map[string]*Batch
@@ -930,6 +936,8 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 					references = append(references, refs...)
 				}
 			}
+		default:
+			return nil, fmt.Errorf("operator is not available: %s", operator)
 		}
 	case MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", int64(limit))
@@ -960,6 +968,8 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 				refs := itr.ValueAll()
 				references = append(references, refs...)
 			}
+		default:
+			return nil, fmt.Errorf("operator is not available: %s", operator)
 		}
 	case NumberIndex:
 		var start int64 = 0
@@ -969,8 +979,9 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 				d.logger.Errorf("finding from document db: ", err.Error())
 				return nil, err
 			}
+		} else if operator == "!=" {
+			start = -1
 		}
-
 		itr, err := idx.NewIntIterator(start, -1, int64(limit))
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("finding from document db: ", err.Error())
@@ -980,6 +991,26 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		case "=":
 			itr.Next()
 			references = itr.ValueAll()
+		case "!=":
+			for itr.Next() {
+				if limit > 0 && references != nil && len(references) > limit { // skipcq: TCV-001
+					break
+				}
+				val, err := strconv.ParseFloat(itr.StringKey(), 64)
+				if err != nil { // skipcq: TCV-001
+					break
+				}
+				end, err := strconv.ParseFloat(fieldValue, 64)
+				if err != nil { // skipcq: TCV-001
+					break
+				}
+
+				if val == end {
+					continue
+				}
+				refs := itr.ValueAll()
+				references = append(references, refs...)
+			}
 		case "=>":
 			for itr.Next() {
 				if limit > 0 && references != nil && len(references) > limit { // skipcq: TCV-001
@@ -1039,6 +1070,8 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 				refs := itr.ValueAll()
 				references = append(references, refs...)
 			}
+		default:
+			return nil, fmt.Errorf("operator is not available: %s", operator)
 		}
 	case BytesIndex: // skipcq: TCV-001
 		d.logger.Errorf("finding from document db: ", ErrIndexNotSupported)
@@ -1184,6 +1217,8 @@ func (*Document) resolveExpression(expr string) (string, string, string, error) 
 		operator = "<"
 	} else if strings.Contains(expr, ">") {
 		operator = ">"
+	} else if strings.Contains(expr, "!=") {
+		operator = "!="
 	} else if strings.Contains(expr, "=") {
 		operator = "="
 	} else { // skipcq: TCV-001
@@ -1501,7 +1536,7 @@ func (d *Document) DocBatchWrite(docBatch *DocBatch, podFile string) error {
 	return nil
 }
 
-// DocFileIndex indexes a existing json file in the pod with the document DB.
+// DocFileIndex indexes an existing json file in the pod with the document DB.
 // skipcq: TCV-001
 func (d *Document) DocFileIndex(dbName, podFile, podPassword string) error {
 	d.logger.Info("Indexing file to db: ", podFile, dbName)
@@ -1592,6 +1627,7 @@ func newEntryTask(c blockstore.Client, allData *[][]byte, ref []byte, mtx sync.L
 	}
 }
 
+// Execute
 func (et *entryTask) Execute(context.Context) error {
 	data, _, err := et.c.DownloadBlob(et.ref)
 	if err != nil {
@@ -1603,6 +1639,7 @@ func (et *entryTask) Execute(context.Context) error {
 	return nil
 }
 
+// Name
 func (et *entryTask) Name() string {
 	return string(et.ref)
 }

@@ -26,6 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// PodNameRequest
 type PodNameRequest struct {
 	PodName string `json:"podName,omitempty"`
 }

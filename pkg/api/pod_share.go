@@ -22,7 +22,6 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -30,6 +29,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// PodSharingReference
 type PodSharingReference struct {
 	Reference string `json:"podSharingReference"`
 }

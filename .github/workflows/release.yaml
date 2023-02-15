@@ -18,7 +18,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -38,3 +38,48 @@ jobs:
         run: |-
           sudo rm -rf dist
           make release
+
+  build-mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        run: |
+          curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip sdk-tools.zip -d $HOME/android-sdk
+          echo "y" | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;30.0.3"
+          export PATH=$PATH:$HOME/android-sdk/platform-tools
+      - name: Install gomobile
+        run: go install golang.org/x/mobile/cmd/gomobile@latest
+      - name: Build android aar
+        run: |
+          make android
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist --config .goreleaser-mobile.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build wasm
+        run: |
+          make wasm
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist --config .goreleaser-wasm.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

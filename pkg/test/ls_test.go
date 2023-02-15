@@ -62,7 +62,7 @@ func TestPod_ListPods(t *testing.T) {
 	})
 
 	t.Run("create-two-pods", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		_, err := pod1.CreatePod(podName1, "", podPassword)
 		if err != nil {
 			t.Fatalf("error creating pod: %v", err)
