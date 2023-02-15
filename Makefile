@@ -88,16 +88,10 @@ release-dry-run:
 		--skip-validate=true \
 		--skip-publish
 
-
-BUILD_DIR := $(PWD)
-BIN_PATH := $(BUILD_DIR)/dist
-EXEC_NAME := fairos.wasm
-GZIP_EXEC_NAME := $(EXEC_NAME).gz
-
 .PHONY: wasm
 wasm:
-	@GOOS=js GOARCH=wasm $(GO) build -ldflags="-s -w" -o $(BIN_PATH)/$(EXEC_NAME)
-	@gzip -9 -v -c $(BIN_PATH)/$(EXEC_NAME) > $(BIN_PATH)/$(GZIP_EXEC_NAME)
+	@GOOS=js GOARCH=wasm $(GO) build -ldflags="-s -w" -o fairos.wasm
+	@gzip -9 -v -c fairos.wasm > fairos.wasm.gz
 
 .PHONY: android
 android:
