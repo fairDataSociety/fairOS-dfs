@@ -3,7 +3,7 @@ project_name: fairos
 release:
   prerelease: auto
   extra_files:
-    - glob: ./dist/fairos.wasm
-    - glob: ./dist/fairos.wasm.gz
+    - glob: /home/runner/work/fairOS-dfs/fairOS-dfs/dist/fairos.wasm
+    - glob: /home/runner/work/fairOS-dfs/fairOS-dfs/dist/fairos.wasm.gz
 builds:
   - skip: true
