@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -11,19 +12,29 @@ import (
 type PodItem struct {
 	Name     string         `json:"name"`
 	Price    uint64         `json:"price"`
+	Address  common.Address `json:"address"`
 	Owner    common.Address `json:"owner"`
 	IsListed bool           `json:"isListed"`
 }
 
+type SubbedItem struct {
+	Name    string         `json:"name"`
+	Address common.Address `json:"address"`
+	EndsAt  int64          `json:"ends_at"`
+	Secret  string         `json:"secret"`
+	Owner   common.Address `json:"owner"`
+}
+
 type requestInfo struct {
 	Name       string         `json:"name"`
+	Address    common.Address `json:"address"`
 	Subscriber common.Address `json:"owner"`
 }
 
 type SubscriptionManager struct {
 	lock            sync.Mutex
 	listMap         map[string]*PodItem
-	subscriptionMap map[string]*PodItem
+	subscriptionMap map[string]*SubbedItem
 	requestMap      map[string]requestInfo
 }
 
@@ -31,30 +42,30 @@ type SubscriptionManager struct {
 func NewMockSubscriptionManager() *SubscriptionManager {
 	return &SubscriptionManager{
 		listMap:         make(map[string]*PodItem),
-		subscriptionMap: make(map[string]*PodItem),
+		subscriptionMap: make(map[string]*SubbedItem),
 		requestMap:      make(map[string]requestInfo),
 	}
 }
 
-func (s *SubscriptionManager) AddPodToMarketplace(owner common.Address, pod string, price uint64) error {
+func (s *SubscriptionManager) AddPodToMarketplace(podAddress, owner common.Address, pod string, price uint64) error {
 	i := &PodItem{
 		Name:     pod,
 		Price:    price,
+		Address:  podAddress,
 		Owner:    owner,
 		IsListed: true,
 	}
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.listMap[owner.Hex()+pod] = i
-
+	s.listMap[owner.Hex()+podAddress.String()] = i
 	return nil
 }
 
-func (s *SubscriptionManager) HidePodFromMarketplace(owner common.Address, pod string) error {
+func (s *SubscriptionManager) HidePodFromMarketplace(podAddress, owner common.Address) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	i, ok := s.listMap[owner.Hex()+pod]
+	i, ok := s.listMap[owner.Hex()+podAddress.String()]
 	if !ok {
 		return fmt.Errorf("pod not listed")
 	}
@@ -62,10 +73,10 @@ func (s *SubscriptionManager) HidePodFromMarketplace(owner common.Address, pod s
 	return nil
 }
 
-func (s *SubscriptionManager) RequestAccess(pod string, owner, subscriber common.Address) error {
+func (s *SubscriptionManager) RequestAccess(podAddress, owner, subscriber common.Address) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	i, ok := s.listMap[owner.Hex()+pod]
+	i, ok := s.listMap[owner.Hex()+podAddress.String()]
 	if !ok {
 		return fmt.Errorf("pod not listed")
 	}
@@ -73,17 +84,18 @@ func (s *SubscriptionManager) RequestAccess(pod string, owner, subscriber common
 		return fmt.Errorf("pod not listed")
 	}
 
-	s.requestMap[owner.Hex()+subscriber.Hex()+pod] = requestInfo{
-		Name:       pod,
+	s.requestMap[owner.Hex()+subscriber.Hex()+podAddress.String()] = requestInfo{
+		Name:       i.Name,
+		Address:    podAddress,
 		Subscriber: subscriber,
 	}
 	return nil
 }
 
-func (s *SubscriptionManager) AllowAccess(pod string, owner, subscriber common.Address) error {
+func (s *SubscriptionManager) AllowAccess(podAddress, owner, subscriber common.Address, secret string) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	i, ok := s.listMap[owner.Hex()+pod]
+	i, ok := s.listMap[owner.Hex()+podAddress.String()]
 	if !ok {
 		return fmt.Errorf("pod not listed")
 	}
@@ -91,25 +103,36 @@ func (s *SubscriptionManager) AllowAccess(pod string, owner, subscriber common.A
 		return fmt.Errorf("pod not listed")
 	}
 
-	_, ok = s.requestMap[owner.Hex()+subscriber.Hex()+pod]
+	_, ok = s.requestMap[owner.Hex()+subscriber.Hex()+podAddress.String()]
 	if !ok {
 		return fmt.Errorf("request not available")
 	}
 
-	s.subscriptionMap[subscriber.Hex()+pod] = i
+	item := &SubbedItem{
+		Name:    i.Name,
+		Address: i.Address,
+		EndsAt:  time.Now().AddDate(0, 1, 0).Unix(),
+		Secret:  secret,
+		Owner:   owner,
+	}
+	s.subscriptionMap[subscriber.Hex()+podAddress.String()] = item
 
 	return nil
 }
 
-func (s *SubscriptionManager) GetSubscriptions(subscriber common.Address) []*PodItem {
+func (s *SubscriptionManager) GetSubscriptions(subscriber common.Address) []*SubbedItem {
 	subscriberHex := subscriber.Hex()
-	pods := []*PodItem{}
+	pods := []*SubbedItem{}
 	for i, v := range s.subscriptionMap {
 		if strings.HasPrefix(i, subscriberHex) {
 			pods = append(pods, v)
 		}
 	}
 	return pods
+}
+
+func (s *SubscriptionManager) GetSubscription(podAddress, subscriber common.Address) *SubbedItem {
+	return s.subscriptionMap[subscriber.Hex()+podAddress.String()]
 }
 
 func (s *SubscriptionManager) GetAllSubscribablePods() []*PodItem {

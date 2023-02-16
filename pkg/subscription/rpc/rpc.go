@@ -6,11 +6,12 @@ import (
 )
 
 type SubscriptionManager interface {
-	AddPodToMarketplace(owner common.Address, pod string, price uint64) error
-	HidePodFromMarketplace(owner common.Address, pod string) error
-	RequestAccess(pod string, owner, subscriber common.Address) error
-	AllowAccess(pod string, owner, subscriber common.Address) error
-	GetSubscriptions(subscriber common.Address) []*mock.PodItem
+	AddPodToMarketplace(podAddress, owner common.Address, pod string, price uint64) error
+	HidePodFromMarketplace(podAddress, owner common.Address) error
+	RequestAccess(podAddress, owner, subscriber common.Address) error
+	AllowAccess(podAddress, owner, subscriber common.Address, secret string) error
+	GetSubscription(podAddress, subscriber common.Address) *mock.SubbedItem
+	GetSubscriptions(subscriber common.Address) []*mock.SubbedItem
 	GetAllSubscribablePods() []*mock.PodItem
 	GetOwnSubscribablePods(owner common.Address) []*mock.PodItem
 }

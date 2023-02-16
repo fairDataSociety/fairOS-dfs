@@ -116,6 +116,45 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	return podInfo, nil
 }
 
+func (p *Pod) OpenFromReference(ref utils.Reference) (*Info, error) {
+	si, err := p.ReceivePodInfo(ref)
+	if err != nil {
+		return nil, err
+	}
+
+	accountInfo := p.acc.GetEmptyAccountInfo()
+	address := utils.HexToAddress(si.Address)
+	accountInfo.SetAddress(address)
+
+	fd := feed.New(accountInfo, p.client, p.logger)
+	file := f.NewFile(si.PodName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
+	dir := d.NewDirectory(si.PodName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
+
+	kvStore := c.NewKeyValueStore(si.PodName, fd, accountInfo, address, p.client, p.logger)
+	docStore := c.NewDocumentStore(si.PodName, fd, accountInfo, address, file, p.tm, p.client, p.logger)
+
+	podInfo := &Info{
+		podName:     si.PodName,
+		podPassword: si.Password,
+		userAddress: address,
+		accountInfo: accountInfo,
+		feed:        fd,
+		dir:         dir,
+		file:        file,
+		kvStore:     kvStore,
+		docStore:    docStore,
+	}
+	p.addPodToPodMap(si.PodName, podInfo)
+
+	// sync the pod's files and directories
+	err = p.SyncPod(si.PodName)
+	if err != nil && err != d.ErrResourceDeleted { // skipcq: TCV-001
+		return nil, err
+	}
+
+	return podInfo, nil
+}
+
 // OpenPodAsync opens a pod if it is not already opened. as part of opening the pod
 // it loads all the data structures related to the pod. Also, it syncs all the
 // files and directories under this pod from the Swarm network.
