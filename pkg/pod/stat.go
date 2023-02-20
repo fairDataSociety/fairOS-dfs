@@ -18,8 +18,8 @@ package pod
 
 // Stat represents a pod name and address
 type Stat struct {
-	PodName    string
-	PodAddress string
+	PodName    string `json:"podName"`
+	PodAddress string `json:"address"`
 }
 
 // PodStat shows all the pod related information like podname and its current address.
