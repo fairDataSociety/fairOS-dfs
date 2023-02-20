@@ -1,3 +1,5 @@
+//go:build js
+
 package main
 
 import (
@@ -520,7 +522,7 @@ func podShare(_ js.Value, funcArgs []js.Value) interface{} {
 				return
 			}
 			data := map[string]string{}
-			data["pod_sharing_reference"] = reference
+			data["podSharingReference"] = reference
 			resp, _ := json.Marshal(data)
 			resolve.Invoke(string(resp))
 		}()
@@ -848,7 +850,7 @@ func fileShare(_ js.Value, funcArgs []js.Value) interface{} {
 				return
 			}
 			data := map[string]string{}
-			data["file_sharing_reference"] = ref
+			data["fileSharingReference"] = ref
 			resp, _ := json.Marshal(data)
 			resolve.Invoke(string(resp))
 		}()
@@ -885,7 +887,7 @@ func fileReceive(_ js.Value, funcArgs []js.Value) interface{} {
 				return
 			}
 			data := map[string]string{}
-			data["file_name"] = filePath
+			data["fileName"] = filePath
 			resp, _ := json.Marshal(data)
 			resolve.Invoke(string(resp))
 		}()
