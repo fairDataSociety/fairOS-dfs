@@ -90,7 +90,7 @@ release-dry-run:
 
 .PHONY: wasm
 wasm:
-	@GOOS=js GOARCH=wasm $(GO) build -ldflags="-s -w" -o fairos.wasm
+	@GOOS=js GOARCH=wasm $(GO) build -ldflags="-s -w" -o fairos.wasm ./wasm
 	@gzip -9 -v -c fairos.wasm > fairos.wasm.gz
 
 .PHONY: android
