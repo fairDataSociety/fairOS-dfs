@@ -30,7 +30,7 @@ require (
 	github.com/tinygrasshopper/bettercsv v0.0.1
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/wealdtech/go-ens/v3 v3.5.5
-	go.uber.org/goleak v1.2.0
+	go.uber.org/goleak v1.2.1
 	golang.org/x/crypto v0.1.0
 	golang.org/x/term v0.5.0
 	gopkg.in/yaml.v2 v2.4.0
