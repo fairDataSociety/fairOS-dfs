@@ -17,6 +17,15 @@ definitions:
           $ref: '#/definitions/api.Collection'
         type: array
     type: object
+  api.DirModeRequest:
+    properties:
+      dirPath:
+        type: string
+      mode:
+        type: string
+      podName:
+        type: string
+    type: object
   api.DirPresentResponse:
     properties:
       error:
@@ -44,21 +53,17 @@ definitions:
       tableName:
         type: string
     type: object
-  api.DocFindResponse:
+  api.DocFind:
     properties:
       docs:
         items:
-          items:
-            type: integer
-          type: array
+          type: string
         type: array
     type: object
-  api.DocGetResponse:
+  api.DocGet:
     properties:
       doc:
-        items:
-          type: integer
-        type: array
+        type: string
     type: object
   api.DocIndexRequest:
     properties:
@@ -90,6 +95,15 @@ definitions:
   api.FileDeleteRequest:
     properties:
       filePath:
+        type: string
+      podName:
+        type: string
+    type: object
+  api.FileModeRequest:
+    properties:
+      filePath:
+        type: string
+      mode:
         type: string
       podName:
         type: string
@@ -226,6 +240,15 @@ definitions:
       tableName:
         type: string
     type: object
+  api.StatusResponse:
+    properties:
+      processed:
+        type: integer
+      synced:
+        type: integer
+      total:
+        type: integer
+    type: object
   api.UserDeleteRequest:
     properties:
       password:
@@ -327,6 +350,8 @@ definitions:
         type: string
       creationTime:
         type: string
+      mode:
+        type: integer
       modificationTime:
         type: string
       name:
@@ -344,6 +369,8 @@ definitions:
         type: string
       dirPath:
         type: string
+      mode:
+        type: integer
       modificationTime:
         type: string
       noOfDirectories:
@@ -372,12 +399,16 @@ definitions:
         type: string
       creationTime:
         type: string
+      mode:
+        type: integer
       modificationTime:
         type: string
       name:
         type: string
       size:
         type: string
+      tag:
+        type: integer
     type: object
   file.Stats:
     properties:
@@ -401,10 +432,14 @@ definitions:
         type: string
       fileSize:
         type: string
+      mode:
+        type: integer
       modificationTime:
         type: string
       podName:
         type: string
+      tag:
+        type: integer
     type: object
   pod.ShareInfo:
     properties:
@@ -456,6 +491,41 @@ info:
   title: FairOS-dfs server
   version: v0.0.0
 paths:
+  /v1/dir/chmod:
+    post:
+      consumes:
+      - application/json
+      description: DirectoryModeHandler is the api handler to change mode of a directory
+      parameters:
+      - description: dir mode request
+        in: body
+        name: dir_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DirModeRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: change mode of a directory
+      tags:
+      - dir
   /v1/dir/ls:
     get:
       description: DirectoryLsHandler is the api handler for listing the contents
@@ -747,7 +817,7 @@ paths:
       summary: Delete a doc table
       tags:
       - doc
-  /v1/doc/entry/delete:
+  /v1/doc/entry/del:
     delete:
       consumes:
       - application/json
@@ -817,9 +887,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: base64 encoded string
           schema:
-            $ref: '#/definitions/api.DocGetResponse'
+            $ref: '#/definitions/api.DocGet'
         "400":
           description: Bad Request
           schema:
@@ -887,7 +957,10 @@ paths:
         name: tableName
         required: true
         type: string
-      - description: expression to search for
+      - description: 'expression to search for. allowed operators in expr are =, >,
+          =>, <=, <. eg: ''first_name=>John'', ''first_name=>J.'', ''first_name=>.'',
+          ''age=>30'', ''age<=30''. if index is string, expr supports regex. we do
+          not have support for multiple conditions in expr yet'
         in: query
         name: expr
         required: true
@@ -905,9 +978,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: array of base64 encoded string
           schema:
-            $ref: '#/definitions/api.DocFindResponse'
+            $ref: '#/definitions/api.DocFind'
         "400":
           description: Bad Request
           schema:
@@ -1042,7 +1115,10 @@ paths:
       - application/json
       description: DocCreateHandler is the api handler to create a new document database
       parameters:
-      - description: doc table info
+      - description: 'doc table info. si or simple index is a comma separated list
+          of keys and their types. eg: ''first_name=string,age=number''. valid index
+          types can be ''string'', ''number'', ''map'', ''list''. default index is
+          ''id'' and it should be of type string'
         in: body
         name: doc_request
         required: true
@@ -1106,6 +1182,41 @@ paths:
       summary: Open a doc table
       tags:
       - doc
+  /v1/file/chmod:
+    post:
+      consumes:
+      - multipart/form-data
+      description: FileModeHandler is the api handler to change mode of a file
+      parameters:
+      - description: file mode request
+        in: body
+        name: file_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.FileModeRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: chmod a file
+      tags:
+      - file
   /v1/file/delete:
     delete:
       consumes:
@@ -1424,6 +1535,98 @@ paths:
       summary: Info of a file
       tags:
       - file
+  /v1/file/status:
+    get:
+      consumes:
+      - application/json
+      description: FileStatusHandler is the api handler to check sync status of a
+        file from a given pod
+      parameters:
+      - description: pod name
+        in: query
+        name: podName
+        required: true
+        type: string
+      - description: file path
+        in: query
+        name: filePath
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - '*/*'
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.StatusResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Sync status of a file
+      tags:
+      - file
+  /v1/file/update:
+    post:
+      consumes:
+      - multipart/form-data
+      description: FileUpdateHandler is the api handler to update a file from a given
+        offset
+      parameters:
+      - description: pod name
+        in: formData
+        name: podName
+        required: true
+        type: string
+      - description: location
+        in: formData
+        name: filePath
+        required: true
+        type: string
+      - description: file content to update
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: file offset
+        in: formData
+        name: offset
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Update a file
+      tags:
+      - file
   /v1/file/upload:
     post:
       consumes:
@@ -1461,6 +1664,11 @@ paths:
         in: header
         name: Cookie
         required: true
+        type: string
+      - description: overwrite the file if already exists
+        example: true, false
+        in: formData
+        name: overwrite
         type: string
       produces:
       - application/json
@@ -2448,6 +2656,41 @@ paths:
           schema:
             $ref: '#/definitions/api.response'
       summary: Sync pod
+      tags:
+      - pod
+  /v1/pod/sync-async:
+    post:
+      consumes:
+      - application/json
+      description: PodSyncAsyncHandler is the api handler to sync a pod's content
+      parameters:
+      - description: pod name
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodNameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Sync pod asynchronously
       tags:
       - pod
   /v1/user/delete:

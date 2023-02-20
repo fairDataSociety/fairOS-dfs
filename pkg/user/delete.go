@@ -16,7 +16,7 @@ limitations under the License.
 
 package user
 
-// DeleteUserV2 deletes a user from the Swarm network. Logs him out if he is logged in and remove from all the
+// DeleteUserV2 deletes a user from the Swarm network. Logs him out if he is logged-in and remove from all the
 // data structures.
 func (u *Users) DeleteUserV2(userName, password, sessionId string, ui *Info) error {
 	// check if session id and user address present in map

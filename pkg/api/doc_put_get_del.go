@@ -24,12 +24,14 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocPutRequest is used to put entry in doc store
 type DocPutRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`
 	Document  string `json:"doc,omitempty"`
 }
 
+// DocDeleteRequest is used to delete entry in doc store
 type DocDeleteRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`
@@ -39,6 +41,11 @@ type DocDeleteRequest struct {
 // DocGetResponse represents a single document row
 type DocGetResponse struct {
 	Doc []byte `json:"doc"`
+}
+
+// DocGet represents a single document row
+type DocGet struct {
+	Doc string `json:"doc"`
 }
 
 // DocEntryPutHandler godoc
@@ -124,7 +131,7 @@ func (h *Handler) DocEntryPutHandler(w http.ResponseWriter, r *http.Request) {
 //	@Param	      tableName query string true "table name"
 //	@Param	      id query string true "id to search for"
 //	@Param	      Cookie header string true "cookie parameter"
-//	@Success      200  {object}  DocGetResponse
+//	@Success      200  {object}  DocGet "base64 encoded string"
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/doc/entry/get [get]
@@ -207,7 +214,7 @@ func (h *Handler) DocEntryGetHandler(w http.ResponseWriter, r *http.Request) {
 //	@Success      200  {object}  response
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
-//	@Router       /v1/doc/entry/delete [delete]
+//	@Router       /v1/doc/entry/del [delete]
 func (h *Handler) DocEntryDelHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

@@ -24,17 +24,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
-	"github.com/plexsysio/taskmanager"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type TestDocument struct {
@@ -61,12 +61,13 @@ func TestDocumentStore(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	file := f.NewFile("pod1", mockClient, fd, user, tm, logger)
-	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, mockClient, logger)
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, tm, mockClient, logger)
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("create_document_db_errors", func(t *testing.T) {
 		nilFd := feed.New(&account.Info{}, mockClient, logger)
-		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, mockClient, logger)
+		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, tm, mockClient, logger)
 		err := nilDocStore.CreateDocumentDB("docdb_err", podPassword, nil, true)
 		if !errors.Is(err, collection.ErrReadOnlyIndex) {
 			t.Fatal("should be readonly index")
@@ -81,9 +82,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		err = docStore.OpenDocumentDB("docdb_err", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		err = docStore.CreateDocumentDB("docdb_err", podPassword, nil, true)
 		if !errors.Is(err, collection.ErrDocumentDBAlreadyOpened) {
 			t.Fatal("db should be opened already")
@@ -108,20 +107,32 @@ func TestDocumentStore(t *testing.T) {
 
 		// delete the db in the middle
 		err = docStore.DeleteDocumentDB("docdb_1_2", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// check if other two db exists
 		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_3"}, docStore, podPassword)
 		err = docStore.DeleteDocumentDB("docdb_1_1", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		err = docStore.DeleteDocumentDB("docdb_1_3", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+		checkIfDBNotExists(t, "docdb_1_1", podPassword, docStore)
+		checkIfDBNotExists(t, "docdb_1_3", podPassword, docStore)
+	})
+
+	t.Run("delete_all_document_db", func(t *testing.T) {
+		// create multiple document DB
+		createDocumentDBs(t, []string{"docdb_1_1", "docdb_1_2", "docdb_1_3"}, docStore, nil, podPassword)
+		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_2", "docdb_1_3"}, docStore, podPassword)
+
+		// delete the db in the middle
+		err = docStore.DeleteDocumentDB("docdb_1_2", podPassword)
+		require.NoError(t, err)
+
+		// check if other two db exists
+		checkIfDBsExists(t, []string{"docdb_1_1", "docdb_1_3"}, docStore, podPassword)
+		err = docStore.DeleteAllDocumentDBs(podPassword)
+		require.NoError(t, err)
+
 		checkIfDBNotExists(t, "docdb_1_1", podPassword, docStore)
 		checkIfDBNotExists(t, "docdb_1_3", podPassword, docStore)
 	})
@@ -172,9 +183,7 @@ func TestDocumentStore(t *testing.T) {
 		createDocumentDBs(t, []string{"docdb_3"}, docStore, nil, podPassword)
 
 		err := docStore.OpenDocumentDB("docdb_3", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// check if the DB is opened properly
 		if !docStore.IsDBOpened("docdb_3") {
@@ -185,14 +194,10 @@ func TestDocumentStore(t *testing.T) {
 	t.Run("put_immutable_error", func(t *testing.T) {
 		// create a document DB
 		err := docStore.CreateDocumentDB("doc_do_immutable", podPassword, nil, false)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		err = docStore.OpenDocumentDB("doc_do_immutable", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// create a json document
 		document1 := &TestDocument{
@@ -202,9 +207,7 @@ func TestDocumentStore(t *testing.T) {
 			Age:       25,
 		}
 		data, err := json.Marshal(document1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// insert the docment in the DB
 		err = docStore.Put("doc_do_immutable", data)
@@ -218,9 +221,8 @@ func TestDocumentStore(t *testing.T) {
 		createDocumentDBs(t, []string{"docdb_4"}, docStore, nil, podPassword)
 
 		err := docStore.OpenDocumentDB("docdb_4", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		invalidType := struct {
 			Time int64 `json:"created_at"`
 		}{
@@ -228,9 +230,7 @@ func TestDocumentStore(t *testing.T) {
 		}
 
 		data, err := json.Marshal(invalidType)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		err = docStore.Put("docdb_4", data)
 		if !errors.Is(err, collection.ErrDocumentDBIndexFieldNotPresent) {
@@ -244,9 +244,7 @@ func TestDocumentStore(t *testing.T) {
 			Age:       25,
 		}
 		data, err = json.Marshal(document1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// insert the docment in the DB
 		err = docStore.Put("docdb_4", data)
@@ -262,27 +260,20 @@ func TestDocumentStore(t *testing.T) {
 			Age:       25,
 		}
 		data, err = json.Marshal(document1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// insert the docment in the DB
 		err = docStore.Put("docdb_4", data)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// get the data and test if the retreived data is okay
 		gotData, err := docStore.Get("docdb_4", "1", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		var doc TestDocument
 		err = json.Unmarshal(gotData, &doc)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if doc.ID != document1.ID ||
 			doc.FirstName != document1.FirstName ||
 			doc.LastName != document1.LastName ||
@@ -301,23 +292,19 @@ func TestDocumentStore(t *testing.T) {
 		createDocumentDBs(t, []string{"docdb_5"}, docStore, si, podPassword)
 
 		err := docStore.OpenDocumentDB("docdb_5", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// Add documents
 		createTestDocuments(t, docStore, "docdb_5")
 
 		// get string index and check if the documents returned are okay
 		docs, err := docStore.Get("docdb_5", "2", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		var gotDoc TestDocument
 		err = json.Unmarshal(docs, &gotDoc)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if gotDoc.ID != "2" ||
 			gotDoc.FirstName != "John" ||
 			gotDoc.LastName != "boy" ||
@@ -338,20 +325,16 @@ func TestDocumentStore(t *testing.T) {
 		createDocumentDBs(t, []string{"docdb_6"}, docStore, si, podPassword)
 
 		err := docStore.OpenDocumentDB("docdb_6", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// Add documents
 		createTestDocuments(t, docStore, "docdb_6")
 
 		count1, err := docStore.Count("docdb_6", "")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
-		if count1 != 5 {
-			t.Fatalf("expected count %d, got %d", 5, count1)
+		if count1 != 6 {
+			t.Fatalf("expected count %d, got %d", 6, count1)
 		}
 
 	})
@@ -366,55 +349,48 @@ func TestDocumentStore(t *testing.T) {
 		createDocumentDBs(t, []string{"docdb_7"}, docStore, si, podPassword)
 
 		err := docStore.OpenDocumentDB("docdb_7", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// Add documents
 		createTestDocuments(t, docStore, "docdb_7")
 
 		// String count
-		count1, err := docStore.Count("docdb_7", "first_name=John")
-		if err != nil {
-			t.Fatal(err)
-		}
+		count1, err := docStore.Count("docdb_7", "first_name=>John")
+		require.NoError(t, err)
+
 		if count1 != 2 {
 			t.Fatalf("expected count %d, got %d", 2, count1)
 		}
 
 		count1, err = docStore.Count("docdb_7", "tag_map=tgf11:tgv11")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if count1 != 1 {
 			t.Fatalf("expected count %d, got %d", 1, count1)
 		}
 
 		// Number =
 		count2, err := docStore.Count("docdb_7", "age=25")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if count2 != 3 {
 			t.Fatalf("expected count %d, got %d", 3, count2)
 		}
 
 		// Number =>
 		count3, err := docStore.Count("docdb_7", "age=>30")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if count3 != 2 {
-			t.Fatalf("expected count %d, got %d", 2, count3)
+		require.NoError(t, err)
+
+		if count3 != 3 {
+			t.Fatalf("expected count %d, got %d", 3, count3)
 		}
 
 		// Number >
 		count4, err := docStore.Count("docdb_7", "age>30")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if count4 != 1 {
-			t.Fatalf("expected count %d, got %d", 1, count4)
+		require.NoError(t, err)
+
+		if count4 != 2 {
+			t.Fatalf("expected count %d, got %d", 2, count4)
 		}
 	})
 
@@ -428,26 +404,22 @@ func TestDocumentStore(t *testing.T) {
 		createDocumentDBs(t, []string{"docdb_8"}, docStore, si, podPassword)
 
 		err := docStore.OpenDocumentDB("docdb_8", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// Add documents
 		createTestDocuments(t, docStore, "docdb_8")
 
-		// String =
-		docs, err := docStore.Find("docdb_8", "first_name=John", podPassword, -1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		// String =>
+		docs, err := docStore.Find("docdb_8", "first_name=>John", podPassword, -1)
+		require.NoError(t, err)
+
 		if len(docs) != 2 {
 			t.Fatalf("expected count %d, got %d", 2, len(docs))
 		}
 		var gotDoc1 TestDocument
 		err = json.Unmarshal(docs[0], &gotDoc1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if gotDoc1.ID != "1" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "Doe" ||
@@ -456,9 +428,8 @@ func TestDocumentStore(t *testing.T) {
 		}
 		var gotDoc2 TestDocument
 		err = json.Unmarshal(docs[1], &gotDoc2)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if gotDoc2.ID != "2" ||
 			gotDoc2.FirstName != "John" ||
 			gotDoc2.LastName != "boy" ||
@@ -468,16 +439,14 @@ func TestDocumentStore(t *testing.T) {
 
 		// tag
 		docs, err = docStore.Find("docdb_8", "tag_map=tgf21:tgv21", podPassword, -1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if len(docs) != 1 {
 			t.Fatalf("expected count %d, got %d", 1, len(docs))
 		}
 		err = json.Unmarshal(docs[0], &gotDoc2)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if gotDoc2.ID != "2" ||
 			gotDoc2.FirstName != "John" ||
 			gotDoc2.LastName != "boy" ||
@@ -488,16 +457,14 @@ func TestDocumentStore(t *testing.T) {
 
 		// Number =
 		docs, err = docStore.Find("docdb_8", "age=25", podPassword, -1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if len(docs) != 3 {
 			t.Fatalf("expected count %d, got %d", 3, len(docs))
 		}
 		err = json.Unmarshal(docs[0], &gotDoc1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if gotDoc1.ID != "2" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "boy" ||
@@ -505,9 +472,8 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatalf("invalid json data received")
 		}
 		err = json.Unmarshal(docs[1], &gotDoc2)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if gotDoc2.ID != "4" ||
 			gotDoc2.FirstName != "Charlie" ||
 			gotDoc2.LastName != "chaplin" ||
@@ -516,9 +482,8 @@ func TestDocumentStore(t *testing.T) {
 		}
 		var gotDoc3 TestDocument
 		err = json.Unmarshal(docs[2], &gotDoc3)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if gotDoc3.ID != "5" ||
 			gotDoc3.FirstName != "Alice" ||
 			gotDoc3.LastName != "wonderland" ||
@@ -528,16 +493,13 @@ func TestDocumentStore(t *testing.T) {
 
 		// Number = with limit
 		docs, err = docStore.Find("docdb_8", "age=25", podPassword, 2)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		if len(docs) != 2 {
 			t.Fatalf("expected count %d, got %d", 2, len(docs))
 		}
 		err = json.Unmarshal(docs[0], &gotDoc1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if gotDoc1.ID != "2" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "boy" ||
@@ -545,9 +507,7 @@ func TestDocumentStore(t *testing.T) {
 			t.Fatalf("invalid json data received")
 		}
 		err = json.Unmarshal(docs[1], &gotDoc2)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if gotDoc2.ID != "4" ||
 			gotDoc2.FirstName != "Charlie" ||
 			gotDoc2.LastName != "chaplin" ||
@@ -557,26 +517,20 @@ func TestDocumentStore(t *testing.T) {
 
 		// Number =>
 		docs, err = docStore.Find("docdb_8", "age=>30", podPassword, -1)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if len(docs) != 2 {
-			t.Fatalf("expected count %d, got %d", 2, len(docs))
+		require.NoError(t, err)
+		if len(docs) != 3 {
+			t.Fatalf("expected count %d, got %d", 3, len(docs))
 		}
 		err = json.Unmarshal(docs[0], &gotDoc1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if gotDoc1.ID != "3" ||
 			gotDoc1.FirstName != "Bob" ||
 			gotDoc1.LastName != "michel" ||
 			gotDoc1.Age != 30 {
 			t.Fatalf("invalid json data received")
 		}
-		err = json.Unmarshal(docs[1], &gotDoc2)
-		if err != nil {
-			t.Fatal(err)
-		}
+		err = json.Unmarshal(docs[2], &gotDoc2)
+		require.NoError(t, err)
 		if gotDoc2.ID != "1" ||
 			gotDoc2.FirstName != "John" ||
 			gotDoc2.LastName != "Doe" ||
@@ -586,21 +540,70 @@ func TestDocumentStore(t *testing.T) {
 
 		// Number >
 		docs, err = docStore.Find("docdb_8", "age>30", podPassword, -1)
-		if err != nil {
-			t.Fatal(err)
+		require.NoError(t, err)
+		if len(docs) != 2 {
+			t.Fatalf("expected count %d, got %d", 2, len(docs))
 		}
-		if len(docs) != 1 {
-			t.Fatalf("expected count %d, got %d", 1, len(docs))
-		}
-		err = json.Unmarshal(docs[0], &gotDoc1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		err = json.Unmarshal(docs[1], &gotDoc1)
+		require.NoError(t, err)
 		if gotDoc1.ID != "1" ||
 			gotDoc1.FirstName != "John" ||
 			gotDoc1.LastName != "Doe" ||
 			gotDoc1.Age != 45.523793600000005 {
 			t.Fatalf("invalid json data received")
+		}
+
+		docs, err = docStore.Find("docdb_8", "tag_map=>tgf11:tgv11", podPassword, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, len(docs), 12)
+
+		docs, err = docStore.Find("docdb_8", "tag_map>tgf11:tgv11", podPassword, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, len(docs), 11)
+
+		docs, err = docStore.Find("docdb_8", "tag_map=>tgf41:tgv41", podPassword, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, len(docs), 6)
+
+		docs, err = docStore.Find("docdb_8", "tag_map>tgf41:tgv41", podPassword, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, len(docs), 5)
+
+		docs, err = docStore.Find("docdb_8", "age<=30", podPassword, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, len(docs), 4)
+
+		docs, err = docStore.Find("docdb_8", "age<30", podPassword, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, len(docs), 3)
+
+		// Number !=
+		docs, err = docStore.Find("docdb_8", "age!=25", podPassword, -1)
+		require.NoError(t, err)
+		if len(docs) != 3 {
+			t.Fatalf("expected count %d, got %d", 3, len(docs))
+		}
+		for _, v := range docs {
+			var doc TestDocument
+			err = json.Unmarshal(v, &doc)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if doc.Age == 25 {
+				t.Fatal("age should not be 25")
+			}
+		}
+
+		// String !=
+		_, err = docStore.Find("docdb_8", "first_name!=Bob", podPassword, -1)
+		if err == nil {
+			t.Fatal("should not be err ", err)
 		}
 	})
 
@@ -612,9 +615,7 @@ func TestDocumentStore(t *testing.T) {
 		createDocumentDBs(t, []string{"docdb_9"}, docStore, si, podPassword)
 
 		err := docStore.OpenDocumentDB("docdb_9", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// Add document and get to see if it is added
 		tag1 := make(map[string]string)
@@ -624,14 +625,10 @@ func TestDocumentStore(t *testing.T) {
 		list1 = append(list1, "lst11", "lst12")
 		addDocument(t, docStore, "docdb_9", "1", "John", "Doe", 45, tag1, list1)
 		docs, err := docStore.Get("docdb_9", "1", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		var gotDoc TestDocument
 		err = json.Unmarshal(docs, &gotDoc)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if gotDoc.ID != "1" ||
 			gotDoc.FirstName != "John" ||
 			gotDoc.LastName != "Doe" ||
@@ -641,10 +638,48 @@ func TestDocumentStore(t *testing.T) {
 
 		// del document
 		err = docStore.Del("docdb_9", "1")
-		if err != nil {
+		require.NoError(t, err)
+		_, err = docStore.Get("docdb_9", "1", podPassword)
+		if !errors.Is(err, collection.ErrEntryNotFound) {
 			t.Fatal(err)
 		}
-		_, err = docStore.Get("docdb_9", "1", podPassword)
+	})
+
+	t.Run("del_different_indexes", func(t *testing.T) {
+		// create a document DB
+		si := make(map[string]collection.IndexType)
+		si["first_name"] = collection.StringIndex
+		si["age"] = collection.NumberIndex
+		si["tag_map"] = collection.MapIndex
+		si["tag_list"] = collection.ListIndex
+		createDocumentDBs(t, []string{"docdb_99"}, docStore, si, podPassword)
+
+		err := docStore.OpenDocumentDB("docdb_99", podPassword)
+		require.NoError(t, err)
+
+		// Add document and get to see if it is added
+		tag1 := make(map[string]string)
+		tag1["tgf11"] = "tgv11"
+		tag1["tgf12"] = "tgv12"
+		var list1 []string
+		list1 = append(list1, "lst11", "lst12")
+		addDocument(t, docStore, "docdb_99", "1", "John", "Doe", 45, tag1, list1)
+		docs, err := docStore.Get("docdb_99", "1", podPassword)
+		require.NoError(t, err)
+		var gotDoc TestDocument
+		err = json.Unmarshal(docs, &gotDoc)
+		require.NoError(t, err)
+		if gotDoc.ID != "1" ||
+			gotDoc.FirstName != "John" ||
+			gotDoc.LastName != "Doe" ||
+			gotDoc.Age != 45 {
+			t.Fatalf("invalid json data received")
+		}
+
+		// del document
+		err = docStore.Del("docdb_99", "1")
+		require.NoError(t, err)
+		_, err = docStore.Get("docdb_99", "1", podPassword)
 		if !errors.Is(err, collection.ErrEntryNotFound) {
 			t.Fatal(err)
 		}
@@ -658,9 +693,7 @@ func TestDocumentStore(t *testing.T) {
 		createDocumentDBs(t, []string{"docdb_10"}, docStore, si, podPassword)
 
 		err := docStore.OpenDocumentDB("docdb_10", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		tag1 := make(map[string]string)
 		tag1["tgf11"] = "tgv11"
@@ -672,18 +705,14 @@ func TestDocumentStore(t *testing.T) {
 
 		// count the total docs using id field
 		count1, err := docStore.Count("docdb_10", "")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if count1 != 1 {
 			t.Fatalf("expected count %d, got %d", 1, count1)
 		}
 
-		// count the total docs using another index to make sure we dont have it any index
+		// count the total docs using another index to make sure we don't have it any index
 		docs, err := docStore.Find("docdb_10", "age=>20", podPassword, -1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if len(docs) != 1 {
 			t.Fatalf("expected count %d, got %d", 1, len(docs))
 		}
@@ -699,14 +728,10 @@ func TestDocumentStore(t *testing.T) {
 		createDocumentDBs(t, []string{"docdb_11"}, docStore, si, podPassword)
 
 		err := docStore.OpenDocumentDB("docdb_11", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		docBatch, err := docStore.CreateDocBatch("docdb_11", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		tag1 := make(map[string]string)
 		tag1["tgf11"] = "tgv11"
@@ -734,40 +759,30 @@ func TestDocumentStore(t *testing.T) {
 		addBatchDocument(t, docStore, docBatch, "4", "John", "Doe", 35, tag4, list4) // this tests the overwriting in batch
 
 		err = docStore.DocBatchWrite(docBatch, "")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// count the total docs using id field
 		count1, err := docStore.Count("docdb_11", "")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if count1 != 4 {
 			t.Fatalf("expected count %d, got %d", 4, count1)
 		}
 
-		// count the total docs using another index to make sure we dont have it any index
+		// count the total docs using another index to make sure we don't have it any index
 		docs, err := docStore.Find("docdb_11", "age=>20", podPassword, -1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if len(docs) != 4 {
 			t.Fatalf("expected count %d, got %d", 3, len(docs))
 		}
 
 		// tag
 		docs, err = docStore.Find("docdb_11", "tag_map=tgf21:tgv21", podPassword, -1)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if len(docs) != 1 {
 			t.Fatalf("expected count %d, got %d", 1, len(docs))
 		}
 		err = docStore.DeleteDocumentDB("docdb_11", podPassword)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	})
 	/*
 		t.Run("batch-immutable", func(t *testing.T) {
@@ -865,9 +880,7 @@ func createDocumentDBs(t *testing.T, dbNames []string, docStore *collection.Docu
 	t.Helper()
 	for _, dbName := range dbNames {
 		err := docStore.CreateDocumentDB(dbName, podPassword, si, true)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	}
 }
 
@@ -953,6 +966,12 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 	var list5 []string
 	list5 = append(list5, "lst51", "lst52")
 	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25, tag5, list5)
+	tag6 := make(map[string]string)
+	tag6["tgf61"] = "tgv61"
+	tag6["tgf62"] = "tgv62"
+	var list6 []string
+	list6 = append(list6, "lst61", "lst62")
+	addDocument(t, docStore, dbName, "6", "Zuri", "wonder", 52, tag6, list6)
 }
 
 func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age float64, tagMap map[string]string, tagList []string) {
@@ -995,15 +1014,11 @@ func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *col
 
 		// marshall the doc
 		data, err := json.Marshal(doc)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// insert the document in the batch
 		err = docStore.DocBatchPut(docBatch, data, 0)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	})
 	t.Run("invalid-json", func(t *testing.T) {
 		// create the doc
@@ -1018,9 +1033,7 @@ func addBatchDocument(t *testing.T, docStore *collection.Document, docBatch *col
 
 		// marshall the doc
 		data, err := json.Marshal([]TestDocument{doc})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		// insert the document in the batch
 		err = docStore.DocBatchPut(docBatch, data, 0)

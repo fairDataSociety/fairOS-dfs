@@ -34,16 +34,31 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+const (
+	minPasswordLength = 12
+	zeroAddressHex    = "0x0000000000000000000000000000000000000000"
+)
+
 // CreateNewUserV2 creates a new user with the given username and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
 func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string, tm taskmanager.TaskManagerGO) (string, string, string, string, *Info, error) {
+	if userName == "" {
+		return "", "", "", "", nil, ErrBlankUsername
+	}
+	if passPhrase == "" {
+		return "", "", "", "", nil, ErrBlankPassword
+	}
 	// Check username validity
 	if !isUserNameValid(userName) {
 		return "", "", "", "", nil, ErrInvalidUserName
 	}
-	// username availability
-	if u.IsUsernameAvailableV2(userName) {
-		return "", "", "", "", nil, ErrUserAlreadyPresent
+	ownerAddress, err := u.ens.GetOwner(userName)
+	if err != nil {
+		return "", "", "", "", nil, err
+	}
+	// check password length
+	if len(passPhrase) < minPasswordLength {
+		return "", "", "", "", nil, ErrPasswordTooSmall
 	}
 
 	acc := account.New(u.logger)
@@ -55,13 +70,27 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		return "", "", "", "", nil, err
 	}
 
-	// create ens subdomain and store mnemonic
-	nameHash, err := u.createENS(userName, accountInfo)
-	if err != nil { // skipcq: TCV-001
-		if err == eth.ErrInsufficientBalance { // skipcq: TCV-001
-			return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
+	// username availability
+	if ownerAddress.Hex() != zeroAddressHex &&
+		ownerAddress.Hex() != accountInfo.GetAddress().Hex() {
+		return "", "", "", "", nil, ErrUserAlreadyPresent
+	}
+
+	nameHash := ""
+	if ownerAddress.Hex() == zeroAddressHex {
+		// create ens subdomain and store mnemonic
+		nameHash, err = u.createENS(userName, accountInfo)
+		if err != nil { // skipcq: TCV-001
+			if err == eth.ErrInsufficientBalance { // skipcq: TCV-001
+				return accountInfo.GetAddress().Hex(), mnemonic, "", "", nil, err
+			}
+			return "", "", "", "", nil, err // skipcq: TCV-001
 		}
-		return "", "", "", "", nil, err // skipcq: TCV-001
+	} else {
+		_, nameHash, err = u.ens.GetInfo(userName)
+		if err != nil { // skipcq: TCV-001
+			return "", "", "", "", nil, err
+		}
 	}
 	key, err := accountInfo.PadSeed(seed, passPhrase)
 	if err != nil { // skipcq: TCV-001
@@ -96,7 +125,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	if err != nil {
 		return "", "", "", "", nil, err
 	}
-	// store encrypted soc address in secondary location
+
 	pb := crypto.FromECDSAPub(accountInfo.GetPublicKey())
 	return userAddressString, mnemonic, nameHash, utils.Encode(pb), ui, nil
 }

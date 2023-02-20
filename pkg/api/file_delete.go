@@ -26,6 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// FileDeleteRequest is used in the file delete request
 type FileDeleteRequest struct {
 	PodName  string `json:"podName,omitempty"`
 	FilePath string `json:"filePath,omitempty"`

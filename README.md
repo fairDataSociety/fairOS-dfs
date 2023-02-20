@@ -11,7 +11,7 @@
 
 Latest documentation is available at [https://docs.fairos.fairdatasociety.org/docs/](https://docs.fairos.fairdatasociety.org/docs/)
 
-![FairOS-dfs](https://github.com/fairDataSociety/fairOS-dfs/blob/master/docs/images/FairOS-dfs.png)
+![FairOS-dfs](./docs/images/FairOS-dfs.png)
 
 The Decentralised File System (dfs) is a file system built for the [FairOS](https://github.com/fairDataSociety/fairOS/blob/master/README.md).
 It is a stateless thin layer which uses the building blocks provided by Swarm to provide high level functionalities like
@@ -19,7 +19,7 @@ It is a stateless thin layer which uses the building blocks provided by Swarm to
 - Creation of logical drives
 - User and Permission management
 - Charging and Payments
-- Mutable, Indexed data structures over immmutable file system
+- Mutable, Indexed data structures over immutable file system
 
 dfs can be used for the following use cases
 1) Personal data store
@@ -62,13 +62,11 @@ To get the most out of your FairOS-dfs it is important that you configure FairOS
 bee:
   bee-api-endpoint: http://localhost:1633
   postage-batch-id: ""
-  is-gateway-proxy: false
 ```
 
 ##### Configuration for FairOS-dfs
 ```
 dfs:
-  data-dir: /Users/fairos/.fairOS/dfs
   ports:
     http-port: :9090
     pprof-port: :9091
@@ -110,11 +108,9 @@ This is how a config file should look like
 bee:
   bee-api-endpoint: http://localhost:1633
   postage-batch-id: <BATCH>
-  is-gateway-proxy: false
 cookie-domain: localhost
 cors-allowed-origins: []
 dfs:
-  data-dir: /Users/username/.fairOS/dfs
   ports:
     http-port: :9090
     pprof-port: :9091
@@ -158,12 +154,8 @@ Flags:
 Global Flags:
       --beeApi string      full bee api endpoint (default "localhost:1633")
       --config string      config file (default "/Users/sabyasachipatra/.dfs.yaml")
-      --dataDir string     store data in this dir (default "dataDirPath")
       --verbosity string   verbosity level (default "trace")
 ```
-
-### Introduction to Key Value Store over Swarm
-[![](https://j.gifs.com/6XZwvl.gif)](https://gateway.ethswarm.org/access/130dcf7d01442836bc14c8c38db32ebfc4d5771c28677438b6a2a2a078bd1414)
 
 ### HTTP APIs
 
@@ -214,5 +206,4 @@ network: "testnet"
 bee:
   bee-api-endpoint: http://localhost:1633 # bee running on mainnet  
   postage-batch-id: <BATCH>
-  is-gateway-proxy: false
 ```

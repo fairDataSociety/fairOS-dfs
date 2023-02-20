@@ -24,25 +24,24 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
+// Users
 type Users struct {
 	client  blockstore.Client
 	userMap map[string]*Info
 	userMu  *sync.RWMutex
 	logger  logging.Logger
 	ens     ensm.ENSManager
-	dataDir string
 }
 
-// NewUsers creates the main user object which stores all the logged in users and there respective
+// NewUsers creates the main user object which stores all the logged-in users and there respective
 // other data structures.
-func NewUsers(dataDir string, client blockstore.Client, ens ensm.ENSManager, logger logging.Logger) *Users {
+func NewUsers(client blockstore.Client, ens ensm.ENSManager, logger logging.Logger) *Users {
 	return &Users{
 		client:  client,
 		userMap: make(map[string]*Info),
 		userMu:  &sync.RWMutex{},
 		logger:  logger,
 		ens:     ens,
-		dataDir: dataDir,
 	}
 }
 

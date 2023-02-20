@@ -1,0 +1,8 @@
+project_name: fairos
+
+release:
+  prerelease: auto
+  extra_files:
+    - glob: ./fairos.aar
+builds:
+  - skip: true

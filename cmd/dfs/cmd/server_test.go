@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -45,28 +46,31 @@ func TestApis(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
 	ens := mock2.NewMockNamespaceManager()
 	logger := logging.New(io.Discard, logrus.ErrorLevel)
-	dataDir, err := os.MkdirTemp("", "new")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dataDir)
-	users := user.NewUsers(dataDir, mockClient, ens, logger)
-	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger, dataDir)
+
+	users := user.NewUsers(mockClient, ens, logger)
+	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
 	handler = api.NewMockHandler(dfsApi, logger, []string{"http://localhost:3000"})
+	defer handler.Close()
 	httpPort = ":9090"
 	pprofPort = ":9091"
 	base := "localhost:9090"
 	basev1 := "http://localhost:9090/v1"
 	basev2 := "http://localhost:9090/v2"
-	go startHttpService(logger)
+	srv := startHttpService(logger)
+	defer func() {
+		err := srv.Shutdown(context.TODO())
+		if err != nil {
+			logger.Error("failed to shutdown server", err.Error())
+		}
+	}()
 
 	// wait 10 seconds for the server to start
-	<-time.After(time.Second * 10)
+	<-time.After(time.Second * 3)
 	t.Run("login-fail-test", func(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 		userBytes, err := json.Marshal(userRequest)
 		if err != nil {
@@ -96,7 +100,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)
@@ -147,7 +151,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)
@@ -243,7 +247,7 @@ func TestApis(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)
@@ -486,24 +490,22 @@ func TestApis(t *testing.T) {
 					t.Fatal("dir stat failed")
 				}
 			} else {
-				if v.isDir {
-					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
-					if err != nil {
-						t.Fatal(err)
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&filePath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
 
-					}
-					statReq.Header.Set("Cookie", cookie[0])
-					statResp, err := c.Do(statReq)
-					if err != nil {
-						t.Fatal(err)
-					}
-					err = statResp.Body.Close()
-					if err != nil {
-						t.Fatal(err)
-					}
-					if statResp.StatusCode != 200 {
-						t.Fatal("file stat failed")
-					}
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("file stat failed")
 				}
 			}
 		}
@@ -553,11 +555,11 @@ func TestApis(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			url := common.FileRename
+			u := common.FileRename
 			if v.isDir {
-				url = common.DirRename
+				u = common.DirRename
 			}
-			renameHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(url)), bytes.NewBuffer(renameBytes))
+			renameHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(u)), bytes.NewBuffer(renameBytes))
 			if err != nil {
 				t.Fatal(err)
 
@@ -574,7 +576,7 @@ func TestApis(t *testing.T) {
 				t.Fatal(err)
 			}
 			if renameResp.StatusCode != 200 {
-				t.Fatal("rename failed", url)
+				t.Fatal("rename failed", u)
 			}
 		}
 
@@ -657,24 +659,413 @@ func TestApis(t *testing.T) {
 					t.Fatal("dir stat failed")
 				}
 			} else {
-				if v.isDir {
-					statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
-					if err != nil {
-						t.Fatal(err)
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&filePath=%s", basev1, string(common.FileStat), podRequest.PodName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
 
-					}
-					statReq.Header.Set("Cookie", cookie[0])
-					statResp, err := c.Do(statReq)
-					if err != nil {
-						t.Fatal(err)
-					}
-					err = statResp.Body.Close()
-					if err != nil {
-						t.Fatal(err)
-					}
-					if statResp.StatusCode != 200 {
-						t.Fatal("file stat failed")
-					}
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("file stat failed")
+				}
+			}
+		}
+	})
+
+	t.Run("signup-login-pod-dir-file-fork", func(t *testing.T) {
+		c := http.Client{Timeout: time.Duration(1) * time.Minute}
+		userRequest := &common.UserSignupRequest{
+			UserName: randStringRunes(16),
+			Password: randStringRunes(12),
+		}
+
+		userBytes, err := json.Marshal(userRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		signupRequestDataHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev2, string(common.UserSignup)), bytes.NewBuffer(userBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		signupRequestDataHttpReq.Header.Add("Content-Type", "application/json")
+		signupRequestDataHttpReq.Header.Add("Content-Length", strconv.Itoa(len(userBytes)))
+		signupRequestResp, err := c.Do(signupRequestDataHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = signupRequestResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if signupRequestResp.StatusCode != http.StatusCreated {
+			t.Fatal("Signup failed", signupRequestResp.StatusCode)
+		}
+
+		userLoginHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev2, string(common.UserLogin)), bytes.NewBuffer(userBytes))
+		if err != nil {
+			t.Fatal(err)
+
+		}
+		userLoginHttpReq.Header.Add("Content-Type", "application/json")
+		userLoginHttpReq.Header.Add("Content-Length", strconv.Itoa(len(userBytes)))
+		userLoginResp, err := c.Do(userLoginHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = userLoginResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if userLoginResp.StatusCode != http.StatusOK {
+			t.Fatal("user should be able to login")
+		}
+
+		cookie := userLoginResp.Header["Set-Cookie"]
+
+		// pod new
+		podRequest := &common.PodRequest{
+			PodName: randStringRunes(16),
+		}
+		podBytes, err := json.Marshal(podRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		podNewHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(common.PodNew)), bytes.NewBuffer(podBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		podNewHttpReq.Header.Set("Cookie", cookie[0])
+		podNewHttpReq.Header.Add("Content-Type", "application/json")
+		podNewHttpReq.Header.Add("Content-Length", strconv.Itoa(len(podBytes)))
+		podNewResp, err := c.Do(podNewHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = podNewResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if podNewResp.StatusCode != 201 {
+			t.Fatal("pod creation failed")
+		}
+
+		entries := []struct {
+			path    string
+			isDir   bool
+			size    int64
+			content []byte
+		}{
+			{
+				path:  "/dir1",
+				isDir: true,
+			},
+			{
+				path:  "/dir2",
+				isDir: true,
+			},
+			{
+				path:  "/dir3",
+				isDir: true,
+			},
+			{
+				path: "/file1",
+				size: 1024 * 1024,
+			},
+			{
+				path: "/dir1/file11",
+				size: 1024 * 512,
+			},
+			{
+				path: "/dir1/file12",
+				size: 1024 * 1024,
+			},
+			{
+				path: "/dir3/file31",
+				size: 1024 * 1024,
+			},
+			{
+				path: "/dir3/file32",
+				size: 1024 * 1024,
+			},
+			{
+				path: "/dir3/file33",
+				size: 1024,
+			},
+			{
+				path:  "/dir2/dir4",
+				isDir: true,
+			},
+			{
+				path:  "/dir2/dir4/dir5",
+				isDir: true,
+			},
+			{
+				path: "/dir2/dir4/file241",
+				size: 5 * 1024 * 1024,
+			},
+			{
+				path: "/dir2/dir4/dir5/file2451",
+				size: 10 * 1024 * 1024,
+			},
+		}
+
+		for _, v := range entries {
+			if v.isDir {
+				mkdirRqst := common.FileSystemRequest{
+					PodName:       podRequest.PodName,
+					DirectoryPath: v.path,
+				}
+				mkDirBytes, err := json.Marshal(mkdirRqst)
+				if err != nil {
+					t.Fatal(err)
+				}
+				mkDirHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(common.DirMkdir)), bytes.NewBuffer(mkDirBytes))
+				if err != nil {
+					t.Fatal(err)
+
+				}
+				mkDirHttpReq.Header.Set("Cookie", cookie[0])
+				mkDirHttpReq.Header.Add("Content-Type", "application/json")
+				mkDirHttpReq.Header.Add("Content-Length", strconv.Itoa(len(mkDirBytes)))
+				mkDirResp, err := c.Do(mkDirHttpReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = mkDirResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if mkDirResp.StatusCode != 201 {
+					t.Fatal("mkdir failed")
+				}
+			} else {
+				body := new(bytes.Buffer)
+				writer := multipart.NewWriter(body)
+				contentLength := fmt.Sprintf("%d", v.size)
+
+				err = writer.WriteField("podName", podRequest.PodName)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = writer.WriteField("contentLength", contentLength)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = writer.WriteField("dirPath", filepath.Dir(v.path))
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = writer.WriteField("blockSize", "1Mb")
+				if err != nil {
+					t.Fatal(err)
+				}
+				part, err := writer.CreateFormFile("files", filepath.Base(v.path))
+				if err != nil {
+					t.Fatal(err)
+				}
+				reader := &io.LimitedReader{R: rand.Reader, N: v.size}
+				_, err = io.Copy(part, reader)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				err = writer.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				uploadReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(common.FileUpload)), body)
+				if err != nil {
+					t.Fatal(err)
+
+				}
+				uploadReq.Header.Set("Cookie", cookie[0])
+				contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
+				uploadReq.Header.Add("Content-Type", contentType)
+				uploadResp, err := c.Do(uploadReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = uploadResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if uploadResp.StatusCode != 200 {
+					t.Fatal("upload failed")
+				}
+			}
+		}
+		<-time.After(time.Second * 2)
+		podForkRequest := &api.PodForkRequest{
+			PodName:  podRequest.PodName,
+			ForkName: "forkedPod",
+		}
+		podForkBytes, err := json.Marshal(podForkRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		podForkHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, "/pod/fork"), bytes.NewBuffer(podForkBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		podForkHttpReq.Header.Set("Cookie", cookie[0])
+		podForkHttpReq.Header.Add("Content-Type", "application/json")
+		podForkHttpReq.Header.Add("Content-Length", strconv.Itoa(len(podForkBytes)))
+		podForkResp, err := c.Do(podForkHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = podForkResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if podForkResp.StatusCode != 200 {
+			t.Fatal("pod fork failed")
+		}
+		podOpenRequest := &common.PodRequest{
+			PodName: podForkRequest.ForkName,
+		}
+		podOpenBytes, err := json.Marshal(podOpenRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		podOpenHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(common.PodOpen)), bytes.NewBuffer(podOpenBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		podOpenHttpReq.Header.Set("Cookie", cookie[0])
+		podOpenHttpReq.Header.Add("Content-Type", "application/json")
+		podOpenHttpReq.Header.Add("Content-Length", strconv.Itoa(len(podOpenBytes)))
+		podOpenResp, err := c.Do(podOpenHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = podOpenResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if podOpenResp.StatusCode != 200 {
+			t.Fatal("forked pod open fork failed")
+		}
+		// check stat in forked pod
+		for _, v := range entries {
+			if v.isDir {
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.DirStat), podForkRequest.ForkName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
+
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("dir stat failed")
+				}
+			} else {
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&filePath=%s", basev1, string(common.FileStat), podForkRequest.ForkName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
+
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("file stat failed")
+				}
+			}
+		}
+
+		// delete files from source pod
+		dirRqst := &api.DirRequest{
+			PodName:       podRequest.PodName,
+			DirectoryPath: "/dir3",
+		}
+
+		dirRqstBytes, _ := json.Marshal(dirRqst)
+		rmReq, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s%s", basev1, string(common.DirRmdir)), bytes.NewBuffer(dirRqstBytes))
+		if err != nil {
+			t.Fatal(err)
+
+		}
+		rmReq.Header.Set("Cookie", cookie[0])
+		rmReq.Header.Add("Content-Type", "application/json")
+		rmReq.Header.Add("Content-Length", strconv.Itoa(len(dirRqstBytes)))
+		rmResp, err := c.Do(rmReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = rmResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rmResp.StatusCode != 200 {
+			t.Fatal("dir delete failed")
+		}
+		// check stat in forked pod
+		for _, v := range entries {
+			if v.isDir {
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&dirPath=%s", basev1, string(common.DirStat), podForkRequest.ForkName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
+
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("dir stat failed")
+				}
+			} else {
+				statReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?podName=%s&filePath=%s", basev1, string(common.FileStat), podForkRequest.ForkName, v.path), http.NoBody)
+				if err != nil {
+					t.Fatal(err)
+
+				}
+				statReq.Header.Set("Cookie", cookie[0])
+				statResp, err := c.Do(statReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				err = statResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if statResp.StatusCode != 200 {
+					t.Fatal("file stat failed")
 				}
 			}
 		}
@@ -746,7 +1137,7 @@ func TestApis(t *testing.T) {
 
 		userRequest := &common.UserSignupRequest{
 			UserName: randStringRunes(16),
-			Password: randStringRunes(8),
+			Password: randStringRunes(12),
 		}
 
 		userBytes, err := json.Marshal(userRequest)

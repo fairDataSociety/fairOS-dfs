@@ -24,6 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// ShareInfo
 type ShareInfo struct {
 	PodName     string `json:"podName"`
 	Address     string `json:"podAddress"`
@@ -71,7 +72,7 @@ func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-	ref, err := p.client.UploadBlob(data, true, true)
+	ref, err := p.client.UploadBlob(data, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -80,6 +81,7 @@ func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 	return shareInfoRef.String(), nil
 }
 
+// ReceivePodInfo
 func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
 	if err != nil { // skipcq: TCV-001
@@ -100,13 +102,14 @@ func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 
 }
 
+// ReceivePod
 func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	if resp != http.StatusOK { // skipcq: TCV-001
-		return nil, fmt.Errorf("ReceivePod: could not download blob")
+		return nil, fmt.Errorf("receivePod: could not download blob")
 	}
 	var shareInfo ShareInfo
 	err = json.Unmarshal(data, &shareInfo)

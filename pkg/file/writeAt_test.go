@@ -11,16 +11,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func TestWriteAt(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
@@ -40,7 +44,8 @@ func TestWriteAt(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+
+	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 
 	t.Run("writeAt-non-existent-file", func(t *testing.T) {
 		filePath := string(os.PathSeparator)
@@ -157,6 +162,131 @@ func TestWriteAt(t *testing.T) {
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
+	})
+
+	t.Run("upload-update-known-very-small-file-two", func(t *testing.T) {
+		filePath := string(os.PathSeparator)
+		fileName := "file1"
+		compression := ""
+		blockSize := uint32(64000000)
+		var offset uint64 = 4
+
+		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
+		dt, err := uploadFileKnownContent(t, fileObject, filePath, fileName, compression, podPassword, blockSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath+fileName), "")
+		// check for meta
+		meta := fileObject.GetFromFileMap(fp)
+		if meta == nil {
+			t.Fatalf("file not added in file map")
+		}
+
+		// validate meta items
+		if meta.Path != filepath.ToSlash(filePath) {
+			t.Fatalf("invalid path in meta")
+		}
+		if meta.Name != fileName {
+			t.Fatalf("invalid file name in meta")
+		}
+		if meta.Size != uint64(len(dt)) {
+			t.Fatalf("invalid file size in meta")
+		}
+		if meta.BlockSize != blockSize {
+			t.Fatalf("invalid block size in meta")
+		}
+		reader, _, err := fileObject.Download(fp, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer := new(bytes.Buffer)
+		_, err = rcvdBuffer.ReadFrom(reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+		reader.Close()
+		reader2, _, err := fileObject.Download(fp, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer2 := new(bytes.Buffer)
+		_, err = rcvdBuffer2.ReadFrom(reader2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		reader, _, err = fileObject.Download(fp, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rcvdBuffer3 := new(bytes.Buffer)
+		_, err = rcvdBuffer3.ReadFrom(reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		update := []byte("abcdefghijklmnop")
+		rewrite := &bytes.Buffer{}
+		rewrite.Write(update)
+		_, err = fileObject.WriteAt(fp, podPassword, rewrite, offset, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		reader, _, err = fileObject.Download(fp, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer = new(bytes.Buffer)
+		_, err = rcvdBuffer.ReadFrom(reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		updatedContent := append(dt[:offset], update...)
+
+		if uint64(len(update))+offset < uint64(len(dt)) {
+			updatedContent = append(updatedContent, dt[uint64(len(update))+offset:]...)
+		}
+
+		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
+			t.Fatal("content is different")
+		}
+
+		offset = 0
+		rewrite = &bytes.Buffer{}
+		rewrite.Write(update)
+		_, err = fileObject.WriteAt(fp, podPassword, rewrite, offset, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		reader, _, err = fileObject.Download(fp, podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rcvdBuffer = new(bytes.Buffer)
+		_, err = rcvdBuffer.ReadFrom(reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+		updatedContent2 := append(updatedContent[:offset], update...)
+
+		if uint64(len(update))+offset < uint64(len(updatedContent)) {
+			updatedContent2 = append(updatedContent2, updatedContent[uint64(len(update))+offset:]...)
+		}
+		if !bytes.Equal(updatedContent2, rcvdBuffer.Bytes()) {
+			t.Fatal("content is different")
+		}
+
+		fileObject.RemoveAllFromFileMap()
+
+		meta2 := fileObject.GetFromFileMap(fp)
+		if meta2 != nil {
+			t.Fatal("meta2 should be nil")
+		}
+
+		fileObject.RemoveAllFromFileMap()
 	})
 
 	t.Run("upload-update-truncate-known-very-small-file", func(t *testing.T) {
@@ -471,7 +601,7 @@ func TestWriteAt(t *testing.T) {
 
 func uploadFileKnownContent(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, blockSize uint32) ([]byte, error) {
 	f1 := &bytes.Buffer{}
-	content := []byte("abcdefghijk abcdefghijk abcdefghijk")
+	content := []byte("abcd")
 	_, err := f1.Write(content)
 	if err != nil {
 		t.Fatal(err)

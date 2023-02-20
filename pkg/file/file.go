@@ -38,6 +38,7 @@ type File struct {
 	client      blockstore.Client
 	fd          *feed.API
 	fileMap     map[string]*MetaData
+	tagMap      sync.Map
 	fileMu      *sync.RWMutex
 	logger      logging.Logger
 	syncManager taskmanager.TaskManagerGO
@@ -103,6 +104,29 @@ func (f *File) RemoveAllFromFileMap() {
 	f.fileMap = make(map[string]*MetaData)
 }
 
+// AddToTagMap adds a mapping filename and tag into tagMap
+func (f *File) AddToTagMap(filePath string, tag uint32) {
+	f.tagMap.Store(filePath, tag)
+}
+
+// LoadFromTagMap gets a tag from tagMap
+func (f *File) LoadFromTagMap(filePath string) uint32 {
+	tag, ok := f.tagMap.Load(filePath)
+	if ok {
+		formattedTag, ok := tag.(uint32)
+		if !ok { // skipcq: TCV-001
+			return 0
+		}
+		return formattedTag
+	}
+	return 0 // skipcq: TCV-001
+}
+
+// DeleteFromTagMap deletes a tag from tagMap
+func (f *File) DeleteFromTagMap(filePath string) { // skipcq: TCV-001
+	f.tagMap.Delete(filePath)
+}
+
 type lsTask struct {
 	f           *File
 	topic       []byte
@@ -125,6 +149,7 @@ func newLsTask(f *File, topic []byte, path, podPassword string, l *[]Entry, mtx 
 	}
 }
 
+// Execute
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
 	_, data, err := lt.f.fd.GetFeedData(lt.topic, lt.f.userAddress, []byte(lt.podPassword))
@@ -147,13 +172,16 @@ func (lt *lsTask) Execute(context.Context) error {
 		CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
 		AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
 		ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
+		Mode:             meta.Mode,
 	}
+	lt.f.AddToFileMap(utils.CombinePathAndFile(meta.Path, meta.Name), meta)
 	lt.mtx.Lock()
 	defer lt.mtx.Unlock()
 	*lt.entries = append(*lt.entries, entry)
 	return nil
 }
 
+// Name
 func (lt *lsTask) Name() string {
 	return lt.f.userAddress.String() + lt.f.podName + lt.path
 }

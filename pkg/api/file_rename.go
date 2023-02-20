@@ -91,7 +91,7 @@ func (h *Handler) FileRenameHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "file rename: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
-	// delete file
+	// rename file
 	err = h.dfsAPI.RenameFile(podName, podFileWithPath, newPodFileWithPath, sessionId)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {

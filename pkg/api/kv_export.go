@@ -10,8 +10,10 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// MaxExportLimit
 const MaxExportLimit = 100
 
+// KVExportRequest
 type KVExportRequest struct {
 	PodName     string `json:"podName,omitempty"`
 	TableName   string `json:"tableName,omitempty"`

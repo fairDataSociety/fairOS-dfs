@@ -25,6 +25,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// DocIndexRequest is used to index a json file from a pod directly
 type DocIndexRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`

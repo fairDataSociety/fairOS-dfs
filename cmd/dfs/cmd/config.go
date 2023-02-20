@@ -6,16 +6,12 @@ import (
 )
 
 var (
-	optionCORSAllowedOrigins = "cors-allowed-origins"
-	// FOR MIGRATION PURPOSE ONLY
-	optionDFSDataDir = "dfs.data-dir"
-
+	optionCORSAllowedOrigins    = "cors-allowed-origins"
 	optionDFSHttpPort           = "dfs.ports.http-port"
 	optionDFSPprofPort          = "dfs.ports.pprof-port"
 	optionVerbosity             = "verbosity"
 	optionBeeApi                = "bee.bee-api-endpoint"
 	optionBeePostageBatchId     = "bee.postage-batch-id"
-	optionIsGatewayProxy        = "bee.is-gateway-proxy"
 	optionCookieDomain          = "cookie-domain"
 	optionNetwork               = "network"
 	optionRPC                   = "rpc"
@@ -30,7 +26,6 @@ var (
 	defaultVerbosity          = "trace"
 	defaultBeeApi             = "http://localhost:1633"
 	defaultCookieDomain       = "api.fairos.io"
-	defaultIsGatewayProxy     = false
 )
 
 var configCmd = &cobra.Command{
@@ -44,7 +39,7 @@ var configCmd = &cobra.Command{
 
 		d := config.AllSettings()
 		ym, err := yaml.Marshal(d)
-		if err != nil {
+		if err != nil { // skipcq: TCV-001
 			return err
 		}
 		cmd.Println(string(ym))

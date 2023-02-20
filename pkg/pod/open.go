@@ -29,7 +29,7 @@ import (
 )
 
 // OpenPod opens a pod if it is not already opened. as part of opening the pod
-// it loads all the data structures related to the pod. Also it syncs all the
+// it loads all the data structures related to the pod. Also, it syncs all the
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPod(podName string) (*Info, error) {
 	// check if pods is present and get the index of the pod
@@ -91,7 +91,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	}
 
 	kvStore := c.NewKeyValueStore(podName, fd, accountInfo, user, p.client, p.logger)
-	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.client, p.logger)
+	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.tm, p.client, p.logger)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
@@ -117,7 +117,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 }
 
 // OpenPodAsync opens a pod if it is not already opened. as part of opening the pod
-// it loads all the data structures related to the pod. Also it syncs all the
+// it loads all the data structures related to the pod. Also, it syncs all the
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	// check if pods is present and get the index of the pod
@@ -181,7 +181,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	}
 
 	kvStore := c.NewKeyValueStore(podName, fd, accountInfo, user, p.client, p.logger)
-	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.client, p.logger)
+	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.tm, p.client, p.logger)
 
 	// create the pod info and store it in the podMap
 	podInfo := &Info{
@@ -205,7 +205,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	return podInfo, nil
 }
 
-func (*Pod) getIndexPassword(podList *PodList, podName string) (int, string) {
+func (*Pod) getIndexPassword(podList *List, podName string) (int, string) {
 	for _, pod := range podList.Pods {
 		if pod.Name == podName {
 			return pod.Index, pod.Password
@@ -214,7 +214,7 @@ func (*Pod) getIndexPassword(podList *PodList, podName string) (int, string) {
 	return -1, "" // skipcq: TCV-001
 }
 
-func (*Pod) getAddressPassword(podList *PodList, podName string) (string, string) {
+func (*Pod) getAddressPassword(podList *List, podName string) (string, string) {
 	for _, pod := range podList.SharedPods {
 		if pod.Name == podName {
 			return pod.Address, pod.Password

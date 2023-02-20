@@ -17,11 +17,16 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	dfs "github.com/fairdatasociety/fairOS-dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
@@ -96,23 +101,20 @@ can consume it.`,
 		postageBlockId = config.GetString(optionBeePostageBatchId)
 		corsOrigins = config.GetStringSlice(optionCORSAllowedOrigins)
 		verbosity = config.GetString(optionVerbosity)
-		isGatewayProxy := config.GetBool(optionIsGatewayProxy)
 
-		if !isGatewayProxy {
-			if postageBlockId == "" {
-				_ = cmd.Help()
-				fmt.Println("\npostageBlockId is required to run server")
-				return fmt.Errorf("postageBlockId is required to run server")
-			} else if postageBlockId != zeroBatchId && postageBlockId != "0" {
-				if len(postageBlockId) != 64 {
-					fmt.Println("\npostageBlockId is invalid")
-					return fmt.Errorf("postageBlockId is invalid")
-				}
-				_, err := hex.DecodeString(postageBlockId)
-				if err != nil {
-					fmt.Println("\npostageBlockId is invalid")
-					return fmt.Errorf("postageBlockId is invalid")
-				}
+		if postageBlockId == "" {
+			_ = cmd.Help()
+			fmt.Println("\npostageBlockId is required to run server")
+			return fmt.Errorf("postageBlockId is required to run server")
+		} else if postageBlockId != zeroBatchId && postageBlockId != "0" {
+			if len(postageBlockId) != 64 {
+				fmt.Println("\npostageBlockId is invalid")
+				return fmt.Errorf("postageBlockId is invalid")
+			}
+			_, err := hex.DecodeString(postageBlockId)
+			if err != nil {
+				fmt.Println("\npostageBlockId is invalid")
+				return fmt.Errorf("postageBlockId is invalid")
 			}
 		}
 		ensConfig := &contracts.Config{}
@@ -191,7 +193,6 @@ can consume it.`,
 		logger.Info("version        : ", dfs.Version)
 		logger.Info("network        : ", network)
 		logger.Info("beeApi         : ", beeApi)
-		logger.Info("isGatewayProxy : ", isGatewayProxy)
 		logger.Info("verbosity      : ", verbosity)
 		logger.Info("httpPort       : ", httpPort)
 		logger.Info("pprofPort      : ", pprofPort)
@@ -199,17 +200,37 @@ can consume it.`,
 		logger.Info("postageBlockId : ", postageBlockId)
 		logger.Info("corsOrigins    : ", corsOrigins)
 
+		ctx, cancel := context.WithCancel(cmd.Context())
+		defer cancel()
 		// datadir will be removed in some future version. it is kept for migration purpose only
-		hdlr, err := api.NewHandler(dataDir, beeApi, cookieDomain, postageBlockId, corsOrigins, isGatewayProxy, ensConfig, logger)
+		hdlr, err := api.New(ctx, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return err
 		}
+		defer hdlr.Close()
 		handler = hdlr
 		if pprof {
 			go startPprofService(logger)
 		}
-		startHttpService(logger)
+
+		srv := startHttpService(logger)
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Minute)
+		defer func() {
+			err = srv.Shutdown(shutdownCtx)
+			if err != nil {
+				logger.Error("failed to shutdown server", err.Error())
+			}
+			shutdownCancel()
+		}()
+
+		done := make(chan os.Signal, 1)
+		signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
+
+		select {
+		case <-ctx.Done():
+		case <-done:
+		}
 		return nil
 	},
 }
@@ -227,7 +248,7 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 }
 
-func startHttpService(logger logging.Logger) {
+func startHttpService(logger logging.Logger) *http.Server {
 	router := mux.NewRouter()
 
 	// Web page handlers
@@ -310,12 +331,15 @@ func startHttpService(logger logging.Logger) {
 	podRouter.HandleFunc("/open-async", handler.PodOpenAsyncHandler).Methods("POST")
 	podRouter.HandleFunc("/close", handler.PodCloseHandler).Methods("POST")
 	podRouter.HandleFunc("/sync", handler.PodSyncHandler).Methods("POST")
+	podRouter.HandleFunc("/sync-async", handler.PodSyncAsyncHandler).Methods("POST")
 	podRouter.HandleFunc("/share", handler.PodShareHandler).Methods("POST")
 	podRouter.HandleFunc("/delete", handler.PodDeleteHandler).Methods("DELETE")
 	podRouter.HandleFunc("/ls", handler.PodListHandler).Methods("GET")
 	podRouter.HandleFunc("/stat", handler.PodStatHandler).Methods("GET")
 	podRouter.HandleFunc("/receive", handler.PodReceiveHandler).Methods("GET")
 	podRouter.HandleFunc("/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
+	podRouter.HandleFunc("/fork", handler.PodForkHandler).Methods("POST")
+	podRouter.HandleFunc("/fork-from-reference", handler.PodForkFromReferenceHandler).Methods("POST")
 
 	// directory related handlers
 	dirRouter := baseRouter.PathPrefix("/dir/").Subrouter()
@@ -324,20 +348,24 @@ func startHttpService(logger logging.Logger) {
 	dirRouter.HandleFunc("/rmdir", handler.DirectoryRmdirHandler).Methods("DELETE")
 	dirRouter.HandleFunc("/ls", handler.DirectoryLsHandler).Methods("GET")
 	dirRouter.HandleFunc("/stat", handler.DirectoryStatHandler).Methods("GET")
+	dirRouter.HandleFunc("/chmod", handler.DirectoryModeHandler).Methods("POST")
 	dirRouter.HandleFunc("/present", handler.DirectoryPresentHandler).Methods("GET")
 	dirRouter.HandleFunc("/rename", handler.DirectoryRenameHandler).Methods("POST")
 
 	// file related handlers
 	fileRouter := baseRouter.PathPrefix("/file/").Subrouter()
 	fileRouter.Use(handler.LoginMiddleware)
+	fileRouter.HandleFunc("/status", handler.FileStatusHandler).Methods("GET")
 	fileRouter.HandleFunc("/download", handler.FileDownloadHandlerGet).Methods("GET")
 	fileRouter.HandleFunc("/download", handler.FileDownloadHandlerPost).Methods("POST")
+	fileRouter.HandleFunc("/update", handler.FileUpdateHandler).Methods("POST")
 	fileRouter.HandleFunc("/upload", handler.FileUploadHandler).Methods("POST")
 	fileRouter.HandleFunc("/share", handler.FileShareHandler).Methods("POST")
 	fileRouter.HandleFunc("/receive", handler.FileReceiveHandler).Methods("GET")
 	fileRouter.HandleFunc("/receiveinfo", handler.FileReceiveInfoHandler).Methods("GET")
 	fileRouter.HandleFunc("/delete", handler.FileDeleteHandler).Methods("DELETE")
 	fileRouter.HandleFunc("/stat", handler.FileStatHandler).Methods("GET")
+	fileRouter.HandleFunc("/chmod", handler.FileModeHandler).Methods("POST")
 	fileRouter.HandleFunc("/rename", handler.FileRenameHandler).Methods("POST")
 
 	kvRouter := baseRouter.PathPrefix("/kv/").Subrouter()
@@ -390,11 +418,20 @@ func startHttpService(logger logging.Logger) {
 	handler := c.Handler(router)
 
 	logger.Infof("fairOS-dfs API server listening on port: %v", httpPort)
-	err := http.ListenAndServe(httpPort, handler)
-	if err != nil {
-		logger.Errorf("http listenAndServe: %v ", err.Error())
-		return
+	srv := &http.Server{
+		Addr:    httpPort,
+		Handler: handler,
 	}
+
+	go func() {
+		err := srv.ListenAndServe()
+		if err != nil {
+			logger.Errorf("http listenAndServe: %v ", err.Error())
+			return
+		}
+	}()
+
+	return srv
 }
 
 func startPprofService(logger logging.Logger) {

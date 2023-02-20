@@ -64,7 +64,7 @@ func (i *Info) GetFeed() *feed.API {
 	return i.feedApi
 }
 
-// AddPodName adds pod to user user pod map
+// AddPodName adds pod to user pod map
 func (i *Info) AddPodName(podName string, podInfo *pod.Info) {
 	i.openPodsMu.Lock()
 	defer i.openPodsMu.Unlock()

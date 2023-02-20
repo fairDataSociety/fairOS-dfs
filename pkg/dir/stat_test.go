@@ -56,8 +56,9 @@ func TestStat(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+
 	t.Run("stat-dir", func(t *testing.T) {
-		podPassword, _ := utils.GetRandString(pod.PodPasswordLength)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
 		// make root dir so that other directories can be added
@@ -79,7 +80,7 @@ func TestStat(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// just add dummy file enty as file listing is not tested here
+		// just add dummy file entry as file listing is not tested here
 		err = dirObject.AddEntryToDir("/dirToStat", podPassword, "file1", true)
 		if err != nil {
 			t.Fatal(err)

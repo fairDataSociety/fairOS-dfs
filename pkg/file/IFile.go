@@ -18,6 +18,7 @@ package file
 
 import "io"
 
+// IFile
 type IFile interface {
 	Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression, podPassword string) error
 	Download(podFileWithPath, podPassword string) (io.ReadCloser, uint64, error)

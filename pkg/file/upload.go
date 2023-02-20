@@ -35,11 +35,15 @@ import (
 
 const (
 	minBlockSizeForGzip = 164000
+	//S_IFREG
+	S_IFREG     = 0100000
+	defaultMode = 0600
 )
 
 var (
 	noOfParallelWorkers = runtime.NumCPU()
 
+	//ErrGzipBlSize
 	ErrGzipBlSize = fmt.Errorf("gzip: block size cannot be less than %d", minBlockSizeForGzip)
 )
 
@@ -49,13 +53,19 @@ var (
 func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression, podPassword string) error {
 	podPath = filepath.ToSlash(podPath)
 	// check compression gzip and blocksize
-	// pgzip does not allow block size lower or equal to 163840
+	// pgzip does not allow block size lower or equal to 163840,
 	// so we set block size lower bound to 164000 for
 	if compression == "gzip" && blockSize < minBlockSizeForGzip {
 		return ErrGzipBlSize
 	}
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()
+
+	tag, err := f.client.CreateTag(nil)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
 	meta := MetaData{
 		Version:          MetaVersion,
 		Path:             podPath,
@@ -66,6 +76,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		CreationTime:     now,
 		AccessTime:       now,
 		ModificationTime: now,
+		Mode:             S_IFREG | defaultMode,
 	}
 
 	var totalLength uint64
@@ -126,21 +137,22 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 				}()
 
 				f.logger.Infof("Uploading %d block", counter)
-				// compress the data
+				// Compress the data
 				uploadData := data[:size]
 				if compression != "" {
-					uploadData, err = compress(data[:size], compression, blockSize)
+					uploadData, err = Compress(data[:size], compression, blockSize)
 					if err != nil { // skipcq: TCV-001
 						mainErr = err
 						return
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
+				addr, uploadErr := f.client.UploadBlob(uploadData, tag, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
 				}
+
 				fileBlock := &BlockInfo{
 					Size:           uint32(size),
 					CompressedSize: uint32(len(uploadData)),
@@ -180,7 +192,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		return err
 	}
 
-	addr, err := f.client.UploadBlob(fileInodeData, true, true)
+	addr, err := f.client.UploadBlob(fileInodeData, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -190,7 +202,12 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	f.AddToFileMap(utils.CombinePathAndFile(meta.Path, meta.Name), &meta)
+
+	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
+	f.AddToFileMap(totalPath, &meta)
+	if tag > 0 {
+		f.AddToTagMap(totalPath, tag)
+	}
 	return nil
 }
 
@@ -203,7 +220,8 @@ func (*File) getContentType(bufferReader *bufio.Reader) string {
 	return http.DetectContentType(buffer)
 }
 
-func compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
+// Compress data
+func Compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
 	switch compression {
 	case "gzip":
 		var b bytes.Buffer

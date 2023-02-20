@@ -70,6 +70,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 	if endofst > dataSize {
 		newDataSize = endofst
 	}
+
 	startingBlock := offset / uint64(meta.BlockSize)
 	readStartPoint := startingBlock * uint64(meta.BlockSize)
 	reader.Next(int(readStartPoint))
@@ -85,10 +86,11 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 	for k, v := range fileInode.Blocks {
 		refMap[k] = v
 	}
-
 	refMapMu := sync.RWMutex{}
 	var contentBytes []byte
 	wg.Add(1)
+
+	tag := f.LoadFromTagMap(totalFilePath)
 	go func() {
 		var mainErr error
 		for {
@@ -122,6 +124,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 				data = append(data, temp[:n]...)
 				totalLength += uint64(n)
 			}
+
 			if totalLength >= offset && totalLength < endofst && uint32(len(data)) != meta.BlockSize {
 				temp := make([]byte, meta.BlockSize-uint32(n))
 				n, err = updater.Read(temp)
@@ -146,7 +149,12 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 
 			if uint32(len(data)) != meta.BlockSize && !truncate {
 				if totalLength < dataSize && uint32(len(data)) != meta.BlockSize {
-					temp := make([]byte, meta.BlockSize-uint32(len(data)))
+					size := meta.BlockSize
+					if dataSize < uint64(meta.BlockSize) {
+						size = uint32(dataSize)
+					}
+
+					temp := make([]byte, size-uint32(len(data)))
 					n, err = reader.Read(temp)
 					if err != nil {
 						if err == io.EOF {
@@ -176,6 +184,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 
 			wg.Add(1)
 			worker <- true
+
 			go func(counter, size int) {
 				defer func() {
 					<-worker
@@ -185,17 +194,17 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 					}
 				}()
 				f.logger.Infof("Uploading %d block", counter)
-				// compress the data
+				// Compress the data
 				uploadData := data
 				if meta.Compression != "" {
-					uploadData, err = compress(data, meta.Compression, meta.BlockSize)
+					uploadData, err = Compress(data, meta.Compression, meta.BlockSize)
 					if err != nil { // skipcq: TCV-001
 						mainErr = err
 						return
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, true, true)
+				addr, uploadErr := f.client.UploadBlob(uploadData, tag, true, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
@@ -211,7 +220,6 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 				defer refMapMu.Unlock()
 				refMap[counter] = fileBlock
 			}(int(i), n)
-
 			i++
 		}
 	}()
@@ -241,13 +249,13 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 		return 0, err
 	}
 
-	addr, err := f.client.UploadBlob(fileInodeData, true, true)
+	addr, err := f.client.UploadBlob(fileInodeData, 0, true, true)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
-
 	meta.InodeAddress = addr
 	meta.Size = newDataSize
+
 	err = f.handleMeta(meta, podPassword)
 	if err != nil { // skipcq: TCV-001
 		return 0, err

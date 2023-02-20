@@ -116,6 +116,7 @@ func logoutUser() {
 	fmt.Println(message)
 }
 
+// StatUser
 func StatUser() {
 	data, err := fdfsAPI.getReq(apiUserStat, "")
 	if err != nil {
@@ -164,8 +165,8 @@ func isUserLoggedIn(userName string) {
 		return
 	}
 	if resp.LoggedIn {
-		fmt.Println("user is logged in")
+		fmt.Println("user is logged-in")
 	} else {
-		fmt.Println("user is NOT logged in")
+		fmt.Println("user is NOT logged-in")
 	}
 }

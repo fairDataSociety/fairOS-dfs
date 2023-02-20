@@ -32,6 +32,7 @@ var (
 	writeDeadline = 4 * time.Second
 )
 
+// WebsocketHandler
 func (h *Handler) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{} // use default options
 	upgrader.CheckOrigin = func(r *http.Request) bool {
@@ -73,14 +74,20 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		ticker := time.NewTicker(pingPeriod)
 		defer ticker.Stop()
 
-		for range ticker.C {
-			if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
+		for {
+			select {
+			case <-h.ctx.Done():
+				h.logger.Debug("stopping server")
 				return
-			}
-			if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-				h.logger.Debugf("ws event handler: failed to send ping: %v", err)
-				h.logger.Error("ws event handler: failed to send ping")
-				return
+			case <-ticker.C:
+				if err := conn.SetWriteDeadline(time.Now().Add(writeDeadline)); err != nil {
+					return
+				}
+				if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+					h.logger.Debugf("ws event handler: failed to send ping: %v", err)
+					h.logger.Error("ws event handler: failed to send ping")
+					return
+				}
 			}
 		}
 	}()
@@ -655,12 +662,12 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			podStatRenponse := &PodStatResponse{
+			podStatResponse := &PodStatResponse{
 				PodName:    stat.PodName,
 				PodAddress: stat.PodAddress,
 			}
 
-			messageBytes, err := json.Marshal(podStatRenponse)
+			messageBytes, err := json.Marshal(podStatResponse)
 			if err != nil {
 				respondWithError(res, err)
 				continue

@@ -17,7 +17,6 @@ limitations under the License.
 package file_test
 
 import (
-	"bytes"
 	"crypto/rand"
 	"errors"
 	"io"
@@ -27,6 +26,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFileReader(t *testing.T) {
@@ -40,17 +41,13 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
 		defer reader.Close()
 		_, err := reader.Seek(10, 0)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		outputBytes := make([]byte, 3)
 		n, err := reader.Read(outputBytes)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if n != 3 {
-			t.Fatal("file not read properly")
-		}
+		require.NoError(t, err)
+
+		assert.Equal(t, n, 3)
 	})
 
 	t.Run("read-entire-file-shorter-than-block-2", func(t *testing.T) {
@@ -61,9 +58,8 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
 		defer reader.Close()
 		_, err := reader.Seek(10, 0)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		outputBytes := make([]byte, 10)
 		_, err = reader.Read(outputBytes)
 		if !errors.Is(err, io.EOF) {
@@ -79,17 +75,13 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
 		defer reader.Close()
 		_, err := reader.Seek(10, 0)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		outputBytes := make([]byte, 5)
 		n, err := reader.Read(outputBytes)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if n != 5 {
-			t.Fatal("file not read properly")
-		}
+		require.NoError(t, err)
+
+		assert.Equal(t, n, 5)
 	})
 
 	t.Run("read-seek", func(t *testing.T) {
@@ -113,17 +105,13 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
 		defer reader.Close()
 		_, err := reader.Seek(0, 0)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		outputBytes := make([]byte, 15)
 		n, err := reader.Read(outputBytes)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if n != 15 {
-			t.Fatal("file not read properly")
-		}
+		require.NoError(t, err)
+
+		assert.Equal(t, n, 15)
 	})
 
 	t.Run("read-entire-file", func(t *testing.T) {
@@ -135,9 +123,7 @@ func TestFileReader(t *testing.T) {
 		defer reader.Close()
 
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !bytes.Equal(b, outputBytes) {
-			t.Fatalf("file contents are not same")
-		}
+		assert.Equal(t, b, outputBytes)
 	})
 
 	t.Run("read-file-with-last-block-shorter", func(t *testing.T) {
@@ -148,9 +134,7 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
 		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !bytes.Equal(b, outputBytes) {
-			t.Fatalf("file contents are not same")
-		}
+		assert.Equal(t, b, outputBytes)
 	})
 
 	t.Run("read-gzip-file", func(t *testing.T) {
@@ -162,9 +146,7 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
 		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !bytes.Equal(b, outputBytes) {
-			t.Fatalf("file contents are not same")
-		}
+		assert.Equal(t, b, outputBytes)
 	})
 
 	t.Run("read-gzip-file-with-last-block-shorter", func(t *testing.T) {
@@ -176,9 +158,7 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
 		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !bytes.Equal(b, outputBytes) {
-			t.Fatalf("file contents are not same")
-		}
+		assert.Equal(t, b, outputBytes)
 	})
 
 	t.Run("read-snappy-file", func(t *testing.T) {
@@ -190,9 +170,7 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
 		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !bytes.Equal(b, outputBytes) {
-			t.Fatalf("file contents are not same")
-		}
+		assert.Equal(t, b, outputBytes)
 	})
 
 	t.Run("read-snappy-file-with-last-block-shorter", func(t *testing.T) {
@@ -204,9 +182,7 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
 		defer reader.Close()
 		outputBytes := readFileContents(t, fileSize, reader)
-		if !bytes.Equal(b, outputBytes) {
-			t.Fatalf("file contents are not same")
-		}
+		assert.Equal(t, b, outputBytes)
 	})
 
 	t.Run("read-lines", func(t *testing.T) {
@@ -218,9 +194,7 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
 		defer reader.Close()
 		outputBytes := readFileContentsUsingReadline(t, fileSize, reader)
-		if !bytes.Equal(b, outputBytes) {
-			t.Fatalf("file contents are not same")
-		}
+		assert.Equal(t, b, outputBytes)
 	})
 
 	t.Run("read-lines-with-last-block-shorter", func(t *testing.T) {
@@ -232,9 +206,7 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
 		defer reader.Close()
 		outputBytes := readFileContentsUsingReadline(t, fileSize, reader)
-		if !bytes.Equal(b, outputBytes) {
-			t.Fatalf("file contents are not same")
-		}
+		assert.Equal(t, b, outputBytes)
 	})
 
 	t.Run("read-lines-with-last-block-shorter-and-compressed", func(t *testing.T) {
@@ -247,9 +219,7 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
 		defer reader.Close()
 		outputBytes := readFileContentsUsingReadline(t, fileSize, reader)
-		if !bytes.Equal(b, outputBytes) {
-			t.Fatalf("file contents are not same")
-		}
+		assert.Equal(t, b, outputBytes)
 	})
 
 	t.Run("seek-and-read-line", func(t *testing.T) {
@@ -261,19 +231,12 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
 		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if seekN != int64(lineStart) {
-			t.Fatalf("did not seek to proper line start")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, seekN, int64(lineStart))
+
 		buf, err := reader.ReadLine()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytes.Equal(buf, line) {
-			t.Fatalf("line contents are not same")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, buf, line)
 	})
 
 	t.Run("seek-and-read-line-spanning-block-boundary", func(t *testing.T) {
@@ -285,19 +248,12 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, "", false)
 		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if seekN != int64(lineStart) {
-			t.Fatalf("did not seek to proper line start")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, seekN, int64(lineStart))
+
 		buf, err := reader.ReadLine()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytes.Equal(buf, line) {
-			t.Fatalf("line contents are not same")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, buf, line)
 	})
 
 	t.Run("seek-and-read-line-spanning-block-boundary-with-compression", func(t *testing.T) {
@@ -310,19 +266,12 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, false)
 		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if seekN != int64(lineStart) {
-			t.Fatalf("did not seek to proper line start")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, seekN, int64(lineStart))
+
 		buf, err := reader.ReadLine()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytes.Equal(buf, line) {
-			t.Fatalf("line contents are not same")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, buf, line)
 	})
 
 	t.Run("seek-and-read-line-spanning-block-boundary-with-compression-with-cache", func(t *testing.T) {
@@ -335,36 +284,21 @@ func TestFileReader(t *testing.T) {
 		reader := file.NewReader(fileInode, mockClient, fileSize, blockSize, compression, true)
 		defer reader.Close()
 		seekN, err := reader.Seek(int64(lineStart), 0)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if seekN != int64(lineStart) {
-			t.Fatalf("did not seek to proper line start")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, seekN, int64(lineStart))
 
 		buf, err := reader.ReadLine()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytes.Equal(buf, line) {
-			t.Fatalf("line contents are not same")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, buf, line)
 
 		// this should come from cache
 		seekN, err = reader.Seek(int64(lineStart), 0)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if seekN != int64(lineStart) {
-			t.Fatalf("did not seek to proper line start")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, seekN, int64(lineStart))
+
 		buf, err = reader.ReadLine()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytes.Equal(buf, line) {
-			t.Fatalf("line contents are not same")
-		}
+		require.NoError(t, err)
+		assert.Equal(t, buf, line)
 	})
 }
 
@@ -395,7 +329,7 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 			buf = compressedData
 		}
 
-		addr, err := mockClient.UploadBlob(buf, true, true)
+		addr, err := mockClient.UploadBlob(buf, 0, true, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -519,7 +453,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			buf = compressedData
 		}
 
-		addr, err := mockClient.UploadBlob(buf, true, true)
+		addr, err := mockClient.UploadBlob(buf, 0, true, true)
 		if err != nil {
 			t.Fatal(err)
 		}

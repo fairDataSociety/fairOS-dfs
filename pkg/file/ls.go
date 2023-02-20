@@ -22,6 +22,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// Entry
 type Entry struct {
 	Name             string `json:"name"`
 	ContentType      string `json:"contentType"`
@@ -30,6 +31,7 @@ type Entry struct {
 	CreationTime     string `json:"creationTime"`
 	ModificationTime string `json:"modificationTime"`
 	AccessTime       string `json:"accessTime"`
+	Mode             uint32 `json:"mode"`
 }
 
 // ListFiles given a list of files, list files gives back the information related to each file.

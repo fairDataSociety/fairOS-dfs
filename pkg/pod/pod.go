@@ -30,9 +30,11 @@ import (
 const (
 	maxPodId = 65535
 
-	PodPasswordLength = 32
+	// PasswordLength defines the pod password length
+	PasswordLength = 32
 )
 
+// Pod
 type Pod struct {
 	fd     *feed.API
 	acc    *account.Account
@@ -43,21 +45,24 @@ type Pod struct {
 	tm     taskmanager.TaskManagerGO
 }
 
-type PodListItem struct {
+// ListItem defines the structure for pod item
+type ListItem struct {
 	Name     string `json:"name"`
 	Index    int    `json:"index"`
 	Password string `json:"password"`
 }
 
-type SharedPodListItem struct {
+// SharedListItem defines the structure for shared pod item
+type SharedListItem struct {
 	Name     string `json:"name"`
 	Address  string `json:"address"`
 	Password string `json:"password"`
 }
 
-type PodList struct {
-	Pods       []PodListItem       `json:"pods"`
-	SharedPods []SharedPodListItem `json:"sharedPods"`
+// List lists all the pods
+type List struct {
+	Pods       []ListItem       `json:"pods"`
+	SharedPods []SharedListItem `json:"sharedPods"`
 }
 
 // NewPod creates the main pod object which has all the methods related to the pods.
@@ -86,6 +91,7 @@ func (p *Pod) removePodFromPodMap(podName string) {
 	delete(p.podMap, podName)
 }
 
+// GetPodInfoFromPodMap
 func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, string, error) {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
@@ -95,9 +101,12 @@ func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, string, error) {
 	return nil, "", fmt.Errorf("could not find pod: %s", podName)
 }
 
+// GetFeed
 func (p *Pod) GetFeed() *feed.API {
 	return p.fd
 }
+
+// GetAccount
 func (p *Pod) GetAccount() *account.Account {
 	return p.acc
 }

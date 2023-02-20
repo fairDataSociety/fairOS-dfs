@@ -23,9 +23,12 @@ import (
 	"resenje.org/jsonhttp"
 )
 
+// Collections
 type Collections struct {
 	Tables []Collection
 }
+
+// Collection
 type Collection struct {
 	Name           string   `json:"tableName"`
 	IndexedColumns []string `json:"indexes"`

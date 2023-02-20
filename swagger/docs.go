@@ -20,6 +20,59 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1/dir/chmod": {
+            "post": {
+                "description": "DirectoryModeHandler is the api handler to change mode of a directory",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dir"
+                ],
+                "summary": "change mode of a directory",
+                "parameters": [
+                    {
+                        "description": "dir mode request",
+                        "name": "dir_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.DirModeRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/dir/ls": {
             "get": {
                 "description": "DirectoryLsHandler is the api handler for listing the contents of a directory.",
@@ -450,7 +503,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/doc/entry/delete": {
+        "/v1/doc/entry/del": {
             "delete": {
                 "description": "DocEntryDelHandler is the api handler to delete a document from a document datastore",
                 "consumes": [
@@ -554,9 +607,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "base64 encoded string",
                         "schema": {
-                            "$ref": "#/definitions/api.DocGetResponse"
+                            "$ref": "#/definitions/api.DocGet"
                         }
                     },
                     "400": {
@@ -663,7 +716,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "expression to search for",
+                        "description": "expression to search for. allowed operators in expr are =, \u003e, =\u003e, \u003c=, \u003c. eg: 'first_name=\u003eJohn', 'first_name=\u003eJ.', 'first_name=\u003e.', 'age=\u003e30', 'age\u003c=30'. if index is string, expr supports regex. we do not have support for multiple conditions in expr yet",
                         "name": "expr",
                         "in": "query",
                         "required": true
@@ -684,9 +737,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "array of base64 encoded string",
                         "schema": {
-                            "$ref": "#/definitions/api.DocFindResponse"
+                            "$ref": "#/definitions/api.DocFind"
                         }
                     },
                     "400": {
@@ -888,7 +941,7 @@ const docTemplate = `{
                 "summary": "Create in doc table",
                 "parameters": [
                     {
-                        "description": "doc table info",
+                        "description": "doc table info. si or simple index is a comma separated list of keys and their types. eg: 'first_name=string,age=number'. valid index types can be 'string', 'number', 'map', 'list'. default index is 'id' and it should be of type string",
                         "name": "doc_request",
                         "in": "body",
                         "required": true,
@@ -962,6 +1015,59 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.DocumentDBs"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/file/chmod": {
+            "post": {
+                "description": "FileModeHandler is the api handler to change mode of a file",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "file"
+                ],
+                "summary": "chmod a file",
+                "parameters": [
+                    {
+                        "description": "file mode request",
+                        "name": "file_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.FileModeRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
                         }
                     },
                     "400": {
@@ -1444,6 +1550,139 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/file/status": {
+            "get": {
+                "description": "FileStatusHandler is the api handler to check sync status of a file from a given pod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "*/*"
+                ],
+                "tags": [
+                    "file"
+                ],
+                "summary": "Sync status of a file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "podName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "file path",
+                        "name": "filePath",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.StatusResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/file/update": {
+            "post": {
+                "description": "FileUpdateHandler is the api handler to update a file from a given offset",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "file"
+                ],
+                "summary": "Update a file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod name",
+                        "name": "podName",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "location",
+                        "name": "filePath",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "file content to update",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "file offset",
+                        "name": "offset",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/file/upload": {
             "post": {
                 "description": "FileUploadHandler is the api handler to upload a file from a local file system to the dfs",
@@ -1500,6 +1739,13 @@ const docTemplate = `{
                         "name": "Cookie",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "true, false",
+                        "description": "overwrite the file if already exists",
+                        "name": "overwrite",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -2965,6 +3211,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/pod/sync-async": {
+            "post": {
+                "description": "PodSyncAsyncHandler is the api handler to sync a pod's content",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pod"
+                ],
+                "summary": "Sync pod asynchronously",
+                "parameters": [
+                    {
+                        "description": "pod name",
+                        "name": "pod_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.PodNameRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/user/delete": {
             "post": {
                 "tags": [
@@ -3355,6 +3654,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.DirModeRequest": {
+            "type": "object",
+            "properties": {
+                "dirPath": {
+                    "type": "string"
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "podName": {
+                    "type": "string"
+                }
+            }
+        },
         "api.DirPresentResponse": {
             "type": "object",
             "properties": {
@@ -3397,28 +3710,22 @@ const docTemplate = `{
                 }
             }
         },
-        "api.DocFindResponse": {
+        "api.DocFind": {
             "type": "object",
             "properties": {
                 "docs": {
                     "type": "array",
                     "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
+                        "type": "string"
                     }
                 }
             }
         },
-        "api.DocGetResponse": {
+        "api.DocGet": {
             "type": "object",
             "properties": {
                 "doc": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "string"
                 }
             }
         },
@@ -3468,6 +3775,20 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "filePath": {
+                    "type": "string"
+                },
+                "podName": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.FileModeRequest": {
+            "type": "object",
+            "properties": {
+                "filePath": {
+                    "type": "string"
+                },
+                "mode": {
                     "type": "string"
                 },
                 "podName": {
@@ -3681,6 +4002,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.StatusResponse": {
+            "type": "object",
+            "properties": {
+                "processed": {
+                    "type": "integer"
+                },
+                "synced": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.UserDeleteRequest": {
             "type": "object",
             "properties": {
@@ -3838,6 +4173,9 @@ const docTemplate = `{
                 "creationTime": {
                     "type": "string"
                 },
+                "mode": {
+                    "type": "integer"
+                },
                 "modificationTime": {
                     "type": "string"
                 },
@@ -3863,6 +4201,9 @@ const docTemplate = `{
                 },
                 "dirPath": {
                     "type": "string"
+                },
+                "mode": {
+                    "type": "integer"
                 },
                 "modificationTime": {
                     "type": "string"
@@ -3907,6 +4248,9 @@ const docTemplate = `{
                 "creationTime": {
                     "type": "string"
                 },
+                "mode": {
+                    "type": "integer"
+                },
                 "modificationTime": {
                     "type": "string"
                 },
@@ -3915,6 +4259,9 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "string"
+                },
+                "tag": {
+                    "type": "integer"
                 }
             }
         },
@@ -3951,11 +4298,17 @@ const docTemplate = `{
                 "fileSize": {
                     "type": "string"
                 },
+                "mode": {
+                    "type": "integer"
+                },
                 "modificationTime": {
                     "type": "string"
                 },
                 "podName": {
                     "type": "string"
+                },
+                "tag": {
+                    "type": "integer"
                 }
             }
         },

@@ -37,6 +37,7 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+// Handler
 type Handler struct {
 	accountInfo *account.Info
 	client      blockstore.Client
@@ -224,7 +225,7 @@ func (h *Handler) updateCache(request *request) (*CacheEntry, error) {
 		}
 	}
 
-	// update our rsrcs entry map
+	// update our source entry map
 	entry.lastKey = updateAddr
 	entry.Update.ID = request.ID
 	entry.data = request.data
@@ -272,10 +273,10 @@ func (h *Handler) toChunkContent(req *request, id, payloadId []byte) ([]byte, er
 	return buf, nil
 }
 
-// NewRequest prepares a request structure with all the necessary information to
+// newRequest prepares a request structure with all the necessary information to
 // just add the desired data and sign it.
 // The resulting structure can then be signed and passed to Handler.Update to be verified and sent
-func (h *Handler) NewRequest(ctx context.Context, feed *Feed) (request2 *request, err error) {
+func (h *Handler) newRequest(ctx context.Context, feed *Feed) (request2 *request, err error) {
 	if feed == nil {
 		return nil, NewError(errInvalidValue, "feed cannot be nil")
 	}

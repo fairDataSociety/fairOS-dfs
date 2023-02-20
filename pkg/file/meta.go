@@ -27,11 +27,14 @@ import (
 )
 
 var (
+	//MetaVersion
 	MetaVersion uint8 = 2
 
+	//ErrDeletedFeed
 	ErrDeletedFeed = errors.New("deleted feed")
 )
 
+// MetaData
 type MetaData struct {
 	Version          uint8  `json:"version"`
 	Path             string `json:"filePath"`
@@ -44,6 +47,7 @@ type MetaData struct {
 	AccessTime       int64  `json:"accessTime"`
 	ModificationTime int64  `json:"modificationTime"`
 	InodeAddress     []byte `json:"fileInodeReference"`
+	Mode             uint32 `json:"mode"`
 }
 
 // LoadFileMeta is used in syncing
@@ -123,6 +127,7 @@ func (f *File) updateMeta(meta *MetaData, podPassword string) error {
 	return nil
 }
 
+// BackupFromFileName
 func (f *File) BackupFromFileName(fileNameWithPath, podPassword string) (*MetaData, error) {
 	p, err := f.GetMetaFromFileName(fileNameWithPath, podPassword, f.userAddress)
 	if err != nil {
@@ -149,6 +154,7 @@ func (f *File) BackupFromFileName(fileNameWithPath, podPassword string) (*MetaDa
 	return p, nil
 }
 
+// RenameFromFileName
 func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath, podPassword string) (*MetaData, error) {
 	fileNameWithPath = filepath.ToSlash(fileNameWithPath)
 	newFileNameWithPath = filepath.ToSlash(newFileNameWithPath)
@@ -183,6 +189,7 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath, podPass
 	return p, nil
 }
 
+// GetMetaFromFileName
 func (f *File) GetMetaFromFileName(fileNameWithPath, podPassword string, userAddress utils.Address) (*MetaData, error) {
 	topic := utils.HashString(fileNameWithPath)
 	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress, []byte(podPassword))
@@ -204,6 +211,7 @@ func (f *File) GetMetaFromFileName(fileNameWithPath, podPassword string, userAdd
 	return meta, nil
 }
 
+// PutMetaForFile
 func (f *File) PutMetaForFile(meta *MetaData, podPassword string) error {
 	return f.updateMeta(meta, podPassword)
 }

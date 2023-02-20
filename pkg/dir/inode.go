@@ -23,12 +23,14 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// Inode
 type Inode struct {
 	Meta           *MetaData `json:"meta"`
 	FileOrDirNames []string  `json:"fileOrDirNames"`
 }
 
 var (
+	//ErrResourceDeleted
 	ErrResourceDeleted = errors.New("resource was deleted")
 )
 
@@ -50,6 +52,7 @@ func (in *Inode) SetFileOrDirNames(fileOrDirNames []string) {
 	in.FileOrDirNames = fileOrDirNames
 }
 
+// Unmarshal
 func (in *Inode) Unmarshal(data []byte) error {
 	if string(data) == utils.DeletedFeedMagicWord {
 		return ErrResourceDeleted
