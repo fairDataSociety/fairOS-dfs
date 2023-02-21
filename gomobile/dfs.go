@@ -94,10 +94,6 @@ func LogoutUser() error {
 	return api.LogoutUser(sessionId)
 }
 
-func DeleteUser() error {
-	return api.DeleteUserV2(savedPassword, sessionId)
-}
-
 func StatUser() (string, error) {
 	stat, err := api.GetUserStat(sessionId)
 	if err != nil {
