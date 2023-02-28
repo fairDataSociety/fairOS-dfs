@@ -176,11 +176,11 @@ func login(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("Failed to create user : %s", err.Error()))
 				return
 			}
-			data := map[string]string{}
-			data["user"] = ui.GetUserName()
-			data["sessionId"] = ui.GetSessionId()
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("user", ui.GetUserName())
+			object.Set("sessionId", ui.GetSessionId())
+
+			resolve.Invoke(object)
 		}()
 
 		return nil
@@ -208,11 +208,11 @@ func walletLogin(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("Failed to create user : %s", err.Error()))
 				return
 			}
-			data := map[string]string{}
-			data["user"] = ui.GetUserName()
-			data["sessionId"] = ui.GetSessionId()
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			object.Set("user", ui.GetUserName())
+			object.Set("sessionId", ui.GetSessionId())
+			resolve.Invoke(object)
 		}()
 
 		return nil
@@ -265,10 +265,10 @@ func userPresent(_ js.Value, funcArgs []js.Value) interface{} {
 
 		go func() {
 			present := api.IsUserNameAvailableV2(username)
-			data := map[string]bool{}
-			data["present"] = present
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("present", present)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -290,10 +290,11 @@ func userIsLoggedIn(_ js.Value, funcArgs []js.Value) interface{} {
 
 		go func() {
 			loggedin := api.IsUserLoggedIn(username)
-			data := map[string]bool{}
-			data["loggedin"] = loggedin
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			object.Set("loggedin", loggedin)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -372,8 +373,12 @@ func userStat(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("userStat failed : %s", err.Error()))
 				return
 			}
-			data, _ := json.Marshal(stat)
-			resolve.Invoke(string(data))
+
+			object := js.Global().Get("Object").New()
+			object.Set("userName", stat.Name)
+			object.Set("address", stat.Reference)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -534,11 +539,22 @@ func podList(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("podList failed : %s", err.Error()))
 				return
 			}
-			data := map[string]interface{}{}
-			data["pods"] = ownPods
-			data["sharedPods"] = sharedPods
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			pods := js.Global().Get("Array").New(len(ownPods))
+			for i, v := range ownPods {
+				pods.SetIndex(i, js.ValueOf(v))
+			}
+
+			sPods := js.Global().Get("Array").New(len(sharedPods))
+			for i, v := range sharedPods {
+				sPods.SetIndex(i, js.ValueOf(v))
+			}
+
+			object.Set("pods", pods)
+			object.Set("sharedPods", sPods)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -565,8 +581,11 @@ func podStat(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("podStat failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(stat)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("podName", stat.PodName)
+			object.Set("address", stat.PodAddress)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -594,10 +613,10 @@ func podShare(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("podShare failed : %s", err.Error()))
 				return
 			}
-			data := map[string]string{}
-			data["podSharingReference"] = reference
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("podSharingReference", reference)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -662,8 +681,14 @@ func podReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("podReceiveInfo failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(shareInfo)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			object.Set("podName", shareInfo.PodName)
+			object.Set("podAddress", shareInfo.Address)
+			object.Set("password", shareInfo.Password)
+			object.Set("userAddress", shareInfo.UserAddress)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -691,10 +716,11 @@ func dirPresent(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("dirPresent failed : %s", err.Error()))
 				return
 			}
-			data := map[string]bool{}
-			data["present"] = present
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			object.Set("present", present)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -778,11 +804,37 @@ func dirList(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("dirList failed : %s", err.Error()))
 				return
 			}
-			data := map[string]interface{}{}
-			data["files"] = files
-			data["dirs"] = dirs
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			filesList := js.Global().Get("Array").New(len(files))
+			for i, v := range files {
+				file := js.Global().Get("Object").New()
+				file.Set("name", v.Name)
+				file.Set("contentType", v.ContentType)
+				file.Set("size", v.Size)
+				file.Set("blockSize", v.BlockSize)
+				file.Set("creationTime", v.CreationTime)
+				file.Set("modificationTime", v.ModificationTime)
+				file.Set("accessTime", v.AccessTime)
+				file.Set("mode", v.Mode)
+				filesList.SetIndex(i, file)
+			}
+			dirsList := js.Global().Get("Array").New(len(dirs))
+			for i, v := range dirs {
+				dir := js.Global().Get("Object").New()
+				dir.Set("name", v.Name)
+				dir.Set("contentType", v.ContentType)
+				dir.Set("size", v.Size)
+				dir.Set("mode", v.Mode)
+				dir.Set("blockSize", v.BlockSize)
+				dir.Set("creationTime", v.CreationTime)
+				dir.Set("modificationTime", v.ModificationTime)
+				dir.Set("accessTime", v.AccessTime)
+				dirsList.SetIndex(i, dir)
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("files", filesList)
+			object.Set("dirs", dirsList)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -810,8 +862,18 @@ func dirStat(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("dirStat failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(stat)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("podName", stat.PodName)
+			object.Set("dirPath", stat.DirPath)
+			object.Set("dirName", stat.DirName)
+			object.Set("mode", stat.Mode)
+			object.Set("creationTime", stat.CreationTime)
+			object.Set("modificationTime", stat.ModificationTime)
+			object.Set("accessTime", stat.AccessTime)
+			object.Set("noOfDirectories", stat.NoOfDirectories)
+			object.Set("noOfFiles", stat.NoOfFiles)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -922,10 +984,11 @@ func fileShare(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("fileShare failed : %s", err.Error()))
 				return
 			}
-			data := map[string]string{}
-			data["fileSharingReference"] = ref
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			object.Set("fileSharingReference", ref)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -959,10 +1022,10 @@ func fileReceive(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("fileReceive failed : %s", err.Error()))
 				return
 			}
-			data := map[string]string{}
-			data["fileName"] = filePath
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("fileName", filePath)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -994,8 +1057,18 @@ func fileReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("fileReceiveInfo failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(receiveInfo)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("name", receiveInfo.FileName)
+			object.Set("size", receiveInfo.Size)
+			object.Set("blockSize", receiveInfo.BlockSize)
+			object.Set("numberOfBlocks", receiveInfo.NumberOfBlocks)
+			object.Set("contentType", receiveInfo.ContentType)
+			object.Set("compression", receiveInfo.Compression)
+			object.Set("sourceAddress", receiveInfo.Sender)
+			object.Set("destAddress", receiveInfo.Receiver)
+			object.Set("sharedTime", receiveInfo.SharedTime)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -1051,8 +1124,21 @@ func fileStat(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("fileStat failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(stat)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("podName", stat.PodName)
+			object.Set("mode", stat.Mode)
+			object.Set("filePath", stat.FilePath)
+			object.Set("fileName", stat.FileName)
+			object.Set("fileSize", stat.FileSize)
+			object.Set("blockSize", stat.BlockSize)
+			object.Set("compression", stat.Compression)
+			object.Set("contentType", stat.ContentType)
+			object.Set("creationTime", stat.CreationTime)
+			object.Set("modificationTime", stat.ModificationTime)
+			object.Set("accessTime", stat.AccessTime)
+			object.Set("blocks", stat.Blocks)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -2049,7 +2135,10 @@ func getSubscriptions(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("getSubscriptions failed : %s", err.Error()))
 				return
 			}
-			resolve.Invoke(subs)
+			object := js.Global().Get("Object").New()
+			object.Set("subs", subs)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -2085,7 +2174,10 @@ func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("openSubscribedPod failed : %s", err.Error()))
 				return
 			}
-			resolve.Invoke(subs)
+			object := js.Global().Get("Object").New()
+			object.Set("subs", subs)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -2111,7 +2203,10 @@ func getSubscribablePods(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("getSubscribablePods failed : %s", err.Error()))
 				return
 			}
-			resolve.Invoke(subs)
+			object := js.Global().Get("Object").New()
+			object.Set("subs", subs)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})

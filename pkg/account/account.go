@@ -38,6 +38,7 @@ const (
 
 	// seedSize is used to determine how much padding we need for portable account SOC
 	seedSize = 64
+	nameSize = 8
 )
 
 // Account is used for keeping authenticated logged-in user info in the session
@@ -271,4 +272,36 @@ func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, er
 	}
 
 	return decryptedBytes[:seedSize], nil
+}
+
+// func (*Info) PadSeedName(seed []byte, username string, passphrase string) ([]byte, error) { pads the given seed and name with random elements to be a chunk of chunkSize
+func (*Info) PadSeedName(seed []byte, username string, passphrase string) ([]byte, error) {
+	usernameLength := len(username)
+	endIndexBytes := make([]byte, nameSize)
+	binary.LittleEndian.PutUint64(endIndexBytes, uint64(usernameLength))
+	paddingLength := utils.MaxChunkLength - aes.BlockSize - seedSize - nameSize - usernameLength
+	randomBytes, err := utils.GetRandBytes(paddingLength)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	chunkData := make([]byte, 0, utils.MaxChunkLength)
+	chunkData = append(chunkData, seed...)
+	chunkData = append(chunkData, endIndexBytes...)
+	chunkData = append(chunkData, []byte(username)...)
+	chunkData = append(chunkData, randomBytes...)
+	encryptedBytes, err := utils.EncryptBytes([]byte(passphrase), chunkData)
+	if err != nil { // skipcq: TCV-001
+		return nil, fmt.Errorf("mnemonic padding failed: %w", err)
+	}
+	return encryptedBytes, nil
+}
+
+// RemovePadFromSeedName removes the padding of random elements from the given data and returns the seed and name
+func (*Info) RemovePadFromSeedName(paddedSeed []byte, passphrase string) ([]byte, string, error) {
+	decryptedBytes, err := utils.DecryptBytes([]byte(passphrase), paddedSeed)
+	if err != nil { // skipcq: TCV-001
+		return nil, "", fmt.Errorf("seed decryption failed: %w", err)
+	}
+	usernameLength := int(binary.LittleEndian.Uint64(decryptedBytes[seedSize : seedSize+nameSize]))
+	return decryptedBytes[:seedSize], string(decryptedBytes[seedSize+nameSize : seedSize+nameSize+usernameLength]), nil
 }

@@ -178,7 +178,7 @@ func (u *Users) ConnectWallet(userName, passPhrase, walletAddressHex, signature 
 		return err
 	}
 
-	key, err = accountInfo.PadSeed(seed, passPhrase)
+	key, err = accountInfo.PadSeedName(seed, userName, signature)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -201,7 +201,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 	}
 
 	// decrypt and remove pad from private ley
-	seed, err := accountInfo.RemovePadFromSeed(key, signature)
+	seed, username, err := accountInfo.RemovePadFromSeedName(key, signature)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 		sessionId = cookie.GetUniqueSessionId()
 	}
 	ui := &Info{
-		name:       addressHex,
+		name:       username,
 		sessionId:  sessionId,
 		feedApi:    fd,
 		account:    acc,

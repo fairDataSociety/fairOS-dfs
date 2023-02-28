@@ -268,11 +268,11 @@ func (c *Client) GetSub(subHash [32]byte) (*swarmMail.SwarmMailSub, error) {
 }
 
 func New(logger logging.Logger, getter SubscriptionInfoGetter, putter SubscriptionInfoPutter) (*Client, error) {
-	c, err := ethclient.Dial("http://localhost:8545")
+	c, err := ethclient.Dial("http://localhost:9545")
 	if err != nil {
 		return nil, fmt.Errorf("dial eth ensm: %w", err)
 	}
-	sMail, err := swarmMail.NewSwarmMail(common.HexToAddress("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"), c)
+	sMail, err := swarmMail.NewSwarmMail(common.HexToAddress("0x21a59654176f2689d12E828B77a783072CD26680"), c)
 	if err != nil {
 		return nil, err
 	}
