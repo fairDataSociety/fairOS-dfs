@@ -96,3 +96,8 @@ func (p *Pod) OpenSubscribedPod(subHash [32]byte, ownerPublicKey *ecdsa.PublicKe
 	}
 	return p.OpenFromShareInfo(shareInfo)
 }
+
+// GetSubRequests will get all owners sub requests
+func (p *Pod) GetSubRequests() ([]swarmMail.SwarmMailSubRequest, error) {
+	return p.sm.GetSubRequests(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()))
+}

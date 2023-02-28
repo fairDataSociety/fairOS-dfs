@@ -40,7 +40,7 @@ var (
 // Client is used to manage ENS
 type Client struct {
 	eth            *ethclient.Client
-	ensConfig      *contracts.Config
+	ensConfig      *contracts.ENSConfig
 	ensRegistry    *ens.ENSRegistry
 	fdsRegistrar   *fdsregistrar.FDSRegistrar
 	publicResolver *publicresolver.PublicResolver
@@ -49,7 +49,7 @@ type Client struct {
 }
 
 // New returns a new ENS manager Client
-func New(ensConfig *contracts.Config, logger logging.Logger) (*Client, error) {
+func New(ensConfig *contracts.ENSConfig, logger logging.Logger) (*Client, error) {
 	eth, err := ethclient.Dial(ensConfig.ProviderBackend)
 	if err != nil {
 		return nil, fmt.Errorf("dial eth ensm: %w", err)

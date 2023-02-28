@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/hex"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
+
 	SwarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -511,6 +513,16 @@ func (a *API) GetSubscriptions(sessionId string, start, limit uint64) ([]*Subscr
 	return subs, nil
 }
 
+// GetSubscribablePodInfo
+func (a *API) GetSubscribablePodInfo(sessionId string, subHash [32]byte) (*rpc.SubscriptionItemInfo, error) {
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	return a.sm.GetSubscribablePodInfo(subHash)
+}
+
 // OpenSubscribedPod
 func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte) (*pod.Info, error) {
 
@@ -553,4 +565,15 @@ func (a *API) GetSubscribablePods(sessionId string) ([]SwarmMail.SwarmMailSub, e
 	}
 
 	return ui.GetPod().GetMarketplace()
+}
+
+// GetSubscribablePods
+func (a *API) GetSubsRequests(sessionId string) ([]SwarmMail.SwarmMailSubRequest, error) {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	return ui.GetPod().GetSubRequests()
 }

@@ -67,6 +67,8 @@ func registerWasmFunctions() {
 	js.Global().Set("getSubscriptions", js.FuncOf(getSubscriptions))
 	js.Global().Set("openSubscribedPod", js.FuncOf(openSubscribedPod))
 	js.Global().Set("getSubscribablePods", js.FuncOf(getSubscribablePods))
+	js.Global().Set("getSubRequests", js.FuncOf(getSubRequests))
+	js.Global().Set("getSubscribablePodInfo", js.FuncOf(getSubscribablePodInfo))
 
 	js.Global().Set("dirPresent", js.FuncOf(dirPresent))
 	js.Global().Set("dirMake", js.FuncOf(dirMake))
@@ -111,19 +113,21 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
-		if len(funcArgs) != 4 {
-			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, false, rpc, play)\"")
+		if len(funcArgs) != 6 {
+			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, false, rpc, play, subRpc, subContractAddress)\"")
 			return nil
 		}
 		beeEndpoint := funcArgs[0].String()
 		stampId := funcArgs[1].String()
 		rpc := funcArgs[2].String()
 		network := funcArgs[3].String()
+		subRpc := funcArgs[4].String()
+		subContractAddress := funcArgs[5].String()
 		if network != "testnet" && network != "play" {
 			reject.Invoke("unknown network. \"use play or testnet\"")
 			return nil
 		}
-		var config *contracts.Config
+		var config *contracts.ENSConfig
 		if network == "play" {
 			config = contracts.PlayConfig()
 		} else {
@@ -132,12 +136,18 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 		config.ProviderBackend = rpc
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
 
+		subConfig := &contracts.SubscriptionConfig{
+			RPC:              subRpc,
+			SwarmMailAddress: subContractAddress,
+		}
+
 		go func() {
 			var err error
 			api, err = dfs.NewDfsAPI(
 				beeEndpoint,
 				stampId,
 				config,
+				subConfig,
 				logger,
 			)
 			if err != nil {
@@ -1136,7 +1146,6 @@ func fileStat(_ js.Value, funcArgs []js.Value) interface{} {
 			object.Set("creationTime", stat.CreationTime)
 			object.Set("modificationTime", stat.ModificationTime)
 			object.Set("accessTime", stat.AccessTime)
-			object.Set("blocks", stat.Blocks)
 
 			resolve.Invoke(object)
 		}()
@@ -1993,15 +2002,9 @@ func changePodListStatusInMarketplace(_ js.Value, funcArgs []js.Value) interface
 		}
 		sessionId := funcArgs[0].String()
 		subHashStr := funcArgs[1].String()
-		showStr := funcArgs[2].String()
+		show := funcArgs[2].Bool()
 
 		subHash, err := utils.Decode(subHashStr)
-		if err != nil {
-			reject.Invoke(fmt.Sprintf("changePodListStatusInMarketplace failed : %s", err.Error()))
-			return nil
-		}
-
-		show, err := strconv.ParseBool(showStr)
 		if err != nil {
 			reject.Invoke(fmt.Sprintf("changePodListStatusInMarketplace failed : %s", err.Error()))
 			return nil
@@ -2115,28 +2118,27 @@ func getSubscriptions(_ js.Value, funcArgs []js.Value) interface{} {
 			return nil
 		}
 		sessionId := funcArgs[0].String()
-		startStr := funcArgs[1].String()
-		limitStr := funcArgs[2].String()
-
-		start, err := strconv.ParseUint(startStr, 10, 64)
-		if err != nil {
-			reject.Invoke(fmt.Sprintf("getSubscriptions failed : %s", err.Error()))
-			return nil
-		}
-		limit, err := strconv.ParseUint(limitStr, 10, 64)
-		if err != nil {
-			reject.Invoke(fmt.Sprintf("getSubscriptions failed : %s", err.Error()))
-			return nil
-		}
+		start := funcArgs[1].Int()
+		limit := funcArgs[2].Int()
 
 		go func() {
-			subs, err := api.GetSubscriptions(sessionId, start, limit)
+			subs, err := api.GetSubscriptions(sessionId, uint64(start), uint64(limit))
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("getSubscriptions failed : %s", err.Error()))
 				return
 			}
 			object := js.Global().Get("Object").New()
-			object.Set("subs", subs)
+			subscriptions := js.Global().Get("Array").New(len(subs))
+			for i, v := range subs {
+				subscription := js.Global().Get("Object").New()
+				subscription.Set("podName", v.PodName)
+				subscription.Set("subHash", utils.Encode(v.SubHash[:]))
+				subscription.Set("podAddress", v.PodAddress)
+				subscription.Set("validTill", v.ValidTill)
+				subscription.Set("infoLocation", utils.Encode(v.InfoLocation))
+				subscriptions.SetIndex(i, js.ValueOf(v))
+			}
+			object.Set("subscriptions", subscriptions)
 
 			resolve.Invoke(object)
 		}()
@@ -2169,15 +2171,13 @@ func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
 		copy(s[:], subHash)
 
 		go func() {
-			subs, err := api.OpenSubscribedPod(sessionId, s)
+			pi, err := api.OpenSubscribedPod(sessionId, s)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("openSubscribedPod failed : %s", err.Error()))
 				return
 			}
-			object := js.Global().Get("Object").New()
-			object.Set("subs", subs)
 
-			resolve.Invoke(object)
+			resolve.Invoke(fmt.Sprintf("%s opened successfully", pi.GetPodName()))
 		}()
 		return nil
 	})
@@ -2204,7 +2204,104 @@ func getSubscribablePods(_ js.Value, funcArgs []js.Value) interface{} {
 				return
 			}
 			object := js.Global().Get("Object").New()
-			object.Set("subs", subs)
+			subscriptions := js.Global().Get("Array").New(len(subs))
+			for i, v := range subs {
+				subscription := js.Global().Get("Object").New()
+				subscription.Set("subHash", utils.Encode(v.SubHash[:]))
+				subscription.Set("sellerNameHash", utils.Encode(v.FdpSellerNameHash[:]))
+				subscription.Set("seller", v.Seller.Hex())
+				subscription.Set("swarmLocation", utils.Encode(v.SwarmLocation[:]))
+				subscription.Set("price", v.Price.Int64())
+				subscription.Set("active", v.Active)
+				subscription.Set("earned", v.Earned.Int64())
+				subscription.Set("bid", v.Bids)
+				subscription.Set("sells", v.Sells)
+				subscription.Set("reports", v.Reports)
+				subscriptions.SetIndex(i, js.ValueOf(v))
+			}
+			object.Set("subscribablePods", subscriptions)
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func getSubRequests(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 1 {
+			reject.Invoke("not enough arguments. \"getSubRequests(sessionId)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+
+		go func() {
+			requests, err := api.GetSubsRequests(sessionId)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("getSubRequests failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			subRequests := js.Global().Get("Array").New(len(requests))
+			for i, v := range requests {
+				request := js.Global().Get("Object").New()
+				request.Set("subHash", utils.Encode(v.SubHash[:]))
+				request.Set("buyerNameHash", utils.Encode(v.FdpBuyerNameHash[:]))
+				request.Set("requestHash", utils.Encode(v.RequestHash[:]))
+				request.Set("buyer", v.Buyer.Hex())
+				subRequests.SetIndex(i, js.ValueOf(v))
+			}
+			object.Set("requests", subRequests)
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func getSubscribablePodInfo(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"getSubscribablePodInfo(sessionId, subHash)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		subHashStr := funcArgs[1].String()
+
+		subHash, err := utils.Decode(subHashStr)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("getSubscribablePodInfo failed : %s", err.Error()))
+			return nil
+		}
+
+		var s [32]byte
+		copy(s[:], subHash)
+
+		go func() {
+			info, err := api.GetSubscribablePodInfo(sessionId, s)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("getSubscribablePodInfo failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("category", info.Category)
+			object.Set("description", info.Description)
+			object.Set("fdpSellerNameHash", info.FdpSellerNameHash)
+			object.Set("imageUrl", info.ImageURL)
+			object.Set("podAddress", info.PodAddress)
+			object.Set("podName", info.PodName)
+			object.Set("price", info.Price)
+			object.Set("title", info.Title)
 
 			resolve.Invoke(object)
 		}()

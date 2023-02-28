@@ -117,7 +117,7 @@ can consume it.`,
 				return fmt.Errorf("postageBlockId is invalid")
 			}
 		}
-		ensConfig := &contracts.Config{}
+		ensConfig := &contracts.ENSConfig{}
 		network := config.GetString("network")
 		rpc := config.GetString(optionRPC)
 		if rpc == "" {
@@ -152,7 +152,7 @@ can consume it.`,
 				return fmt.Errorf("ensRegistry contract address is missing")
 			}
 
-			ensConfig = &contracts.Config{
+			ensConfig = &contracts.ENSConfig{
 				ENSRegistryAddress:    ensRegistryAddress,
 				FDSRegistrarAddress:   fdsRegistrarAddress,
 				PublicResolverAddress: publicResolverAddress,

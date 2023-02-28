@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -267,12 +269,12 @@ func (c *Client) GetSub(subHash [32]byte) (*swarmMail.SwarmMailSub, error) {
 	return &sub, err
 }
 
-func New(logger logging.Logger, getter SubscriptionInfoGetter, putter SubscriptionInfoPutter) (*Client, error) {
-	c, err := ethclient.Dial("http://localhost:9545")
+func New(subConfig *contracts.SubscriptionConfig, logger logging.Logger, getter SubscriptionInfoGetter, putter SubscriptionInfoPutter) (*Client, error) {
+	c, err := ethclient.Dial(subConfig.RPC)
 	if err != nil {
 		return nil, fmt.Errorf("dial eth ensm: %w", err)
 	}
-	sMail, err := swarmMail.NewSwarmMail(common.HexToAddress("0x21a59654176f2689d12E828B77a783072CD26680"), c)
+	sMail, err := swarmMail.NewSwarmMail(common.HexToAddress(subConfig.SwarmMailAddress), c)
 	if err != nil {
 		return nil, err
 	}
