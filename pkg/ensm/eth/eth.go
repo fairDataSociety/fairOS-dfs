@@ -205,11 +205,21 @@ func (c *Client) GetInfo(username string) (*ecdsa.PublicKey, string, error) {
 		return nil, "", err
 	}
 
+	_, pub, nameHashStr, err := c.GetInfoFromNameHash(node)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return pub, nameHashStr, nil
+}
+
+// GetInfoFromNameHash returns the public key of the user from nameHash
+func (c *Client) GetInfoFromNameHash(node [32]byte) (common.Address, *ecdsa.PublicKey, string, error) {
 	opts := &bind.CallOpts{}
 	info, err := c.publicResolver.GetAll(opts, node)
 	if err != nil {
 		c.logger.Error("public resolver get all failed : ", err)
-		return nil, "", err
+		return common.Address{}, nil, "", err
 	}
 	x := new(big.Int)
 	x.SetBytes(info.X[:])
@@ -222,7 +232,11 @@ func (c *Client) GetInfo(username string) (*ecdsa.PublicKey, string, error) {
 
 	pub.Curve = btcec.S256()
 	nameHash := node[:]
-	return pub, utils.Encode(nameHash), nil
+	return info.Addr, pub, utils.Encode(nameHash), nil
+}
+
+func (c *Client) GetNameHash(username string) ([32]byte, error) {
+	return goens.NameHash(username + "." + c.ensConfig.ProviderDomain)
 }
 
 func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*bind.TransactOpts, error) {

@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/plexsysio/taskmanager"
@@ -50,8 +52,9 @@ func TestPodDelete(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 
 	podName1 := "test1"
 	podName2 := "test2"

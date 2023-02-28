@@ -81,6 +81,39 @@ func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 	return shareInfoRef.String(), nil
 }
 
+// GetPodSharingInfo returns the raw shareInfo
+func (p *Pod) GetPodSharingInfo(podName string) (*ShareInfo, error) {
+	// check if pods is present and get the index of the pod
+	podList, err := p.loadUserPods()
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	if !p.checkIfPodPresent(podList, podName) {
+		return nil, ErrInvalidPodName
+	}
+
+	index, podPassword := p.getIndexPassword(podList, podName)
+	if index == -1 { // skipcq: TCV-001
+		return nil, fmt.Errorf("pod does not exist")
+	}
+
+	// Create pod account and get the address
+	accountInfo, err := p.acc.CreatePodAccount(index, false)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	address := accountInfo.GetAddress()
+	userAddress := p.acc.GetUserAccountInfo().GetAddress()
+
+	return &ShareInfo{
+		PodName:     podName,
+		Password:    podPassword,
+		Address:     address.String(),
+		UserAddress: userAddress.String(),
+	}, nil
+}
+
 // ReceivePodInfo
 func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
@@ -99,7 +132,6 @@ func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 	}
 
 	return &shareInfo, nil
-
 }
 
 // ReceivePod

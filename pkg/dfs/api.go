@@ -22,6 +22,9 @@ import (
 	"io"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
@@ -42,6 +45,7 @@ type API struct {
 	users  *user.Users
 	logger logging.Logger
 	tm     *taskmanager.TaskManager
+	sm     subscriptionManager.SubscriptionManager
 	io.Closer
 }
 
@@ -60,6 +64,10 @@ func NewDfsAPI(apiUrl, postageBlockId string, ensConfig *contracts.Config, logge
 	}
 	users := user.NewUsers(c, ens, logger)
 
+	sm, err := rpc.New(logger, c, c)
+	if err != nil {
+		return nil, errSubManager
+	}
 	// discard tm logs as it creates too much noise
 	tmLogger := logging.New(io.Discard, 0)
 
@@ -68,6 +76,7 @@ func NewDfsAPI(apiUrl, postageBlockId string, ensConfig *contracts.Config, logge
 		users:  users,
 		logger: logger,
 		tm:     taskmanager.New(10, defaultMaxWorkers, time.Second*15, tmLogger),
+		sm:     sm,
 	}, nil
 }
 

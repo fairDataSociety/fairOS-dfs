@@ -15,4 +15,6 @@ type ENSManager interface {
 	SetResolver(username string, owner common.Address, key *ecdsa.PrivateKey) (string, error)
 	SetAll(username string, owner common.Address, key *ecdsa.PrivateKey) error
 	GetInfo(username string) (*ecdsa.PublicKey, string, error)
+	GetInfoFromNameHash(node [32]byte) (common.Address, *ecdsa.PublicKey, string, error)
+	GetNameHash(username string) ([32]byte, error)
 }

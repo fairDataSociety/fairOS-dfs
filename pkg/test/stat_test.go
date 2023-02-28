@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 
 	"github.com/plexsysio/taskmanager"
@@ -39,6 +41,7 @@ func TestUserStat(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock3.NewMockSubscriptionManager()
 
 	t.Run("stat-nonexistent-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
@@ -56,7 +59,7 @@ func TestUserStat(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}

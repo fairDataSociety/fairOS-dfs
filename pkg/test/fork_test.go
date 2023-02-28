@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -44,7 +46,9 @@ func TestFork(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	sm := mock2.NewMockSubscriptionManager()
+
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 	podName1 := "test1"
 
 	t.Run("fork-pod", func(t *testing.T) {

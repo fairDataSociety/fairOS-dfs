@@ -22,17 +22,17 @@ import (
 
 // CreateUserV2 is a controller function which calls the create user function from the user object.
 func (a *API) CreateUserV2(userName, passPhrase, mnemonic, sessionId string) (string, string, string, string, *user.Info, error) {
-	return a.users.CreateNewUserV2(userName, passPhrase, mnemonic, sessionId, a.tm)
+	return a.users.CreateNewUserV2(userName, passPhrase, mnemonic, sessionId, a.tm, a.sm)
 }
 
 // LoginUserV2 is a controller function which calls the users login function.
 func (a *API) LoginUserV2(userName, passPhrase, sessionId string) (*user.Info, string, string, error) {
-	return a.users.LoginUserV2(userName, passPhrase, a.client, a.tm, sessionId)
+	return a.users.LoginUserV2(userName, passPhrase, a.client, a.tm, a.sm, sessionId)
 }
 
 // LoadLiteUser is a controller function which loads user from mnemonic and doesn't store any user info on chain
 func (a *API) LoadLiteUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *user.Info, error) {
-	return a.users.LoadLiteUser(userName, passPhrase, mnemonic, sessionId, a.tm)
+	return a.users.LoadLiteUser(userName, passPhrase, mnemonic, sessionId, a.tm, a.sm)
 }
 
 // LogoutUser is a controller function which gets the logged-in user information and logs it out.
@@ -77,4 +77,14 @@ func (a *API) GetUserStat(sessionId string) (*user.Stat, error) {
 	}
 
 	return a.users.GetUserStat(ui)
+}
+
+// ConnectPortableAccountWithWallet is a controller function which calls the users login function.
+func (a *API) ConnectPortableAccountWithWallet(userName, passPhrase, addressHex, signature string) error {
+	return a.users.ConnectWallet(userName, passPhrase, addressHex, signature, a.client)
+}
+
+// LoginWithWallet is a controller function which calls the users login function.
+func (a *API) LoginWithWallet(addressHex, signature, sessionId string) (*user.Info, error) {
+	return a.users.LoginWithWallet(addressHex, signature, a.client, a.tm, a.sm, sessionId)
 }

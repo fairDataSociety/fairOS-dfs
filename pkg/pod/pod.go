@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -43,6 +45,7 @@ type Pod struct {
 	podMu  *sync.RWMutex
 	logger logging.Logger
 	tm     taskmanager.TaskManagerGO
+	sm     subscriptionManager.SubscriptionManager
 }
 
 // ListItem defines the structure for pod item
@@ -67,7 +70,7 @@ type List struct {
 
 // NewPod creates the main pod object which has all the methods related to the pods.
 func NewPod(client blockstore.Client, feed *feed.API, account *account.Account,
-	m taskmanager.TaskManagerGO, logger logging.Logger) *Pod {
+	m taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, logger logging.Logger) *Pod {
 	return &Pod{
 		fd:     feed,
 		acc:    account,
@@ -76,6 +79,7 @@ func NewPod(client blockstore.Client, feed *feed.API, account *account.Account,
 		podMu:  &sync.RWMutex{},
 		logger: logger,
 		tm:     m,
+		sm:     sm,
 	}
 }
 

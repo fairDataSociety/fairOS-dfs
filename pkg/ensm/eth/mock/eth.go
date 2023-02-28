@@ -6,6 +6,9 @@ import (
 	"math/big"
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	goens "github.com/wealdtech/go-ens/v3"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -23,6 +26,40 @@ type NamespaceManager struct {
 	storer         map[string]string
 	publicResolver map[string]info
 	storerMu       sync.RWMutex
+}
+
+func (c *NamespaceManager) GetInfoFromNameHash(node [32]byte) (common.Address, *ecdsa.PublicKey, string, error) {
+	c.storerMu.Lock()
+	defer c.storerMu.Unlock()
+
+	for username, i := range c.publicResolver {
+		nh, err := goens.NameHash(username)
+		if err != nil {
+			return common.Address{}, nil, "", err
+		}
+		if nh == node {
+			addr := c.storer[username]
+			if addr == "" {
+				return common.Address{}, nil, "", fmt.Errorf("username not available")
+			}
+			x := new(big.Int)
+			x.SetBytes(i.X[:])
+
+			y := new(big.Int)
+			y.SetBytes(i.Y[:])
+			pub := new(ecdsa.PublicKey)
+			pub.X = x
+			pub.Y = y
+
+			pub.Curve = btcec.S256()
+			return common.HexToAddress(addr), pub, utils.Encode(nh[:]), nil
+		}
+	}
+	return common.Address{}, nil, "", fmt.Errorf("info not available")
+}
+
+func (c *NamespaceManager) GetNameHash(username string) ([32]byte, error) {
+	return goens.NameHash(username)
 }
 
 // GetInfo returns the public key of the user

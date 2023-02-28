@@ -9,20 +9,18 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
-	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscription"
-	rpcMock "github.com/fairdatasociety/fairOS-dfs/pkg/subscription/rpc/mock"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
 	"github.com/stretchr/testify/assert"
+	goens "github.com/wealdtech/go-ens/v3"
 )
 
 func TestSubscription(t *testing.T) {
 	mockClient := mock.NewMockBeeClient()
-	ens := mock2.NewMockNamespaceManager()
 
 	logger := logging.New(os.Stdout, 0)
 	acc1 := account.New(logger)
@@ -35,10 +33,15 @@ func TestSubscription(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	pod1 := pod.NewPod(mockClient, fd, acc1, tm, logger)
 	addr1 := common.HexToAddress(acc1.GetUserAccountInfo().GetAddress().Hex())
-	sm := rpcMock.NewMockSubscriptionManager()
-	m := subscription.New(pod1, addr1, acc1.GetUserAccountInfo().GetPrivateKey(), ens, sm)
+	nameHash1, err := goens.NameHash(addr1.Hex())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sm := mock2.NewMockSubscriptionManager()
+	pod1 := pod.NewPod(mockClient, fd, acc1, tm, sm, logger)
+
 	randomLongPodName1, err := utils.GetRandString(64)
 	if err != nil {
 		t.Fatalf("error creating pod %s", randomLongPodName1)
@@ -62,8 +65,14 @@ func TestSubscription(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	category := [32]byte{}
+	err = pod1.ListPodInMarketplace(randomLongPodName1, randomLongPodName1, randomLongPodName1, "", 1, category, nameHash1)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	err = m.ListPod(randomLongPodName1, common.HexToAddress(p1.GetPodAddress().Hex()), 1)
+	// sub
+	market, err := sm.GetAllSubscribablePods()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,63 +82,48 @@ func TestSubscription(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, logger)
 	addr2 := common.HexToAddress(acc2.GetUserAccountInfo().GetAddress().Hex())
-
-	m2 := subscription.New(pod2, addr2, acc2.GetUserAccountInfo().GetPrivateKey(), ens, sm)
-
-	err = m2.RequestSubscription(common.HexToAddress(p1.GetPodAddress().Hex()), addr1)
+	nameHash2, err := goens.NameHash(addr2.Hex())
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = pod2.RequestSubscription(market[0].SubHash, nameHash2)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = m.ApproveSubscription(p1.GetPodName(), common.HexToAddress(p1.GetPodAddress().Hex()), addr2, acc2.GetUserAccountInfo().GetPublicKey())
+	requests, err := sm.GetSubRequests(addr1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	subs, err := m2.GetSubscriptions()
+	if requests[0].SubHash != market[0].SubHash {
+		t.Fatal("subhash mismatch")
+	}
+
+	err = pod1.ApproveSubscription(p1.GetPodName(), requests[0].RequestHash, acc2.GetUserAccountInfo().GetPublicKey())
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	subs, err := pod2.GetSubscriptions(0, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	podInfo, err := pod2.GetSubscribablePodInfo(subs[0].SubHash)
+	if err != nil {
+		t.Fatal(err)
+	}
 	assert.Equal(t, len(subs), 1)
-	assert.Equal(t, subs[0].Name, randomLongPodName1)
+	assert.Equal(t, podInfo.PodName, randomLongPodName1)
 
-	randomLongPodName2, err := utils.GetRandString(64)
+	pi, err := pod2.OpenSubscribedPod(subs[0].SubHash, acc1.GetUserAccountInfo().GetPublicKey())
 	if err != nil {
-		t.Fatalf("error creating pod %s", randomLongPodName2)
-	}
-
-	p2, err := pod1.CreatePod(randomLongPodName2, "", podPassword)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = m2.RequestSubscription(common.HexToAddress(p2.GetPodAddress().Hex()), addr1)
-	if err == nil {
-		t.Fatal("pod is not listed")
-	}
-
-	err = m.ListPod(randomLongPodName2, common.HexToAddress(p2.GetPodAddress().Hex()), 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = m.DelistPod(common.HexToAddress(p2.GetPodAddress().Hex()))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = m2.RequestSubscription(common.HexToAddress(p2.GetPodAddress().Hex()), addr1)
-	if err == nil {
-		t.Fatal("pod is not listed")
-	}
-
-	pi, err := m2.OpenSubscribedPod(common.HexToAddress(p1.GetPodAddress().Hex()), acc1.GetUserAccountInfo().GetPublicKey())
-	if err != nil {
-		return
+		t.Fatal("failed to open subscribed pod")
 	}
 
 	dirObject := pi.GetDirectory()
@@ -190,4 +184,5 @@ func TestSubscription(t *testing.T) {
 	if fileMeta2.BlockSize != uint32(20) {
 		t.Fatalf("invalid block size")
 	}
+
 }

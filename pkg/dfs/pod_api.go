@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/hex"
 
+	SwarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -389,4 +391,166 @@ func (a *API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
 	}
 
 	return pi, nil
+}
+
+// ListPodInMarketplace
+func (a *API) ListPodInMarketplace(podName, title, desc, thumbnail, sessionId string, price uint64, category [32]byte) error {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	if a.sm == nil {
+		return errNilSubManager
+	}
+
+	nameHash, err := a.users.GetNameHash(ui.GetUserName())
+	if err != nil {
+		return err
+	}
+
+	return ui.GetPod().ListPodInMarketplace(podName, title, desc, thumbnail, price, category, nameHash)
+}
+
+// ChangePodListStatusInMarketplace
+func (a *API) ChangePodListStatusInMarketplace(sessionId string, subHash [32]byte, show bool) error {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	if a.sm == nil {
+		return errNilSubManager
+	}
+
+	return ui.GetPod().PodStatusInMarketplace(subHash, show)
+}
+
+// RequestSubscription
+func (a *API) RequestSubscription(sessionId string, subHash [32]byte) error {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	if a.sm == nil {
+		return errNilSubManager
+	}
+
+	nameHash, err := a.users.GetNameHash(ui.GetUserName())
+	if err != nil {
+		return err
+	}
+	return ui.GetPod().RequestSubscription(subHash, nameHash)
+}
+
+// ApproveSubscription
+func (a *API) ApproveSubscription(sessionId, podName string, reqHash, nameHash [32]byte) error {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	if a.sm == nil {
+		return errNilSubManager
+	}
+
+	_, subscriberPublicKey, err := a.users.GetUserInfoFromENS(nameHash)
+	if err != nil {
+		return err
+	}
+
+	return ui.GetPod().ApproveSubscription(podName, reqHash, subscriberPublicKey)
+}
+
+type SubscriptionInfo struct {
+	SubHash      [32]byte
+	PodName      string
+	PodAddress   string
+	InfoLocation []byte
+	ValidTill    int64
+}
+
+// GetSubscriptions
+func (a *API) GetSubscriptions(sessionId string, start, limit uint64) ([]*SubscriptionInfo, error) {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	if a.sm == nil {
+		return nil, errNilSubManager
+	}
+
+	subscriptions, err := ui.GetPod().GetSubscriptions(start, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	subs := []*SubscriptionInfo{}
+	for _, item := range subscriptions {
+		info, err := ui.GetPod().GetSubscribablePodInfo(item.SubHash)
+		if err != nil {
+			return subs, err
+		}
+		sub := &SubscriptionInfo{
+			SubHash:      item.SubHash,
+			PodName:      info.PodName,
+			PodAddress:   info.PodAddress,
+			InfoLocation: item.UnlockKeyLocation[:],
+			ValidTill:    item.ValidTill.Int64(),
+		}
+		subs = append(subs, sub)
+	}
+
+	return subs, nil
+}
+
+// OpenSubscribedPod
+func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte) (*pod.Info, error) {
+
+	sub, err := a.sm.GetSub(subHash)
+	if err != nil {
+		return nil, err
+	}
+
+	_, ownerPublicKey, err := a.users.GetUserInfoFromENS(sub.FdpSellerNameHash)
+	if err != nil {
+		return nil, err
+	}
+
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	// open the pod
+	pi, err := ui.GetPod().OpenSubscribedPod(subHash, ownerPublicKey)
+	if err != nil {
+		return nil, err
+	}
+	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
+	if err != nil {
+		return nil, err
+	}
+	// Add podName in the login user session
+	ui.AddPodName(pi.GetPodName(), pi)
+	return pi, nil
+}
+
+// GetSubscribablePods
+func (a *API) GetSubscribablePods(sessionId string) ([]SwarmMail.SwarmMailSub, error) {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	return ui.GetPod().GetMarketplace()
 }

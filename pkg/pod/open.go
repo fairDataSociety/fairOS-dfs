@@ -55,7 +55,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	)
 	if sharedPodType {
 		var addressString string
-		addressString, podPassword = p.getAddressPassword(podList, podName)
+		addressString, podPassword = p.getSharedAddressPassword(podList, podName)
 		if addressString == "" { // skipcq: TCV-001
 			return nil, fmt.Errorf("shared pod does not exist")
 		}
@@ -116,12 +116,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	return podInfo, nil
 }
 
-func (p *Pod) OpenFromReference(ref utils.Reference) (*Info, error) {
-	si, err := p.ReceivePodInfo(ref)
-	if err != nil {
-		return nil, err
-	}
-
+func (p *Pod) OpenFromShareInfo(si *ShareInfo) (*Info, error) {
 	accountInfo := p.acc.GetEmptyAccountInfo()
 	address := utils.HexToAddress(si.Address)
 	accountInfo.SetAddress(address)
@@ -147,7 +142,7 @@ func (p *Pod) OpenFromReference(ref utils.Reference) (*Info, error) {
 	p.addPodToPodMap(si.PodName, podInfo)
 
 	// sync the pod's files and directories
-	err = p.SyncPod(si.PodName)
+	err := p.SyncPod(si.PodName)
 	if err != nil && err != d.ErrResourceDeleted { // skipcq: TCV-001
 		return nil, err
 	}
@@ -184,7 +179,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	)
 	if sharedPodType {
 		var addressString string
-		addressString, podPassword = p.getAddressPassword(podList, podName)
+		addressString, podPassword = p.getSharedAddressPassword(podList, podName)
 		if addressString == "" { // skipcq: TCV-001
 			return nil, fmt.Errorf("shared pod does not exist")
 		}
@@ -253,10 +248,20 @@ func (*Pod) getIndexPassword(podList *List, podName string) (int, string) {
 	return -1, "" // skipcq: TCV-001
 }
 
-func (*Pod) getAddressPassword(podList *List, podName string) (string, string) {
+func (*Pod) getSharedAddressPassword(podList *List, podName string) (string, string) {
 	for _, pod := range podList.SharedPods {
 		if pod.Name == podName {
 			return pod.Address, pod.Password
+		}
+	}
+	return "", ""
+}
+
+func (p *Pod) getAddressPassword(podList *List, podName string) (string, string) {
+	for _, pod := range podList.Pods {
+		if pod.Name == podName {
+			addr := p.acc.GetAddress(pod.Index)
+			return addr.Hex(), pod.Password
 		}
 	}
 	return "", ""
