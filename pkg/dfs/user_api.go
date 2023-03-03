@@ -88,3 +88,13 @@ func (a *API) ConnectPortableAccountWithWallet(userName, passPhrase, addressHex,
 func (a *API) LoginWithWallet(addressHex, signature, sessionId string) (*user.Info, error) {
 	return a.users.LoginWithWallet(addressHex, signature, a.client, a.tm, a.sm, sessionId)
 }
+
+// GetNameHash
+func (a *API) GetNameHash(sessionId string, username string) ([32]byte, error) {
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return [32]byte{}, ErrUserNotLoggedIn
+	}
+
+	return a.users.GetNameHash(username)
+}

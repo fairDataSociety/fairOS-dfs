@@ -48,6 +48,7 @@ func registerWasmFunctions() {
 	js.Global().Set("userLogout", js.FuncOf(userLogout))
 	js.Global().Set("userDelete", js.FuncOf(userDelete))
 	js.Global().Set("userStat", js.FuncOf(userStat))
+	js.Global().Set("getNameHash", js.FuncOf(getNameHash))
 
 	js.Global().Set("podNew", js.FuncOf(podNew))
 	js.Global().Set("podOpen", js.FuncOf(podOpen))
@@ -2302,6 +2303,36 @@ func getSubscribablePodInfo(_ js.Value, funcArgs []js.Value) interface{} {
 			object.Set("podName", info.PodName)
 			object.Set("price", info.Price)
 			object.Set("title", info.Title)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func getNameHash(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"getNameHash(sessionId, username)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		username := funcArgs[1].String()
+
+		go func() {
+			nameHash, err := api.GetNameHash(sessionId, username)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("getNameHash failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("namehash", utils.Encode(nameHash[:]))
 
 			resolve.Invoke(object)
 		}()
