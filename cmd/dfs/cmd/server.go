@@ -271,6 +271,9 @@ func startHttpService(logger logging.Logger) *http.Server {
 			httpSwagger.URL("./swagger/doc.json"),
 		)).Methods(http.MethodGet)
 	}
+	router.HandleFunc("/public/file", handler.PublicPodGetFileHandler)
+	router.HandleFunc("/public/dir", handler.PublicPodGetDirHandler)
+	router.HandleFunc("/public/{ref}/{file}", handler.PublicPodFilePathHandler)
 
 	apiVersion := "v1"
 

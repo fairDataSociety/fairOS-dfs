@@ -274,7 +274,7 @@ func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, er
 	return decryptedBytes[:seedSize], nil
 }
 
-// func (*Info) PadSeedName(seed []byte, username string, passphrase string) ([]byte, error) { pads the given seed and name with random elements to be a chunk of chunkSize
+// PadSeedName pads the given seed and name with random elements to be a chunk of chunkSize
 func (*Info) PadSeedName(seed []byte, username string, passphrase string) ([]byte, error) {
 	usernameLength := len(username)
 	endIndexBytes := make([]byte, nameSize)

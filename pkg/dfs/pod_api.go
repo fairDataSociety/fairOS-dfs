@@ -19,7 +19,18 @@ package dfs
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"path/filepath"
+	"strconv"
+	"strings"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
 
 	SwarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
@@ -293,6 +304,157 @@ func (a *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareI
 	}
 
 	return ui.GetPod().ReceivePodInfo(ref)
+}
+
+// PublicPodReceiveInfo
+func (a *API) PublicPodReceiveInfo(ref utils.Reference) (*pod.ShareInfo, error) {
+	data, resp, err := a.client.DownloadBlob(ref.Bytes())
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	if resp != http.StatusOK { // skipcq: TCV-001
+		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
+	}
+
+	var shareInfo *pod.ShareInfo
+	err = json.Unmarshal(data, &shareInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return shareInfo, nil
+}
+
+// PublicPodFileDownload
+func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.ReadCloser, uint64, error) {
+
+	accountInfo := &account.Info{}
+	address := utils.HexToAddress(pod.Address)
+	accountInfo.SetAddress(address)
+
+	fd := feed.New(accountInfo, a.client, a.logger)
+	topic := utils.HashString(filePath)
+	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if string(metaBytes) == utils.DeletedFeedMagicWord {
+		a.logger.Errorf("found deleted feed for %s\n", filePath)
+		return nil, 0, file.ErrDeletedFeed
+	}
+
+	var meta *file.MetaData
+	err = json.Unmarshal(metaBytes, &meta)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+
+	fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+
+	var fileInode file.INode
+	err = json.Unmarshal(fileInodeBytes, &fileInode)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+
+	reader := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+	return reader, meta.Size, nil
+}
+
+// PublicPodFileDownload
+func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entry, []file.Entry, error) {
+
+	accountInfo := &account.Info{}
+	address := utils.HexToAddress(pod.Address)
+	accountInfo.SetAddress(address)
+
+	fd := feed.New(accountInfo, a.client, a.logger)
+
+	dirNameWithPath := filepath.ToSlash(dirPathToLs)
+	topic := utils.HashString(dirNameWithPath)
+	_, data, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password))
+	if err != nil { // skipcq: TCV-001
+		if dirNameWithPath == utils.PathSeparator {
+			return nil, nil, nil
+		}
+		return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
+	}
+
+	dirInode := &dir.Inode{}
+	err = dirInode.Unmarshal(data)
+	if err != nil {
+		return nil, nil, fmt.Errorf("list dir : %v", err)
+	}
+
+	listEntries := []dir.Entry{}
+	var files []string
+	for _, fileOrDirName := range dirInode.FileOrDirNames {
+		if strings.HasPrefix(fileOrDirName, "_D_") {
+			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
+			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
+			dirTopic := utils.HashString(dirPath)
+
+			_, data, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(pod.Password))
+			if err != nil { // skipcq: TCV-001
+				return nil, nil, fmt.Errorf("list dir : %v", err)
+			}
+			var dirInode *dir.Inode
+			err = json.Unmarshal(data, &dirInode)
+			if err != nil { // skipcq: TCV-001
+				return nil, nil, fmt.Errorf("list dir : %v", err)
+			}
+			entry := dir.Entry{
+				Name:             dirInode.Meta.Name,
+				ContentType:      dir.MineTypeDirectory, // per RFC2425
+				CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
+				AccessTime:       strconv.FormatInt(dirInode.Meta.AccessTime, 10),
+				ModificationTime: strconv.FormatInt(dirInode.Meta.ModificationTime, 10),
+				Mode:             dirInode.Meta.Mode,
+			}
+			listEntries = append(listEntries, entry)
+		} else if strings.HasPrefix(fileOrDirName, "_F_") {
+			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
+			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
+			files = append(files, filePath)
+		}
+	}
+
+	fileEntries := []file.Entry{}
+	for _, filePath := range files {
+		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
+
+		_, data, err := fd.GetFeedData(fileTopic, accountInfo.GetAddress(), []byte(pod.Password))
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, fmt.Errorf("file mtdt : %v", err)
+		}
+		if string(data) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
+			continue
+		}
+		var meta *file.MetaData
+		err = json.Unmarshal(data, &meta)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, fmt.Errorf("file mtdt : %v", err)
+		}
+		entry := file.Entry{
+			Name:             meta.Name,
+			ContentType:      meta.ContentType,
+			Size:             strconv.FormatUint(meta.Size, 10),
+			BlockSize:        strconv.FormatInt(int64(meta.BlockSize), 10),
+			CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
+			AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
+			ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
+			Mode:             meta.Mode,
+		}
+
+		fileEntries = append(fileEntries, entry)
+	}
+
+	return listEntries, fileEntries, nil
 }
 
 // PodReceive
