@@ -29,7 +29,7 @@ const (
 )
 
 type SubscriptionInfoPutter interface {
-	UploadBlob(data []byte, tag uint32, pin bool, encrypt bool) (address []byte, err error)
+	UploadBlob(data []byte, tag uint32, encrypt bool) (address []byte, err error)
 }
 
 type SubscriptionInfoGetter interface {
@@ -84,7 +84,7 @@ func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, titl
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	ref, err := c.putter.UploadBlob(data, 0, true, false)
+	ref, err := c.putter.UploadBlob(data, 0, false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -160,7 +160,11 @@ func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, request
 		return err
 	}
 
-	ref, err := c.putter.UploadBlob(encData, 0, true, false)
+	ref, err := c.putter.UploadBlob(encData, 0, false)
+	if err != nil {
+		return err
+	}
+
 	var fixedRef [32]byte
 	copy(fixedRef[:], ref)
 

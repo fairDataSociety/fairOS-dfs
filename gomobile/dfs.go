@@ -61,6 +61,7 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 		beeEndpoint,
 		postageBlockId,
 		ensConfig,
+		nil,
 		logger,
 	)
 	return err

@@ -37,7 +37,7 @@ type Handler struct {
 
 // New
 func New(ctx context.Context, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, ensConfig *contracts.ENSConfig, logger logging.Logger) (*Handler, error) {
-	api, err := dfs.NewDfsAPI(beeApi, postageBlockId, ensConfig, logger)
+	api, err := dfs.NewDfsAPI(beeApi, postageBlockId, ensConfig, nil, logger)
 
 	if err != nil {
 		return nil, err

@@ -204,7 +204,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, tag, true, true)
+				addr, uploadErr := f.client.UploadBlob(uploadData, tag, true)
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
@@ -249,7 +249,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 		return 0, err
 	}
 
-	addr, err := f.client.UploadBlob(fileInodeData, 0, true, true)
+	addr, err := f.client.UploadBlob(fileInodeData, 0, true)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}

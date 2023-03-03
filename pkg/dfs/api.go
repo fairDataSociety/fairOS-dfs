@@ -58,16 +58,20 @@ func NewDfsAPI(apiUrl, postageBlockId string, ensConfig *contracts.ENSConfig, su
 		}
 		return nil, errEthClient
 	}
-	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)
+	c := bee.NewBeeClient(apiUrl, postageBlockId, false, logger)
 	if !c.CheckConnection() {
 		return nil, ErrBeeClient
 	}
 	users := user.NewUsers(c, ens, logger)
 
-	sm, err := rpc.New(subConfig, logger, c, c)
-	if err != nil {
-		return nil, errSubManager
+	var sm subscriptionManager.SubscriptionManager
+	if subConfig != nil {
+		sm, err = rpc.New(subConfig, logger, c, c)
+		if err != nil {
+			return nil, errSubManager
+		}
 	}
+
 	// discard tm logs as it creates too much noise
 	tmLogger := logging.New(io.Discard, 0)
 
