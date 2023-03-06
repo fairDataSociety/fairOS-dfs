@@ -3,12 +3,14 @@ package pod
 import (
 	"crypto/ecdsa"
 	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
 
 	"github.com/ethereum/go-ethereum/common"
 	swarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 // ListPodInMarketplace will save the pod info in the subscriptionManager smart contract with its owner and price
@@ -56,6 +58,40 @@ func (p *Pod) ApproveSubscription(podName string, requestHash [32]byte, subscrib
 	}
 
 	return p.sm.AllowAccess(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()), info, requestHash, secret, p.acc.GetUserAccountInfo().GetPrivateKey())
+}
+
+// EncryptUploadSubscriptionInfo will upload sub pod info into swarm
+func (p *Pod) EncryptUploadSubscriptionInfo(podName string, subscriberPublicKey *ecdsa.PublicKey) (string, error) {
+	a, _ := subscriberPublicKey.Curve.ScalarMult(subscriberPublicKey.X, subscriberPublicKey.Y, p.acc.GetUserAccountInfo().GetPrivateKey().D.Bytes())
+	secret := sha256.Sum256(a.Bytes())
+
+	shareInfo, err := p.GetPodSharingInfo(podName)
+	if err != nil {
+		return "", err
+	}
+
+	info := &rpc.ShareInfo{
+		PodName:     shareInfo.PodName,
+		Address:     shareInfo.Address,
+		Password:    shareInfo.Password,
+		UserAddress: shareInfo.UserAddress,
+	}
+
+	data, err := json.Marshal(info)
+	if err != nil { // skipcq: TCV-001
+		return "", err
+	}
+	encData, err := utils.EncryptBytes(secret[:], data)
+	if err != nil {
+		return "", err
+	}
+
+	ref, err := p.client.UploadBlob(encData, 0, false)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(ref), nil
 }
 
 // RequestSubscription will send a subscriptionManager request to the owner of the pod

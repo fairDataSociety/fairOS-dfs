@@ -651,6 +651,26 @@ func (a *API) ApproveSubscription(sessionId, podName string, reqHash, nameHash [
 	return ui.GetPod().ApproveSubscription(podName, reqHash, subscriberPublicKey)
 }
 
+// EncryptSubscription
+func (a *API) EncryptSubscription(sessionId, podName string, nameHash [32]byte) (string, error) {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return "", ErrUserNotLoggedIn
+	}
+
+	if a.sm == nil {
+		return "", errNilSubManager
+	}
+
+	_, subscriberPublicKey, err := a.users.GetUserInfoFromENS(nameHash)
+	if err != nil {
+		return "", err
+	}
+
+	return ui.GetPod().EncryptUploadSubscriptionInfo(podName, subscriberPublicKey)
+}
+
 type SubscriptionInfo struct {
 	SubHash      [32]byte
 	PodName      string

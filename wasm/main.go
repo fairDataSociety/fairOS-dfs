@@ -70,6 +70,7 @@ func registerWasmFunctions() {
 	js.Global().Set("getSubscribablePods", js.FuncOf(getSubscribablePods))
 	js.Global().Set("getSubRequests", js.FuncOf(getSubRequests))
 	js.Global().Set("getSubscribablePodInfo", js.FuncOf(getSubscribablePodInfo))
+	js.Global().Set("encryptSubscription", js.FuncOf(encryptSubscription))
 
 	js.Global().Set("dirPresent", js.FuncOf(dirPresent))
 	js.Global().Set("dirMake", js.FuncOf(dirMake))
@@ -2101,6 +2102,45 @@ func approveSubscription(_ js.Value, funcArgs []js.Value) interface{} {
 				return
 			}
 			resolve.Invoke("request approved successfully")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func encryptSubscription(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"encryptSubscription(sessionId, podName, subscriberNameHash)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		podName := funcArgs[1].String()
+		subscriberNameHashStr := funcArgs[2].String()
+
+		nameHash, err := utils.Decode(subscriberNameHashStr)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("approveSubscription failed : %s", err.Error()))
+			return nil
+		}
+
+		var nh [32]byte
+		copy(nh[:], nameHash)
+		go func() {
+			ref, err := api.EncryptSubscription(sessionId, podName, nh)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("encryptSubscription failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("reference", ref)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
