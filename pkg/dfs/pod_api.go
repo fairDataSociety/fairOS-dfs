@@ -671,6 +671,38 @@ func (a *API) EncryptSubscription(sessionId, podName string, nameHash [32]byte) 
 	return ui.GetPod().EncryptUploadSubscriptionInfo(podName, subscriberPublicKey)
 }
 
+// DecryptAndOpenSubscriptionPod
+func (a *API) DecryptAndOpenSubscriptionPod(sessionId, reference string, sellerNameHash [32]byte) (*pod.Info, error) {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	if a.sm == nil {
+		return nil, errNilSubManager
+	}
+
+	_, publicKey, err := a.users.GetUserInfoFromENS(sellerNameHash)
+	if err != nil {
+		return nil, err
+	}
+
+	pi, err := ui.GetPod().OpenSubscribedPodFromReference(reference, publicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
+	if err != nil {
+		return nil, err
+	}
+	// Add podName in the login user session
+	ui.AddPodName(pi.GetPodName(), pi)
+	return pi, nil
+
+}
+
 type SubscriptionInfo struct {
 	SubHash      [32]byte
 	PodName      string

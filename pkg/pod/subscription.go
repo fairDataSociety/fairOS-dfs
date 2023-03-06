@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/ethereum/go-ethereum/common"
 	swarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
@@ -120,6 +121,43 @@ func (p *Pod) OpenSubscribedPod(subHash [32]byte, ownerPublicKey *ecdsa.PublicKe
 	a, _ := ownerPublicKey.Curve.ScalarMult(ownerPublicKey.X, ownerPublicKey.Y, p.acc.GetUserAccountInfo().GetPrivateKey().D.Bytes())
 	secret := sha256.Sum256(a.Bytes())
 	info, err := p.sm.GetSubscription(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()), subHash, secret)
+	if err != nil {
+		return nil, err
+	}
+
+	shareInfo := &ShareInfo{
+		PodName:     info.PodName,
+		Address:     info.Address,
+		Password:    info.Password,
+		UserAddress: info.UserAddress,
+	}
+	return p.OpenFromShareInfo(shareInfo)
+}
+
+// OpenSubscribedPodFromReference will open a subscribed pod
+func (p *Pod) OpenSubscribedPodFromReference(reference string, ownerPublicKey *ecdsa.PublicKey) (*Info, error) {
+	a, _ := ownerPublicKey.Curve.ScalarMult(ownerPublicKey.X, ownerPublicKey.Y, p.acc.GetUserAccountInfo().GetPrivateKey().D.Bytes())
+	secret := sha256.Sum256(a.Bytes())
+
+	ref, err := hex.DecodeString(reference)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	encData, resp, err := p.client.DownloadBlob(ref)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	if resp != http.StatusOK { // skipcq: TCV-001
+		return nil, fmt.Errorf("OpenSubscribedPodFromReference: could not get subscription info")
+	}
+
+	data, err := utils.DecryptBytes(secret[:], encData)
+	if err != nil {
+		return nil, err
+	}
+	var info *rpc.ShareInfo
+	err = json.Unmarshal(data, &info)
 	if err != nil {
 		return nil, err
 	}

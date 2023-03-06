@@ -71,6 +71,7 @@ func registerWasmFunctions() {
 	js.Global().Set("getSubRequests", js.FuncOf(getSubRequests))
 	js.Global().Set("getSubscribablePodInfo", js.FuncOf(getSubscribablePodInfo))
 	js.Global().Set("encryptSubscription", js.FuncOf(encryptSubscription))
+	js.Global().Set("openSubscribedPodFromReference", js.FuncOf(openSubscribedPodFromReference))
 
 	js.Global().Set("dirPresent", js.FuncOf(dirPresent))
 	js.Global().Set("dirMake", js.FuncOf(dirMake))
@@ -2215,6 +2216,44 @@ func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
 			pi, err := api.OpenSubscribedPod(sessionId, s)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("openSubscribedPod failed : %s", err.Error()))
+				return
+			}
+
+			resolve.Invoke(fmt.Sprintf("%s opened successfully", pi.GetPodName()))
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func openSubscribedPodFromReference(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"openSubscribedPodFromReference(sessionId, reference, sellerNameHash)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		reference := funcArgs[1].String()
+		sellerNameHash := funcArgs[2].String()
+
+		subHash, err := utils.Decode(sellerNameHash)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("openSubscribedPodFromReference failed : %s", err.Error()))
+			return nil
+		}
+
+		var s [32]byte
+		copy(s[:], subHash)
+
+		go func() {
+			pi, err := api.DecryptAndOpenSubscriptionPod(sessionId, reference, s)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("openSubscribedPodFromReference failed : %s", err.Error()))
 				return
 			}
 
