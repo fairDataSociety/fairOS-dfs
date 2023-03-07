@@ -271,9 +271,15 @@ func startHttpService(logger logging.Logger) *http.Server {
 			httpSwagger.URL("./swagger/doc.json"),
 		)).Methods(http.MethodGet)
 	}
-	router.HandleFunc("/public/file", handler.PublicPodGetFileHandler)
-	router.HandleFunc("/public/dir", handler.PublicPodGetDirHandler)
-	router.HandleFunc("/public/{ref}/{file}", handler.PublicPodFilePathHandler)
+	router.HandleFunc("/public-file", handler.PublicPodGetFileHandler)
+	router.HandleFunc("/public-dir", handler.PublicPodGetDirHandler)
+	router.HandleFunc("/public-kv", handler.PublicPodKVEntryGetHandler)
+
+	redirectHandler := func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+	}
+	router.HandleFunc("/public/{ref}", redirectHandler)
+	router.HandleFunc("/public/{ref}/{file:.*}", handler.PublicPodFilePathHandler)
 
 	apiVersion := "v1"
 

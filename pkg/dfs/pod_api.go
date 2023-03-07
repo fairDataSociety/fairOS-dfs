@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"strings"
 
+	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -364,6 +366,24 @@ func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.Rea
 
 	reader := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
 	return reader, meta.Size, nil
+}
+
+// PublicPodKVEntryGet
+func (a *API) PublicPodKVEntryGet(pod *pod.ShareInfo, name, key string) ([]string, []byte, error) {
+
+	accountInfo := &account.Info{}
+	address := utils.HexToAddress(pod.Address)
+	accountInfo.SetAddress(address)
+
+	fd := feed.New(accountInfo, a.client, a.logger)
+	kvStore := c.NewKeyValueStore(pod.PodName, fd, accountInfo, address, a.client, a.logger)
+
+	err := kvStore.OpenKVTable(name, pod.Password)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return kvStore.KVGet(name, key)
 }
 
 // PublicPodFileDownload
