@@ -117,7 +117,7 @@ can consume it.`,
 				return fmt.Errorf("postageBlockId is invalid")
 			}
 		}
-		ensConfig := &contracts.Config{}
+		ensConfig := &contracts.ENSConfig{}
 		network := config.GetString("network")
 		rpc := config.GetString(optionRPC)
 		if rpc == "" {
@@ -152,7 +152,7 @@ can consume it.`,
 				return fmt.Errorf("ensRegistry contract address is missing")
 			}
 
-			ensConfig = &contracts.Config{
+			ensConfig = &contracts.ENSConfig{
 				ENSRegistryAddress:    ensRegistryAddress,
 				FDSRegistrarAddress:   fdsRegistrarAddress,
 				PublicResolverAddress: publicResolverAddress,
@@ -271,6 +271,15 @@ func startHttpService(logger logging.Logger) *http.Server {
 			httpSwagger.URL("./swagger/doc.json"),
 		)).Methods(http.MethodGet)
 	}
+	router.HandleFunc("/public-file", handler.PublicPodGetFileHandler)
+	router.HandleFunc("/public-dir", handler.PublicPodGetDirHandler)
+	router.HandleFunc("/public-kv", handler.PublicPodKVEntryGetHandler)
+
+	redirectHandler := func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+	}
+	router.HandleFunc("/public/{ref}", redirectHandler)
+	router.HandleFunc("/public/{ref}/{file:.*}", handler.PublicPodFilePathHandler)
 
 	apiVersion := "v1"
 

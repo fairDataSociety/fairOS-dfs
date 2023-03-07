@@ -29,7 +29,9 @@ var (
 	ErrFileAlreadyPresent = errors.New("file already exist with new name")
 
 	//ErrBeeClient
-	ErrBeeClient   = errors.New("could not connect to bee client")
-	errEthClient   = errors.New("could not connect to eth backend")
-	errReadOnlyPod = errors.New("operation not permitted: read only pod")
+	ErrBeeClient     = errors.New("could not connect to bee client")
+	errEthClient     = errors.New("could not connect to eth backend")
+	errSubManager    = errors.New("subscription manager initialisation failed")
+	errNilSubManager = errors.New("subscription manager not initialised")
+	errReadOnlyPod   = errors.New("operation not permitted: read only pod")
 )

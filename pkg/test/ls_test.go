@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -44,8 +46,9 @@ func TestPod_ListPods(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)

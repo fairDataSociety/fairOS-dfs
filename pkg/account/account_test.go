@@ -132,6 +132,40 @@ func TestPadUnpadSeed(t *testing.T) {
 	}
 }
 
+func TestPadUnpadSeedName(t *testing.T) {
+	name := "TestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedNameTestPadUnpadSeedName"
+	password := "letmein"
+	logger := logging.New(io.Discard, 0)
+	acc := New(logger)
+	_, seed, err := acc.CreateUserAccount("")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	acc.wallet.seed = seed
+	r, err := acc.userAccount.PadSeedName(seed, name, password)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(r) != utils.MaxChunkLength {
+		t.Fatal("padded string does not match chunk size")
+	}
+
+	seed2, name2, err := acc.userAccount.RemovePadFromSeedName(r, password)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(seed, seed2) {
+		t.Fatal("seed and padding removed seed do not match")
+	}
+
+	if name != name2 {
+		t.Fatal("name do not match")
+	}
+}
+
 func TestCreatePodAccount(t *testing.T) {
 	logger := logging.New(io.Discard, 0)
 	acc := New(logger)

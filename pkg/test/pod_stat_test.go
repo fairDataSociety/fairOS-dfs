@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/plexsysio/taskmanager"
@@ -47,7 +49,9 @@ func TestStat(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	sm := mock3.NewMockSubscriptionManager()
+
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 	podName1 := "test1"
 
 	t.Run("pod-stat", func(t *testing.T) {

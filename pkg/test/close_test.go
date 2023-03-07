@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/plexsysio/taskmanager"
@@ -48,7 +50,9 @@ func TestClose(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	sm := mock2.NewMockSubscriptionManager()
+
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 	podName1 := "test1"
 
 	t.Run("close-pod", func(t *testing.T) {

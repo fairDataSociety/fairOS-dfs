@@ -67,6 +67,7 @@ type Client struct {
 	postageBlockId     string
 	logger             logging.Logger
 	isProxy            bool
+	shouldPin          bool
 }
 
 func hashFunc() hash.Hash {
@@ -95,7 +96,7 @@ type beeError struct {
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
-func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *Client {
+func NewBeeClient(apiUrl, postageBlockId string, shouldPin bool, logger logging.Logger) *Client {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache, err := lru.New(chunkCacheSize)
 	if err != nil {
@@ -119,6 +120,7 @@ func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *Client 
 		downloadBlockCache: downloadBlockCache,
 		postageBlockId:     postageBlockId,
 		logger:             logger,
+		shouldPin:          shouldPin,
 	}
 }
 
@@ -190,7 +192,9 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 
 	// TODO change this in the future when we have some alternative to pin SOC
 	// This is a temporary fix to force soc pinning
-	req.Header.Set(swarmPinHeader, "true")
+	if s.shouldPin {
+		req.Header.Set(swarmPinHeader, "true")
+	}
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -232,7 +236,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 }
 
 // UploadChunk uploads a chunk to Swarm network.
-func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error) {
+func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	to := time.Now()
 	fullUrl := fmt.Sprintf(s.url + chunkUploadDownloadUrl)
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(ch.Data()))
@@ -240,7 +244,7 @@ func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err erro
 		return nil, err
 	}
 
-	if pin {
+	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
 	}
 
@@ -333,7 +337,7 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 }
 
 // UploadBlob uploads a binary blob of data to Swarm network. It also optionally pins and encrypts the data.
-func (s *Client) UploadBlob(data []byte, tag uint32, pin, encrypt bool) (address []byte, err error) {
+func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []byte, err error) {
 	to := time.Now()
 
 	// return the ref if this data is already in swarm
@@ -347,7 +351,7 @@ func (s *Client) UploadBlob(data []byte, tag uint32, pin, encrypt bool) (address
 		return nil, err
 	}
 
-	if pin {
+	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
 	}
 

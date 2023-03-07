@@ -329,7 +329,7 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 			buf = compressedData
 		}
 
-		addr, err := mockClient.UploadBlob(buf, 0, true, true)
+		addr, err := mockClient.UploadBlob(buf, 0, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -453,7 +453,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			buf = compressedData
 		}
 
-		addr, err := mockClient.UploadBlob(buf, 0, true, true)
+		addr, err := mockClient.UploadBlob(buf, 0, true)
 		if err != nil {
 			t.Fatal(err)
 		}

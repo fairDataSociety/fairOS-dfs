@@ -22,6 +22,9 @@ import (
 	"io"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
@@ -42,11 +45,12 @@ type API struct {
 	users  *user.Users
 	logger logging.Logger
 	tm     *taskmanager.TaskManager
+	sm     subscriptionManager.SubscriptionManager
 	io.Closer
 }
 
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(apiUrl, postageBlockId string, ensConfig *contracts.Config, logger logging.Logger) (*API, error) {
+func NewDfsAPI(apiUrl, postageBlockId string, ensConfig *contracts.ENSConfig, subConfig *contracts.SubscriptionConfig, logger logging.Logger) (*API, error) {
 	ens, err := ethClient.New(ensConfig, logger)
 	if err != nil {
 		if errors.Is(err, ethClient.ErrWrongChainID) {
@@ -54,11 +58,19 @@ func NewDfsAPI(apiUrl, postageBlockId string, ensConfig *contracts.Config, logge
 		}
 		return nil, errEthClient
 	}
-	c := bee.NewBeeClient(apiUrl, postageBlockId, logger)
+	c := bee.NewBeeClient(apiUrl, postageBlockId, false, logger)
 	if !c.CheckConnection() {
 		return nil, ErrBeeClient
 	}
 	users := user.NewUsers(c, ens, logger)
+
+	var sm subscriptionManager.SubscriptionManager
+	if subConfig != nil {
+		sm, err = rpc.New(subConfig, logger, c, c)
+		if err != nil {
+			return nil, errSubManager
+		}
+	}
 
 	// discard tm logs as it creates too much noise
 	tmLogger := logging.New(io.Discard, 0)
@@ -68,6 +80,7 @@ func NewDfsAPI(apiUrl, postageBlockId string, ensConfig *contracts.Config, logge
 		users:  users,
 		logger: logger,
 		tm:     taskmanager.New(10, defaultMaxWorkers, time.Second*15, tmLogger),
+		sm:     sm,
 	}, nil
 }
 

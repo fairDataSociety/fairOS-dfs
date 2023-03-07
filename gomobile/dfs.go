@@ -45,7 +45,7 @@ func IsConnected() bool {
 func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) error {
 	logger := logging.New(os.Stdout, logrus.Level(logLevel))
 	var err error
-	var ensConfig *contracts.Config
+	var ensConfig *contracts.ENSConfig
 	switch network {
 	case "play":
 		ensConfig = contracts.PlayConfig()
@@ -61,6 +61,7 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 		beeEndpoint,
 		postageBlockId,
 		ensConfig,
+		nil,
 		logger,
 	)
 	return err
