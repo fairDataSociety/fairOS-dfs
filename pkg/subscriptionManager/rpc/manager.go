@@ -278,6 +278,7 @@ func New(subConfig *contracts.SubscriptionConfig, logger logging.Logger, getter 
 	if err != nil {
 		return nil, fmt.Errorf("dial eth ensm: %w", err)
 	}
+	logger.Info("SwarmMailAddress      : ", subConfig.SwarmMailAddress)
 	sMail, err := swarmMail.NewSwarmMail(common.HexToAddress(subConfig.SwarmMailAddress), c)
 	if err != nil {
 		return nil, err

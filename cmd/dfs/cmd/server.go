@@ -118,6 +118,7 @@ can consume it.`,
 			}
 		}
 		ensConfig := &contracts.ENSConfig{}
+		var subscriptionConfig *contracts.SubscriptionConfig
 		network := config.GetString("network")
 		rpc := config.GetString(optionRPC)
 		if rpc == "" {
@@ -164,12 +165,15 @@ can consume it.`,
 				fmt.Println("\nens is not available for mainnet yet")
 				return fmt.Errorf("ens is not available for mainnet yet")
 			case "testnet":
-				ensConfig = contracts.TestnetConfig()
+				ensConfig, subscriptionConfig = contracts.TestnetConfig()
 			case "play":
-				ensConfig = contracts.PlayConfig()
+				ensConfig, subscriptionConfig = contracts.PlayConfig()
 			}
 		}
 		ensConfig.ProviderBackend = rpc
+		if subscriptionConfig != nil {
+			subscriptionConfig.RPC = rpc
+		}
 		var logger logging.Logger
 		switch v := strings.ToLower(verbosity); v {
 		case "0", "silent":
@@ -203,7 +207,7 @@ can consume it.`,
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 		// datadir will be removed in some future version. it is kept for migration purpose only
-		hdlr, err := api.New(ctx, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, logger)
+		hdlr, err := api.New(ctx, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, subscriptionConfig, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return err

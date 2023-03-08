@@ -117,7 +117,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
 		if len(funcArgs) != 6 {
-			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, false, rpc, play, subRpc, subContractAddress)\"")
+			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, false, rpc, subRpc, subContractAddress)\"")
 			return nil
 		}
 		beeEndpoint := funcArgs[0].String()
@@ -130,19 +130,20 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 			reject.Invoke("unknown network. \"use play or testnet\"")
 			return nil
 		}
-		var config *contracts.ENSConfig
+		var (
+			config    *contracts.ENSConfig
+			subConfig *contracts.SubscriptionConfig
+		)
+
 		if network == "play" {
-			config = contracts.PlayConfig()
+			config, subConfig = contracts.PlayConfig()
 		} else {
-			config = contracts.TestnetConfig()
+			config, subConfig = contracts.TestnetConfig()
 		}
 		config.ProviderBackend = rpc
+		subConfig.RPC = subRpc
+		subConfig.SwarmMailAddress = subContractAddress
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
-
-		subConfig := &contracts.SubscriptionConfig{
-			RPC:              subRpc,
-			SwarmMailAddress: subContractAddress,
-		}
 
 		go func() {
 			var err error

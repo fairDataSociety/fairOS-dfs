@@ -32,6 +32,7 @@ var (
 
 	//ErrDeletedFeed
 	ErrDeletedFeed = errors.New("deleted feed")
+	ErrUnknownFeed = errors.New("unknown value in feed")
 )
 
 // MetaData
@@ -69,7 +70,7 @@ func (f *File) handleMeta(meta *MetaData, podPassword string) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	_, err := f.GetMetaFromFileName(totalPath, podPassword, f.userAddress)
 	if err != nil {
-		if err != ErrDeletedFeed {
+		if err != ErrDeletedFeed || err != ErrUnknownFeed {
 			return f.uploadMeta(meta, podPassword)
 		}
 	}
@@ -201,11 +202,10 @@ func (f *File) GetMetaFromFileName(fileNameWithPath, podPassword string, userAdd
 		f.logger.Errorf("found deleted feed for %s\n", fileNameWithPath)
 		return nil, ErrDeletedFeed
 	}
-
 	var meta *MetaData
 	err = json.Unmarshal(metaBytes, &meta)
 	if err != nil { // skipcq: TCV-001
-		return nil, err
+		return nil, ErrUnknownFeed
 	}
 
 	return meta, nil
