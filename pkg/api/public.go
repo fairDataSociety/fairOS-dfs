@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -147,6 +148,9 @@ func (h *Handler) PublicPodFilePathHandler(w http.ResponseWriter, r *http.Reques
 	sizeString := strconv.FormatUint(size, 10)
 	w.Header().Set("Content-Length", sizeString)
 	w.Header().Set("Content-Type", contentType)
+	if strings.HasPrefix(filePath, "static/") {
+		w.Header().Set("Cache-Control", "public, max-age=31536000")
+	}
 	_, err = io.Copy(w, reader)
 	if err != nil {
 		h.logger.Errorf("download: %v", err)

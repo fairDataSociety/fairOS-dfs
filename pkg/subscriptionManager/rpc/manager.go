@@ -187,7 +187,6 @@ func (c *Client) GetSubscription(subscriber common.Address, subHash, secret [32]
 	if err != nil {
 		return nil, err
 	}
-
 	encData, resp, err := c.getter.DownloadBlob(item.UnlockKeyLocation[:])
 	if err != nil { // skipcq: TCV-001
 		return nil, err
