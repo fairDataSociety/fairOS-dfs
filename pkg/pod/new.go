@@ -148,6 +148,13 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 		docStore:    docStore,
 	}
 	p.addPodToPodMap(podName, podInfo)
+	if addressString == "" {
+		// create the root directory
+		err = podInfo.GetDirectory().MkRootDir(podInfo.GetPodName(), podPassword, podInfo.GetPodAddress(), podInfo.GetFeed())
+		if err != nil {
+			return nil, err
+		}
+	}
 	return podInfo, nil
 }
 

@@ -19,7 +19,6 @@ package file
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"strconv"
 )
 
@@ -49,9 +48,9 @@ type Blocks struct {
 // GetStats given a filename this function returns all the information about the file
 // including the block information.
 func (f *File) GetStats(podName, podFileWithPath, podPassword string) (*Stats, error) {
-	meta := f.GetFromFileMap(podFileWithPath)
+	meta := f.GetInode(podPassword, podFileWithPath)
 	if meta == nil { // skipcq: TCV-001
-		return nil, fmt.Errorf("file not found")
+		return nil, ErrFileNotFound
 	}
 
 	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
@@ -74,6 +73,7 @@ func (f *File) GetStats(podName, podFileWithPath, podPassword string) (*Stats, e
 		}
 		fileBlocks = append(fileBlocks, fb)
 	}
+	f.AddToFileMap(podFileWithPath, meta)
 	return &Stats{
 		PodName:          podName,
 		FilePath:         meta.Path,

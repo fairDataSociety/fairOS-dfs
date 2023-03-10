@@ -26,12 +26,7 @@ func (a *API) DocCreate(sessionId, podName, name string, indexes map[string]coll
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -47,12 +42,7 @@ func (a *API) DocOpen(sessionId, podName, name string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -68,12 +58,7 @@ func (a *API) DocDelete(sessionId, podName, name string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -90,12 +75,7 @@ func (a *API) DocList(sessionId, podName string) (map[string]collection.DBSchema
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -113,12 +93,7 @@ func (a *API) DocCount(sessionId, podName, name, expr string) (*collection.Table
 		return keyCount, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return keyCount, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return keyCount, err
 	}
@@ -140,12 +115,7 @@ func (a *API) DocPut(sessionId, podName, name string, value []byte) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -162,12 +132,7 @@ func (a *API) DocGet(sessionId, podName, name, id string) ([]byte, error) {
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -184,12 +149,7 @@ func (a *API) DocDel(sessionId, podName, name, id string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -206,12 +166,7 @@ func (a *API) DocFind(sessionId, podName, name, expr string, limit int) ([][]byt
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -227,12 +182,7 @@ func (a *API) DocBatch(sessionId, podName, name string) (*collection.DocBatch, e
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -248,12 +198,7 @@ func (a *API) DocBatchPut(sessionId, podName string, doc []byte, docBatch *colle
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -269,12 +214,7 @@ func (a *API) DocBatchWrite(sessionId, podName string, docBatch *collection.DocB
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -290,18 +230,13 @@ func (a *API) DocIndexJson(sessionId, podName, name, podFileWithPath string) err
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
 	// check if file present
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
 	file := podInfo.GetFile()
-	if !file.IsFileAlreadyPresent(podFileWithPath) {
+	if !file.IsFileAlreadyPresent(podInfo.GetPodPassword(), podFileWithPath) {
 		return ErrFileNotPresent
 	}
 

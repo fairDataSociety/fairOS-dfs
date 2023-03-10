@@ -26,7 +26,7 @@ type Stat struct {
 
 // PodStat shows all the pod related information like podname and its current address.
 func (p *Pod) PodStat(podName string) (*Stat, error) {
-	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := p.GetPodInfo(podName)
 	if err == nil {
 		return &Stat{
 			PodName:    podInfo.GetPodName(),

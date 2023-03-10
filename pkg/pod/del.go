@@ -40,7 +40,7 @@ func (p *Pod) DeleteOwnPod(podName string) error {
 	}
 
 	// delete tables
-	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := p.GetPodInfo(podName)
 	if err != nil {
 		return err
 	}

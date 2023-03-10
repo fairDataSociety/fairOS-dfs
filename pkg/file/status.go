@@ -8,8 +8,8 @@ import (
 func (f *File) Status(podFileWithPath, podPassword string) (int64, int64, int64, error) {
 	// check if file present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
-	if !f.IsFileAlreadyPresent(totalFilePath) {
-		return 0, 0, 0, ErrFileNotPresent
+	if !f.IsFileAlreadyPresent(podPassword, totalFilePath) {
+		return 0, 0, 0, ErrFileNotFound
 	}
 
 	tag := f.LoadFromTagMap(totalFilePath)

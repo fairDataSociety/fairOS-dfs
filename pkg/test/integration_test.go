@@ -301,13 +301,11 @@ func TestLiteUser(t *testing.T) {
 					_, err := dfsApi.DirectoryStat(podRequest.PodName, v.path, sessionId)
 					if err != nil {
 						t.Fatal(err)
-
 					}
 				} else {
 					_, err := dfsApi.FileStat(podRequest.PodName, v.path, sessionId)
 					if err != nil {
-						t.Fatal(err)
-
+						t.Fatal(err, v.path)
 					}
 				}
 			}

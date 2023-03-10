@@ -103,10 +103,7 @@ func (f *File) deleteMeta(meta *MetaData, podPassword string) error {
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	err = f.fd.DeleteFeed(topic, f.userAddress)
-	if err != nil {
-		f.logger.Warningf("failed to remove file feed %s", totalPath)
-	}
+
 	return nil
 }
 
@@ -159,13 +156,13 @@ func (f *File) BackupFromFileName(fileNameWithPath, podPassword string) (*MetaDa
 func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath, podPassword string) (*MetaData, error) {
 	fileNameWithPath = filepath.ToSlash(fileNameWithPath)
 	newFileNameWithPath = filepath.ToSlash(newFileNameWithPath)
-	p, err := f.GetMetaFromFileName(fileNameWithPath, podPassword, f.userAddress)
-	if err != nil {
-		return nil, err
+	p := f.GetInode(podPassword, fileNameWithPath)
+	if p == nil {
+		return nil, ErrFileNotFound
 	}
 
 	// remove old meta and from file map
-	err = f.deleteMeta(p, podPassword)
+	err := f.deleteMeta(p, podPassword)
 	if err != nil {
 		return nil, err
 	}

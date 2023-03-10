@@ -36,15 +36,15 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 	}
 
 	// check if directory exists
-	if d.GetDirFromDirectoryMap(dirNameWithPath) == nil { // skipcq: TCV-001
+	if d.GetInode(podPassword, dirNameWithPath) == nil { // skipcq: TCV-001
 		return ErrDirectoryNotPresent
 	}
 
 	// check if parent directory exists
-	if d.GetDirFromDirectoryMap(parentPath) == nil { // skipcq: TCV-001
+	if d.GetInode(podPassword, parentPath) == nil { // skipcq: TCV-001
 		return ErrDirectoryNotPresent
 	}
-	if d.GetDirFromDirectoryMap(newDirNameWithPath) != nil {
+	if d.GetInode(podPassword, newDirNameWithPath) != nil {
 		return ErrDirectoryAlreadyPresent
 	}
 

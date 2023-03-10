@@ -61,7 +61,7 @@ func TestWriteAt(t *testing.T) {
 		rewrite := &bytes.Buffer{}
 		rewrite.Write(update)
 		_, err = fileObject.WriteAt(fp, podPassword, rewrite, offset, false)
-		if !errors.Is(file.ErrFileNotPresent, err) {
+		if !errors.Is(file.ErrFileNotFound, err) {
 			t.Fatal("file should not be present")
 		}
 	})
@@ -81,7 +81,7 @@ func TestWriteAt(t *testing.T) {
 
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath+fileName), "")
 		// check for meta
-		meta := fileObject.GetFromFileMap(fp)
+		meta := fileObject.GetInode(podPassword, fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -156,9 +156,12 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different")
 		}
 
-		fileObject.RemoveAllFromFileMap()
+		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		meta2 := fileObject.GetFromFileMap(fp)
+		meta2 := fileObject.GetInode(podPassword, fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -179,7 +182,7 @@ func TestWriteAt(t *testing.T) {
 
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath+fileName), "")
 		// check for meta
-		meta := fileObject.GetFromFileMap(fp)
+		meta := fileObject.GetInode(podPassword, fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -279,14 +282,15 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different")
 		}
 
-		fileObject.RemoveAllFromFileMap()
+		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		meta2 := fileObject.GetFromFileMap(fp)
+		meta2 := fileObject.GetInode(podPassword, fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
-
-		fileObject.RemoveAllFromFileMap()
 	})
 
 	t.Run("upload-update-truncate-known-very-small-file", func(t *testing.T) {
@@ -304,7 +308,7 @@ func TestWriteAt(t *testing.T) {
 
 		// check for meta
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath+fileName), "")
-		meta := fileObject.GetFromFileMap(fp)
+		meta := fileObject.GetInode(podPassword, fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -355,9 +359,12 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different")
 		}
 
-		fileObject.RemoveAllFromFileMap()
+		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		meta2 := fileObject.GetFromFileMap(fp)
+		meta2 := fileObject.GetInode(podPassword, fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -377,7 +384,7 @@ func TestWriteAt(t *testing.T) {
 
 		// check for meta
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)
-		meta := fileObject.GetFromFileMap(fp)
+		meta := fileObject.GetInode(podPassword, fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -435,9 +442,12 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-		fileObject.RemoveAllFromFileMap()
+		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		meta2 := fileObject.GetFromFileMap(fp)
+		meta2 := fileObject.GetInode(podPassword, fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -457,7 +467,7 @@ func TestWriteAt(t *testing.T) {
 
 		// check for meta
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)
-		meta := fileObject.GetFromFileMap(fp)
+		meta := fileObject.GetInode(podPassword, fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -511,9 +521,12 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different")
 		}
 
-		fileObject.RemoveAllFromFileMap()
+		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		meta2 := fileObject.GetFromFileMap(fp)
+		meta2 := fileObject.GetInode(podPassword, fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -537,7 +550,7 @@ func TestWriteAt(t *testing.T) {
 
 		// check for meta
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)
-		meta := fileObject.GetFromFileMap(fp)
+		meta := fileObject.GetInode(podPassword, fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -590,9 +603,12 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different ")
 		}
 
-		fileObject.RemoveAllFromFileMap()
+		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		meta2 := fileObject.GetFromFileMap(fp)
+		meta2 := fileObject.GetInode(podPassword, fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}

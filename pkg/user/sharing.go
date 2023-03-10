@@ -130,12 +130,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 		return "", err
 	}
 
-	// check if pod is open
-	if !pd.IsPodOpened(podName) {
-		return "", pod.ErrPodNotOpened
-	}
-
-	podInfo, _, err := pd.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := pd.GetPodInfo(podName)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -146,7 +141,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	totalPath := utils.CombinePathAndFile(podDir, fileNameToAdd)
 
 	// check if file is already present
-	if file.IsFileAlreadyPresent(totalPath) {
+	if file.IsFileAlreadyPresent(podInfo.GetPodPassword(), totalPath) {
 		return "", f.ErrFileAlreadyPresent
 	}
 

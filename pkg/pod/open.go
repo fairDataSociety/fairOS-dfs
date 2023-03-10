@@ -107,12 +107,13 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	}
 
 	p.addPodToPodMap(podName, podInfo)
-
-	// sync the pod's files and directories
-	err = p.SyncPod(podName)
-	if err != nil && err != d.ErrResourceDeleted { // skipcq: TCV-001
-		return nil, err
+	if !sharedPodType {
+		err = podInfo.GetDirectory().AddRootDir(podInfo.GetPodName(), podInfo.GetPodPassword(), podInfo.GetPodAddress(), podInfo.GetFeed())
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return podInfo, nil
 }
 

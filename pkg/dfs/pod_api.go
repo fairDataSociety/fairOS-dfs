@@ -71,7 +71,7 @@ func (a *API) DeletePod(podName, sessionId string) error {
 
 	// delete all the directory, files, and database tables under this pod from
 	// the Swarm network.
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -85,11 +85,8 @@ func (a *API) DeletePod(podName, sessionId string) error {
 			return err
 		}
 
-		// close the pod if it is open
-		if ui.IsPodOpen(podName) {
-			// remove from the login session
-			ui.RemovePodName(podName)
-		}
+		// remove from the login session
+		ui.RemovePodName(podName)
 		return nil
 	}
 
@@ -104,12 +101,7 @@ func (a *API) DeletePod(podName, sessionId string) error {
 		return err
 	}
 
-	// close the pod if it is open
-	if ui.IsPodOpen(podName) {
-		// remove from the login session
-		ui.RemovePodName(podName)
-	}
-
+	ui.RemovePodName(podName)
 	return nil
 }
 
@@ -120,55 +112,13 @@ func (a *API) OpenPod(podName, sessionId string) (*pod.Info, error) {
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-	// return if pod already open
-	if ui.IsPodOpen(podName) {
-		podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
-		if err != nil {
-			return nil, err
-		}
-		return podInfo, nil
-	}
-	// open the pod
-	pi, err := ui.GetPod().OpenPod(podName)
-	if err != nil {
-		return nil, err
-	}
-	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
 	// Add podName in the login user session
-	ui.AddPodName(podName, pi)
-	return pi, nil
-}
-
-// OpenPodAsync
-func (a *API) OpenPodAsync(ctx context.Context, podName, sessionId string) (*pod.Info, error) {
-	// get the logged-in user information
-	ui := a.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-	// return if pod already open
-	if ui.IsPodOpen(podName) {
-		podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
-		if err != nil {
-			return nil, err
-		}
-		return podInfo, nil
-	}
-	// open the pod
-	pi, err := ui.GetPod().OpenPodAsync(ctx, podName)
-	if err != nil {
-		return nil, err
-	}
-	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
-	if err != nil {
-		return nil, err
-	}
-	// Add podName in the login user session
-	ui.AddPodName(podName, pi)
-	return pi, nil
+	ui.AddPodName(podName, podInfo)
+	return podInfo, nil
 }
 
 // ClosePod
@@ -177,11 +127,6 @@ func (a *API) ClosePod(podName, sessionId string) error {
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
-	}
-
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
 	}
 
 	// close the pod
@@ -219,11 +164,6 @@ func (a *API) SyncPod(podName, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
 	// sync the pod
 	err := ui.GetPod().SyncPod(podName)
 	if err != nil {
@@ -238,11 +178,6 @@ func (a *API) SyncPodAsync(ctx context.Context, podName, sessionId string) error
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
-	}
-
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
 	}
 
 	// sync the pod
@@ -505,10 +440,6 @@ func (a *API) ForkPod(podName, forkName, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
 	if forkName == "" {
 		return pod.ErrBlankPodName
 	}
@@ -564,12 +495,6 @@ func (a *API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
 
 	// open the pod
 	pi, err := ui.GetPod().OpenPod(podName)
-	if err != nil {
-		return nil, err
-	}
-
-	// create the root directory
-	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), podPassword, pi.GetPodAddress(), pi.GetFeed())
 	if err != nil {
 		return nil, err
 	}
