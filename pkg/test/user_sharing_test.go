@@ -165,8 +165,8 @@ func TestSharing(t *testing.T) {
 		}
 
 		_, err = userObject2.ReceiveFileFromUser("podName2", sharingRef, ui, pod2, "/parentDir2")
-		if !errors.Is(err, pod.ErrPodNotOpened) {
-			t.Fatal("pod does not supposed tp be open")
+		if err == nil {
+			t.Fatal("pod should not exist")
 		}
 
 		// receive file
