@@ -212,11 +212,11 @@ func TestUpload(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		meta2 := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta2 := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -255,12 +255,12 @@ func TestUpload(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		meta2 := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta2 := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -314,7 +314,7 @@ func TestUpload(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}

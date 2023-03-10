@@ -156,7 +156,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different")
 		}
 
-		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -282,7 +282,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different")
 		}
 
-		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -359,7 +359,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different")
 		}
 
-		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -442,7 +442,7 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -521,7 +521,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different")
 		}
 
-		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -603,7 +603,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal("content is different ")
 		}
 
-		err = fileObject.RmFile(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName), podPassword)
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
