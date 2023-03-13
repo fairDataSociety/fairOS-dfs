@@ -46,12 +46,11 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 	logger := logging.New(os.Stdout, logrus.Level(logLevel))
 	var err error
 	var ensConfig *contracts.ENSConfig
-	var subConfig *contracts.SubscriptionConfig
 	switch network {
 	case "play":
-		ensConfig, subConfig = contracts.PlayConfig()
+		ensConfig, _ = contracts.PlayConfig()
 	case "testnet":
-		ensConfig, subConfig = contracts.TestnetConfig()
+		ensConfig, _ = contracts.TestnetConfig()
 	case "mainnet":
 		return fmt.Errorf("not supported yet")
 	default:
@@ -62,7 +61,7 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 		beeEndpoint,
 		postageBlockId,
 		ensConfig,
-		subConfig,
+		nil,
 		logger,
 	)
 	return err

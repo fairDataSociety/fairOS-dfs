@@ -46,7 +46,7 @@ func NewMockSubscriptionManager() *SubscriptionManager {
 	}
 }
 
-func (s *SubscriptionManager) AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, category, nameHash [32]byte, key *ecdsa.PrivateKey) error {
+func (s *SubscriptionManager) AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, daysValid uint, category, nameHash [32]byte, key *ecdsa.PrivateKey) error {
 	subHash, err := goens.NameHash(owner.Hex() + podAddress.String())
 	if err != nil {
 		return err

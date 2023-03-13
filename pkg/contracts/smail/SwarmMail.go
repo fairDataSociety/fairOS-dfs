@@ -61,6 +61,7 @@ type SwarmMailSub struct {
 	Bids              uint32
 	Sells             uint32
 	Reports           uint32
+	DaysValid         *big.Int
 }
 
 // SwarmMailSubItem is an auto generated low-level Go binding around an user-defined struct.
@@ -80,7 +81,7 @@ type SwarmMailSubRequest struct {
 
 // SwarmMailMetaData contains all meta data concerning the SwarmMail contract.
 var SwarmMailMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpBuyerNameHash\",\"type\":\"bytes32\"}],\"name\":\"bidSub\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"name\":\"enableSub\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"feesCollected\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"fundsBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"fundsTransfer\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getActiveBidAt\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.ActiveBid\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getActiveBids\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.ActiveBid[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getAllSubItems\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"unlockKeyLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"validTill\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.SubItem[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getBoxCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"numInboxItems\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numSentItems\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numSubRequests\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numSubItems\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numActiveBids\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"category\",\"type\":\"bytes32\"}],\"name\":\"getCategory\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256[]\",\"name\":\"subIdxs\",\"type\":\"uint256[]\"}],\"internalType\":\"structSwarmMail.Category\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_fee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"getFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getInbox\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getInboxAt\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getListedSubs\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getPublicKeys\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"registered\",\"type\":\"bool\"},{\"internalType\":\"bytes32\",\"name\":\"key\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"smail\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getSent\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getSentAt\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getSub\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"earned\",\"type\":\"uint256\"},{\"internalType\":\"uint32\",\"name\":\"bids\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"sells\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"reports\",\"type\":\"uint32\"}],\"internalType\":\"structSwarmMail.Sub\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"}],\"name\":\"getSubBy\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"earned\",\"type\":\"uint256\"},{\"internalType\":\"uint32\",\"name\":\"bids\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"sells\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"reports\",\"type\":\"uint32\"}],\"internalType\":\"structSwarmMail.Sub\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"forAddress\",\"type\":\"address\"}],\"name\":\"getSubInfoBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getSubItemAt\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"unlockKeyLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"validTill\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.SubItem\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"}],\"name\":\"getSubItemBy\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"unlockKeyLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"validTill\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.SubItem\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"getSubItems\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"unlockKeyLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"validTill\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.SubItem[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getSubItemsCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getSubRequestAt\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"fdpBuyerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.SubRequest\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"name\":\"getSubRequestByHash\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"fdpBuyerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.SubRequest\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getSubRequests\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"fdpBuyerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.SubRequest[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"}],\"name\":\"getSubSubscribers\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getSubs\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"earned\",\"type\":\"uint256\"},{\"internalType\":\"uint32\",\"name\":\"bids\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"sells\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"reports\",\"type\":\"uint32\"}],\"internalType\":\"structSwarmMail.Sub[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"inEscrow\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"dataSwarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"category\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"podAddress\",\"type\":\"address\"}],\"name\":\"listSub\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"marketFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minListingFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"key\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"smail\",\"type\":\"bytes32\"}],\"name\":\"register\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"types\",\"type\":\"uint256\"},{\"internalType\":\"bytes32[]\",\"name\":\"swarmLocations\",\"type\":\"bytes32[]\"}],\"name\":\"removeEmails\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"removeInboxEmail\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"removeSentEmail\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"removeSubItem\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"name\":\"removeUserActiveBid\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"encryptedKeyLocation\",\"type\":\"bytes32\"}],\"name\":\"sellSub\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"toAddress\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"sendEmail\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"newFee\",\"type\":\"uint256\"}],\"name\":\"setFee\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"newListingFee\",\"type\":\"uint256\"}],\"name\":\"setListingFee\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"signEmail\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"subscriptionIds\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"subscriptions\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"earned\",\"type\":\"uint256\"},{\"internalType\":\"uint32\",\"name\":\"bids\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"sells\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"reports\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpBuyerNameHash\",\"type\":\"bytes32\"}],\"name\":\"bidSub\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"name\":\"enableSub\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"feesCollected\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"fundsBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"fundsTransfer\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getActiveBidAt\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.ActiveBid\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getActiveBids\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.ActiveBid[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"}],\"name\":\"getActiveSubItemsCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getAllSubItems\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"unlockKeyLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"validTill\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.SubItem[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getBoxCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"numInboxItems\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numSentItems\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numSubRequests\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numSubItems\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numActiveBids\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numLockers\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"numSharedLockers\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"category\",\"type\":\"bytes32\"}],\"name\":\"getCategory\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256[]\",\"name\":\"subIdxs\",\"type\":\"uint256[]\"}],\"internalType\":\"structSwarmMail.Category\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_fee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"getFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getInbox\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getInboxAt\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getInboxCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"getInboxRange\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getListedSubs\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getLocker\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getLockerCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"getLockerRange\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getPortableAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getPublicKeys\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"registered\",\"type\":\"bool\"},{\"internalType\":\"bytes32\",\"name\":\"key\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"smail\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"portable\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getSent\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getSentAt\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getSharedLocker\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getSharedLockerCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"getSharedLockerRange\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"signed\",\"type\":\"bool\"}],\"internalType\":\"structSwarmMail.Email[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getSub\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"earned\",\"type\":\"uint256\"},{\"internalType\":\"uint32\",\"name\":\"bids\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"sells\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"reports\",\"type\":\"uint32\"},{\"internalType\":\"uint256\",\"name\":\"daysValid\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.Sub\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"}],\"name\":\"getSubBy\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"earned\",\"type\":\"uint256\"},{\"internalType\":\"uint32\",\"name\":\"bids\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"sells\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"reports\",\"type\":\"uint32\"},{\"internalType\":\"uint256\",\"name\":\"daysValid\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.Sub\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"forAddress\",\"type\":\"address\"}],\"name\":\"getSubInfoBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getSubItemAt\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"unlockKeyLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"validTill\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.SubItem\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"}],\"name\":\"getSubItemBy\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"unlockKeyLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"validTill\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.SubItem\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"getSubItems\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"unlockKeyLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"validTill\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.SubItem[]\",\"name\":\"items\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256\",\"name\":\"last\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getSubRequestAt\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"fdpBuyerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.SubRequest\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"name\":\"getSubRequestByHash\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"fdpBuyerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.SubRequest\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"getSubRequests\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"fdpBuyerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"buyer\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"internalType\":\"structSwarmMail.SubRequest[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"}],\"name\":\"getSubSubscribers\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getSubs\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"earned\",\"type\":\"uint256\"},{\"internalType\":\"uint32\",\"name\":\"bids\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"sells\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"reports\",\"type\":\"uint32\"},{\"internalType\":\"uint256\",\"name\":\"daysValid\",\"type\":\"uint256\"}],\"internalType\":\"structSwarmMail.Sub[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"inEscrow\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"dataSwarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"category\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"podAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"daysValid\",\"type\":\"uint256\"}],\"name\":\"listSub\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"marketFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minListingFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"key\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"smail\",\"type\":\"bytes32\"}],\"name\":\"register\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"types\",\"type\":\"uint256\"},{\"internalType\":\"bytes32[]\",\"name\":\"swarmLocations\",\"type\":\"bytes32[]\"}],\"name\":\"removeEmails\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"removeInboxEmail\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"removeLockerEmail\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"removeSentEmail\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"removeSubItem\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"}],\"name\":\"removeUserActiveBid\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"requestHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"encryptedKeyLocation\",\"type\":\"bytes32\"}],\"name\":\"sellSub\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"toAddress\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"isEncryption\",\"type\":\"bool\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"sendEmail\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"newFee\",\"type\":\"uint256\"}],\"name\":\"setFee\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"newListingFee\",\"type\":\"uint256\"}],\"name\":\"setListingFee\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setPortableAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"withAddress\",\"type\":\"address\"}],\"name\":\"shareLockerWith\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"signEmail\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"}],\"name\":\"storeLocker\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"subscriptionIds\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"subscriptions\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"subHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"fdpSellerNameHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"earned\",\"type\":\"uint256\"},{\"internalType\":\"uint32\",\"name\":\"bids\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"sells\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"reports\",\"type\":\"uint32\"},{\"internalType\":\"uint256\",\"name\":\"daysValid\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"swarmLocation\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"withAddress\",\"type\":\"address\"}],\"name\":\"unshareLockerWith\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
 }
 
 // SwarmMailABI is the input ABI used to generate the binding from.
@@ -384,6 +385,37 @@ func (_SwarmMail *SwarmMailCallerSession) GetActiveBids(addr common.Address) ([]
 	return _SwarmMail.Contract.GetActiveBids(&_SwarmMail.CallOpts, addr)
 }
 
+// GetActiveSubItemsCount is a free data retrieval call binding the contract method 0x0a1043c0.
+//
+// Solidity: function getActiveSubItemsCount(address addr, uint256 start) view returns(uint256)
+func (_SwarmMail *SwarmMailCaller) GetActiveSubItemsCount(opts *bind.CallOpts, addr common.Address, start *big.Int) (*big.Int, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getActiveSubItemsCount", addr, start)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetActiveSubItemsCount is a free data retrieval call binding the contract method 0x0a1043c0.
+//
+// Solidity: function getActiveSubItemsCount(address addr, uint256 start) view returns(uint256)
+func (_SwarmMail *SwarmMailSession) GetActiveSubItemsCount(addr common.Address, start *big.Int) (*big.Int, error) {
+	return _SwarmMail.Contract.GetActiveSubItemsCount(&_SwarmMail.CallOpts, addr, start)
+}
+
+// GetActiveSubItemsCount is a free data retrieval call binding the contract method 0x0a1043c0.
+//
+// Solidity: function getActiveSubItemsCount(address addr, uint256 start) view returns(uint256)
+func (_SwarmMail *SwarmMailCallerSession) GetActiveSubItemsCount(addr common.Address, start *big.Int) (*big.Int, error) {
+	return _SwarmMail.Contract.GetActiveSubItemsCount(&_SwarmMail.CallOpts, addr, start)
+}
+
 // GetAllSubItems is a free data retrieval call binding the contract method 0x224b6b8c.
 //
 // Solidity: function getAllSubItems(address addr) view returns((bytes32,bytes32,uint256)[])
@@ -417,23 +449,27 @@ func (_SwarmMail *SwarmMailCallerSession) GetAllSubItems(addr common.Address) ([
 
 // GetBoxCount is a free data retrieval call binding the contract method 0xa88b5c4f.
 //
-// Solidity: function getBoxCount(address addr) view returns(uint256 numInboxItems, uint256 numSentItems, uint256 numSubRequests, uint256 numSubItems, uint256 numActiveBids)
+// Solidity: function getBoxCount(address addr) view returns(uint256 numInboxItems, uint256 numSentItems, uint256 numSubRequests, uint256 numSubItems, uint256 numActiveBids, uint256 numLockers, uint256 numSharedLockers)
 func (_SwarmMail *SwarmMailCaller) GetBoxCount(opts *bind.CallOpts, addr common.Address) (struct {
-	NumInboxItems  *big.Int
-	NumSentItems   *big.Int
-	NumSubRequests *big.Int
-	NumSubItems    *big.Int
-	NumActiveBids  *big.Int
+	NumInboxItems    *big.Int
+	NumSentItems     *big.Int
+	NumSubRequests   *big.Int
+	NumSubItems      *big.Int
+	NumActiveBids    *big.Int
+	NumLockers       *big.Int
+	NumSharedLockers *big.Int
 }, error) {
 	var out []interface{}
 	err := _SwarmMail.contract.Call(opts, &out, "getBoxCount", addr)
 
 	outstruct := new(struct {
-		NumInboxItems  *big.Int
-		NumSentItems   *big.Int
-		NumSubRequests *big.Int
-		NumSubItems    *big.Int
-		NumActiveBids  *big.Int
+		NumInboxItems    *big.Int
+		NumSentItems     *big.Int
+		NumSubRequests   *big.Int
+		NumSubItems      *big.Int
+		NumActiveBids    *big.Int
+		NumLockers       *big.Int
+		NumSharedLockers *big.Int
 	})
 	if err != nil {
 		return *outstruct, err
@@ -444,6 +480,8 @@ func (_SwarmMail *SwarmMailCaller) GetBoxCount(opts *bind.CallOpts, addr common.
 	outstruct.NumSubRequests = *abi.ConvertType(out[2], new(*big.Int)).(**big.Int)
 	outstruct.NumSubItems = *abi.ConvertType(out[3], new(*big.Int)).(**big.Int)
 	outstruct.NumActiveBids = *abi.ConvertType(out[4], new(*big.Int)).(**big.Int)
+	outstruct.NumLockers = *abi.ConvertType(out[5], new(*big.Int)).(**big.Int)
+	outstruct.NumSharedLockers = *abi.ConvertType(out[6], new(*big.Int)).(**big.Int)
 
 	return *outstruct, err
 
@@ -451,26 +489,30 @@ func (_SwarmMail *SwarmMailCaller) GetBoxCount(opts *bind.CallOpts, addr common.
 
 // GetBoxCount is a free data retrieval call binding the contract method 0xa88b5c4f.
 //
-// Solidity: function getBoxCount(address addr) view returns(uint256 numInboxItems, uint256 numSentItems, uint256 numSubRequests, uint256 numSubItems, uint256 numActiveBids)
+// Solidity: function getBoxCount(address addr) view returns(uint256 numInboxItems, uint256 numSentItems, uint256 numSubRequests, uint256 numSubItems, uint256 numActiveBids, uint256 numLockers, uint256 numSharedLockers)
 func (_SwarmMail *SwarmMailSession) GetBoxCount(addr common.Address) (struct {
-	NumInboxItems  *big.Int
-	NumSentItems   *big.Int
-	NumSubRequests *big.Int
-	NumSubItems    *big.Int
-	NumActiveBids  *big.Int
+	NumInboxItems    *big.Int
+	NumSentItems     *big.Int
+	NumSubRequests   *big.Int
+	NumSubItems      *big.Int
+	NumActiveBids    *big.Int
+	NumLockers       *big.Int
+	NumSharedLockers *big.Int
 }, error) {
 	return _SwarmMail.Contract.GetBoxCount(&_SwarmMail.CallOpts, addr)
 }
 
 // GetBoxCount is a free data retrieval call binding the contract method 0xa88b5c4f.
 //
-// Solidity: function getBoxCount(address addr) view returns(uint256 numInboxItems, uint256 numSentItems, uint256 numSubRequests, uint256 numSubItems, uint256 numActiveBids)
+// Solidity: function getBoxCount(address addr) view returns(uint256 numInboxItems, uint256 numSentItems, uint256 numSubRequests, uint256 numSubItems, uint256 numActiveBids, uint256 numLockers, uint256 numSharedLockers)
 func (_SwarmMail *SwarmMailCallerSession) GetBoxCount(addr common.Address) (struct {
-	NumInboxItems  *big.Int
-	NumSentItems   *big.Int
-	NumSubRequests *big.Int
-	NumSubItems    *big.Int
-	NumActiveBids  *big.Int
+	NumInboxItems    *big.Int
+	NumSentItems     *big.Int
+	NumSubRequests   *big.Int
+	NumSubItems      *big.Int
+	NumActiveBids    *big.Int
+	NumLockers       *big.Int
+	NumSharedLockers *big.Int
 }, error) {
 	return _SwarmMail.Contract.GetBoxCount(&_SwarmMail.CallOpts, addr)
 }
@@ -599,6 +641,68 @@ func (_SwarmMail *SwarmMailCallerSession) GetInboxAt(addr common.Address, index 
 	return _SwarmMail.Contract.GetInboxAt(&_SwarmMail.CallOpts, addr, index)
 }
 
+// GetInboxCount is a free data retrieval call binding the contract method 0x762e1824.
+//
+// Solidity: function getInboxCount(address addr) view returns(uint256)
+func (_SwarmMail *SwarmMailCaller) GetInboxCount(opts *bind.CallOpts, addr common.Address) (*big.Int, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getInboxCount", addr)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetInboxCount is a free data retrieval call binding the contract method 0x762e1824.
+//
+// Solidity: function getInboxCount(address addr) view returns(uint256)
+func (_SwarmMail *SwarmMailSession) GetInboxCount(addr common.Address) (*big.Int, error) {
+	return _SwarmMail.Contract.GetInboxCount(&_SwarmMail.CallOpts, addr)
+}
+
+// GetInboxCount is a free data retrieval call binding the contract method 0x762e1824.
+//
+// Solidity: function getInboxCount(address addr) view returns(uint256)
+func (_SwarmMail *SwarmMailCallerSession) GetInboxCount(addr common.Address) (*big.Int, error) {
+	return _SwarmMail.Contract.GetInboxCount(&_SwarmMail.CallOpts, addr)
+}
+
+// GetInboxRange is a free data retrieval call binding the contract method 0x384fb864.
+//
+// Solidity: function getInboxRange(address addr, uint256 start, uint256 length) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCaller) GetInboxRange(opts *bind.CallOpts, addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailEmail, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getInboxRange", addr, start, length)
+
+	if err != nil {
+		return *new([]SwarmMailEmail), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]SwarmMailEmail)).(*[]SwarmMailEmail)
+
+	return out0, err
+
+}
+
+// GetInboxRange is a free data retrieval call binding the contract method 0x384fb864.
+//
+// Solidity: function getInboxRange(address addr, uint256 start, uint256 length) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailSession) GetInboxRange(addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetInboxRange(&_SwarmMail.CallOpts, addr, start, length)
+}
+
+// GetInboxRange is a free data retrieval call binding the contract method 0x384fb864.
+//
+// Solidity: function getInboxRange(address addr, uint256 start, uint256 length) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCallerSession) GetInboxRange(addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetInboxRange(&_SwarmMail.CallOpts, addr, start, length)
+}
+
 // GetListedSubs is a free data retrieval call binding the contract method 0xcddf64ea.
 //
 // Solidity: function getListedSubs(address addr) view returns(bytes32[])
@@ -630,13 +734,138 @@ func (_SwarmMail *SwarmMailCallerSession) GetListedSubs(addr common.Address) ([]
 	return _SwarmMail.Contract.GetListedSubs(&_SwarmMail.CallOpts, addr)
 }
 
+// GetLocker is a free data retrieval call binding the contract method 0x919884bf.
+//
+// Solidity: function getLocker(address addr) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCaller) GetLocker(opts *bind.CallOpts, addr common.Address) ([]SwarmMailEmail, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getLocker", addr)
+
+	if err != nil {
+		return *new([]SwarmMailEmail), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]SwarmMailEmail)).(*[]SwarmMailEmail)
+
+	return out0, err
+
+}
+
+// GetLocker is a free data retrieval call binding the contract method 0x919884bf.
+//
+// Solidity: function getLocker(address addr) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailSession) GetLocker(addr common.Address) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetLocker(&_SwarmMail.CallOpts, addr)
+}
+
+// GetLocker is a free data retrieval call binding the contract method 0x919884bf.
+//
+// Solidity: function getLocker(address addr) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCallerSession) GetLocker(addr common.Address) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetLocker(&_SwarmMail.CallOpts, addr)
+}
+
+// GetLockerCount is a free data retrieval call binding the contract method 0x71b14815.
+//
+// Solidity: function getLockerCount(address addr) view returns(uint256)
+func (_SwarmMail *SwarmMailCaller) GetLockerCount(opts *bind.CallOpts, addr common.Address) (*big.Int, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getLockerCount", addr)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetLockerCount is a free data retrieval call binding the contract method 0x71b14815.
+//
+// Solidity: function getLockerCount(address addr) view returns(uint256)
+func (_SwarmMail *SwarmMailSession) GetLockerCount(addr common.Address) (*big.Int, error) {
+	return _SwarmMail.Contract.GetLockerCount(&_SwarmMail.CallOpts, addr)
+}
+
+// GetLockerCount is a free data retrieval call binding the contract method 0x71b14815.
+//
+// Solidity: function getLockerCount(address addr) view returns(uint256)
+func (_SwarmMail *SwarmMailCallerSession) GetLockerCount(addr common.Address) (*big.Int, error) {
+	return _SwarmMail.Contract.GetLockerCount(&_SwarmMail.CallOpts, addr)
+}
+
+// GetLockerRange is a free data retrieval call binding the contract method 0xf787b1c1.
+//
+// Solidity: function getLockerRange(address addr, uint256 start, uint256 length) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCaller) GetLockerRange(opts *bind.CallOpts, addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailEmail, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getLockerRange", addr, start, length)
+
+	if err != nil {
+		return *new([]SwarmMailEmail), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]SwarmMailEmail)).(*[]SwarmMailEmail)
+
+	return out0, err
+
+}
+
+// GetLockerRange is a free data retrieval call binding the contract method 0xf787b1c1.
+//
+// Solidity: function getLockerRange(address addr, uint256 start, uint256 length) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailSession) GetLockerRange(addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetLockerRange(&_SwarmMail.CallOpts, addr, start, length)
+}
+
+// GetLockerRange is a free data retrieval call binding the contract method 0xf787b1c1.
+//
+// Solidity: function getLockerRange(address addr, uint256 start, uint256 length) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCallerSession) GetLockerRange(addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetLockerRange(&_SwarmMail.CallOpts, addr, start, length)
+}
+
+// GetPortableAddress is a free data retrieval call binding the contract method 0xc3b4dde9.
+//
+// Solidity: function getPortableAddress(address addr) view returns(address)
+func (_SwarmMail *SwarmMailCaller) GetPortableAddress(opts *bind.CallOpts, addr common.Address) (common.Address, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getPortableAddress", addr)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GetPortableAddress is a free data retrieval call binding the contract method 0xc3b4dde9.
+//
+// Solidity: function getPortableAddress(address addr) view returns(address)
+func (_SwarmMail *SwarmMailSession) GetPortableAddress(addr common.Address) (common.Address, error) {
+	return _SwarmMail.Contract.GetPortableAddress(&_SwarmMail.CallOpts, addr)
+}
+
+// GetPortableAddress is a free data retrieval call binding the contract method 0xc3b4dde9.
+//
+// Solidity: function getPortableAddress(address addr) view returns(address)
+func (_SwarmMail *SwarmMailCallerSession) GetPortableAddress(addr common.Address) (common.Address, error) {
+	return _SwarmMail.Contract.GetPortableAddress(&_SwarmMail.CallOpts, addr)
+}
+
 // GetPublicKeys is a free data retrieval call binding the contract method 0x5fcbb7d6.
 //
-// Solidity: function getPublicKeys(address addr) view returns(bool registered, bytes32 key, bytes32 smail)
+// Solidity: function getPublicKeys(address addr) view returns(bool registered, bytes32 key, bytes32 smail, address portable)
 func (_SwarmMail *SwarmMailCaller) GetPublicKeys(opts *bind.CallOpts, addr common.Address) (struct {
 	Registered bool
 	Key        [32]byte
 	Smail      [32]byte
+	Portable   common.Address
 }, error) {
 	var out []interface{}
 	err := _SwarmMail.contract.Call(opts, &out, "getPublicKeys", addr)
@@ -645,6 +874,7 @@ func (_SwarmMail *SwarmMailCaller) GetPublicKeys(opts *bind.CallOpts, addr commo
 		Registered bool
 		Key        [32]byte
 		Smail      [32]byte
+		Portable   common.Address
 	})
 	if err != nil {
 		return *outstruct, err
@@ -653,6 +883,7 @@ func (_SwarmMail *SwarmMailCaller) GetPublicKeys(opts *bind.CallOpts, addr commo
 	outstruct.Registered = *abi.ConvertType(out[0], new(bool)).(*bool)
 	outstruct.Key = *abi.ConvertType(out[1], new([32]byte)).(*[32]byte)
 	outstruct.Smail = *abi.ConvertType(out[2], new([32]byte)).(*[32]byte)
+	outstruct.Portable = *abi.ConvertType(out[3], new(common.Address)).(*common.Address)
 
 	return *outstruct, err
 
@@ -660,22 +891,24 @@ func (_SwarmMail *SwarmMailCaller) GetPublicKeys(opts *bind.CallOpts, addr commo
 
 // GetPublicKeys is a free data retrieval call binding the contract method 0x5fcbb7d6.
 //
-// Solidity: function getPublicKeys(address addr) view returns(bool registered, bytes32 key, bytes32 smail)
+// Solidity: function getPublicKeys(address addr) view returns(bool registered, bytes32 key, bytes32 smail, address portable)
 func (_SwarmMail *SwarmMailSession) GetPublicKeys(addr common.Address) (struct {
 	Registered bool
 	Key        [32]byte
 	Smail      [32]byte
+	Portable   common.Address
 }, error) {
 	return _SwarmMail.Contract.GetPublicKeys(&_SwarmMail.CallOpts, addr)
 }
 
 // GetPublicKeys is a free data retrieval call binding the contract method 0x5fcbb7d6.
 //
-// Solidity: function getPublicKeys(address addr) view returns(bool registered, bytes32 key, bytes32 smail)
+// Solidity: function getPublicKeys(address addr) view returns(bool registered, bytes32 key, bytes32 smail, address portable)
 func (_SwarmMail *SwarmMailCallerSession) GetPublicKeys(addr common.Address) (struct {
 	Registered bool
 	Key        [32]byte
 	Smail      [32]byte
+	Portable   common.Address
 }, error) {
 	return _SwarmMail.Contract.GetPublicKeys(&_SwarmMail.CallOpts, addr)
 }
@@ -773,9 +1006,102 @@ func (_SwarmMail *SwarmMailCallerSession) GetSentAt(addr common.Address, index *
 	return _SwarmMail.Contract.GetSentAt(&_SwarmMail.CallOpts, addr, index)
 }
 
+// GetSharedLocker is a free data retrieval call binding the contract method 0x1d2b242c.
+//
+// Solidity: function getSharedLocker(address addr) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCaller) GetSharedLocker(opts *bind.CallOpts, addr common.Address) ([]SwarmMailEmail, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getSharedLocker", addr)
+
+	if err != nil {
+		return *new([]SwarmMailEmail), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]SwarmMailEmail)).(*[]SwarmMailEmail)
+
+	return out0, err
+
+}
+
+// GetSharedLocker is a free data retrieval call binding the contract method 0x1d2b242c.
+//
+// Solidity: function getSharedLocker(address addr) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailSession) GetSharedLocker(addr common.Address) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetSharedLocker(&_SwarmMail.CallOpts, addr)
+}
+
+// GetSharedLocker is a free data retrieval call binding the contract method 0x1d2b242c.
+//
+// Solidity: function getSharedLocker(address addr) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCallerSession) GetSharedLocker(addr common.Address) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetSharedLocker(&_SwarmMail.CallOpts, addr)
+}
+
+// GetSharedLockerCount is a free data retrieval call binding the contract method 0x286edb06.
+//
+// Solidity: function getSharedLockerCount(address addr) view returns(uint256)
+func (_SwarmMail *SwarmMailCaller) GetSharedLockerCount(opts *bind.CallOpts, addr common.Address) (*big.Int, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getSharedLockerCount", addr)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetSharedLockerCount is a free data retrieval call binding the contract method 0x286edb06.
+//
+// Solidity: function getSharedLockerCount(address addr) view returns(uint256)
+func (_SwarmMail *SwarmMailSession) GetSharedLockerCount(addr common.Address) (*big.Int, error) {
+	return _SwarmMail.Contract.GetSharedLockerCount(&_SwarmMail.CallOpts, addr)
+}
+
+// GetSharedLockerCount is a free data retrieval call binding the contract method 0x286edb06.
+//
+// Solidity: function getSharedLockerCount(address addr) view returns(uint256)
+func (_SwarmMail *SwarmMailCallerSession) GetSharedLockerCount(addr common.Address) (*big.Int, error) {
+	return _SwarmMail.Contract.GetSharedLockerCount(&_SwarmMail.CallOpts, addr)
+}
+
+// GetSharedLockerRange is a free data retrieval call binding the contract method 0x9fea2a71.
+//
+// Solidity: function getSharedLockerRange(address addr, uint256 start, uint256 length) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCaller) GetSharedLockerRange(opts *bind.CallOpts, addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailEmail, error) {
+	var out []interface{}
+	err := _SwarmMail.contract.Call(opts, &out, "getSharedLockerRange", addr, start, length)
+
+	if err != nil {
+		return *new([]SwarmMailEmail), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]SwarmMailEmail)).(*[]SwarmMailEmail)
+
+	return out0, err
+
+}
+
+// GetSharedLockerRange is a free data retrieval call binding the contract method 0x9fea2a71.
+//
+// Solidity: function getSharedLockerRange(address addr, uint256 start, uint256 length) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailSession) GetSharedLockerRange(addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetSharedLockerRange(&_SwarmMail.CallOpts, addr, start, length)
+}
+
+// GetSharedLockerRange is a free data retrieval call binding the contract method 0x9fea2a71.
+//
+// Solidity: function getSharedLockerRange(address addr, uint256 start, uint256 length) view returns((bool,uint256,address,address,bytes32,bool)[])
+func (_SwarmMail *SwarmMailCallerSession) GetSharedLockerRange(addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailEmail, error) {
+	return _SwarmMail.Contract.GetSharedLockerRange(&_SwarmMail.CallOpts, addr, start, length)
+}
+
 // GetSub is a free data retrieval call binding the contract method 0xb1bf9a22.
 //
-// Solidity: function getSub(uint256 index) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32))
+// Solidity: function getSub(uint256 index) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32,uint256))
 func (_SwarmMail *SwarmMailCaller) GetSub(opts *bind.CallOpts, index *big.Int) (SwarmMailSub, error) {
 	var out []interface{}
 	err := _SwarmMail.contract.Call(opts, &out, "getSub", index)
@@ -792,21 +1118,21 @@ func (_SwarmMail *SwarmMailCaller) GetSub(opts *bind.CallOpts, index *big.Int) (
 
 // GetSub is a free data retrieval call binding the contract method 0xb1bf9a22.
 //
-// Solidity: function getSub(uint256 index) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32))
+// Solidity: function getSub(uint256 index) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32,uint256))
 func (_SwarmMail *SwarmMailSession) GetSub(index *big.Int) (SwarmMailSub, error) {
 	return _SwarmMail.Contract.GetSub(&_SwarmMail.CallOpts, index)
 }
 
 // GetSub is a free data retrieval call binding the contract method 0xb1bf9a22.
 //
-// Solidity: function getSub(uint256 index) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32))
+// Solidity: function getSub(uint256 index) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32,uint256))
 func (_SwarmMail *SwarmMailCallerSession) GetSub(index *big.Int) (SwarmMailSub, error) {
 	return _SwarmMail.Contract.GetSub(&_SwarmMail.CallOpts, index)
 }
 
 // GetSubBy is a free data retrieval call binding the contract method 0x1f9ef490.
 //
-// Solidity: function getSubBy(bytes32 subHash) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32))
+// Solidity: function getSubBy(bytes32 subHash) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32,uint256))
 func (_SwarmMail *SwarmMailCaller) GetSubBy(opts *bind.CallOpts, subHash [32]byte) (SwarmMailSub, error) {
 	var out []interface{}
 	err := _SwarmMail.contract.Call(opts, &out, "getSubBy", subHash)
@@ -823,14 +1149,14 @@ func (_SwarmMail *SwarmMailCaller) GetSubBy(opts *bind.CallOpts, subHash [32]byt
 
 // GetSubBy is a free data retrieval call binding the contract method 0x1f9ef490.
 //
-// Solidity: function getSubBy(bytes32 subHash) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32))
+// Solidity: function getSubBy(bytes32 subHash) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32,uint256))
 func (_SwarmMail *SwarmMailSession) GetSubBy(subHash [32]byte) (SwarmMailSub, error) {
 	return _SwarmMail.Contract.GetSubBy(&_SwarmMail.CallOpts, subHash)
 }
 
 // GetSubBy is a free data retrieval call binding the contract method 0x1f9ef490.
 //
-// Solidity: function getSubBy(bytes32 subHash) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32))
+// Solidity: function getSubBy(bytes32 subHash) view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32,uint256))
 func (_SwarmMail *SwarmMailCallerSession) GetSubBy(subHash [32]byte) (SwarmMailSub, error) {
 	return _SwarmMail.Contract.GetSubBy(&_SwarmMail.CallOpts, subHash)
 }
@@ -930,64 +1256,47 @@ func (_SwarmMail *SwarmMailCallerSession) GetSubItemBy(addr common.Address, subH
 
 // GetSubItems is a free data retrieval call binding the contract method 0xd3fbc74c.
 //
-// Solidity: function getSubItems(address addr, uint256 start, uint256 length) view returns((bytes32,bytes32,uint256)[])
-func (_SwarmMail *SwarmMailCaller) GetSubItems(opts *bind.CallOpts, addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailSubItem, error) {
+// Solidity: function getSubItems(address addr, uint256 start, uint256 length) view returns((bytes32,bytes32,uint256)[] items, uint256 last)
+func (_SwarmMail *SwarmMailCaller) GetSubItems(opts *bind.CallOpts, addr common.Address, start *big.Int, length *big.Int) (struct {
+	Items []SwarmMailSubItem
+	Last  *big.Int
+}, error) {
 	var out []interface{}
 	err := _SwarmMail.contract.Call(opts, &out, "getSubItems", addr, start, length)
 
+	outstruct := new(struct {
+		Items []SwarmMailSubItem
+		Last  *big.Int
+	})
 	if err != nil {
-		return *new([]SwarmMailSubItem), err
+		return *outstruct, err
 	}
 
-	out0 := *abi.ConvertType(out[0], new([]SwarmMailSubItem)).(*[]SwarmMailSubItem)
+	outstruct.Items = *abi.ConvertType(out[0], new([]SwarmMailSubItem)).(*[]SwarmMailSubItem)
+	outstruct.Last = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
 
-	return out0, err
+	return *outstruct, err
 
 }
 
 // GetSubItems is a free data retrieval call binding the contract method 0xd3fbc74c.
 //
-// Solidity: function getSubItems(address addr, uint256 start, uint256 length) view returns((bytes32,bytes32,uint256)[])
-func (_SwarmMail *SwarmMailSession) GetSubItems(addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailSubItem, error) {
+// Solidity: function getSubItems(address addr, uint256 start, uint256 length) view returns((bytes32,bytes32,uint256)[] items, uint256 last)
+func (_SwarmMail *SwarmMailSession) GetSubItems(addr common.Address, start *big.Int, length *big.Int) (struct {
+	Items []SwarmMailSubItem
+	Last  *big.Int
+}, error) {
 	return _SwarmMail.Contract.GetSubItems(&_SwarmMail.CallOpts, addr, start, length)
 }
 
 // GetSubItems is a free data retrieval call binding the contract method 0xd3fbc74c.
 //
-// Solidity: function getSubItems(address addr, uint256 start, uint256 length) view returns((bytes32,bytes32,uint256)[])
-func (_SwarmMail *SwarmMailCallerSession) GetSubItems(addr common.Address, start *big.Int, length *big.Int) ([]SwarmMailSubItem, error) {
+// Solidity: function getSubItems(address addr, uint256 start, uint256 length) view returns((bytes32,bytes32,uint256)[] items, uint256 last)
+func (_SwarmMail *SwarmMailCallerSession) GetSubItems(addr common.Address, start *big.Int, length *big.Int) (struct {
+	Items []SwarmMailSubItem
+	Last  *big.Int
+}, error) {
 	return _SwarmMail.Contract.GetSubItems(&_SwarmMail.CallOpts, addr, start, length)
-}
-
-// GetSubItemsCount is a free data retrieval call binding the contract method 0x51b6d3c9.
-//
-// Solidity: function getSubItemsCount(address addr) view returns(uint256)
-func (_SwarmMail *SwarmMailCaller) GetSubItemsCount(opts *bind.CallOpts, addr common.Address) (*big.Int, error) {
-	var out []interface{}
-	err := _SwarmMail.contract.Call(opts, &out, "getSubItemsCount", addr)
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// GetSubItemsCount is a free data retrieval call binding the contract method 0x51b6d3c9.
-//
-// Solidity: function getSubItemsCount(address addr) view returns(uint256)
-func (_SwarmMail *SwarmMailSession) GetSubItemsCount(addr common.Address) (*big.Int, error) {
-	return _SwarmMail.Contract.GetSubItemsCount(&_SwarmMail.CallOpts, addr)
-}
-
-// GetSubItemsCount is a free data retrieval call binding the contract method 0x51b6d3c9.
-//
-// Solidity: function getSubItemsCount(address addr) view returns(uint256)
-func (_SwarmMail *SwarmMailCallerSession) GetSubItemsCount(addr common.Address) (*big.Int, error) {
-	return _SwarmMail.Contract.GetSubItemsCount(&_SwarmMail.CallOpts, addr)
 }
 
 // GetSubRequestAt is a free data retrieval call binding the contract method 0x84053229.
@@ -1116,7 +1425,7 @@ func (_SwarmMail *SwarmMailCallerSession) GetSubSubscribers(subHash [32]byte) ([
 
 // GetSubs is a free data retrieval call binding the contract method 0xb8fb1bac.
 //
-// Solidity: function getSubs() view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32)[])
+// Solidity: function getSubs() view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32,uint256)[])
 func (_SwarmMail *SwarmMailCaller) GetSubs(opts *bind.CallOpts) ([]SwarmMailSub, error) {
 	var out []interface{}
 	err := _SwarmMail.contract.Call(opts, &out, "getSubs")
@@ -1133,14 +1442,14 @@ func (_SwarmMail *SwarmMailCaller) GetSubs(opts *bind.CallOpts) ([]SwarmMailSub,
 
 // GetSubs is a free data retrieval call binding the contract method 0xb8fb1bac.
 //
-// Solidity: function getSubs() view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32)[])
+// Solidity: function getSubs() view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32,uint256)[])
 func (_SwarmMail *SwarmMailSession) GetSubs() ([]SwarmMailSub, error) {
 	return _SwarmMail.Contract.GetSubs(&_SwarmMail.CallOpts)
 }
 
 // GetSubs is a free data retrieval call binding the contract method 0xb8fb1bac.
 //
-// Solidity: function getSubs() view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32)[])
+// Solidity: function getSubs() view returns((bytes32,bytes32,address,bytes32,uint256,bool,uint256,uint32,uint32,uint32,uint256)[])
 func (_SwarmMail *SwarmMailCallerSession) GetSubs() ([]SwarmMailSub, error) {
 	return _SwarmMail.Contract.GetSubs(&_SwarmMail.CallOpts)
 }
@@ -1333,7 +1642,7 @@ func (_SwarmMail *SwarmMailCallerSession) SubscriptionIds(arg0 [32]byte) (*big.I
 
 // Subscriptions is a free data retrieval call binding the contract method 0x2d5bbf60.
 //
-// Solidity: function subscriptions(uint256 ) view returns(bytes32 subHash, bytes32 fdpSellerNameHash, address seller, bytes32 swarmLocation, uint256 price, bool active, uint256 earned, uint32 bids, uint32 sells, uint32 reports)
+// Solidity: function subscriptions(uint256 ) view returns(bytes32 subHash, bytes32 fdpSellerNameHash, address seller, bytes32 swarmLocation, uint256 price, bool active, uint256 earned, uint32 bids, uint32 sells, uint32 reports, uint256 daysValid)
 func (_SwarmMail *SwarmMailCaller) Subscriptions(opts *bind.CallOpts, arg0 *big.Int) (struct {
 	SubHash           [32]byte
 	FdpSellerNameHash [32]byte
@@ -1345,6 +1654,7 @@ func (_SwarmMail *SwarmMailCaller) Subscriptions(opts *bind.CallOpts, arg0 *big.
 	Bids              uint32
 	Sells             uint32
 	Reports           uint32
+	DaysValid         *big.Int
 }, error) {
 	var out []interface{}
 	err := _SwarmMail.contract.Call(opts, &out, "subscriptions", arg0)
@@ -1360,6 +1670,7 @@ func (_SwarmMail *SwarmMailCaller) Subscriptions(opts *bind.CallOpts, arg0 *big.
 		Bids              uint32
 		Sells             uint32
 		Reports           uint32
+		DaysValid         *big.Int
 	})
 	if err != nil {
 		return *outstruct, err
@@ -1375,6 +1686,7 @@ func (_SwarmMail *SwarmMailCaller) Subscriptions(opts *bind.CallOpts, arg0 *big.
 	outstruct.Bids = *abi.ConvertType(out[7], new(uint32)).(*uint32)
 	outstruct.Sells = *abi.ConvertType(out[8], new(uint32)).(*uint32)
 	outstruct.Reports = *abi.ConvertType(out[9], new(uint32)).(*uint32)
+	outstruct.DaysValid = *abi.ConvertType(out[10], new(*big.Int)).(**big.Int)
 
 	return *outstruct, err
 
@@ -1382,7 +1694,7 @@ func (_SwarmMail *SwarmMailCaller) Subscriptions(opts *bind.CallOpts, arg0 *big.
 
 // Subscriptions is a free data retrieval call binding the contract method 0x2d5bbf60.
 //
-// Solidity: function subscriptions(uint256 ) view returns(bytes32 subHash, bytes32 fdpSellerNameHash, address seller, bytes32 swarmLocation, uint256 price, bool active, uint256 earned, uint32 bids, uint32 sells, uint32 reports)
+// Solidity: function subscriptions(uint256 ) view returns(bytes32 subHash, bytes32 fdpSellerNameHash, address seller, bytes32 swarmLocation, uint256 price, bool active, uint256 earned, uint32 bids, uint32 sells, uint32 reports, uint256 daysValid)
 func (_SwarmMail *SwarmMailSession) Subscriptions(arg0 *big.Int) (struct {
 	SubHash           [32]byte
 	FdpSellerNameHash [32]byte
@@ -1394,13 +1706,14 @@ func (_SwarmMail *SwarmMailSession) Subscriptions(arg0 *big.Int) (struct {
 	Bids              uint32
 	Sells             uint32
 	Reports           uint32
+	DaysValid         *big.Int
 }, error) {
 	return _SwarmMail.Contract.Subscriptions(&_SwarmMail.CallOpts, arg0)
 }
 
 // Subscriptions is a free data retrieval call binding the contract method 0x2d5bbf60.
 //
-// Solidity: function subscriptions(uint256 ) view returns(bytes32 subHash, bytes32 fdpSellerNameHash, address seller, bytes32 swarmLocation, uint256 price, bool active, uint256 earned, uint32 bids, uint32 sells, uint32 reports)
+// Solidity: function subscriptions(uint256 ) view returns(bytes32 subHash, bytes32 fdpSellerNameHash, address seller, bytes32 swarmLocation, uint256 price, bool active, uint256 earned, uint32 bids, uint32 sells, uint32 reports, uint256 daysValid)
 func (_SwarmMail *SwarmMailCallerSession) Subscriptions(arg0 *big.Int) (struct {
 	SubHash           [32]byte
 	FdpSellerNameHash [32]byte
@@ -1412,6 +1725,7 @@ func (_SwarmMail *SwarmMailCallerSession) Subscriptions(arg0 *big.Int) (struct {
 	Bids              uint32
 	Sells             uint32
 	Reports           uint32
+	DaysValid         *big.Int
 }, error) {
 	return _SwarmMail.Contract.Subscriptions(&_SwarmMail.CallOpts, arg0)
 }
@@ -1531,25 +1845,25 @@ func (_SwarmMail *SwarmMailTransactorSession) GrantRole(role [32]byte, account c
 	return _SwarmMail.Contract.GrantRole(&_SwarmMail.TransactOpts, role, account)
 }
 
-// ListSub is a paid mutator transaction binding the contract method 0x1273b932.
+// ListSub is a paid mutator transaction binding the contract method 0x1f59388d.
 //
-// Solidity: function listSub(bytes32 fdpSellerNameHash, bytes32 dataSwarmLocation, uint256 price, bytes32 category, address podAddress) payable returns()
-func (_SwarmMail *SwarmMailTransactor) ListSub(opts *bind.TransactOpts, fdpSellerNameHash [32]byte, dataSwarmLocation [32]byte, price *big.Int, category [32]byte, podAddress common.Address) (*types.Transaction, error) {
-	return _SwarmMail.contract.Transact(opts, "listSub", fdpSellerNameHash, dataSwarmLocation, price, category, podAddress)
+// Solidity: function listSub(bytes32 fdpSellerNameHash, bytes32 dataSwarmLocation, uint256 price, bytes32 category, address podAddress, uint256 daysValid) payable returns()
+func (_SwarmMail *SwarmMailTransactor) ListSub(opts *bind.TransactOpts, fdpSellerNameHash [32]byte, dataSwarmLocation [32]byte, price *big.Int, category [32]byte, podAddress common.Address, daysValid *big.Int) (*types.Transaction, error) {
+	return _SwarmMail.contract.Transact(opts, "listSub", fdpSellerNameHash, dataSwarmLocation, price, category, podAddress, daysValid)
 }
 
-// ListSub is a paid mutator transaction binding the contract method 0x1273b932.
+// ListSub is a paid mutator transaction binding the contract method 0x1f59388d.
 //
-// Solidity: function listSub(bytes32 fdpSellerNameHash, bytes32 dataSwarmLocation, uint256 price, bytes32 category, address podAddress) payable returns()
-func (_SwarmMail *SwarmMailSession) ListSub(fdpSellerNameHash [32]byte, dataSwarmLocation [32]byte, price *big.Int, category [32]byte, podAddress common.Address) (*types.Transaction, error) {
-	return _SwarmMail.Contract.ListSub(&_SwarmMail.TransactOpts, fdpSellerNameHash, dataSwarmLocation, price, category, podAddress)
+// Solidity: function listSub(bytes32 fdpSellerNameHash, bytes32 dataSwarmLocation, uint256 price, bytes32 category, address podAddress, uint256 daysValid) payable returns()
+func (_SwarmMail *SwarmMailSession) ListSub(fdpSellerNameHash [32]byte, dataSwarmLocation [32]byte, price *big.Int, category [32]byte, podAddress common.Address, daysValid *big.Int) (*types.Transaction, error) {
+	return _SwarmMail.Contract.ListSub(&_SwarmMail.TransactOpts, fdpSellerNameHash, dataSwarmLocation, price, category, podAddress, daysValid)
 }
 
-// ListSub is a paid mutator transaction binding the contract method 0x1273b932.
+// ListSub is a paid mutator transaction binding the contract method 0x1f59388d.
 //
-// Solidity: function listSub(bytes32 fdpSellerNameHash, bytes32 dataSwarmLocation, uint256 price, bytes32 category, address podAddress) payable returns()
-func (_SwarmMail *SwarmMailTransactorSession) ListSub(fdpSellerNameHash [32]byte, dataSwarmLocation [32]byte, price *big.Int, category [32]byte, podAddress common.Address) (*types.Transaction, error) {
-	return _SwarmMail.Contract.ListSub(&_SwarmMail.TransactOpts, fdpSellerNameHash, dataSwarmLocation, price, category, podAddress)
+// Solidity: function listSub(bytes32 fdpSellerNameHash, bytes32 dataSwarmLocation, uint256 price, bytes32 category, address podAddress, uint256 daysValid) payable returns()
+func (_SwarmMail *SwarmMailTransactorSession) ListSub(fdpSellerNameHash [32]byte, dataSwarmLocation [32]byte, price *big.Int, category [32]byte, podAddress common.Address, daysValid *big.Int) (*types.Transaction, error) {
+	return _SwarmMail.Contract.ListSub(&_SwarmMail.TransactOpts, fdpSellerNameHash, dataSwarmLocation, price, category, podAddress, daysValid)
 }
 
 // Register is a paid mutator transaction binding the contract method 0x2f926732.
@@ -1613,6 +1927,27 @@ func (_SwarmMail *SwarmMailSession) RemoveInboxEmail(swarmLocation [32]byte) (*t
 // Solidity: function removeInboxEmail(bytes32 swarmLocation) returns()
 func (_SwarmMail *SwarmMailTransactorSession) RemoveInboxEmail(swarmLocation [32]byte) (*types.Transaction, error) {
 	return _SwarmMail.Contract.RemoveInboxEmail(&_SwarmMail.TransactOpts, swarmLocation)
+}
+
+// RemoveLockerEmail is a paid mutator transaction binding the contract method 0xc221e534.
+//
+// Solidity: function removeLockerEmail(bytes32 swarmLocation) returns()
+func (_SwarmMail *SwarmMailTransactor) RemoveLockerEmail(opts *bind.TransactOpts, swarmLocation [32]byte) (*types.Transaction, error) {
+	return _SwarmMail.contract.Transact(opts, "removeLockerEmail", swarmLocation)
+}
+
+// RemoveLockerEmail is a paid mutator transaction binding the contract method 0xc221e534.
+//
+// Solidity: function removeLockerEmail(bytes32 swarmLocation) returns()
+func (_SwarmMail *SwarmMailSession) RemoveLockerEmail(swarmLocation [32]byte) (*types.Transaction, error) {
+	return _SwarmMail.Contract.RemoveLockerEmail(&_SwarmMail.TransactOpts, swarmLocation)
+}
+
+// RemoveLockerEmail is a paid mutator transaction binding the contract method 0xc221e534.
+//
+// Solidity: function removeLockerEmail(bytes32 swarmLocation) returns()
+func (_SwarmMail *SwarmMailTransactorSession) RemoveLockerEmail(swarmLocation [32]byte) (*types.Transaction, error) {
+	return _SwarmMail.Contract.RemoveLockerEmail(&_SwarmMail.TransactOpts, swarmLocation)
 }
 
 // RemoveSentEmail is a paid mutator transaction binding the contract method 0xc9bdc1c5.
@@ -1825,6 +2160,48 @@ func (_SwarmMail *SwarmMailTransactorSession) SetListingFee(newListingFee *big.I
 	return _SwarmMail.Contract.SetListingFee(&_SwarmMail.TransactOpts, newListingFee)
 }
 
+// SetPortableAddress is a paid mutator transaction binding the contract method 0xc6d05aee.
+//
+// Solidity: function setPortableAddress(address addr) returns()
+func (_SwarmMail *SwarmMailTransactor) SetPortableAddress(opts *bind.TransactOpts, addr common.Address) (*types.Transaction, error) {
+	return _SwarmMail.contract.Transact(opts, "setPortableAddress", addr)
+}
+
+// SetPortableAddress is a paid mutator transaction binding the contract method 0xc6d05aee.
+//
+// Solidity: function setPortableAddress(address addr) returns()
+func (_SwarmMail *SwarmMailSession) SetPortableAddress(addr common.Address) (*types.Transaction, error) {
+	return _SwarmMail.Contract.SetPortableAddress(&_SwarmMail.TransactOpts, addr)
+}
+
+// SetPortableAddress is a paid mutator transaction binding the contract method 0xc6d05aee.
+//
+// Solidity: function setPortableAddress(address addr) returns()
+func (_SwarmMail *SwarmMailTransactorSession) SetPortableAddress(addr common.Address) (*types.Transaction, error) {
+	return _SwarmMail.Contract.SetPortableAddress(&_SwarmMail.TransactOpts, addr)
+}
+
+// ShareLockerWith is a paid mutator transaction binding the contract method 0x0071f0c6.
+//
+// Solidity: function shareLockerWith(bytes32 swarmLocation, address withAddress) returns()
+func (_SwarmMail *SwarmMailTransactor) ShareLockerWith(opts *bind.TransactOpts, swarmLocation [32]byte, withAddress common.Address) (*types.Transaction, error) {
+	return _SwarmMail.contract.Transact(opts, "shareLockerWith", swarmLocation, withAddress)
+}
+
+// ShareLockerWith is a paid mutator transaction binding the contract method 0x0071f0c6.
+//
+// Solidity: function shareLockerWith(bytes32 swarmLocation, address withAddress) returns()
+func (_SwarmMail *SwarmMailSession) ShareLockerWith(swarmLocation [32]byte, withAddress common.Address) (*types.Transaction, error) {
+	return _SwarmMail.Contract.ShareLockerWith(&_SwarmMail.TransactOpts, swarmLocation, withAddress)
+}
+
+// ShareLockerWith is a paid mutator transaction binding the contract method 0x0071f0c6.
+//
+// Solidity: function shareLockerWith(bytes32 swarmLocation, address withAddress) returns()
+func (_SwarmMail *SwarmMailTransactorSession) ShareLockerWith(swarmLocation [32]byte, withAddress common.Address) (*types.Transaction, error) {
+	return _SwarmMail.Contract.ShareLockerWith(&_SwarmMail.TransactOpts, swarmLocation, withAddress)
+}
+
 // SignEmail is a paid mutator transaction binding the contract method 0x87134952.
 //
 // Solidity: function signEmail(bytes32 swarmLocation) returns()
@@ -1846,6 +2223,27 @@ func (_SwarmMail *SwarmMailTransactorSession) SignEmail(swarmLocation [32]byte) 
 	return _SwarmMail.Contract.SignEmail(&_SwarmMail.TransactOpts, swarmLocation)
 }
 
+// StoreLocker is a paid mutator transaction binding the contract method 0xda305b20.
+//
+// Solidity: function storeLocker(bytes32 swarmLocation) payable returns()
+func (_SwarmMail *SwarmMailTransactor) StoreLocker(opts *bind.TransactOpts, swarmLocation [32]byte) (*types.Transaction, error) {
+	return _SwarmMail.contract.Transact(opts, "storeLocker", swarmLocation)
+}
+
+// StoreLocker is a paid mutator transaction binding the contract method 0xda305b20.
+//
+// Solidity: function storeLocker(bytes32 swarmLocation) payable returns()
+func (_SwarmMail *SwarmMailSession) StoreLocker(swarmLocation [32]byte) (*types.Transaction, error) {
+	return _SwarmMail.Contract.StoreLocker(&_SwarmMail.TransactOpts, swarmLocation)
+}
+
+// StoreLocker is a paid mutator transaction binding the contract method 0xda305b20.
+//
+// Solidity: function storeLocker(bytes32 swarmLocation) payable returns()
+func (_SwarmMail *SwarmMailTransactorSession) StoreLocker(swarmLocation [32]byte) (*types.Transaction, error) {
+	return _SwarmMail.Contract.StoreLocker(&_SwarmMail.TransactOpts, swarmLocation)
+}
+
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -1865,6 +2263,27 @@ func (_SwarmMail *SwarmMailSession) TransferOwnership(newOwner common.Address) (
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_SwarmMail *SwarmMailTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
 	return _SwarmMail.Contract.TransferOwnership(&_SwarmMail.TransactOpts, newOwner)
+}
+
+// UnshareLockerWith is a paid mutator transaction binding the contract method 0x5daaa285.
+//
+// Solidity: function unshareLockerWith(bytes32 swarmLocation, address withAddress) returns()
+func (_SwarmMail *SwarmMailTransactor) UnshareLockerWith(opts *bind.TransactOpts, swarmLocation [32]byte, withAddress common.Address) (*types.Transaction, error) {
+	return _SwarmMail.contract.Transact(opts, "unshareLockerWith", swarmLocation, withAddress)
+}
+
+// UnshareLockerWith is a paid mutator transaction binding the contract method 0x5daaa285.
+//
+// Solidity: function unshareLockerWith(bytes32 swarmLocation, address withAddress) returns()
+func (_SwarmMail *SwarmMailSession) UnshareLockerWith(swarmLocation [32]byte, withAddress common.Address) (*types.Transaction, error) {
+	return _SwarmMail.Contract.UnshareLockerWith(&_SwarmMail.TransactOpts, swarmLocation, withAddress)
+}
+
+// UnshareLockerWith is a paid mutator transaction binding the contract method 0x5daaa285.
+//
+// Solidity: function unshareLockerWith(bytes32 swarmLocation, address withAddress) returns()
+func (_SwarmMail *SwarmMailTransactorSession) UnshareLockerWith(swarmLocation [32]byte, withAddress common.Address) (*types.Transaction, error) {
+	return _SwarmMail.Contract.UnshareLockerWith(&_SwarmMail.TransactOpts, swarmLocation, withAddress)
 }
 
 // Receive is a paid mutator transaction binding the contract receive function.

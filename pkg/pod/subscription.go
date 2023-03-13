@@ -16,7 +16,7 @@ import (
 
 // ListPodInMarketplace will save the pod info in the subscriptionManager smart contract with its owner and price
 // we keep the pod info in the smart contract, with a `list` flag
-func (p *Pod) ListPodInMarketplace(podName, title, desc, thumbnail string, price uint64, category, nameHash [32]byte) error {
+func (p *Pod) ListPodInMarketplace(podName, title, desc, thumbnail string, price uint64, daysValid uint, category, nameHash [32]byte) error {
 	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return err
@@ -32,7 +32,7 @@ func (p *Pod) ListPodInMarketplace(podName, title, desc, thumbnail string, price
 
 	podAddress := common.HexToAddress(strAddr)
 
-	return p.sm.AddPodToMarketplace(podAddress, common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()), podName, title, desc, thumbnail, price, category, nameHash, p.acc.GetUserAccountInfo().GetPrivateKey())
+	return p.sm.AddPodToMarketplace(podAddress, common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()), podName, title, desc, thumbnail, price, daysValid, category, nameHash, p.acc.GetUserAccountInfo().GetPrivateKey())
 }
 
 // PodStatusInMarketplace will change the `list` flag for the pod so that it's not listed or gets re listed in the pod marketplace

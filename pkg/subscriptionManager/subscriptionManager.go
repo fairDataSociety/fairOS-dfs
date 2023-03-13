@@ -11,7 +11,7 @@ import (
 )
 
 type SubscriptionManager interface {
-	AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, category, nameHash [32]byte, key *ecdsa.PrivateKey) error
+	AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, daysValid uint, category, nameHash [32]byte, key *ecdsa.PrivateKey) error
 	HidePodFromMarketplace(owner common.Address, subHash [32]byte, hide bool, key *ecdsa.PrivateKey) error
 	RequestAccess(subscriber common.Address, subHash, nameHash [32]byte, key *ecdsa.PrivateKey) error
 	AllowAccess(owner common.Address, si *rpc.ShareInfo, requestHash, secret [32]byte, key *ecdsa.PrivateKey) error

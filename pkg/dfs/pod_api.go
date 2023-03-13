@@ -503,7 +503,7 @@ func (a *API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
 }
 
 // ListPodInMarketplace
-func (a *API) ListPodInMarketplace(podName, title, desc, thumbnail, sessionId string, price uint64, category [32]byte) error {
+func (a *API) ListPodInMarketplace(podName, title, desc, thumbnail, sessionId string, price uint64, daysValid uint, category [32]byte) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -519,7 +519,7 @@ func (a *API) ListPodInMarketplace(podName, title, desc, thumbnail, sessionId st
 		return err
 	}
 
-	return ui.GetPod().ListPodInMarketplace(podName, title, desc, thumbnail, price, category, nameHash)
+	return ui.GetPod().ListPodInMarketplace(podName, title, desc, thumbnail, price, daysValid, category, nameHash)
 }
 
 // ChangePodListStatusInMarketplace

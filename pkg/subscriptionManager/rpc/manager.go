@@ -64,7 +64,7 @@ type ShareInfo struct {
 	UserAddress string `json:"userAddress"`
 }
 
-func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, category, nameHash [32]byte, key *ecdsa.PrivateKey) error {
+func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, daysValid uint, category, nameHash [32]byte, key *ecdsa.PrivateKey) error {
 	info := &SubscriptionItemInfo{
 		Category:          utils.Encode(category[:]),
 		Description:       desc,
@@ -75,7 +75,7 @@ func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, titl
 		Price:             fmt.Sprintf("%d", price),
 		Title:             title,
 	}
-	opts, err := c.newTransactor(key, owner)
+	opts, err := c.newTransactor(key, owner, nil)
 	if err != nil {
 		return err
 	}
@@ -91,9 +91,7 @@ func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, titl
 	var a [32]byte
 	copy(a[:], ref)
 
-	i := new(big.Int).SetUint64(price)
-
-	tx, err := c.swarmMail.ListSub(opts, nameHash, a, i, category, podAddress)
+	tx, err := c.swarmMail.ListSub(opts, nameHash, a, new(big.Int).SetUint64(price), category, podAddress, new(big.Int).SetInt64(int64(daysValid)))
 	if err != nil {
 		return err
 	}
@@ -108,7 +106,7 @@ func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, titl
 }
 
 func (c *Client) HidePodFromMarketplace(owner common.Address, subHash [32]byte, hide bool, key *ecdsa.PrivateKey) error {
-	opts, err := c.newTransactor(key, owner)
+	opts, err := c.newTransactor(key, owner, nil)
 	if err != nil {
 		return err
 	}
@@ -127,7 +125,12 @@ func (c *Client) HidePodFromMarketplace(owner common.Address, subHash [32]byte, 
 }
 
 func (c *Client) RequestAccess(subscriber common.Address, subHash, nameHash [32]byte, key *ecdsa.PrivateKey) error {
-	opts, err := c.newTransactor(key, subscriber)
+	item, err := c.swarmMail.GetSubBy(&bind.CallOpts{}, subHash)
+	if err != nil {
+		return err
+	}
+
+	opts, err := c.newTransactor(key, subscriber, item.Price)
 	if err != nil {
 		return err
 	}
@@ -146,7 +149,7 @@ func (c *Client) RequestAccess(subscriber common.Address, subHash, nameHash [32]
 }
 
 func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, requestHash, secret [32]byte, key *ecdsa.PrivateKey) error {
-	opts, err := c.newTransactor(key, owner)
+	opts, err := c.newTransactor(key, owner, nil)
 	if err != nil {
 		return err
 	}
@@ -235,7 +238,11 @@ func (c *Client) GetSubscribablePodInfo(subHash [32]byte) (*SubscriptionItemInfo
 
 func (c *Client) GetSubscriptions(subscriber common.Address, start, limit uint64) ([]swarmMail.SwarmMailSubItem, error) {
 	opts := &bind.CallOpts{}
-	return c.swarmMail.GetSubItems(opts, subscriber, new(big.Int).SetUint64(start), new(big.Int).SetUint64(limit))
+	itemsStruct, err := c.swarmMail.GetSubItems(opts, subscriber, new(big.Int).SetUint64(start), new(big.Int).SetUint64(limit))
+	if err != nil {
+		return nil, err
+	}
+	return itemsStruct.Items, nil
 }
 
 func (c *Client) GetAllSubscribablePods() ([]swarmMail.SwarmMailSub, error) {
@@ -292,7 +299,7 @@ func New(subConfig *contracts.SubscriptionConfig, logger logging.Logger, getter 
 	}, nil
 }
 
-func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*bind.TransactOpts, error) {
+func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address, value *big.Int) (*bind.TransactOpts, error) {
 	nonce, err := c.c.PendingNonceAt(context.Background(), account)
 	if err != nil {
 		return nil, err
@@ -310,7 +317,7 @@ func (c *Client) newTransactor(key *ecdsa.PrivateKey, account common.Address) (*
 		return nil, err
 	}
 	opts.Nonce = big.NewInt(int64(nonce))
-	opts.Value = big.NewInt(0)
+	opts.Value = value
 	opts.GasLimit = uint64(1000000)
 	opts.GasPrice = gasPrice
 	opts.From = account

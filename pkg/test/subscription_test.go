@@ -66,7 +66,7 @@ func TestSubscription(t *testing.T) {
 		t.Fatal(err)
 	}
 	category := [32]byte{}
-	err = pod1.ListPodInMarketplace(randomLongPodName1, randomLongPodName1, randomLongPodName1, "", 1, category, nameHash1)
+	err = pod1.ListPodInMarketplace(randomLongPodName1, randomLongPodName1, randomLongPodName1, "", 1, 10, category, nameHash1)
 	if err != nil {
 		t.Fatal(err)
 	}
