@@ -141,8 +141,12 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 			config, subConfig = contracts.TestnetConfig()
 		}
 		config.ProviderBackend = rpc
-		subConfig.RPC = subRpc
-		subConfig.SwarmMailAddress = subContractAddress
+		if subRpc != "" {
+			subConfig.RPC = subRpc
+		}
+		if subContractAddress != "" {
+			subConfig.SwarmMailAddress = subContractAddress
+		}
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
 
 		go func() {
@@ -1953,8 +1957,8 @@ func listPodInMarketplace(_ js.Value, funcArgs []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
 
-		if len(funcArgs) != 7 {
-			reject.Invoke("not enough arguments. \"listPodInMarketplace(sessionId, podName, title, desc, thumbnail, price, category)\"")
+		if len(funcArgs) != 8 {
+			reject.Invoke("not enough arguments. \"listPodInMarketplace(sessionId, podName, title, desc, thumbnail, price, days, category)\"")
 			return nil
 		}
 		sessionId := funcArgs[0].String()
@@ -1963,10 +1967,18 @@ func listPodInMarketplace(_ js.Value, funcArgs []js.Value) interface{} {
 		desc := funcArgs[3].String()
 		thumbnail := funcArgs[4].String()
 		priceStr := funcArgs[5].String()
-		categoryStr := funcArgs[6].String()
+		daysStr := funcArgs[6].String()
+		categoryStr := funcArgs[7].String()
 
 		// convert priceStr to uint64
 		price, err := strconv.ParseUint(priceStr, 10, 64)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("listPodInMarketplace failed : %s", err.Error()))
+			return nil
+		}
+
+		// convert daysStr to uint64
+		days, err := strconv.ParseUint(daysStr, 10, 64)
 		if err != nil {
 			reject.Invoke(fmt.Sprintf("listPodInMarketplace failed : %s", err.Error()))
 			return nil
@@ -1981,7 +1993,8 @@ func listPodInMarketplace(_ js.Value, funcArgs []js.Value) interface{} {
 		var c [32]byte
 		copy(c[:], category)
 		go func() {
-			err := api.ListPodInMarketplace(sessionId, podName, title, desc, thumbnail, price, c)
+			fmt.Println("listPodInMarketplace", sessionId, podName, title, desc, thumbnail, price, days, c)
+			err := api.ListPodInMarketplace(sessionId, podName, title, desc, thumbnail, price, uint(days), c)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("listPodInMarketplace failed : %s", err.Error()))
 				return
@@ -2157,15 +2170,13 @@ func getSubscriptions(_ js.Value, funcArgs []js.Value) interface{} {
 		reject := args[1]
 
 		if len(funcArgs) != 3 {
-			reject.Invoke("not enough arguments. \"getSubscriptions(sessionId, start, limit)\"")
+			reject.Invoke("not enough arguments. \"getSubscriptions(sessionId)\"")
 			return nil
 		}
 		sessionId := funcArgs[0].String()
-		start := funcArgs[1].Int()
-		limit := funcArgs[2].Int()
 
 		go func() {
-			subs, err := api.GetSubscriptions(sessionId, uint64(start), uint64(limit))
+			subs, err := api.GetSubscriptions(sessionId)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("getSubscriptions failed : %s", err.Error()))
 				return

@@ -503,7 +503,7 @@ func (a *API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
 }
 
 // ListPodInMarketplace
-func (a *API) ListPodInMarketplace(podName, title, desc, thumbnail, sessionId string, price uint64, daysValid uint, category [32]byte) error {
+func (a *API) ListPodInMarketplace(sessionId, podName, title, desc, thumbnail string, price uint64, daysValid uint, category [32]byte) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -637,7 +637,7 @@ type SubscriptionInfo struct {
 }
 
 // GetSubscriptions
-func (a *API) GetSubscriptions(sessionId string, start, limit uint64) ([]*SubscriptionInfo, error) {
+func (a *API) GetSubscriptions(sessionId string) ([]*SubscriptionInfo, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -648,7 +648,7 @@ func (a *API) GetSubscriptions(sessionId string, start, limit uint64) ([]*Subscr
 		return nil, errNilSubManager
 	}
 
-	subscriptions, err := ui.GetPod().GetSubscriptions(start, limit)
+	subscriptions, err := ui.GetPod().GetSubscriptions()
 	if err != nil {
 		return nil, err
 	}

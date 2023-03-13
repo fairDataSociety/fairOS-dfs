@@ -159,7 +159,7 @@ func (s *SubscriptionManager) AllowAccess(owner common.Address, si *rpc.ShareInf
 	return nil
 }
 
-func (s *SubscriptionManager) GetSubscriptions(subscriber common.Address, _, _ uint64) ([]swarmMail.SwarmMailSubItem, error) {
+func (s *SubscriptionManager) GetSubscriptions(subscriber common.Address) ([]swarmMail.SwarmMailSubItem, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 

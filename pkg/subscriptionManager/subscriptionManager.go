@@ -16,7 +16,7 @@ type SubscriptionManager interface {
 	RequestAccess(subscriber common.Address, subHash, nameHash [32]byte, key *ecdsa.PrivateKey) error
 	AllowAccess(owner common.Address, si *rpc.ShareInfo, requestHash, secret [32]byte, key *ecdsa.PrivateKey) error
 	GetSubscription(subscriber common.Address, subHash, secret [32]byte) (*rpc.ShareInfo, error)
-	GetSubscriptions(subscriber common.Address, start, limit uint64) ([]swarmMail.SwarmMailSubItem, error)
+	GetSubscriptions(subscriber common.Address) ([]swarmMail.SwarmMailSubItem, error)
 	GetAllSubscribablePods() ([]swarmMail.SwarmMailSub, error)
 	GetOwnSubscribablePods(owner common.Address) ([]swarmMail.SwarmMailSub, error)
 	GetSubscribablePodInfo(subHash [32]byte) (*rpc.SubscriptionItemInfo, error)

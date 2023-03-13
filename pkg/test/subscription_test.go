@@ -109,7 +109,7 @@ func TestSubscription(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	subs, err := pod2.GetSubscriptions(0, 10)
+	subs, err := pod2.GetSubscriptions()
 	if err != nil {
 		t.Fatal(err)
 	}

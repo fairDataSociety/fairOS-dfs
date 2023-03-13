@@ -26,6 +26,8 @@ const (
 	additionalConfirmations           = 1
 	transactionReceiptTimeout         = time.Minute * 2
 	transactionReceiptPollingInterval = time.Second * 10
+
+	listMinFee = 1000000000000000
 )
 
 type SubscriptionInfoPutter interface {
@@ -75,7 +77,7 @@ func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, titl
 		Price:             fmt.Sprintf("%d", price),
 		Title:             title,
 	}
-	opts, err := c.newTransactor(key, owner, nil)
+	opts, err := c.newTransactor(key, owner, big.NewInt(listMinFee))
 	if err != nil {
 		return err
 	}
@@ -236,13 +238,9 @@ func (c *Client) GetSubscribablePodInfo(subHash [32]byte) (*SubscriptionItemInfo
 	return info, nil
 }
 
-func (c *Client) GetSubscriptions(subscriber common.Address, start, limit uint64) ([]swarmMail.SwarmMailSubItem, error) {
+func (c *Client) GetSubscriptions(subscriber common.Address) ([]swarmMail.SwarmMailSubItem, error) {
 	opts := &bind.CallOpts{}
-	itemsStruct, err := c.swarmMail.GetSubItems(opts, subscriber, new(big.Int).SetUint64(start), new(big.Int).SetUint64(limit))
-	if err != nil {
-		return nil, err
-	}
-	return itemsStruct.Items, nil
+	return c.swarmMail.GetAllSubItems(opts, subscriber)
 }
 
 func (c *Client) GetAllSubscribablePods() ([]swarmMail.SwarmMailSub, error) {
