@@ -50,7 +50,7 @@ func TestRename(t *testing.T) {
 
 		// file existent check
 		podFile := utils.CombinePathAndFile(filePath, fileName)
-		if fileObject.IsFileAlreadyPresent(podFile) {
+		if fileObject.IsFileAlreadyPresent(podPassword, podFile) {
 			t.Fatal("file should not be present")
 		}
 		_, _, err = fileObject.Download(podFile, podPassword)
@@ -70,9 +70,14 @@ func TestRename(t *testing.T) {
 		}
 
 		// Download the file and read from reader
-		present := fileObject.IsFileAlreadyPresent(podFile)
+		present := fileObject.IsFileAlreadyPresent(podPassword, podFile)
 		if present {
 			t.Fatal("old name should not be present")
+		}
+
+		present = fileObject.IsFileAlreadyPresent(podPassword, newPodFile)
+		if !present {
+			t.Fatal("new name should be present")
 		}
 
 		// Download the file and read from reader
@@ -125,7 +130,7 @@ func TestRename(t *testing.T) {
 
 		// file existent check
 		podFile := utils.CombinePathAndFile(filePath, fileName)
-		if fileObject.IsFileAlreadyPresent(podFile) {
+		if fileObject.IsFileAlreadyPresent(podPassword, podFile) {
 			t.Fatal("file should not be present")
 		}
 
@@ -135,7 +140,7 @@ func TestRename(t *testing.T) {
 			t.Fatal(err)
 		}
 		newPodFile := utils.CombinePathAndFile(newFilePath, fileName)
-		if fileObject.IsFileAlreadyPresent(newPodFile) {
+		if fileObject.IsFileAlreadyPresent(podPassword, newPodFile) {
 			t.Fatal("file should not be present")
 		}
 		_, err = fileObject.RenameFromFileName(podFile, newPodFile, podPassword)
@@ -144,12 +149,12 @@ func TestRename(t *testing.T) {
 		}
 
 		// Download the file and read from reader
-		present := fileObject.IsFileAlreadyPresent(podFile)
+		present := fileObject.IsFileAlreadyPresent(podPassword, podFile)
 		if present {
 			t.Fatal("old name should not be present")
 		}
 
-		present = fileObject.IsFileAlreadyPresent(newPodFile)
+		present = fileObject.IsFileAlreadyPresent(podPassword, newPodFile)
 		if !present {
 			t.Fatal("new name should be present")
 		}

@@ -576,7 +576,7 @@ func TestApis(t *testing.T) {
 				t.Fatal(err)
 			}
 			if renameResp.StatusCode != 200 {
-				t.Fatal("rename failed", u)
+				t.Fatal("rename failed", u, renameResp.StatusCode)
 			}
 		}
 

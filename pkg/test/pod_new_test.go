@@ -102,7 +102,7 @@ func TestPodNew(t *testing.T) {
 			t.Fatalf("podName is not %s", podName1)
 		}
 
-		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName1)
+		infoGot, _, err := pod1.GetPodInfo(podName1)
 		if err != nil {
 			t.Fatalf("could not get pod from podMap")
 		}
@@ -136,7 +136,7 @@ func TestPodNew(t *testing.T) {
 			t.Fatalf("podName is not %s", podName2)
 		}
 
-		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName2)
+		infoGot, _, err := pod1.GetPodInfo(podName2)
 		if err != nil {
 			t.Fatalf("could not get pod from podMap")
 		}

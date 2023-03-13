@@ -91,7 +91,7 @@ func TestOpen(t *testing.T) {
 		if podInfo == nil {
 			t.Fatalf("pod not opened")
 		}
-		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName1)
+		gotPodInfo, _, err := pod1.GetPodInfo(podName1)
 		if err != nil {
 			t.Fatalf("pod not opened")
 		}
@@ -136,7 +136,7 @@ func TestOpen(t *testing.T) {
 		if podInfo == nil {
 			t.Fatalf("pod not opened")
 		}
-		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName2)
+		gotPodInfo, _, err := pod1.GetPodInfo(podName2)
 		if err != nil {
 			t.Fatalf("pod not opened")
 		}
@@ -235,7 +235,7 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 
 	// close the pod
 	err = pod1.ClosePod(podName1)
-	if !errors.Is(err, pod.ErrPodNotOpened) {
+	if err == nil {
 		t.Fatal("pod should not be open")
 	}
 }

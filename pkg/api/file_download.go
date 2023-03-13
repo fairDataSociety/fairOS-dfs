@@ -125,7 +125,7 @@ func (h *Handler) handleDownload(w http.ResponseWriter, r *http.Request, podName
 			jsonhttp.BadRequest(w, "download: "+err.Error())
 			return
 		}
-		if err == file.ErrFileNotPresent || err == file.ErrFileNotFound {
+		if err == file.ErrFileNotFound {
 			h.logger.Errorf("download: %v", err)
 			jsonhttp.NotFound(w, "download: "+err.Error())
 			return

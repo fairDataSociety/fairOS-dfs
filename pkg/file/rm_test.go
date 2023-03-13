@@ -59,7 +59,7 @@ func TestRemoveFile(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		// remove file2
 		err = fileObject.RmFile("/dir1/file2", podPassword)
-		require.Equal(t, err.Error(), "feed does not exist or was not updated yet")
+		require.Equal(t, err.Error(), file.ErrFileNotFound.Error())
 
 		file1, _ := utils.GetRandString(12)
 		file2, _ := utils.GetRandString(12)
@@ -75,13 +75,13 @@ func TestRemoveFile(t *testing.T) {
 		require.NoError(t, err)
 
 		// validate file deletion
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", file2))
+		meta := fileObject.GetInode(podPassword, utils.CombinePathAndFile("/dir1", file2))
 		if meta != nil {
 			t.Fatalf("file is not removed")
 		}
 
 		// check if other file is present
-		meta = fileObject.GetFromFileMap(utils.CombinePathAndFile("/dir1", file1))
+		meta = fileObject.GetInode(podPassword, utils.CombinePathAndFile("/dir1", file1))
 		if meta == nil {
 			t.Fatalf("file is not present")
 		}
@@ -107,7 +107,7 @@ func TestRemoveFile(t *testing.T) {
 			require.NoError(t, err)
 
 			// validate file deletion
-			meta := fileObject.GetFromFileMap("/dir1/" + filename)
+			meta := fileObject.GetInode(podPassword, "/dir1/"+filename)
 			if meta != nil {
 				t.Fatalf("file is not removed")
 			}

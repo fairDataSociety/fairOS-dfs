@@ -46,11 +46,12 @@ func (d *Directory) RmDir(directoryNameWithPath, podPassword string) error {
 	} else {
 		totalPath = utils.CombinePathAndFile(parentPath, dirToDelete)
 	}
-	if d.GetDirFromDirectoryMap(totalPath) == nil {
+	// recursive delete
+	dirInode := d.GetInode(podPassword, totalPath)
+	if dirInode == nil {
 		return ErrDirectoryNotPresent
 	}
-	// recursive delete
-	dirInode := d.GetDirFromDirectoryMap(totalPath)
+
 	if dirInode.FileOrDirNames != nil && len(dirInode.FileOrDirNames) > 0 {
 		for _, fileOrDirName := range dirInode.FileOrDirNames {
 			if strings.HasPrefix(fileOrDirName, "_F_") {

@@ -15,11 +15,11 @@ func (f *File) Chmod(podFileWithPath, podPassword string, mode uint32) error {
 	}
 	// check if file present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
-	if !f.IsFileAlreadyPresent(totalFilePath) {
-		return ErrFileNotPresent
+	if !f.IsFileAlreadyPresent(podPassword, totalFilePath) {
+		return ErrFileNotFound
 	}
 
-	meta := f.GetFromFileMap(totalFilePath)
+	meta := f.GetInode(podPassword, totalFilePath)
 	if meta == nil { // skipcq: TCV-001
 		return ErrFileNotFound
 	}

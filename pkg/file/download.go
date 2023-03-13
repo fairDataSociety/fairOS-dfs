@@ -26,8 +26,6 @@ import (
 )
 
 var (
-	// ErrFileNotPresent denotes file is not present
-	ErrFileNotPresent = errors.New("file not present")
 
 	// ErrFileAlreadyPresent denotes file is present
 	ErrFileAlreadyPresent = errors.New("file already present in the destination dir")
@@ -50,11 +48,11 @@ func (f *File) Download(podFileWithPath, podPassword string) (io.ReadCloser, uin
 func (f *File) ReadSeeker(podFileWithPath, podPassword string) (io.ReadSeekCloser, uint64, error) {
 	// check if file present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
-	if !f.IsFileAlreadyPresent(totalFilePath) {
-		return nil, 0, ErrFileNotPresent
+	if !f.IsFileAlreadyPresent(podPassword, totalFilePath) {
+		return nil, 0, ErrFileNotFound
 	}
 
-	meta := f.GetFromFileMap(totalFilePath)
+	meta := f.GetInode(podPassword, totalFilePath)
 	if meta == nil { // skipcq: TCV-001
 		return nil, 0, ErrFileNotFound
 	}

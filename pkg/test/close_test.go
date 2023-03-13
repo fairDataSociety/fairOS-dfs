@@ -63,12 +63,6 @@ func TestClose(t *testing.T) {
 			t.Fatalf("error creating pod %s", podName1)
 		}
 
-		// make root dir so that other directories can be added
-		err = info.GetDirectory().MkRootDir("pod1", podPassword, info.GetPodAddress(), info.GetFeed())
-		if err != nil {
-			t.Fatal(err)
-		}
-
 		// create some dir and files
 		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
 
@@ -80,23 +74,31 @@ func TestClose(t *testing.T) {
 		if gotPodInfo != nil {
 			t.Fatalf("pod not closed")
 		}
-		dirObject := info.GetDirectory()
-		dirInode1 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir1")
-		if dirInode1 != nil {
-			t.Fatalf("dir not closed properly")
+
+		gotPodInfo, _, err = pod1.GetPodInfo(podName1)
+		if err != nil {
+			t.Fatalf("pod should be open")
 		}
-		dirInode2 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir2")
-		if dirInode2 != nil {
-			t.Fatalf("dir not closed properly")
+		if gotPodInfo == nil {
+			t.Fatalf("pod should be open")
 		}
-		fileObject := info.GetFile()
-		fileMeta1 := fileObject.GetFromFileMap("/parentDir/file1")
-		if fileMeta1 != nil {
-			t.Fatalf("file not closed properly")
+		dirObject := gotPodInfo.GetDirectory()
+		dirInode1 := dirObject.GetInode(podPassword, "/parentDir/subDir1")
+		if dirInode1 == nil {
+			t.Fatalf("dir should nil be nil")
 		}
-		fileMeta2 := fileObject.GetFromFileMap("/parentDir/file2")
-		if fileMeta2 != nil {
-			t.Fatalf("file not closed properly")
+		dirInode2 := dirObject.GetInode(podPassword, "/parentDir/subDir2")
+		if dirInode2 == nil {
+			t.Fatalf("dir should nil be nil")
+		}
+		fileObject := gotPodInfo.GetFile()
+		fileMeta1 := fileObject.GetInode(podPassword, "/parentDir/file1")
+		if fileMeta1 == nil {
+			t.Fatalf("file should nil be nil")
+		}
+		fileMeta2 := fileObject.GetInode(podPassword, "/parentDir/file2")
+		if fileMeta2 == nil {
+			t.Fatalf("file should nil be nil")
 		}
 	})
 
