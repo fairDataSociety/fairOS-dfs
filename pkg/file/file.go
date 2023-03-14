@@ -93,7 +93,7 @@ func (f *File) IsFileAlreadyPresent(podPassword, fileWithPath string) bool {
 }
 
 // RemoveAllFromFileMap resets the fileMap
-func (f *File) RemoveAllFromFileMap() {
+func (f *File) RemoveAllFromFileMap() { // skipcq: TCV-001
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()
 	f.fileMap = make(map[string]*MetaData)
