@@ -277,8 +277,11 @@ func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, er
 // PadSeedName pads the given seed and name with random elements to be a chunk of chunkSize
 func (*Info) PadSeedName(seed []byte, username string, passphrase string) ([]byte, error) {
 	usernameLength := len(username)
+	if usernameLength > 255 {
+		return nil, fmt.Errorf("username length is too long")
+	}
 	usernameLengthBytes := make([]byte, usernameLengthSize)
-	binary.LittleEndian.PutUint64(usernameLengthBytes, uint64(usernameLength))
+	usernameLengthBytes[0] = byte(usernameLength)
 	paddingLength := utils.MaxChunkLength - aes.BlockSize - seedSize - usernameLengthSize - usernameLength
 	randomBytes, err := utils.GetRandBytes(paddingLength)
 	if err != nil { // skipcq: TCV-001
@@ -302,6 +305,6 @@ func (*Info) RemovePadFromSeedName(paddedSeed []byte, passphrase string) ([]byte
 	if err != nil { // skipcq: TCV-001
 		return nil, "", fmt.Errorf("seed decryption failed: %w", err)
 	}
-	usernameLength := int(binary.LittleEndian.Uint64(decryptedBytes[seedSize : seedSize+usernameLengthSize]))
+	usernameLength := int(decryptedBytes[seedSize])
 	return decryptedBytes[:seedSize], string(decryptedBytes[seedSize+usernameLengthSize : seedSize+usernameLengthSize+usernameLength]), nil
 }

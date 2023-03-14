@@ -1030,12 +1030,7 @@ func fileReceive(_ js.Value, funcArgs []js.Value) interface{} {
 		fileSharingReference := funcArgs[3].String()
 
 		go func() {
-			ref, err := utils.ParseSharingReference(fileSharingReference)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("fileReceive failed : %s", err.Error()))
-				return
-			}
-			filePath, err := api.ReceiveFile(podName, sessionId, ref, directory)
+			filePath, err := api.ReceiveFile(podName, sessionId, fileSharingReference, directory)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileReceive failed : %s", err.Error()))
 				return
@@ -1065,12 +1060,7 @@ func fileReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 		fileSharingReference := funcArgs[2].String()
 
 		go func() {
-			ref, err := utils.ParseSharingReference(fileSharingReference)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("fileReceiveInfo failed : %s", err.Error()))
-				return
-			}
-			receiveInfo, err := api.ReceiveInfo(sessionId, ref)
+			receiveInfo, err := api.ReceiveInfo(sessionId, fileSharingReference)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileReceiveInfo failed : %s", err.Error()))
 				return

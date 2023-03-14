@@ -270,11 +270,7 @@ func FileShare(podName, dirPath, destinationUser string) (string, error) {
 }
 
 func FileReceive(podName, directory, fileSharingReference string) (string, error) {
-	ref, err := utils.ParseSharingReference(fileSharingReference)
-	if err != nil {
-		return "", err
-	}
-	filePath, err := api.ReceiveFile(podName, sessionId, ref, directory)
+	filePath, err := api.ReceiveFile(podName, sessionId, fileSharingReference, directory)
 	if err != nil {
 		return "", err
 	}
@@ -285,11 +281,7 @@ func FileReceive(podName, directory, fileSharingReference string) (string, error
 }
 
 func FileReceiveInfo(podName, fileSharingReference string) (string, error) {
-	ref, err := utils.ParseSharingReference(fileSharingReference)
-	if err != nil {
-		return "", err
-	}
-	receiveInfo, err := api.ReceiveInfo(sessionId, ref)
+	receiveInfo, err := api.ReceiveInfo(sessionId, fileSharingReference)
 	if err != nil {
 		return "", err
 	}

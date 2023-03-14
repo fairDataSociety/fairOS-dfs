@@ -23,7 +23,6 @@ import (
 	"resenje.org/jsonhttp"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 // ReceiveFileResponse represents the response for receiving a file
@@ -182,14 +181,7 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sharingRef, err := utils.ParseSharingReference(sharingRefString)
-	if err != nil {
-		h.logger.Errorf("file receive: invalid reference: ", err)
-		jsonhttp.BadRequest(w, &response{Message: "file receive: invalid reference:" + err.Error()})
-		return
-	}
-
-	filePath, err := h.dfsAPI.ReceiveFile(podName, sessionId, sharingRef, dir)
+	filePath, err := h.dfsAPI.ReceiveFile(podName, sessionId, sharingRefString, dir)
 	if err != nil {
 		h.logger.Errorf("file receive: %v", err)
 		jsonhttp.InternalServerError(w, &response{Message: "file receive: " + err.Error()})
@@ -242,14 +234,7 @@ func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	sharingRef, err := utils.ParseSharingReference(sharingRefString)
-	if err != nil {
-		h.logger.Errorf("file receive info: invalid reference: ", err)
-		jsonhttp.BadRequest(w, &response{Message: "file receive info: invalid reference:" + err.Error()})
-		return
-	}
-
-	receiveInfo, err := h.dfsAPI.ReceiveInfo(sessionId, sharingRef)
+	receiveInfo, err := h.dfsAPI.ReceiveInfo(sessionId, sharingRefString)
 	if err != nil {
 		h.logger.Errorf("file receive info: %v", err)
 		jsonhttp.InternalServerError(w, &response{Message: "file receive info: " + err.Error()})

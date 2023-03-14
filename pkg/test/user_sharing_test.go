@@ -141,11 +141,7 @@ func TestSharing(t *testing.T) {
 		}
 
 		// receive file info
-		sharingRef, err := utils.ParseSharingReference(sharingRefString)
-		if err != nil {
-			t.Fatal(err)
-		}
-		receiveFileInfo, err := userObject2.ReceiveFileInfo(sharingRef)
+		receiveFileInfo, err := userObject2.ReceiveFileInfo(sharingRefString)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -164,18 +160,18 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("invalid block size received")
 		}
 
-		_, err = userObject2.ReceiveFileFromUser("podName2", sharingRef, ui, pod2, "/parentDir2")
+		_, err = userObject2.ReceiveFileFromUser("podName2", sharingRefString, ui, pod2, "/parentDir2")
 		if err == nil {
 			t.Fatal("pod should not exist")
 		}
 
 		// receive file
-		destinationFilePath, err := userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2")
+		destinationFilePath, err := userObject2.ReceiveFileFromUser(podName2, sharingRefString, ui, pod2, "/parentDir2")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2")
+		_, err = userObject2.ReceiveFileFromUser(podName2, sharingRefString, ui, pod2, "/parentDir2")
 		if !errors.Is(err, file.ErrFileAlreadyPresent) {
 			t.Fatal("pod does not supposed tp be open")
 		}

@@ -1138,12 +1138,8 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			sharingRef, err := utils.ParseSharingReference(fsReq.SharingReference)
-			if err != nil {
-				respondWithError(res, err)
-				continue
-			}
-			filePath, err := h.dfsAPI.ReceiveFile(fsReq.PodName, fsReq.DirectoryPath, sharingRef, sessionID)
+
+			filePath, err := h.dfsAPI.ReceiveFile(fsReq.PodName, fsReq.DirectoryPath, fsReq.SharingReference, sessionID)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -1175,12 +1171,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			sharingRef, err := utils.ParseSharingReference(fsReq.SharingReference)
-			if err != nil {
-				respondWithError(res, err)
-				continue
-			}
-			receiveInfo, err := h.dfsAPI.ReceiveInfo(sessionID, sharingRef)
+			receiveInfo, err := h.dfsAPI.ReceiveInfo(sessionID, fsReq.SharingReference)
 			if err != nil {
 				respondWithError(res, err)
 				continue
