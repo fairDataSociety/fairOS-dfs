@@ -140,7 +140,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 			subConfig.RPC = subRpc
 		}
 		if subContractAddress != "" {
-			subConfig.SwarmMailAddress = subContractAddress
+			subConfig.DataHubAddress = subContractAddress
 		}
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
 
