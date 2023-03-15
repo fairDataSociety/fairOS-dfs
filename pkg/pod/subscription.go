@@ -9,14 +9,14 @@ import (
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/common"
-	swarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/datahub"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 // ListPodInMarketplace will save the pod info in the subscriptionManager smart contract with its owner and price
 // we keep the pod info in the smart contract, with a `list` flag
-func (p *Pod) ListPodInMarketplace(podName, title, desc, thumbnail string, price uint64, daysValid uint, category, nameHash [32]byte) error {
+func (p *Pod) ListPodInMarketplace(podName, title, desc, thumbnail string, price uint64, daysValid uint16, category, nameHash [32]byte) error {
 	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return err
@@ -102,12 +102,12 @@ func (p *Pod) RequestSubscription(subHash, nameHash [32]byte) error {
 }
 
 // GetSubscriptions will query the smart contract and list my subscriptions
-func (p *Pod) GetSubscriptions() ([]swarmMail.SwarmMailSubItem, error) {
+func (p *Pod) GetSubscriptions() ([]datahub.DataHubSubItem, error) {
 	return p.sm.GetSubscriptions(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()))
 }
 
 // GetMarketplace will query the smart contract make the `list` all the pod from the marketplace
-func (p *Pod) GetMarketplace() ([]swarmMail.SwarmMailSub, error) {
+func (p *Pod) GetMarketplace() ([]datahub.DataHubSub, error) {
 	return p.sm.GetAllSubscribablePods()
 }
 
@@ -172,6 +172,6 @@ func (p *Pod) OpenSubscribedPodFromReference(reference string, ownerPublicKey *e
 }
 
 // GetSubRequests will get all owners sub requests
-func (p *Pod) GetSubRequests() ([]swarmMail.SwarmMailSubRequest, error) {
+func (p *Pod) GetSubRequests() ([]datahub.DataHubSubRequest, error) {
 	return p.sm.GetSubRequests(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()))
 }

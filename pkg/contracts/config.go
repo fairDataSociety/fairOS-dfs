@@ -12,8 +12,8 @@ type ENSConfig struct {
 
 // SubscriptionConfig handles the Subscription Management
 type SubscriptionConfig struct {
-	RPC              string
-	SwarmMailAddress string
+	RPC            string
+	DataHubAddress string
 }
 
 // TestnetConfig defines the configuration for goerli testnet
@@ -27,7 +27,7 @@ func TestnetConfig() (*ENSConfig, *SubscriptionConfig) {
 	}
 
 	s := &SubscriptionConfig{
-		SwarmMailAddress: "0x7Aedf45B82924B2dBF9818c7cAaB6c7557Ba09c0",
+		DataHubAddress: "0x43E6403948be1245f8878fE0f429798762A5d3b8",
 	}
 	return e, s
 }
@@ -35,7 +35,7 @@ func TestnetConfig() (*ENSConfig, *SubscriptionConfig) {
 // PlayConfig defines the configuration for fdp-play
 func PlayConfig() (*ENSConfig, *SubscriptionConfig) {
 	s := &SubscriptionConfig{
-		SwarmMailAddress: "0x86072CbFF48dA3C1F01824a6761A03F105BCC697",
+		DataHubAddress: "0x86072CbFF48dA3C1F01824a6761A03F105BCC697",
 	}
 	return &ENSConfig{
 		ChainID:               "4020",
