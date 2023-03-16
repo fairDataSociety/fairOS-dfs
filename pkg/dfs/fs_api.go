@@ -266,22 +266,24 @@ func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 		return nil, err
 	}
 	podFileWithPath = filepath.ToSlash(podFileWithPath)
+	a.logger.Debugf("file stat: %s", podFileWithPath)
 	directory := podInfo.GetDirectory()
+	a.logger.Debugf("file stat parent: %s", filepath.Dir(podFileWithPath))
 	inode := directory.GetInode(podInfo.GetPodPassword(), filepath.Dir(podFileWithPath))
-	if inode == nil {
-		return nil, f.ErrFileNotFound
-	}
-	found := false
-	fileName := filepath.Base(podFileWithPath)
-	for _, name := range inode.FileOrDirNames {
-		if strings.TrimPrefix(name, "_F_") == fileName {
-			found = true
-			break
+	if inode != nil {
+		found := false
+		fileName := filepath.Base(podFileWithPath)
+		for _, name := range inode.FileOrDirNames {
+			if strings.TrimPrefix(name, "_F_") == fileName {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, f.ErrFileNotFound
 		}
 	}
-	if !found {
-		return nil, f.ErrFileNotFound
-	}
+
 	file := podInfo.GetFile()
 	return file.GetStats(podName, podFileWithPath, podInfo.GetPodPassword())
 }
