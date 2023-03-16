@@ -154,9 +154,10 @@ func (a *API) DirectoryStat(podName, directoryPath, sessionId string) (*dir.Stat
 	directoryPath = filepath.ToSlash(directoryPath)
 	fmt.Println("directory stat: ", directoryPath)
 	if directoryPath != utils.PathSeparator {
-		inode := directory.GetInode(podInfo.GetPodPassword(), filepath.Dir(directoryPath))
+		parent := filepath.ToSlash(filepath.Dir(directoryPath))
+		inode := directory.GetInode(podInfo.GetPodPassword(), parent)
 		if inode == nil {
-			fmt.Println("directory stat: parent directory not present: ", filepath.Dir(directoryPath))
+			fmt.Println("directory stat: parent directory not present: ", parent)
 			return nil, dir.ErrDirectoryNotPresent
 		}
 		found := false
