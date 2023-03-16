@@ -152,12 +152,10 @@ func (a *API) DirectoryStat(podName, directoryPath, sessionId string) (*dir.Stat
 	}
 	directory := podInfo.GetDirectory()
 	directoryPath = filepath.ToSlash(directoryPath)
-	fmt.Println("directory stat: ", directoryPath)
 	if directoryPath != utils.PathSeparator {
 		parent := filepath.ToSlash(filepath.Dir(directoryPath))
 		inode := directory.GetInode(podInfo.GetPodPassword(), parent)
 		if inode == nil {
-			fmt.Println("directory stat: parent directory not present: ", parent)
 			return nil, dir.ErrDirectoryNotPresent
 		}
 		found := false
@@ -169,7 +167,6 @@ func (a *API) DirectoryStat(podName, directoryPath, sessionId string) (*dir.Stat
 			}
 		}
 		if !found {
-			fmt.Println("directory stat: directory not present in parent: ", directoryName)
 			return nil, dir.ErrDirectoryNotPresent
 		}
 	}
@@ -270,10 +267,8 @@ func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 		return nil, err
 	}
 	podFileWithPath = filepath.ToSlash(podFileWithPath)
-	a.logger.Debugf("file stat: %s", podFileWithPath)
 	directory := podInfo.GetDirectory()
-	a.logger.Debugf("file stat parent: %s", filepath.Dir(podFileWithPath))
-	inode := directory.GetInode(podInfo.GetPodPassword(), filepath.Dir(podFileWithPath))
+	inode := directory.GetInode(podInfo.GetPodPassword(), filepath.ToSlash(filepath.Dir(podFileWithPath)))
 	if inode != nil {
 		found := false
 		fileName := filepath.Base(podFileWithPath)
