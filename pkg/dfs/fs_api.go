@@ -265,10 +265,12 @@ func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 	if err != nil {
 		return nil, err
 	}
-
+	podFileWithPath = filepath.ToSlash(podFileWithPath)
 	directory := podInfo.GetDirectory()
 	inode := directory.GetInode(podInfo.GetPodPassword(), filepath.Dir(podFileWithPath))
-
+	if inode == nil {
+		return nil, f.ErrFileNotFound
+	}
 	found := false
 	fileName := filepath.Base(podFileWithPath)
 	for _, name := range inode.FileOrDirNames {
