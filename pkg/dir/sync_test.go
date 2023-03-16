@@ -70,15 +70,15 @@ func TestSync(t *testing.T) {
 		}
 
 		// populate the directory with few directory and files
-		err := dirObject.MkDir("/dirToStat", podPassword)
+		err := dirObject.MkDir("/dirToStat", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/dirToStat/subDir1", podPassword)
+		err = dirObject.MkDir("/dirToStat/subDir1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/dirToStat/subDir2", podPassword)
+		err = dirObject.MkDir("/dirToStat/subDir2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}

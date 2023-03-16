@@ -37,22 +37,10 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 		return ErrInvalidFileOrDirectoryName
 	}
 
+	dirInode := d.GetInode(podPassword, parentDir)
 	// check if parent directory present
-	if d.GetDirFromDirectoryMap(parentDir) == nil {
+	if dirInode == nil {
 		return ErrDirectoryNotPresent
-	}
-
-	// get the latest meta from swarm
-	topic := utils.HashString(parentDir)
-	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
-	if err != nil { // skipcq: TCV-001
-		return fmt.Errorf("modify dir entry: %v", err)
-	}
-
-	var dirInode Inode
-	err = json.Unmarshal(data, &dirInode)
-	if err != nil { // skipcq: TCV-001
-		return fmt.Errorf("modify dir entry : %v", err)
 	}
 
 	// add file or directory entry
@@ -65,15 +53,17 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 	dirInode.Meta.ModificationTime = time.Now().Unix()
 
 	// update the feed of the dir and the data structure with the latest info
-	data, err = json.Marshal(dirInode)
+	data, err := json.Marshal(dirInode)
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
+
+	topic := utils.HashString(parentDir)
 	_, err = d.fd.UpdateFeed(topic, d.userAddress, data, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
-	d.AddToDirectoryMap(parentDir, &dirInode)
+	d.AddToDirectoryMap(parentDir, dirInode)
 	return nil
 }
 
@@ -90,17 +80,13 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 		return ErrInvalidFileOrDirectoryName
 	}
 
-	parentHash := utils.HashString(parentDir)
-	_, parentData, err := d.fd.GetFeedData(parentHash, d.userAddress, []byte(podPassword))
-	if err != nil { // skipcq: TCV-001
-		return err
+	parentDirInode := d.GetInode(podPassword, parentDir)
+	// check if parent directory present
+	if parentDirInode == nil {
+		return ErrDirectoryNotPresent
 	}
 
-	var parentDirInode *Inode
-	err = json.Unmarshal(parentData, &parentDirInode)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
+	parentHash := utils.HashString(parentDir)
 
 	if isFile {
 		itemToDelete = "_F_" + itemToDelete
@@ -117,7 +103,7 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 	parentDirInode.FileOrDirNames = fileNames
 	parentDirInode.Meta.ModificationTime = time.Now().Unix()
 
-	parentData, err = json.Marshal(parentDirInode)
+	parentData, err := json.Marshal(parentDirInode)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

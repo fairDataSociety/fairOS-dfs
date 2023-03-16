@@ -67,14 +67,11 @@ func (f *File) LoadFileMeta(fileNameWithPath, podPassword string) error {
 
 func (f *File) handleMeta(meta *MetaData, podPassword string) error {
 	// check if meta is present.
-	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
-	_, err := f.GetMetaFromFileName(totalPath, podPassword, f.userAddress)
+	err := f.uploadMeta(meta, podPassword)
 	if err != nil {
-		if err != ErrDeletedFeed || err != ErrUnknownFeed {
-			return f.uploadMeta(meta, podPassword)
-		}
+		return f.updateMeta(meta, podPassword)
 	}
-	return f.updateMeta(meta, podPassword)
+	return nil
 }
 
 func (f *File) uploadMeta(meta *MetaData, podPassword string) error {
@@ -88,11 +85,7 @@ func (f *File) uploadMeta(meta *MetaData, podPassword string) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	_, err = f.fd.CreateFeed(topic, f.userAddress, fileMetaBytes, []byte(podPassword))
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (f *File) deleteMeta(meta *MetaData, podPassword string) error {
