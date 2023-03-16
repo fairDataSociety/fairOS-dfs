@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -30,7 +31,7 @@ import (
 
 // Mkdir is a controller function which validates if the user is logged-in,
 // pod is open and calls the make directory function in the dir object.
-func (a *API) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
+func (a *API) Mkdir(podName, dirToCreateWithPath, sessionId string, mode uint32) error {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -43,7 +44,7 @@ func (a *API) Mkdir(podName, dirToCreateWithPath, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-	return directory.MkDir(dirToCreateWithPath, podPassword)
+	return directory.MkDir(dirToCreateWithPath, podPassword, mode)
 }
 
 // RenameDir is a controller function which validates if the user is logged-in,
@@ -137,7 +138,7 @@ func (a *API) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.E
 
 // DirectoryStat is a controller function which validates if the user is logged-in,
 // pod is open and calls the dir object to get the information about the given directory.
-func (a *API) DirectoryStat(podName, directoryName, sessionId string) (*dir.Stats, error) {
+func (a *API) DirectoryStat(podName, directoryPath, sessionId string) (*dir.Stats, error) {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -150,11 +151,30 @@ func (a *API) DirectoryStat(podName, directoryName, sessionId string) (*dir.Stat
 		return nil, err
 	}
 	directory := podInfo.GetDirectory()
-	ds, err := directory.DirStat(podName, podInfo.GetPodPassword(), directoryName)
-	if err != nil {
-		return nil, err
+	directoryPath = filepath.ToSlash(directoryPath)
+	fmt.Println("directory stat: ", directoryPath)
+	if directoryPath != utils.PathSeparator {
+		parent := filepath.ToSlash(filepath.Dir(directoryPath))
+		inode := directory.GetInode(podInfo.GetPodPassword(), parent)
+		if inode == nil {
+			fmt.Println("directory stat: parent directory not present: ", parent)
+			return nil, dir.ErrDirectoryNotPresent
+		}
+		found := false
+		directoryName := filepath.Base(directoryPath)
+		for _, name := range inode.FileOrDirNames {
+			if strings.TrimPrefix(name, "_D_") == directoryName {
+				found = true
+				break
+			}
+		}
+		if !found {
+			fmt.Println("directory stat: directory not present in parent: ", directoryName)
+			return nil, dir.ErrDirectoryNotPresent
+		}
 	}
-	return ds, nil
+
+	return directory.DirStat(podName, podInfo.GetPodPassword(), directoryPath)
 }
 
 // DirectoryInode is a controller function which validates if the user is logged-in,
@@ -249,18 +269,33 @@ func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 	if err != nil {
 		return nil, err
 	}
-	file := podInfo.GetFile()
-	ds, err := file.GetStats(podName, podFileWithPath, podInfo.GetPodPassword())
-	if err != nil {
-		return nil, err
+	podFileWithPath = filepath.ToSlash(podFileWithPath)
+	a.logger.Debugf("file stat: %s", podFileWithPath)
+	directory := podInfo.GetDirectory()
+	a.logger.Debugf("file stat parent: %s", filepath.Dir(podFileWithPath))
+	inode := directory.GetInode(podInfo.GetPodPassword(), filepath.Dir(podFileWithPath))
+	if inode != nil {
+		found := false
+		fileName := filepath.Base(podFileWithPath)
+		for _, name := range inode.FileOrDirNames {
+			if strings.TrimPrefix(name, "_F_") == fileName {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, f.ErrFileNotFound
+		}
 	}
-	return ds, nil
+
+	file := podInfo.GetFile()
+	return file.GetStats(podName, podFileWithPath, podInfo.GetPodPassword())
 }
 
 // UploadFile is a controller function which validates if the user is logged-in,
 //
 //	pod is open and calls the upload function.
-func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint32, overwrite bool) error {
+func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize, mode uint32, overwrite bool) error {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -274,11 +309,9 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 	file := podInfo.GetFile()
 	directory := podInfo.GetDirectory()
 	podPath = filepath.ToSlash(podPath)
-
 	// check if file exists, then backup the file
 	totalPath := utils.CombinePathAndFile(podPath, podFileName)
 	alreadyPresent := file.IsFileAlreadyPresent(podInfo.GetPodPassword(), totalPath)
-
 	if alreadyPresent {
 		if !overwrite {
 			m, err := file.BackupFromFileName(totalPath, podInfo.GetPodPassword())
@@ -295,8 +328,7 @@ func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64,
 			return err
 		}
 	}
-
-	err = file.Upload(fd, podFileName, fileSize, blockSize, podPath, compression, podInfo.GetPodPassword())
+	err = file.Upload(fd, podFileName, fileSize, blockSize, mode, podPath, compression, podInfo.GetPodPassword())
 	if err != nil {
 		return err
 	}

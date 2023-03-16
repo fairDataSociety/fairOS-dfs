@@ -17,32 +17,22 @@ limitations under the License.
 package file
 
 import (
-	"encoding/hex"
-	"encoding/json"
 	"strconv"
 )
 
 // Stats
 type Stats struct {
-	PodName          string   `json:"podName"`
-	Mode             uint32   `json:"mode"`
-	FilePath         string   `json:"filePath"`
-	FileName         string   `json:"fileName"`
-	FileSize         string   `json:"fileSize"`
-	BlockSize        string   `json:"blockSize"`
-	Compression      string   `json:"compression"`
-	ContentType      string   `json:"contentType"`
-	CreationTime     string   `json:"creationTime"`
-	ModificationTime string   `json:"modificationTime"`
-	AccessTime       string   `json:"accessTime"`
-	Blocks           []Blocks `json:"blocks"`
-}
-
-// Blocks
-type Blocks struct {
-	Reference      string `json:"reference"`
-	Size           string `json:"size"`
-	CompressedSize string `json:"compressedSize"`
+	PodName          string `json:"podName"`
+	Mode             uint32 `json:"mode"`
+	FilePath         string `json:"filePath"`
+	FileName         string `json:"fileName"`
+	FileSize         string `json:"fileSize"`
+	BlockSize        string `json:"blockSize"`
+	Compression      string `json:"compression"`
+	ContentType      string `json:"contentType"`
+	CreationTime     string `json:"creationTime"`
+	ModificationTime string `json:"modificationTime"`
+	AccessTime       string `json:"accessTime"`
 }
 
 // GetStats given a filename this function returns all the information about the file
@@ -53,26 +43,6 @@ func (f *File) GetStats(podName, podFileWithPath, podPassword string) (*Stats, e
 		return nil, ErrFileNotFound
 	}
 
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
-
-	var fileInode INode
-	err = json.Unmarshal(fileInodeBytes, &fileInode)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
-
-	var fileBlocks []Blocks
-	for _, b := range fileInode.Blocks {
-		fb := Blocks{
-			Reference:      hex.EncodeToString(b.Reference.Bytes()),
-			Size:           strconv.Itoa(int(b.Size)),
-			CompressedSize: strconv.Itoa(int(b.CompressedSize)),
-		}
-		fileBlocks = append(fileBlocks, fb)
-	}
 	f.AddToFileMap(podFileWithPath, meta)
 	return &Stats{
 		PodName:          podName,
@@ -86,6 +56,5 @@ func (f *File) GetStats(podName, podFileWithPath, podPassword string) (*Stats, e
 		CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
 		ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
 		AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
-		Blocks:           fileBlocks,
 	}, nil
 }

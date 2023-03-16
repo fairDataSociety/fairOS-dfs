@@ -122,10 +122,6 @@ func statFileOrDirectory(podName, statElement string) {
 			fmt.Println("Cr. Time	  : ", time.Unix(crTime, 0).String())
 			fmt.Println("Mo. Time	  : ", time.Unix(accTime, 0).String())
 			fmt.Println("Ac. Time	  : ", time.Unix(modTime, 0).String())
-			for _, b := range resp.Blocks {
-				blkStr := fmt.Sprintf("0x%s, %s bytes, %s bytes", b.Reference, b.Size, b.CompressedSize)
-				fmt.Println(blkStr)
-			}
 		} else {
 			fmt.Println("stat: ", err)
 			return

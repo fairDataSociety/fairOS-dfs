@@ -623,5 +623,5 @@ func uploadFileKnownContent(t *testing.T, fileObject *file.File, filePath, fileN
 		t.Fatal(err)
 	}
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, int64(len(content)), blockSize, filePath, compression, podPassword)
+	return content, fileObject.Upload(f1, fileName, int64(len(content)), blockSize, 0, filePath, compression, podPassword)
 }

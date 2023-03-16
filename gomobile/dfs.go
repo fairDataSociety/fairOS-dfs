@@ -214,7 +214,7 @@ func DirPresent(podName, dirPath string) (string, error) {
 }
 
 func DirMake(podName, dirPath string) (string, error) {
-	err := api.Mkdir(podName, dirPath, sessionId)
+	err := api.Mkdir(podName, dirPath, sessionId, 0)
 	if err != nil {
 		return "", err
 	}
@@ -316,12 +316,12 @@ func FileUpload(podName, filePath, dirPath, compression, blockSize string, overw
 	if err != nil {
 		return err
 	}
-	return api.UploadFile(podName, fileInfo.Name(), sessionId, fileInfo.Size(), f, dirPath, compression, uint32(bs), overwrite)
+	return api.UploadFile(podName, fileInfo.Name(), sessionId, fileInfo.Size(), f, dirPath, compression, uint32(bs), 0, overwrite)
 }
 
 func BlobUpload(data []byte, podName, fileName, dirPath, compression string, size, blockSize int64, overwrite bool) error {
 	r := bytes.NewReader(data)
-	return api.UploadFile(podName, fileName, sessionId, size, r, dirPath, compression, uint32(blockSize), overwrite)
+	return api.UploadFile(podName, fileName, sessionId, size, r, dirPath, compression, uint32(blockSize), 0, overwrite)
 }
 
 func FileDownload(podName, filePath string) ([]byte, error) {

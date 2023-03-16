@@ -124,14 +124,13 @@ func TestLiteUser(t *testing.T) {
 
 		for _, v := range entries {
 			if v.isDir {
-
-				err = dfsApi.Mkdir(podRequest.PodName, v.path, sessionId)
+				err = dfsApi.Mkdir(podRequest.PodName, v.path, sessionId, 0)
 				if err != nil {
 					t.Fatal(err)
 				}
 			} else {
 				reader := &io.LimitedReader{R: rand.Reader, N: v.size}
-				err = dfsApi.UploadFile(podRequest.PodName, filepath.Base(v.path), sessionId, v.size, reader, filepath.Dir(v.path), "", 100000, false)
+				err = dfsApi.UploadFile(podRequest.PodName, filepath.Base(v.path), sessionId, v.size, reader, filepath.Dir(v.path), "", 100000, 0, false)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -142,14 +141,12 @@ func TestLiteUser(t *testing.T) {
 			if v.isDir {
 				_, err := dfsApi.DirectoryStat(podRequest.PodName, v.path, sessionId)
 				if err != nil {
-					t.Fatal(err)
-
+					t.Fatal("DirectoryStat failed for ", v.path, err)
 				}
 			} else {
 				_, err := dfsApi.FileStat(podRequest.PodName, v.path, sessionId)
 				if err != nil {
 					t.Fatal(err)
-
 				}
 			}
 		}

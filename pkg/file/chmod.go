@@ -24,6 +24,9 @@ func (f *File) Chmod(podFileWithPath, podPassword string, mode uint32) error {
 		return ErrFileNotFound
 	}
 
+	if meta.Mode == S_IFREG|mode {
+		return nil
+	}
 	meta.Mode = S_IFREG | mode
 	meta.AccessTime = time.Now().Unix()
 
