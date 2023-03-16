@@ -151,9 +151,12 @@ func (a *API) DirectoryStat(podName, directoryPath, sessionId string) (*dir.Stat
 		return nil, err
 	}
 	directory := podInfo.GetDirectory()
-	if directoryPath != "/" {
+	directoryPath = filepath.ToSlash(filepath.Dir(directoryPath))
+	if directoryPath != utils.PathSeparator {
 		inode := directory.GetInode(podInfo.GetPodPassword(), filepath.Dir(directoryPath))
-
+		if inode == nil {
+			return nil, dir.ErrDirectoryNotPresent
+		}
 		found := false
 		directoryName := filepath.Base(directoryPath)
 		for _, name := range inode.FileOrDirNames {
