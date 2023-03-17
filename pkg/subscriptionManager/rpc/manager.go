@@ -10,14 +10,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	swarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/datahub"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -50,10 +49,10 @@ type SubscriptionItemInfo struct {
 }
 
 type Client struct {
-	c         *ethclient.Client
-	putter    SubscriptionInfoPutter
-	getter    SubscriptionInfoGetter
-	swarmMail *swarmMail.SwarmMail
+	c       *ethclient.Client
+	putter  SubscriptionInfoPutter
+	getter  SubscriptionInfoGetter
+	datahub *datahub.Datahub
 
 	logger logging.Logger
 }
@@ -66,7 +65,7 @@ type ShareInfo struct {
 	UserAddress string `json:"userAddress"`
 }
 
-func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, daysValid uint, category, nameHash [32]byte, key *ecdsa.PrivateKey) error {
+func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, daysValid uint16, category, nameHash [32]byte, key *ecdsa.PrivateKey) error {
 	info := &SubscriptionItemInfo{
 		Category:          utils.Encode(category[:]),
 		Description:       desc,
@@ -93,7 +92,7 @@ func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, titl
 	var a [32]byte
 	copy(a[:], ref)
 
-	tx, err := c.swarmMail.ListSub(opts, nameHash, a, new(big.Int).SetUint64(price), category, podAddress, new(big.Int).SetInt64(int64(daysValid)))
+	tx, err := c.datahub.ListSub(opts, nameHash, a, new(big.Int).SetUint64(price), category, podAddress, daysValid)
 	if err != nil {
 		return err
 	}
@@ -113,7 +112,7 @@ func (c *Client) HidePodFromMarketplace(owner common.Address, subHash [32]byte, 
 		return err
 	}
 
-	tx, err := c.swarmMail.EnableSub(opts, subHash, !hide)
+	tx, err := c.datahub.EnableSub(opts, subHash, !hide)
 	if err != nil {
 		return err
 	}
@@ -127,7 +126,7 @@ func (c *Client) HidePodFromMarketplace(owner common.Address, subHash [32]byte, 
 }
 
 func (c *Client) RequestAccess(subscriber common.Address, subHash, nameHash [32]byte, key *ecdsa.PrivateKey) error {
-	item, err := c.swarmMail.GetSubBy(&bind.CallOpts{}, subHash)
+	item, err := c.datahub.GetSubBy(&bind.CallOpts{}, subHash)
 	if err != nil {
 		return err
 	}
@@ -137,7 +136,7 @@ func (c *Client) RequestAccess(subscriber common.Address, subHash, nameHash [32]
 		return err
 	}
 
-	tx, err := c.swarmMail.BidSub(opts, subHash, nameHash)
+	tx, err := c.datahub.BidSub(opts, subHash, nameHash)
 	if err != nil {
 		return err
 	}
@@ -173,7 +172,7 @@ func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, request
 	var fixedRef [32]byte
 	copy(fixedRef[:], ref)
 
-	tx, err := c.swarmMail.SellSub(opts, requestHash, fixedRef)
+	tx, err := c.datahub.SellSub(opts, requestHash, fixedRef)
 	if err != nil {
 		return err
 	}
@@ -188,7 +187,7 @@ func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, request
 
 func (c *Client) GetSubscription(subscriber common.Address, subHash, secret [32]byte) (*ShareInfo, error) {
 	opts := &bind.CallOpts{}
-	item, err := c.swarmMail.GetSubItemBy(opts, subscriber, subHash)
+	item, err := c.datahub.GetSubItemBy(opts, subscriber, subHash)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +215,7 @@ func (c *Client) GetSubscription(subscriber common.Address, subHash, secret [32]
 
 func (c *Client) GetSubscribablePodInfo(subHash [32]byte) (*SubscriptionItemInfo, error) {
 	opts := &bind.CallOpts{}
-	item, err := c.swarmMail.GetSubBy(opts, subHash)
+	item, err := c.datahub.GetSubBy(opts, subHash)
 	if err != nil {
 		return nil, err
 	}
@@ -238,23 +237,23 @@ func (c *Client) GetSubscribablePodInfo(subHash [32]byte) (*SubscriptionItemInfo
 	return info, nil
 }
 
-func (c *Client) GetSubscriptions(subscriber common.Address) ([]swarmMail.SwarmMailSubItem, error) {
+func (c *Client) GetSubscriptions(subscriber common.Address) ([]datahub.DataHubSubItem, error) {
 	opts := &bind.CallOpts{}
-	return c.swarmMail.GetAllSubItems(opts, subscriber)
+	return c.datahub.GetAllSubItems(opts, subscriber)
 }
 
-func (c *Client) GetAllSubscribablePods() ([]swarmMail.SwarmMailSub, error) {
+func (c *Client) GetAllSubscribablePods() ([]datahub.DataHubSub, error) {
 	opts := &bind.CallOpts{}
-	return c.swarmMail.GetSubs(opts)
+	return c.datahub.GetSubs(opts)
 }
 
-func (c *Client) GetOwnSubscribablePods(owner common.Address) ([]swarmMail.SwarmMailSub, error) {
+func (c *Client) GetOwnSubscribablePods(owner common.Address) ([]datahub.DataHubSub, error) {
 	opts := &bind.CallOpts{}
-	s, err := c.swarmMail.GetSubs(opts)
+	s, err := c.datahub.GetSubs(opts)
 	if err != nil {
 		return nil, err
 	}
-	osp := []swarmMail.SwarmMailSub{}
+	osp := []datahub.DataHubSub{}
 	for _, p := range s {
 		if p.Seller == owner {
 			osp = append(osp, p)
@@ -263,14 +262,14 @@ func (c *Client) GetOwnSubscribablePods(owner common.Address) ([]swarmMail.Swarm
 	return osp, nil
 }
 
-func (c *Client) GetSubRequests(owner common.Address) ([]swarmMail.SwarmMailSubRequest, error) {
+func (c *Client) GetSubRequests(owner common.Address) ([]datahub.DataHubSubRequest, error) {
 	opts := &bind.CallOpts{}
-	return c.swarmMail.GetSubRequests(opts, owner)
+	return c.datahub.GetSubRequests(opts, owner)
 }
 
-func (c *Client) GetSub(subHash [32]byte) (*swarmMail.SwarmMailSub, error) {
+func (c *Client) GetSub(subHash [32]byte) (*datahub.DataHubSub, error) {
 	opts := &bind.CallOpts{}
-	sub, err := c.swarmMail.GetSubBy(opts, subHash)
+	sub, err := c.datahub.GetSubBy(opts, subHash)
 	if err != nil {
 		return nil, err
 	}
@@ -282,18 +281,18 @@ func New(subConfig *contracts.SubscriptionConfig, logger logging.Logger, getter 
 	if err != nil {
 		return nil, fmt.Errorf("dial eth ensm: %w", err)
 	}
-	logger.Info("SwarmMailAddress      : ", subConfig.SwarmMailAddress)
-	sMail, err := swarmMail.NewSwarmMail(common.HexToAddress(subConfig.SwarmMailAddress), c)
+	logger.Info("DataHubAddress      : ", subConfig.DataHubAddress)
+	sMail, err := datahub.NewDatahub(common.HexToAddress(subConfig.DataHubAddress), c)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
-		c:         c,
-		getter:    getter,
-		putter:    putter,
-		logger:    logger,
-		swarmMail: sMail,
+		c:       c,
+		getter:  getter,
+		putter:  putter,
+		logger:  logger,
+		datahub: sMail,
 	}, nil
 }
 

@@ -140,7 +140,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 			subConfig.RPC = subRpc
 		}
 		if subContractAddress != "" {
-			subConfig.SwarmMailAddress = subContractAddress
+			subConfig.DataHubAddress = subContractAddress
 		}
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
 
@@ -756,7 +756,7 @@ func dirMake(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			err := api.Mkdir(podName, dirPath, sessionId)
+			err := api.Mkdir(podName, dirPath, sessionId, 0)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirMake failed : %s", err.Error()))
 				return
@@ -964,7 +964,7 @@ func fileUpload(_ js.Value, funcArgs []js.Value) interface{} {
 			js.CopyBytesToGo(inBuf, array)
 			reader := bytes.NewReader(inBuf)
 
-			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), true)
+			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), 0, true)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileUpload failed : %s", err.Error()))
 				return

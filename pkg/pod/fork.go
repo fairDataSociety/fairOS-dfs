@@ -113,7 +113,7 @@ func cloneFolder(source, dst *Info, dirNameWithPath string, dirInode *d.Inode) e
 				return err
 			}
 
-			err = dst.GetFile().Upload(r, meta.Name, int64(meta.Size), meta.BlockSize, meta.Path, meta.Compression, dst.GetPodPassword())
+			err = dst.GetFile().Upload(r, meta.Name, int64(meta.Size), meta.BlockSize, 0, meta.Path, meta.Compression, dst.GetPodPassword())
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
@@ -126,7 +126,7 @@ func cloneFolder(source, dst *Info, dirNameWithPath string, dirInode *d.Inode) e
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
 			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			iNode := source.GetDirectory().GetInode(source.GetPodPassword(), path)
-			err := dst.GetDirectory().MkDir(path, dst.GetPodPassword())
+			err := dst.GetDirectory().MkDir(path, dst.GetPodPassword(), 0)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}

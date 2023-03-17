@@ -231,7 +231,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 		"reference": addrResp.Reference.String(),
 		"duration":  time.Since(to).String(),
 	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload soc: ")
 	return addrResp.Reference.Bytes(), nil
 }
 

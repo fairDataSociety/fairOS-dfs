@@ -119,11 +119,11 @@ func TestRename(t *testing.T) {
 		}
 
 		// populate the directory with few directory and files
-		err = dirObject.MkDir(filePath, podPassword)
+		err = dirObject.MkDir(filePath, podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir(newFilePath, podPassword)
+		err = dirObject.MkDir(newFilePath, podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}

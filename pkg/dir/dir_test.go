@@ -50,7 +50,7 @@ func TestDirRmAllFromMap(t *testing.T) {
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/baseDir", podPassword)
+		err := dirObject.MkDir("/baseDir", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}

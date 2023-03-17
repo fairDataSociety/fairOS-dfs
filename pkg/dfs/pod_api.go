@@ -30,14 +30,12 @@ import (
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/datahub"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
-
-	SwarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -503,7 +501,7 @@ func (a *API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
 }
 
 // ListPodInMarketplace
-func (a *API) ListPodInMarketplace(sessionId, podName, title, desc, thumbnail string, price uint64, daysValid uint, category [32]byte) error {
+func (a *API) ListPodInMarketplace(sessionId, podName, title, desc, thumbnail string, price uint64, daysValid uint16, category [32]byte) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -716,7 +714,7 @@ func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte) (*pod.Info, 
 }
 
 // GetSubscribablePods
-func (a *API) GetSubscribablePods(sessionId string) ([]SwarmMail.SwarmMailSub, error) {
+func (a *API) GetSubscribablePods(sessionId string) ([]datahub.DataHubSub, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -727,7 +725,7 @@ func (a *API) GetSubscribablePods(sessionId string) ([]SwarmMail.SwarmMailSub, e
 }
 
 // GetSubscribablePods
-func (a *API) GetSubsRequests(sessionId string) ([]SwarmMail.SwarmMailSubRequest, error) {
+func (a *API) GetSubsRequests(sessionId string) ([]datahub.DataHubSubRequest, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {

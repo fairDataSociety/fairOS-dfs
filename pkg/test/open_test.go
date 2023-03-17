@@ -181,13 +181,13 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, 0, filePath, compression, podPassword)
 }
 
 func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1, podPassword string) {
 	t.Helper()
 	dirObject := info.GetDirectory()
-	err := dirObject.MkDir("/parentDir", podPassword)
+	err := dirObject.MkDir("/parentDir", podPassword, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,11 +201,11 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	}
 
 	// populate the directory with few directory and files
-	err = dirObject.MkDir("/parentDir/subDir1", podPassword)
+	err = dirObject.MkDir("/parentDir/subDir1", podPassword, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dirObject.MkDir("/parentDir/subDir2", podPassword)
+	err = dirObject.MkDir("/parentDir/subDir2", podPassword, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
