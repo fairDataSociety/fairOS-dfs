@@ -19,6 +19,7 @@ package dir
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -79,10 +80,11 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 	if itemToDelete == "" { // skipcq: TCV-001
 		return ErrInvalidFileOrDirectoryName
 	}
-
+	parentDir = filepath.ToSlash(parentDir)
 	parentDirInode := d.GetInode(podPassword, parentDir)
 	// check if parent directory present
 	if parentDirInode == nil {
+		d.logger.Errorf("remove entry from dir: parent directory not present %s\n", parentDir)
 		return ErrDirectoryNotPresent
 	}
 
