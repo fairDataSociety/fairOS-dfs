@@ -248,7 +248,7 @@ func (a *API) DeleteFile(podName, podFileWithPath, sessionId string) error {
 	}
 
 	// update the directory by removing the file from it
-	fileDir := filepath.Dir(podFileWithPath)
+	fileDir := filepath.ToSlash(filepath.Dir(podFileWithPath))
 	fileName := filepath.Base(podFileWithPath)
 	return directory.RemoveEntryFromDir(fileDir, podInfo.GetPodPassword(), fileName, true)
 }
