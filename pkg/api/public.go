@@ -144,9 +144,7 @@ func (h *Handler) PublicPodFilePathHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	defer reader.Close()
-
-	sizeString := strconv.FormatUint(size, 10)
-	w.Header().Set("Content-Length", sizeString)
+	w.Header().Set("Content-Length", strconv.Itoa(int(size)))
 	w.Header().Set("Content-Type", contentType)
 	if strings.HasPrefix(filePath, "static/") {
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
