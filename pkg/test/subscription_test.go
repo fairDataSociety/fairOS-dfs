@@ -66,7 +66,7 @@ func TestSubscription(t *testing.T) {
 		t.Fatal(err)
 	}
 	category := [32]byte{}
-	err = pod1.ListPodInMarketplace(randomLongPodName1, randomLongPodName1, randomLongPodName1, "", 1, category, nameHash1)
+	err = pod1.ListPodInMarketplace(randomLongPodName1, randomLongPodName1, randomLongPodName1, "", 1, 10, category, nameHash1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,7 +109,7 @@ func TestSubscription(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	subs, err := pod2.GetSubscriptions(0, 10)
+	subs, err := pod2.GetSubscriptions()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +151,7 @@ func TestSubscription(t *testing.T) {
 	}
 
 	fileObject := pi.GetFile()
-	fileMeta1 := fileObject.GetFromFileMap("/parentDir/file1")
+	fileMeta1 := fileObject.GetInode(podPassword, "/parentDir/file1")
 	if fileMeta1 == nil {
 		t.Fatalf("invalid file meta")
 	}
@@ -168,7 +168,7 @@ func TestSubscription(t *testing.T) {
 	if fileMeta1.BlockSize != uint32(10) {
 		t.Fatalf("invalid block size")
 	}
-	fileMeta2 := fileObject.GetFromFileMap("/parentDir/file2")
+	fileMeta2 := fileObject.GetInode(podPassword, "/parentDir/file2")
 	if fileMeta2 == nil {
 		t.Fatalf("invalid file meta")
 	}

@@ -67,7 +67,7 @@ func TestMkdir(t *testing.T) {
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/baseDir", podPassword)
+		err := dirObject.MkDir("/baseDir", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -96,22 +96,22 @@ func TestMkdir(t *testing.T) {
 		}
 
 		// try to create a new dir without creating root
-		err := dirObject.MkDir("/baseDir/baseDir2/baseDir3/baseDir4", podPassword)
+		err := dirObject.MkDir("/baseDir/baseDir2/baseDir3/baseDir4", podPassword, 0)
 		if err == nil || err != dir.ErrDirectoryNotPresent {
 			t.Fatal(err)
 		}
 
-		err = dirObject.MkDir("/baseDir", podPassword)
+		err = dirObject.MkDir("/baseDir", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = dirObject.MkDir("/baseDir/baseDir2", podPassword)
+		err = dirObject.MkDir("/baseDir/baseDir2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = dirObject.MkDir("/baseDir/baseDir2/baseDir3", podPassword)
+		err = dirObject.MkDir("/baseDir/baseDir2/baseDir3", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}

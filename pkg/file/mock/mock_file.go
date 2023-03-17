@@ -32,7 +32,7 @@ func NewMockFile() *File {
 }
 
 // Upload
-func (*File) Upload(_ io.Reader, _ string, _ int64, _ uint32, _, _, _ string) error {
+func (*File) Upload(_ io.Reader, _ string, _ int64, _, _ uint32, _, _, _ string) error {
 	return nil
 }
 

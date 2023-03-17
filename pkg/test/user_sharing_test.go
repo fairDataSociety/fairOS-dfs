@@ -98,7 +98,7 @@ func TestSharing(t *testing.T) {
 
 		// create dir and file
 		dirObject1 := info1.GetDirectory()
-		err = dirObject1.MkDir("/parentDir1", podPassword)
+		err = dirObject1.MkDir("/parentDir1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -135,17 +135,13 @@ func TestSharing(t *testing.T) {
 
 		// create dir and file
 		dirObject2 := info2.GetDirectory()
-		err = dirObject2.MkDir("/parentDir2", podPassword)
+		err = dirObject2.MkDir("/parentDir2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// receive file info
-		sharingRef, err := utils.ParseSharingReference(sharingRefString)
-		if err != nil {
-			t.Fatal(err)
-		}
-		receiveFileInfo, err := userObject2.ReceiveFileInfo(sharingRef)
+		receiveFileInfo, err := userObject2.ReceiveFileInfo(sharingRefString)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -164,18 +160,18 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("invalid block size received")
 		}
 
-		_, err = userObject2.ReceiveFileFromUser("podName2", sharingRef, ui, pod2, "/parentDir2")
-		if !errors.Is(err, pod.ErrPodNotOpened) {
-			t.Fatal("pod does not supposed tp be open")
+		_, err = userObject2.ReceiveFileFromUser("podName2", sharingRefString, ui, pod2, "/parentDir2")
+		if err == nil {
+			t.Fatal("pod should not exist")
 		}
 
 		// receive file
-		destinationFilePath, err := userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2")
+		destinationFilePath, err := userObject2.ReceiveFileFromUser(podName2, sharingRefString, ui, pod2, "/parentDir2")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2")
+		_, err = userObject2.ReceiveFileFromUser(podName2, sharingRefString, ui, pod2, "/parentDir2")
 		if !errors.Is(err, file.ErrFileAlreadyPresent) {
 			t.Fatal("pod does not supposed tp be open")
 		}
@@ -197,17 +193,11 @@ func TestSharing(t *testing.T) {
 		if files[0] != "/parentDir2/file1" {
 			t.Fatalf("file not imported")
 		}
-		if !ui0.IsPodOpen(podName1) {
-			t.Fatalf("pod should be open")
-		}
 		// delete source pod
 		err = pod1.DeleteOwnPod(podName1)
 		if err != nil {
 			t.Fatalf("error deleting pod %s", podName1)
 		}
 		ui0.RemovePodName(podName1)
-		if ui0.IsPodOpen(podName1) {
-			t.Fatalf("pod should have been deleted")
-		}
 	})
 }

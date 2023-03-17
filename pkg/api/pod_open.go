@@ -145,20 +145,5 @@ func (h *Handler) PodOpenAsyncHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "pod open: \"cookie-id\" parameter missing in cookie"})
 		return
 	}
-
-	// open pod
-	_, err = h.dfsAPI.OpenPodAsync(r.Context(), pod, sessionId)
-	if err != nil {
-		if err == dfs.ErrUserNotLoggedIn ||
-			err == p.ErrInvalidPodName {
-			h.logger.Errorf("pod open: %v", err)
-			jsonhttp.NotFound(w, &response{Message: "pod open: " + err.Error()})
-			return
-		}
-		h.logger.Errorf("pod open: %v", err)
-		jsonhttp.InternalServerError(w, &response{Message: "pod open: " + err.Error()})
-		return
-	}
-
-	jsonhttp.OK(w, &response{Message: "pod opened successfully"})
+	jsonhttp.BadRequest(w, &response{Message: "pod/open-async: deprecated"})
 }

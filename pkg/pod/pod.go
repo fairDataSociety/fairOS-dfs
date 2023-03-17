@@ -114,3 +114,16 @@ func (p *Pod) GetFeed() *feed.API {
 func (p *Pod) GetAccount() *account.Account {
 	return p.acc
 }
+
+// GetPodInfo
+func (p *Pod) GetPodInfo(podName string) (*Info, string, error) {
+	pi, password, _ := p.GetPodInfoFromPodMap(podName)
+	if pi != nil {
+		return pi, password, nil
+	}
+	pi, err := p.OpenPod(podName)
+	if err != nil {
+		return nil, "", err
+	}
+	return pi, pi.GetPodPassword(), nil
+}

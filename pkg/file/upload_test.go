@@ -72,7 +72,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, fileName))
+		meta := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filePath, fileName))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -124,7 +124,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName))
+		meta := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -159,7 +159,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(filepath.ToSlash(utils.CombinePathAndFile(filePath+fileName, "")))
+		meta := fileObject.GetInode(podPassword, filepath.ToSlash(utils.CombinePathAndFile(filePath+fileName, "")))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -182,7 +182,7 @@ func TestUpload(t *testing.T) {
 	t.Run("upload-small-file-at-root-with-prefix", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		filePath := string(os.PathSeparator)
-		fileName := "file1"
+		fileName, _ := utils.GetRandString(20)
 		compression := ""
 		fileSize := int64(100)
 		blockSize := uint32(10)
@@ -193,7 +193,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
+		meta := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -212,9 +212,11 @@ func TestUpload(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		fileObject.RemoveAllFromFileMap()
-
-		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		meta2 := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -223,7 +225,7 @@ func TestUpload(t *testing.T) {
 	t.Run("upload-small-file-at-root-with-prefix-snappy", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		filePath := string(os.PathSeparator)
-		fileName := "file2"
+		fileName, _ := utils.GetRandString(20)
 		compression := "snappy"
 		fileSize := int64(100)
 		blockSize := uint32(10)
@@ -234,7 +236,7 @@ func TestUpload(t *testing.T) {
 		}
 
 		// check for meta
-		meta := fileObject.GetFromFileMap(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
+		meta := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -253,9 +255,12 @@ func TestUpload(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		fileObject.RemoveAllFromFileMap()
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		meta2 := fileObject.GetFromFileMap(utils.CombinePathAndFile(filePath, string(os.PathSeparator)+fileName))
+		meta2 := fileObject.GetInode(podPassword, utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)))
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -264,7 +269,7 @@ func TestUpload(t *testing.T) {
 	t.Run("upload-small-file-at-root-with-prefix-gzip", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		filePath := string(os.PathSeparator)
-		fileName := "file2"
+		fileName, _ := utils.GetRandString(20)
 		compression := "gzip"
 		fileSize := int64(100)
 		blockSize := uint32(164000)
@@ -282,7 +287,7 @@ func TestUpload(t *testing.T) {
 
 		// check for meta
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName))
-		meta := fileObject.GetFromFileMap(fp)
+		meta := fileObject.GetInode(podPassword, fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -309,9 +314,12 @@ func TestUpload(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fileObject.RemoveAllFromFileMap()
+		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		meta2 := fileObject.GetFromFileMap(fp)
+		meta2 := fileObject.GetInode(podPassword, fp)
 		if meta2 != nil {
 			t.Fatal("meta2 should be nil")
 		}
@@ -350,5 +358,5 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, 0, filePath, compression, podPassword)
 }

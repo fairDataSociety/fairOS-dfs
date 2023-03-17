@@ -37,8 +37,8 @@ const (
 	UserAccountIndex = -1
 
 	// seedSize is used to determine how much padding we need for portable account SOC
-	seedSize = 64
-	nameSize = 8
+	seedSize           = 64
+	usernameLengthSize = 1
 )
 
 // Account is used for keeping authenticated logged-in user info in the session
@@ -277,16 +277,19 @@ func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, er
 // PadSeedName pads the given seed and name with random elements to be a chunk of chunkSize
 func (*Info) PadSeedName(seed []byte, username string, passphrase string) ([]byte, error) {
 	usernameLength := len(username)
-	endIndexBytes := make([]byte, nameSize)
-	binary.LittleEndian.PutUint64(endIndexBytes, uint64(usernameLength))
-	paddingLength := utils.MaxChunkLength - aes.BlockSize - seedSize - nameSize - usernameLength
+	if usernameLength > 255 {
+		return nil, fmt.Errorf("username length is too long")
+	}
+	usernameLengthBytes := make([]byte, usernameLengthSize)
+	usernameLengthBytes[0] = byte(usernameLength)
+	paddingLength := utils.MaxChunkLength - aes.BlockSize - seedSize - usernameLengthSize - usernameLength
 	randomBytes, err := utils.GetRandBytes(paddingLength)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	chunkData := make([]byte, 0, utils.MaxChunkLength)
 	chunkData = append(chunkData, seed...)
-	chunkData = append(chunkData, endIndexBytes...)
+	chunkData = append(chunkData, usernameLengthBytes...)
 	chunkData = append(chunkData, []byte(username)...)
 	chunkData = append(chunkData, randomBytes...)
 	encryptedBytes, err := utils.EncryptBytes([]byte(passphrase), chunkData)
@@ -302,6 +305,6 @@ func (*Info) RemovePadFromSeedName(paddedSeed []byte, passphrase string) ([]byte
 	if err != nil { // skipcq: TCV-001
 		return nil, "", fmt.Errorf("seed decryption failed: %w", err)
 	}
-	usernameLength := int(binary.LittleEndian.Uint64(decryptedBytes[seedSize : seedSize+nameSize]))
-	return decryptedBytes[:seedSize], string(decryptedBytes[seedSize+nameSize : seedSize+nameSize+usernameLength]), nil
+	usernameLength := int(decryptedBytes[seedSize])
+	return decryptedBytes[:seedSize], string(decryptedBytes[seedSize+usernameLengthSize : seedSize+usernameLengthSize+usernameLength]), nil
 }

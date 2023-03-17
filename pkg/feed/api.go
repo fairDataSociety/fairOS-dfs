@@ -104,7 +104,6 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte, encrypti
 			return nil, err
 		}
 	}
-
 	// fill Feed and Epoc related details
 	copy(req.ID.Topic[:], topic)
 	req.ID.User = user
@@ -119,13 +118,11 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte, encrypti
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// get the payload id BMT(span, payload)
 	payloadId, err := a.handler.getPayloadId(encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
 	ch, err := utils.NewChunkWithSpan(encryptedData)
@@ -137,35 +134,26 @@ func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte, encrypti
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// generate the data to sign
 	toSignBytes, err := toSignDigest(id, ch.Address().Bytes())
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// sign the chunk
 	signature, err := signer.Sign(toSignBytes)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// set the address and the data for the soc chunk
 	req.idAddr = sch.Address()
 	req.binaryData = sch.Data()
-
 	// set signature and binary data fields
 	_, err = a.handler.toChunkContent(&req, id, payloadId)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	// send the updated soc chunk to bee
-	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
-
-	return address, nil
+	return a.handler.update(id, user.ToBytes(), signature, ch.Data())
 }
 
 // CreateFeedFromTopic creates a soc with the topic as identifier
@@ -302,7 +290,6 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encrypti
 			return nil, err
 		}
 	}
-
 	ctx := context.Background()
 	f := new(Feed)
 	f.User = user
@@ -315,19 +302,16 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encrypti
 	}
 	req.Time = uint64(time.Now().Unix())
 	req.data = encryptedData
-
 	// create the id, hash(topic, epoc)
 	id, err := a.handler.getId(req.Topic, req.Time, req.Level)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// get the payload id BMT(span, payload)
 	payloadId, err := a.handler.getPayloadId(encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// create the signer and the content addressed chunk
 	signer := crypto.NewDefaultSigner(a.accountInfo.GetPrivateKey())
 	ch, err := utils.NewChunkWithSpan(encryptedData)
@@ -339,34 +323,25 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encrypti
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// generate the data to sign
 	toSignBytes, err := toSignDigest(id, ch.Address().Bytes())
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// sign the chunk
 	signature, err := signer.Sign(toSignBytes)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	// set the address and the data for the soc chunk
 	req.idAddr = sch.Address()
 	req.binaryData = sch.Data()
-
 	// set signature and binary data fields
 	_, err = a.handler.toChunkContent(req, id, payloadId)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
-	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
-	return address, nil
+	return a.handler.update(id, user.ToBytes(), signature, ch.Data())
 }
 
 // DeleteFeed deleted the feed by updating with no data inside the SOC chunk.

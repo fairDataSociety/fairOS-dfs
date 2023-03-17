@@ -63,3 +63,22 @@ func (in *Inode) Unmarshal(data []byte) error {
 	}
 	return nil
 }
+
+func (d *Directory) GetInode(podPassword, dirNameWithPath string) *Inode {
+	node := d.GetDirFromDirectoryMap(dirNameWithPath)
+	if node != nil {
+		return node
+	}
+	topic := utils.HashString(dirNameWithPath)
+	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword))
+	if err != nil { // skipcq: TCV-001
+		return nil
+	}
+	var inode Inode
+	err = inode.Unmarshal(data)
+	if err != nil { // skipcq: TCV-001
+		return nil
+	}
+	d.AddToDirectoryMap(dirNameWithPath, &inode)
+	return &inode
+}

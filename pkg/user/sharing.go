@@ -17,13 +17,12 @@ limitations under the License.
 package user
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -89,53 +88,35 @@ func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destina
 		return "", err
 	}
 
-	// encrypt data
-	encryptedData, err := encryptData(data, now.Unix())
-	if err != nil { // skipcq: TCV-001
-		return "", err
-	}
-
 	// upload the encrypted data and get the reference
-	ref, err := u.client.UploadBlob(encryptedData, 0, true)
+	ref, err := u.client.UploadBlob(data, 0, true)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
-	// add now to the ref
-	sharingRef := utils.NewSharingReference(ref, now.Unix())
-	return sharingRef.String(), nil
+	return hex.EncodeToString(ref), nil
 }
 
 // ReceiveFileFromUser imports an exported file in to the current user and pod by reading the sharing file entry.
-func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingReference, userInfo *Info, pd *pod.Pod, podDir string) (string, error) {
-	metaRef := sharingRef.GetRef()
-	unixTime := sharingRef.GetNonce()
-
+func (u *Users) ReceiveFileFromUser(podName string, ref string, userInfo *Info, pd *pod.Pod, podDir string) (string, error) {
+	refBytes, err := hex.DecodeString(ref)
+	if err != nil {
+		return "", err
+	}
 	// get the encrypted meta
-	encryptedData, respCode, err := u.client.DownloadBlob(metaRef)
+	data, respCode, err := u.client.DownloadBlob(refBytes)
 	if err != nil || respCode != http.StatusOK {
 		return "", err
 	} // skipcq: TCV-001
 
-	// decrypt the data
-	decryptedData, err := decryptData(encryptedData, unixTime)
-	if err != nil { // skipcq: TCV-001
-		return "", err
-	}
-
 	// unmarshall the entry
 	sharingEntry := SharingEntry{}
-	err = json.Unmarshal(decryptedData, &sharingEntry)
+	err = json.Unmarshal(data, &sharingEntry)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
-	// check if pod is open
-	if !pd.IsPodOpened(podName) {
-		return "", pod.ErrPodNotOpened
-	}
-
-	podInfo, _, err := pd.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := pd.GetPodInfo(podName)
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -146,7 +127,7 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	totalPath := utils.CombinePathAndFile(podDir, fileNameToAdd)
 
 	// check if file is already present
-	if file.IsFileAlreadyPresent(totalPath) {
+	if file.IsFileAlreadyPresent(podInfo.GetPodPassword(), totalPath) {
 		return "", f.ErrFileAlreadyPresent
 	}
 
@@ -179,45 +160,23 @@ func (u *Users) ReceiveFileFromUser(podName string, sharingRef utils.SharingRefe
 	return totalPath, nil
 }
 
-func encryptData(data []byte, now int64) ([]byte, error) {
-	pk, err := account.CreateRandomKeyPair(now)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
-	pubKey := btcec.PublicKey{Curve: pk.PublicKey.Curve, X: pk.PublicKey.X, Y: pk.PublicKey.Y}
-	return btcec.Encrypt(&pubKey, data)
-}
-
-func decryptData(data []byte, now int64) ([]byte, error) {
-	pk, err := account.CreateRandomKeyPair(now)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
-	}
-	privateKey := btcec.PrivateKey{PublicKey: pk.PublicKey, D: pk.D}
-	return btcec.Decrypt(&privateKey, data)
-}
-
 // ReceiveFileInfo displays the information of the exported file. This is used to decide whether
 // to import the file or not.
-func (u *Users) ReceiveFileInfo(sharingRef utils.SharingReference) (*ReceiveFileInfo, error) {
-	metaRef := sharingRef.GetRef()
-	unixTime := sharingRef.GetNonce()
-
-	// get the encrypted meta
-	encryptedData, respCode, err := u.client.DownloadBlob(metaRef)
-	if err != nil || respCode != http.StatusOK { // skipcq: TCV-001
+func (u *Users) ReceiveFileInfo(ref string) (*ReceiveFileInfo, error) {
+	refBytes, err := hex.DecodeString(ref)
+	if err != nil {
 		return nil, err
 	}
 
-	// decrypt the data
-	decryptedData, err := decryptData(encryptedData, unixTime)
-	if err != nil { // skipcq: TCV-001
+	// get the encrypted meta
+	data, respCode, err := u.client.DownloadBlob(refBytes)
+	if err != nil || respCode != http.StatusOK { // skipcq: TCV-001
 		return nil, err
 	}
 
 	// unmarshall the entry
 	sharingEntry := SharingEntry{}
-	err = json.Unmarshal(decryptedData, &sharingEntry)
+	err = json.Unmarshal(data, &sharingEntry)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}

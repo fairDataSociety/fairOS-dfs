@@ -497,11 +497,11 @@ func TestShare(t *testing.T) {
 			t.Fatal(err)
 		}
 		dirObject8 := gotSharedPodInfo.GetDirectory()
-		dirInode1 := dirObject8.GetDirFromDirectoryMap("/parentDir/subDir1")
+		dirInode1 := dirObject8.GetInode(podPassword, "/parentDir/subDir1")
 		if dirInode1 != nil {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode1 = dirObject8.GetDirFromDirectoryMap("/parentDir/newSubDir1")
+		dirInode1 = dirObject8.GetInode(podPassword, "/parentDir/newSubDir1")
 		if dirInode1 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -511,7 +511,7 @@ func TestShare(t *testing.T) {
 		if dirInode1.Meta.Name != "newSubDir1" {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode2 := dirObject8.GetDirFromDirectoryMap("/parentDir/subDir2")
+		dirInode2 := dirObject8.GetInode(podPassword, "/parentDir/subDir2")
 		if dirInode2 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -523,11 +523,11 @@ func TestShare(t *testing.T) {
 		}
 
 		fileObject8 := gotInfo.GetFile()
-		fileMeta1 := fileObject8.GetFromFileMap("/parentDir/file1")
+		fileMeta1 := fileObject8.GetInode(podPassword, "/parentDir/file1")
 		if fileMeta1 != nil {
 			t.Fatalf("invalid file meta")
 		}
-		fileMeta1 = fileObject8.GetFromFileMap("/parentDir/renamedFile1")
+		fileMeta1 = fileObject8.GetInode(podPassword, "/parentDir/renamedFile1")
 		if fileMeta1 == nil {
 			t.Fatalf("invalid file meta")
 		}
@@ -543,7 +543,7 @@ func TestShare(t *testing.T) {
 		if fileMeta1.BlockSize != uint32(10) {
 			t.Fatalf("invalid block size")
 		}
-		fileMeta2 := fileObject.GetFromFileMap("/parentDir/file2")
+		fileMeta2 := fileObject.GetInode(podPassword, "/parentDir/file2")
 		if fileMeta2 == nil {
 			t.Fatalf("invalid file meta")
 		}

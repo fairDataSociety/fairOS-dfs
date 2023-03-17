@@ -29,11 +29,7 @@ func (p *Pod) SyncPod(podName string) error {
 		return err
 	}
 
-	if !p.IsPodOpened(podName) {
-		return ErrPodNotOpened
-	}
-
-	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := p.GetPodInfo(podName)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -54,11 +50,7 @@ func (p *Pod) SyncPodAsync(ctx context.Context, podName string) error {
 		return err
 	}
 
-	if !p.IsPodOpened(podName) {
-		return ErrPodNotOpened
-	}
-
-	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := p.GetPodInfo(podName)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

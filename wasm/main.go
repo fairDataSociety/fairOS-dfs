@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"strings"
 	"syscall/js"
 
@@ -61,15 +60,13 @@ func registerWasmFunctions() {
 	js.Global().Set("podReceive", js.FuncOf(podReceive))
 	js.Global().Set("podReceiveInfo", js.FuncOf(podReceiveInfo))
 
-	js.Global().Set("listPodInMarketplace", js.FuncOf(listPodInMarketplace))
-	js.Global().Set("changePodListStatusInMarketplace", js.FuncOf(changePodListStatusInMarketplace))
-	js.Global().Set("requestSubscription", js.FuncOf(requestSubscription))
-	js.Global().Set("approveSubscription", js.FuncOf(approveSubscription))
 	js.Global().Set("getSubscriptions", js.FuncOf(getSubscriptions))
 	js.Global().Set("openSubscribedPod", js.FuncOf(openSubscribedPod))
 	js.Global().Set("getSubscribablePods", js.FuncOf(getSubscribablePods))
 	js.Global().Set("getSubRequests", js.FuncOf(getSubRequests))
 	js.Global().Set("getSubscribablePodInfo", js.FuncOf(getSubscribablePodInfo))
+	js.Global().Set("encryptSubscription", js.FuncOf(encryptSubscription))
+	js.Global().Set("openSubscribedPodFromReference", js.FuncOf(openSubscribedPodFromReference))
 
 	js.Global().Set("dirPresent", js.FuncOf(dirPresent))
 	js.Global().Set("dirMake", js.FuncOf(dirMake))
@@ -115,7 +112,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
 		if len(funcArgs) != 6 {
-			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, false, rpc, play, subRpc, subContractAddress)\"")
+			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, false, rpc, subRpc, subContractAddress)\"")
 			return nil
 		}
 		beeEndpoint := funcArgs[0].String()
@@ -128,19 +125,24 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 			reject.Invoke("unknown network. \"use play or testnet\"")
 			return nil
 		}
-		var config *contracts.ENSConfig
+		var (
+			config    *contracts.ENSConfig
+			subConfig *contracts.SubscriptionConfig
+		)
+
 		if network == "play" {
-			config = contracts.PlayConfig()
+			config, subConfig = contracts.PlayConfig()
 		} else {
-			config = contracts.TestnetConfig()
+			config, subConfig = contracts.TestnetConfig()
 		}
 		config.ProviderBackend = rpc
-		logger := logging.New(os.Stdout, logrus.DebugLevel)
-
-		subConfig := &contracts.SubscriptionConfig{
-			RPC:              subRpc,
-			SwarmMailAddress: subContractAddress,
+		if subRpc != "" {
+			subConfig.RPC = subRpc
 		}
+		if subContractAddress != "" {
+			subConfig.DataHubAddress = subContractAddress
+		}
+		logger := logging.New(os.Stdout, logrus.DebugLevel)
 
 		go func() {
 			var err error
@@ -754,7 +756,7 @@ func dirMake(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			err := api.Mkdir(podName, dirPath, sessionId)
+			err := api.Mkdir(podName, dirPath, sessionId, 0)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirMake failed : %s", err.Error()))
 				return
@@ -962,7 +964,7 @@ func fileUpload(_ js.Value, funcArgs []js.Value) interface{} {
 			js.CopyBytesToGo(inBuf, array)
 			reader := bytes.NewReader(inBuf)
 
-			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), true)
+			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), 0, true)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileUpload failed : %s", err.Error()))
 				return
@@ -1023,12 +1025,7 @@ func fileReceive(_ js.Value, funcArgs []js.Value) interface{} {
 		fileSharingReference := funcArgs[3].String()
 
 		go func() {
-			ref, err := utils.ParseSharingReference(fileSharingReference)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("fileReceive failed : %s", err.Error()))
-				return
-			}
-			filePath, err := api.ReceiveFile(podName, sessionId, ref, directory)
+			filePath, err := api.ReceiveFile(podName, sessionId, fileSharingReference, directory)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileReceive failed : %s", err.Error()))
 				return
@@ -1058,12 +1055,7 @@ func fileReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 		fileSharingReference := funcArgs[2].String()
 
 		go func() {
-			ref, err := utils.ParseSharingReference(fileSharingReference)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("fileReceiveInfo failed : %s", err.Error()))
-				return
-			}
-			receiveInfo, err := api.ReceiveInfo(sessionId, ref)
+			receiveInfo, err := api.ReceiveInfo(sessionId, fileSharingReference)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileReceiveInfo failed : %s", err.Error()))
 				return
@@ -1945,146 +1937,18 @@ func docIndexJson(_ js.Value, funcArgs []js.Value) interface{} {
 	return promiseConstructor.New(handler)
 }
 
-func listPodInMarketplace(_ js.Value, funcArgs []js.Value) interface{} {
-	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		resolve := args[0]
-		reject := args[1]
-
-		if len(funcArgs) != 7 {
-			reject.Invoke("not enough arguments. \"listPodInMarketplace(sessionId, podName, title, desc, thumbnail, price, category)\"")
-			return nil
-		}
-		sessionId := funcArgs[0].String()
-		podName := funcArgs[1].String()
-		title := funcArgs[2].String()
-		desc := funcArgs[3].String()
-		thumbnail := funcArgs[4].String()
-		priceStr := funcArgs[5].String()
-		categoryStr := funcArgs[6].String()
-
-		// convert priceStr to uint64
-		price, err := strconv.ParseUint(priceStr, 10, 64)
-		if err != nil {
-			reject.Invoke(fmt.Sprintf("listPodInMarketplace failed : %s", err.Error()))
-			return nil
-		}
-
-		category, err := utils.Decode(categoryStr)
-		if err != nil {
-			reject.Invoke(fmt.Sprintf("listPodInMarketplace failed : %s", err.Error()))
-			return nil
-		}
-
-		var c [32]byte
-		copy(c[:], category)
-		go func() {
-			err := api.ListPodInMarketplace(sessionId, podName, title, desc, thumbnail, price, c)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("listPodInMarketplace failed : %s", err.Error()))
-				return
-			}
-			resolve.Invoke("pod listed")
-		}()
-		return nil
-	})
-
-	promiseConstructor := js.Global().Get("Promise")
-	return promiseConstructor.New(handler)
-}
-
-func changePodListStatusInMarketplace(_ js.Value, funcArgs []js.Value) interface{} {
+func encryptSubscription(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
 
 		if len(funcArgs) != 3 {
-			reject.Invoke("not enough arguments. \"changePodListStatusInMarketplace(sessionId, subHash, show)\"")
-			return nil
-		}
-		sessionId := funcArgs[0].String()
-		subHashStr := funcArgs[1].String()
-		show := funcArgs[2].Bool()
-
-		subHash, err := utils.Decode(subHashStr)
-		if err != nil {
-			reject.Invoke(fmt.Sprintf("changePodListStatusInMarketplace failed : %s", err.Error()))
-			return nil
-		}
-
-		var s [32]byte
-		copy(s[:], subHash)
-		go func() {
-			err := api.ChangePodListStatusInMarketplace(sessionId, s, show)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("listPodInMarketplace failed : %s", err.Error()))
-				return
-			}
-			resolve.Invoke("pod list status changed successfully")
-		}()
-		return nil
-	})
-
-	promiseConstructor := js.Global().Get("Promise")
-	return promiseConstructor.New(handler)
-}
-
-func requestSubscription(_ js.Value, funcArgs []js.Value) interface{} {
-	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		resolve := args[0]
-		reject := args[1]
-
-		if len(funcArgs) != 2 {
-			reject.Invoke("not enough arguments. \"requestSubscription(sessionId, subHash)\"")
-			return nil
-		}
-		sessionId := funcArgs[0].String()
-		subHashStr := funcArgs[1].String()
-
-		subHash, err := utils.Decode(subHashStr)
-		if err != nil {
-			reject.Invoke(fmt.Sprintf("requestSubscription failed : %s", err.Error()))
-			return nil
-		}
-
-		var s [32]byte
-		copy(s[:], subHash)
-		go func() {
-			err := api.RequestSubscription(sessionId, s)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("requestSubscription failed : %s", err.Error()))
-				return
-			}
-			resolve.Invoke("request submitted successfully")
-		}()
-		return nil
-	})
-
-	promiseConstructor := js.Global().Get("Promise")
-	return promiseConstructor.New(handler)
-}
-
-func approveSubscription(_ js.Value, funcArgs []js.Value) interface{} {
-	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		resolve := args[0]
-		reject := args[1]
-
-		if len(funcArgs) != 4 {
-			reject.Invoke("not enough arguments. \"approveSubscription(sessionId, podName, reqHash, subscriberNameHash)\"")
+			reject.Invoke("not enough arguments. \"encryptSubscription(sessionId, podName, subscriberNameHash)\"")
 			return nil
 		}
 		sessionId := funcArgs[0].String()
 		podName := funcArgs[1].String()
-		reqHashStr := funcArgs[2].String()
-		subscriberNameHashStr := funcArgs[3].String()
-
-		reqHash, err := utils.Decode(reqHashStr)
-		if err != nil {
-			reject.Invoke(fmt.Sprintf("approveSubscription failed : %s", err.Error()))
-			return nil
-		}
-
-		var r [32]byte
-		copy(r[:], reqHash)
+		subscriberNameHashStr := funcArgs[2].String()
 
 		nameHash, err := utils.Decode(subscriberNameHashStr)
 		if err != nil {
@@ -2095,12 +1959,15 @@ func approveSubscription(_ js.Value, funcArgs []js.Value) interface{} {
 		var nh [32]byte
 		copy(nh[:], nameHash)
 		go func() {
-			err := api.ApproveSubscription(sessionId, podName, r, nh)
+			ref, err := api.EncryptSubscription(sessionId, podName, nh)
 			if err != nil {
-				reject.Invoke(fmt.Sprintf("approveSubscription failed : %s", err.Error()))
+				reject.Invoke(fmt.Sprintf("encryptSubscription failed : %s", err.Error()))
 				return
 			}
-			resolve.Invoke("request approved successfully")
+			object := js.Global().Get("Object").New()
+			object.Set("reference", ref)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -2115,15 +1982,13 @@ func getSubscriptions(_ js.Value, funcArgs []js.Value) interface{} {
 		reject := args[1]
 
 		if len(funcArgs) != 3 {
-			reject.Invoke("not enough arguments. \"getSubscriptions(sessionId, start, limit)\"")
+			reject.Invoke("not enough arguments. \"getSubscriptions(sessionId)\"")
 			return nil
 		}
 		sessionId := funcArgs[0].String()
-		start := funcArgs[1].Int()
-		limit := funcArgs[2].Int()
 
 		go func() {
-			subs, err := api.GetSubscriptions(sessionId, uint64(start), uint64(limit))
+			subs, err := api.GetSubscriptions(sessionId)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("getSubscriptions failed : %s", err.Error()))
 				return
@@ -2175,6 +2040,44 @@ func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
 			pi, err := api.OpenSubscribedPod(sessionId, s)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("openSubscribedPod failed : %s", err.Error()))
+				return
+			}
+
+			resolve.Invoke(fmt.Sprintf("%s opened successfully", pi.GetPodName()))
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func openSubscribedPodFromReference(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"openSubscribedPodFromReference(sessionId, reference, sellerNameHash)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		reference := funcArgs[1].String()
+		sellerNameHash := funcArgs[2].String()
+
+		subHash, err := utils.Decode(sellerNameHash)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("openSubscribedPodFromReference failed : %s", err.Error()))
+			return nil
+		}
+
+		var s [32]byte
+		copy(s[:], subHash)
+
+		go func() {
+			pi, err := api.DecryptAndOpenSubscriptionPod(sessionId, reference, s)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("openSubscribedPodFromReference failed : %s", err.Error()))
 				return
 			}
 

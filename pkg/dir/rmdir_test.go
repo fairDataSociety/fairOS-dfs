@@ -69,7 +69,7 @@ func TestRmdir(t *testing.T) {
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/dirToRemove", podPassword)
+		err := dirObject.MkDir("/dirToRemove", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -119,17 +119,17 @@ func TestRmdir(t *testing.T) {
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/dirToRemove1", podPassword)
+		err := dirObject.MkDir("/dirToRemove1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2", podPassword)
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove", podPassword)
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -198,17 +198,17 @@ func TestRmRootDirByPath(t *testing.T) {
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/dirToRemove1", podPassword)
+		err := dirObject.MkDir("/dirToRemove1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2", podPassword)
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove", podPassword)
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -290,17 +290,17 @@ func TestRmRootDir(t *testing.T) {
 		}
 
 		// create a new dir
-		err := dirObject.MkDir("/dirToRemove1", podPassword)
+		err := dirObject.MkDir("/dirToRemove1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2", podPassword)
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// create a new dir
-		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove", podPassword)
+		err = dirObject.MkDir("/dirToRemove1/dirToRemove2/dirToRemove", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}

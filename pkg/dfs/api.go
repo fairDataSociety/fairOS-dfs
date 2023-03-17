@@ -68,6 +68,7 @@ func NewDfsAPI(apiUrl, postageBlockId string, ensConfig *contracts.ENSConfig, su
 	if subConfig != nil {
 		sm, err = rpc.New(subConfig, logger, c, c)
 		if err != nil {
+			logger.Errorf("subscriptionManager initialisation failed %s", err.Error())
 			return nil, errSubManager
 		}
 	}

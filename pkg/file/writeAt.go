@@ -15,12 +15,12 @@ import (
 func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, offset uint64, truncate bool) (int, error) {
 	// check file is present
 	totalFilePath := utils.CombinePathAndFile(podFileWithPath, "")
-	if !f.IsFileAlreadyPresent(totalFilePath) {
-		return 0, ErrFileNotPresent
+	if !f.IsFileAlreadyPresent(podPassword, totalFilePath) {
+		return 0, ErrFileNotFound
 	}
 
 	// get file meta
-	meta := f.GetFromFileMap(totalFilePath)
+	meta := f.GetInode(podPassword, totalFilePath)
 	if meta == nil { // skipcq: TCV-001
 		return 0, ErrFileNotFound
 	}

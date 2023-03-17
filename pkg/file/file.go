@@ -88,17 +88,12 @@ func (f *File) GetFromFileMap(filePath string) *MetaData {
 }
 
 // IsFileAlreadyPresent checks if a file is present in the fileMap
-func (f *File) IsFileAlreadyPresent(fileWithPath string) bool {
-	f.fileMu.Lock()
-	defer f.fileMu.Unlock()
-	if _, ok := f.fileMap[fileWithPath]; ok {
-		return true
-	}
-	return false
+func (f *File) IsFileAlreadyPresent(podPassword, fileWithPath string) bool {
+	return f.GetInode(podPassword, fileWithPath) != nil
 }
 
 // RemoveAllFromFileMap resets the fileMap
-func (f *File) RemoveAllFromFileMap() {
+func (f *File) RemoveAllFromFileMap() { // skipcq: TCV-001
 	f.fileMu.Lock()
 	defer f.fileMu.Unlock()
 	f.fileMap = make(map[string]*MetaData)
@@ -125,6 +120,30 @@ func (f *File) LoadFromTagMap(filePath string) uint32 {
 // DeleteFromTagMap deletes a tag from tagMap
 func (f *File) DeleteFromTagMap(filePath string) { // skipcq: TCV-001
 	f.tagMap.Delete(filePath)
+}
+
+func (f *File) GetInode(podPassword, filePath string) *MetaData { // skipcq: TCV-001
+	meta := f.GetFromFileMap(filePath)
+	if meta != nil {
+		return meta
+	}
+	topic := utils.HashString(filePath)
+	_, metaBytes, err := f.fd.GetFeedData(topic, f.userAddress, []byte(podPassword))
+	if err != nil {
+		return nil
+	}
+
+	if string(metaBytes) == utils.DeletedFeedMagicWord {
+		return nil
+	}
+
+	err = json.Unmarshal(metaBytes, &meta)
+	if err != nil { // skipcq: TCV-001
+		return nil
+	}
+
+	f.AddToFileMap(filePath, meta)
+	return meta
 }
 
 type lsTask struct {

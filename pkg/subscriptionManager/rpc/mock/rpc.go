@@ -9,21 +9,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/datahub"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	goens "github.com/wealdtech/go-ens/v3"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
-
-	swarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
-
-	"github.com/ethereum/go-ethereum/common"
 )
 
 type SubscriptionManager struct {
 	lock            sync.Mutex
-	listMap         map[string]*swarmMail.SwarmMailSub
-	subscriptionMap map[string]*swarmMail.SwarmMailSubItem
-	requestMap      map[string]*swarmMail.SwarmMailSubRequest
+	listMap         map[string]*datahub.DataHubSub
+	subscriptionMap map[string]*datahub.DataHubSubItem
+	requestMap      map[string]*datahub.DataHubSubRequest
 	subPodInfo      map[string]*rpc.SubscriptionItemInfo
 	subscribedMap   map[string][]byte
 }
@@ -38,20 +35,20 @@ func (s *SubscriptionManager) GetSubscribablePodInfo(subHash [32]byte) (*rpc.Sub
 // NewMockSubscriptionManager returns a new mock subscriptionManager manager client
 func NewMockSubscriptionManager() *SubscriptionManager {
 	return &SubscriptionManager{
-		listMap:         make(map[string]*swarmMail.SwarmMailSub),
-		subscriptionMap: make(map[string]*swarmMail.SwarmMailSubItem),
-		requestMap:      make(map[string]*swarmMail.SwarmMailSubRequest),
+		listMap:         make(map[string]*datahub.DataHubSub),
+		subscriptionMap: make(map[string]*datahub.DataHubSubItem),
+		requestMap:      make(map[string]*datahub.DataHubSubRequest),
 		subPodInfo:      make(map[string]*rpc.SubscriptionItemInfo),
 		subscribedMap:   make(map[string][]byte),
 	}
 }
 
-func (s *SubscriptionManager) AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, category, nameHash [32]byte, key *ecdsa.PrivateKey) error {
+func (s *SubscriptionManager) AddPodToMarketplace(podAddress, owner common.Address, pod, title, desc, thumbnail string, price uint64, daysValid uint16, category, nameHash [32]byte, key *ecdsa.PrivateKey) error {
 	subHash, err := goens.NameHash(owner.Hex() + podAddress.String())
 	if err != nil {
 		return err
 	}
-	i := &swarmMail.SwarmMailSub{
+	i := &datahub.DataHubSub{
 		SubHash:           subHash,
 		FdpSellerNameHash: nameHash,
 		Seller:            owner,
@@ -103,7 +100,7 @@ func (s *SubscriptionManager) RequestAccess(subscriber common.Address, subHash, 
 	if err != nil {
 		return err
 	}
-	s.requestMap[utils.Encode(reqHash[:])] = &swarmMail.SwarmMailSubRequest{
+	s.requestMap[utils.Encode(reqHash[:])] = &datahub.DataHubSubRequest{
 		FdpBuyerNameHash: nameHash,
 		Buyer:            subscriber,
 		SubHash:          subHash,
@@ -112,11 +109,11 @@ func (s *SubscriptionManager) RequestAccess(subscriber common.Address, subHash, 
 	return nil
 }
 
-func (s *SubscriptionManager) GetSubRequests(owner common.Address) ([]swarmMail.SwarmMailSubRequest, error) {
+func (s *SubscriptionManager) GetSubRequests(owner common.Address) ([]datahub.DataHubSubRequest, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	requests := []swarmMail.SwarmMailSubRequest{}
+	requests := []datahub.DataHubSubRequest{}
 	for _, r := range s.requestMap {
 		sub := s.listMap[utils.Encode(r.SubHash[:])]
 		if sub.Seller == owner {
@@ -136,7 +133,7 @@ func (s *SubscriptionManager) AllowAccess(owner common.Address, si *rpc.ShareInf
 		return fmt.Errorf("request not available")
 	}
 
-	item := &swarmMail.SwarmMailSubItem{
+	item := &datahub.DataHubSubItem{
 		SubHash:           i.SubHash,
 		UnlockKeyLocation: [32]byte{},
 		ValidTill:         new(big.Int).SetInt64(time.Now().AddDate(0, 1, 0).Unix()),
@@ -159,12 +156,12 @@ func (s *SubscriptionManager) AllowAccess(owner common.Address, si *rpc.ShareInf
 	return nil
 }
 
-func (s *SubscriptionManager) GetSubscriptions(subscriber common.Address, _, _ uint64) ([]swarmMail.SwarmMailSubItem, error) {
+func (s *SubscriptionManager) GetSubscriptions(subscriber common.Address) ([]datahub.DataHubSubItem, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	subscriberHex := subscriber.Hex()
-	pods := []swarmMail.SwarmMailSubItem{}
+	pods := []datahub.DataHubSubItem{}
 	for i, v := range s.subscriptionMap {
 		if strings.HasPrefix(i, subscriberHex) {
 			pods = append(pods, *v)
@@ -192,10 +189,10 @@ func (s *SubscriptionManager) GetSubscription(subscriber common.Address, subHash
 	return ip, nil
 }
 
-func (s *SubscriptionManager) GetAllSubscribablePods() ([]swarmMail.SwarmMailSub, error) {
+func (s *SubscriptionManager) GetAllSubscribablePods() ([]datahub.DataHubSub, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	pods := []swarmMail.SwarmMailSub{}
+	pods := []datahub.DataHubSub{}
 	for _, v := range s.listMap {
 		if v.Active {
 			pods = append(pods, *v)
@@ -204,11 +201,11 @@ func (s *SubscriptionManager) GetAllSubscribablePods() ([]swarmMail.SwarmMailSub
 	return pods, nil
 }
 
-func (s *SubscriptionManager) GetOwnSubscribablePods(owner common.Address) ([]swarmMail.SwarmMailSub, error) {
+func (s *SubscriptionManager) GetOwnSubscribablePods(owner common.Address) ([]datahub.DataHubSub, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	pods := []swarmMail.SwarmMailSub{}
+	pods := []datahub.DataHubSub{}
 	for _, v := range s.listMap {
 		if v.Seller == owner {
 			pods = append(pods, *v)
@@ -217,7 +214,7 @@ func (s *SubscriptionManager) GetOwnSubscribablePods(owner common.Address) ([]sw
 	return pods, nil
 }
 
-func (s *SubscriptionManager) GetSub(subHash [32]byte) (*swarmMail.SwarmMailSub, error) {
+func (s *SubscriptionManager) GetSub(subHash [32]byte) (*datahub.DataHubSub, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	i, ok := s.listMap[utils.Encode(subHash[:])]

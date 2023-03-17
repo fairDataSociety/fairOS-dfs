@@ -30,14 +30,12 @@ import (
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/datahub"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
-
-	SwarmMail "github.com/fairdatasociety/fairOS-dfs/pkg/contracts/smail"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -71,7 +69,7 @@ func (a *API) DeletePod(podName, sessionId string) error {
 
 	// delete all the directory, files, and database tables under this pod from
 	// the Swarm network.
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -85,11 +83,8 @@ func (a *API) DeletePod(podName, sessionId string) error {
 			return err
 		}
 
-		// close the pod if it is open
-		if ui.IsPodOpen(podName) {
-			// remove from the login session
-			ui.RemovePodName(podName)
-		}
+		// remove from the login session
+		ui.RemovePodName(podName)
 		return nil
 	}
 
@@ -104,12 +99,7 @@ func (a *API) DeletePod(podName, sessionId string) error {
 		return err
 	}
 
-	// close the pod if it is open
-	if ui.IsPodOpen(podName) {
-		// remove from the login session
-		ui.RemovePodName(podName)
-	}
-
+	ui.RemovePodName(podName)
 	return nil
 }
 
@@ -120,55 +110,13 @@ func (a *API) OpenPod(podName, sessionId string) (*pod.Info, error) {
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-	// return if pod already open
-	if ui.IsPodOpen(podName) {
-		podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
-		if err != nil {
-			return nil, err
-		}
-		return podInfo, nil
-	}
-	// open the pod
-	pi, err := ui.GetPod().OpenPod(podName)
-	if err != nil {
-		return nil, err
-	}
-	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
 	// Add podName in the login user session
-	ui.AddPodName(podName, pi)
-	return pi, nil
-}
-
-// OpenPodAsync
-func (a *API) OpenPodAsync(ctx context.Context, podName, sessionId string) (*pod.Info, error) {
-	// get the logged-in user information
-	ui := a.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
-	}
-	// return if pod already open
-	if ui.IsPodOpen(podName) {
-		podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
-		if err != nil {
-			return nil, err
-		}
-		return podInfo, nil
-	}
-	// open the pod
-	pi, err := ui.GetPod().OpenPodAsync(ctx, podName)
-	if err != nil {
-		return nil, err
-	}
-	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
-	if err != nil {
-		return nil, err
-	}
-	// Add podName in the login user session
-	ui.AddPodName(podName, pi)
-	return pi, nil
+	ui.AddPodName(podName, podInfo)
+	return podInfo, nil
 }
 
 // ClosePod
@@ -177,11 +125,6 @@ func (a *API) ClosePod(podName, sessionId string) error {
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
-	}
-
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
 	}
 
 	// close the pod
@@ -219,11 +162,6 @@ func (a *API) SyncPod(podName, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
 	// sync the pod
 	err := ui.GetPod().SyncPod(podName)
 	if err != nil {
@@ -238,11 +176,6 @@ func (a *API) SyncPodAsync(ctx context.Context, podName, sessionId string) error
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
-	}
-
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
 	}
 
 	// sync the pod
@@ -505,10 +438,6 @@ func (a *API) ForkPod(podName, forkName, sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
 	if forkName == "" {
 		return pod.ErrBlankPodName
 	}
@@ -568,17 +497,11 @@ func (a *API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
 		return nil, err
 	}
 
-	// create the root directory
-	err = pi.GetDirectory().MkRootDir(pi.GetPodName(), podPassword, pi.GetPodAddress(), pi.GetFeed())
-	if err != nil {
-		return nil, err
-	}
-
 	return pi, nil
 }
 
 // ListPodInMarketplace
-func (a *API) ListPodInMarketplace(podName, title, desc, thumbnail, sessionId string, price uint64, category [32]byte) error {
+func (a *API) ListPodInMarketplace(sessionId, podName, title, desc, thumbnail string, price uint64, daysValid uint16, category [32]byte) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -594,7 +517,7 @@ func (a *API) ListPodInMarketplace(podName, title, desc, thumbnail, sessionId st
 		return err
 	}
 
-	return ui.GetPod().ListPodInMarketplace(podName, title, desc, thumbnail, price, category, nameHash)
+	return ui.GetPod().ListPodInMarketplace(podName, title, desc, thumbnail, price, daysValid, category, nameHash)
 }
 
 // ChangePodListStatusInMarketplace
@@ -651,16 +574,28 @@ func (a *API) ApproveSubscription(sessionId, podName string, reqHash, nameHash [
 	return ui.GetPod().ApproveSubscription(podName, reqHash, subscriberPublicKey)
 }
 
-type SubscriptionInfo struct {
-	SubHash      [32]byte
-	PodName      string
-	PodAddress   string
-	InfoLocation []byte
-	ValidTill    int64
+// EncryptSubscription
+func (a *API) EncryptSubscription(sessionId, podName string, nameHash [32]byte) (string, error) {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return "", ErrUserNotLoggedIn
+	}
+
+	if a.sm == nil {
+		return "", errNilSubManager
+	}
+
+	_, subscriberPublicKey, err := a.users.GetUserInfoFromENS(nameHash)
+	if err != nil {
+		return "", err
+	}
+
+	return ui.GetPod().EncryptUploadSubscriptionInfo(podName, subscriberPublicKey)
 }
 
-// GetSubscriptions
-func (a *API) GetSubscriptions(sessionId string, start, limit uint64) ([]*SubscriptionInfo, error) {
+// DecryptAndOpenSubscriptionPod
+func (a *API) DecryptAndOpenSubscriptionPod(sessionId, reference string, sellerNameHash [32]byte) (*pod.Info, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -671,7 +606,47 @@ func (a *API) GetSubscriptions(sessionId string, start, limit uint64) ([]*Subscr
 		return nil, errNilSubManager
 	}
 
-	subscriptions, err := ui.GetPod().GetSubscriptions(start, limit)
+	_, publicKey, err := a.users.GetUserInfoFromENS(sellerNameHash)
+	if err != nil {
+		return nil, err
+	}
+
+	pi, err := ui.GetPod().OpenSubscribedPodFromReference(reference, publicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	err = pi.GetDirectory().AddRootDir(pi.GetPodName(), pi.GetPodPassword(), pi.GetPodAddress(), pi.GetFeed())
+	if err != nil {
+		return nil, err
+	}
+	// Add podName in the login user session
+	ui.AddPodName(pi.GetPodName(), pi)
+	return pi, nil
+
+}
+
+type SubscriptionInfo struct {
+	SubHash      [32]byte
+	PodName      string
+	PodAddress   string
+	InfoLocation []byte
+	ValidTill    int64
+}
+
+// GetSubscriptions
+func (a *API) GetSubscriptions(sessionId string) ([]*SubscriptionInfo, error) {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
+
+	if a.sm == nil {
+		return nil, errNilSubManager
+	}
+
+	subscriptions, err := ui.GetPod().GetSubscriptions()
 	if err != nil {
 		return nil, err
 	}
@@ -739,7 +714,7 @@ func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte) (*pod.Info, 
 }
 
 // GetSubscribablePods
-func (a *API) GetSubscribablePods(sessionId string) ([]SwarmMail.SwarmMailSub, error) {
+func (a *API) GetSubscribablePods(sessionId string) ([]datahub.DataHubSub, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -750,7 +725,7 @@ func (a *API) GetSubscribablePods(sessionId string) ([]SwarmMail.SwarmMailSub, e
 }
 
 // GetSubscribablePods
-func (a *API) GetSubsRequests(sessionId string) ([]SwarmMail.SwarmMailSubRequest, error) {
+func (a *API) GetSubsRequests(sessionId string) ([]datahub.DataHubSubRequest, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {

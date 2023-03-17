@@ -50,7 +50,7 @@ var (
 // Upload uploads a given blob of bytes as a file in the pod. It also splits the file into number of blocks. the
 // size of the block is provided during upload. This function also does compression of the blocks gzip/snappy if it is
 // requested during the upload.
-func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint32, podPath, compression, podPassword string) error {
+func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize, mode uint32, podPath, compression, podPassword string) error {
 	podPath = filepath.ToSlash(podPath)
 	// check compression gzip and blocksize
 	// pgzip does not allow block size lower or equal to 163840,
@@ -66,6 +66,9 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		return err
 	}
 
+	if mode == 0 {
+		mode = S_IFREG | defaultMode
+	}
 	meta := MetaData{
 		Version:          MetaVersion,
 		Path:             podPath,
@@ -76,7 +79,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		CreationTime:     now,
 		AccessTime:       now,
 		ModificationTime: now,
-		Mode:             S_IFREG | defaultMode,
+		Mode:             mode,
 	}
 
 	var totalLength uint64
