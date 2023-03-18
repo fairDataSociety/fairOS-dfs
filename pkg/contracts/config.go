@@ -27,7 +27,7 @@ func TestnetConfig() (*ENSConfig, *SubscriptionConfig) {
 	}
 
 	s := &SubscriptionConfig{
-		DataHubAddress: "0x43E6403948be1245f8878fE0f429798762A5d3b8",
+		DataHubAddress: "0x1949beB6CC2db0241Dd625dcaC09891DF5c3756b",
 	}
 	return e, s
 }
