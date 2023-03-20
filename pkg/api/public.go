@@ -20,12 +20,12 @@ import (
 //
 //	@Summary      download file from a shared pod
 //	@Description  PodReceiveInfoHandler is the api handler to download file from a shared pod
-//	@Tags         pod
+//	@Tags         public
 //	@Accept       json
 //	@Produce      json
 //	@Param	      sharingRef query string true "pod sharing reference"
 //	@Param	      filePath query string true "file location in the pod"
-//	@Success      200  {object}  pod.ShareInfo
+//	@Success      200  {array}  byte
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /public-file [get]
@@ -94,10 +94,10 @@ func (h *Handler) PublicPodGetFileHandler(w http.ResponseWriter, r *http.Request
 //
 //	@Summary      download file from a shared pod
 //	@Description  PublicPodFilePathHandler is the api handler to download file from a shared pod
-//	@Tags         pod
+//	@Tags         public
 //	@Accept       json
 //	@Produce      json
-//	@Success      200  {object}  pod.ShareInfo
+//	@Success      200  {array}  byte
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /public/{ref}/{file} [get]
@@ -161,12 +161,12 @@ func (h *Handler) PublicPodFilePathHandler(w http.ResponseWriter, r *http.Reques
 //
 //	@Summary      List directory content
 //	@Description  PublicPodGetDirHandler is the api handler to list content of a directory from a public pod
-//	@Tags         pod
+//	@Tags         public
 //	@Accept       json
 //	@Produce      json
 //	@Param	      sharingRef query string true "pod sharing reference"
 //	@Param	      dirPath query string true "dir location in the pod"
-//	@Success      200  {object}  pod.ShareInfo
+//	@Success      200  {object}  ListFileResponse
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /public-dir [get]
@@ -241,7 +241,7 @@ func (h *Handler) PublicPodGetDirHandler(w http.ResponseWriter, r *http.Request)
 //	@Param	      sharingRef query string true "pod sharing reference"
 //	@Param	      tableName query string true "table name"
 //	@Param	      key query string true "key to look up"
-//	@Success      200  {object}  pod.ShareInfo
+//	@Success      200  {object}  KVResponse
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /public-kv [get]
