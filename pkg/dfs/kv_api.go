@@ -28,12 +28,7 @@ func (a *API) KVCreate(sessionId, podName, name string, indexType collection.Ind
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -49,12 +44,7 @@ func (a *API) KVDelete(sessionId, podName, name string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -70,12 +60,7 @@ func (a *API) KVOpen(sessionId, podName, name string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -91,11 +76,7 @@ func (a *API) KVList(sessionId, podName string) (map[string][]string, error) {
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, ErrPodNotOpen
-	}
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -111,12 +92,7 @@ func (a *API) KVCount(sessionId, podName, name string) (*collection.TableKeyCoun
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -132,12 +108,7 @@ func (a *API) KVPut(sessionId, podName, name, key string, value []byte) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return err
 	}
@@ -153,12 +124,7 @@ func (a *API) KVGet(sessionId, podName, name, key string) ([]string, []byte, err
 		return nil, nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, nil, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -174,11 +140,7 @@ func (a *API) KVDel(sessionId, podName, name, key string) ([]byte, error) {
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, ErrPodNotOpen
-	}
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -194,12 +156,7 @@ func (a *API) KVBatch(sessionId, podName, name string, columns []string) (*colle
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -215,11 +172,6 @@ func (a *API) KVBatchPut(sessionId, podName, key string, value []byte, batch *co
 		return ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
-	}
-
 	return batch.Put(key, value, false, false)
 }
 
@@ -229,11 +181,6 @@ func (a *API) KVBatchWrite(sessionId, podName string, batch *collection.Batch) e
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return ErrUserNotLoggedIn
-	}
-
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return ErrPodNotOpen
 	}
 
 	_, err := batch.Write("")
@@ -248,12 +195,7 @@ func (a *API) KVSeek(sessionId, podName, name, start, end string, limit int64) (
 		return nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}
@@ -269,12 +211,7 @@ func (a *API) KVGetNext(sessionId, podName, name string) ([]string, string, []by
 		return nil, "", nil, ErrUserNotLoggedIn
 	}
 
-	// check if pod open
-	if !ui.IsPodOpen(podName) {
-		return nil, "", nil, ErrPodNotOpen
-	}
-
-	podInfo, _, err := ui.GetPod().GetPodInfoFromPodMap(podName)
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
 	if err != nil {
 		return nil, "", nil, err
 	}

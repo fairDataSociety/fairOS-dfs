@@ -55,7 +55,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	)
 	if sharedPodType {
 		var addressString string
-		addressString, podPassword = p.getAddressPassword(podList, podName)
+		addressString, podPassword = p.getSharedAddressPassword(podList, podName)
 		if addressString == "" { // skipcq: TCV-001
 			return nil, fmt.Errorf("shared pod does not exist")
 		}
@@ -107,12 +107,47 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	}
 
 	p.addPodToPodMap(podName, podInfo)
+	if !sharedPodType {
+		err = podInfo.GetDirectory().AddRootDir(podInfo.GetPodName(), podInfo.GetPodPassword(), podInfo.GetPodAddress(), podInfo.GetFeed())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return podInfo, nil
+}
+
+func (p *Pod) OpenFromShareInfo(si *ShareInfo) (*Info, error) {
+	accountInfo := p.acc.GetEmptyAccountInfo()
+	address := utils.HexToAddress(si.Address)
+	accountInfo.SetAddress(address)
+
+	fd := feed.New(accountInfo, p.client, p.logger)
+	file := f.NewFile(si.PodName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
+	dir := d.NewDirectory(si.PodName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
+
+	kvStore := c.NewKeyValueStore(si.PodName, fd, accountInfo, address, p.client, p.logger)
+	docStore := c.NewDocumentStore(si.PodName, fd, accountInfo, address, file, p.tm, p.client, p.logger)
+
+	podInfo := &Info{
+		podName:     si.PodName,
+		podPassword: si.Password,
+		userAddress: address,
+		accountInfo: accountInfo,
+		feed:        fd,
+		dir:         dir,
+		file:        file,
+		kvStore:     kvStore,
+		docStore:    docStore,
+	}
+	p.addPodToPodMap(si.PodName, podInfo)
 
 	// sync the pod's files and directories
-	err = p.SyncPod(podName)
+	err := p.SyncPod(si.PodName)
 	if err != nil && err != d.ErrResourceDeleted { // skipcq: TCV-001
 		return nil, err
 	}
+
 	return podInfo, nil
 }
 
@@ -145,7 +180,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	)
 	if sharedPodType {
 		var addressString string
-		addressString, podPassword = p.getAddressPassword(podList, podName)
+		addressString, podPassword = p.getSharedAddressPassword(podList, podName)
 		if addressString == "" { // skipcq: TCV-001
 			return nil, fmt.Errorf("shared pod does not exist")
 		}
@@ -214,10 +249,20 @@ func (*Pod) getIndexPassword(podList *List, podName string) (int, string) {
 	return -1, "" // skipcq: TCV-001
 }
 
-func (*Pod) getAddressPassword(podList *List, podName string) (string, string) {
+func (*Pod) getSharedAddressPassword(podList *List, podName string) (string, string) {
 	for _, pod := range podList.SharedPods {
 		if pod.Name == podName {
 			return pod.Address, pod.Password
+		}
+	}
+	return "", ""
+}
+
+func (p *Pod) getAddressPassword(podList *List, podName string) (string, string) {
+	for _, pod := range podList.Pods {
+		if pod.Name == podName {
+			addr := p.acc.GetAddress(pod.Index)
+			return addr.Hex(), pod.Password
 		}
 	}
 	return "", ""

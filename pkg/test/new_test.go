@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -38,13 +40,14 @@ func TestNew(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock3.NewMockSubscriptionManager()
 
 	t.Run("new-blank-username", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
 		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, _, err := userObject.CreateNewUserV2("", "password1", "", "", tm)
+		_, _, _, _, _, err := userObject.CreateNewUserV2("", "password1", "", "", tm, sm)
 		if !errors.Is(err, user.ErrBlankUsername) {
 			t.Fatal(err)
 		}
@@ -55,17 +58,17 @@ func TestNew(t *testing.T) {
 
 		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, _, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm)
+		_, _, _, _, _, err := userObject.CreateNewUserV2("user1", "password1", "", "", tm, sm)
 		if err != nil && !errors.Is(err, user.ErrPasswordTooSmall) {
 			t.Fatal(err)
 		}
 
-		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
+		_, _, _, _, _, err = userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if !errors.Is(err, user.ErrUserAlreadyPresent) {
 			t.Fatal(err)
 		}
@@ -98,12 +101,12 @@ func TestNew(t *testing.T) {
 		//create user
 		userObject := user.NewUsers(mockClient, ens, logger)
 		pass := "password1password1"
-		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, pass, "", "", tm)
+		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass, "", "", tm)
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if !errors.Is(err, user.ErrUserAlreadyPresent) {
 			t.Fatal(err)
 		}
@@ -129,7 +132,7 @@ func TestNew(t *testing.T) {
 			t.Fatalf("invalid mnemonic")
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass+pass, mnemonic, "", tm)
+		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass+pass, mnemonic, "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}

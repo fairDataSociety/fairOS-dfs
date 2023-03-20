@@ -67,7 +67,7 @@ func TestListDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err := dirObject.MkDir("/", podPassword)
+		err := dirObject.MkDir("/", podPassword, 0)
 		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
 			t.Fatal("invalid dir name", err)
 		}
@@ -75,26 +75,26 @@ func TestListDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/"+longDirName, podPassword)
+		err = dirObject.MkDir("/"+longDirName, podPassword, 0)
 		if !errors.Is(err, dir.ErrTooLongDirectoryName) {
 			t.Fatal("dir name too long")
 		}
 
 		// create some dir and files
-		err = dirObject.MkDir("/parentDir", podPassword)
+		err = dirObject.MkDir("/parentDir", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/parentDir", podPassword)
+		err = dirObject.MkDir("/parentDir", podPassword, 0)
 		if !errors.Is(err, dir.ErrDirectoryAlreadyPresent) {
 			t.Fatal("dir already present")
 		}
 		// populate the directory with few directory and files
-		err = dirObject.MkDir("/parentDir/subDir1", podPassword)
+		err = dirObject.MkDir("/parentDir/subDir1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/parentDir/subDir2", podPassword)
+		err = dirObject.MkDir("/parentDir/subDir2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -165,12 +165,12 @@ func TestListDirectory(t *testing.T) {
 		}
 
 		// create dir
-		err = dirObject.MkDir("/parentDir", podPassword)
+		err = dirObject.MkDir("/parentDir", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// populate the directory with few directory and files
-		err = dirObject.MkDir("/parentDir/subDir1", podPassword)
+		err = dirObject.MkDir("/parentDir/subDir1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}

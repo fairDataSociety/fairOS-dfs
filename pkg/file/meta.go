@@ -32,6 +32,7 @@ var (
 
 	//ErrDeletedFeed
 	ErrDeletedFeed = errors.New("deleted feed")
+	ErrUnknownFeed = errors.New("unknown value in feed")
 )
 
 // MetaData
@@ -66,14 +67,11 @@ func (f *File) LoadFileMeta(fileNameWithPath, podPassword string) error {
 
 func (f *File) handleMeta(meta *MetaData, podPassword string) error {
 	// check if meta is present.
-	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
-	_, err := f.GetMetaFromFileName(totalPath, podPassword, f.userAddress)
+	err := f.uploadMeta(meta, podPassword)
 	if err != nil {
-		if err != ErrDeletedFeed {
-			return f.uploadMeta(meta, podPassword)
-		}
+		return f.updateMeta(meta, podPassword)
 	}
-	return f.updateMeta(meta, podPassword)
+	return nil
 }
 
 func (f *File) uploadMeta(meta *MetaData, podPassword string) error {
@@ -87,11 +85,7 @@ func (f *File) uploadMeta(meta *MetaData, podPassword string) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	_, err = f.fd.CreateFeed(topic, f.userAddress, fileMetaBytes, []byte(podPassword))
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (f *File) deleteMeta(meta *MetaData, podPassword string) error {
@@ -102,10 +96,7 @@ func (f *File) deleteMeta(meta *MetaData, podPassword string) error {
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	err = f.fd.DeleteFeed(topic, f.userAddress)
-	if err != nil {
-		f.logger.Warningf("failed to remove file feed %s", totalPath)
-	}
+
 	return nil
 }
 
@@ -158,13 +149,13 @@ func (f *File) BackupFromFileName(fileNameWithPath, podPassword string) (*MetaDa
 func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath, podPassword string) (*MetaData, error) {
 	fileNameWithPath = filepath.ToSlash(fileNameWithPath)
 	newFileNameWithPath = filepath.ToSlash(newFileNameWithPath)
-	p, err := f.GetMetaFromFileName(fileNameWithPath, podPassword, f.userAddress)
-	if err != nil {
-		return nil, err
+	p := f.GetInode(podPassword, fileNameWithPath)
+	if p == nil {
+		return nil, ErrFileNotFound
 	}
 
 	// remove old meta and from file map
-	err = f.deleteMeta(p, podPassword)
+	err := f.deleteMeta(p, podPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -201,11 +192,10 @@ func (f *File) GetMetaFromFileName(fileNameWithPath, podPassword string, userAdd
 		f.logger.Errorf("found deleted feed for %s\n", fileNameWithPath)
 		return nil, ErrDeletedFeed
 	}
-
 	var meta *MetaData
 	err = json.Unmarshal(metaBytes, &meta)
 	if err != nil { // skipcq: TCV-001
-		return nil, err
+		return nil, ErrUnknownFeed
 	}
 
 	return meta, nil

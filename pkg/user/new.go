@@ -20,6 +20,8 @@ import (
 	"regexp"
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -41,7 +43,7 @@ const (
 
 // CreateNewUserV2 creates a new user with the given username and password. if a mnemonic is passed
 // then it is used instead of creating a new one.
-func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string, tm taskmanager.TaskManagerGO) (string, string, string, string, *Info, error) {
+func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager) (string, string, string, string, *Info, error) {
 	if userName == "" {
 		return "", "", "", "", nil, ErrBlankUsername
 	}
@@ -102,7 +104,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), tm, u.logger)
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
 	}

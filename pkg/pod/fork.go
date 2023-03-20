@@ -19,11 +19,7 @@ func (p *Pod) PodFork(podName, forkName string) error {
 		return err
 	}
 
-	if !p.IsPodOpened(podName) {
-		return ErrPodNotOpened
-	}
-
-	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := p.GetPodInfo(podName)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -33,16 +29,16 @@ func (p *Pod) PodFork(podName, forkName string) error {
 		return err
 	}
 
-	if !p.IsPodOpened(forkName) {
-		return ErrPodNotOpened
-	}
-
-	forkInfo, _, err := p.GetPodInfoFromPodMap(forkName)
+	forkInfo, _, err := p.GetPodInfo(forkName)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
-	rootInode := podInfo.GetDirectory().GetDirFromDirectoryMap("/")
+	directory := podInfo.GetDirectory()
+	rootInode := directory.GetInode(podInfo.GetPodPassword(), "/")
+	if rootInode == nil {
+		return fmt.Errorf("root inode not found")
+	}
 	return cloneFolder(podInfo, forkInfo, "/", rootInode)
 }
 
@@ -96,11 +92,7 @@ func (p *Pod) forkPod(podInfo *Info, forkName string) error {
 		return err
 	}
 
-	if !p.IsPodOpened(forkName) {
-		return ErrPodNotOpened
-	}
-
-	forkInfo, _, err := p.GetPodInfoFromPodMap(forkName)
+	forkInfo, _, err := p.GetPodInfo(forkName)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -115,14 +107,13 @@ func cloneFolder(source, dst *Info, dirNameWithPath string, dirInode *d.Inode) e
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
 			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
-			meta := source.GetFile().GetFromFileMap(filePath)
-
+			meta := source.GetFile().GetInode(source.GetPodPassword(), filePath)
 			r, _, err := source.GetFile().Download(filePath, source.GetPodPassword())
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
 
-			err = dst.GetFile().Upload(r, meta.Name, int64(meta.Size), meta.BlockSize, meta.Path, meta.Compression, dst.GetPodPassword())
+			err = dst.GetFile().Upload(r, meta.Name, int64(meta.Size), meta.BlockSize, 0, meta.Path, meta.Compression, dst.GetPodPassword())
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
@@ -134,8 +125,8 @@ func cloneFolder(source, dst *Info, dirNameWithPath string, dirInode *d.Inode) e
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
 			path := utils.CombinePathAndFile(dirNameWithPath, dirName)
-			iNode := source.GetDirectory().GetDirFromDirectoryMap(path)
-			err := dst.GetDirectory().MkDir(path, dst.GetPodPassword())
+			iNode := source.GetDirectory().GetInode(source.GetPodPassword(), path)
+			err := dst.GetDirectory().MkDir(path, dst.GetPodPassword(), 0)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}

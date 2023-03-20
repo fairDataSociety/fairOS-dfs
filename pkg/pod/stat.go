@@ -16,6 +16,8 @@ limitations under the License.
 
 package pod
 
+import "fmt"
+
 // Stat represents a pod name and address
 type Stat struct {
 	PodName    string `json:"podName"`
@@ -24,12 +26,31 @@ type Stat struct {
 
 // PodStat shows all the pod related information like podname and its current address.
 func (p *Pod) PodStat(podName string) (*Stat, error) {
-	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
-	if err != nil {
-		return nil, ErrInvalidPodName
+	podInfo, _, err := p.GetPodInfo(podName)
+	if err == nil {
+		return &Stat{
+			PodName:    podInfo.GetPodName(),
+			PodAddress: podInfo.userAddress.String(),
+		}, nil
 	}
+	podList, err := p.loadUserPods()
+	if err != nil {
+		return nil, err
+	}
+
+	index, _ := p.getIndexPassword(podList, podName)
+	if index == -1 {
+		return nil, fmt.Errorf("pod does not exist")
+	}
+	// Create pod account and other data structures
+	// create a child account for the userAddress and other data structures for the pod
+	accountInfo, err := p.acc.CreatePodAccount(index, false)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	addr := accountInfo.GetAddress()
 	return &Stat{
-		PodName:    podInfo.GetPodName(),
-		PodAddress: podInfo.userAddress.String(),
+		PodName:    podName,
+		PodAddress: addr.String(),
 	}, nil
 }

@@ -17,7 +17,12 @@ limitations under the License.
 package user
 
 import (
+	"fmt"
 	"sync"
+
+	"github.com/ethereum/go-ethereum/common"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 
@@ -34,7 +39,7 @@ import (
 
 // LoginUserV2 checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sessionId string) (*Info, string, string, error) {
+func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*Info, string, string, error) {
 	// check if username is available (user created)
 	if !u.IsUsernameAvailableV2(userName) {
 		return nil, "", "", ErrUserNameNotFound
@@ -69,6 +74,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		return nil, "", "", err
 	}
 	// load user account
+
 	err = acc.LoadUserAccountFromSeed(seed)
 	if err != nil { // skipcq: TCV-001
 		return nil, "", "", err
@@ -80,7 +86,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
 	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	if sessionId == "" {
 		sessionId = cookie.GetUniqueSessionId()
@@ -132,4 +138,102 @@ func (u *Users) GetLoggedInUserInfo(sessionId string) *Info {
 // IsUserNameLoggedIn checks if the user is logged-in from username
 func (u *Users) IsUserNameLoggedIn(userName string) bool {
 	return u.isUserNameInMap(userName)
+}
+
+// ConnectWallet connects user with wallet.
+func (u *Users) ConnectWallet(userName, passPhrase, walletAddressHex, signature string, client blockstore.Client) error {
+	// check if username is available (user created)
+	if !u.IsUsernameAvailableV2(userName) {
+		return ErrUserNameNotFound
+	}
+
+	// get owner address from Subdomain registrar
+	address, err := u.ens.GetOwner(userName)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
+	// check if address matches with wallet address
+	if address.Hex() != walletAddressHex {
+		return fmt.Errorf("wallet doesnot match portable account address")
+	}
+	// create account
+	acc := account.New(u.logger)
+	accountInfo := acc.GetUserAccountInfo()
+	// load encrypted private key
+	fd := feed.New(accountInfo, client, u.logger)
+	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
+	if err != nil {
+		u.logger.Errorf(err.Error())
+		return err
+	}
+
+	// decrypt and remove pad from private ley
+	seed, err := accountInfo.RemovePadFromSeed(key, passPhrase)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
+	if err = acc.LoadUserAccountFromSeed(seed); err != nil {
+		return err
+	}
+
+	key, err = accountInfo.PadSeedName(seed, userName, signature)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+	return u.uploadPortableAccount(accountInfo, walletAddressHex, signature, key, fd)
+}
+
+// LoginWithWallet logs user in with wallet and signature
+func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*Info, error) {
+
+	address := common.HexToAddress(addressHex)
+	// create account
+	acc := account.New(u.logger)
+	accountInfo := acc.GetUserAccountInfo()
+	// load encrypted private key
+	fd := feed.New(accountInfo, client, u.logger)
+	key, err := u.downloadPortableAccount(utils.Address(address), addressHex, signature, fd)
+	if err != nil {
+		u.logger.Errorf(err.Error())
+		return nil, ErrInvalidPassword
+	}
+
+	// decrypt and remove pad from private ley
+	seed, username, err := accountInfo.RemovePadFromSeedName(key, signature)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	// load user account
+	err = acc.LoadUserAccountFromSeed(seed)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
+		return nil, ErrUserAlreadyLoggedIn
+	}
+
+	// Instantiate pod, dir & file objects
+	file := f.NewFile(addressHex, client, fd, accountInfo.GetAddress(), tm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
+	dir := d.NewDirectory(addressHex, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
+	if sessionId == "" {
+		sessionId = cookie.GetUniqueSessionId()
+	}
+	ui := &Info{
+		name:       username,
+		sessionId:  sessionId,
+		feedApi:    fd,
+		account:    acc,
+		file:       file,
+		dir:        dir,
+		pod:        pod,
+		openPods:   make(map[string]*p.Info),
+		openPodsMu: &sync.RWMutex{},
+	}
+
+	// set cookie and add user to map
+	return ui, u.addUserAndSessionToMap(ui)
 }

@@ -25,6 +25,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/plexsysio/taskmanager"
@@ -49,9 +51,10 @@ func TestOpen(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock2.NewMockSubscriptionManager()
 
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 	podName1 := "test1"
 	podName2 := "test2"
 
@@ -88,7 +91,7 @@ func TestOpen(t *testing.T) {
 		if podInfo == nil {
 			t.Fatalf("pod not opened")
 		}
-		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName1)
+		gotPodInfo, _, err := pod1.GetPodInfo(podName1)
 		if err != nil {
 			t.Fatalf("pod not opened")
 		}
@@ -133,7 +136,7 @@ func TestOpen(t *testing.T) {
 		if podInfo == nil {
 			t.Fatalf("pod not opened")
 		}
-		gotPodInfo, _, err := pod1.GetPodInfoFromPodMap(podName2)
+		gotPodInfo, _, err := pod1.GetPodInfo(podName2)
 		if err != nil {
 			t.Fatalf("pod not opened")
 		}
@@ -178,13 +181,13 @@ func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compres
 	}
 
 	// upload  the temp file
-	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, filePath, compression, podPassword)
+	return content, fileObject.Upload(f1, fileName, fileSize, blockSize, 0, filePath, compression, podPassword)
 }
 
 func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName1, podPassword string) {
 	t.Helper()
 	dirObject := info.GetDirectory()
-	err := dirObject.MkDir("/parentDir", podPassword)
+	err := dirObject.MkDir("/parentDir", podPassword, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,11 +201,11 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	}
 
 	// populate the directory with few directory and files
-	err = dirObject.MkDir("/parentDir/subDir1", podPassword)
+	err = dirObject.MkDir("/parentDir/subDir1", podPassword, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = dirObject.MkDir("/parentDir/subDir2", podPassword)
+	err = dirObject.MkDir("/parentDir/subDir2", podPassword, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,7 +235,7 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 
 	// close the pod
 	err = pod1.ClosePod(podName1)
-	if !errors.Is(err, pod.ErrPodNotOpened) {
+	if err == nil {
 		t.Fatal("pod should not be open")
 	}
 }

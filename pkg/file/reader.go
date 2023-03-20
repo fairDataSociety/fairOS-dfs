@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
@@ -62,9 +61,9 @@ type Reader struct {
 // TODO test
 // skipcq: TCV-001
 func (f *File) OpenFileForIndex(podFile, podPassword string) (*Reader, error) {
-	meta := f.GetFromFileMap(podFile)
+	meta := f.GetInode(podPassword, podFile)
 	if meta == nil {
-		return nil, fmt.Errorf("file not found in dfs")
+		return nil, ErrFileNotFound
 	}
 
 	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)

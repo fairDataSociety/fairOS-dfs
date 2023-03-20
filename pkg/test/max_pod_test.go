@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -30,8 +32,9 @@ func TestMaxPods(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock3.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 
 	t.Run("create-max-pods", func(t *testing.T) {
 		// t.SkipNow()

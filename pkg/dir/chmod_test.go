@@ -49,15 +49,15 @@ func TestChmod(t *testing.T) {
 		}
 
 		// populate the directory with few directory and files
-		err := dirObject.MkDir("/dirToChmod", podPassword)
+		err := dirObject.MkDir("/dirToChmod", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/dirToChmod/subDir1", podPassword)
+		err = dirObject.MkDir("/dirToChmod/subDir1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/dirToChmod/subDir2", podPassword)
+		err = dirObject.MkDir("/dirToChmod/subDir2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}

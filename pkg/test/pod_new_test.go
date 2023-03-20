@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -48,7 +50,9 @@ func TestPodNew(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	sm := mock2.NewMockSubscriptionManager()
+
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 
 	podName1 := "test1"
 	podName2 := "test2"
@@ -98,7 +102,7 @@ func TestPodNew(t *testing.T) {
 			t.Fatalf("podName is not %s", podName1)
 		}
 
-		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName1)
+		infoGot, _, err := pod1.GetPodInfo(podName1)
 		if err != nil {
 			t.Fatalf("could not get pod from podMap")
 		}
@@ -132,7 +136,7 @@ func TestPodNew(t *testing.T) {
 			t.Fatalf("podName is not %s", podName2)
 		}
 
-		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName2)
+		infoGot, _, err := pod1.GetPodInfo(podName2)
 		if err != nil {
 			t.Fatalf("could not get pod from podMap")
 		}

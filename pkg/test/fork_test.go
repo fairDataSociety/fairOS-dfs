@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -44,7 +46,9 @@ func TestFork(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	sm := mock2.NewMockSubscriptionManager()
+
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 	podName1 := "test1"
 
 	t.Run("fork-pod", func(t *testing.T) {
@@ -76,22 +80,9 @@ func TestFork(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// open fork pod
-		pi, err := pod1.OpenPod(forkName)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// create the root directory
-		err = pi.GetDirectory().MkRootDir(pi.GetPodName(), podPassword, pi.GetPodAddress(), pi.GetFeed())
-		if err != nil {
-			t.Fatal(err)
-		}
-
 		err = pod1.PodFork(podName1, forkName)
 		if err != nil {
 			t.Fatal(err)
-
 		}
 		// open the pod ths triggers sync too
 		gotInfo, err := pod1.OpenPod(forkName)
@@ -101,7 +92,7 @@ func TestFork(t *testing.T) {
 
 		// validate if the directory and files are synced
 		dirObject := gotInfo.GetDirectory()
-		dirInode1 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir1")
+		dirInode1 := dirObject.GetInode(podPassword, "/parentDir/subDir1")
 		if dirInode1 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -111,7 +102,7 @@ func TestFork(t *testing.T) {
 		if dirInode1.Meta.Name != "subDir1" {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode2 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir2")
+		dirInode2 := dirObject.GetInode(podPassword, "/parentDir/subDir2")
 		if dirInode2 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -123,7 +114,7 @@ func TestFork(t *testing.T) {
 		}
 
 		fileObject := gotInfo.GetFile()
-		fileMeta1 := fileObject.GetFromFileMap("/parentDir/file1")
+		fileMeta1 := fileObject.GetInode(podPassword, "/parentDir/file1")
 		if fileMeta1 == nil {
 			t.Fatalf("invalid file meta")
 		}
@@ -139,7 +130,7 @@ func TestFork(t *testing.T) {
 		if fileMeta1.BlockSize != uint32(10) {
 			t.Fatalf("invalid block size")
 		}
-		fileMeta2 := fileObject.GetFromFileMap("/parentDir/file2")
+		fileMeta2 := fileObject.GetInode(podPassword, "/parentDir/file2")
 		if fileMeta2 == nil {
 			t.Fatalf("invalid file meta")
 		}

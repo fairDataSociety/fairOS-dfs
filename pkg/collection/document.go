@@ -633,7 +633,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	}
 
 	// upload the document
-	ref, err := d.client.UploadBlob(doc, 0, true, true)
+	ref, err := d.client.UploadBlob(doc, 0, true)
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("inserting in to document db: ", err.Error())
 		return err
@@ -1419,7 +1419,7 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 			}
 
 			// upload the document
-			ref, err = d.client.UploadBlob(doc, 0, true, true)
+			ref, err = d.client.UploadBlob(doc, 0, true)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("inserting in batch: ", err.Error())
 				return err

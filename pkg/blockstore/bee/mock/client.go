@@ -89,7 +89,7 @@ func (m *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address
 }
 
 // UploadChunk into swarm
-func (m *BeeClient) UploadChunk(ch swarm.Chunk, _ bool) (address []byte, err error) {
+func (m *BeeClient) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	m.storer[ch.Address().String()] = ch.Data()
@@ -107,7 +107,7 @@ func (m *BeeClient) DownloadChunk(_ context.Context, address []byte) (data []byt
 }
 
 // UploadBlob into swarm
-func (m *BeeClient) UploadBlob(data []byte, tag uint32, _, _ bool) (address []byte, err error) {
+func (m *BeeClient) UploadBlob(data []byte, tag uint32, _ bool) (address []byte, err error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()
 	address = make([]byte, 32)

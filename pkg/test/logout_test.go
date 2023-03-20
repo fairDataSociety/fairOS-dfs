@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -38,13 +40,14 @@ func TestLogout(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock3.NewMockSubscriptionManager()
 
 	t.Run("logout-user", func(t *testing.T) {
 
 		ens := mock2.NewMockNamespaceManager()
 		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm)
+		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}

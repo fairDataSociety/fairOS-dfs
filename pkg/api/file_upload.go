@@ -170,5 +170,5 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleFileUpload(podName, podFileName, sessionId string, fileSize int64, f multipart.File, podPath, compression string, blockSize uint32, overwrite bool) error {
 	defer f.Close()
-	return h.dfsAPI.UploadFile(podName, podFileName, sessionId, fileSize, f, podPath, compression, blockSize, overwrite)
+	return h.dfsAPI.UploadFile(podName, podFileName, sessionId, fileSize, f, podPath, compression, blockSize, 0, overwrite)
 }
