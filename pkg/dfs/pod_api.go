@@ -630,6 +630,7 @@ type SubscriptionInfo struct {
 	SubHash      [32]byte
 	PodName      string
 	PodAddress   string
+	Category     string
 	InfoLocation []byte
 	ValidTill    int64
 }
@@ -663,6 +664,7 @@ func (a *API) GetSubscriptions(sessionId string) ([]*SubscriptionInfo, error) {
 			PodAddress:   info.PodAddress,
 			InfoLocation: item.UnlockKeyLocation[:],
 			ValidTill:    item.ValidTill.Int64(),
+			Category:     info.Category,
 		}
 		subs = append(subs, sub)
 	}
