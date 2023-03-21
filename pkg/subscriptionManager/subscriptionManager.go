@@ -13,8 +13,8 @@ type SubscriptionManager interface {
 	HidePodFromMarketplace(owner common.Address, subHash [32]byte, hide bool, key *ecdsa.PrivateKey) error
 	RequestAccess(subscriber common.Address, subHash, nameHash [32]byte, key *ecdsa.PrivateKey) error
 	AllowAccess(owner common.Address, si *rpc.ShareInfo, requestHash, secret [32]byte, key *ecdsa.PrivateKey) error
-	GetSubscription(subscriber common.Address, subHash, secret [32]byte) (*rpc.ShareInfo, error)
-	GetSubscriptions(subscriber common.Address) ([]datahub.DataHubSubItem, error)
+	GetSubscription(infoLocation []byte, secret [32]byte) (*rpc.ShareInfo, error)
+	GetSubscriptions(nameHash [32]byte) ([]datahub.DataHubSubItem, error)
 	GetAllSubscribablePods() ([]datahub.DataHubSub, error)
 	GetOwnSubscribablePods(owner common.Address) ([]datahub.DataHubSub, error)
 	GetSubscribablePodInfo(subHash [32]byte) (*rpc.SubscriptionItemInfo, error)

@@ -35,12 +35,13 @@ type SubscriptionInfoPutter interface {
 
 type SubscriptionInfoGetter interface {
 	DownloadBlob(address []byte) (data []byte, respCode int, err error)
+	DownloadBzz(address []byte) (data []byte, respCode int, err error)
 }
 
 type SubscriptionItemInfo struct {
 	Category          string `json:"category"`
 	Description       string `json:"description"`
-	FdpSellerNameHash string `json:"fdpSellerNameHash"`
+	FdpSellerNameHash string `json:"sellerNameHash"`
 	ImageURL          string `json:"imageUrl"`
 	PodAddress        string `json:"podAddress"`
 	PodName           string `json:"podName"`
@@ -185,13 +186,8 @@ func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, request
 	return nil
 }
 
-func (c *Client) GetSubscription(subscriber common.Address, subHash, secret [32]byte) (*ShareInfo, error) {
-	opts := &bind.CallOpts{}
-	item, err := c.datahub.GetSubItemBy(opts, subscriber, subHash)
-	if err != nil {
-		return nil, err
-	}
-	encData, resp, err := c.getter.DownloadBlob(item.UnlockKeyLocation[:])
+func (c *Client) GetSubscription(infoLocation []byte, secret [32]byte) (*ShareInfo, error) {
+	encData, resp, err := c.getter.DownloadBlob(infoLocation[:])
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -219,8 +215,7 @@ func (c *Client) GetSubscribablePodInfo(subHash [32]byte) (*SubscriptionItemInfo
 	if err != nil {
 		return nil, err
 	}
-
-	data, respCode, err := c.getter.DownloadBlob(item.SwarmLocation[:])
+	data, respCode, err := c.getter.DownloadBzz(item.SwarmLocation[:])
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -233,13 +228,12 @@ func (c *Client) GetSubscribablePodInfo(subHash [32]byte) (*SubscriptionItemInfo
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	return info, nil
 }
 
-func (c *Client) GetSubscriptions(subscriber common.Address) ([]datahub.DataHubSubItem, error) {
+func (c *Client) GetSubscriptions(nameHash [32]byte) ([]datahub.DataHubSubItem, error) {
 	opts := &bind.CallOpts{}
-	return c.datahub.GetAllSubItems(opts, subscriber)
+	return c.datahub.GetAllSubItemsForNameHash(opts, nameHash)
 }
 
 func (c *Client) GetAllSubscribablePods() ([]datahub.DataHubSub, error) {

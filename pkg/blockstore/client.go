@@ -30,6 +30,7 @@ type Client interface {
 	UploadBlob(data []byte, tag uint32, encrypt bool) (address []byte, err error)
 	DownloadChunk(ctx context.Context, address []byte) (data []byte, err error)
 	DownloadBlob(address []byte) (data []byte, respCode int, err error)
+	DownloadBzz(address []byte) (data []byte, respCode int, err error)
 	DeleteReference(address []byte) error
 	CreateTag(address []byte) (uint32, error)
 	GetTag(tag uint32) (int64, int64, int64, error)

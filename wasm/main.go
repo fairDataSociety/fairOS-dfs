@@ -2020,12 +2020,13 @@ func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
 
-		if len(funcArgs) != 2 {
-			reject.Invoke("not enough arguments. \"openSubscribedPod(sessionId, subHash)\"")
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"openSubscribedPod(sessionId, subHash, keyLocation)\"")
 			return nil
 		}
 		sessionId := funcArgs[0].String()
 		subHashStr := funcArgs[1].String()
+		keyLocation := funcArgs[2].String()
 
 		subHash, err := utils.Decode(subHashStr)
 		if err != nil {
@@ -2037,7 +2038,7 @@ func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
 		copy(s[:], subHash)
 
 		go func() {
-			pi, err := api.OpenSubscribedPod(sessionId, s)
+			pi, err := api.OpenSubscribedPod(sessionId, s, keyLocation)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("openSubscribedPod failed : %s", err.Error()))
 				return

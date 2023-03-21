@@ -102,8 +102,8 @@ func (p *Pod) RequestSubscription(subHash, nameHash [32]byte) error {
 }
 
 // GetSubscriptions will query the smart contract and list my subscriptions
-func (p *Pod) GetSubscriptions() ([]datahub.DataHubSubItem, error) {
-	return p.sm.GetSubscriptions(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()))
+func (p *Pod) GetSubscriptions(nameHash [32]byte) ([]datahub.DataHubSubItem, error) {
+	return p.sm.GetSubscriptions(nameHash)
 }
 
 // GetMarketplace will query the smart contract make the `list` all the pod from the marketplace
@@ -117,10 +117,10 @@ func (p *Pod) GetSubscribablePodInfo(subHash [32]byte) (*rpc.SubscriptionItemInf
 }
 
 // OpenSubscribedPod will open a subscribed pod
-func (p *Pod) OpenSubscribedPod(subHash [32]byte, ownerPublicKey *ecdsa.PublicKey) (*Info, error) {
+func (p *Pod) OpenSubscribedPod(infoLocation []byte, ownerPublicKey *ecdsa.PublicKey) (*Info, error) {
 	a, _ := ownerPublicKey.Curve.ScalarMult(ownerPublicKey.X, ownerPublicKey.Y, p.acc.GetUserAccountInfo().GetPrivateKey().D.Bytes())
 	secret := sha256.Sum256(a.Bytes())
-	info, err := p.sm.GetSubscription(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()), subHash, secret)
+	info, err := p.sm.GetSubscription(infoLocation, secret)
 	if err != nil {
 		return nil, err
 	}

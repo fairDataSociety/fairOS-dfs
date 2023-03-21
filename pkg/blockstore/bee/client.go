@@ -46,6 +46,7 @@ const (
 	healthUrl              = "/health"
 	chunkUploadDownloadUrl = "/chunks"
 	bytesUploadDownloadUrl = "/bytes"
+	bzzUrl                 = "/bzz"
 	tagsUrl                = "/tags"
 	pinsUrl                = "/pins/"
 	_                      = pinsUrl
@@ -421,6 +422,58 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 	}
 
 	fullUrl := s.url + bytesUploadDownloadUrl + "/" + addrString
+	req, err := http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
+	if err != nil {
+		return nil, http.StatusNotFound, err
+	}
+
+	response, err := s.client.Do(req)
+	if err != nil {
+		return nil, http.StatusNotFound, err
+	}
+	defer response.Body.Close()
+
+	req.Close = true
+
+	respData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, response.StatusCode, errors.New("error downloading blob")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return nil, response.StatusCode, errors.New(string(respData))
+		}
+		return nil, response.StatusCode, errors.New(beeErr.Message)
+	}
+
+	fields := logrus.Fields{
+		"reference": addrString,
+		"size":      len(respData),
+		"duration":  time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "download blob: ")
+
+	// add the data and ref if it is not in cache
+	if !s.inBlockCache(s.downloadBlockCache, addrString) {
+		s.addToBlockCache(s.downloadBlockCache, addrString, respData)
+	}
+	return respData, response.StatusCode, nil
+}
+
+// DownloadBzz downloads bzz data from the Swarm network.
+func (s *Client) DownloadBzz(address []byte) ([]byte, int, error) {
+	to := time.Now()
+
+	// return the data if this address is already in cache
+	addrString := swarm.NewAddress(address).String()
+	if s.inBlockCache(s.downloadBlockCache, addrString) {
+		return s.getFromBlockCache(s.downloadBlockCache, addrString), 200, nil
+	}
+
+	fullUrl := s.url + bzzUrl + "/" + addrString
 	req, err := http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 	if err != nil {
 		return nil, http.StatusNotFound, err
