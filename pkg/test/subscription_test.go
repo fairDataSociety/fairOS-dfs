@@ -109,7 +109,7 @@ func TestSubscription(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	subs, err := pod2.GetSubscriptions()
+	subs, err := pod2.GetSubscriptions(nameHash2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func TestSubscription(t *testing.T) {
 	assert.Equal(t, len(subs), 1)
 	assert.Equal(t, podInfo.PodName, randomLongPodName1)
 
-	pi, err := pod2.OpenSubscribedPod(subs[0].SubHash, acc1.GetUserAccountInfo().GetPublicKey())
+	pi, err := pod2.OpenSubscribedPod(subs[0].UnlockKeyLocation[:], acc1.GetUserAccountInfo().GetPublicKey())
 	if err != nil {
 		t.Fatal("failed to open subscribed pod")
 	}
