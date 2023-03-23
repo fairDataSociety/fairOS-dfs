@@ -28,6 +28,7 @@ type Client interface {
 	UploadSOC(owner string, id string, signature string, data []byte) (address []byte, err error)
 	UploadChunk(ch swarm.Chunk) (address []byte, err error)
 	UploadBlob(data []byte, tag uint32, encrypt bool) (address []byte, err error)
+	UploadBzz(data []byte, fileName string) (address []byte, err error)
 	DownloadChunk(ctx context.Context, address []byte) (data []byte, err error)
 	DownloadBlob(address []byte) (data []byte, respCode int, err error)
 	DownloadBzz(address []byte) (data []byte, respCode int, err error)

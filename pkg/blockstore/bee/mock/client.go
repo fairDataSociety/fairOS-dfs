@@ -132,6 +132,11 @@ func (m *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 	return nil, http.StatusInternalServerError, fmt.Errorf("error downloading data")
 }
 
+// UploadBzz downloads  data to bzz api from the Swarm network.
+func (m *BeeClient) UploadBzz(_ []byte, _ string) ([]byte, error) {
+	return nil, nil
+}
+
 // DownloadBzz downloads bzz data from the Swarm network.
 func (m *BeeClient) DownloadBzz(_ []byte) ([]byte, int, error) {
 	return nil, 0, nil

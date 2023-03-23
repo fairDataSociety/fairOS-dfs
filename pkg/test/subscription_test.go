@@ -109,7 +109,7 @@ func TestSubscription(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	subs, err := pod2.GetSubscriptions(nameHash2)
+	subs, err := pod2.GetSubscriptions(requests[0].FdpBuyerNameHash)
 	if err != nil {
 		t.Fatal(err)
 	}

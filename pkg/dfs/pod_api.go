@@ -551,6 +551,7 @@ func (a *API) RequestSubscription(sessionId string, subHash [32]byte) error {
 	if err != nil {
 		return err
 	}
+
 	return ui.GetPod().RequestSubscription(subHash, nameHash)
 }
 
@@ -636,7 +637,7 @@ type SubscriptionInfo struct {
 }
 
 // GetSubscriptions
-func (a *API) GetSubscriptions(sessionId string) ([]*SubscriptionInfo, error) {
+func (a *API) GetSubscriptions(sessionId string) ([]SubscriptionInfo, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -647,7 +648,7 @@ func (a *API) GetSubscriptions(sessionId string) ([]*SubscriptionInfo, error) {
 		return nil, errNilSubManager
 	}
 
-	nameHash, err := a.users.GetNameHash(ui.GetAccount().GetUserAccountInfo().GetAddress().Hex())
+	nameHash, err := a.users.GetNameHash(ui.GetUserName())
 	if err != nil {
 		return nil, err
 	}
@@ -657,21 +658,24 @@ func (a *API) GetSubscriptions(sessionId string) ([]*SubscriptionInfo, error) {
 		return nil, err
 	}
 
-	subs := []*SubscriptionInfo{}
-	for _, item := range subscriptions {
+	subs := make([]SubscriptionInfo, len(subscriptions))
+	for i, item := range subscriptions {
 		info, err := ui.GetPod().GetSubscribablePodInfo(item.SubHash)
 		if err != nil {
 			return subs, err
 		}
-		sub := &SubscriptionInfo{
+		var infoLocation = make([]byte, 32)
+		copy(infoLocation, item.UnlockKeyLocation[:])
+		sub := SubscriptionInfo{
 			SubHash:      item.SubHash,
 			PodName:      info.PodName,
 			PodAddress:   info.PodAddress,
-			InfoLocation: item.UnlockKeyLocation[:],
+			InfoLocation: infoLocation,
 			ValidTill:    item.ValidTill.Int64(),
 			Category:     info.Category,
 		}
-		subs = append(subs, sub)
+
+		subs[i] = sub
 	}
 
 	return subs, nil
@@ -695,7 +699,7 @@ func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte, infoLocation
 		return nil, err
 	}
 
-	subHasshString := utils.Encode(subHash[:])
+	subHashString := utils.Encode(subHash[:])
 
 	_, ownerPublicKey, err := a.users.GetUserInfoFromENS(sub.FdpSellerNameHash)
 	if err != nil {
@@ -708,12 +712,8 @@ func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte, infoLocation
 		return nil, ErrUserNotLoggedIn
 	}
 
-	swarmAddr, err := hex.DecodeString(infoLocation)
-	if err != nil {
-		return nil, err
-	}
 	// open the pod
-	pi, err := ui.GetPod().OpenSubscribedPod(swarmAddr, ownerPublicKey)
+	pi, err := ui.GetPod().OpenSubscribedPodFromReference(infoLocation, ownerPublicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -722,7 +722,7 @@ func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte, infoLocation
 		return nil, err
 	}
 	// Add podName in the login user session
-	ui.AddPodName("0x"+subHasshString, pi)
+	ui.AddPodName("0x"+subHashString, pi)
 	return pi, nil
 }
 

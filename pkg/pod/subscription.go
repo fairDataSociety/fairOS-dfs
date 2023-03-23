@@ -117,10 +117,10 @@ func (p *Pod) GetSubscribablePodInfo(subHash [32]byte) (*rpc.SubscriptionItemInf
 }
 
 // OpenSubscribedPod will open a subscribed pod
-func (p *Pod) OpenSubscribedPod(infoLocation []byte, ownerPublicKey *ecdsa.PublicKey) (*Info, error) {
+func (p *Pod) OpenSubscribedPod(reference []byte, ownerPublicKey *ecdsa.PublicKey) (*Info, error) {
 	a, _ := ownerPublicKey.Curve.ScalarMult(ownerPublicKey.X, ownerPublicKey.Y, p.acc.GetUserAccountInfo().GetPrivateKey().D.Bytes())
 	secret := sha256.Sum256(a.Bytes())
-	info, err := p.sm.GetSubscription(infoLocation, secret)
+	info, err := p.sm.GetSubscription(reference, secret)
 	if err != nil {
 		return nil, err
 	}
@@ -156,6 +156,7 @@ func (p *Pod) OpenSubscribedPodFromReference(reference string, ownerPublicKey *e
 	if err != nil {
 		return nil, err
 	}
+
 	var info *rpc.ShareInfo
 	err = json.Unmarshal(data, &info)
 	if err != nil {

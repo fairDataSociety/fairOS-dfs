@@ -66,6 +66,9 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if err != nil { // skipcq: TCV-001
 		return nil, "", "", err
 	}
+	if publicKey == nil {
+		return nil, "", "", fmt.Errorf("public key not found")
+	}
 	pb := crypto.FromECDSAPub(publicKey)
 
 	// decrypt and remove pad from private ley

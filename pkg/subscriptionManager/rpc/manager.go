@@ -31,6 +31,7 @@ const (
 
 type SubscriptionInfoPutter interface {
 	UploadBlob(data []byte, tag uint32, encrypt bool) (address []byte, err error)
+	UploadBzz(data []byte, fileName string) (address []byte, err error)
 }
 
 type SubscriptionInfoGetter interface {
@@ -86,7 +87,7 @@ func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, titl
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	ref, err := c.putter.UploadBlob(data, 0, false)
+	ref, err := c.putter.UploadBzz(data, fmt.Sprintf("%d.sub.json", time.Now().Unix()))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -187,12 +188,11 @@ func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, request
 }
 
 func (c *Client) GetSubscription(infoLocation []byte, secret [32]byte) (*ShareInfo, error) {
-	encData, resp, err := c.getter.DownloadBlob(infoLocation[:])
+	encData, respCode, err := c.getter.DownloadBlob(infoLocation[:])
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
-	if resp != http.StatusOK { // skipcq: TCV-001
+	if respCode != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
 	}
 
