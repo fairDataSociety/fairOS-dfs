@@ -6,7 +6,7 @@ require (
 	github.com/btcsuite/btcd v0.22.3
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.1
-	github.com/ethereum/go-ethereum v1.11.4
+	github.com/ethereum/go-ethereum v1.11.5
 	github.com/ethersphere/bee v1.12.0
 	github.com/ethersphere/bmt v0.1.4
 	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d
@@ -54,6 +54,7 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/holiman/uint256 v1.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/ipfs/go-cid v0.3.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
