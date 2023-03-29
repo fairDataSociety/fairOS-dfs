@@ -39,6 +39,8 @@ func registerWasmFunctions() {
 	js.Global().Set("connect", js.FuncOf(connect))
 	js.Global().Set("stop", js.FuncOf(stop))
 
+	js.Global().Set("publicKvEntryGet", js.FuncOf(publicKvEntryGet))
+
 	js.Global().Set("connectWallet", js.FuncOf(connectWallet))
 	js.Global().Set("login", js.FuncOf(login))
 	js.Global().Set("walletLogin", js.FuncOf(walletLogin))
@@ -111,37 +113,30 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
-		if len(funcArgs) != 6 {
-			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, false, rpc, subRpc, subContractAddress)\"")
+		if len(funcArgs) != 4 {
+			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, rpc, network)\"")
 			return nil
 		}
 		beeEndpoint := funcArgs[0].String()
 		stampId := funcArgs[1].String()
 		rpc := funcArgs[2].String()
 		network := funcArgs[3].String()
-		subRpc := funcArgs[4].String()
-		subContractAddress := funcArgs[5].String()
+		//subRpc := funcArgs[4].String()
+		//subContractAddress := funcArgs[5].String()
 		if network != "testnet" && network != "play" {
 			reject.Invoke("unknown network. \"use play or testnet\"")
 			return nil
 		}
 		var (
-			config    *contracts.ENSConfig
-			subConfig *contracts.SubscriptionConfig
+			config *contracts.ENSConfig
 		)
 
 		if network == "play" {
-			config, subConfig = contracts.PlayConfig()
+			config, _ = contracts.PlayConfig()
 		} else {
-			config, subConfig = contracts.TestnetConfig()
+			config, _ = contracts.TestnetConfig()
 		}
 		config.ProviderBackend = rpc
-		if subRpc != "" {
-			subConfig.RPC = subRpc
-		}
-		if subContractAddress != "" {
-			subConfig.DataHubAddress = subContractAddress
-		}
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
 
 		go func() {
@@ -150,7 +145,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 				beeEndpoint,
 				stampId,
 				config,
-				subConfig,
+				nil,
 				logger,
 			)
 			if err != nil {
@@ -171,6 +166,53 @@ func stop(js.Value, []js.Value) interface{} {
 	return nil
 }
 
+func publicKvEntryGet(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"publicKvEntryGet(sharingRef, tableName, key)\"")
+			return nil
+		}
+		sharingRef := funcArgs[0].String()
+		tableName := funcArgs[1].String()
+		key := funcArgs[2].String()
+
+		ref, err := utils.ParseHexReference(sharingRef)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("public pod kv get: invalid reference: %s", err.Error()))
+			return nil
+		}
+
+		go func() {
+			shareInfo, err := api.PublicPodReceiveInfo(ref)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod kv get: %v", err))
+				return
+			}
+			columns, data, err := api.PublicPodKVEntryGet(shareInfo, tableName, key)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod kv get: %s", err.Error()))
+				return
+			}
+			var res KVResponse
+			if columns != nil {
+				res.Keys = columns
+			} else {
+				res.Keys = []string{key}
+			}
+			res.Values = data
+			resp, _ := json.Marshal(res)
+			resolve.Invoke(resp)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
 func login(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
@@ -184,13 +226,15 @@ func login(_ js.Value, funcArgs []js.Value) interface{} {
 		password := funcArgs[1].String()
 
 		go func() {
-			ui, _, _, err := api.LoginUserV2(username, password, "")
+			ui, nameHash, _, err := api.LoginUserV2(username, password, "")
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("Failed to create user : %s", err.Error()))
 				return
 			}
 			object := js.Global().Get("Object").New()
 			object.Set("user", ui.GetUserName())
+			object.Set("address", ui.GetAccount().GetUserAccountInfo().GetAddress().Hex())
+			object.Set("nameHash", nameHash)
 			object.Set("sessionId", ui.GetSessionId())
 
 			resolve.Invoke(object)
@@ -216,14 +260,16 @@ func walletLogin(_ js.Value, funcArgs []js.Value) interface{} {
 		signature := funcArgs[1].String()
 
 		go func() {
-			ui, err := api.LoginWithWallet(address, signature, "")
+			ui, nameHash, err := api.LoginWithWallet(address, signature, "")
 			if err != nil {
-				reject.Invoke(fmt.Sprintf("Failed to create user : %s", err.Error()))
+				reject.Invoke(fmt.Sprintf("Failed to login user : %s", err.Error()))
 				return
 			}
 
 			object := js.Global().Get("Object").New()
 			object.Set("user", ui.GetUserName())
+			object.Set("address", ui.GetAccount().GetUserAccountInfo().GetAddress().Hex())
+			object.Set("nameHash", nameHash)
 			object.Set("sessionId", ui.GetSessionId())
 			resolve.Invoke(object)
 		}()
@@ -2020,12 +2066,13 @@ func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
 
-		if len(funcArgs) != 2 {
-			reject.Invoke("not enough arguments. \"openSubscribedPod(sessionId, subHash)\"")
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"openSubscribedPod(sessionId, subHash, keyLocation)\"")
 			return nil
 		}
 		sessionId := funcArgs[0].String()
 		subHashStr := funcArgs[1].String()
+		keyLocation := funcArgs[2].String()
 
 		subHash, err := utils.Decode(subHashStr)
 		if err != nil {
@@ -2037,7 +2084,7 @@ func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
 		copy(s[:], subHash)
 
 		go func() {
-			pi, err := api.OpenSubscribedPod(sessionId, s)
+			pi, err := api.OpenSubscribedPod(sessionId, s, keyLocation)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("openSubscribedPod failed : %s", err.Error()))
 				return

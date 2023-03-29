@@ -2,6 +2,7 @@ package mock
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -133,13 +134,16 @@ func (s *SubscriptionManager) AllowAccess(owner common.Address, si *rpc.ShareInf
 		return fmt.Errorf("request not available")
 	}
 
+	addrBytes, _ := utils.GetRandBytes(32)
+
+	var addr [32]byte
+	copy(addr[:], addrBytes)
 	item := &datahub.DataHubSubItem{
 		SubHash:           i.SubHash,
-		UnlockKeyLocation: [32]byte{},
+		UnlockKeyLocation: addr,
 		ValidTill:         new(big.Int).SetInt64(time.Now().AddDate(0, 1, 0).Unix()),
 	}
-
-	s.subscriptionMap[i.Buyer.Hex()+utils.Encode(requestHash[:])] = item
+	s.subscriptionMap[utils.Encode(i.FdpBuyerNameHash[:])+utils.Encode(requestHash[:])] = item
 
 	dt, err := json.Marshal(si)
 	if err != nil {
@@ -151,19 +155,19 @@ func (s *SubscriptionManager) AllowAccess(owner common.Address, si *rpc.ShareInf
 		return err
 	}
 
-	s.subscribedMap[utils.Encode(i.SubHash[:])] = encDt
+	s.subscribedMap[hex.EncodeToString(addrBytes)] = encDt
 
 	return nil
 }
 
-func (s *SubscriptionManager) GetSubscriptions(subscriber common.Address) ([]datahub.DataHubSubItem, error) {
+func (s *SubscriptionManager) GetSubscriptions(nameHash [32]byte) ([]datahub.DataHubSubItem, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	subscriberHex := subscriber.Hex()
+	subscriber := utils.Encode(nameHash[:])
 	pods := []datahub.DataHubSubItem{}
 	for i, v := range s.subscriptionMap {
-		if strings.HasPrefix(i, subscriberHex) {
+		if strings.HasPrefix(i, subscriber) {
 			pods = append(pods, *v)
 		}
 	}
@@ -171,11 +175,11 @@ func (s *SubscriptionManager) GetSubscriptions(subscriber common.Address) ([]dat
 	return pods, nil
 }
 
-func (s *SubscriptionManager) GetSubscription(subscriber common.Address, subHash, secret [32]byte) (*rpc.ShareInfo, error) {
+func (s *SubscriptionManager) GetSubscription(infoLocation []byte, secret [32]byte) (*rpc.ShareInfo, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	encDt := s.subscribedMap[utils.Encode(subHash[:])]
+	encDt := s.subscribedMap[hex.EncodeToString(infoLocation)]
 	dt, err := utils.DecryptBytes(secret[:], encDt)
 	if err != nil {
 		return nil, err

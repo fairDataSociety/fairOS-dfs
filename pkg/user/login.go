@@ -66,6 +66,9 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if err != nil { // skipcq: TCV-001
 		return nil, "", "", err
 	}
+	if publicKey == nil {
+		return nil, "", "", fmt.Errorf("public key not found")
+	}
 	pb := crypto.FromECDSAPub(publicKey)
 
 	// decrypt and remove pad from private ley
@@ -186,10 +189,11 @@ func (u *Users) ConnectWallet(userName, passPhrase, walletAddressHex, signature 
 }
 
 // LoginWithWallet logs user in with wallet and signature
-func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*Info, error) {
+func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*Info, string, error) {
 
 	address := common.HexToAddress(addressHex)
 	// create account
+
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	// load encrypted private key
@@ -197,22 +201,27 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 	key, err := u.downloadPortableAccount(utils.Address(address), addressHex, signature, fd)
 	if err != nil {
 		u.logger.Errorf(err.Error())
-		return nil, ErrInvalidPassword
+		return nil, "", ErrInvalidPassword
 	}
 
 	// decrypt and remove pad from private ley
 	seed, username, err := accountInfo.RemovePadFromSeedName(key, signature)
 	if err != nil { // skipcq: TCV-001
-		return nil, err
+		return nil, "", err
+	}
+
+	nameHash, err := u.GetNameHash(username)
+	if err != nil { // skipcq: TCV-001
+		return nil, "", err
 	}
 	// load user account
 	err = acc.LoadUserAccountFromSeed(seed)
 	if err != nil { // skipcq: TCV-001
-		return nil, err
+		return nil, "", err
 	}
 
 	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
-		return nil, ErrUserAlreadyLoggedIn
+		return nil, "", ErrUserAlreadyLoggedIn
 	}
 
 	// Instantiate pod, dir & file objects
@@ -233,7 +242,6 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
 	}
-
 	// set cookie and add user to map
-	return ui, u.addUserAndSessionToMap(ui)
+	return ui, utils.Encode(nameHash[:]), u.addUserAndSessionToMap(ui)
 }
