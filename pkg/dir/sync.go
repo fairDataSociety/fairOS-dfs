@@ -85,7 +85,7 @@ func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath, pod
 			syncTask := newSyncTask(d, filePath, podPassword, wg)
 			_, err = d.syncManager.Go(syncTask)
 			if err != nil { // skipcq: TCV-001
-				return err
+				wg.Done()
 			}
 		} else if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
