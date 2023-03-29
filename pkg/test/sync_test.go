@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -43,8 +45,10 @@ func TestSync(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock2.NewMockSubscriptionManager()
+
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 	podName1 := "test1"
 
 	t.Run("sync-pod", func(t *testing.T) {
@@ -76,7 +80,7 @@ func TestSync(t *testing.T) {
 
 		// validate if the directory and files are synced
 		dirObject := gotInfo.GetDirectory()
-		dirInode1 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir1")
+		dirInode1 := dirObject.GetInode(podPassword, "/parentDir/subDir1")
 		if dirInode1 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -86,7 +90,7 @@ func TestSync(t *testing.T) {
 		if dirInode1.Meta.Name != "subDir1" {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode2 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir2")
+		dirInode2 := dirObject.GetInode(podPassword, "/parentDir/subDir2")
 		if dirInode2 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -98,7 +102,7 @@ func TestSync(t *testing.T) {
 		}
 
 		fileObject := gotInfo.GetFile()
-		fileMeta1 := fileObject.GetFromFileMap("/parentDir/file1")
+		fileMeta1 := fileObject.GetInode(podPassword, "/parentDir/file1")
 		if fileMeta1 == nil {
 			t.Fatalf("invalid file meta")
 		}
@@ -114,7 +118,7 @@ func TestSync(t *testing.T) {
 		if fileMeta1.BlockSize != uint32(10) {
 			t.Fatalf("invalid block size")
 		}
-		fileMeta2 := fileObject.GetFromFileMap("/parentDir/file2")
+		fileMeta2 := fileObject.GetInode(podPassword, "/parentDir/file2")
 		if fileMeta2 == nil {
 			t.Fatalf("invalid file meta")
 		}

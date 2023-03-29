@@ -200,6 +200,20 @@ definitions:
       loggedin:
         type: boolean
     type: object
+  api.PodForkFromReferenceRequest:
+    properties:
+      forkName:
+        type: string
+      podSharingReference:
+        type: string
+    type: object
+  api.PodForkRequest:
+    properties:
+      forkName:
+        type: string
+      podName:
+        type: string
+    type: object
   api.PodListResponse:
     properties:
       pods:
@@ -380,15 +394,6 @@ definitions:
       podName:
         type: string
     type: object
-  file.Blocks:
-    properties:
-      compressedSize:
-        type: string
-      reference:
-        type: string
-      size:
-        type: string
-    type: object
   file.Entry:
     properties:
       accessTime:
@@ -407,8 +412,6 @@ definitions:
         type: string
       size:
         type: string
-      tag:
-        type: integer
     type: object
   file.Stats:
     properties:
@@ -416,10 +419,6 @@ definitions:
         type: string
       blockSize:
         type: string
-      blocks:
-        items:
-          $ref: '#/definitions/file.Blocks'
-        type: array
       compression:
         type: string
       contentType:
@@ -438,8 +437,6 @@ definitions:
         type: string
       podName:
         type: string
-      tag:
-        type: integer
     type: object
   pod.ShareInfo:
     properties:
@@ -491,6 +488,144 @@ info:
   title: FairOS-dfs server
   version: v0.0.0
 paths:
+  /public-dir:
+    get:
+      consumes:
+      - application/json
+      description: PublicPodGetDirHandler is the api handler to list content of a
+        directory from a public pod
+      parameters:
+      - description: pod sharing reference
+        in: query
+        name: sharingRef
+        required: true
+        type: string
+      - description: dir location in the pod
+        in: query
+        name: dirPath
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.ListFileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: List directory content
+      tags:
+      - public
+  /public-file:
+    get:
+      consumes:
+      - application/json
+      description: PodReceiveInfoHandler is the api handler to download file from
+        a shared pod
+      parameters:
+      - description: pod sharing reference
+        in: query
+        name: sharingRef
+        required: true
+        type: string
+      - description: file location in the pod
+        in: query
+        name: filePath
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: integer
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: download file from a shared pod
+      tags:
+      - public
+  /public-kv:
+    get:
+      consumes:
+      - application/json
+      description: PublicPodKVEntryGetHandler is the api handler to get key from key
+        value store from a public pod
+      parameters:
+      - description: pod sharing reference
+        in: query
+        name: sharingRef
+        required: true
+        type: string
+      - description: table name
+        in: query
+        name: tableName
+        required: true
+        type: string
+      - description: key to look up
+        in: query
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.KVResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: get key from public pod
+      tags:
+      - public
+  /public/{ref}/{file}:
+    get:
+      consumes:
+      - application/json
+      description: PublicPodFilePathHandler is the api handler to download file from
+        a shared pod
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: integer
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: download file from a shared pod
+      tags:
+      - public
   /v1/dir/chmod:
     post:
       consumes:
@@ -2312,6 +2447,77 @@ paths:
       summary: Delete pod
       tags:
       - pod
+  /v1/pod/fork:
+    post:
+      consumes:
+      - application/json
+      description: PodForkHandler is the api handler to fork a pod
+      parameters:
+      - description: pod name and user password
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodForkRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Fork a pod
+      tags:
+      - pod
+  /v1/pod/fork-from-reference:
+    post:
+      consumes:
+      - application/json
+      description: PodForkFromReferenceHandler is the api handler to fork a pod from
+        a given sharing reference
+      parameters:
+      - description: pod name and user password
+        in: body
+        name: pod_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PodForkFromReferenceRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Fork a pod from sharing reference
+      tags:
+      - pod
   /v1/pod/ls:
     get:
       consumes:
@@ -2711,7 +2917,7 @@ paths:
       - application/json
       description: Check if the given user is logged-in
       parameters:
-      - description: user name
+      - description: username
         in: query
         name: userName
         required: true
@@ -2841,7 +3047,7 @@ paths:
       - application/json
       description: login user with the new ENS based authentication
       parameters:
-      - description: user name
+      - description: username
         in: body
         name: user_request
         required: true
@@ -2877,7 +3083,7 @@ paths:
     get:
       description: checks if the new user is present in the new ENS based authentication
       parameters:
-      - description: user name
+      - description: username
         in: query
         name: userName
         required: true
@@ -2902,7 +3108,7 @@ paths:
       - application/json
       description: registers new user with the new ENS based authentication
       parameters:
-      - description: user name
+      - description: username
         in: body
         name: user_request
         required: true

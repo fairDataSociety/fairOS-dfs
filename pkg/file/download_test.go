@@ -65,10 +65,10 @@ func TestDownload(t *testing.T) {
 
 		// file existent check
 		podFile := utils.CombinePathAndFile(filePath, fileName)
-		assert.Equal(t, fileObject.IsFileAlreadyPresent(podFile), false)
+		assert.Equal(t, fileObject.IsFileAlreadyPresent(podPassword, podFile), false)
 
 		_, _, err = fileObject.Download(podFile, podPassword)
-		assert.Equal(t, err, file.ErrFileNotPresent)
+		assert.Equal(t, err, file.ErrFileNotFound)
 
 		// upload a file
 		content, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
@@ -109,10 +109,10 @@ func TestDownload(t *testing.T) {
 
 		// file existent check
 		podFile := utils.CombinePathAndFile(filePath, fileName)
-		assert.Equal(t, fileObject.IsFileAlreadyPresent(podFile), false)
+		assert.Equal(t, fileObject.IsFileAlreadyPresent(podPassword, podFile), false)
 
 		_, _, err = fileObject.Download(podFile, podPassword)
-		assert.Equal(t, err, file.ErrFileNotPresent)
+		assert.Equal(t, err, file.ErrFileNotFound)
 
 		// upload a file
 		content, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
@@ -145,10 +145,10 @@ func TestDownload(t *testing.T) {
 
 		// file existent check
 		podFile := utils.CombinePathAndFile(filePath, fileName)
-		assert.Equal(t, fileObject.IsFileAlreadyPresent(podFile), false)
+		assert.Equal(t, fileObject.IsFileAlreadyPresent(podPassword, podFile), false)
 
 		_, _, err = fileObject.Download(podFile, podPassword)
-		assert.Equal(t, err, file.ErrFileNotPresent)
+		assert.Equal(t, err, file.ErrFileNotFound)
 
 		// upload a file
 		content, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)

@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
@@ -53,9 +55,10 @@ func TestSharing(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock3.NewMockSubscriptionManager()
 
 	fd1 := feed.New(acc1.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, logger)
+	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, sm, logger)
 	podName1 := "test1"
 
 	acc2 := account.New(logger)
@@ -68,14 +71,14 @@ func TestSharing(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, logger)
 	podName2 := "test2"
 
 	t.Run("sharing-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create source user
 		userObject1 := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1twelve", "", "", tm)
+		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -95,7 +98,7 @@ func TestSharing(t *testing.T) {
 
 		// create dir and file
 		dirObject1 := info1.GetDirectory()
-		err = dirObject1.MkDir("/parentDir1", podPassword)
+		err = dirObject1.MkDir("/parentDir1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -112,7 +115,7 @@ func TestSharing(t *testing.T) {
 
 		// create destination user
 		userObject2 := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password1twelve", "", "", tm)
+		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -132,17 +135,13 @@ func TestSharing(t *testing.T) {
 
 		// create dir and file
 		dirObject2 := info2.GetDirectory()
-		err = dirObject2.MkDir("/parentDir2", podPassword)
+		err = dirObject2.MkDir("/parentDir2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// receive file info
-		sharingRef, err := utils.ParseSharingReference(sharingRefString)
-		if err != nil {
-			t.Fatal(err)
-		}
-		receiveFileInfo, err := userObject2.ReceiveFileInfo(sharingRef)
+		receiveFileInfo, err := userObject2.ReceiveFileInfo(sharingRefString)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -161,18 +160,18 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("invalid block size received")
 		}
 
-		_, err = userObject2.ReceiveFileFromUser("podName2", sharingRef, ui, pod2, "/parentDir2")
-		if !errors.Is(err, pod.ErrPodNotOpened) {
-			t.Fatal("pod does not supposed tp be open")
+		_, err = userObject2.ReceiveFileFromUser("podName2", sharingRefString, ui, pod2, "/parentDir2")
+		if err == nil {
+			t.Fatal("pod should not exist")
 		}
 
 		// receive file
-		destinationFilePath, err := userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2")
+		destinationFilePath, err := userObject2.ReceiveFileFromUser(podName2, sharingRefString, ui, pod2, "/parentDir2")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = userObject2.ReceiveFileFromUser(podName2, sharingRef, ui, pod2, "/parentDir2")
+		_, err = userObject2.ReceiveFileFromUser(podName2, sharingRefString, ui, pod2, "/parentDir2")
 		if !errors.Is(err, file.ErrFileAlreadyPresent) {
 			t.Fatal("pod does not supposed tp be open")
 		}
@@ -194,17 +193,11 @@ func TestSharing(t *testing.T) {
 		if files[0] != "/parentDir2/file1" {
 			t.Fatalf("file not imported")
 		}
-		if !ui0.IsPodOpen(podName1) {
-			t.Fatalf("pod should be open")
-		}
 		// delete source pod
 		err = pod1.DeleteOwnPod(podName1)
 		if err != nil {
 			t.Fatalf("error deleting pod %s", podName1)
 		}
 		ui0.RemovePodName(podName1)
-		if ui0.IsPodOpen(podName1) {
-			t.Fatalf("pod should have been deleted")
-		}
 	})
 }

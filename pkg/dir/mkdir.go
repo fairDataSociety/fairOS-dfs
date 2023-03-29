@@ -34,7 +34,7 @@ const (
 )
 
 // MkDir
-func (d *Directory) MkDir(dirToCreateWithPath, podPassword string) error {
+func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) error {
 	parentPath := filepath.ToSlash(filepath.Dir(dirToCreateWithPath))
 	dirName := filepath.Base(dirToCreateWithPath)
 
@@ -52,14 +52,17 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string) error {
 	topic := utils.HashString(totalPath)
 
 	// check if parent path exists
-	if d.GetDirFromDirectoryMap(parentPath) == nil {
+	if d.GetInode(podPassword, parentPath) == nil {
 		return ErrDirectoryNotPresent
 	}
 
-	if d.GetDirFromDirectoryMap(totalPath) != nil {
+	if d.GetInode(podPassword, totalPath) != nil {
 		return ErrDirectoryAlreadyPresent
 	}
 
+	if mode == 0 {
+		mode = S_IFDIR | defaultMode
+	}
 	// create the meta data
 	now := time.Now().Unix()
 	meta := MetaData{
@@ -69,7 +72,7 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string) error {
 		CreationTime:     now,
 		ModificationTime: now,
 		AccessTime:       now,
-		Mode:             S_IFDIR | defaultMode,
+		Mode:             mode,
 	}
 	dirInode := &Inode{
 		Meta: &meta,

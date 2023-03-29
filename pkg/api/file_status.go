@@ -78,7 +78,7 @@ func (h *Handler) FileStatusHandler(w http.ResponseWriter, r *http.Request) {
 			jsonhttp.BadRequest(w, "status: "+err.Error())
 			return
 		}
-		if err == file.ErrFileNotPresent || err == file.ErrFileNotFound {
+		if err == file.ErrFileNotFound {
 			h.logger.Errorf("status: %v", err)
 			jsonhttp.NotFound(w, "status: "+err.Error())
 			return

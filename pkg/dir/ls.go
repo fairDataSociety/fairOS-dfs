@@ -75,7 +75,7 @@ func (d *Directory) ListDir(dirNameWithPath, podPassword string) ([]Entry, []str
 			lsTask := newLsTask(d, dirTopic, dirPath, podPassword, listEntries, mtx, wg)
 			_, err := d.syncManager.Go(lsTask)
 			if err != nil {
-				return nil, nil, fmt.Errorf("list dir : %v", err)
+				wg.Done()
 			}
 		} else if strings.HasPrefix(fileOrDirName, "_F_") {
 			fileName := strings.TrimPrefix(fileOrDirName, "_F_")

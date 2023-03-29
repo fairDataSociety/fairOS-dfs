@@ -46,6 +46,7 @@ const (
 	healthUrl              = "/health"
 	chunkUploadDownloadUrl = "/chunks"
 	bytesUploadDownloadUrl = "/bytes"
+	bzzUrl                 = "/bzz"
 	tagsUrl                = "/tags"
 	pinsUrl                = "/pins/"
 	_                      = pinsUrl
@@ -53,7 +54,8 @@ const (
 	swarmEncryptHeader     = "Swarm-Encrypt"
 	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
 	//swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
-	swarmTagHeader = "Swarm-Tag"
+	swarmTagHeader    = "Swarm-Tag"
+	contentTypeHeader = "Content-Type"
 )
 
 // Client is a bee http client that satisfies blockstore.Client
@@ -67,6 +69,7 @@ type Client struct {
 	postageBlockId     string
 	logger             logging.Logger
 	isProxy            bool
+	shouldPin          bool
 }
 
 func hashFunc() hash.Hash {
@@ -95,7 +98,7 @@ type beeError struct {
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
-func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *Client {
+func NewBeeClient(apiUrl, postageBlockId string, shouldPin bool, logger logging.Logger) *Client {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache, err := lru.New(chunkCacheSize)
 	if err != nil {
@@ -119,6 +122,7 @@ func NewBeeClient(apiUrl, postageBlockId string, logger logging.Logger) *Client 
 		downloadBlockCache: downloadBlockCache,
 		postageBlockId:     postageBlockId,
 		logger:             logger,
+		shouldPin:          shouldPin,
 	}
 }
 
@@ -190,7 +194,9 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 
 	// TODO change this in the future when we have some alternative to pin SOC
 	// This is a temporary fix to force soc pinning
-	req.Header.Set(swarmPinHeader, "true")
+	if s.shouldPin {
+		req.Header.Set(swarmPinHeader, "true")
+	}
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -227,12 +233,12 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 		"reference": addrResp.Reference.String(),
 		"duration":  time.Since(to).String(),
 	}
-	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload soc: ")
 	return addrResp.Reference.Bytes(), nil
 }
 
 // UploadChunk uploads a chunk to Swarm network.
-func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err error) {
+func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	to := time.Now()
 	fullUrl := fmt.Sprintf(s.url + chunkUploadDownloadUrl)
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(ch.Data()))
@@ -240,7 +246,7 @@ func (s *Client) UploadChunk(ch swarm.Chunk, pin bool) (address []byte, err erro
 		return nil, err
 	}
 
-	if pin {
+	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
 	}
 
@@ -333,7 +339,7 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 }
 
 // UploadBlob uploads a binary blob of data to Swarm network. It also optionally pins and encrypts the data.
-func (s *Client) UploadBlob(data []byte, tag uint32, pin, encrypt bool) (address []byte, err error) {
+func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []byte, err error) {
 	to := time.Now()
 
 	// return the ref if this data is already in swarm
@@ -347,7 +353,7 @@ func (s *Client) UploadBlob(data []byte, tag uint32, pin, encrypt bool) (address
 		return nil, err
 	}
 
-	if pin {
+	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
 	}
 
@@ -450,6 +456,110 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 		"duration":  time.Since(to).String(),
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "download blob: ")
+
+	// add the data and ref if it is not in cache
+	if !s.inBlockCache(s.downloadBlockCache, addrString) {
+		s.addToBlockCache(s.downloadBlockCache, addrString, respData)
+	}
+	return respData, response.StatusCode, nil
+}
+
+// UploadBzz uploads a file through bzz api
+func (s *Client) UploadBzz(data []byte, fileName string) (address []byte, err error) {
+	to := time.Now()
+
+	fullUrl := s.url + bzzUrl + "?name=" + fileName
+	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
+	req.Header.Set(contentTypeHeader, "application/json")
+
+	response, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	req.Close = true
+
+	respData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, errors.New("error downloading bzz")
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return nil, errors.New(string(respData))
+		}
+		return nil, errors.New(beeErr.Message)
+	}
+
+	var resp bytesPostResponse
+	err = json.Unmarshal(respData, &resp)
+
+	fields := logrus.Fields{
+		"reference": resp.Reference.String(),
+		"size":      len(respData),
+		"duration":  time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload bzz: ")
+
+	// add the data and ref if it is not in cache
+	if !s.inBlockCache(s.downloadBlockCache, resp.Reference.String()) {
+		s.addToBlockCache(s.downloadBlockCache, resp.Reference.String(), data)
+	}
+	return resp.Reference.Bytes(), nil
+}
+
+// DownloadBzz downloads bzz data from the Swarm network.
+func (s *Client) DownloadBzz(address []byte) ([]byte, int, error) {
+	to := time.Now()
+
+	// return the data if this address is already in cache
+	addrString := swarm.NewAddress(address).String()
+	if s.inBlockCache(s.downloadBlockCache, addrString) {
+		return s.getFromBlockCache(s.downloadBlockCache, addrString), 200, nil
+	}
+
+	fullUrl := s.url + bzzUrl + "/" + addrString
+	req, err := http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
+	if err != nil {
+		return nil, http.StatusNotFound, err
+	}
+
+	response, err := s.client.Do(req)
+	if err != nil {
+		return nil, http.StatusNotFound, err
+	}
+	defer response.Body.Close()
+
+	req.Close = true
+
+	respData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, response.StatusCode, errors.New("error downloading bzz")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return nil, response.StatusCode, errors.New(string(respData))
+		}
+		return nil, response.StatusCode, errors.New(beeErr.Message)
+	}
+
+	fields := logrus.Fields{
+		"reference": addrString,
+		"size":      len(respData),
+		"duration":  time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "download bzz: ")
 
 	// add the data and ref if it is not in cache
 	if !s.inBlockCache(s.downloadBlockCache, addrString) {

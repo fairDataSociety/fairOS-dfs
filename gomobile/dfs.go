@@ -45,12 +45,12 @@ func IsConnected() bool {
 func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) error {
 	logger := logging.New(os.Stdout, logrus.Level(logLevel))
 	var err error
-	var ensConfig *contracts.Config
+	var ensConfig *contracts.ENSConfig
 	switch network {
 	case "play":
-		ensConfig = contracts.PlayConfig()
+		ensConfig, _ = contracts.PlayConfig()
 	case "testnet":
-		ensConfig = contracts.TestnetConfig()
+		ensConfig, _ = contracts.TestnetConfig()
 	case "mainnet":
 		return fmt.Errorf("not supported yet")
 	default:
@@ -61,6 +61,7 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 		beeEndpoint,
 		postageBlockId,
 		ensConfig,
+		nil,
 		logger,
 	)
 	return err
@@ -91,10 +92,6 @@ func IsUserLoggedIn() bool {
 
 func LogoutUser() error {
 	return api.LogoutUser(sessionId)
-}
-
-func DeleteUser() error {
-	return api.DeleteUserV2(savedPassword, sessionId)
 }
 
 func StatUser() (string, error) {
@@ -213,7 +210,7 @@ func DirPresent(podName, dirPath string) (string, error) {
 }
 
 func DirMake(podName, dirPath string) (string, error) {
-	err := api.Mkdir(podName, dirPath, sessionId)
+	err := api.Mkdir(podName, dirPath, sessionId, 0)
 	if err != nil {
 		return "", err
 	}
@@ -269,11 +266,7 @@ func FileShare(podName, dirPath, destinationUser string) (string, error) {
 }
 
 func FileReceive(podName, directory, fileSharingReference string) (string, error) {
-	ref, err := utils.ParseSharingReference(fileSharingReference)
-	if err != nil {
-		return "", err
-	}
-	filePath, err := api.ReceiveFile(podName, sessionId, ref, directory)
+	filePath, err := api.ReceiveFile(podName, sessionId, fileSharingReference, directory)
 	if err != nil {
 		return "", err
 	}
@@ -284,11 +277,7 @@ func FileReceive(podName, directory, fileSharingReference string) (string, error
 }
 
 func FileReceiveInfo(podName, fileSharingReference string) (string, error) {
-	ref, err := utils.ParseSharingReference(fileSharingReference)
-	if err != nil {
-		return "", err
-	}
-	receiveInfo, err := api.ReceiveInfo(sessionId, ref)
+	receiveInfo, err := api.ReceiveInfo(sessionId, fileSharingReference)
 	if err != nil {
 		return "", err
 	}
@@ -323,12 +312,12 @@ func FileUpload(podName, filePath, dirPath, compression, blockSize string, overw
 	if err != nil {
 		return err
 	}
-	return api.UploadFile(podName, fileInfo.Name(), sessionId, fileInfo.Size(), f, dirPath, compression, uint32(bs), overwrite)
+	return api.UploadFile(podName, fileInfo.Name(), sessionId, fileInfo.Size(), f, dirPath, compression, uint32(bs), 0, overwrite)
 }
 
 func BlobUpload(data []byte, podName, fileName, dirPath, compression string, size, blockSize int64, overwrite bool) error {
 	r := bytes.NewReader(data)
-	return api.UploadFile(podName, fileName, sessionId, size, r, dirPath, compression, uint32(blockSize), overwrite)
+	return api.UploadFile(podName, fileName, sessionId, size, r, dirPath, compression, uint32(blockSize), 0, overwrite)
 }
 
 func FileDownload(podName, filePath string) ([]byte, error) {

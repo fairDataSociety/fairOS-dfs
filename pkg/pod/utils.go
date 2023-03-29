@@ -24,11 +24,18 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// IsPodOpened checks if a pod is open
-func (p *Pod) IsPodOpened(podName string) bool {
-	p.podMu.Lock()
-	defer p.podMu.Unlock()
-	if _, ok := p.podMap[podName]; ok {
+// IsOwnPodPresent checks if a pod is already present for user
+func (p *Pod) IsOwnPodPresent(podName string) bool {
+	podName, err := CleanPodName(podName)
+	if err != nil {
+		return false
+	}
+	// check if pods is present and get free index
+	podList, err := p.loadUserPods()
+	if err != nil { // skipcq: TCV-001
+		return false
+	}
+	if p.checkIfPodPresent(podList, podName) {
 		return true
 	}
 	return false
@@ -72,7 +79,7 @@ func (*Pod) GetName(inode *d.Inode) string {
 
 // GetAccountInfo returns the pod account info
 func (p *Pod) GetAccountInfo(podName string) (*account.Info, error) {
-	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
+	podInfo, _, err := p.GetPodInfo(podName)
 	if err != nil {
 		return nil, err
 	}

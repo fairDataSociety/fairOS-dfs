@@ -19,10 +19,6 @@ package pod
 // ClosePod closed an already opened pod and removes its information from directory and file
 // data structures.
 func (p *Pod) ClosePod(podName string) error {
-	if !p.IsPodOpened(podName) {
-		return ErrPodNotOpened
-	}
-
 	podInfo, _, err := p.GetPodInfoFromPodMap(podName)
 	if err != nil { // skipcq: TCV-001
 		return err

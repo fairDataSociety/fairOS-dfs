@@ -39,12 +39,17 @@ func registerWasmFunctions() {
 	js.Global().Set("connect", js.FuncOf(connect))
 	js.Global().Set("stop", js.FuncOf(stop))
 
+	js.Global().Set("publicKvEntryGet", js.FuncOf(publicKvEntryGet))
+
+	js.Global().Set("connectWallet", js.FuncOf(connectWallet))
 	js.Global().Set("login", js.FuncOf(login))
+	js.Global().Set("walletLogin", js.FuncOf(walletLogin))
 	js.Global().Set("userPresent", js.FuncOf(userPresent))
 	js.Global().Set("userIsLoggedIn", js.FuncOf(userIsLoggedIn))
 	js.Global().Set("userLogout", js.FuncOf(userLogout))
 	js.Global().Set("userDelete", js.FuncOf(userDelete))
 	js.Global().Set("userStat", js.FuncOf(userStat))
+	js.Global().Set("getNameHash", js.FuncOf(getNameHash))
 
 	js.Global().Set("podNew", js.FuncOf(podNew))
 	js.Global().Set("podOpen", js.FuncOf(podOpen))
@@ -56,6 +61,14 @@ func registerWasmFunctions() {
 	js.Global().Set("podShare", js.FuncOf(podShare))
 	js.Global().Set("podReceive", js.FuncOf(podReceive))
 	js.Global().Set("podReceiveInfo", js.FuncOf(podReceiveInfo))
+
+	js.Global().Set("getSubscriptions", js.FuncOf(getSubscriptions))
+	js.Global().Set("openSubscribedPod", js.FuncOf(openSubscribedPod))
+	js.Global().Set("getSubscribablePods", js.FuncOf(getSubscribablePods))
+	js.Global().Set("getSubRequests", js.FuncOf(getSubRequests))
+	js.Global().Set("getSubscribablePodInfo", js.FuncOf(getSubscribablePodInfo))
+	js.Global().Set("encryptSubscription", js.FuncOf(encryptSubscription))
+	js.Global().Set("openSubscribedPodFromReference", js.FuncOf(openSubscribedPodFromReference))
 
 	js.Global().Set("dirPresent", js.FuncOf(dirPresent))
 	js.Global().Set("dirMake", js.FuncOf(dirMake))
@@ -101,22 +114,27 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
 		if len(funcArgs) != 4 {
-			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, false, rpc, play)\"")
+			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, rpc, network)\"")
 			return nil
 		}
 		beeEndpoint := funcArgs[0].String()
 		stampId := funcArgs[1].String()
 		rpc := funcArgs[2].String()
 		network := funcArgs[3].String()
+		//subRpc := funcArgs[4].String()
+		//subContractAddress := funcArgs[5].String()
 		if network != "testnet" && network != "play" {
 			reject.Invoke("unknown network. \"use play or testnet\"")
 			return nil
 		}
-		var config *contracts.Config
+		var (
+			config *contracts.ENSConfig
+		)
+
 		if network == "play" {
-			config = contracts.PlayConfig()
+			config, _ = contracts.PlayConfig()
 		} else {
-			config = contracts.TestnetConfig()
+			config, _ = contracts.TestnetConfig()
 		}
 		config.ProviderBackend = rpc
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
@@ -127,6 +145,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 				beeEndpoint,
 				stampId,
 				config,
+				nil,
 				logger,
 			)
 			if err != nil {
@@ -147,6 +166,53 @@ func stop(js.Value, []js.Value) interface{} {
 	return nil
 }
 
+func publicKvEntryGet(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"publicKvEntryGet(sharingRef, tableName, key)\"")
+			return nil
+		}
+		sharingRef := funcArgs[0].String()
+		tableName := funcArgs[1].String()
+		key := funcArgs[2].String()
+
+		ref, err := utils.ParseHexReference(sharingRef)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("public pod kv get: invalid reference: %s", err.Error()))
+			return nil
+		}
+
+		go func() {
+			shareInfo, err := api.PublicPodReceiveInfo(ref)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod kv get: %v", err))
+				return
+			}
+			columns, data, err := api.PublicPodKVEntryGet(shareInfo, tableName, key)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod kv get: %s", err.Error()))
+				return
+			}
+			var res KVResponse
+			if columns != nil {
+				res.Keys = columns
+			} else {
+				res.Keys = []string{key}
+			}
+			res.Values = data
+			resp, _ := json.Marshal(res)
+			resolve.Invoke(resp)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
 func login(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
@@ -160,16 +226,82 @@ func login(_ js.Value, funcArgs []js.Value) interface{} {
 		password := funcArgs[1].String()
 
 		go func() {
-			ui, _, _, err := api.LoginUserV2(username, password, "")
+			ui, nameHash, _, err := api.LoginUserV2(username, password, "")
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("Failed to create user : %s", err.Error()))
 				return
 			}
-			data := map[string]string{}
-			data["user"] = ui.GetUserName()
-			data["sessionId"] = ui.GetSessionId()
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("user", ui.GetUserName())
+			object.Set("address", ui.GetAccount().GetUserAccountInfo().GetAddress().Hex())
+			object.Set("nameHash", nameHash)
+			object.Set("sessionId", ui.GetSessionId())
+
+			resolve.Invoke(object)
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func walletLogin(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"walletLogin(addressHex, signature)\"")
+			return nil
+		}
+		address := funcArgs[0].String()
+		signature := funcArgs[1].String()
+
+		go func() {
+			ui, nameHash, err := api.LoginWithWallet(address, signature, "")
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("Failed to login user : %s", err.Error()))
+				return
+			}
+
+			object := js.Global().Get("Object").New()
+			object.Set("user", ui.GetUserName())
+			object.Set("address", ui.GetAccount().GetUserAccountInfo().GetAddress().Hex())
+			object.Set("nameHash", nameHash)
+			object.Set("sessionId", ui.GetSessionId())
+			resolve.Invoke(object)
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func connectWallet(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 4 {
+			reject.Invoke("not enough arguments. \"connectWallet(username, password, walletAddress, signature)\"")
+			return nil
+		}
+		username := funcArgs[0].String()
+		password := funcArgs[1].String()
+		walletAddress := funcArgs[2].String()
+		signature := funcArgs[3].String()
+
+		go func() {
+			err := api.ConnectPortableAccountWithWallet(username, password, walletAddress, signature)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("Failed to create user : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("wallet connected")
 		}()
 
 		return nil
@@ -192,10 +324,10 @@ func userPresent(_ js.Value, funcArgs []js.Value) interface{} {
 
 		go func() {
 			present := api.IsUserNameAvailableV2(username)
-			data := map[string]bool{}
-			data["present"] = present
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("present", present)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -217,10 +349,11 @@ func userIsLoggedIn(_ js.Value, funcArgs []js.Value) interface{} {
 
 		go func() {
 			loggedin := api.IsUserLoggedIn(username)
-			data := map[string]bool{}
-			data["loggedin"] = loggedin
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			object.Set("loggedin", loggedin)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -299,8 +432,12 @@ func userStat(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("userStat failed : %s", err.Error()))
 				return
 			}
-			data, _ := json.Marshal(stat)
-			resolve.Invoke(string(data))
+
+			object := js.Global().Get("Object").New()
+			object.Set("userName", stat.Name)
+			object.Set("address", stat.Reference)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -461,11 +598,22 @@ func podList(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("podList failed : %s", err.Error()))
 				return
 			}
-			data := map[string]interface{}{}
-			data["pods"] = ownPods
-			data["sharedPods"] = sharedPods
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			pods := js.Global().Get("Array").New(len(ownPods))
+			for i, v := range ownPods {
+				pods.SetIndex(i, js.ValueOf(v))
+			}
+
+			sPods := js.Global().Get("Array").New(len(sharedPods))
+			for i, v := range sharedPods {
+				sPods.SetIndex(i, js.ValueOf(v))
+			}
+
+			object.Set("pods", pods)
+			object.Set("sharedPods", sPods)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -492,8 +640,11 @@ func podStat(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("podStat failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(stat)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("podName", stat.PodName)
+			object.Set("address", stat.PodAddress)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -521,10 +672,10 @@ func podShare(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("podShare failed : %s", err.Error()))
 				return
 			}
-			data := map[string]string{}
-			data["podSharingReference"] = reference
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("podSharingReference", reference)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -589,8 +740,14 @@ func podReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("podReceiveInfo failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(shareInfo)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			object.Set("podName", shareInfo.PodName)
+			object.Set("podAddress", shareInfo.Address)
+			object.Set("password", shareInfo.Password)
+			object.Set("userAddress", shareInfo.UserAddress)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -618,10 +775,11 @@ func dirPresent(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("dirPresent failed : %s", err.Error()))
 				return
 			}
-			data := map[string]bool{}
-			data["present"] = present
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			object.Set("present", present)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -644,7 +802,7 @@ func dirMake(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			err := api.Mkdir(podName, dirPath, sessionId)
+			err := api.Mkdir(podName, dirPath, sessionId, 0)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirMake failed : %s", err.Error()))
 				return
@@ -705,11 +863,37 @@ func dirList(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("dirList failed : %s", err.Error()))
 				return
 			}
-			data := map[string]interface{}{}
-			data["files"] = files
-			data["dirs"] = dirs
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			filesList := js.Global().Get("Array").New(len(files))
+			for i, v := range files {
+				file := js.Global().Get("Object").New()
+				file.Set("name", v.Name)
+				file.Set("contentType", v.ContentType)
+				file.Set("size", v.Size)
+				file.Set("blockSize", v.BlockSize)
+				file.Set("creationTime", v.CreationTime)
+				file.Set("modificationTime", v.ModificationTime)
+				file.Set("accessTime", v.AccessTime)
+				file.Set("mode", v.Mode)
+				filesList.SetIndex(i, file)
+			}
+			dirsList := js.Global().Get("Array").New(len(dirs))
+			for i, v := range dirs {
+				dir := js.Global().Get("Object").New()
+				dir.Set("name", v.Name)
+				dir.Set("contentType", v.ContentType)
+				dir.Set("size", v.Size)
+				dir.Set("mode", v.Mode)
+				dir.Set("blockSize", v.BlockSize)
+				dir.Set("creationTime", v.CreationTime)
+				dir.Set("modificationTime", v.ModificationTime)
+				dir.Set("accessTime", v.AccessTime)
+				dirsList.SetIndex(i, dir)
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("files", filesList)
+			object.Set("dirs", dirsList)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -737,8 +921,18 @@ func dirStat(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("dirStat failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(stat)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("podName", stat.PodName)
+			object.Set("dirPath", stat.DirPath)
+			object.Set("dirName", stat.DirName)
+			object.Set("mode", stat.Mode)
+			object.Set("creationTime", stat.CreationTime)
+			object.Set("modificationTime", stat.ModificationTime)
+			object.Set("accessTime", stat.AccessTime)
+			object.Set("noOfDirectories", stat.NoOfDirectories)
+			object.Set("noOfFiles", stat.NoOfFiles)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -816,7 +1010,7 @@ func fileUpload(_ js.Value, funcArgs []js.Value) interface{} {
 			js.CopyBytesToGo(inBuf, array)
 			reader := bytes.NewReader(inBuf)
 
-			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), true)
+			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), 0, true)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileUpload failed : %s", err.Error()))
 				return
@@ -849,10 +1043,11 @@ func fileShare(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("fileShare failed : %s", err.Error()))
 				return
 			}
-			data := map[string]string{}
-			data["fileSharingReference"] = ref
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+
+			object := js.Global().Get("Object").New()
+			object.Set("fileSharingReference", ref)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -876,20 +1071,15 @@ func fileReceive(_ js.Value, funcArgs []js.Value) interface{} {
 		fileSharingReference := funcArgs[3].String()
 
 		go func() {
-			ref, err := utils.ParseSharingReference(fileSharingReference)
+			filePath, err := api.ReceiveFile(podName, sessionId, fileSharingReference, directory)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileReceive failed : %s", err.Error()))
 				return
 			}
-			filePath, err := api.ReceiveFile(podName, sessionId, ref, directory)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("fileReceive failed : %s", err.Error()))
-				return
-			}
-			data := map[string]string{}
-			data["fileName"] = filePath
-			resp, _ := json.Marshal(data)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("fileName", filePath)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -911,18 +1101,23 @@ func fileReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 		fileSharingReference := funcArgs[2].String()
 
 		go func() {
-			ref, err := utils.ParseSharingReference(fileSharingReference)
+			receiveInfo, err := api.ReceiveInfo(sessionId, fileSharingReference)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileReceiveInfo failed : %s", err.Error()))
 				return
 			}
-			receiveInfo, err := api.ReceiveInfo(sessionId, ref)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("fileReceiveInfo failed : %s", err.Error()))
-				return
-			}
-			resp, _ := json.Marshal(receiveInfo)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("name", receiveInfo.FileName)
+			object.Set("size", receiveInfo.Size)
+			object.Set("blockSize", receiveInfo.BlockSize)
+			object.Set("numberOfBlocks", receiveInfo.NumberOfBlocks)
+			object.Set("contentType", receiveInfo.ContentType)
+			object.Set("compression", receiveInfo.Compression)
+			object.Set("sourceAddress", receiveInfo.Sender)
+			object.Set("destAddress", receiveInfo.Receiver)
+			object.Set("sharedTime", receiveInfo.SharedTime)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -978,8 +1173,20 @@ func fileStat(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("fileStat failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(stat)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			object.Set("podName", stat.PodName)
+			object.Set("mode", stat.Mode)
+			object.Set("filePath", stat.FilePath)
+			object.Set("fileName", stat.FileName)
+			object.Set("fileSize", stat.FileSize)
+			object.Set("blockSize", stat.BlockSize)
+			object.Set("compression", stat.Compression)
+			object.Set("contentType", stat.ContentType)
+			object.Set("creationTime", stat.CreationTime)
+			object.Set("modificationTime", stat.ModificationTime)
+			object.Set("accessTime", stat.AccessTime)
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -1768,6 +1975,316 @@ func docIndexJson(_ js.Value, funcArgs []js.Value) interface{} {
 				return
 			}
 			resolve.Invoke("indexing started")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func encryptSubscription(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"encryptSubscription(sessionId, podName, subscriberNameHash)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		podName := funcArgs[1].String()
+		subscriberNameHashStr := funcArgs[2].String()
+
+		nameHash, err := utils.Decode(subscriberNameHashStr)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("approveSubscription failed : %s", err.Error()))
+			return nil
+		}
+
+		var nh [32]byte
+		copy(nh[:], nameHash)
+		go func() {
+			ref, err := api.EncryptSubscription(sessionId, podName, nh)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("encryptSubscription failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("reference", ref)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func getSubscriptions(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"getSubscriptions(sessionId)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+
+		go func() {
+			subs, err := api.GetSubscriptions(sessionId)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("getSubscriptions failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			subscriptions := js.Global().Get("Array").New(len(subs))
+			for i, v := range subs {
+				subscription := js.Global().Get("Object").New()
+				subscription.Set("podName", v.PodName)
+				subscription.Set("subHash", utils.Encode(v.SubHash[:]))
+				subscription.Set("podAddress", v.PodAddress)
+				subscription.Set("validTill", v.ValidTill)
+				subscription.Set("infoLocation", utils.Encode(v.InfoLocation))
+				subscriptions.SetIndex(i, js.ValueOf(v))
+			}
+			object.Set("subscriptions", subscriptions)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"openSubscribedPod(sessionId, subHash, keyLocation)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		subHashStr := funcArgs[1].String()
+		keyLocation := funcArgs[2].String()
+
+		subHash, err := utils.Decode(subHashStr)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("openSubscribedPod failed : %s", err.Error()))
+			return nil
+		}
+
+		var s [32]byte
+		copy(s[:], subHash)
+
+		go func() {
+			pi, err := api.OpenSubscribedPod(sessionId, s, keyLocation)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("openSubscribedPod failed : %s", err.Error()))
+				return
+			}
+
+			resolve.Invoke(fmt.Sprintf("%s opened successfully", pi.GetPodName()))
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func openSubscribedPodFromReference(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"openSubscribedPodFromReference(sessionId, reference, sellerNameHash)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		reference := funcArgs[1].String()
+		sellerNameHash := funcArgs[2].String()
+
+		subHash, err := utils.Decode(sellerNameHash)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("openSubscribedPodFromReference failed : %s", err.Error()))
+			return nil
+		}
+
+		var s [32]byte
+		copy(s[:], subHash)
+
+		go func() {
+			pi, err := api.DecryptAndOpenSubscriptionPod(sessionId, reference, s)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("openSubscribedPodFromReference failed : %s", err.Error()))
+				return
+			}
+
+			resolve.Invoke(fmt.Sprintf("%s opened successfully", pi.GetPodName()))
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func getSubscribablePods(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 1 {
+			reject.Invoke("not enough arguments. \"getSubscribablePods(sessionId)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+
+		go func() {
+			subs, err := api.GetSubscribablePods(sessionId)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("getSubscribablePods failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			subscriptions := js.Global().Get("Array").New(len(subs))
+			for i, v := range subs {
+				subscription := js.Global().Get("Object").New()
+				subscription.Set("subHash", utils.Encode(v.SubHash[:]))
+				subscription.Set("sellerNameHash", utils.Encode(v.FdpSellerNameHash[:]))
+				subscription.Set("seller", v.Seller.Hex())
+				subscription.Set("swarmLocation", utils.Encode(v.SwarmLocation[:]))
+				subscription.Set("price", v.Price.Int64())
+				subscription.Set("active", v.Active)
+				subscription.Set("earned", v.Earned.Int64())
+				subscription.Set("bid", v.Bids)
+				subscription.Set("sells", v.Sells)
+				subscription.Set("reports", v.Reports)
+				subscriptions.SetIndex(i, js.ValueOf(v))
+			}
+			object.Set("subscribablePods", subscriptions)
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func getSubRequests(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 1 {
+			reject.Invoke("not enough arguments. \"getSubRequests(sessionId)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+
+		go func() {
+			requests, err := api.GetSubsRequests(sessionId)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("getSubRequests failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			subRequests := js.Global().Get("Array").New(len(requests))
+			for i, v := range requests {
+				request := js.Global().Get("Object").New()
+				request.Set("subHash", utils.Encode(v.SubHash[:]))
+				request.Set("buyerNameHash", utils.Encode(v.FdpBuyerNameHash[:]))
+				request.Set("requestHash", utils.Encode(v.RequestHash[:]))
+				request.Set("buyer", v.Buyer.Hex())
+				subRequests.SetIndex(i, js.ValueOf(v))
+			}
+			object.Set("requests", subRequests)
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func getSubscribablePodInfo(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"getSubscribablePodInfo(sessionId, subHash)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		subHashStr := funcArgs[1].String()
+
+		subHash, err := utils.Decode(subHashStr)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("getSubscribablePodInfo failed : %s", err.Error()))
+			return nil
+		}
+
+		var s [32]byte
+		copy(s[:], subHash)
+
+		go func() {
+			info, err := api.GetSubscribablePodInfo(sessionId, s)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("getSubscribablePodInfo failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("category", info.Category)
+			object.Set("description", info.Description)
+			object.Set("fdpSellerNameHash", info.FdpSellerNameHash)
+			object.Set("imageUrl", info.ImageURL)
+			object.Set("podAddress", info.PodAddress)
+			object.Set("podName", info.PodName)
+			object.Set("price", info.Price)
+			object.Set("title", info.Title)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func getNameHash(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"getNameHash(sessionId, username)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		username := funcArgs[1].String()
+
+		go func() {
+			nameHash, err := api.GetNameHash(sessionId, username)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("getNameHash failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("namehash", utils.Encode(nameHash[:]))
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})

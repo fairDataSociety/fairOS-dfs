@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/plexsysio/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -46,7 +48,9 @@ func TestShare(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	sm := mock2.NewMockSubscriptionManager()
+
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 	podName1 := "test1"
 
 	acc2 := account.New(logger)
@@ -55,7 +59,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, logger)
 	podName2 := "test2"
 
 	acc3 := account.New(logger)
@@ -64,7 +68,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd3 := feed.New(acc3.GetUserAccountInfo(), mockClient, logger)
-	pod3 := pod.NewPod(mockClient, fd3, acc3, tm, logger)
+	pod3 := pod.NewPod(mockClient, fd3, acc3, tm, sm, logger)
 	podName3 := "test3"
 
 	acc4 := account.New(logger)
@@ -73,7 +77,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd4 := feed.New(acc4.GetUserAccountInfo(), mockClient, logger)
-	pod4 := pod.NewPod(mockClient, fd4, acc4, tm, logger)
+	pod4 := pod.NewPod(mockClient, fd4, acc4, tm, sm, logger)
 	podName4 := "test4"
 
 	acc5 := account.New(logger)
@@ -82,7 +86,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd5 := feed.New(acc5.GetUserAccountInfo(), mockClient, logger)
-	pod5 := pod.NewPod(mockClient, fd5, acc5, tm, logger)
+	pod5 := pod.NewPod(mockClient, fd5, acc5, tm, sm, logger)
 	podName5 := "test5"
 
 	acc6 := account.New(logger)
@@ -91,7 +95,7 @@ func TestShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	fd6 := feed.New(acc6.GetUserAccountInfo(), mockClient, logger)
-	pod6 := pod.NewPod(mockClient, fd6, acc6, tm, logger)
+	pod6 := pod.NewPod(mockClient, fd6, acc6, tm, sm, logger)
 	podName6 := "test6"
 
 	t.Run("share-pod", func(t *testing.T) {
@@ -416,7 +420,7 @@ func TestShare(t *testing.T) {
 			t.Fatal(err)
 		}
 		fd7 := feed.New(acc7.GetUserAccountInfo(), mockClient, logger)
-		pod7 := pod.NewPod(mockClient, fd7, acc7, tm, logger)
+		pod7 := pod.NewPod(mockClient, fd7, acc7, tm, sm, logger)
 		podName7 := "test7"
 
 		acc8 := account.New(logger)
@@ -425,7 +429,7 @@ func TestShare(t *testing.T) {
 			t.Fatal(err)
 		}
 		fd8 := feed.New(acc8.GetUserAccountInfo(), mockClient, logger)
-		pod8 := pod.NewPod(mockClient, fd8, acc8, tm, logger)
+		pod8 := pod.NewPod(mockClient, fd8, acc8, tm, sm, logger)
 
 		// create sending pod and receiving pod
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -493,11 +497,11 @@ func TestShare(t *testing.T) {
 			t.Fatal(err)
 		}
 		dirObject8 := gotSharedPodInfo.GetDirectory()
-		dirInode1 := dirObject8.GetDirFromDirectoryMap("/parentDir/subDir1")
+		dirInode1 := dirObject8.GetInode(podPassword, "/parentDir/subDir1")
 		if dirInode1 != nil {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode1 = dirObject8.GetDirFromDirectoryMap("/parentDir/newSubDir1")
+		dirInode1 = dirObject8.GetInode(podPassword, "/parentDir/newSubDir1")
 		if dirInode1 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -507,7 +511,7 @@ func TestShare(t *testing.T) {
 		if dirInode1.Meta.Name != "newSubDir1" {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode2 := dirObject8.GetDirFromDirectoryMap("/parentDir/subDir2")
+		dirInode2 := dirObject8.GetInode(podPassword, "/parentDir/subDir2")
 		if dirInode2 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -519,11 +523,11 @@ func TestShare(t *testing.T) {
 		}
 
 		fileObject8 := gotInfo.GetFile()
-		fileMeta1 := fileObject8.GetFromFileMap("/parentDir/file1")
+		fileMeta1 := fileObject8.GetInode(podPassword, "/parentDir/file1")
 		if fileMeta1 != nil {
 			t.Fatalf("invalid file meta")
 		}
-		fileMeta1 = fileObject8.GetFromFileMap("/parentDir/renamedFile1")
+		fileMeta1 = fileObject8.GetInode(podPassword, "/parentDir/renamedFile1")
 		if fileMeta1 == nil {
 			t.Fatalf("invalid file meta")
 		}
@@ -539,7 +543,7 @@ func TestShare(t *testing.T) {
 		if fileMeta1.BlockSize != uint32(10) {
 			t.Fatalf("invalid block size")
 		}
-		fileMeta2 := fileObject.GetFromFileMap("/parentDir/file2")
+		fileMeta2 := fileObject.GetInode(podPassword, "/parentDir/file2")
 		if fileMeta2 == nil {
 			t.Fatalf("invalid file meta")
 		}

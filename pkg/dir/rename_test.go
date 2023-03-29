@@ -48,7 +48,7 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err := dirObject.MkDir("/", podPassword)
+		err := dirObject.MkDir("/", podPassword, 0)
 		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
 			t.Fatal("invalid dir name")
 		}
@@ -56,40 +56,40 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/"+longDirName, podPassword)
+		err = dirObject.MkDir("/"+longDirName, podPassword, 0)
 		if !errors.Is(err, dir.ErrTooLongDirectoryName) {
 			t.Fatal("dir name too long")
 		}
 
 		// create some dir and files
-		err = dirObject.MkDir("/parentDir", podPassword)
+		err = dirObject.MkDir("/parentDir", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/parentDir", podPassword)
+		err = dirObject.MkDir("/parentDir", podPassword, 0)
 		if !errors.Is(err, dir.ErrDirectoryAlreadyPresent) {
 			t.Fatal("dir already present")
 		}
 		// populate the directory with few directory and files
-		err = dirObject.MkDir("/parentDir/subDir1", podPassword)
+		err = dirObject.MkDir("/parentDir/subDir1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/parentDir/subDir2", podPassword)
+		err = dirObject.MkDir("/parentDir/subDir2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		r := new(bytes.Buffer)
-		err = fileObject.Upload(r, "file1", 0, 100, "/parentDir", "", podPassword)
+		err = fileObject.Upload(r, "file1", 0, 100, 0, "/parentDir", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.Upload(r, "file2", 0, 100, "/parentDir", "", podPassword)
+		err = fileObject.Upload(r, "file2", 0, 100, 0, "/parentDir", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.Upload(r, "file2", 0, 100, "/parentDir/subDir2", "", podPassword)
+		err = fileObject.Upload(r, "file2", 0, 100, 0, "/parentDir/subDir2", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -119,7 +119,7 @@ func TestRenameDirectory(t *testing.T) {
 			t.Fatal("rename failed for parentDir")
 		}
 
-		err = dirObject.MkDir("/parent", podPassword)
+		err = dirObject.MkDir("/parent", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -191,7 +191,7 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err := dirObject.MkDir("/", podPassword)
+		err := dirObject.MkDir("/", podPassword, 0)
 		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
 			t.Fatal("invalid dir name")
 		}
@@ -199,37 +199,37 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/"+longDirName, podPassword)
+		err = dirObject.MkDir("/"+longDirName, podPassword, 0)
 		if !errors.Is(err, dir.ErrTooLongDirectoryName) {
 			t.Fatal("dir name too long")
 		}
 
 		// create some dir and files
-		err = dirObject.MkDir("/parentDir", podPassword)
+		err = dirObject.MkDir("/parentDir", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// populate the directory with few directory and files
-		err = dirObject.MkDir("/parentDir/subDir1", podPassword)
+		err = dirObject.MkDir("/parentDir/subDir1", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/parentDir/subDir1/subDir11", podPassword)
+		err = dirObject.MkDir("/parentDir/subDir1/subDir11", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/parentDir/subDir1/subDir11/sub111", podPassword)
+		err = dirObject.MkDir("/parentDir/subDir1/subDir11/sub111", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = dirObject.MkDir("/parentDir/subDir2", podPassword)
+		err = dirObject.MkDir("/parentDir/subDir2", podPassword, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		r := new(bytes.Buffer)
-		err = fileObject.Upload(r, "file1", 0, 100, "/parentDir/subDir1/subDir11/sub111", "", podPassword)
+		err = fileObject.Upload(r, "file1", 0, 100, 0, "/parentDir/subDir1/subDir11/sub111", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}

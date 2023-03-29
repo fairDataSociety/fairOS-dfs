@@ -78,16 +78,6 @@ func (i *Info) RemovePodName(podName string) {
 	delete(i.openPods, podName)
 }
 
-// IsPodOpen checks if users pod is open
-func (i *Info) IsPodOpen(podName string) bool {
-	i.openPodsMu.RLock()
-	defer i.openPodsMu.RUnlock()
-	if _, ok := i.openPods[podName]; ok {
-		return true
-	}
-	return false
-}
-
 // GetUserDirectory returns user directory handler
 func (i *Info) GetUserDirectory() *d.Directory {
 	return i.dir

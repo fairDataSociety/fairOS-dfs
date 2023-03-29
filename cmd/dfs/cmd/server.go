@@ -117,7 +117,8 @@ can consume it.`,
 				return fmt.Errorf("postageBlockId is invalid")
 			}
 		}
-		ensConfig := &contracts.Config{}
+		ensConfig := &contracts.ENSConfig{}
+		var subscriptionConfig *contracts.SubscriptionConfig
 		network := config.GetString("network")
 		rpc := config.GetString(optionRPC)
 		if rpc == "" {
@@ -152,7 +153,7 @@ can consume it.`,
 				return fmt.Errorf("ensRegistry contract address is missing")
 			}
 
-			ensConfig = &contracts.Config{
+			ensConfig = &contracts.ENSConfig{
 				ENSRegistryAddress:    ensRegistryAddress,
 				FDSRegistrarAddress:   fdsRegistrarAddress,
 				PublicResolverAddress: publicResolverAddress,
@@ -164,12 +165,15 @@ can consume it.`,
 				fmt.Println("\nens is not available for mainnet yet")
 				return fmt.Errorf("ens is not available for mainnet yet")
 			case "testnet":
-				ensConfig = contracts.TestnetConfig()
+				ensConfig, subscriptionConfig = contracts.TestnetConfig()
 			case "play":
-				ensConfig = contracts.PlayConfig()
+				ensConfig, subscriptionConfig = contracts.PlayConfig()
 			}
 		}
 		ensConfig.ProviderBackend = rpc
+		if subscriptionConfig != nil {
+			subscriptionConfig.RPC = rpc
+		}
 		var logger logging.Logger
 		switch v := strings.ToLower(verbosity); v {
 		case "0", "silent":
@@ -202,8 +206,8 @@ can consume it.`,
 
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
-		// datadir will be removed in some future version. it is kept for migration purpose only
-		hdlr, err := api.New(ctx, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, logger)
+
+		hdlr, err := api.New(ctx, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, nil, logger)
 		if err != nil {
 			logger.Error(err.Error())
 			return err
@@ -271,6 +275,15 @@ func startHttpService(logger logging.Logger) *http.Server {
 			httpSwagger.URL("./swagger/doc.json"),
 		)).Methods(http.MethodGet)
 	}
+	router.HandleFunc("/public-file", handler.PublicPodGetFileHandler)
+	router.HandleFunc("/public-dir", handler.PublicPodGetDirHandler)
+	router.HandleFunc("/public-kv", handler.PublicPodKVEntryGetHandler)
+
+	redirectHandler := func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+	}
+	router.HandleFunc("/public/{ref}", redirectHandler)
+	router.HandleFunc("/public/{ref}/{file:.*}", handler.PublicPodFilePathHandler)
 
 	apiVersion := "v1"
 

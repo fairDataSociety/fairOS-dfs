@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/plexsysio/taskmanager"
@@ -50,8 +52,9 @@ func TestPodDelete(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
 
 	podName1 := "test1"
 	podName2 := "test2"
@@ -91,7 +94,7 @@ func TestPodDelete(t *testing.T) {
 			t.Fatalf("delete failed")
 		}
 
-		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName1)
+		infoGot, _, err := pod1.GetPodInfo(podName1)
 		if err == nil {
 			t.Fatalf("pod not deleted from map")
 		}
@@ -143,7 +146,7 @@ func TestPodDelete(t *testing.T) {
 			t.Fatalf("delete pod failed")
 		}
 
-		infoGot, _, err := pod1.GetPodInfoFromPodMap(podName1)
+		infoGot, _, err := pod1.GetPodInfo(podName1)
 		if err == nil {
 			t.Fatalf("pod not deleted from map")
 		}
@@ -151,7 +154,7 @@ func TestPodDelete(t *testing.T) {
 			t.Fatalf("pod not deleted from map")
 		}
 
-		_, _, err = pod1.GetPodInfoFromPodMap(podName2)
+		_, _, err = pod1.GetPodInfo(podName2)
 		if err != nil {
 			t.Fatalf("removed wrong pod")
 		}

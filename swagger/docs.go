@@ -20,6 +20,207 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/public-dir": {
+            "get": {
+                "description": "PublicPodGetDirHandler is the api handler to list content of a directory from a public pod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public"
+                ],
+                "summary": "List directory content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod sharing reference",
+                        "name": "sharingRef",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "dir location in the pod",
+                        "name": "dirPath",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.ListFileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/public-file": {
+            "get": {
+                "description": "PodReceiveInfoHandler is the api handler to download file from a shared pod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public"
+                ],
+                "summary": "download file from a shared pod",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod sharing reference",
+                        "name": "sharingRef",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "file location in the pod",
+                        "name": "filePath",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/public-kv": {
+            "get": {
+                "description": "PublicPodKVEntryGetHandler is the api handler to get key from key value store from a public pod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public"
+                ],
+                "summary": "get key from public pod",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod sharing reference",
+                        "name": "sharingRef",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "tableName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "key to look up",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.KVResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/{ref}/{file}": {
+            "get": {
+                "description": "PublicPodFilePathHandler is the api handler to download file from a shared pod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public"
+                ],
+                "summary": "download file from a shared pod",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/dir/chmod": {
             "post": {
                 "description": "DirectoryModeHandler is the api handler to change mode of a directory",
@@ -2692,6 +2893,112 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/pod/fork": {
+            "post": {
+                "description": "PodForkHandler is the api handler to fork a pod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pod"
+                ],
+                "summary": "Fork a pod",
+                "parameters": [
+                    {
+                        "description": "pod name and user password",
+                        "name": "pod_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.PodForkRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/pod/fork-from-reference": {
+            "post": {
+                "description": "PodForkFromReferenceHandler is the api handler to fork a pod from a given sharing reference",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pod"
+                ],
+                "summary": "Fork a pod from sharing reference",
+                "parameters": [
+                    {
+                        "description": "pod name and user password",
+                        "name": "pod_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.PodForkFromReferenceRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/pod/ls": {
             "get": {
                 "description": "PodListHandler is the api handler to list all pods",
@@ -3298,7 +3605,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user name",
+                        "description": "username",
                         "name": "userName",
                         "in": "query",
                         "required": true
@@ -3494,7 +3801,7 @@ const docTemplate = `{
                 "summary": "Login User",
                 "parameters": [
                     {
-                        "description": "user name",
+                        "description": "username",
                         "name": "user_request",
                         "in": "body",
                         "required": true,
@@ -3550,7 +3857,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user name",
+                        "description": "username",
                         "name": "userName",
                         "in": "query",
                         "required": true
@@ -3587,7 +3894,7 @@ const docTemplate = `{
                 "summary": "Register New User",
                 "parameters": [
                     {
-                        "description": "user name",
+                        "description": "username",
                         "name": "user_request",
                         "in": "body",
                         "required": true,
@@ -3939,6 +4246,28 @@ const docTemplate = `{
                 }
             }
         },
+        "api.PodForkFromReferenceRequest": {
+            "type": "object",
+            "properties": {
+                "forkName": {
+                    "type": "string"
+                },
+                "podSharingReference": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.PodForkRequest": {
+            "type": "object",
+            "properties": {
+                "forkName": {
+                    "type": "string"
+                },
+                "podName": {
+                    "type": "string"
+                }
+            }
+        },
         "api.PodListResponse": {
             "type": "object",
             "properties": {
@@ -4219,20 +4548,6 @@ const docTemplate = `{
                 }
             }
         },
-        "file.Blocks": {
-            "type": "object",
-            "properties": {
-                "compressedSize": {
-                    "type": "string"
-                },
-                "reference": {
-                    "type": "string"
-                },
-                "size": {
-                    "type": "string"
-                }
-            }
-        },
         "file.Entry": {
             "type": "object",
             "properties": {
@@ -4259,9 +4574,6 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "string"
-                },
-                "tag": {
-                    "type": "integer"
                 }
             }
         },
@@ -4273,12 +4585,6 @@ const docTemplate = `{
                 },
                 "blockSize": {
                     "type": "string"
-                },
-                "blocks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/file.Blocks"
-                    }
                 },
                 "compression": {
                     "type": "string"
@@ -4306,9 +4612,6 @@ const docTemplate = `{
                 },
                 "podName": {
                     "type": "string"
-                },
-                "tag": {
-                    "type": "integer"
                 }
             }
         },

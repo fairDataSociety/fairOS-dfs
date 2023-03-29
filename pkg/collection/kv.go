@@ -264,7 +264,7 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 			}
 			return table.index.PutNumber(fkey, value, NumberIndex, false)
 		case BytesIndex:
-			ref, err := kv.client.UploadBlob(value, 0, true, true)
+			ref, err := kv.client.UploadBlob(value, 0, true)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
