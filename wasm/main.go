@@ -113,37 +113,30 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
-		if len(funcArgs) != 6 {
-			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, rpc, network, subRpc, subContractAddress)\"")
+		if len(funcArgs) != 4 {
+			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, rpc, network)\"")
 			return nil
 		}
 		beeEndpoint := funcArgs[0].String()
 		stampId := funcArgs[1].String()
 		rpc := funcArgs[2].String()
 		network := funcArgs[3].String()
-		subRpc := funcArgs[4].String()
-		subContractAddress := funcArgs[5].String()
+		//subRpc := funcArgs[4].String()
+		//subContractAddress := funcArgs[5].String()
 		if network != "testnet" && network != "play" {
 			reject.Invoke("unknown network. \"use play or testnet\"")
 			return nil
 		}
 		var (
-			config    *contracts.ENSConfig
-			subConfig *contracts.SubscriptionConfig
+			config *contracts.ENSConfig
 		)
 
 		if network == "play" {
-			config, subConfig = contracts.PlayConfig()
+			config, _ = contracts.PlayConfig()
 		} else {
-			config, subConfig = contracts.TestnetConfig()
+			config, _ = contracts.TestnetConfig()
 		}
 		config.ProviderBackend = rpc
-		if subRpc != "" {
-			subConfig.RPC = subRpc
-		}
-		if subContractAddress != "" {
-			subConfig.DataHubAddress = subContractAddress
-		}
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
 
 		go func() {
@@ -152,7 +145,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 				beeEndpoint,
 				stampId,
 				config,
-				subConfig,
+				nil,
 				logger,
 			)
 			if err != nil {

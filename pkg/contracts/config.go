@@ -25,11 +25,7 @@ func TestnetConfig() (*ENSConfig, *SubscriptionConfig) {
 		PublicResolverAddress: "0xbfeCC6c32B224F7D0026ac86506Fe40A9607BD14",
 		ProviderDomain:        "fds",
 	}
-
-	s := &SubscriptionConfig{
-		DataHubAddress: "0xBE41b272e3cDe3aeC8fE4a144C5b7cE71D9e6498",
-	}
-	return e, s
+	return e, nil
 }
 
 // PlayConfig defines the configuration for fdp-play
