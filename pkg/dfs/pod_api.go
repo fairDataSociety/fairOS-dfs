@@ -687,13 +687,23 @@ func (a *API) GetSubscribablePodInfo(sessionId string, subHash [32]byte) (*rpc.S
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-
+	if a.sm == nil {
+		return nil, errNilSubManager
+	}
 	return a.sm.GetSubscribablePodInfo(subHash)
 }
 
 // OpenSubscribedPod
 func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte, infoLocation string) (*pod.Info, error) {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return nil, ErrUserNotLoggedIn
+	}
 
+	if a.sm == nil {
+		return nil, errNilSubManager
+	}
 	sub, err := a.sm.GetSub(subHash)
 	if err != nil {
 		return nil, err
@@ -704,12 +714,6 @@ func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte, infoLocation
 	_, ownerPublicKey, err := a.users.GetUserInfoFromENS(sub.FdpSellerNameHash)
 	if err != nil {
 		return nil, err
-	}
-
-	// get the loggedin user information
-	ui := a.users.GetLoggedInUserInfo(sessionId)
-	if ui == nil {
-		return nil, ErrUserNotLoggedIn
 	}
 
 	// open the pod
@@ -733,7 +737,9 @@ func (a *API) GetSubscribablePods(sessionId string) ([]datahub.DataHubSub, error
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-
+	if a.sm == nil {
+		return nil, errNilSubManager
+	}
 	return ui.GetPod().GetMarketplace()
 }
 
@@ -744,6 +750,8 @@ func (a *API) GetSubsRequests(sessionId string) ([]datahub.DataHubSubRequest, er
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-
+	if a.sm == nil {
+		return nil, errNilSubManager
+	}
 	return ui.GetPod().GetSubRequests()
 }
