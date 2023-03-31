@@ -64,7 +64,7 @@ func TestUpload(t *testing.T) {
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
@@ -116,7 +116,7 @@ func TestUpload(t *testing.T) {
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
@@ -151,7 +151,7 @@ func TestUpload(t *testing.T) {
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
@@ -185,7 +185,7 @@ func TestUpload(t *testing.T) {
 		fileName, _ := utils.GetRandString(20)
 		compression := ""
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
@@ -228,7 +228,7 @@ func TestUpload(t *testing.T) {
 		fileName, _ := utils.GetRandString(20)
 		compression := "snappy"
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
@@ -272,11 +272,11 @@ func TestUpload(t *testing.T) {
 		fileName, _ := utils.GetRandString(20)
 		compression := "gzip"
 		fileSize := int64(100)
-		blockSize := uint32(164000)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
-		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, uint32(163999))
-		if !errors.Is(file.ErrGzipBlSize, err) {
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, uint32(10))
+		if !errors.Is(file.ErrInvalidBlockSize, err) {
 			t.Fatal("should provide higher block size")
 		}
 
