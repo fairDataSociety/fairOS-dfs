@@ -56,13 +56,11 @@ func listFileAndDirectories(podName, dirNameWithpath string) (*api.ListFileRespo
 	args := fmt.Sprintf("podName=%s&dirPath=%s", podName, dirNameWithpath)
 	data, err := fdfsAPI.getReq(apiDirLs, args)
 	if err != nil {
-		fmt.Println("ls failed: ", err)
 		return nil, err
 	}
 	var resp api.ListFileResponse
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
-		fmt.Println("dir ls: ", err)
 		return nil, err
 	}
 	if resp.Directories == nil && resp.Files == nil {

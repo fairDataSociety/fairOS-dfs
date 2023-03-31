@@ -752,7 +752,10 @@ func executor(in string) {
 		if !isPodOpened() {
 			return
 		}
-		listFileAndDirectories(currentPod, currentDirectory)
+		_, err = listFileAndDirectories(currentPod, currentDirectory)
+		if err != nil {
+			fmt.Println("ls failed: ", err)
+		}
 		currentPrompt = getCurrentPrompt()
 	case "mkdir":
 		if !isPodOpened() {
