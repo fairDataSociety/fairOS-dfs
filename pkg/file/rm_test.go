@@ -64,10 +64,10 @@ func TestRemoveFile(t *testing.T) {
 		file1, _ := utils.GetRandString(12)
 		file2, _ := utils.GetRandString(12)
 		// upload few files
-		_, err = uploadFile(t, fileObject, "/dir1", file1, "", podPassword, 100, 10)
+		_, err = uploadFile(t, fileObject, "/dir1", file1, "", podPassword, 100, file.MinBlockSize)
 		require.NoError(t, err)
 
-		_, err = uploadFile(t, fileObject, "/dir1", file2, "", podPassword, 200, 20)
+		_, err = uploadFile(t, fileObject, "/dir1", file2, "", podPassword, 200, file.MinBlockSize)
 		require.NoError(t, err)
 
 		// remove file2
@@ -99,7 +99,7 @@ func TestRemoveFile(t *testing.T) {
 		for i := 0; i < 80; i++ {
 			filename, _ := utils.GetRandString(12)
 			// upload file1
-			_, err = uploadFile(t, fileObject, "/dir1", filename, "", podPassword, 100, 10)
+			_, err = uploadFile(t, fileObject, "/dir1", filename, "", podPassword, 100, file.MinBlockSize)
 			require.NoError(t, err)
 
 			// remove file1

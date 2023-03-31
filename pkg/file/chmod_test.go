@@ -43,7 +43,7 @@ func TestChmod(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// upload a file
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, file.MinBlockSize)
 		require.NoError(t, err)
 
 		// stat the file

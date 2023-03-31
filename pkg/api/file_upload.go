@@ -138,7 +138,6 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "file upload: parameter \"files\" missing"})
 		return
 	}
-
 	// upload files one by one
 	var responses []UploadResponse
 	for _, file := range files {

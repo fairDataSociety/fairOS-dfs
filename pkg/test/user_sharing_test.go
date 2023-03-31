@@ -19,6 +19,7 @@ package test_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"testing"
@@ -103,7 +104,7 @@ func TestSharing(t *testing.T) {
 			t.Fatal(err)
 		}
 		fileObject1 := info1.GetFile()
-		_, err = uploadFile(t, fileObject1, "/parentDir1", "file1", "", podPassword, 100, 10)
+		_, err = uploadFile(t, fileObject1, "/parentDir1", "file1", "", podPassword, 100, file.MinBlockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -156,7 +157,7 @@ func TestSharing(t *testing.T) {
 		if receiveFileInfo.Size != strconv.FormatUint(100, 10) {
 			t.Fatalf("invalid file size received")
 		}
-		if receiveFileInfo.BlockSize != strconv.FormatUint(10, 10) {
+		if receiveFileInfo.BlockSize != fmt.Sprintf("%d", file.MinBlockSize) {
 			t.Fatalf("invalid block size received")
 		}
 

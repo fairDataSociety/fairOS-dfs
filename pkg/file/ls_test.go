@@ -18,6 +18,7 @@ package file_test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strconv"
 	"testing"
@@ -57,17 +58,17 @@ func TestListFiles(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// upload few files
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, 10)
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 100, file.MinBlockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", podPassword, 200, 20)
+		_, err = uploadFile(t, fileObject, "/dir1", "file2", "", podPassword, 200, file.MinBlockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = uploadFile(t, fileObject, "/dir1", "file3", "", podPassword, 300, 30)
+		_, err = uploadFile(t, fileObject, "/dir1", "file3", "", podPassword, 300, file.MinBlockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -116,7 +117,7 @@ func TestListFiles(t *testing.T) {
 		if entry.Size != strconv.FormatUint(100, 10) {
 			t.Fatalf("invalid file size")
 		}
-		if entry.BlockSize != strconv.FormatUint(10, 10) {
+		if entry.BlockSize != fmt.Sprintf("%d", file.MinBlockSize) {
 			t.Fatalf("invalid block size")
 		}
 		entry = entries[foundIndex2]
@@ -126,7 +127,7 @@ func TestListFiles(t *testing.T) {
 		if entry.Size != strconv.FormatUint(200, 10) {
 			t.Fatalf("invalid file size")
 		}
-		if entry.BlockSize != strconv.FormatUint(20, 10) {
+		if entry.BlockSize != fmt.Sprintf("%d", file.MinBlockSize) {
 			t.Fatalf("invalid block size")
 		}
 		entry = entries[foundIndex3]
@@ -136,7 +137,7 @@ func TestListFiles(t *testing.T) {
 		if entry.Size != strconv.FormatUint(300, 10) {
 			t.Fatalf("invalid file size")
 		}
-		if entry.BlockSize != strconv.FormatUint(30, 10) {
+		if entry.BlockSize != fmt.Sprintf("%d", file.MinBlockSize) {
 			t.Fatalf("invalid block size")
 		}
 	})

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -165,7 +167,7 @@ func TestSubscription(t *testing.T) {
 	if fileMeta1.Size != uint64(100) {
 		t.Fatalf("invalid file size")
 	}
-	if fileMeta1.BlockSize != uint32(10) {
+	if fileMeta1.BlockSize != file.MinBlockSize {
 		t.Fatalf("invalid block size")
 	}
 	fileMeta2 := fileObject.GetInode(podPassword, "/parentDir/file2")
@@ -181,7 +183,7 @@ func TestSubscription(t *testing.T) {
 	if fileMeta2.Size != uint64(200) {
 		t.Fatalf("invalid file size")
 	}
-	if fileMeta2.BlockSize != uint32(20) {
+	if fileMeta2.BlockSize != file.MinBlockSize {
 		t.Fatalf("invalid block size")
 	}
 
