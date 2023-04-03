@@ -408,10 +408,10 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		rand.Seed(time.Now().UnixNano())
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		min := 0
 		max := int(fileSize)
-		offset := rand.Intn((max - min + 1) + min)
+		offset := rnd.Intn((max - min + 1) + min)
 		content, err := utils.GetRandBytes(offset)
 		if err != nil {
 			t.Fatal(err)
@@ -486,10 +486,10 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		rand.Seed(time.Now().UnixNano())
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		min := 0
 		max := int(fileSize)
-		offset := rand.Intn((max - min + 1) + min)
+		offset := rnd.Intn((max - min + 1) + min)
 		content, err := utils.GetRandBytes(offset)
 		if err != nil {
 			t.Fatal(err)
@@ -569,10 +569,10 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		rand.Seed(time.Now().UnixNano())
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		min := 0
 		max := int(fileSize)
-		offset := rand.Intn((max - min + 1) + min)
+		offset := rnd.Intn((max - min + 1) + min)
 		content, err := utils.GetRandBytes(offset)
 		if err != nil {
 			t.Fatal(err)
