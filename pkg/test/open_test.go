@@ -210,7 +210,7 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 		t.Fatal(err)
 	}
 	fileObject := info.GetFile()
-	_, err = uploadFile(t, fileObject, "/parentDir", "file1", "", podPassword, 100, 10)
+	_, err = uploadFile(t, fileObject, "/parentDir", "file1", "", podPassword, 100, file.MinBlockSize)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +218,7 @@ func addFilesAndDirectories(t *testing.T, info *pod.Info, pod1 *pod.Pod, podName
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = uploadFile(t, fileObject, "/parentDir", "file2", "", podPassword, 200, 20)
+	_, err = uploadFile(t, fileObject, "/parentDir", "file2", "", podPassword, 200, file.MinBlockSize)
 	if err != nil {
 		t.Fatal(err)
 	}

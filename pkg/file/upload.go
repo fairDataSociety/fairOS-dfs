@@ -34,8 +34,10 @@ import (
 )
 
 const (
-	minBlockSizeForGzip = 164000
-	//S_IFREG
+	MinBlockSize uint32 = 1000000
+	MaxBlockSize uint32 = 8000000
+
+	// S_IFREG is the regular file type
 	S_IFREG     = 0100000
 	defaultMode = 0600
 )
@@ -43,8 +45,7 @@ const (
 var (
 	noOfParallelWorkers = runtime.NumCPU()
 
-	//ErrGzipBlSize
-	ErrGzipBlSize = fmt.Errorf("gzip: block size cannot be less than %d", minBlockSizeForGzip)
+	ErrInvalidBlockSize = fmt.Errorf("upload: block size must be between %d - %d (1Mb - 8Mb)", MinBlockSize, MaxBlockSize)
 )
 
 // Upload uploads a given blob of bytes as a file in the pod. It also splits the file into number of blocks. the
@@ -52,11 +53,8 @@ var (
 // requested during the upload.
 func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize, mode uint32, podPath, compression, podPassword string) error {
 	podPath = filepath.ToSlash(podPath)
-	// check compression gzip and blocksize
-	// pgzip does not allow block size lower or equal to 163840,
-	// so we set block size lower bound to 164000 for
-	if compression == "gzip" && blockSize < minBlockSizeForGzip {
-		return ErrGzipBlSize
+	if blockSize < MinBlockSize || blockSize > MaxBlockSize {
+		return ErrInvalidBlockSize
 	}
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()

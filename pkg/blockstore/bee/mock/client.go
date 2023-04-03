@@ -112,12 +112,13 @@ func (m *BeeClient) UploadBlob(data []byte, tag uint32, _ bool) (address []byte,
 	defer m.storerMu.Unlock()
 	address = make([]byte, 32)
 	_, err = rand.Read(address)
-	newChunks := int64(len(data) / 4096000)
+	newChunks := int64(len(data) / 4000)
 	if newChunks == 0 {
 		newChunks = 1
 	}
 	chunks := newChunks + m.tagStorer[tag] + 1
 	m.tagStorer[tag] = chunks
+
 	m.storer[swarm.NewAddress(address).String()] = data
 	return address, nil
 }

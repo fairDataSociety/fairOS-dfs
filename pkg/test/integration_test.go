@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
@@ -130,7 +132,7 @@ func TestLiteUser(t *testing.T) {
 				}
 			} else {
 				reader := &io.LimitedReader{R: rand.Reader, N: v.size}
-				err = dfsApi.UploadFile(podRequest.PodName, filepath.Base(v.path), sessionId, v.size, reader, filepath.Dir(v.path), "", 100000, 0, false)
+				err = dfsApi.UploadFile(podRequest.PodName, filepath.Base(v.path), sessionId, v.size, reader, filepath.Dir(v.path), "", file.MinBlockSize, 0, false)
 				if err != nil {
 					t.Fatal(err)
 				}

@@ -430,7 +430,7 @@ func TestApis(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				err = writer.WriteField("blockSize", "4kb")
+				err = writer.WriteField("blockSize", "1Mb")
 				if err != nil {
 					t.Fatal(err)
 				}
