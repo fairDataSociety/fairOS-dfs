@@ -74,7 +74,9 @@ func (c *NamespaceManager) GetInfo(username string) (*ecdsa.PublicKey, string, e
 	x.SetBytes(i.X[:])
 
 	y := new(big.Int)
+
 	y.SetBytes(i.Y[:])
+
 	pub := new(ecdsa.PublicKey)
 	pub.X = x
 	pub.Y = y
