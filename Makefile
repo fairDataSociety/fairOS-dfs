@@ -74,7 +74,7 @@ release:
 		-v `pwd`:/go/src/github.com/fairDataSociety/fairOS-dfs \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/fairDataSociety/fairOS-dfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.19.5 release --rm-dist
+		ghcr.io/goreleaser/goreleaser-cross:v1.20.2 release --rm-dist
 
 .PHONY: release-dry-run
 release-dry-run:
@@ -84,7 +84,7 @@ release-dry-run:
 		-v `pwd`:/go/src/github.com/fairDataSociety/fairOS-dfs \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/fairDataSociety/fairOS-dfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.19.5 release --rm-dist \
+		ghcr.io/goreleaser/goreleaser-cross:v1.20.2 release --rm-dist \
 		--skip-validate=true \
 		--skip-publish
 
