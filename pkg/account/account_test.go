@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -65,11 +66,11 @@ func TestAuthorise(t *testing.T) {
 }
 
 func TestCreateRandomKeyPair(t *testing.T) {
-	pk1, err := CreateRandomKeyPair(1)
+	pk1, err := CreateRandomKeyPair(time.Now().Unix())
 	if err != nil {
 		t.Fatal(err)
 	}
-	pk2, err := CreateRandomKeyPair(2)
+	pk2, err := CreateRandomKeyPair(time.Now().Unix() + 100)
 	if err != nil {
 		t.Fatal(err)
 	}
