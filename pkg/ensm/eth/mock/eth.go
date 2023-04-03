@@ -71,15 +71,11 @@ func (c *NamespaceManager) GetInfo(username string) (*ecdsa.PublicKey, string, e
 		return nil, "", fmt.Errorf("no info available for user")
 	}
 	x := new(big.Int)
-	fmt.Println("i.X", i.X)
 	x.SetBytes(i.X[:])
-	fmt.Println("x", x.Bytes())
 
 	y := new(big.Int)
-	fmt.Println("i.Y", i.Y)
 
 	y.SetBytes(i.Y[:])
-	fmt.Println("y", y.Bytes())
 
 	pub := new(ecdsa.PublicKey)
 	pub.X = x
