@@ -2,6 +2,7 @@ package file_test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -40,7 +41,7 @@ func TestStatus(t *testing.T) {
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		numberOfChunks := int64(10)
 		// upload a file
-		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 4095000*numberOfChunks, 40960000)
+		_, err = uploadFile(t, fileObject, "/dir1", "file1", "", podPassword, 3900*numberOfChunks, file.MinBlockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -55,7 +56,7 @@ func TestStatus(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		fmt.Println("total", total, "numberOfChunks", numberOfChunks)
 		if total != numberOfChunks {
 			t.Fatal("chunk count mismatch for status")
 		}

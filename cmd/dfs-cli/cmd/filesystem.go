@@ -52,18 +52,16 @@ func isDirectoryPresent(podName, dirNameWithpath string) bool {
 	return resp.Present
 }
 
-func listFileAndDirectories(podName, dirNameWithpath string) {
+func listFileAndDirectories(podName, dirNameWithpath string) (*api.ListFileResponse, error) {
 	args := fmt.Sprintf("podName=%s&dirPath=%s", podName, dirNameWithpath)
 	data, err := fdfsAPI.getReq(apiDirLs, args)
 	if err != nil {
-		fmt.Println("ls failed: ", err)
-		return
+		return nil, err
 	}
 	var resp api.ListFileResponse
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
-		fmt.Println("dir ls: ", err)
-		return
+		return nil, err
 	}
 	if resp.Directories == nil && resp.Files == nil {
 		fmt.Println("empty directory")
@@ -74,6 +72,7 @@ func listFileAndDirectories(podName, dirNameWithpath string) {
 	for _, entry := range resp.Files {
 		fmt.Println("<File>: ", entry.Name)
 	}
+	return &resp, nil
 }
 
 func statFileOrDirectory(podName, statElement string) {
@@ -213,6 +212,7 @@ func uploadFile(fileName, podName, localFileWithPath, podDir, blockSize, compres
 	args["podName"] = podName
 	args["dirPath"] = podDir
 	args["blockSize"] = blockSize
+	args["overwrite"] = "true"
 	data, err := fdfsAPI.uploadMultipartFile(apiFileUpload, fileName, fi.Size(), fd, args, "files", compression)
 	if err != nil {
 		fmt.Println("upload failed: ", err)

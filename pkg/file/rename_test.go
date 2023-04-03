@@ -45,7 +45,7 @@ func TestRename(t *testing.T) {
 		newFileName := "file_new"
 		compression := ""
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// file existent check
@@ -107,7 +107,7 @@ func TestRename(t *testing.T) {
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, fileObject, tm, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)

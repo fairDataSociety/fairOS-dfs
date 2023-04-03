@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -228,6 +229,8 @@ var suggestions = []prompt.Suggest{
 	{Text: "cd", Description: "change path"},
 	{Text: "download", Description: "download file from dfs to local machine"},
 	{Text: "upload", Description: "upload file from local machine to dfs"},
+	{Text: "uploadDir", Description: "upload a dir from local machine to dfs"},
+	{Text: "downloadDir", Description: "download dir from dfs to local machine"},
 	{Text: "share", Description: "share file with another user"},
 	{Text: "receive", Description: "receive a shared file"},
 	{Text: "exit", Description: "exit dfs-prompt"},
@@ -297,7 +300,6 @@ func executor(in string) {
 				mnemonic = strings.TrimPrefix(mnemonic, " ")
 			}
 			userNew(userName, mnemonic)
-			currentUser = userName
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
@@ -750,7 +752,10 @@ func executor(in string) {
 		if !isPodOpened() {
 			return
 		}
-		listFileAndDirectories(currentPod, currentDirectory)
+		_, err = listFileAndDirectories(currentPod, currentDirectory)
+		if err != nil {
+			fmt.Println("ls failed: ", err)
+		}
 		currentPrompt = getCurrentPrompt()
 	case "mkdir":
 		if !isPodOpened() {
@@ -796,6 +801,81 @@ func executor(in string) {
 			}
 		}
 		rmDir(currentPod, dirToRm)
+		currentPrompt = getCurrentPrompt()
+	case "uploadDir":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 4 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		dirName := blocks[1]
+		podDir := blocks[2]
+		if podDir == "." {
+			podDir = currentDirectory
+		}
+		blockSize := blocks[3]
+		compression := ""
+		if len(blocks) >= 5 {
+			compression = blocks[4]
+			if compression != "snappy" && compression != "gzip" {
+				fmt.Println("invalid value for \"compression\", should either be \"snappy\" or \"gzip\"")
+				return
+			}
+		}
+		toUpload, err := findFilesToUpload(dirName)
+		if err != nil {
+			fmt.Println("Failed to list files to upload at: ", dirName, err)
+			return
+		}
+		for _, item := range toUpload.filesToUpload {
+			if toUpload.rootDirectory != item {
+				itemStats, err := os.Stat(item)
+				if err != nil {
+					fmt.Println("Failed to read stats for: ", item, err)
+					continue
+				}
+				fmt.Println("Handling item: ", removeParentDirectory(toUpload.rootDirectory, item))
+				if itemStats.IsDir() {
+					dirToMk := filepath.ToSlash(filepath.Join(podDir, removeParentDirectory(toUpload.rootDirectory, item)))
+					mkdir(currentPod, dirToMk)
+				} else {
+					filePath := removeParentDirectory(toUpload.rootDirectory, item)
+					uploadFile(filepath.Base(filePath), currentPod, item, filepath.ToSlash(filepath.Join(podDir, filepath.Dir(filePath))), blockSize, compression)
+				}
+			}
+		}
+		currentPrompt = getCurrentPrompt()
+	case "downloadDir":
+		if !isPodOpened() {
+			return
+		}
+		if len(blocks) < 3 {
+			fmt.Println("invalid command. Missing one or more arguments")
+			return
+		}
+		localDir := blocks[1]
+		dirStat, err := os.Stat(localDir)
+		if err != nil {
+			fmt.Println("local path is not a present: ", err)
+			return
+		}
+
+		if !dirStat.IsDir() {
+			fmt.Println("local path is not a directory")
+			return
+		}
+
+		podPath := blocks[2]
+		if !strings.HasPrefix(podPath, utils.PathSeparator) {
+			if currentDirectory == utils.PathSeparator {
+				podPath = currentDirectory + podPath
+			} else {
+				podPath = currentDirectory + utils.PathSeparator + podPath
+			}
+		}
+		downloadDir(currentPod, localDir, podPath)
 		currentPrompt = getCurrentPrompt()
 	case "upload":
 		if !isPodOpened() {
@@ -988,6 +1068,8 @@ func help() {
 	fmt.Println(" - ls ")
 	fmt.Println(" - download <destination dir in local fs> <relative path of source file in pod>")
 	fmt.Println(" - upload <source file in local fs> <destination directory in pod> <block size (ex: 1Mb, 64Mb)>, <compression (snappy/gzip)>")
+	fmt.Println(" - uploadDir <source location in local fs> <destination directory in pod> <block size (ex: 1Mb, 64Mb)>, <compression (snappy/gzip)>")
+	fmt.Println(" - downloadDir <destination location in local fs> <source directory in pod>")
 	fmt.Println(" - share <file name> -  shares a file with another user")
 	fmt.Println(" - receive <sharing reference> <pod dir> - receives a file from another user")
 	fmt.Println(" - receiveinfo <sharing reference> - shows the received file info before accepting the receive")
@@ -1049,4 +1131,78 @@ func getPassword() (password string) {
 	passwd := string(bytePassword)
 	password = strings.TrimSpace(passwd)
 	return password
+}
+
+type files struct {
+	filesToUpload []string
+	rootDirectory string
+}
+
+func findFilesToUpload(searchPath string) (*files, error) {
+	searchResults := []string{}
+	rawSearchResults, err := filepath.Glob(searchPath)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, searchResult := range rawSearchResults {
+		searchResults = append(searchResults, searchResult)
+		fileStats, err := os.Stat(searchResult)
+		if err != nil {
+			return nil, err
+		}
+
+		if fileStats.IsDir() {
+			toUpload, err := findFilesToUpload(filepath.Join(searchResult, "*"))
+			if err == nil {
+				searchResults = append(searchResults, toUpload.filesToUpload...)
+			}
+		}
+	}
+
+	if len(searchResults) == 1 && searchPath == searchResults[0] {
+		return &files{
+			filesToUpload: searchResults,
+			rootDirectory: filepath.Dir(searchResults[0]),
+		}, nil
+	}
+
+	return &files{
+		filesToUpload: searchResults,
+		rootDirectory: searchPath,
+	}, nil
+}
+
+func removeParentDirectory(parentPath, childPath string) string {
+	relativePath, err := filepath.Rel(parentPath, childPath)
+	if err != nil {
+		panic(err)
+	}
+	if relativePath == "" {
+		return "/"
+	}
+	if strings.HasPrefix(relativePath, "..") {
+		return ""
+	}
+	return "/" + relativePath
+}
+
+func downloadDir(currentPod, localDir, podPath string) {
+	stat, err := listFileAndDirectories(currentPod, podPath)
+	if err != nil {
+		fmt.Println("failed to get contents of dir: ", podPath, err)
+		return
+	}
+	for _, dir := range stat.Directories {
+		err := os.Mkdir(filepath.Join(localDir, dir.Name), os.FileMode(dir.Mode))
+		if err != nil && !errors.Is(err, os.ErrExist) {
+			fmt.Println("failed to create local dir: ", filepath.Join(localDir, dir.Name), err)
+			continue
+		}
+		downloadDir(currentPod, filepath.Join(localDir, dir.Name), filepath.ToSlash(filepath.Join(podPath, dir.Name)))
+	}
+	for _, file := range stat.Files {
+		loalFile := filepath.Join(localDir, file.Name)
+		downloadFile(currentPod, loalFile, filepath.ToSlash(filepath.Join(podPath, file.Name)))
+	}
 }

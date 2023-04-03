@@ -60,7 +60,7 @@ func TestDownload(t *testing.T) {
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// file existent check
@@ -104,7 +104,7 @@ func TestDownload(t *testing.T) {
 		fileName := "file1"
 		compression := "gzip"
 		fileSize := int64(100)
-		blockSize := uint32(164000)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// file existent check
@@ -140,7 +140,7 @@ func TestDownload(t *testing.T) {
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 		// file existent check
