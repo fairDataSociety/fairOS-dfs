@@ -48,33 +48,33 @@ func TestLogin(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", "", "", tm, sm)
+		sr, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		ui := sr.UserInfo
 		// Logout user
 		err = userObject.LogoutUser(ui.GetUserName(), ui.GetSessionId())
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, _, _, err = userObject.LoginUserV2("not_an_username", "password1", mockClient, tm, sm, "")
+		_, err = userObject.LoginUserV2("not_an_username", "password1", mockClient, tm, sm, "")
 		if !errors.Is(err, user.ErrUserNameNotFound) {
 			t.Fatal(err)
 		}
 
-		_, _, _, err = userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "wrong_password", mockClient, tm, sm, "")
+		_, err = userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "wrong_password", mockClient, tm, sm, "")
 		if !errors.Is(err, user.ErrInvalidPassword) {
 			t.Fatal(err)
 		}
 
 		// addUserAndSessionToMap user again
-		ui1, _, _, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", mockClient, tm, sm, "")
+		sr1, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		ui1 := sr1.UserInfo
 		ui2 := userObject.GetLoggedInUserInfo(ui1.GetSessionId())
 
 		// Validate login
@@ -101,12 +101,12 @@ func TestLogin(t *testing.T) {
 		pass := "password1password1"
 		//create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
+		sr, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
+		ui := sr.UserInfo
+		_, err = userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if !errors.Is(err, user.ErrUserAlreadyPresent) {
 			t.Fatal(err)
 		}
@@ -127,25 +127,26 @@ func TestLogin(t *testing.T) {
 		if ui.GetFeed() == nil || ui.GetAccount() == nil {
 			t.Fatalf("invalid feed or account")
 		}
-		err = ui.GetAccount().GetWallet().IsValidMnemonic(mnemonic)
+		err = ui.GetAccount().GetWallet().IsValidMnemonic(sr.Mnemonic)
 		if err != nil {
 			t.Fatalf("invalid mnemonic")
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass+pass, mnemonic, "", tm, sm)
+		_, err = userObject.CreateNewUserV2(user1, pass+pass, sr.Mnemonic, "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		login1, _, _, err := userObject.LoginUserV2(user1, pass, mockClient, tm, sm, "")
+		lr1, err := userObject.LoginUserV2(user1, pass, mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		login2, _, _, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, sm, "")
+		login1 := lr1.UserInfo
+		lr2, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
+		login2 := lr2.UserInfo
 
 		if login1.GetAccount().GetUserAccountInfo().GetAddress().Hex() !=
 			login2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
@@ -159,16 +160,16 @@ func TestLogin(t *testing.T) {
 		//create user
 		userObject := user.NewUsers(mockClient, ens, logger)
 		pass := "password1password1"
-		_, mnemonic, _, _, ui, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
+		sr, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, _, _, _, _, err = userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
+		_, err = userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if !errors.Is(err, user.ErrUserAlreadyPresent) {
 			t.Fatal(err)
 		}
-
+		ui := sr.UserInfo
 		// validate user
 		if !userObject.IsUsernameAvailableV2(ui.GetUserName()) {
 			t.Fatalf("user not created")
@@ -185,7 +186,7 @@ func TestLogin(t *testing.T) {
 		if ui.GetFeed() == nil || ui.GetAccount() == nil {
 			t.Fatalf("invalid feed or account")
 		}
-		err = ui.GetAccount().GetWallet().IsValidMnemonic(mnemonic)
+		err = ui.GetAccount().GetWallet().IsValidMnemonic(sr.Mnemonic)
 		if err != nil {
 			t.Fatalf("invalid mnemonic")
 		}
@@ -202,21 +203,22 @@ func TestLogin(t *testing.T) {
 			t.Fatalf("error creating pod %s : %s", podName1, err.Error())
 		}
 
-		_, _, _, _, ui2, err := userObject.CreateNewUserV2(user1, pass+pass, mnemonic, "", tm, sm)
+		sr2, err := userObject.CreateNewUserV2(user1, pass+pass, sr.Mnemonic, "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
+		ui2 := sr2.UserInfo
 
-		login1, _, _, err := userObject.LoginUserV2(user1, pass, mockClient, tm, sm, "")
+		lr1, err := userObject.LoginUserV2(user1, pass, mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		login2, _, _, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, sm, "")
+		login1 := lr1.UserInfo
+		lr2, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		login2 := lr2.UserInfo
 		if login1.GetAccount().GetUserAccountInfo().GetAddress().Hex() !=
 			login2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
 			t.Fatal("got different accounts with same login")

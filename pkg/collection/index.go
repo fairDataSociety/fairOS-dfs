@@ -132,13 +132,13 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	}
 
 	if string(oldData) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
-		_, err = fd.UpdateFeed(topic, user, ref, []byte(encryptionPassword))
+		_, err = fd.UpdateFeed(user, topic, ref, []byte(encryptionPassword))
 		if err != nil {
 			return ErrManifestCreate
 		}
 		return nil
 	}
-	_, err = fd.CreateFeed(topic, user, ref, []byte(encryptionPassword))
+	_, err = fd.CreateFeed(user, topic, ref, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -182,7 +182,7 @@ func (idx *Index) DeleteIndex(encryptionPassword string) error {
 
 	// erase the top Manifest
 	topic := utils.HashString(idx.name)
-	_, err := idx.feed.UpdateFeed(topic, idx.user, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword))
+	_, err := idx.feed.UpdateFeed(idx.user, topic, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrDeleteingIndex
 	}
@@ -287,7 +287,7 @@ func (idx *Index) updateManifest(manifest *Manifest, encryptionPassword string) 
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.UpdateFeed(topic, idx.user, ref, []byte(encryptionPassword))
+	_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -312,7 +312,7 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.CreateFeed(topic, idx.user, ref, []byte(encryptionPassword))
+	_, err = idx.feed.CreateFeed(idx.user, topic, ref, []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return ErrManifestCreate
 	}

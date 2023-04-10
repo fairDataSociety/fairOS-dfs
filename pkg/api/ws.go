@@ -183,11 +183,12 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			ui, nameHash, publicKey, err := h.dfsAPI.LoginUserV2(loginRequest.UserName, loginRequest.Password, "")
+			lr, err := h.dfsAPI.LoginUserV2(loginRequest.UserName, loginRequest.Password, "")
 			if err != nil {
 				respondWithError(res, err)
 				continue
 			}
+			ui, nameHash, publicKey := lr.UserInfo, lr.NameHash, lr.PublicKey
 			sessionID = ui.GetSessionId()
 			loginResponse := &UserSignupResponse{
 				NameHash:  nameHash,

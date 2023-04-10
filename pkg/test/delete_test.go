@@ -45,10 +45,11 @@ func TestDelete(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
+		sr, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
+		ui := sr.UserInfo
 		// delete user with wrong password
 		err = userObject.DeleteUserV2("user1", "password11", ui.GetSessionId(), ui)
 		if err == nil {

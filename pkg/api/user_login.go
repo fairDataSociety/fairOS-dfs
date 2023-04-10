@@ -81,7 +81,7 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// login user
-	ui, nameHash, publicKey, err := h.dfsAPI.LoginUserV2(user, password, "")
+	loginResp, err := h.dfsAPI.LoginUserV2(user, password, "")
 	if err != nil {
 		if errors.Is(err, u.ErrUserNameNotFound) {
 			h.logger.Errorf("user login: %v", err)
@@ -99,7 +99,7 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
 		return
 	}
-	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
+	err = cookie.SetSession(loginResp.UserInfo.GetSessionId(), w, h.cookieDomain)
 	if err != nil {
 		h.logger.Errorf("user login: %v", err)
 		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
@@ -107,9 +107,9 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonhttp.OK(w, &UserSignupResponse{
-		Address:   ui.GetAccount().GetUserAccountInfo().GetAddress().Hex(),
-		NameHash:  "0x" + nameHash,
-		PublicKey: publicKey,
+		Address:   loginResp.UserInfo.GetAccount().GetUserAccountInfo().GetAddress().Hex(),
+		NameHash:  "0x" + loginResp.NameHash,
+		PublicKey: loginResp.PublicKey,
 		Message:   "user logged-in successfully",
 	})
 }

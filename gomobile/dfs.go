@@ -3,6 +3,7 @@ package fairos
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -58,6 +59,7 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 	}
 	ensConfig.ProviderBackend = rpc
 	api, err = dfs.NewDfsAPI(
+		context.TODO(),
 		beeEndpoint,
 		postageBlockId,
 		ensConfig,
@@ -68,10 +70,11 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 }
 
 func LoginUser(username, password string) (string, error) {
-	ui, nameHash, publicKey, err := api.LoginUserV2(username, password, "")
+	loginResp, err := api.LoginUserV2(username, password, "")
 	if err != nil {
 		return "", err
 	}
+	ui, nameHash, publicKey := loginResp.UserInfo, loginResp.NameHash, loginResp.PublicKey
 	sessionId = ui.GetSessionId()
 	savedPassword = password
 	savedUsername = username

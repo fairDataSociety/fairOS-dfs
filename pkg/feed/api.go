@@ -80,7 +80,7 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 // CreateFeed creates a feed by constructing a single owner chunk. This chunk
 // can only be accessed if the pod address is known. Also, no one else can spoof this
 // chunk since this is signed by the pod.
-func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte, encryptionPassword []byte) ([]byte, error) {
+func (a *API) CreateFeed(user utils.Address, topic, data, encryptionPassword []byte) ([]byte, error) {
 	var req request
 
 	if a.accountInfo.GetPrivateKey() == nil {
@@ -268,7 +268,7 @@ func (a *API) GetFeedDataFromTopic(topic []byte, user utils.Address) ([]byte, []
 }
 
 // UpdateFeed updates the contents of an already created feed.
-func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encryptionPassword []byte) ([]byte, error) {
+func (a *API) UpdateFeed(user utils.Address, topic, data, encryptionPassword []byte) ([]byte, error) {
 	if a.accountInfo.GetPrivateKey() == nil {
 		return nil, ErrReadOnlyFeed
 	}

@@ -473,14 +473,14 @@ func (a *API) ShareFile(podName, podFileWithPath, destinationUser, sessionId str
 // ReceiveFile is a controller function which validates if the user is logged-in,
 // pod is open and calls the ReceiveFile function to get the shared file in to the
 // given pod.
-func (a *API) ReceiveFile(podName, sessionId, ref string, dir string) (string, error) {
+func (a *API) ReceiveFile(podName, sessionId, ref, dir string) (string, error) {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
 		return "", ErrUserNotLoggedIn
 	}
 
-	return a.users.ReceiveFileFromUser(podName, ref, ui, ui.GetPod(), dir)
+	return a.users.ReceiveFileFromUser(ui, ui.GetPod(), podName, ref, dir)
 }
 
 // ReceiveInfo is a controller function which validates if the user is logged-in,

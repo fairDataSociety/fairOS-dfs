@@ -20,13 +20,14 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -37,18 +38,31 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
+// LoginResponse is the response of a successful login
+type LoginResponse struct {
+	Address   string `json:"address"`
+	NameHash  string `json:"nameHash"`
+	PublicKey string `json:"publicKey"`
+	UserInfo  *Info  `json:"userInfo"`
+}
+
 // LoginUserV2 checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*Info, string, string, error) {
+func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*LoginResponse, error) {
+	// check if sessionId is still active
+	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
+		return nil, ErrUserAlreadyLoggedIn
+	}
+
 	// check if username is available (user created)
 	if !u.IsUsernameAvailableV2(userName) {
-		return nil, "", "", ErrUserNameNotFound
+		return nil, ErrUserNameNotFound
 	}
 
 	// get owner address from Subdomain registrar
 	address, err := u.ens.GetOwner(userName)
 	if err != nil { // skipcq: TCV-001
-		return nil, "", "", err
+		return nil, err
 	}
 	// create account
 	acc := account.New(u.logger)
@@ -57,34 +71,27 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	fd := feed.New(accountInfo, client, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
 	if err != nil {
-		u.logger.Errorf(err.Error())
-		return nil, "", "", ErrInvalidPassword
+		return nil, ErrInvalidPassword
 	}
 
 	// load public key from public resolver
 	publicKey, nameHash, err := u.ens.GetInfo(userName)
 	if err != nil { // skipcq: TCV-001
-		return nil, "", "", err
+		return nil, err
 	}
 	if publicKey == nil {
-		return nil, "", "", fmt.Errorf("public key not found")
+		return nil, fmt.Errorf("public key not found")
 	}
-	pb := crypto.FromECDSAPub(publicKey)
 
 	// decrypt and remove pad from private ley
 	seed, err := accountInfo.RemovePadFromSeed(key, passPhrase)
 	if err != nil { // skipcq: TCV-001
-		return nil, "", "", err
+		return nil, err
 	}
+
 	// load user account
-
-	err = acc.LoadUserAccountFromSeed(seed)
-	if err != nil { // skipcq: TCV-001
-		return nil, "", "", err
-	}
-
-	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
-		return nil, "", "", ErrUserAlreadyLoggedIn
+	if err = acc.LoadUserAccountFromSeed(seed); err != nil { // skipcq: TCV-001
+		return nil, err
 	}
 
 	// Instantiate pod, dir & file objects
@@ -107,7 +114,16 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 
 	// set cookie and add user to map
-	return ui, nameHash, utils.Encode(pb), u.addUserAndSessionToMap(ui)
+	if err = u.addUserAndSessionToMap(ui); err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	return &LoginResponse{
+		Address:   accountInfo.GetAddress().Hex(),
+		NameHash:  nameHash,
+		PublicKey: utils.Encode(crypto.FromECDSAPub(publicKey)),
+		UserInfo:  ui,
+	}, nil
 }
 
 func (u *Users) addUserAndSessionToMap(ui *Info) error {

@@ -98,7 +98,7 @@ func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destina
 }
 
 // ReceiveFileFromUser imports an exported file in to the current user and pod by reading the sharing file entry.
-func (u *Users) ReceiveFileFromUser(podName string, ref string, userInfo *Info, pd *pod.Pod, podDir string) (string, error) {
+func (u *Users) ReceiveFileFromUser(_ *Info, pd *pod.Pod, podName, ref, podDir string) (string, error) {
 	refBytes, err := hex.DecodeString(ref)
 	if err != nil {
 		return "", err
