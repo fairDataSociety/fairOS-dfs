@@ -94,7 +94,6 @@ func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, block
 	if cache {
 		blockCache, _ = lru.New(blockCacheSize)
 	}
-
 	r := &Reader{
 		fileInode:     fileInode,
 		client:        client,
@@ -146,7 +145,6 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 			// read spans across block. so flow down and read the next block
 		}
 	}
-
 	if r.lastBlock == nil {
 		noOfBlocks := int((bytesToRead / r.blockSize) + 1)
 		for i := 0; i < noOfBlocks; i++ {
