@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-// Iterator
+// Iterator is used to iterate over the index.
 type Iterator struct {
 	index         *Index
 	indexType     IndexType

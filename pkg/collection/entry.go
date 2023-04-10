@@ -16,7 +16,7 @@ limitations under the License.
 
 package collection
 
-// Manifest
+// Manifest is the structure of the manifest
 type Manifest struct {
 	Name         string    `json:"name"`
 	Mutable      bool      `json:"mutable"`

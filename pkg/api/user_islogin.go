@@ -22,7 +22,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// LoginStatus
+// LoginStatus is the json response sent to check if user is logged-in
 type LoginStatus struct {
 	LoggedIn bool `json:"loggedin"`
 }

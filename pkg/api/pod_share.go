@@ -29,7 +29,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// PodSharingReference
+// PodSharingReference is the response sent to the user when a pod is shared
 type PodSharingReference struct {
 	Reference string `json:"podSharingReference"`
 }

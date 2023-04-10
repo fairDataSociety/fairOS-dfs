@@ -40,7 +40,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// CreatePod
+// CreatePod creates a new pod
 func (a *API) CreatePod(podName, sessionId string) (*pod.Info, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)

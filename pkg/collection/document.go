@@ -47,7 +47,7 @@ const (
 	DefaultIndexFieldName = "id"
 )
 
-// Document
+// Document is the main object to handle document DBs
 type Document struct {
 	podName     string
 	fd          *feed.API
@@ -61,7 +61,7 @@ type Document struct {
 	entryGetter taskmanager.TaskManagerGO
 }
 
-// DocumentDB
+// DocumentDB is the main object to handle a document DB
 type DocumentDB struct {
 	name          string
 	mutable       bool
@@ -70,7 +70,7 @@ type DocumentDB struct {
 	listIndexes   map[string]*Index
 }
 
-// DBSchema
+// DBSchema is the schema of a document DB
 type DBSchema struct {
 	Name            string   `json:"name"`
 	Mutable         bool     `json:"mutable"`
@@ -80,18 +80,18 @@ type DBSchema struct {
 	CompoundIndexes []CIndex `json:"compound_indexes,omitempty"`
 }
 
-// SIndex
+// SIndex is a simple index
 type SIndex struct {
 	FieldName string    `json:"name"`
 	FieldType IndexType `json:"type"`
 }
 
-// CIndex
+// CIndex is a compound index
 type CIndex struct {
 	SimpleIndexes []SIndex
 }
 
-// DocBatch
+// DocBatch is a batch of documents
 type DocBatch struct {
 	db      *DocumentDB
 	batches map[string]*Batch

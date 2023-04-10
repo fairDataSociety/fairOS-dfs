@@ -33,7 +33,7 @@ const (
 	defaultMode = 0700
 )
 
-// MkDir
+// MkDir creates a directory in the given path
 func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) error {
 	parentPath := filepath.ToSlash(filepath.Dir(dirToCreateWithPath))
 	dirName := filepath.Base(dirToCreateWithPath)
@@ -128,7 +128,7 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) 
 	return nil
 }
 
-// MkRootDir
+// MkRootDir creates the root directory for the pod
 func (d *Directory) MkRootDir(podName, podPassword string, podAddress utils.Address, fd *feed.API) error {
 	// create the root parent dir
 	now := time.Now().Unix()
@@ -166,7 +166,7 @@ func (d *Directory) MkRootDir(podName, podPassword string, podAddress utils.Addr
 	return nil
 }
 
-// AddRootDir
+// AddRootDir adds the root directory to the directory map
 func (d *Directory) AddRootDir(podName, podPassword string, podAddress utils.Address, fd *feed.API) error {
 	parentPath := utils.CombinePathAndFile(utils.PathSeparator, "")
 	parentHash := utils.HashString(parentPath)

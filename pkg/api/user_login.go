@@ -28,7 +28,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserLoginResponse
+// UserLoginResponse is the json response sent to login user
 type UserLoginResponse struct {
 	Address   string `json:"address"`
 	NameHash  string `json:"nameHash,omitempty"`

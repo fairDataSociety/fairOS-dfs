@@ -32,7 +32,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// IndexType
+// IndexType is the type of the index
 type IndexType int
 
 const (
@@ -84,7 +84,7 @@ func toIndexTypeEnum(s string) IndexType {
 	}
 }
 
-// Index
+// Index is the structure of the index
 type Index struct {
 	name               string
 	mutable            bool

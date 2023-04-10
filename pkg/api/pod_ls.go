@@ -26,7 +26,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-// PodListResponse
+// PodListResponse is the json response to list all the pods
 type PodListResponse struct {
 	Pods       []string `json:"pods"`
 	SharedPods []string `json:"sharedPods"`

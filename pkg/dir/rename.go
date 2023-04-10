@@ -12,7 +12,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// RenameDir
+// RenameDir renames a directory
 func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword string) error {
 	dirNameWithPath = filepath.ToSlash(dirNameWithPath)
 	newDirNameWithPath = filepath.ToSlash(newDirNameWithPath)
