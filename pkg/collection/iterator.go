@@ -167,12 +167,12 @@ func (itr *Iterator) Next() bool {
 	return itr.nextStringKey()
 }
 
-// StringKey
+// StringKey returns the current key.
 func (itr *Iterator) StringKey() string {
 	return itr.currentKey
 }
 
-// IntegerKey
+// IntegerKey returns the current key as an integer.
 func (itr *Iterator) IntegerKey() int64 {
 	gotKey, err := strconv.ParseInt(itr.currentKey, 10, 64)
 	if err != nil {
@@ -181,12 +181,12 @@ func (itr *Iterator) IntegerKey() int64 {
 	return gotKey
 }
 
-// Value
+// Value returns the current value.
 func (itr *Iterator) Value() []byte {
 	return itr.currentValue[0]
 }
 
-// ValueAll
+// ValueAll returns all the values for the current key.
 func (itr *Iterator) ValueAll() [][]byte {
 	return itr.currentValue
 }

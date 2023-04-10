@@ -35,7 +35,7 @@ type Entry struct {
 	Manifest *Manifest `json:"Manifest,omitempty"`
 }
 
-// NewManifest
+// NewManifest creates a new manifest
 func NewManifest(name string, time int64, idxType IndexType, mutable bool) *Manifest {
 	var entries []*Entry
 	return &Manifest{

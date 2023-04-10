@@ -61,12 +61,12 @@ func (ref SharingReference) String() string { // skipcq: TCV-001
 	return refStr + numString
 }
 
-// GetRef
+// GetRef returns the reference
 func (ref SharingReference) GetRef() []byte {
 	return ref.r
 }
 
-// GetNonce
+// GetNonce returns the nonce
 func (ref SharingReference) GetNonce() int64 {
 	return ref.n
 }

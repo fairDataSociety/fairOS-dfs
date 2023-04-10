@@ -103,7 +103,7 @@ func (a *API) DeletePod(podName, sessionId string) error {
 	return nil
 }
 
-// OpenPod
+// OpenPod opens a pod
 func (a *API) OpenPod(podName, sessionId string) (*pod.Info, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -119,7 +119,7 @@ func (a *API) OpenPod(podName, sessionId string) (*pod.Info, error) {
 	return podInfo, nil
 }
 
-// ClosePod
+// ClosePod closes a pod
 func (a *API) ClosePod(podName, sessionId string) error {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -138,7 +138,7 @@ func (a *API) ClosePod(podName, sessionId string) error {
 	return nil
 }
 
-// PodStat
+// PodStat returns the pod stat
 func (a *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -154,7 +154,7 @@ func (a *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
 	return podStat, nil
 }
 
-// SyncPod
+// SyncPod syncs a pod
 func (a *API) SyncPod(podName, sessionId string) error {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -170,7 +170,7 @@ func (a *API) SyncPod(podName, sessionId string) error {
 	return nil
 }
 
-// SyncPodAsync
+// SyncPodAsync syncs a pod asynchronously
 func (a *API) SyncPodAsync(ctx context.Context, podName, sessionId string) error {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -186,7 +186,7 @@ func (a *API) SyncPodAsync(ctx context.Context, podName, sessionId string) error
 	return nil
 }
 
-// ListPods
+// ListPods lists all the pods of a user
 func (a *API) ListPods(sessionId string) ([]string, []string, error) {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -214,7 +214,7 @@ func (a *API) PodList(sessionId string) (*pod.List, error) {
 	return ui.GetPod().PodList()
 }
 
-// PodShare
+// PodShare shares a pod
 func (a *API) PodShare(podName, sharedPodName, sessionId string) (string, error) {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -230,7 +230,7 @@ func (a *API) PodShare(podName, sharedPodName, sessionId string) (string, error)
 	return address, nil
 }
 
-// PodReceiveInfo
+// PodReceiveInfo receives the pod information
 func (a *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareInfo, error) {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -241,7 +241,7 @@ func (a *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareI
 	return ui.GetPod().ReceivePodInfo(ref)
 }
 
-// PublicPodReceiveInfo
+// PublicPodReceiveInfo receives the pod information for a public pod
 func (a *API) PublicPodReceiveInfo(ref utils.Reference) (*pod.ShareInfo, error) {
 	data, resp, err := a.client.DownloadBlob(ref.Bytes())
 	if err != nil { // skipcq: TCV-001
@@ -261,7 +261,7 @@ func (a *API) PublicPodReceiveInfo(ref utils.Reference) (*pod.ShareInfo, error) 
 	return shareInfo, nil
 }
 
-// PublicPodFileDownload
+// PublicPodFileDownload downloads a file from a public pod
 func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.ReadCloser, uint64, error) {
 
 	accountInfo := &account.Info{}
@@ -301,7 +301,7 @@ func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.Rea
 	return reader, meta.Size, nil
 }
 
-// PublicPodKVEntryGet
+// PublicPodKVEntryGet gets a kv entry from a public pod
 func (a *API) PublicPodKVEntryGet(pod *pod.ShareInfo, name, key string) ([]string, []byte, error) {
 
 	accountInfo := &account.Info{}
@@ -319,7 +319,7 @@ func (a *API) PublicPodKVEntryGet(pod *pod.ShareInfo, name, key string) ([]strin
 	return kvStore.KVGet(name, key)
 }
 
-// PublicPodFileDownload
+// PublicPodDisLs lists a directory from a public pod
 func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entry, []file.Entry, error) {
 
 	accountInfo := &account.Info{}
@@ -410,7 +410,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 	return listEntries, fileEntries, nil
 }
 
-// PodReceive
+// PodReceive - receive a pod from a sharingReference
 func (a *API) PodReceive(sessionId, sharedPodName string, ref utils.Reference) (*pod.Info, error) {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -421,7 +421,7 @@ func (a *API) PodReceive(sessionId, sharedPodName string, ref utils.Reference) (
 	return ui.GetPod().ReceivePod(sharedPodName, ref)
 }
 
-// IsPodExist
+// IsPodExist checks if a pod exists
 func (a *API) IsPodExist(podName, sessionId string) bool {
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -430,7 +430,7 @@ func (a *API) IsPodExist(podName, sessionId string) bool {
 	return ui.GetPod().IsPodPresent(podName)
 }
 
-// ForkPod
+// ForkPod forks a pod
 func (a *API) ForkPod(podName, forkName, sessionId string) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -454,7 +454,7 @@ func (a *API) ForkPod(podName, forkName, sessionId string) error {
 	return ui.GetPod().PodFork(podName, forkName)
 }
 
-// ForkPodFromRef
+// ForkPodFromRef forks a pod from a sharing reference
 func (a *API) ForkPodFromRef(forkName, refString, sessionId string) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -500,7 +500,7 @@ func (*API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
 	return pi, nil
 }
 
-// ListPodInMarketplace
+// ListPodInMarketplace lists a pod in the datahub marketplace
 func (a *API) ListPodInMarketplace(sessionId, podName, title, desc, thumbnail string, price uint64, daysValid uint16, category [32]byte) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -520,7 +520,7 @@ func (a *API) ListPodInMarketplace(sessionId, podName, title, desc, thumbnail st
 	return ui.GetPod().ListPodInMarketplace(podName, title, desc, thumbnail, price, daysValid, category, nameHash)
 }
 
-// ChangePodListStatusInMarketplace
+// ChangePodListStatusInMarketplace changes the status of a pod in the datahub marketplace
 func (a *API) ChangePodListStatusInMarketplace(sessionId string, subHash [32]byte, show bool) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -535,7 +535,7 @@ func (a *API) ChangePodListStatusInMarketplace(sessionId string, subHash [32]byt
 	return ui.GetPod().PodStatusInMarketplace(subHash, show)
 }
 
-// RequestSubscription
+// RequestSubscription requests a subscription to a pod
 func (a *API) RequestSubscription(sessionId string, subHash [32]byte) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -555,7 +555,7 @@ func (a *API) RequestSubscription(sessionId string, subHash [32]byte) error {
 	return ui.GetPod().RequestSubscription(subHash, nameHash)
 }
 
-// ApproveSubscription
+// ApproveSubscription approves a subscription to a pod
 func (a *API) ApproveSubscription(sessionId, podName string, reqHash, nameHash [32]byte) error {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -575,7 +575,7 @@ func (a *API) ApproveSubscription(sessionId, podName string, reqHash, nameHash [
 	return ui.GetPod().ApproveSubscription(podName, reqHash, subscriberPublicKey)
 }
 
-// EncryptSubscription
+// EncryptSubscription encrypts the subscription information
 func (a *API) EncryptSubscription(sessionId, podName string, nameHash [32]byte) (string, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -595,7 +595,7 @@ func (a *API) EncryptSubscription(sessionId, podName string, nameHash [32]byte) 
 	return ui.GetPod().EncryptUploadSubscriptionInfo(podName, subscriberPublicKey)
 }
 
-// DecryptAndOpenSubscriptionPod
+// DecryptAndOpenSubscriptionPod decrypts pod info and opens the subscription pod
 func (a *API) DecryptAndOpenSubscriptionPod(sessionId, reference string, sellerNameHash [32]byte) (*pod.Info, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -627,6 +627,7 @@ func (a *API) DecryptAndOpenSubscriptionPod(sessionId, reference string, sellerN
 
 }
 
+// GetSubscriptionInfo returns the subscription info
 type SubscriptionInfo struct {
 	SubHash      [32]byte
 	PodName      string
@@ -636,7 +637,7 @@ type SubscriptionInfo struct {
 	ValidTill    int64
 }
 
-// GetSubscriptions
+// GetSubscriptions returns the list of subscriptions
 func (a *API) GetSubscriptions(sessionId string) ([]SubscriptionInfo, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -681,7 +682,7 @@ func (a *API) GetSubscriptions(sessionId string) ([]SubscriptionInfo, error) {
 	return subs, nil
 }
 
-// GetSubscribablePodInfo
+// GetSubscribablePodInfo returns the subscribable pod info
 func (a *API) GetSubscribablePodInfo(sessionId string, subHash [32]byte) (*rpc.SubscriptionItemInfo, error) {
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
@@ -693,7 +694,7 @@ func (a *API) GetSubscribablePodInfo(sessionId string, subHash [32]byte) (*rpc.S
 	return a.sm.GetSubscribablePodInfo(subHash)
 }
 
-// OpenSubscribedPod
+// OpenSubscribedPod opens the subscribed pod
 func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte, infoLocation string) (*pod.Info, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -730,7 +731,7 @@ func (a *API) OpenSubscribedPod(sessionId string, subHash [32]byte, infoLocation
 	return pi, nil
 }
 
-// GetSubscribablePods
+// GetSubscribablePods returns the list of subscribable pods
 func (a *API) GetSubscribablePods(sessionId string) ([]datahub.DataHubSub, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
@@ -743,7 +744,7 @@ func (a *API) GetSubscribablePods(sessionId string) ([]datahub.DataHubSub, error
 	return ui.GetPod().GetMarketplace()
 }
 
-// GetSubscribablePods
+// GetSubsRequests returns the list of subscription requests
 func (a *API) GetSubsRequests(sessionId string) ([]datahub.DataHubSubRequest, error) {
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)

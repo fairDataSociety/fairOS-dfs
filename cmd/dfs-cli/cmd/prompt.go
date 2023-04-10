@@ -348,7 +348,7 @@ func executor(in string) {
 				fmt.Println("please login as user to do the operation")
 				return
 			}
-			StatUser()
+			statUser()
 			currentPrompt = getCurrentPrompt()
 		default:
 			fmt.Println("invalid user command")
