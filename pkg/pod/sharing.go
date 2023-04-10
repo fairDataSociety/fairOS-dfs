@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// ShareInfo
+// ShareInfo is the structure of the share info
 type ShareInfo struct {
 	PodName     string `json:"podName"`
 	Address     string `json:"podAddress"`

@@ -23,12 +23,12 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// Collections
+// Collections is the struct which holds the list of tables
 type Collections struct {
 	Tables []Collection
 }
 
-// Collection
+// Collection is the struct which holds the table information
 type Collection struct {
 	Name           string   `json:"tableName"`
 	IndexedColumns []string `json:"indexes"`

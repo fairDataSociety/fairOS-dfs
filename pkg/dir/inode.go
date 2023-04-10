@@ -23,7 +23,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// Inode
+// Inode is the structure of the inode
 type Inode struct {
 	Meta           *MetaData `json:"meta"`
 	FileOrDirNames []string  `json:"fileOrDirNames"`

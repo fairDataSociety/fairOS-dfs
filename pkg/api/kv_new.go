@@ -26,7 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// KVTableRequest
+// KVTableRequest is the request to create a key value table
 type KVTableRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`

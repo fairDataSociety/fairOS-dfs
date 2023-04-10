@@ -27,12 +27,12 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UploadFileResponse
+// UploadFileResponse is the json response from upload file api
 type UploadFileResponse struct {
 	Responses []UploadResponse
 }
 
-// UploadResponse
+// UploadResponse is the json response from upload file api
 type UploadResponse struct {
 	FileName string `json:"fileName"`
 	Message  string `json:"message,omitempty"`

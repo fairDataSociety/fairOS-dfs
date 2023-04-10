@@ -26,7 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// KVEntryRequest
+// KVEntryRequest is the request to put a key-value in the kv table
 type KVEntryRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`
@@ -34,20 +34,20 @@ type KVEntryRequest struct {
 	Value     string `json:"value,omitempty"`
 }
 
-// KVEntryDeleteRequest
+// KVEntryDeleteRequest is the request to delete a key-value in the kv table
 type KVEntryDeleteRequest struct {
 	PodName   string `json:"podName,omitempty"`
 	TableName string `json:"tableName,omitempty"`
 	Key       string `json:"key,omitempty"`
 }
 
-// KVResponse
+// KVResponse is the response to get a key-value from the kv table
 type KVResponse struct {
 	Keys   []string `json:"keys,omitempty"`
 	Values []byte   `json:"values"`
 }
 
-// KVResponseRaw
+// KVResponseRaw is the response to get a key-value from the kv table
 type KVResponseRaw struct {
 	Keys   []string `json:"keys,omitempty"`
 	Values string   `json:"values"`

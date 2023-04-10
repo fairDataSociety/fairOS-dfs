@@ -9,7 +9,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// StatusResponse
+// StatusResponse is the response for file status
 type StatusResponse struct {
 	Total     int64 `json:"total"`
 	Processed int64 `json:"processed"`

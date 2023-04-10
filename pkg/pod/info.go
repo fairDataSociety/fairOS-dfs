@@ -26,7 +26,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// Info
+// Info is the struct which holds the pod information
 type Info struct {
 	podName     string
 	podPassword string
@@ -39,37 +39,37 @@ type Info struct {
 	docStore    *collection.Document
 }
 
-// GetPodName
+// GetPodName returns the pod name
 func (i *Info) GetPodName() string {
 	return i.podName
 }
 
-// GetPodAddress
+// GetPodAddress returns the pod address
 func (i *Info) GetPodAddress() utils.Address {
 	return i.userAddress
 }
 
-// GetPodPassword
+// GetPodPassword returns the pod password
 func (i *Info) GetPodPassword() string {
 	return i.podPassword
 }
 
-// GetDirectory
+// GetDirectory returns the directory object
 func (i *Info) GetDirectory() *di.Directory {
 	return i.dir
 }
 
-// GetFile
+// GetFile returns the file object
 func (i *Info) GetFile() *f.File {
 	return i.file
 }
 
-// GetAccountInfo
+// GetAccountInfo returns the pod account info
 func (i *Info) GetAccountInfo() *account.Info {
 	return i.accountInfo
 }
 
-// GetFeed
+// GetFeed returns the feed object
 func (i *Info) GetFeed() *feed.API {
 	return i.feed
 }

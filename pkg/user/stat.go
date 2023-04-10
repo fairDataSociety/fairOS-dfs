@@ -18,7 +18,7 @@ package user
 
 import "github.com/fairdatasociety/fairOS-dfs/pkg/account"
 
-// Stat
+// Stat is the structure of the user information.
 type Stat struct {
 	Name      string `json:"userName"`
 	Reference string `json:"address"`

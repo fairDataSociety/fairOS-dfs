@@ -27,7 +27,7 @@ type Manifest struct {
 	dirtyFlag    bool
 }
 
-// Entry
+// Entry is the structure of the entry
 type Entry struct {
 	Name     string    `json:"name"`
 	EType    string    `json:"type"`

@@ -39,7 +39,7 @@ const (
 	CSVHeaderKey = "__csv_header__"
 )
 
-// KeyValue
+// KeyValue is the main object used to do all operation on the key value tables.
 type KeyValue struct {
 	podName      string
 	fd           *feed.API
@@ -52,14 +52,14 @@ type KeyValue struct {
 	logger       logging.Logger
 }
 
-// KVTable
+// KVTable is the object used to do all operation on a key value table.
 type KVTable struct {
 	index     *Index
 	indexType IndexType
 	columns   []string
 }
 
-// TableKeyCount
+// TableKeyCount is the object used to store the count of keys in a table.
 type TableKeyCount struct {
 	Count     uint64 `json:"count"`
 	TableName string `json:"tableName"`

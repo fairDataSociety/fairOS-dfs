@@ -102,14 +102,7 @@ const (
 	apiUserDeleteV2  = apiVersionV2 + "/user/delete"
 )
 
-// Message
-type Message struct {
-	Message string
-	Code    int
-}
-
-// NewPrompt spawns dfs-client and checks if it is connected to it.
-func NewPrompt() {
+func newPrompt() {
 	var err error
 	fdfsAPI, err = newFdfsClient(fdfsServer)
 	if err != nil {

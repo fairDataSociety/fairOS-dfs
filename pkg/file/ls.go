@@ -22,7 +22,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// Entry
+// Entry is the structure of the entry
 type Entry struct {
 	Name             string `json:"name"`
 	ContentType      string `json:"contentType"`

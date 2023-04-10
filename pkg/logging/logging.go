@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Logger
+// Logger is the interface for logging
 type Logger interface {
 	Tracef(format string, args ...interface{})
 	Trace(args ...interface{})

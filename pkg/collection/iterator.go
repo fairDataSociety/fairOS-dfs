@@ -38,7 +38,7 @@ type Iterator struct {
 	error         error
 }
 
-// ManifestState
+// ManifestState is used to keep track of the current manifest and the current index of the manifest.
 type ManifestState struct {
 	currentManifest *Manifest
 	currentIndex    int

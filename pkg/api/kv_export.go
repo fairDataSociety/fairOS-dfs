@@ -10,10 +10,9 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// MaxExportLimit
-const MaxExportLimit = 100
+const maxExportLimit = 100
 
-// KVExportRequest
+// KVExportRequest is the request for kv export
 type KVExportRequest struct {
 	PodName     string `json:"podName,omitempty"`
 	TableName   string `json:"tableName,omitempty"`
@@ -76,7 +75,7 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 	end := kvReq.EndPrefix
 	limit := kvReq.Limit
 	if limit == "" {
-		limit = fmt.Sprintf("%d", MaxExportLimit)
+		limit = fmt.Sprintf("%d", maxExportLimit)
 	}
 	noOfRows, err := strconv.ParseInt(limit, 10, 64)
 	if err != nil {
@@ -85,9 +84,9 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if noOfRows > MaxExportLimit {
-		h.logger.Errorf("kv export: maximum limit is %d", MaxExportLimit)
-		jsonhttp.BadRequest(w, &response{Message: fmt.Sprintf("kv export: maximum limit is %d", MaxExportLimit)})
+	if noOfRows > maxExportLimit {
+		h.logger.Errorf("kv export: maximum limit is %d", maxExportLimit)
+		jsonhttp.BadRequest(w, &response{Message: fmt.Sprintf("kv export: maximum limit is %d", maxExportLimit)})
 		return
 	}
 
