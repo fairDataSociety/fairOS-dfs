@@ -57,11 +57,7 @@ func (in *Inode) Unmarshal(data []byte) error {
 	if string(data) == utils.DeletedFeedMagicWord {
 		return ErrResourceDeleted
 	}
-	err := json.Unmarshal(data, in)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-	return nil
+	return json.Unmarshal(data, in)
 }
 
 func (d *Directory) GetInode(podPassword, dirNameWithPath string) *Inode {

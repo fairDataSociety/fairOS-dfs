@@ -151,14 +151,13 @@ func (kv *KeyValue) DeleteAllKVTables(encryptionPassword string) error {
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
+	kv.openKVTMu.Lock()
+	defer kv.openKVTMu.Unlock()
 	for name := range kvtables {
 		if _, ok := kvtables[name]; !ok {
 			return ErrKVTableNotPresent
 		}
 
-		kv.openKVTMu.Lock()
-		defer kv.openKVTMu.Unlock()
 		if table, ok := kv.openKVTables[name]; ok {
 			err = table.index.DeleteIndex(encryptionPassword)
 			if err != nil { // skipcq: TCV-001
@@ -168,6 +167,9 @@ func (kv *KeyValue) DeleteAllKVTables(encryptionPassword string) error {
 		} else {
 			idx, err := OpenIndex(kv.podName, defaultCollectionName, name, encryptionPassword, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
 			if err != nil { // skipcq: TCV-001
+				if err == ErrIndexNotPresent {
+					continue
+				}
 				return err
 			}
 			err = idx.DeleteIndex(encryptionPassword)
