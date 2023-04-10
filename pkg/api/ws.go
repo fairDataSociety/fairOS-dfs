@@ -171,7 +171,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		}
 		switch req.Event {
 		// user related events
-		case common.UserLoginV2:
+		case common.UserLogin:
 			jsonBytes, err := json.Marshal(req.Params)
 			if err != nil {
 				respondWithError(res, err)
@@ -206,7 +206,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			logEventDescription(string(common.UserLogin), to, http.StatusOK, h.logger)
-		case common.UserPresentV2:
+		case common.UserPresent:
 			jsonBytes, err := json.Marshal(req.Params)
 			if err != nil {
 				respondWithError(res, err)
@@ -232,7 +232,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			logEventDescription(string(common.UserPresentV2), to, res.StatusCode, h.logger)
+			logEventDescription(string(common.UserPresent), to, res.StatusCode, h.logger)
 		case common.UserIsLoggedin:
 			jsonBytes, err := json.Marshal(req.Params)
 			if err != nil {
