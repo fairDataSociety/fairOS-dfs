@@ -465,7 +465,7 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 				d.logger.Errorf("counting document db: %v", err.Error())
 				return 0, err
 			}
-			matched := re.Match([]byte(itr.StringKey()))
+			matched := re.MatchString(itr.StringKey())
 			if matched {
 				refs := itr.ValueAll()
 				return uint64(len(refs)), nil
@@ -479,7 +479,7 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 			}
 
 			for itr.Next() {
-				matched := re.Match([]byte(itr.StringKey()))
+				matched := re.MatchString(itr.StringKey())
 				if matched {
 					refs := itr.ValueAll()
 					count = count + uint64(len(refs))
@@ -918,7 +918,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 				d.logger.Errorf("finding from document db: %v", err.Error())
 				return nil, err
 			}
-			matched := re.Match([]byte(itr.StringKey()))
+			matched := re.MatchString(itr.StringKey())
 			if matched {
 				references = itr.ValueAll()
 			}
@@ -930,7 +930,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 			}
 
 			for itr.Next() {
-				matched := re.Match([]byte(itr.StringKey()))
+				matched := re.MatchString(itr.StringKey())
 				if matched {
 					refs := itr.ValueAll()
 					references = append(references, refs...)

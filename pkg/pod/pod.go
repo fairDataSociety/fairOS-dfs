@@ -125,5 +125,6 @@ func (p *Pod) GetPodInfo(podName string) (*Info, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	return pi, pi.GetPodPassword(), nil
+	password = pi.GetPodPassword()
+	return pi, password, nil
 }
