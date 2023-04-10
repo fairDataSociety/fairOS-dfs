@@ -177,7 +177,7 @@ func (idx *Index) DeleteIndex(encryptionPassword string) error {
 	}
 	manifest := getRootManifestOfIndex(idx.name, encryptionPassword, idx.feed, idx.user, idx.client)
 	if manifest == nil {
-		return nil
+		return ErrIndexNotPresent
 	}
 
 	// erase the top Manifest
