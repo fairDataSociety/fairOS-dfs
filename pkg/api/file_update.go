@@ -68,7 +68,7 @@ func (h *Handler) FileUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "file update: \"filePath\" argument missing"})
 		return
 	}
-	offset, err := strconv.Atoi(r.FormValue("offset"))
+	offset, err := strconv.ParseUint(r.FormValue("offset"), 10, 64)
 	if err != nil {
 		h.logger.Errorf("file update: \"offset\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "file update: \"offset\" argument missing or wrong"})
@@ -90,7 +90,7 @@ func (h *Handler) FileUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	_, err = h.dfsAPI.WriteAtFile(podName, fileNameWithPath, sessionId, file, uint64(offset), false)
+	_, err = h.dfsAPI.WriteAtFile(podName, fileNameWithPath, sessionId, file, offset, false)
 	if err != nil {
 		h.logger.Errorf("file update: writeAt failed: %s", err.Error())
 		jsonhttp.BadRequest(w, &response{Message: "file update: writeAt failed: " + err.Error()})

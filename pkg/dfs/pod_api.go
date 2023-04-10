@@ -481,7 +481,7 @@ func (a *API) ForkPodFromRef(forkName, refString, sessionId string) error {
 	return ui.GetPod().PodForkFromRef(forkName, refString)
 }
 
-func (a *API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
+func (*API) prepareOwnPod(ui *user.Info, podName string) (*pod.Info, error) {
 	podPasswordBytes, _ := utils.GetRandBytes(pod.PasswordLength)
 	podPassword := hex.EncodeToString(podPasswordBytes)
 
