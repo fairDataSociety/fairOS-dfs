@@ -99,7 +99,7 @@ func TestLogin(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		user1 := "multicredtester"
 		pass := "password1password1"
-		//create user
+		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
 		sr, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if err != nil {
@@ -157,7 +157,7 @@ func TestLogin(t *testing.T) {
 	t.Run("new-user-multi-cred-with-pods", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		user1 := "multicredtester"
-		//create user
+		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
 		pass := "password1password1"
 		sr, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)

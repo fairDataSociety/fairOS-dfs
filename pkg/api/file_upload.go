@@ -40,7 +40,7 @@ type UploadResponse struct {
 
 const (
 	defaultMaxMemory = 32 << 20 // 32 MB
-	//CompressionHeader
+	// CompressionHeader is the header key for compression type
 	CompressionHeader = "fairOS-dfs-Compression"
 )
 

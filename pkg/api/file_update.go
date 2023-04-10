@@ -89,12 +89,7 @@ func (h *Handler) FileUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	//_, err = file.Seek(int64(offset), io.SeekStart)
-	//if err != nil {
-	//	h.logger.Errorf("file update: seek failed: %s", err.Error())
-	//	jsonhttp.BadRequest(w, &response{Message: "file update: seek failed: " + err.Error()})
-	//	return
-	//}
+
 	_, err = h.dfsAPI.WriteAtFile(podName, fileNameWithPath, sessionId, file, uint64(offset), false)
 	if err != nil {
 		h.logger.Errorf("file update: writeAt failed: %s", err.Error())

@@ -57,12 +57,12 @@ type decError struct{ msg string }
 func (err decError) Error() string { return err.msg }
 
 var (
-	//ErrEmptyString
+	// ErrEmptyString is returned when a hex string is empty.
 	ErrEmptyString = &decError{"empty hex string"}
-	//ErrMissingPrefix
+	// ErrMissingPrefix is returned when a hex string does not have a 0x prefix.
 	ErrMissingPrefix = &decError{"hex string without 0x prefix"}
 	errSyntax        = &decError{"invalid hex string"}
-	//ErrOddLength
+	//ErrOddLength is returned when a hex string has an odd length.
 	ErrOddLength   = &decError{"hex string of odd length"}
 	errUint64Range = &decError{"hex number > 64 bits"}
 )

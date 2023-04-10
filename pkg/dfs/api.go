@@ -62,7 +62,7 @@ func NewDfsAPI(ctx context.Context, apiUrl, postageBlockId string, ensConfig *co
 	c := bee.NewBeeClient(apiUrl, postageBlockId, false, logger)
 	if !c.CheckConnection() {
 		logger.Errorf("dfs: bee client initialisation failed")
-		return nil, ErrBeeClient
+		return nil, errBeeClient
 	}
 	users := user.NewUsers(c, ens, logger)
 

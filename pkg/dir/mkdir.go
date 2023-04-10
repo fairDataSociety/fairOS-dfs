@@ -28,7 +28,7 @@ import (
 
 const (
 	nameLength = 100
-	//S_IFDIR
+	// S_IFDIR is the mode for directory
 	S_IFDIR     = 0040000
 	defaultMode = 0700
 )

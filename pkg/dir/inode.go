@@ -30,7 +30,7 @@ type Inode struct {
 }
 
 var (
-	//ErrResourceDeleted
+	// ErrResourceDeleted is returned when the resource is deleted
 	ErrResourceDeleted = errors.New("resource was deleted")
 )
 

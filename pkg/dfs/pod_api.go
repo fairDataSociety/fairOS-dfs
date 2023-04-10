@@ -363,7 +363,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 			}
 			entry := dir.Entry{
 				Name:             dirInode.Meta.Name,
-				ContentType:      dir.MineTypeDirectory, // per RFC2425
+				ContentType:      dir.MimeTypeDirectory, // per RFC2425
 				CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
 				AccessTime:       strconv.FormatInt(dirInode.Meta.AccessTime, 10),
 				ModificationTime: strconv.FormatInt(dirInode.Meta.ModificationTime, 10),

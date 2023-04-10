@@ -144,7 +144,7 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 			// so that the entire branch goes kaboom
 			parentEntryKey := filepath.Base(manifest.Name)
 			for i, entry := range parentManifest.Entries {
-				if entry.EType == IntermediateEntry && entry.Name == parentEntryKey {
+				if entry.EType == intermediateEntry && entry.Name == parentEntryKey {
 					deletedRef = entry.Ref
 					parentManifest.Entries = append(parentManifest.Entries[:i], parentManifest.Entries[i+1:]...)
 					break
@@ -186,7 +186,7 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Man
 		for _, dirtyEntry := range memManifest.Entries {
 			diskManifest.dirtyFlag = true
 			b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
-			if dirtyEntry.EType == IntermediateEntry && dirtyEntry.Manifest != nil { // skipcq: TCV-001
+			if dirtyEntry.EType == intermediateEntry && dirtyEntry.Manifest != nil { // skipcq: TCV-001
 				err := b.storeMemoryManifest(dirtyEntry.Manifest, 0)
 				if err != nil {
 					return nil, err
@@ -250,7 +250,7 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 
 	// store any branches in this manifest
 	for _, entry := range manifest.Entries {
-		if entry.EType == IntermediateEntry && entry.Manifest != nil {
+		if entry.EType == intermediateEntry && entry.Manifest != nil {
 			if depth >= maxManifestDepth {
 				// process later
 				b.manifestStack = append(b.manifestStack, entry.Manifest)

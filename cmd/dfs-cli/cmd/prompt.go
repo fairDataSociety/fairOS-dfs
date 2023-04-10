@@ -31,18 +31,12 @@ import (
 )
 
 const (
-	//DefaultPrompt
-	DefaultPrompt = "dfs"
-	//UserSeperator
-	UserSeperator = ">>>"
-	//PodSeperator
-	PodSeperator = ">>"
-	//PromptSeperator
-	PromptSeperator = "> "
-	//APIVersion
-	APIVersion = "/v1"
-	//APIVersionV2
-	APIVersionV2 = "/v2"
+	defaultPrompt   = "dfs"
+	userSeperator   = ">>>"
+	podSeperator    = ">>"
+	promptSeperator = "> "
+	apiVersion      = "/v1"
+	apiVersionV2    = "/v2"
 )
 
 var (
@@ -54,58 +48,58 @@ var (
 )
 
 const (
-	apiUserIsLoggedin  = APIVersion + "/user/isloggedin"
-	apiUserLogout      = APIVersion + "/user/logout"
-	apiUserStat        = APIVersion + "/user/stat"
-	apiPodNew          = APIVersion + "/pod/new"
-	apiPodOpen         = APIVersion + "/pod/open"
-	apiPodClose        = APIVersion + "/pod/close"
-	apiPodSync         = APIVersion + "/pod/sync"
-	apiPodDelete       = APIVersion + "/pod/delete"
-	apiPodLs           = APIVersion + "/pod/ls"
-	apiPodStat         = APIVersion + "/pod/stat"
-	apiPodShare        = APIVersion + "/pod/share"
-	apiPodReceive      = APIVersion + "/pod/receive"
-	apiPodReceiveInfo  = APIVersion + "/pod/receiveinfo"
-	apiDirIsPresent    = APIVersion + "/dir/present"
-	apiDirMkdir        = APIVersion + "/dir/mkdir"
-	apiDirRmdir        = APIVersion + "/dir/rmdir"
-	apiDirLs           = APIVersion + "/dir/ls"
-	apiDirStat         = APIVersion + "/dir/stat"
-	apiFileDownload    = APIVersion + "/file/download"
-	apiFileUpload      = APIVersion + "/file/upload"
-	apiFileShare       = APIVersion + "/file/share"
-	apiFileReceive     = APIVersion + "/file/receive"
-	apiFileReceiveInfo = APIVersion + "/file/receiveinfo"
-	apiFileDelete      = APIVersion + "/file/delete"
-	apiFileStat        = APIVersion + "/file/stat"
-	apiKVCreate        = APIVersion + "/kv/new"
-	apiKVList          = APIVersion + "/kv/ls"
-	apiKVOpen          = APIVersion + "/kv/open"
-	apiKVDelete        = APIVersion + "/kv/delete"
-	apiKVCount         = APIVersion + "/kv/count"
-	apiKVEntryPut      = APIVersion + "/kv/entry/put"
-	apiKVEntryGet      = APIVersion + "/kv/entry/get"
-	apiKVEntryDelete   = APIVersion + "/kv/entry/del"
-	apiKVLoadCSV       = APIVersion + "/kv/loadcsv"
-	apiKVSeek          = APIVersion + "/kv/seek"
-	apiKVSeekNext      = APIVersion + "/kv/seek/next"
-	apiDocCreate       = APIVersion + "/doc/new"
-	apiDocList         = APIVersion + "/doc/ls"
-	apiDocOpen         = APIVersion + "/doc/open"
-	apiDocCount        = APIVersion + "/doc/count"
-	apiDocDelete       = APIVersion + "/doc/delete"
-	apiDocFind         = APIVersion + "/doc/find"
-	apiDocEntryPut     = APIVersion + "/doc/entry/put"
-	apiDocEntryGet     = APIVersion + "/doc/entry/get"
-	apiDocEntryDel     = APIVersion + "/doc/entry/del"
-	apiDocLoadJson     = APIVersion + "/doc/loadjson"
-	apiDocIndexJson    = APIVersion + "/doc/indexjson"
+	apiUserIsLoggedin  = apiVersion + "/user/isloggedin"
+	apiUserLogout      = apiVersion + "/user/logout"
+	apiUserStat        = apiVersion + "/user/stat"
+	apiPodNew          = apiVersion + "/pod/new"
+	apiPodOpen         = apiVersion + "/pod/open"
+	apiPodClose        = apiVersion + "/pod/close"
+	apiPodSync         = apiVersion + "/pod/sync"
+	apiPodDelete       = apiVersion + "/pod/delete"
+	apiPodLs           = apiVersion + "/pod/ls"
+	apiPodStat         = apiVersion + "/pod/stat"
+	apiPodShare        = apiVersion + "/pod/share"
+	apiPodReceive      = apiVersion + "/pod/receive"
+	apiPodReceiveInfo  = apiVersion + "/pod/receiveinfo"
+	apiDirIsPresent    = apiVersion + "/dir/present"
+	apiDirMkdir        = apiVersion + "/dir/mkdir"
+	apiDirRmdir        = apiVersion + "/dir/rmdir"
+	apiDirLs           = apiVersion + "/dir/ls"
+	apiDirStat         = apiVersion + "/dir/stat"
+	apiFileDownload    = apiVersion + "/file/download"
+	apiFileUpload      = apiVersion + "/file/upload"
+	apiFileShare       = apiVersion + "/file/share"
+	apiFileReceive     = apiVersion + "/file/receive"
+	apiFileReceiveInfo = apiVersion + "/file/receiveinfo"
+	apiFileDelete      = apiVersion + "/file/delete"
+	apiFileStat        = apiVersion + "/file/stat"
+	apiKVCreate        = apiVersion + "/kv/new"
+	apiKVList          = apiVersion + "/kv/ls"
+	apiKVOpen          = apiVersion + "/kv/open"
+	apiKVDelete        = apiVersion + "/kv/delete"
+	apiKVCount         = apiVersion + "/kv/count"
+	apiKVEntryPut      = apiVersion + "/kv/entry/put"
+	apiKVEntryGet      = apiVersion + "/kv/entry/get"
+	apiKVEntryDelete   = apiVersion + "/kv/entry/del"
+	apiKVLoadCSV       = apiVersion + "/kv/loadcsv"
+	apiKVSeek          = apiVersion + "/kv/seek"
+	apiKVSeekNext      = apiVersion + "/kv/seek/next"
+	apiDocCreate       = apiVersion + "/doc/new"
+	apiDocList         = apiVersion + "/doc/ls"
+	apiDocOpen         = apiVersion + "/doc/open"
+	apiDocCount        = apiVersion + "/doc/count"
+	apiDocDelete       = apiVersion + "/doc/delete"
+	apiDocFind         = apiVersion + "/doc/find"
+	apiDocEntryPut     = apiVersion + "/doc/entry/put"
+	apiDocEntryGet     = apiVersion + "/doc/entry/get"
+	apiDocEntryDel     = apiVersion + "/doc/entry/del"
+	apiDocLoadJson     = apiVersion + "/doc/loadjson"
+	apiDocIndexJson    = apiVersion + "/doc/indexjson"
 
-	apiUserSignupV2  = APIVersionV2 + "/user/signup"
-	apiUserLoginV2   = APIVersionV2 + "/user/login"
-	apiUserPresentV2 = APIVersionV2 + "/user/present"
-	apiUserDeleteV2  = APIVersionV2 + "/user/delete"
+	apiUserSignupV2  = apiVersionV2 + "/user/signup"
+	apiUserLoginV2   = apiVersionV2 + "/user/login"
+	apiUserPresentV2 = apiVersionV2 + "/user/present"
+	apiUserDeleteV2  = apiVersionV2 + "/user/delete"
 )
 
 // Message
@@ -129,7 +123,7 @@ func NewPrompt() {
 }
 
 func initPrompt() {
-	currentPrompt = DefaultPrompt + " " + UserSeperator
+	currentPrompt = defaultPrompt + " " + userSeperator
 	p := prompt.New(
 		executor,
 		completer,
@@ -1087,11 +1081,11 @@ func getCurrentPrompt() string {
 	currPrompt := getUserPrompt()
 	podPrompt := getPodPrompt()
 	if podPrompt != "" {
-		currPrompt = currPrompt + " " + podPrompt + " " + PodSeperator
+		currPrompt = currPrompt + " " + podPrompt + " " + podSeperator
 	}
 	dirPrompt := currentDirectory
 	if dirPrompt != "" {
-		currPrompt = currPrompt + " " + dirPrompt + " " + PromptSeperator
+		currPrompt = currPrompt + " " + dirPrompt + " " + promptSeperator
 	}
 	return currPrompt
 }
@@ -1106,9 +1100,9 @@ func isPodOpened() bool {
 
 func getUserPrompt() string {
 	if currentUser == "" {
-		return DefaultPrompt + " " + UserSeperator
+		return defaultPrompt + " " + userSeperator
 	} else {
-		return DefaultPrompt + "@" + currentUser + " " + UserSeperator
+		return defaultPrompt + "@" + currentUser + " " + userSeperator
 	}
 }
 

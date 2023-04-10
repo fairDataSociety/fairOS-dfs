@@ -35,7 +35,7 @@ import (
 const (
 	kvFile                = "key_value_tables"
 	defaultCollectionName = "KV"
-	//CSVHeaderKey
+	// CSVHeaderKey is the key used to store the header of the csv file
 	CSVHeaderKey = "__csv_header__"
 )
 

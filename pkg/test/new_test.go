@@ -99,7 +99,7 @@ func TestNew(t *testing.T) {
 	t.Run("new-user-multi-cred", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		user1 := "multicredtester"
-		//create user
+		// create user
 		userObject := user.NewUsers(mockClient, ens, logger)
 		pass := "password1password1"
 		sr, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)

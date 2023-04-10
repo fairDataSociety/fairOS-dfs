@@ -27,10 +27,8 @@ import (
 )
 
 const (
-	//LeafEntry
-	LeafEntry = "L"
-	//IntermediateEntry
-	IntermediateEntry = "I"
+	leafEntry         = "L"
+	intermediateEntry = "I"
 )
 
 // PutNumber inserts an entry in to index with a number as a key.
@@ -108,7 +106,7 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 			return nil, err
 		}
 		for i, entry := range parentManifest.Entries {
-			if entry.EType == IntermediateEntry && entry.Name == parentEntryKey {
+			if entry.EType == intermediateEntry && entry.Name == parentEntryKey {
 				deletedRef = entry.Ref
 				parentManifest.Entries = append(parentManifest.Entries[:i], parentManifest.Entries[i+1:]...)
 				break
@@ -141,7 +139,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 		}
 
 		// this is the update of an existing entry
-		if entry.EType == LeafEntry && entry.Name == key {
+		if entry.EType == leafEntry && entry.Name == key {
 			var refs [][]byte
 			if apnd {
 				refs = entry.Ref
@@ -158,7 +156,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 			continue
 		}
 
-		if entry.EType == LeafEntry {
+		if entry.EType == leafEntry {
 			var newManifest Manifest
 			newManifest.Name = manifest.Name + prefix
 			newManifest.IdxType = idxType
@@ -167,13 +165,13 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 			refs1 = append(refs1, value)
 			entry1 := &Entry{
 				Name:  keySuffix,
-				EType: LeafEntry,
+				EType: leafEntry,
 				Ref:   refs1,
 			}
 			idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
 			entry2 := &Entry{
 				Name:  entrySuffix,
-				EType: LeafEntry,
+				EType: leafEntry,
 				Ref:   entry.Ref,
 			}
 			idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
@@ -191,13 +189,13 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 
 			// convert the existing leaf to intermediate node
 			entry.Name = prefix
-			entry.EType = IntermediateEntry
+			entry.EType = intermediateEntry
 			manifest.dirtyFlag = true
 			entryAdded = true
 			break
 		}
 
-		if entry.EType == IntermediateEntry {
+		if entry.EType == intermediateEntry {
 			if len(keySuffix) > 0 && len(entrySuffix) > 0 {
 				// create the new Manifest with two entries
 				var newManifest Manifest
@@ -209,14 +207,14 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 				refs2 = append(refs2, value)
 				entry1 := &Entry{
 					Name:  keySuffix,
-					EType: LeafEntry,
+					EType: leafEntry,
 					Ref:   refs2,
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
 				// add the old intermediate branch as another entry
 				entry2 := &Entry{
 					Name:  entrySuffix,
-					EType: IntermediateEntry,
+					EType: intermediateEntry,
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
 				if !memory {
@@ -233,7 +231,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 
 				// update the existing intermediate nodes name
 				entry.Name = prefix
-				entry.EType = IntermediateEntry
+				entry.EType = intermediateEntry
 				manifest.dirtyFlag = true
 				entryAdded = true
 				break
@@ -272,14 +270,14 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 				refs3 = append(refs3, value)
 				entry1 := &Entry{
 					Name:  keySuffix,
-					EType: LeafEntry,
+					EType: leafEntry,
 					Ref:   refs3,
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
 				// add the old intermediate branch as another entry
 				entry2 := &Entry{
 					Name:  entrySuffix,
-					EType: IntermediateEntry,
+					EType: intermediateEntry,
 				}
 				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
 				if !memory {
@@ -295,7 +293,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 
 				// update the existing intermediate nodes name
 				entry.Name = key
-				entry.EType = IntermediateEntry
+				entry.EType = intermediateEntry
 				manifest.dirtyFlag = true
 				entryAdded = true
 				break
@@ -308,7 +306,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 		var refs [][]byte
 		newEntry := Entry{
 			Name:  key,
-			EType: LeafEntry,
+			EType: leafEntry,
 			Ref:   append(refs, value),
 		}
 		idx.addEntryToManifestSortedLexicographically(manifest, &newEntry)
@@ -407,11 +405,11 @@ func (idx *Index) findManifest(grandParentManifest, parentManifest *Manifest, ke
 				}
 			}
 
-			if entry.EType == LeafEntry && entry.Name == key {
+			if entry.EType == leafEntry && entry.Name == key {
 				return grandParentManifest, parentManifest, i, nil
 			}
 
-			if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
+			if entry.EType == intermediateEntry && strings.HasPrefix(key, entry.Name) {
 				var childManifest *Manifest
 				childKey := strings.TrimPrefix(key, entry.Name)
 				if entry.Manifest == nil {
