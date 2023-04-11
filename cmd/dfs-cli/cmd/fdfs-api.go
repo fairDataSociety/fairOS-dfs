@@ -85,6 +85,7 @@ func (s *fdfsClient) CheckConnection() bool {
 	if err != nil {
 		return false
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 	req.Close = true
 
@@ -125,6 +126,7 @@ func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -197,6 +199,7 @@ func (s *fdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 	req.Close = true
 
@@ -289,6 +292,7 @@ func (s *fdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 	req.Close = true
 
@@ -343,6 +347,7 @@ func (s *fdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 	if err != nil {
 		return 0, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 	req.Close = true
 

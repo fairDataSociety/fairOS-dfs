@@ -1365,6 +1365,7 @@ func TestApis(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
+		// skipcq: GO-S2307
 		defer file.Close()
 		body := &bytes.Buffer{}
 		_, err = io.Copy(body, file)

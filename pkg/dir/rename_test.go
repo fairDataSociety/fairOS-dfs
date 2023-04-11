@@ -133,8 +133,7 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		dirs := []string{}
-
+		var dirs []string
 		for _, v := range dirEntries {
 			dirs = append(dirs, v.Name)
 		}
@@ -259,7 +258,7 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		dirs := []string{}
+		var dirs []string
 
 		for _, v := range dirEntries {
 			dirs = append(dirs, v.Name)

@@ -344,7 +344,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 		return nil, nil, fmt.Errorf("list dir : %v", err)
 	}
 
-	listEntries := []dir.Entry{}
+	var listEntries []dir.Entry
 	var files []string
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_D_") {
@@ -377,7 +377,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 		}
 	}
 
-	fileEntries := []file.Entry{}
+	var fileEntries []file.Entry
 	for _, filePath := range files {
 		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
 

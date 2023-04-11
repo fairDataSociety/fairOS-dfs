@@ -109,7 +109,7 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, &response{Message: "kv export: " + err.Error()})
 		return
 	}
-	items := []map[string]interface{}{}
+	var items []map[string]interface{}
 	var i int64
 	for i = 0; i < noOfRows; i++ {
 		if itr == nil {

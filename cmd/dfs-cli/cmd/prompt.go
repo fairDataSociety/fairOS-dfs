@@ -1126,7 +1126,7 @@ type files struct {
 }
 
 func findFilesToUpload(searchPath string) (*files, error) {
-	searchResults := []string{}
+	var searchResults []string
 	rawSearchResults, err := filepath.Glob(searchPath)
 	if err != nil {
 		return nil, err

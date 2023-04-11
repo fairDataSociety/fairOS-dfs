@@ -308,7 +308,7 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 	if fileSize%uint64(blockSize) != 0 {
 		noOfBlocks += 1
 	}
-	content := []byte{}
+	var content []byte
 	bytesRemaining := fileSize
 	for i := uint64(0); i < noOfBlocks; i++ {
 		bytesToWrite := blockSize
@@ -362,7 +362,7 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 	var borderCrossingLine []byte
 
 	bytesWritten := 0
-	content := []byte{}
+	var content []byte
 
 	for i := uint64(0); i < noOfBlocks; i++ {
 		bytesToWrite := blockSize

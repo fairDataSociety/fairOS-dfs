@@ -233,8 +233,8 @@ func DirList(podName, dirPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fileList := []string{}
-	dirList := []string{}
+	var fileList []string
+	var dirList []string
 	for _, v := range files {
 		fileList = append(fileList, v.Name)
 	}
@@ -310,6 +310,7 @@ func FileUpload(podName, filePath, dirPath, compression, blockSize string, overw
 	if err != nil {
 		return err
 	}
+	// skipcq: GO-S2307
 	defer f.Close()
 	bs, err := humanize.ParseBytes(blockSize)
 	if err != nil {
@@ -412,6 +413,7 @@ func KVLoadCSV(podName, tableName, filePath, memory string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// skipcq: GO-S2307
 	defer f.Close()
 	mem := true
 	if memory == "" {
@@ -582,6 +584,7 @@ func DocLoadJson(podName, tableName, filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// skipcq: GO-S2307
 	defer f.Close()
 	reader := bufio.NewReader(f)
 
