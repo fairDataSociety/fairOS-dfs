@@ -167,6 +167,8 @@ func (s *Client) checkBee(isProxy bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 	req.Close = true
 	data, err := io.ReadAll(response.Body)
@@ -202,6 +204,8 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 	if err != nil {
 		return nil, err
 	}
+
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -259,6 +263,7 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -316,6 +321,7 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -374,6 +380,7 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -432,6 +439,7 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -481,6 +489,7 @@ func (s *Client) UploadBzz(data []byte, fileName string) (address []byte, err er
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -536,6 +545,7 @@ func (s *Client) DownloadBzz(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -615,7 +625,7 @@ func (s *Client) CreateTag(address []byte) (uint32, error) {
 	to := time.Now()
 
 	fullUrl := s.url + tagsUrl
-	data := []byte{}
+	var data []byte
 	var err error
 	if len(address) > 0 {
 		addrString := swarm.NewAddress(address).String()
@@ -634,6 +644,7 @@ func (s *Client) CreateTag(address []byte) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -687,6 +698,7 @@ func (s *Client) GetTag(tag uint32) (int64, int64, int64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true

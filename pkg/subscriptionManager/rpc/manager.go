@@ -247,7 +247,7 @@ func (c *Client) GetOwnSubscribablePods(owner common.Address) ([]datahub.DataHub
 	if err != nil {
 		return nil, err
 	}
-	osp := []datahub.DataHubSub{}
+	var osp []datahub.DataHubSub
 	for _, p := range s {
 		if p.Seller == owner {
 			osp = append(osp, p)

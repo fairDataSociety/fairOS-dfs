@@ -114,7 +114,7 @@ func (s *SubscriptionManager) GetSubRequests(owner common.Address) ([]datahub.Da
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	requests := []datahub.DataHubSubRequest{}
+	var requests []datahub.DataHubSubRequest
 	for _, r := range s.requestMap {
 		sub := s.listMap[utils.Encode(r.SubHash[:])]
 		if sub.Seller == owner {
@@ -165,7 +165,7 @@ func (s *SubscriptionManager) GetSubscriptions(nameHash [32]byte) ([]datahub.Dat
 	defer s.lock.Unlock()
 
 	subscriber := utils.Encode(nameHash[:])
-	pods := []datahub.DataHubSubItem{}
+	var pods []datahub.DataHubSubItem
 	for i, v := range s.subscriptionMap {
 		if strings.HasPrefix(i, subscriber) {
 			pods = append(pods, *v)
@@ -196,7 +196,7 @@ func (s *SubscriptionManager) GetSubscription(infoLocation []byte, secret [32]by
 func (s *SubscriptionManager) GetAllSubscribablePods() ([]datahub.DataHubSub, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	pods := []datahub.DataHubSub{}
+	var pods []datahub.DataHubSub
 	for _, v := range s.listMap {
 		if v.Active {
 			pods = append(pods, *v)
@@ -209,7 +209,7 @@ func (s *SubscriptionManager) GetOwnSubscribablePods(owner common.Address) ([]da
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	pods := []datahub.DataHubSub{}
+	var pods []datahub.DataHubSub
 	for _, v := range s.listMap {
 		if v.Seller == owner {
 			pods = append(pods, *v)

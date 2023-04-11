@@ -1080,7 +1080,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		d.logger.Errorf("finding from document db: ", ErrInvalidIndexType)
 		return nil, ErrInvalidIndexType
 	}
-	docs := [][]byte{}
+	var docs [][]byte
 	if idx.mutable {
 		wg := new(sync.WaitGroup)
 		mtx := &sync.Mutex{}

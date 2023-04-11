@@ -103,7 +103,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 				wg.Done()
 				return
 			}
-			data := []byte{}
+			var data []byte
 			n := 0
 			var err error
 			if totalLength < offset {
