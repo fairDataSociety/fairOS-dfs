@@ -119,7 +119,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 
 	return &LoginResponse{
-		Address:   accountInfo.GetAddress().Hex(),
+		Address:   address.Hex(),
 		NameHash:  nameHash,
 		PublicKey: utils.Encode(crypto.FromECDSAPub(publicKey)),
 		UserInfo:  ui,

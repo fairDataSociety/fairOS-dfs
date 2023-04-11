@@ -35,7 +35,8 @@ func TestSubscription(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	addr1 := common.HexToAddress(acc1.GetUserAccountInfo().GetAddress().Hex())
+	a1 := acc1.GetUserAccountInfo().GetAddress()
+	addr1 := common.HexToAddress(a1.Hex())
 	nameHash1, err := goens.NameHash(addr1.Hex())
 	if err != nil {
 		t.Fatal(err)
@@ -87,7 +88,8 @@ func TestSubscription(t *testing.T) {
 
 	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
 	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, logger)
-	addr2 := common.HexToAddress(acc2.GetUserAccountInfo().GetAddress().Hex())
+	a2 := acc2.GetUserAccountInfo().GetAddress()
+	addr2 := common.HexToAddress(a2.Hex())
 	nameHash2, err := goens.NameHash(addr2.Hex())
 	if err != nil {
 		t.Fatal(err)

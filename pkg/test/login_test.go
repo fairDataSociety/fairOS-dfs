@@ -81,12 +81,14 @@ func TestLogin(t *testing.T) {
 		if !userObject.IsUserNameLoggedIn("7e4567e7cb003804992eef11fd5c757275a4c") {
 			t.Fatalf("user not loggin in")
 		}
-
-		if ui.GetAccount().GetUserAccountInfo().GetAddress().Hex() != ui1.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+		addr := ui.GetAccount().GetUserAccountInfo().GetAddress()
+		addr1 := ui1.GetAccount().GetUserAccountInfo().GetAddress()
+		addr2 := ui2.GetAccount().GetUserAccountInfo().GetAddress()
+		if addr.Hex() != addr1.Hex() {
 			t.Fatal("loaded with different account")
 		}
 
-		if ui.GetAccount().GetUserAccountInfo().GetAddress().Hex() != ui2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+		if addr.Hex() != addr2.Hex() {
 			t.Fatal("got different userinfo")
 		}
 
@@ -148,8 +150,9 @@ func TestLogin(t *testing.T) {
 		}
 		login2 := lr2.UserInfo
 
-		if login1.GetAccount().GetUserAccountInfo().GetAddress().Hex() !=
-			login2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+		addr1 := login1.GetAccount().GetUserAccountInfo().GetAddress()
+		addr2 := login2.GetAccount().GetUserAccountInfo().GetAddress()
+		if addr1.Hex() != addr2.Hex() {
 			t.Fatal("got different accounts with same login")
 		}
 	})
@@ -219,8 +222,9 @@ func TestLogin(t *testing.T) {
 			t.Fatal(err)
 		}
 		login2 := lr2.UserInfo
-		if login1.GetAccount().GetUserAccountInfo().GetAddress().Hex() !=
-			login2.GetAccount().GetUserAccountInfo().GetAddress().Hex() {
+		addr1 := login1.GetAccount().GetUserAccountInfo().GetAddress()
+		addr2 := login2.GetAccount().GetUserAccountInfo().GetAddress()
+		if addr1.Hex() != addr2.Hex() {
 			t.Fatal("got different accounts with same login")
 		}
 

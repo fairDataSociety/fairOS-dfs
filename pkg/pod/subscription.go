@@ -31,14 +31,17 @@ func (p *Pod) ListPodInMarketplace(podName, title, desc, thumbnail string, price
 	}
 
 	podAddress := common.HexToAddress(strAddr)
-
-	return p.sm.AddPodToMarketplace(podAddress, common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()), podName, title, desc, thumbnail, price, daysValid, category, nameHash, p.acc.GetUserAccountInfo().GetPrivateKey())
+	owner := p.acc.GetUserAccountInfo().GetAddress()
+	ownerAddress := common.HexToAddress(owner.Hex())
+	return p.sm.AddPodToMarketplace(podAddress, ownerAddress, podName, title, desc, thumbnail, price, daysValid, category, nameHash, p.acc.GetUserAccountInfo().GetPrivateKey())
 }
 
 // PodStatusInMarketplace will change the `list` flag for the pod so that it's not listed or gets re listed in the pod marketplace
 func (p *Pod) PodStatusInMarketplace(subHash [32]byte, show bool) error {
 	hide := !show
-	return p.sm.HidePodFromMarketplace(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()), subHash, hide, p.acc.GetUserAccountInfo().GetPrivateKey())
+	owner := p.acc.GetUserAccountInfo().GetAddress()
+	ownerAddress := common.HexToAddress(owner.Hex())
+	return p.sm.HidePodFromMarketplace(ownerAddress, subHash, hide, p.acc.GetUserAccountInfo().GetPrivateKey())
 }
 
 // ApproveSubscription will send a subscriptionManager request to the owner of the pod
@@ -57,8 +60,9 @@ func (p *Pod) ApproveSubscription(podName string, requestHash [32]byte, subscrib
 		Password:    shareInfo.Password,
 		UserAddress: shareInfo.UserAddress,
 	}
-
-	return p.sm.AllowAccess(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()), info, requestHash, secret, p.acc.GetUserAccountInfo().GetPrivateKey())
+	owner := p.acc.GetUserAccountInfo().GetAddress()
+	ownerAddress := common.HexToAddress(owner.Hex())
+	return p.sm.AllowAccess(ownerAddress, info, requestHash, secret, p.acc.GetUserAccountInfo().GetPrivateKey())
 }
 
 // EncryptUploadSubscriptionInfo will upload sub pod info into swarm
@@ -98,7 +102,9 @@ func (p *Pod) EncryptUploadSubscriptionInfo(podName string, subscriberPublicKey 
 // RequestSubscription will send a subscriptionManager request to the owner of the pod
 // will create an escrow account and deposit the `price`
 func (p *Pod) RequestSubscription(subHash, nameHash [32]byte) error {
-	return p.sm.RequestAccess(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()), subHash, nameHash, p.acc.GetUserAccountInfo().GetPrivateKey())
+	subscriber := p.acc.GetUserAccountInfo().GetAddress()
+	subscriberAddress := common.HexToAddress(subscriber.Hex())
+	return p.sm.RequestAccess(subscriberAddress, subHash, nameHash, p.acc.GetUserAccountInfo().GetPrivateKey())
 }
 
 // GetSubscriptions will query the smart contract and list my subscriptions
@@ -174,5 +180,7 @@ func (p *Pod) OpenSubscribedPodFromReference(reference string, ownerPublicKey *e
 
 // GetSubRequests will get all owners sub requests
 func (p *Pod) GetSubRequests() ([]datahub.DataHubSubRequest, error) {
-	return p.sm.GetSubRequests(common.HexToAddress(p.acc.GetUserAccountInfo().GetAddress().Hex()))
+	owner := p.acc.GetUserAccountInfo().GetAddress()
+	ownerAddress := common.HexToAddress(owner.Hex())
+	return p.sm.GetSubRequests(ownerAddress)
 }

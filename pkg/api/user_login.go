@@ -105,9 +105,9 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
 		return
 	}
-
+	addr := loginResp.UserInfo.GetAccount().GetUserAccountInfo().GetAddress()
 	jsonhttp.OK(w, &UserSignupResponse{
-		Address:   loginResp.UserInfo.GetAccount().GetUserAccountInfo().GetAddress().Hex(),
+		Address:   addr.Hex(),
 		NameHash:  "0x" + loginResp.NameHash,
 		PublicKey: loginResp.PublicKey,
 		Message:   "user logged-in successfully",
