@@ -407,7 +407,7 @@ func TestWriteAt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		// skipcq: GSC-G404
 		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		min := 0
 		max := int(fileSize)
@@ -486,6 +486,7 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
+		// skipcq: GSC-G404
 		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		min := 0
 		max := int(fileSize)
@@ -568,7 +569,7 @@ func TestWriteAt(t *testing.T) {
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
 		}
-
+		// skipcq: GSC-G404
 		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		min := 0
 		max := int(fileSize)

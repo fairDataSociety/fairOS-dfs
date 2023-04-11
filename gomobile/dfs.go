@@ -329,6 +329,7 @@ func FileDownload(podName, filePath string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer r.Close()
 
 	buf := new(bytes.Buffer)
