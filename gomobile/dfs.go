@@ -185,7 +185,7 @@ func PodReceive(podSharingReference string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("public pod \"%s\", added as shared pod", pi.GetPodName()), nil
+	return fmt.Sprintf("public pod %q, added as shared pod", pi.GetPodName()), nil
 }
 
 func PodReceiveInfo(podSharingReference string) (string, error) {

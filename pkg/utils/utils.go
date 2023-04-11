@@ -62,7 +62,7 @@ var (
 	// ErrMissingPrefix is returned when a hex string does not have a 0x prefix.
 	ErrMissingPrefix = &decError{"hex string without 0x prefix"}
 	errSyntax        = &decError{"invalid hex string"}
-	//ErrOddLength is returned when a hex string has an odd length.
+	// ErrOddLength is returned when a hex string has an odd length.
 	ErrOddLength   = &decError{"hex string of odd length"}
 	errUint64Range = &decError{"hex number > 64 bits"}
 )

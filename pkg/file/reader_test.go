@@ -347,7 +347,7 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 	}
 }
 
-func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.BeeClient, linesPerBlock uint32) ([]byte, file.INode, int, []byte, int, []byte) {
+func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.BeeClient, linesPerBlock uint32) ([]byte, file.INode, int, []byte, int, []byte) { // skipcq: GO-C4008
 	var fileBlocks []*file.BlockInfo
 	noOfBlocks := fileSize / uint64(blockSize)
 	if fileSize%uint64(blockSize) != 0 {

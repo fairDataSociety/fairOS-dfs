@@ -188,7 +188,7 @@ func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, request
 }
 
 func (c *Client) GetSubscription(infoLocation []byte, secret [32]byte) (*ShareInfo, error) {
-	encData, respCode, err := c.getter.DownloadBlob(infoLocation[:])
+	encData, respCode, err := c.getter.DownloadBlob(infoLocation)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}

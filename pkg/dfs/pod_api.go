@@ -627,7 +627,7 @@ func (a *API) DecryptAndOpenSubscriptionPod(sessionId, reference string, sellerN
 
 }
 
-// GetSubscriptionInfo returns the subscription info
+// SubscriptionInfo contains the subscription information
 type SubscriptionInfo struct {
 	SubHash      [32]byte
 	PodName      string

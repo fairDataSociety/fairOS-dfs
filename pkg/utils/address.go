@@ -42,7 +42,7 @@ func (a *Address) String() string {
 }
 
 // Hex returns the hex of the corresponding address
-func (a Address) Hex() string {
+func (a *Address) Hex() string {
 	unchecksummed := hex.EncodeToString(a[:])
 	sha := sha3.NewLegacyKeccak256()
 	_, err := sha.Write([]byte(unchecksummed))
@@ -67,7 +67,7 @@ func (a Address) Hex() string {
 }
 
 // ToBytes returns the address bytes
-func (a Address) ToBytes() []byte {
+func (a *Address) ToBytes() []byte {
 	return a[:]
 }
 

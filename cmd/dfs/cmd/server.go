@@ -449,7 +449,11 @@ func startHttpService(logger logging.Logger) *http.Server {
 
 func startPprofService(logger logging.Logger) {
 	logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
-	err := http.ListenAndServe("localhost"+pprofPort, nil)
+	server := &http.Server{
+		Addr:              "localhost" + pprofPort,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+	err := server.ListenAndServe()
 	if err != nil {
 		logger.Errorf("pprof listenAndServe: %v ", err.Error())
 		return

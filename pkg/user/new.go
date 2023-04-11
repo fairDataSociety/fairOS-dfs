@@ -87,14 +87,14 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
+	address := accountInfo.GetAddress()
 	// username availability
 	if ownerAddress.Hex() != zeroAddressHex &&
-		ownerAddress.Hex() != accountInfo.GetAddress().Hex() {
+		ownerAddress.Hex() != address.Hex() {
 		return nil, ErrUserAlreadyPresent
 	}
 	signUp := &SignupResponse{
-		Address:  accountInfo.GetAddress().Hex(),
+		Address:  address.Hex(),
 		Mnemonic: mnemonic,
 	}
 	nameHash := ""
@@ -174,17 +174,18 @@ func isUserNameValid(username string) bool {
 }
 
 func (u *Users) createENS(userName string, accountInfo *account.Info) (string, error) {
-	err := u.ens.RegisterSubdomain(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	address := accountInfo.GetAddress()
+	err := u.ens.RegisterSubdomain(userName, common.HexToAddress(address.Hex()), accountInfo.GetPrivateKey())
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
-	nameHash, err := u.ens.SetResolver(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	nameHash, err := u.ens.SetResolver(userName, common.HexToAddress(address.Hex()), accountInfo.GetPrivateKey())
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
-	err = u.ens.SetAll(userName, common.HexToAddress(accountInfo.GetAddress().Hex()), accountInfo.GetPrivateKey())
+	err = u.ens.SetAll(userName, common.HexToAddress(address.Hex()), accountInfo.GetPrivateKey())
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
