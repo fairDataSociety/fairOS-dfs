@@ -19,6 +19,7 @@ package feed
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ethersphere/bee/pkg/crypto"
@@ -36,6 +37,8 @@ import (
 const (
 	maxuint64 = ^uint64(0)
 	idLength  = 32
+
+	maxUpdateRetry = 3
 )
 
 var (
@@ -290,6 +293,8 @@ func (a *API) UpdateFeed(user utils.Address, topic, data, encryptionPassword []b
 			return nil, err
 		}
 	}
+	retries := 0
+retry:
 	ctx := context.Background()
 	f := new(Feed)
 	f.User = user
@@ -341,7 +346,21 @@ func (a *API) UpdateFeed(user utils.Address, topic, data, encryptionPassword []b
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	return a.handler.update(id, user.ToBytes(), signature, ch.Data())
+
+	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
+	if err != nil {
+		// updating same feed in the same second will lead to "chunk already exists" error.
+		// This will wait for 1 second and retry the update maxUpdateRetry times.
+		// It is a very dirty fix for this issue. We should find a better way to handle this.
+		if strings.Contains(err.Error(), "chunk already exists") && retries < maxUpdateRetry {
+			retries++
+			<-time.After(1 * time.Second)
+			goto retry
+		}
+		return nil, err
+	}
+
+	return address, nil
 }
 
 // DeleteFeed deleted the feed by updating with no data inside the SOC chunk.
