@@ -52,7 +52,7 @@ func (b *Batch) PutNumber(key float64, refValue []byte, apnd, memory bool) error
 }
 
 // Put creates an index entry given a key string and value.
-func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
+func (b *Batch) Put(key string, value []byte, apnd, memory bool) error {
 	if b.idx.isReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
@@ -75,8 +75,14 @@ func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 			return ErrKVKeyNotANumber
 		}
 		stringKey = fmt.Sprintf("%020d", i)
+	} else if b.idx.indexType == BytesIndex {
+		ref, err := b.idx.client.UploadBlob(value, 0, true)
+		if err != nil { // skipcq: TCV-001
+			return err
+		}
+		value = ref
 	}
-	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, refValue, memory, apnd)
+	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, value, memory, apnd)
 }
 
 // Get extracts an index value from an index given a key.
@@ -192,7 +198,6 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Man
 					return nil, err
 				}
 				dirtyEntry.Manifest = nil
-				fmt.Println(atomic.LoadUint64(&b.storageCount))
 			}
 		}
 		diskManifest.Mutable = memManifest.Mutable

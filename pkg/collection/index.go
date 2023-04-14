@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -310,11 +311,17 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 		idx.logger.Errorf("uploadBlob failed in storeManifest : %s", err.Error())
 		return ErrManifestCreate
 	}
-
 	topic := utils.HashString(manifest.Name)
 	_, err = idx.feed.CreateFeed(idx.user, topic, ref, []byte(encryptionPassword))
 	if err != nil { //  skipcq: TCV-001
-		return ErrManifestCreate
+		if strings.Contains(err.Error(), "chunk already exists") {
+			_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword))
+			if err != nil { //  skipcq: TCV-001
+				return ErrManifestCreate
+			}
+		} else {
+			return ErrManifestCreate
+		}
 	}
 	return nil
 }
