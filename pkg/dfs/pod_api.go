@@ -319,6 +319,16 @@ func (a *API) PublicPodKVEntryGet(pod *pod.ShareInfo, name, key string) ([]strin
 	return kvStore.KVGet(name, key)
 }
 
+// PublicPodKVGetter gets a kv store getter interface
+func (a *API) PublicPodKVGetter(pod *pod.ShareInfo) KVGetter {
+	accountInfo := &account.Info{}
+	address := utils.HexToAddress(pod.Address)
+	accountInfo.SetAddress(address)
+
+	fd := feed.New(accountInfo, a.client, a.logger)
+	return c.NewKeyValueStore(pod.PodName, fd, accountInfo, address, a.client, a.logger)
+}
+
 // PublicPodDisLs lists a directory from a public pod
 func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entry, []file.Entry, error) {
 
