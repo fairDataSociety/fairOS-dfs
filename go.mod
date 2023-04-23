@@ -6,11 +6,11 @@ require (
 	github.com/btcsuite/btcd v0.22.3
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.1
-	github.com/ethereum/go-ethereum v1.11.5
+	github.com/ethereum/go-ethereum v1.11.6
 	github.com/ethersphere/bee v1.13.0
 	github.com/ethersphere/bmt v0.1.4
 	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d
-	github.com/golang/snappy v0.0.4
+	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/securecookie v1.1.1
@@ -54,7 +54,7 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/holiman/uint256 v1.2.0 // indirect
+	github.com/holiman/uint256 v1.2.2-0.20230321075855-87b91420868c // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/go-cid v0.3.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
