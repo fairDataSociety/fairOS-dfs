@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -44,6 +45,7 @@ type TestDocument struct {
 	Age       float64           `json:"age"`
 	TagMap    map[string]string `json:"tag_map"`
 	TagList   []string          `json:"tag_list"`
+	Vector    []float32         `json:"vector"`
 }
 
 func TestDocumentStore(t *testing.T) {
@@ -623,7 +625,7 @@ func TestDocumentStore(t *testing.T) {
 		tag1["tgf12"] = "tgv12"
 		var list1 []string
 		list1 = append(list1, "lst11", "lst12")
-		addDocument(t, docStore, "docdb_9", "1", "John", "Doe", 45, tag1, list1)
+		addDocument(t, docStore, "docdb_9", "1", "John", "Doe", 45, tag1, list1, nil)
 		docs, err := docStore.Get("docdb_9", "1", podPassword)
 		require.NoError(t, err)
 		var gotDoc TestDocument
@@ -663,7 +665,7 @@ func TestDocumentStore(t *testing.T) {
 		tag1["tgf12"] = "tgv12"
 		var list1 []string
 		list1 = append(list1, "lst11", "lst12")
-		addDocument(t, docStore, "docdb_99", "1", "John", "Doe", 45, tag1, list1)
+		addDocument(t, docStore, "docdb_99", "1", "John", "Doe", 45, tag1, list1, nil)
 		docs, err := docStore.Get("docdb_99", "1", podPassword)
 		require.NoError(t, err)
 		var gotDoc TestDocument
@@ -700,8 +702,8 @@ func TestDocumentStore(t *testing.T) {
 		tag1["tgf12"] = "tgv12"
 		var list1 []string
 		list1 = append(list1, "lst11", "lst12")
-		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 45, tag1, list1)
-		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 25, tag1, list1)
+		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 45, tag1, list1, nil)
+		addDocument(t, docStore, "docdb_10", "1", "John", "Doe", 25, tag1, list1, nil)
 
 		// count the total docs using id field
 		count1, err := docStore.Count("docdb_10", "")
@@ -784,6 +786,36 @@ func TestDocumentStore(t *testing.T) {
 		err = docStore.DeleteDocumentDB("docdb_11", podPassword)
 		require.NoError(t, err)
 	})
+	t.Run("vector_index", func(t *testing.T) {
+		// create a document DB
+		si := make(map[string]collection.IndexType)
+		si["first_name"] = collection.StringIndex
+		si["age"] = collection.NumberIndex
+		si["tag_map"] = collection.MapIndex
+		si["vector"] = collection.VectorIndex
+		si["tag_list"] = collection.ListIndex
+		createDocumentDBs(t, []string{"docdb_vector"}, docStore, si, podPassword)
+
+		err := docStore.OpenDocumentDB("docdb_vector", podPassword)
+		require.NoError(t, err)
+
+		// Add documents
+		createVectorDocuments(t, docStore, "docdb_vector")
+
+		// Find documents
+		docs, err := docStore.NearestNodes("docdb_vector", podPassword, "vector", []float32{0.1, 0.1, 0.98}, .2, 0)
+		require.NoError(t, err)
+
+		for _, v := range docs {
+			var doc TestDocument
+			err = json.Unmarshal(v, &doc)
+			if err != nil {
+				t.Fatal(err)
+			}
+			fmt.Println(doc)
+		}
+	})
+
 	/*
 		t.Run("batch-immutable", func(t *testing.T) {
 			// create a document DB
@@ -934,6 +966,52 @@ func checkIndex(t *testing.T, si collection.SIndex, filedName string, idxType co
 	}
 }
 
+func createVectorDocuments(t *testing.T, docStore *collection.Document, dbName string) {
+	t.Helper()
+	tag1 := make(map[string]string)
+	tag1["tgf11"] = "tgv11"
+	tag1["tgf12"] = "tgv12"
+	var list1 []string
+	list1 = append(list1, "lst11", "lst12")
+	vector1 := []float32{0.1, 0.1, 0.98}
+	addDocument(t, docStore, dbName, "1", "John", "Doe", 45.523793600000005, tag1, list1, vector1)
+	tag2 := make(map[string]string)
+	tag2["tgf21"] = "tgv21"
+	tag2["tgf22"] = "tgv22"
+	var list2 []string
+	list2 = append(list2, "lst21", "lst22")
+	vector2 := []float32{0.1, 0.1, 0.96}
+	addDocument(t, docStore, dbName, "2", "John", "boy", 25, tag2, list2, vector2)
+	tag3 := make(map[string]string)
+	tag3["tgf31"] = "tgv31"
+	tag3["tgf32"] = "tgv32"
+	var list3 []string
+	list3 = append(list3, "lst31", "lst32")
+	vector3 := []float32{0.1, 0.1, 0.93}
+	addDocument(t, docStore, dbName, "3", "Bob", "michel", 30, tag3, list3, vector3)
+	tag4 := make(map[string]string)
+	tag4["tgf41"] = "tgv41"
+	tag4["tgf42"] = "tgv42"
+	var list4 []string
+	list4 = append(list4, "lst41", "lst42")
+	vector4 := []float32{0.1, 0.98, 0.1}
+	addDocument(t, docStore, dbName, "4", "Charlie", "chaplin", 25, tag4, list4, vector4)
+	tag5 := make(map[string]string)
+	tag5["tgf51"] = "tgv51"
+	tag5["tgf52"] = "tgv52"
+	var list5 []string
+	list5 = append(list5, "lst51", "lst52")
+	vector5 := []float32{0.1, 0.93, 0.1}
+	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25, tag5, list5, vector5)
+	tag6 := make(map[string]string)
+	tag6["tgf61"] = "tgv61"
+	tag6["tgf62"] = "tgv62"
+	var list6 []string
+	list6 = append(list6, "lst61", "lst62")
+	vector6 := []float32{0.1, 0.92, 0.1}
+	addDocument(t, docStore, dbName, "6", "Zuri", "wonder", 52, tag6, list6, vector6)
+}
+
 func createTestDocuments(t *testing.T, docStore *collection.Document, dbName string) {
 	t.Helper()
 	tag1 := make(map[string]string)
@@ -941,40 +1019,40 @@ func createTestDocuments(t *testing.T, docStore *collection.Document, dbName str
 	tag1["tgf12"] = "tgv12"
 	var list1 []string
 	list1 = append(list1, "lst11", "lst12")
-	addDocument(t, docStore, dbName, "1", "John", "Doe", 45.523793600000005, tag1, list1)
+	addDocument(t, docStore, dbName, "1", "John", "Doe", 45.523793600000005, tag1, list1, nil)
 	tag2 := make(map[string]string)
 	tag2["tgf21"] = "tgv21"
 	tag2["tgf22"] = "tgv22"
 	var list2 []string
 	list2 = append(list2, "lst21", "lst22")
-	addDocument(t, docStore, dbName, "2", "John", "boy", 25, tag2, list2)
+	addDocument(t, docStore, dbName, "2", "John", "boy", 25, tag2, list2, nil)
 	tag3 := make(map[string]string)
 	tag3["tgf31"] = "tgv31"
 	tag3["tgf32"] = "tgv32"
 	var list3 []string
 	list3 = append(list3, "lst31", "lst32")
-	addDocument(t, docStore, dbName, "3", "Bob", "michel", 30, tag3, list3)
+	addDocument(t, docStore, dbName, "3", "Bob", "michel", 30, tag3, list3, nil)
 	tag4 := make(map[string]string)
 	tag4["tgf41"] = "tgv41"
 	tag4["tgf42"] = "tgv42"
 	var list4 []string
 	list4 = append(list4, "lst41", "lst42")
-	addDocument(t, docStore, dbName, "4", "Charlie", "chaplin", 25, tag4, list4)
+	addDocument(t, docStore, dbName, "4", "Charlie", "chaplin", 25, tag4, list4, nil)
 	tag5 := make(map[string]string)
 	tag5["tgf51"] = "tgv51"
 	tag5["tgf52"] = "tgv52"
 	var list5 []string
 	list5 = append(list5, "lst51", "lst52")
-	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25, tag5, list5)
+	addDocument(t, docStore, dbName, "5", "Alice", "wonderland", 25, tag5, list5, nil)
 	tag6 := make(map[string]string)
 	tag6["tgf61"] = "tgv61"
 	tag6["tgf62"] = "tgv62"
 	var list6 []string
 	list6 = append(list6, "lst61", "lst62")
-	addDocument(t, docStore, dbName, "6", "Zuri", "wonder", 52, tag6, list6)
+	addDocument(t, docStore, dbName, "6", "Zuri", "wonder", 52, tag6, list6, nil)
 }
 
-func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age float64, tagMap map[string]string, tagList []string) {
+func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname, lname string, age float64, tagMap map[string]string, tagList []string, vector []float32) {
 	t.Helper()
 	// create the doc
 	doc := &TestDocument{
@@ -984,6 +1062,7 @@ func addDocument(t *testing.T, docStore *collection.Document, dbName, id, fname,
 		Age:       age,
 		TagMap:    tagMap,
 		TagList:   tagList,
+		Vector:    vector,
 	}
 
 	// marshall the doc
