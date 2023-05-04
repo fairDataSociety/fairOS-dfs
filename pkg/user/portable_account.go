@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	//AuthVersion
+	// AuthVersion is used to version the portable account feed topic
 	AuthVersion = "FDP-login-v1.0"
 )
 

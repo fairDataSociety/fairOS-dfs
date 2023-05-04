@@ -76,7 +76,7 @@ func (h *Handler) PublicPodGetFileHandler(w http.ResponseWriter, r *http.Request
 		jsonhttp.InternalServerError(w, "public pod file download: "+err.Error())
 		return
 	}
-
+	// skipcq: GO-S2307
 	defer reader.Close()
 
 	sizeString := strconv.FormatUint(size, 10)
@@ -143,7 +143,9 @@ func (h *Handler) PublicPodFilePathHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// skipcq: GO-S2307
 	defer reader.Close()
+
 	w.Header().Set("Content-Length", strconv.Itoa(int(size)))
 	w.Header().Set("Content-Type", contentType)
 	if strings.HasPrefix(filePath, "static/") {

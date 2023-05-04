@@ -18,7 +18,7 @@ package user
 
 import "github.com/fairdatasociety/fairOS-dfs/pkg/account"
 
-// Stat
+// Stat is the structure of the user information.
 type Stat struct {
 	Name      string `json:"userName"`
 	Reference string `json:"address"`
@@ -29,10 +29,10 @@ func (u *Users) GetUserStat(userInfo *Info) (*Stat, error) {
 	if !u.IsUsernameAvailableV2(userInfo.name) {
 		return nil, ErrInvalidUserName
 	}
-
+	addr := userInfo.GetAccount().GetAddress(account.UserAccountIndex)
 	stat := &Stat{
 		Name:      userInfo.name,
-		Reference: userInfo.GetAccount().GetAddress(account.UserAccountIndex).Hex(),
+		Reference: addr.Hex(),
 	}
 	return stat, nil
 }

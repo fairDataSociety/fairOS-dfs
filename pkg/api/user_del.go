@@ -70,7 +70,7 @@ func (h *Handler) UserDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.BadRequest(w, &response{Message: "user delete: deprecated"})
 }
 
-// UserDeleteRequest
+// UserDeleteRequest is the json request to delete user
 type UserDeleteRequest struct {
 	Password string `json:"password,omitempty"`
 }

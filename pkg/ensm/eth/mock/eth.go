@@ -58,7 +58,7 @@ func (c *NamespaceManager) GetInfoFromNameHash(node [32]byte) (common.Address, *
 	return common.Address{}, nil, "", fmt.Errorf("info not available")
 }
 
-func (c *NamespaceManager) GetNameHash(username string) ([32]byte, error) {
+func (*NamespaceManager) GetNameHash(username string) ([32]byte, error) {
 	return goens.NameHash(username)
 }
 

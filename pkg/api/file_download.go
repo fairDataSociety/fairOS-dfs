@@ -134,6 +134,7 @@ func (h *Handler) handleDownload(w http.ResponseWriter, r *http.Request, podName
 		jsonhttp.InternalServerError(w, "download: "+err.Error())
 		return
 	}
+	// skipcq: GO-S2307
 	defer reader.Close()
 
 	sizeString := strconv.FormatUint(size, 10)

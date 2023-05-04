@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
-// Users
+// Users is the main object which stores all the logged-in users and there respective
 type Users struct {
 	client  blockstore.Client
 	userMap map[string]*Info

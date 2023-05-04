@@ -26,7 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// PodNameRequest
+// PodNameRequest is the request to open a pod
 type PodNameRequest struct {
 	PodName string `json:"podName,omitempty"`
 }

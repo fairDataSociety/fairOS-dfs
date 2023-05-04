@@ -78,7 +78,8 @@ func TestStat(t *testing.T) {
 		if podStat.PodName != podName1 {
 			t.Fatalf("invalid pod name: expected %s got %s", podName1, podStat.PodName)
 		}
-		addr := info.GetAccountInfo().GetAddress().Hex()[2:]
+		a := info.GetAccountInfo().GetAddress()
+		addr := a.Hex()[2:]
 		addr = strings.ToLower(addr)
 		if podStat.PodAddress != addr {
 			t.Fatalf("invalid pod address")

@@ -79,10 +79,11 @@ func TestSharing(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create source user
 		userObject1 := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, ui0, err := userObject1.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
+		sr0, err := userObject1.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
+		ui0 := sr0.UserInfo
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		// create source pod
 		info1, err := pod1.CreatePod(podName1, "", podPassword)
@@ -116,11 +117,11 @@ func TestSharing(t *testing.T) {
 
 		// create destination user
 		userObject2 := user.NewUsers(mockClient, ens, logger)
-		_, _, _, _, ui, err := userObject2.CreateNewUserV2("user2", "password1twelve", "", "", tm, sm)
+		sr, err := userObject2.CreateNewUserV2("user2", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		ui := sr.UserInfo
 		// create destination pod
 		podPassword, _ = utils.GetRandString(pod.PasswordLength)
 		info2, err := pod2.CreatePod(podName2, "", podPassword)
@@ -161,18 +162,18 @@ func TestSharing(t *testing.T) {
 			t.Fatalf("invalid block size received")
 		}
 
-		_, err = userObject2.ReceiveFileFromUser("podName2", sharingRefString, ui, pod2, "/parentDir2")
+		_, err = userObject2.ReceiveFileFromUser(ui, pod2, "podName2", sharingRefString, "/parentDir2")
 		if err == nil {
 			t.Fatal("pod should not exist")
 		}
 
 		// receive file
-		destinationFilePath, err := userObject2.ReceiveFileFromUser(podName2, sharingRefString, ui, pod2, "/parentDir2")
+		destinationFilePath, err := userObject2.ReceiveFileFromUser(ui, pod2, podName2, sharingRefString, "/parentDir2")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		_, err = userObject2.ReceiveFileFromUser(podName2, sharingRefString, ui, pod2, "/parentDir2")
+		_, err = userObject2.ReceiveFileFromUser(ui, pod2, podName2, sharingRefString, "/parentDir2")
 		if !errors.Is(err, file.ErrFileAlreadyPresent) {
 			t.Fatal("pod does not supposed tp be open")
 		}

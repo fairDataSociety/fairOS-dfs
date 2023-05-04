@@ -52,7 +52,7 @@ func Test_ExecuteCommand(t *testing.T) {
 		defer os.RemoveAll(tempDir)
 		b := bytes.NewBufferString("")
 		rootCmd.SetOut(b)
-		rootCmd.SetArgs([]string{"server", "--config", tempDir + string(os.PathSeparator) + ".dfs.yaml"})
+		rootCmd.SetArgs([]string{"server", "--config", filepath.Join(tempDir, ".dfs.yaml")})
 		err = rootCmd.Execute()
 		if err != nil && err.Error() != "postageBlockId is required to run server" {
 			t.Fatal("server should fail")

@@ -36,7 +36,7 @@ const (
 	PasswordLength = 32
 )
 
-// Pod
+// Pod is the main struct which acts on pods
 type Pod struct {
 	fd     *feed.API
 	acc    *account.Account
@@ -95,7 +95,7 @@ func (p *Pod) removePodFromPodMap(podName string) {
 	delete(p.podMap, podName)
 }
 
-// GetPodInfoFromPodMap
+// GetPodInfoFromPodMap returns the pod info for the given pod name.
 func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, string, error) {
 	p.podMu.Lock()
 	defer p.podMu.Unlock()
@@ -105,17 +105,17 @@ func (p *Pod) GetPodInfoFromPodMap(podName string) (*Info, string, error) {
 	return nil, "", fmt.Errorf("could not find pod: %s", podName)
 }
 
-// GetFeed
+// GetFeed returns the feed object
 func (p *Pod) GetFeed() *feed.API {
 	return p.fd
 }
 
-// GetAccount
+// GetAccount returns the account object
 func (p *Pod) GetAccount() *account.Account {
 	return p.acc
 }
 
-// GetPodInfo
+// GetPodInfo returns the pod info for the given pod name.
 func (p *Pod) GetPodInfo(podName string) (*Info, string, error) {
 	pi, password, _ := p.GetPodInfoFromPodMap(podName)
 	if pi != nil {
@@ -125,5 +125,6 @@ func (p *Pod) GetPodInfo(podName string) (*Info, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	return pi, pi.GetPodPassword(), nil
+	password = pi.GetPodPassword()
+	return pi, password, nil
 }

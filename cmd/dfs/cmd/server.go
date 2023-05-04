@@ -32,7 +32,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	_ "github.com/fairdatasociety/fairOS-dfs/swagger"
 	docs "github.com/fairdatasociety/fairOS-dfs/swagger"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -432,8 +431,9 @@ func startHttpService(logger logging.Logger) *http.Server {
 
 	logger.Infof("fairOS-dfs API server listening on port: %v", httpPort)
 	srv := &http.Server{
-		Addr:    httpPort,
-		Handler: handler,
+		Addr:              httpPort,
+		Handler:           handler,
+		ReadHeaderTimeout: 3 * time.Second,
 	}
 
 	go func() {
@@ -449,7 +449,11 @@ func startHttpService(logger logging.Logger) *http.Server {
 
 func startPprofService(logger logging.Logger) {
 	logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
-	err := http.ListenAndServe("localhost"+pprofPort, nil)
+	server := &http.Server{
+		Addr:              "localhost" + pprofPort,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+	err := server.ListenAndServe()
 	if err != nil {
 		logger.Errorf("pprof listenAndServe: %v ", err.Error())
 		return

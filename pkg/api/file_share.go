@@ -35,7 +35,7 @@ type FileSharingReference struct {
 	Reference string `json:"fileSharingReference"`
 }
 
-// FileShareRequest
+// FileShareRequest is the request to share a file
 type FileShareRequest struct {
 	PodName     string `json:"podName,omitempty"`
 	FilePath    string `json:"filePath,omitempty"`

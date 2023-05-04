@@ -52,7 +52,7 @@ func TestFeed(t *testing.T) {
 		fd := feed.New(accountInfo1, client, logger)
 		topic := utils.HashString("topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-		addr, err := fd.CreateFeed(topic, user1, data, nil)
+		addr, err := fd.CreateFeed(user1, topic, data, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -88,7 +88,7 @@ func TestFeed(t *testing.T) {
 		fd1 := feed.New(accountInfo1, client, logger)
 		topic := utils.HashString("topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-		addr, err := fd1.CreateFeed(topic, user1, data, nil)
+		addr, err := fd1.CreateFeed(user1, topic, data, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -132,7 +132,7 @@ func TestFeed(t *testing.T) {
 		fd1 := feed.New(accountInfo1, client, logger)
 		topic := utils.HashString("topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-		_, err := fd1.CreateFeed(topic, user1, data, nil)
+		_, err := fd1.CreateFeed(user1, topic, data, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -152,7 +152,7 @@ func TestFeed(t *testing.T) {
 		fd := feed.New(accountInfo1, client, logger)
 		topic := utils.HashString("topic3")
 		data := []byte{0}
-		_, err = fd.CreateFeed(topic, user1, data, nil)
+		_, err = fd.CreateFeed(user1, topic, data, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -161,7 +161,7 @@ func TestFeed(t *testing.T) {
 			buf := make([]byte, 4)
 			binary.LittleEndian.PutUint16(buf, uint16(i))
 
-			_, err = fd.UpdateFeed(topic, user1, buf, nil)
+			_, err = fd.UpdateFeed(user1, topic, buf, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -232,13 +232,13 @@ func TestFeed(t *testing.T) {
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-		_, err = nilFd.CreateFeed(topic, user1, data, nil)
+		_, err = nilFd.CreateFeed(user1, topic, data, nil)
 		if !errors.Is(err, feed.ErrReadOnlyFeed) {
 			t.Fatal("read only feed")
 		}
 
 		longTopic := append(topic, topic...) // skipcq: CRT-D0001
-		_, err = fd.CreateFeed(longTopic, user1, data, nil)
+		_, err = fd.CreateFeed(user1, longTopic, data, nil)
 		if !errors.Is(err, feed.ErrInvalidTopicSize) {
 			t.Fatal("invalid topic size")
 		}
@@ -247,7 +247,7 @@ func TestFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = fd.CreateFeed(topic, user1, longData, nil)
+		_, err = fd.CreateFeed(user1, topic, longData, nil)
 		if !errors.Is(err, feed.ErrInvalidPayloadSize) {
 			t.Fatal("invalid payload size")
 		}
@@ -288,13 +288,13 @@ func TestFeed(t *testing.T) {
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-		_, err = nilFd.UpdateFeed(topic, user1, data, nil)
+		_, err = nilFd.UpdateFeed(user1, topic, data, nil)
 		if !errors.Is(err, feed.ErrReadOnlyFeed) {
 			t.Fatal("read only feed")
 		}
 
 		longTopic := append(topic, topic...) // skipcq: CRT-D0001
-		_, err = fd.UpdateFeed(longTopic, user1, data, nil)
+		_, err = fd.UpdateFeed(user1, longTopic, data, nil)
 		if !errors.Is(err, feed.ErrInvalidTopicSize) {
 			t.Fatal("invalid topic size")
 		}
@@ -303,7 +303,7 @@ func TestFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = fd.UpdateFeed(topic, user1, longData, nil)
+		_, err = fd.UpdateFeed(user1, topic, longData, nil)
 		if !errors.Is(err, feed.ErrInvalidPayloadSize) {
 			t.Fatal("invalid payload size")
 		}
@@ -321,7 +321,7 @@ func TestFeed(t *testing.T) {
 			t.Fatal("read only feed")
 		}
 
-		_, err = fd.CreateFeed(topic, user1, data, nil)
+		_, err = fd.CreateFeed(user1, topic, data, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

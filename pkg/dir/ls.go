@@ -26,11 +26,11 @@ import (
 )
 
 const (
-	//MineTypeDirectory
-	MineTypeDirectory = "inode/directory"
+	// MimeTypeDirectory is the mime type for directory
+	MimeTypeDirectory = "inode/directory"
 )
 
-// Entry
+// Entry is the structure of the directory entry
 type Entry struct {
 	Name             string `json:"name"`
 	ContentType      string `json:"contentType"`

@@ -26,11 +26,6 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// PodOpenResponse
-type PodOpenResponse struct {
-	Reference string `json:"reference"`
-}
-
 // PodOpenHandler godoc
 //
 //	@Summary      Open pod

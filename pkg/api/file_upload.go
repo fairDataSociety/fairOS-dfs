@@ -27,12 +27,12 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UploadFileResponse
+// UploadFileResponse is the json response from upload file api
 type UploadFileResponse struct {
 	Responses []UploadResponse
 }
 
-// UploadResponse
+// UploadResponse is the json response from upload file api
 type UploadResponse struct {
 	FileName string `json:"fileName"`
 	Message  string `json:"message,omitempty"`
@@ -40,7 +40,7 @@ type UploadResponse struct {
 
 const (
 	defaultMaxMemory = 32 << 20 // 32 MB
-	//CompressionHeader
+	// CompressionHeader is the header key for compression type
 	CompressionHeader = "fairOS-dfs-Compression"
 )
 

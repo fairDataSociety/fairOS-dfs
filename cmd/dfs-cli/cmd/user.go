@@ -119,8 +119,7 @@ func logoutUser() {
 	fmt.Println(message)
 }
 
-// StatUser
-func StatUser() {
+func statUser() {
 	data, err := fdfsAPI.getReq(apiUserStat, "")
 	if err != nil {
 		fmt.Println("user stat: ", err)

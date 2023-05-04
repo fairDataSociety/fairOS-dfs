@@ -52,7 +52,7 @@ func (b *Batch) PutNumber(key float64, refValue []byte, apnd, memory bool) error
 }
 
 // Put creates an index entry given a key string and value.
-func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
+func (b *Batch) Put(key string, value []byte, apnd, memory bool) error {
 	if b.idx.isReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
@@ -75,8 +75,14 @@ func (b *Batch) Put(key string, refValue []byte, apnd, memory bool) error {
 			return ErrKVKeyNotANumber
 		}
 		stringKey = fmt.Sprintf("%020d", i)
+	} else if b.idx.indexType == BytesIndex {
+		ref, err := b.idx.client.UploadBlob(value, 0, true)
+		if err != nil { // skipcq: TCV-001
+			return err
+		}
+		value = ref
 	}
-	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, refValue, memory, apnd)
+	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, value, memory, apnd)
 }
 
 // Get extracts an index value from an index given a key.
@@ -144,7 +150,7 @@ func (b *Batch) Del(key string) ([][]byte, error) {
 			// so that the entire branch goes kaboom
 			parentEntryKey := filepath.Base(manifest.Name)
 			for i, entry := range parentManifest.Entries {
-				if entry.EType == IntermediateEntry && entry.Name == parentEntryKey {
+				if entry.EType == intermediateEntry && entry.Name == parentEntryKey {
 					deletedRef = entry.Ref
 					parentManifest.Entries = append(parentManifest.Entries[:i], parentManifest.Entries[i+1:]...)
 					break
@@ -186,13 +192,12 @@ func (b *Batch) mergeAndWriteManifest(diskManifest, memManifest *Manifest) (*Man
 		for _, dirtyEntry := range memManifest.Entries {
 			diskManifest.dirtyFlag = true
 			b.idx.addEntryToManifestSortedLexicographically(diskManifest, dirtyEntry)
-			if dirtyEntry.EType == IntermediateEntry && dirtyEntry.Manifest != nil { // skipcq: TCV-001
+			if dirtyEntry.EType == intermediateEntry && dirtyEntry.Manifest != nil { // skipcq: TCV-001
 				err := b.storeMemoryManifest(dirtyEntry.Manifest, 0)
 				if err != nil {
 					return nil, err
 				}
 				dirtyEntry.Manifest = nil
-				fmt.Println(atomic.LoadUint64(&b.storageCount))
 			}
 		}
 		diskManifest.Mutable = memManifest.Mutable
@@ -250,7 +255,7 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 
 	// store any branches in this manifest
 	for _, entry := range manifest.Entries {
-		if entry.EType == IntermediateEntry && entry.Manifest != nil {
+		if entry.EType == intermediateEntry && entry.Manifest != nil {
 			if depth >= maxManifestDepth {
 				// process later
 				b.manifestStack = append(b.manifestStack, entry.Manifest)

@@ -32,7 +32,7 @@ var (
 	writeDeadline = 4 * time.Second
 )
 
-// WebsocketHandler
+// WebsocketHandler handles websocket requests
 func (h *Handler) WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{} // use default options
 	upgrader.CheckOrigin = func(r *http.Request) bool {
@@ -171,7 +171,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 		}
 		switch req.Event {
 		// user related events
-		case common.UserLoginV2:
+		case common.UserLogin:
 			jsonBytes, err := json.Marshal(req.Params)
 			if err != nil {
 				respondWithError(res, err)
@@ -183,11 +183,12 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			ui, nameHash, publicKey, err := h.dfsAPI.LoginUserV2(loginRequest.UserName, loginRequest.Password, "")
+			lr, err := h.dfsAPI.LoginUserV2(loginRequest.UserName, loginRequest.Password, "")
 			if err != nil {
 				respondWithError(res, err)
 				continue
 			}
+			ui, nameHash, publicKey := lr.UserInfo, lr.NameHash, lr.PublicKey
 			sessionID = ui.GetSessionId()
 			loginResponse := &UserSignupResponse{
 				NameHash:  nameHash,
@@ -205,7 +206,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				continue
 			}
 			logEventDescription(string(common.UserLogin), to, http.StatusOK, h.logger)
-		case common.UserPresentV2:
+		case common.UserPresent:
 			jsonBytes, err := json.Marshal(req.Params)
 			if err != nil {
 				respondWithError(res, err)
@@ -231,7 +232,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			logEventDescription(string(common.UserPresentV2), to, res.StatusCode, h.logger)
+			logEventDescription(string(common.UserPresent), to, res.StatusCode, h.logger)
 		case common.UserIsLoggedin:
 			jsonBytes, err := json.Marshal(req.Params)
 			if err != nil {

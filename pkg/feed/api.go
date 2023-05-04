@@ -19,6 +19,7 @@ package feed
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ethersphere/bee/pkg/crypto"
@@ -36,6 +37,8 @@ import (
 const (
 	maxuint64 = ^uint64(0)
 	idLength  = 32
+
+	maxUpdateRetry = 3
 )
 
 var (
@@ -80,7 +83,7 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 // CreateFeed creates a feed by constructing a single owner chunk. This chunk
 // can only be accessed if the pod address is known. Also, no one else can spoof this
 // chunk since this is signed by the pod.
-func (a *API) CreateFeed(topic []byte, user utils.Address, data []byte, encryptionPassword []byte) ([]byte, error) {
+func (a *API) CreateFeed(user utils.Address, topic, data, encryptionPassword []byte) ([]byte, error) {
 	var req request
 
 	if a.accountInfo.GetPrivateKey() == nil {
@@ -268,7 +271,7 @@ func (a *API) GetFeedDataFromTopic(topic []byte, user utils.Address) ([]byte, []
 }
 
 // UpdateFeed updates the contents of an already created feed.
-func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encryptionPassword []byte) ([]byte, error) {
+func (a *API) UpdateFeed(user utils.Address, topic, data, encryptionPassword []byte) ([]byte, error) {
 	if a.accountInfo.GetPrivateKey() == nil {
 		return nil, ErrReadOnlyFeed
 	}
@@ -290,6 +293,8 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encrypti
 			return nil, err
 		}
 	}
+	retries := 0
+retry:
 	ctx := context.Background()
 	f := new(Feed)
 	f.User = user
@@ -341,7 +346,21 @@ func (a *API) UpdateFeed(topic []byte, user utils.Address, data []byte, encrypti
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	return a.handler.update(id, user.ToBytes(), signature, ch.Data())
+
+	address, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
+	if err != nil {
+		// updating same feed in the same second will lead to "chunk already exists" error.
+		// This will wait for 1 second and retry the update maxUpdateRetry times.
+		// It is a very dirty fix for this issue. We should find a better way to handle this.
+		if strings.Contains(err.Error(), "chunk already exists") && retries < maxUpdateRetry {
+			retries++
+			<-time.After(1 * time.Second)
+			goto retry
+		}
+		return nil, err
+	}
+
+	return address, nil
 }
 
 // DeleteFeed deleted the feed by updating with no data inside the SOC chunk.

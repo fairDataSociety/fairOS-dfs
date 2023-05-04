@@ -26,7 +26,7 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 )
 
-// PodStatResponse
+// PodStatResponse is the json response to pod stat api request
 type PodStatResponse struct {
 	PodName    string `json:"podName"`
 	PodAddress string `json:"address"`

@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	//DefaultSeekLimit
+	// DefaultSeekLimit is the default limit for seek
 	DefaultSeekLimit = "10"
 )
 

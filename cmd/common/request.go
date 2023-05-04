@@ -16,20 +16,20 @@ limitations under the License.
 
 package common
 
-// UserSignupRequest
+// UserSignupRequest is the request body for user signup
 type UserSignupRequest struct {
 	UserName string `json:"userName,omitempty"`
 	Password string `json:"password,omitempty"`
 	Mnemonic string `json:"mnemonic,omitempty"`
 }
 
-// UserLoginRequest
+// UserLoginRequest is the request body for user login
 type UserLoginRequest struct {
 	UserName string `json:"userName,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
-// PodRequest
+// PodRequest is the request body for pod creation
 type PodRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	Password      string `json:"password,omitempty"`
@@ -37,20 +37,20 @@ type PodRequest struct {
 	SharedPodName string `json:"sharedPodName,omitempty"`
 }
 
-// PodShareRequest
+// PodShareRequest is the request body for pod sharing
 type PodShareRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	SharedPodName string `json:"sharedPodName,omitempty"`
 }
 
-// PodReceiveRequest
+// PodReceiveRequest is the request body for pod receiving
 type PodReceiveRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	Reference     string `json:"sharingRef,omitempty"`
 	SharedPodName string `json:"sharedPodName,omitempty"`
 }
 
-// FileSystemRequest
+// FileSystemRequest is the request body for file system operations
 type FileSystemRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	DirectoryPath string `json:"dirPath,omitempty"`
@@ -60,21 +60,21 @@ type FileSystemRequest struct {
 	Destination   string `json:"destUser,omitempty"`
 }
 
-// RenameRequest
+// RenameRequest is the request body for file rename
 type RenameRequest struct {
 	PodName string `json:"podName,omitempty"`
 	OldPath string `json:"oldPath,omitempty"`
 	NewPath string `json:"newPath,omitempty"`
 }
 
-// FileReceiveRequest
+// FileReceiveRequest is the request body for file receiving
 type FileReceiveRequest struct {
 	PodName          string `json:"podName,omitempty"`
 	SharingReference string `json:"sharingRef,omitempty"`
 	DirectoryPath    string `json:"dirPath,omitempty"`
 }
 
-// KVRequest
+// KVRequest is the request body for kv operations
 type KVRequest struct {
 	PodName     string `json:"podName,omitempty"`
 	TableName   string `json:"tableName,omitempty"`
@@ -87,7 +87,7 @@ type KVRequest struct {
 	Memory      string `json:"memory,omitempty"`
 }
 
-// DocRequest
+// DocRequest is the request body for document operations
 type DocRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	TableName     string `json:"tableName,omitempty"`

@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// ShareInfo
+// ShareInfo is the structure of the share info
 type ShareInfo struct {
 	PodName     string `json:"podName"`
 	Address     string `json:"podAddress"`
@@ -114,7 +114,7 @@ func (p *Pod) GetPodSharingInfo(podName string) (*ShareInfo, error) {
 	}, nil
 }
 
-// ReceivePodInfo
+// ReceivePodInfo returns the shareInfo from the reference
 func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
 	if err != nil { // skipcq: TCV-001
@@ -134,7 +134,7 @@ func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 	return &shareInfo, nil
 }
 
-// ReceivePod
+// ReceivePod imports a pod by creating a new pod with the same name and password
 func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, error) {
 	data, resp, err := p.client.DownloadBlob(ref.Bytes())
 	if err != nil { // skipcq: TCV-001

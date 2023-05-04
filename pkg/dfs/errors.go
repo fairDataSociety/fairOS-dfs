@@ -25,11 +25,10 @@ var (
 	ErrPodNotOpen = errors.New("pod not open")
 	// ErrFileNotPresent indicates file is not present
 	ErrFileNotPresent = errors.New("file not present")
-	//ErrFileAlreadyPresent
+	// ErrFileAlreadyPresent indicates file is already present
 	ErrFileAlreadyPresent = errors.New("file already exist with new name")
 
-	//ErrBeeClient
-	ErrBeeClient     = errors.New("could not connect to bee client")
+	errBeeClient     = errors.New("could not connect to bee client")
 	errEthClient     = errors.New("could not connect to eth backend")
 	errSubManager    = errors.New("subscription manager initialisation failed")
 	errNilSubManager = errors.New("subscription manager not initialised")

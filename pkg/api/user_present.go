@@ -22,7 +22,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// PresentResponse
+// PresentResponse is the json response sent to check if user is present
 type PresentResponse struct {
 	Present bool `json:"present"`
 }
