@@ -81,19 +81,10 @@ rpc: http://localhost:9545
 ```
 
 ##### Custom configuration for ENS based Registration
-For ENS based authentication we can either use a `network` configuration in the config file 
+For ENS based authentication we can either use a `ens-network` configuration in the config file 
 ```
 // define network for ens authtication
-network: "testnet"
-```
-OR define custom configuration for ENS based Registration
-##### Custom configuration for ENS based Registration
-```
-ens:
-  ens-registry-address: 0x26b4AFb60d6C903165150C6F0AA14F8016bE4aec
-  provider-domain: fds
-  public-resolver-address: 0xA94B7f0465E98609391C623d0560C5720a3f2D33
-  fds-registrar-address: 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe
+ens-network: "testnet"
 ```
 
 #### Other configuration
