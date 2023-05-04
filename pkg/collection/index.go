@@ -49,6 +49,8 @@ const (
 	MapIndex
 	// ListIndex is returned when the index type is list
 	ListIndex
+
+	VectorIndex
 )
 
 func (e IndexType) String() string {
@@ -63,6 +65,8 @@ func (e IndexType) String() string {
 		return "MapIndex"
 	case ListIndex:
 		return "ListIndex"
+	case VectorIndex:
+		return "VectorIndex"
 	default:
 		return "InvalidIndex"
 	}
