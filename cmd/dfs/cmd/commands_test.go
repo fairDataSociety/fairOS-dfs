@@ -107,7 +107,7 @@ func Test_ExecuteCommand(t *testing.T) {
 			"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552", "--config",
 			filepath.Join(tempDir, ".dfs.yaml")})
 		err = rootCmd.Execute()
-		if err != nil && err.Error() != "ens provider domain is missing" {
+		if err != nil && err.Error() != "could not connect to eth backend" {
 			t.Fatal("server should fail")
 		}
 	})
@@ -122,7 +122,7 @@ func Test_ExecuteCommand(t *testing.T) {
 
 		rootCmd.SetArgs([]string{
 			"server",
-			"--network",
+			"--ens-network",
 			"play",
 			"--beeHost",
 			"http://localhost:1633",
