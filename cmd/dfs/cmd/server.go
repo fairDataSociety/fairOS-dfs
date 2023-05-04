@@ -213,7 +213,7 @@ func init() {
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
 	serverCmd.Flags().String("postageBlockId", "", "the postage block used to store the data in bee")
 	serverCmd.Flags().StringSlice("cors-origins", defaultCORSAllowedOrigins, "allow CORS headers for the given origins")
-	serverCmd.Flags().String("ens-network", "", "network to use for authentication [not related to swarm network] (mainnet/testnet/play)")
+	serverCmd.Flags().String("ens-network", "testnet", "network to use for authentication [not related to swarm network] (mainnet/testnet/play)")
 	serverCmd.Flags().String("rpc", "", "rpc endpoint for ens network. xDai for mainnet | Goerli for testnet | local fdp-play rpc endpoint for play")
 	rootCmd.AddCommand(serverCmd)
 }
