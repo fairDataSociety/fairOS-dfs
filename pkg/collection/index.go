@@ -194,6 +194,18 @@ func (idx *Index) DeleteIndex(encryptionPassword string) error {
 	return nil
 }
 
+func (idx *Index) IsEmpty(encryptionPassword string) (bool, error) {
+	if idx.memDB == nil || idx.memDB.Entries == nil {
+		manifest, err := idx.loadManifest(idx.name, encryptionPassword)
+		if err != nil {
+			return true, err
+		}
+		idx.memDB = manifest
+	}
+
+	return len(idx.memDB.Entries) == 0, nil
+}
+
 // CountIndex counts the entries in an index.
 func (idx *Index) CountIndex(encryptionPassword string) (uint64, error) {
 	if idx.memDB == nil || idx.memDB.Entries == nil {
