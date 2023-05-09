@@ -241,6 +241,21 @@ func (kv *KeyValue) IsEmpty(name string) (bool, error) {
 	return false, ErrKVTableNotOpened
 }
 
+// IsEmpty checks if the given key value table is empty.
+func (kv *KeyValue) IsEmpty(name, encryptionPassword string) (bool, error) {
+	kv.openKVTMu.Lock()
+	defer kv.openKVTMu.Unlock()
+	if table, ok := kv.openKVTables[name]; ok {
+		return table.index.IsEmpty(table.index.encryptionPassword)
+	} else {
+		idx, err := OpenIndex(kv.podName, defaultCollectionName, name, encryptionPassword, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
+		if err != nil {
+			return true, err
+		}
+		return idx.IsEmpty(idx.encryptionPassword)
+	}
+}
+
 // KVPut inserts a given key and value in to the KV table.
 func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
