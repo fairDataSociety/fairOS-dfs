@@ -337,7 +337,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		countObject, err := kvStore.KVCount("kv_table_8", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_8")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -376,7 +376,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		countObject, err := kvStore.KVCount("kv_table_bytes", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_bytes")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -458,7 +458,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// test count
-		countObject, err := kvStore.KVCount("kv_table_11", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_11")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -569,7 +569,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// check the count
-		countObject, err := kvStore.KVCount("kv_table_batch_2", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_batch_2")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -633,7 +633,15 @@ func TestKeyValueStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		countObject, err := kvStore.KVCount("kv_table_batch_count", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_batch_count")
+		if err != collection.ErrKVTableNotOpened {
+			t.Fatal("should have returned error ", collection.ErrKVTableNotOpened)
+		}
+		err = kvStore.OpenKVTable("kv_table_batch_count", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		countObject, err = kvStore.KVCount("kv_table_batch_count")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -658,7 +666,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// check the count
-		countObject, err := kvStore.KVCount("kv_table_Itr_0", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_Itr_0")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -844,7 +852,7 @@ func TestKeyValueStore(t *testing.T) {
 		}
 
 		// check the count
-		count, err := kvStore.KVCount(fmt.Sprintf("kv_table_Itr_1%d", tableNo), podPassword)
+		count, err := kvStore.KVCount(fmt.Sprintf("kv_table_Itr_1%d", tableNo))
 		if err != nil {
 			t.Fatal(err)
 		}
