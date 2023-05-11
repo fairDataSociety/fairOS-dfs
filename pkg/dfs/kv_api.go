@@ -102,7 +102,7 @@ func (a *API) KVCount(sessionId, podName, name string) (*collection.TableKeyCoun
 		return nil, err
 	}
 
-	return podInfo.GetKVStore().KVCount(name, podInfo.GetPodPassword())
+	return podInfo.GetKVStore().KVCount(name)
 }
 
 // KVPut does validation checks and calls the put KVtable function.
