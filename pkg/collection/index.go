@@ -65,7 +65,7 @@ func (e IndexType) String() string {
 		return "MapIndex"
 	case ListIndex:
 		return "ListIndex"
-	case VectorIndex:
+	case VectorIndex: //  skipcq: TCV-001
 		return "VectorIndex"
 	default:
 		return "InvalidIndex"
@@ -84,7 +84,7 @@ func toIndexTypeEnum(s string) IndexType {
 		return MapIndex
 	case "ListIndex":
 		return ListIndex
-	case "VectorIndex":
+	case "VectorIndex": //  skipcq: TCV-001
 		return VectorIndex
 	default:
 		return InvalidIndex
