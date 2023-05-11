@@ -84,6 +84,8 @@ func toIndexTypeEnum(s string) IndexType {
 		return MapIndex
 	case "ListIndex":
 		return ListIndex
+	case "VectorIndex":
+		return VectorIndex
 	default:
 		return InvalidIndex
 	}
