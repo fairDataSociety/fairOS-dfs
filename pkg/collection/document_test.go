@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -806,14 +805,7 @@ func TestDocumentStore(t *testing.T) {
 		docs, err := docStore.NearestNodes("docdb_vector", podPassword, "vector", []float32{0.1, 0.1, 0.98}, .2, 0)
 		require.NoError(t, err)
 
-		for _, v := range docs {
-			var doc TestDocument
-			err = json.Unmarshal(v, &doc)
-			if err != nil {
-				t.Fatal(err)
-			}
-			fmt.Println(doc)
-		}
+		assert.Equal(t, 3, len(docs))
 	})
 
 	/*
