@@ -219,7 +219,7 @@ func (kv *KeyValue) OpenKVTable(name, encryptionPassword string) error {
 }
 
 // KVCount counts the number of entries in the given key value table.
-func (kv *KeyValue) KVCount(name, encryptionPassword string) (*TableKeyCount, error) {
+func (kv *KeyValue) KVCount(name string) (*TableKeyCount, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
@@ -227,31 +227,18 @@ func (kv *KeyValue) KVCount(name, encryptionPassword string) (*TableKeyCount, er
 			Count:     table.index.count,
 			TableName: name,
 		}, nil
-	} else {
-		idx, err := OpenIndex(kv.podName, defaultCollectionName, name, encryptionPassword, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
-		if err != nil {
-			return nil, err
-		}
-		return &TableKeyCount{
-			Count:     idx.count,
-			TableName: name,
-		}, nil
 	}
+	return nil, ErrKVTableNotOpened
 }
 
 // IsEmpty checks if the given key value table is empty.
-func (kv *KeyValue) IsEmpty(name, encryptionPassword string) (bool, error) {
+func (kv *KeyValue) IsEmpty(name string) (bool, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
 		return table.index.IsEmpty(table.index.encryptionPassword)
-	} else {
-		idx, err := OpenIndex(kv.podName, defaultCollectionName, name, encryptionPassword, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
-		if err != nil {
-			return true, err
-		}
-		return idx.IsEmpty(idx.encryptionPassword)
 	}
+	return false, ErrKVTableNotOpened
 }
 
 // KVPut inserts a given key and value in to the KV table.
