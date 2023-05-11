@@ -22,6 +22,7 @@ import (
 
 type KVGetter interface {
 	KVGet(name, key string) ([]string, []byte, error)
+	OpenKVTable(name, encryptionPassword string) error
 }
 
 // KVCreate does validation checks and calls the create KVtable function.
