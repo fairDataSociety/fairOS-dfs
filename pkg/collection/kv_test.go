@@ -633,7 +633,7 @@ func TestKeyValueStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		countObject, err := kvStore.KVCount("kv_table_batch_count")
+		_, err = kvStore.KVCount("kv_table_batch_count")
 		if err != collection.ErrKVTableNotOpened {
 			t.Fatal("should have returned error ", collection.ErrKVTableNotOpened)
 		}
@@ -641,7 +641,7 @@ func TestKeyValueStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		countObject, err = kvStore.KVCount("kv_table_batch_count")
+		countObject, err := kvStore.KVCount("kv_table_batch_count")
 		if err != nil {
 			t.Fatal(err)
 		}
