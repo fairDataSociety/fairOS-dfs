@@ -223,12 +223,8 @@ func (kv *KeyValue) KVCount(name, encryptionPassword string) (*TableKeyCount, er
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
-		count, err := table.index.CountIndex(table.index.encryptionPassword)
-		if err != nil {
-			return nil, err
-		}
 		return &TableKeyCount{
-			Count:     count,
+			Count:     table.index.count,
 			TableName: name,
 		}, nil
 	} else {
@@ -236,12 +232,8 @@ func (kv *KeyValue) KVCount(name, encryptionPassword string) (*TableKeyCount, er
 		if err != nil {
 			return nil, err
 		}
-		count, err := idx.CountIndex(idx.encryptionPassword)
-		if err != nil {
-			return nil, err
-		}
 		return &TableKeyCount{
-			Count:     count,
+			Count:     idx.count,
 			TableName: name,
 		}, nil
 	}
