@@ -168,7 +168,7 @@ func OpenIndex(podName, collectionName, indexName, podPassword string, fd *feed.
 		accountInfo:        ai,
 		feed:               fd,
 		client:             client,
-		count:              0,
+		count:              manifest.Count,
 		memDB:              manifest,
 		logger:             logger,
 	}
