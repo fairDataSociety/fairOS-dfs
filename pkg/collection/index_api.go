@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -120,6 +121,9 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 	}
 
 	manifest.Entries = append(manifest.Entries[:i], manifest.Entries[i+1:]...)
+	var delta int = -1
+	atomic.AddUint64(&idx.count, uint64(delta))
+	manifest.Count = idx.count
 	err = idx.updateManifest(manifest, idx.encryptionPassword)
 	if err != nil {
 		return nil, err
@@ -315,6 +319,10 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 	}
 
 	if entryAdded && !memory {
+		// update the count
+		atomic.AddUint64(&idx.count, 1)
+		manifest.Count = idx.count
+
 		return idx.updateManifest(manifest, idx.encryptionPassword)
 	}
 	return nil // skipcq: TCV-001
