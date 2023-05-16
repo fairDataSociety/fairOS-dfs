@@ -27,6 +27,7 @@ import (
 //
 //	@Summary      User stat
 //	@Description  show user stats
+//	@ID 		  user-stat
 //	@Tags         user
 //	@Accept       json
 //	@Param	      Cookie header string true "cookie parameter"

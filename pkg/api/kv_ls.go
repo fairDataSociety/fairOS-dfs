@@ -39,6 +39,7 @@ type Collection struct {
 //
 //	@Summary      List all key value tables
 //	@Description  KVListHandler is the api handler to list all the key value tables in a pod
+//	@ID		      kv-ls
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json

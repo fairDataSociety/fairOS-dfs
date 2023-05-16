@@ -36,6 +36,7 @@ const (
 //
 //	@Summary      Seek in kv table
 //	@Description  KVSeekHandler is the api handler to seek to a particular key with the given prefix
+//	@ID		      kv-seek
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json
@@ -121,6 +122,7 @@ func (h *Handler) KVSeekHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Get next value from last seek in kv table
 //	@Description  KVGetNextHandler is the api handler to get the key and value from the current seek position
+//	@ID		      kv-get-next
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json

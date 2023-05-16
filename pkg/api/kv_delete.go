@@ -28,6 +28,7 @@ import (
 //
 //	@Summary      Delete a key value table
 //	@Description  KVDeleteHandler is the api handler to delete a key value table
+//	@ID		      kv-delete
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json

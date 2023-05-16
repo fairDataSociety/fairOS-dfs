@@ -36,6 +36,7 @@ type FileDeleteRequest struct {
 //
 //	@Summary      Delete a file
 //	@Description  FileReceiveHandler is the api handler to delete a file from a given pod
+//	@ID		      file-delete-handler
 //	@Tags         file
 //	@Accept       json
 //	@Produce      json
