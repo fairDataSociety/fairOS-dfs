@@ -36,6 +36,7 @@ type DocIndexRequest struct {
 //
 //	@Summary      Index a json file that is present in a pod, in to the given document database
 //	@Description  DocIndexJsonHandler is the api handler to index a json file that is present in a pod, in to the given document database
+//	@ID		      doc-indexjson
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json

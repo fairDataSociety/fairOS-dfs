@@ -29,6 +29,7 @@ import (
 //
 //	@Summary      Update a file
 //	@Description  FileUpdateHandler is the api handler to update a file from a given offset
+//	@ID		      file-update-handler
 //	@Tags         file
 //	@Accept       mpfd
 //	@Produce      json

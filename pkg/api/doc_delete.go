@@ -28,6 +28,7 @@ import (
 //
 //	@Summary      Delete a doc table
 //	@Description  DocDeleteHandler is the api handler to delete the given document database
+//	@ID		      doc-delete
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json

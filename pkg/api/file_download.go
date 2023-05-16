@@ -31,6 +31,7 @@ import (
 //
 //	@Summary      Download a file
 //	@Description  FileDownloadHandlerPost is the api handler to download a file from a given pod
+//	@ID		      file-download-handler-post
 //	@Tags         file
 //	@Accept       mpfd
 //	@Produce      */*
@@ -63,6 +64,7 @@ func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request
 //
 //	@Summary      Download a file
 //	@Description  FileDownloadHandlerGet is the api handler to download a file from a given pod
+//	@ID		      file-download-handler
 //	@Tags         file
 //	@Accept       json
 //	@Produce      */*

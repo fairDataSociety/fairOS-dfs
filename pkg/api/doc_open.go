@@ -28,6 +28,7 @@ import (
 //
 //	@Summary      Open a doc table
 //	@Description  DocOpenHandler is the api handler to open a document database
+//	@ID		      doc-open
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json

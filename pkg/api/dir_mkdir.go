@@ -37,6 +37,7 @@ type DirRequest struct {
 //
 //	@Summary      Create directory
 //	@Description  DirectoryMkdirHandler is the api handler to create a new directory.
+//	@ID		      directory-mkdir-handler
 //	@Tags         dir
 //	@Accept       json
 //	@Produce      json

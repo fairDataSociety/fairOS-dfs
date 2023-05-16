@@ -28,6 +28,7 @@ import (
 //
 //	@Summary      Open a key value table
 //	@Description  KVOpenHandler is the api handler to open a key value table
+//	@ID		      kv-open
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json

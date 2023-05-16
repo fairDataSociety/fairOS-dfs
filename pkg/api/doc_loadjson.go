@@ -31,6 +31,7 @@ import (
 //
 //	@Summary      Load json file from local file system
 //	@Description  DocLoadJsonHandler is the api handler that indexes a json file that is present in the local file system
+//	@ID		      doc-loadjson
 //	@Tags         doc
 //	@Accept       mpfd
 //	@Produce      json

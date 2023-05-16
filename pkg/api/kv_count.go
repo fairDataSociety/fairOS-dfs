@@ -28,6 +28,7 @@ import (
 //
 //	@Summary      Count rows in a key value table
 //	@Description  KVCountHandler is the api handler to count the number of rows in a key value table
+//	@ID		      kv-count
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json

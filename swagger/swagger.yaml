@@ -631,6 +631,7 @@ paths:
       consumes:
       - application/json
       description: DirectoryModeHandler is the api handler to change mode of a directory
+      operationId: directory-mode-handler
       parameters:
       - description: dir mode request
         in: body
@@ -665,6 +666,7 @@ paths:
     get:
       description: DirectoryLsHandler is the api handler for listing the contents
         of a directory.
+      operationId: directory-ls-handler
       parameters:
       - description: pod name
         in: query
@@ -704,6 +706,7 @@ paths:
       consumes:
       - application/json
       description: DirectoryMkdirHandler is the api handler to create a new directory.
+      operationId: directory-mkdir-handler
       parameters:
       - description: pod name and dir path
         in: body
@@ -738,6 +741,7 @@ paths:
     get:
       description: DirectoryPresentHandler is the api handler which says if a directory
         is present or not
+      operationId: directory-present-handler
       parameters:
       - description: pod name
         in: query
@@ -777,6 +781,7 @@ paths:
       consumes:
       - application/json
       description: DirectoryRenameHandler is the api handler to rename a directory.
+      operationId: directory-rename-handler
       parameters:
       - description: old name and new path
         in: body
@@ -812,6 +817,7 @@ paths:
       consumes:
       - application/json
       description: DirectoryRmdirHandler is the api handler to remove a directory.
+      operationId: directory-rmdir-handler
       parameters:
       - description: pod name and dir path
         in: body
@@ -846,6 +852,7 @@ paths:
     get:
       description: DirectoryStatHandler is the api handler which gives the information
         about a directory
+      operationId: directory-stat-handler
       parameters:
       - description: pod name
         in: query
@@ -886,6 +893,7 @@ paths:
       - application/json
       description: DocCountHandler is the api handler to count the number of documents
         in a given document database
+      operationId: doc-count
       parameters:
       - description: doc table info
         in: body
@@ -922,6 +930,7 @@ paths:
       - application/json
       description: DocDeleteHandler is the api handler to delete the given document
         database
+      operationId: doc-delete
       parameters:
       - description: doc table info
         in: body
@@ -958,6 +967,7 @@ paths:
       - application/json
       description: DocEntryDelHandler is the api handler to delete a document from
         a document datastore
+      operationId: doc-entry-del
       parameters:
       - in: query
         name: id
@@ -997,6 +1007,7 @@ paths:
       - application/json
       description: DocEntryGetHandler is the api handler to get a document from a
         document datastore
+      operationId: doc-entry-get
       parameters:
       - description: pod name
         in: query
@@ -1042,6 +1053,7 @@ paths:
       - application/json
       description: DocEntryPutHandler is the api handler add a document in to a document
         datastore
+      operationId: doc-entry-put
       parameters:
       - in: query
         name: doc
@@ -1081,6 +1093,7 @@ paths:
       - application/json
       description: DocFindHandler is the api handler to select rows from a given document
         datastore
+      operationId: doc-find
       parameters:
       - description: pod name
         in: query
@@ -1133,6 +1146,7 @@ paths:
       - application/json
       description: DocIndexJsonHandler is the api handler to index a json file that
         is present in a pod, in to the given document database
+      operationId: doc-indexjson
       parameters:
       - description: index request
         in: body
@@ -1170,6 +1184,7 @@ paths:
       - multipart/form-data
       description: DocLoadJsonHandler is the api handler that indexes a json file
         that is present in the local file system
+      operationId: doc-loadjson
       parameters:
       - description: pod name
         in: query
@@ -1215,6 +1230,7 @@ paths:
       - application/json
       description: DocListHandler is the api handler which lists all the document
         database in a pod
+      operationId: doc-ls
       parameters:
       - description: pod name
         in: query
@@ -1249,6 +1265,7 @@ paths:
       consumes:
       - application/json
       description: DocCreateHandler is the api handler to create a new document database
+      operationId: doc-create
       parameters:
       - description: 'doc table info. si or simple index is a comma separated list
           of keys and their types. eg: ''first_name=string,age=number''. valid index
@@ -1287,6 +1304,7 @@ paths:
       consumes:
       - application/json
       description: DocOpenHandler is the api handler to open a document database
+      operationId: doc-open
       parameters:
       - description: doc table info
         in: body
@@ -1322,6 +1340,7 @@ paths:
       consumes:
       - multipart/form-data
       description: FileModeHandler is the api handler to change mode of a file
+      operationId: file-mode-handler
       parameters:
       - description: file mode request
         in: body
@@ -1358,6 +1377,7 @@ paths:
       - application/json
       description: FileReceiveHandler is the api handler to delete a file from a given
         pod
+      operationId: file-delete-handler
       parameters:
       - description: pod name and file path
         in: body
@@ -1398,6 +1418,7 @@ paths:
       - application/json
       description: FileDownloadHandlerGet is the api handler to download a file from
         a given pod
+      operationId: file-download-handler
       parameters:
       - description: pod name
         in: query
@@ -1439,6 +1460,7 @@ paths:
       - multipart/form-data
       description: FileDownloadHandlerPost is the api handler to download a file from
         a given pod
+      operationId: file-download-handler-post
       parameters:
       - description: pod name
         in: formData
@@ -1481,6 +1503,7 @@ paths:
       - application/json
       description: FileReceiveHandler is the api handler to receive a file in a given
         pod
+      operationId: file-receive-handler
       parameters:
       - description: pod name
         in: query
@@ -1525,6 +1548,7 @@ paths:
       consumes:
       - application/json
       description: FileReceiveInfoHandler is the api handler to receive a file info
+      operationId: file-receive-info-handler
       parameters:
       - description: sharing reference
         in: query
@@ -1560,6 +1584,7 @@ paths:
       - application/json
       description: FileRenameHandler is the api handler to get the information of
         a file
+      operationId: file-rename-handler
       parameters:
       - description: old name & new name
         in: body
@@ -1600,6 +1625,7 @@ paths:
       - application/json
       description: FileShareHandler is the api handler to share a file from a given
         pod
+      operationId: file-share-handler
       parameters:
       - description: file share request params
         in: body
@@ -1636,6 +1662,7 @@ paths:
       - application/json
       description: FileStatHandler is the api handler to get the information of a
         file
+      operationId: file-stat-handler
       parameters:
       - description: pod name
         in: query
@@ -1676,6 +1703,7 @@ paths:
       - application/json
       description: FileStatusHandler is the api handler to check sync status of a
         file from a given pod
+      operationId: file-status-handler
       parameters:
       - description: pod name
         in: query
@@ -1718,6 +1746,7 @@ paths:
       - multipart/form-data
       description: FileUpdateHandler is the api handler to update a file from a given
         offset
+      operationId: file-update-handler
       parameters:
       - description: pod name
         in: formData
@@ -1768,6 +1797,7 @@ paths:
       - multipart/form-data
       description: FileUploadHandler is the api handler to upload a file from a local
         file system to the dfs
+      operationId: file-upload-handler
       parameters:
       - description: pod name
         in: formData
@@ -1829,6 +1859,7 @@ paths:
       - application/json
       description: KVCountHandler is the api handler to count the number of rows in
         a key value table
+      operationId: kv-count
       parameters:
       - description: kv table request
         in: body
@@ -1864,6 +1895,7 @@ paths:
       consumes:
       - application/json
       description: KVDeleteHandler is the api handler to delete a key value table
+      operationId: kv-delete
       parameters:
       - description: kv table request
         in: body
@@ -1900,6 +1932,7 @@ paths:
       - application/json
       description: KVDelHandler is the api handler to delete a key and value from
         the kv table
+      operationId: kv-del
       parameters:
       - description: delete request
         in: body
@@ -1935,6 +1968,7 @@ paths:
       consumes:
       - application/json
       description: KVGetHandler is the api handler to get a value from the kv table
+      operationId: kv-get
       parameters:
       - description: pod name
         in: query
@@ -1980,6 +2014,7 @@ paths:
       - application/json
       description: KVGetDataHandler is the api handler to get raw value from the kv
         table
+      operationId: kv-get-data
       parameters:
       - description: pod name
         in: query
@@ -2030,6 +2065,7 @@ paths:
       - application/json
       description: KVPresentHandler is the api handler to check if a value exists
         in the kv table
+      operationId: kv-present-handler
       parameters:
       - description: pod name
         in: query
@@ -2074,6 +2110,7 @@ paths:
       consumes:
       - application/json
       description: KVPutHandler is the api handler to put a key-value  in the kv table
+      operationId: kv-put
       parameters:
       - description: kv entry
         in: body
@@ -2110,6 +2147,7 @@ paths:
       - application/json
       description: KVExportHandler is the api handler to export from a particular
         key with the given prefix
+      operationId: kv-export
       parameters:
       - description: kv export info
         in: body
@@ -2149,6 +2187,7 @@ paths:
       - multipart/form-data
       description: KVLoadCSVHandler is the api handler to load a csv file as key and
         value in a KV table
+      operationId: kv-loadcsv
       parameters:
       - description: pod name
         in: formData
@@ -2198,6 +2237,7 @@ paths:
       - application/json
       description: KVListHandler is the api handler to list all the key value tables
         in a pod
+      operationId: kv-ls
       parameters:
       - description: pod name
         in: query
@@ -2232,6 +2272,7 @@ paths:
       consumes:
       - application/json
       description: KVCreateHandler is the api handler to create a key value table
+      operationId: kv-create-handler
       parameters:
       - description: kv table request
         in: body
@@ -2267,6 +2308,7 @@ paths:
       consumes:
       - application/json
       description: KVOpenHandler is the api handler to open a key value table
+      operationId: kv-open
       parameters:
       - description: kv table request
         in: body
@@ -2303,6 +2345,7 @@ paths:
       - application/json
       description: KVSeekHandler is the api handler to seek to a particular key with
         the given prefix
+      operationId: kv-seek
       parameters:
       - description: kv seek info
         in: body
@@ -2339,6 +2382,7 @@ paths:
       - application/json
       description: KVGetNextHandler is the api handler to get the key and value from
         the current seek position
+      operationId: kv-get-next
       parameters:
       - description: pod name
         in: query
@@ -2382,6 +2426,7 @@ paths:
       consumes:
       - application/json
       description: PodCloseHandler is the api handler to close an open pod
+      operationId: pod-close-handler
       parameters:
       - description: pod name
         in: body
@@ -2417,6 +2462,7 @@ paths:
       consumes:
       - application/json
       description: PodDeleteHandler is the api handler to delete a pod
+      operationId: pod-delete-handler
       parameters:
       - description: pod name and user password
         in: body
@@ -2452,6 +2498,7 @@ paths:
       consumes:
       - application/json
       description: PodForkHandler is the api handler to fork a pod
+      operationId: pod-fork-handler
       parameters:
       - description: pod name and user password
         in: body
@@ -2488,6 +2535,7 @@ paths:
       - application/json
       description: PodForkFromReferenceHandler is the api handler to fork a pod from
         a given sharing reference
+      operationId: pod-fork-from-reference-handler
       parameters:
       - description: pod name and user password
         in: body
@@ -2523,6 +2571,7 @@ paths:
       consumes:
       - application/json
       description: PodListHandler is the api handler to list all pods
+      operationId: pod-list-handler
       parameters:
       - description: cookie parameter
         in: header
@@ -2552,6 +2601,7 @@ paths:
       consumes:
       - application/json
       description: PodCreateHandler is the api handler to create a new pod
+      operationId: pod-create-handler
       parameters:
       - description: pod name and user password
         in: body
@@ -2587,6 +2637,7 @@ paths:
       consumes:
       - application/json
       description: PodOpenHandler is the api handler to open pod
+      operationId: pod-open-handler
       parameters:
       - description: pod name and user password
         in: body
@@ -2622,6 +2673,7 @@ paths:
       consumes:
       - application/json
       description: PodOpenAsyncHandler is the api handler to open pod asynchronously
+      operationId: pod-open-async-handler
       parameters:
       - description: pod name and user password
         in: body
@@ -2657,6 +2709,7 @@ paths:
       consumes:
       - application/json
       description: PodPresentHandler is the api handler to check if a pod is present
+      operationId: pod-present
       parameters:
       - description: pod name
         in: query
@@ -2692,6 +2745,7 @@ paths:
       - application/json
       description: PodReceiveHandler is the api handler to receive shared pod from
         shared reference
+      operationId: pod-receive-handler
       parameters:
       - description: pod sharing reference
         in: query
@@ -2731,6 +2785,7 @@ paths:
       - application/json
       description: PodReceiveInfoHandler is the api handler to receive shared pod
         info from shared reference
+      operationId: pod-receive-info-handler
       parameters:
       - description: pod sharing reference
         in: query
@@ -2765,6 +2820,7 @@ paths:
       consumes:
       - application/json
       description: PodShareHandler is the api handler to share a pod to the public
+      operationId: pod-share-handler
       parameters:
       - description: pod name and user password
         in: body
@@ -2800,6 +2856,7 @@ paths:
       consumes:
       - application/json
       description: PodStatHandler is the api handler get information about a pod
+      operationId: pod-stat-handler
       parameters:
       - description: pod name
         in: query
@@ -2834,6 +2891,7 @@ paths:
       consumes:
       - application/json
       description: PodSyncHandler is the api handler to sync a pod's content
+      operationId: pod-sync-handler
       parameters:
       - description: pod name
         in: body
@@ -2869,6 +2927,7 @@ paths:
       consumes:
       - application/json
       description: PodSyncAsyncHandler is the api handler to sync a pod's content
+      operationId: pod-sync-async-handler
       parameters:
       - description: pod name
         in: body
@@ -2916,6 +2975,7 @@ paths:
       consumes:
       - application/json
       description: Check if the given user is logged-in
+      operationId: user-isloggedin
       parameters:
       - description: username
         in: query
@@ -2947,6 +3007,7 @@ paths:
       consumes:
       - application/json
       description: logs-out user
+      operationId: user-logout
       parameters:
       - description: cookie parameter
         in: header
@@ -2986,6 +3047,7 @@ paths:
       consumes:
       - application/json
       description: show user stats
+      operationId: user-stat
       parameters:
       - description: cookie parameter
         in: header
@@ -3011,6 +3073,7 @@ paths:
   /v2/user/delete:
     delete:
       description: deletes user info from swarm
+      operationId: user-delete-v2
       parameters:
       - description: user delete request
         in: body
@@ -3046,6 +3109,7 @@ paths:
       consumes:
       - application/json
       description: login user with the new ENS based authentication
+      operationId: user-login-v2
       parameters:
       - description: username
         in: body
@@ -3082,6 +3146,7 @@ paths:
   /v2/user/present:
     get:
       description: checks if the new user is present in the new ENS based authentication
+      operationId: user-present-v2
       parameters:
       - description: username
         in: query
@@ -3107,6 +3172,7 @@ paths:
       consumes:
       - application/json
       description: registers new user with the new ENS based authentication
+      operationId: user-signup-v2
       parameters:
       - description: username
         in: body

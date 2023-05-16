@@ -25,6 +25,7 @@ type KVExportRequest struct {
 //
 //	@Summary      Export from a particular key with the given prefix
 //	@Description  KVExportHandler is the api handler to export from a particular key with the given prefix
+//	@ID		      kv-export
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json
