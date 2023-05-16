@@ -48,6 +48,7 @@ const (
 //
 //	@Summary      Upload a file
 //	@Description  FileUploadHandler is the api handler to upload a file from a local file system to the dfs
+//	@ID		      file-upload-handler
 //	@Tags         file
 //	@Accept       mpfd
 //	@Produce      json

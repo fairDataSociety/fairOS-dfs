@@ -44,6 +44,7 @@ type SimpleDocRequest struct {
 //
 //	@Summary      Create in doc table
 //	@Description  DocCreateHandler is the api handler to create a new document database
+//	@ID		      doc-create
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json

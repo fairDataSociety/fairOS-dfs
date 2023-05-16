@@ -37,6 +37,7 @@ type DocCountRequest struct {
 //
 //	@Summary      Count number of document in a table
 //	@Description  DocCountHandler is the api handler to count the number of documents in a given document database
+//	@ID		      doc-count
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json

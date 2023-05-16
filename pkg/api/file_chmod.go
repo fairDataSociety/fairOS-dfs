@@ -21,6 +21,7 @@ type FileModeRequest struct {
 //
 //	@Summary      chmod a file
 //	@Description  FileModeHandler is the api handler to change mode of a file
+//	@ID		      file-mode-handler
 //	@Tags         file
 //	@Accept       mpfd
 //	@Produce      json

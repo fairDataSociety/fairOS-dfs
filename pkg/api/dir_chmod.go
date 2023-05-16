@@ -21,6 +21,7 @@ type DirModeRequest struct {
 //
 //	@Summary      change mode of a directory
 //	@Description  DirectoryModeHandler is the api handler to change mode of a directory
+//	@ID		      directory-mode-handler
 //	@Tags         dir
 //	@Accept       json
 //	@Produce      json

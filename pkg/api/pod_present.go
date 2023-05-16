@@ -12,6 +12,7 @@ import (
 //
 //	@Summary      Is pod present
 //	@Description  PodPresentHandler is the api handler to check if a pod is present
+//	@ID 		  pod-present
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

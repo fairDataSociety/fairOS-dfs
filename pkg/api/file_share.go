@@ -46,6 +46,7 @@ type FileShareRequest struct {
 //
 //	@Summary      Share a file
 //	@Description  FileShareHandler is the api handler to share a file from a given pod
+//	@ID		      file-share-handler
 //	@Tags         file
 //	@Accept       json
 //	@Produce      json
@@ -122,6 +123,7 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Receive a file
 //	@Description  FileReceiveHandler is the api handler to receive a file in a given pod
+//	@ID		      file-receive-handler
 //	@Tags         file
 //	@Accept       json
 //	@Produce      json
@@ -198,6 +200,7 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Receive a file info
 //	@Description  FileReceiveInfoHandler is the api handler to receive a file info
+//	@ID		      file-receive-info-handler
 //	@Tags         file
 //	@Accept       json
 //	@Produce      json

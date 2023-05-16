@@ -57,6 +57,7 @@ type KVResponseRaw struct {
 //
 //	@Summary      put key and value in the kv table
 //	@Description  KVPutHandler is the api handler to put a key-value  in the kv table
+//	@ID		      kv-put
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json
@@ -137,6 +138,7 @@ func (h *Handler) KVPutHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      get value from the kv table
 //	@Description  KVGetHandler is the api handler to get a value from the kv table
+//	@ID		      kv-get
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json
@@ -228,6 +230,7 @@ func (h *Handler) KVGetHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      get value from the kv table
 //	@Description  KVGetDataHandler is the api handler to get raw value from the kv table
+//	@ID		      kv-get-data
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json
@@ -344,6 +347,7 @@ func (h *Handler) KVGetDataHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Delete key-value from the kv table
 //	@Description  KVDelHandler is the api handler to delete a key and value from the kv table
+//	@ID		      kv-del
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json
@@ -417,6 +421,7 @@ func (h *Handler) KVDelHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Check if a value exists in the kv table
 //	@Description  KVPresentHandler is the api handler to check if a value exists in the kv table
+//	@ID           kv-present-handler
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json

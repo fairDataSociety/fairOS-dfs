@@ -36,6 +36,7 @@ type PodStatResponse struct {
 //
 //	@Summary      Stats for pod
 //	@Description  PodStatHandler is the api handler get information about a pod
+//	@ID           pod-stat-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

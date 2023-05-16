@@ -31,6 +31,7 @@ import (
 //
 //	@Summary      Sync pod
 //	@Description  PodSyncHandler is the api handler to sync a pod's content
+//	@ID           pod-sync-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
@@ -96,6 +97,7 @@ func (h *Handler) PodSyncHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Sync pod asynchronously
 //	@Description  PodSyncAsyncHandler is the api handler to sync a pod's content
+//	@ID           pod-sync-async-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

@@ -29,6 +29,7 @@ import (
 //
 //	@Summary      Info of a file
 //	@Description  FileStatHandler is the api handler to get the information of a file
+//	@ID		      file-stat-handler
 //	@Tags         file
 //	@Accept       json
 //	@Produce      json

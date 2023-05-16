@@ -79,6 +79,9 @@ type UserDeleteRequest struct {
 //
 //	@Summary      Delete user for ENS based authentication
 //	@Description  deletes user info from swarm
+//
+// @ID  		user-delete-v2
+//
 //	@Tags         user
 //	@Produce      json
 //	@Param	      UserDeleteRequest body UserDeleteRequest true "user delete request"

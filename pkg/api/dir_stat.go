@@ -30,6 +30,7 @@ import (
 //
 //	@Summary      Directory stat
 //	@Description  DirectoryStatHandler is the api handler which gives the information about a directory
+//	@ID		      directory-stat-handler
 //	@Tags         dir
 //	@Produce      json
 //	@Param	      podName query string true "pod name"
