@@ -159,7 +159,6 @@ func OpenIndex(podName, collectionName, indexName, podPassword string, fd *feed.
 	if manifest == nil {
 		return nil, ErrIndexNotPresent
 	}
-
 	idx := &Index{
 		name:               manifest.Name,
 		encryptionPassword: podPassword,

@@ -226,7 +226,6 @@ func (d *Document) OpenDocumentDB(dbName, encryptionPassword string) error {
 		d.logger.Errorf("opening document db: %v", ErrDocumentDBNotPresent)
 		return ErrDocumentDBNotPresent
 	}
-
 	// open the simple indexes
 	simpleIndexs := make(map[string]*Index)
 	for _, si := range schema.SimpleIndexes {
@@ -274,7 +273,6 @@ func (d *Document) OpenDocumentDB(dbName, encryptionPassword string) error {
 		}
 		vectorIndexes[vi.FieldName] = idx
 	}
-
 	// create the document DB index map
 	docDB := &DocumentDB{
 		name:          schema.Name,
@@ -288,6 +286,21 @@ func (d *Document) OpenDocumentDB(dbName, encryptionPassword string) error {
 	// add to the open DB map
 	d.addToOpenedDb(dbName, docDB)
 	d.logger.Info("document db opened: ", schema.Name)
+	return nil
+}
+
+// CloseDocumentDB closes a document database.
+func (d *Document) CloseDocumentDB(dbName string) error {
+	d.logger.Info("closing document db: ", dbName)
+	// check if the db is already present and opened
+	if !d.IsDBOpened(dbName) { // skipcq: TCV-001
+		d.logger.Errorf("closing document db: %v", ErrDocumentDBNotOpened)
+		return ErrDocumentDBNotOpened
+	}
+
+	// add to the open DB map
+	d.removeFromOpenedDB(dbName)
+	d.logger.Info("document db closed: ", dbName)
 	return nil
 }
 
@@ -1145,6 +1158,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		return nil, ErrInvalidIndexType
 	}
 	var docs [][]byte
+
 	if idx.mutable {
 		wg := new(sync.WaitGroup)
 		mtx := &sync.Mutex{}
@@ -1444,7 +1458,6 @@ func (d *Document) CreateDocBatch(dbName, podPassword string) (*DocBatch, error)
 			docBatch.batches[fieldName] = batch
 			d.logger.Info("created list batch index: ", fieldName)
 		}
-
 		d.logger.Info("created batch for inserting in document db: ", dbName)
 		return &docBatch, nil
 	}
