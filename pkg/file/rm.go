@@ -63,11 +63,10 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 	}
 	// remove the meta
 	topic := utils.HashString(totalFilePath)
-	_, err = f.fd.UpdateFeed(f.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword)) // empty byte array will fail, so some 1 byte
-	if err != nil {                                                                                         // skipcq: TCV-001
+	_, err = f.fd.UpdateFeed(f.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false) // empty byte array will fail, so some 1 byte
+	if err != nil {                                                                                                // skipcq: TCV-001
 		return err
 	}
-
 	// remove the file from file map
 	f.RemoveFromFileMap(totalFilePath)
 

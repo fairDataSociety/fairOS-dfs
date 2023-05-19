@@ -128,13 +128,12 @@ func (f *File) GetInode(podPassword, filePath string) *MetaData { // skipcq: TCV
 		return meta
 	}
 	topic := utils.HashString(filePath)
-	_, metaBytes, err := f.fd.GetFeedData(topic, f.userAddress, []byte(podPassword))
+	_, metaBytes, err := f.fd.GetFeedData(topic, f.userAddress, []byte(podPassword), false)
 	if err != nil {
 		return nil
 	}
-
 	if string(metaBytes) == utils.DeletedFeedMagicWord {
-		return nil
+		return meta
 	}
 
 	err = json.Unmarshal(metaBytes, &meta)
@@ -171,7 +170,7 @@ func newLsTask(f *File, topic []byte, path, podPassword string, l *[]Entry, mtx 
 // Execute
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
-	_, data, err := lt.f.fd.GetFeedData(lt.topic, lt.f.userAddress, []byte(lt.podPassword))
+	_, data, err := lt.f.fd.GetFeedData(lt.topic, lt.f.userAddress, []byte(lt.podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("file mtdt : %v", err)
 	}

@@ -16,6 +16,8 @@ limitations under the License.
 
 package user
 
+import "fmt"
+
 // LogoutUser logs out a giver user from the system and clean him from all the data structures.
 func (u *Users) LogoutUser(userName, sessionId string) error {
 	// unset cookie and remove user from map
@@ -25,6 +27,7 @@ func (u *Users) LogoutUser(userName, sessionId string) error {
 
 	err := u.Logout(sessionId)
 	if err != nil { // skipcq: TCV-001
+		fmt.Println("u.Logout(sessionId))", err)
 		return err
 	}
 

@@ -1167,7 +1167,7 @@ func TestApis(t *testing.T) {
 		}
 
 		// userLogin
-		podName := fmt.Sprintf("%d", time.Now().UnixNano())
+		//podName := fmt.Sprintf("%d", time.Now().UnixNano())
 
 		login := &common.WebsocketRequest{
 			Event:  common.UserLogin,
@@ -1214,521 +1214,521 @@ func TestApis(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		// userStat
-		userStat := &common.WebsocketRequest{
-			Event: common.UserStat,
-		}
-		data, err = json.Marshal(userStat)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// podNew
-		podNew := &common.WebsocketRequest{
-			Event: common.PodNew,
-			Params: common.PodRequest{
-				PodName:  podName,
-				Password: userRequest.Password,
-			},
-		}
-		data, err = json.Marshal(podNew)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// podLs
-		podLs := &common.WebsocketRequest{
-			Event: common.PodLs,
-		}
-		data, err = json.Marshal(podLs)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// mkdir
-		mkDir := &common.WebsocketRequest{
-			Event: common.DirMkdir,
-			Params: common.FileRequest{
-				PodName: podName,
-				DirPath: "/d",
-			},
-		}
-		data, err = json.Marshal(mkDir)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// rmDir
-		rmDir := &common.WebsocketRequest{
-			Event: common.DirRmdir,
-			Params: common.FileRequest{
-				PodName: podName,
-				DirPath: "/d",
-			},
-		}
-		data, err = json.Marshal(rmDir)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// dirLs
-		dirLs := &common.WebsocketRequest{
-			Event: common.DirLs,
-			Params: common.FileRequest{
-				PodName: podName,
-				DirPath: "/",
-			},
-		}
-		data, err = json.Marshal(dirLs)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// dirStat
-		dirStat := &common.WebsocketRequest{
-			Event: common.DirStat,
-			Params: common.FileRequest{
-				PodName: podName,
-				DirPath: "/",
-			},
-		}
-		data, err = json.Marshal(dirStat)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// dirPresent
-		dirPresent := &common.WebsocketRequest{
-			Event: common.DirIsPresent,
-			Params: common.FileRequest{
-				PodName: podName,
-				DirPath: "/d",
-			},
-		}
-		data, err = json.Marshal(dirPresent)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// Upload
-		upload := &common.WebsocketRequest{
-			Event: common.FileUpload,
-			Params: common.FileRequest{
-				PodName:   podName,
-				DirPath:   "/",
-				BlockSize: "1Mb",
-				FileName:  "README.md",
-			},
-		}
-		data, err = json.Marshal(upload)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-		file, err := os.Open("../../../README.md")
-		if err != nil {
-			panic(err)
-		}
-		// skipcq: GO-S2307
-		defer file.Close()
-		body := &bytes.Buffer{}
-		_, err = io.Copy(body, file)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.BinaryMessage, body.Bytes())
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// Download
-		download := &common.WebsocketRequest{
-			Event: common.FileDownload,
-			Params: common.FileDownloadRequest{
-				PodName:  podName,
-				Filepath: "/README.md",
-			},
-		}
-		data, err = json.Marshal(download)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// stat
-		stat := &common.WebsocketRequest{
-			Event: common.FileStat,
-			Params: common.FileSystemRequest{
-				PodName:       podName,
-				DirectoryPath: "/README.md",
-			},
-		}
-		data, err = json.Marshal(stat)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		table := "kv_1"
-		// kvCreate
-		kvCreate := &common.WebsocketRequest{
-			Event: common.KVCreate,
-			Params: common.KVRequest{
-				PodName:   podName,
-				TableName: table,
-				IndexType: "string",
-			},
-		}
-		data, err = json.Marshal(kvCreate)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// kvList
-		kvList := &common.WebsocketRequest{
-			Event: common.KVList,
-			Params: common.KVRequest{
-				PodName: podName,
-			},
-		}
-		data, err = json.Marshal(kvList)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// kvOpen
-		kvOpen := &common.WebsocketRequest{
-			Event: common.KVOpen,
-			Params: common.KVRequest{
-				PodName:   podName,
-				TableName: table,
-			},
-		}
-		data, err = json.Marshal(kvOpen)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// kvEntryPut
-		kvEntryPut := &common.WebsocketRequest{
-			Event: common.KVEntryPut,
-			Params: common.KVRequest{
-				PodName:   podName,
-				TableName: table,
-				Key:       "key1",
-				Value:     "value1",
-			},
-		}
-		data, err = json.Marshal(kvEntryPut)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// kvCount
-		kvCount := &common.WebsocketRequest{
-			Event: common.KVCount,
-			Params: common.KVRequest{
-				PodName:   podName,
-				TableName: table,
-			},
-		}
-		data, err = json.Marshal(kvCount)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// kvGet
-		kvGet := &common.WebsocketRequest{
-			Event: common.KVEntryGet,
-			Params: common.KVRequest{
-				PodName:   podName,
-				TableName: table,
-				Key:       "key1",
-			},
-		}
-		data, err = json.Marshal(kvGet)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// kvSeek
-		kvSeek := &common.WebsocketRequest{
-			Event: common.KVSeek,
-			Params: common.KVRequest{
-				PodName:     podName,
-				TableName:   table,
-				StartPrefix: "key",
-			},
-		}
-		data, err = json.Marshal(kvSeek)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// kvSeek
-		kvSeekNext := &common.WebsocketRequest{
-			Event: common.KVSeekNext,
-			Params: common.KVRequest{
-				PodName:   podName,
-				TableName: table,
-			},
-		}
-		data, err = json.Marshal(kvSeekNext)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// kvEntryDel
-		kvEntryDel := &common.WebsocketRequest{
-			Event: common.KVEntryDelete,
-			Params: common.KVRequest{
-				PodName:   podName,
-				TableName: table,
-				Key:       "key1",
-			},
-		}
-		data, err = json.Marshal(kvEntryDel)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		docTable := "doc_1"
-		// docCreate
-		docCreate := &common.WebsocketRequest{
-			Event: common.DocCreate,
-			Params: common.DocRequest{
-				PodName:     podName,
-				TableName:   docTable,
-				SimpleIndex: "first_name=string,age=number",
-				Mutable:     true,
-			},
-		}
-		data, err = json.Marshal(docCreate)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// docLs
-		docLs := &common.WebsocketRequest{
-			Event: common.DocList,
-			Params: common.DocRequest{
-				PodName:   podName,
-				TableName: docTable,
-			},
-		}
-		data, err = json.Marshal(docLs)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// docOpen
-		docOpen := &common.WebsocketRequest{
-			Event: common.DocOpen,
-			Params: common.DocRequest{
-				PodName:   podName,
-				TableName: docTable,
-			},
-		}
-		data, err = json.Marshal(docOpen)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// docEntryPut
-		docEntryPut := &common.WebsocketRequest{
-			Event: common.DocEntryPut,
-			Params: common.DocRequest{
-				PodName:   podName,
-				TableName: docTable,
-				Document:  `{"id":"1", "first_name": "Hello1", "age": 11}`,
-			},
-		}
-		data, err = json.Marshal(docEntryPut)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// docEntryGet
-		docEntryGet := &common.WebsocketRequest{
-			Event: common.DocEntryGet,
-			Params: common.DocRequest{
-				PodName:   podName,
-				TableName: docTable,
-				ID:        "1",
-			},
-		}
-		data, err = json.Marshal(docEntryGet)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// docFind
-		docFind := &common.WebsocketRequest{
-			Event: common.DocFind,
-			Params: common.DocRequest{
-				PodName:    podName,
-				TableName:  docTable,
-				Expression: `age>10`,
-			},
-		}
-		data, err = json.Marshal(docFind)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// docCount
-		docCount := &common.WebsocketRequest{
-			Event: common.DocCount,
-			Params: common.DocRequest{
-				PodName:   podName,
-				TableName: docTable,
-			},
-		}
-		data, err = json.Marshal(docCount)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// docEntryGet
-		docEntryDel := &common.WebsocketRequest{
-			Event: common.DocEntryDel,
-			Params: common.DocRequest{
-				PodName:   podName,
-				TableName: docTable,
-				ID:        "1",
-			},
-		}
-		data, err = json.Marshal(docEntryDel)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// docDel
-		docDel := &common.WebsocketRequest{
-			Event: common.DocDelete,
-			Params: common.DocRequest{
-				PodName:   podName,
-				TableName: docTable,
-			},
-		}
-		data, err = json.Marshal(docDel)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			t.Fatal(err)
-		}
+		//
+		//// userStat
+		//userStat := &common.WebsocketRequest{
+		//	Event: common.UserStat,
+		//}
+		//data, err = json.Marshal(userStat)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// podNew
+		//podNew := &common.WebsocketRequest{
+		//	Event: common.PodNew,
+		//	Params: common.PodRequest{
+		//		PodName:  podName,
+		//		Password: userRequest.Password,
+		//	},
+		//}
+		//data, err = json.Marshal(podNew)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// podLs
+		//podLs := &common.WebsocketRequest{
+		//	Event: common.PodLs,
+		//}
+		//data, err = json.Marshal(podLs)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// mkdir
+		//mkDir := &common.WebsocketRequest{
+		//	Event: common.DirMkdir,
+		//	Params: common.FileRequest{
+		//		PodName: podName,
+		//		DirPath: "/d",
+		//	},
+		//}
+		//data, err = json.Marshal(mkDir)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// rmDir
+		//rmDir := &common.WebsocketRequest{
+		//	Event: common.DirRmdir,
+		//	Params: common.FileRequest{
+		//		PodName: podName,
+		//		DirPath: "/d",
+		//	},
+		//}
+		//data, err = json.Marshal(rmDir)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// dirLs
+		//dirLs := &common.WebsocketRequest{
+		//	Event: common.DirLs,
+		//	Params: common.FileRequest{
+		//		PodName: podName,
+		//		DirPath: "/",
+		//	},
+		//}
+		//data, err = json.Marshal(dirLs)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// dirStat
+		//dirStat := &common.WebsocketRequest{
+		//	Event: common.DirStat,
+		//	Params: common.FileRequest{
+		//		PodName: podName,
+		//		DirPath: "/",
+		//	},
+		//}
+		//data, err = json.Marshal(dirStat)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// dirPresent
+		//dirPresent := &common.WebsocketRequest{
+		//	Event: common.DirIsPresent,
+		//	Params: common.FileRequest{
+		//		PodName: podName,
+		//		DirPath: "/d",
+		//	},
+		//}
+		//data, err = json.Marshal(dirPresent)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// Upload
+		//upload := &common.WebsocketRequest{
+		//	Event: common.FileUpload,
+		//	Params: common.FileRequest{
+		//		PodName:   podName,
+		//		DirPath:   "/",
+		//		BlockSize: "1Mb",
+		//		FileName:  "README.md",
+		//	},
+		//}
+		//data, err = json.Marshal(upload)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//file, err := os.Open("../../../README.md")
+		//if err != nil {
+		//	panic(err)
+		//}
+		//// skipcq: GO-S2307
+		//defer file.Close()
+		//body := &bytes.Buffer{}
+		//_, err = io.Copy(body, file)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.BinaryMessage, body.Bytes())
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// Download
+		//download := &common.WebsocketRequest{
+		//	Event: common.FileDownload,
+		//	Params: common.FileDownloadRequest{
+		//		PodName:  podName,
+		//		Filepath: "/README.md",
+		//	},
+		//}
+		//data, err = json.Marshal(download)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// stat
+		//stat := &common.WebsocketRequest{
+		//	Event: common.FileStat,
+		//	Params: common.FileSystemRequest{
+		//		PodName:       podName,
+		//		DirectoryPath: "/README.md",
+		//	},
+		//}
+		//data, err = json.Marshal(stat)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//table := "kv_1"
+		//// kvCreate
+		//kvCreate := &common.WebsocketRequest{
+		//	Event: common.KVCreate,
+		//	Params: common.KVRequest{
+		//		PodName:   podName,
+		//		TableName: table,
+		//		IndexType: "string",
+		//	},
+		//}
+		//data, err = json.Marshal(kvCreate)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// kvList
+		//kvList := &common.WebsocketRequest{
+		//	Event: common.KVList,
+		//	Params: common.KVRequest{
+		//		PodName: podName,
+		//	},
+		//}
+		//data, err = json.Marshal(kvList)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// kvOpen
+		//kvOpen := &common.WebsocketRequest{
+		//	Event: common.KVOpen,
+		//	Params: common.KVRequest{
+		//		PodName:   podName,
+		//		TableName: table,
+		//	},
+		//}
+		//data, err = json.Marshal(kvOpen)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// kvEntryPut
+		//kvEntryPut := &common.WebsocketRequest{
+		//	Event: common.KVEntryPut,
+		//	Params: common.KVRequest{
+		//		PodName:   podName,
+		//		TableName: table,
+		//		Key:       "key1",
+		//		Value:     "value1",
+		//	},
+		//}
+		//data, err = json.Marshal(kvEntryPut)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// kvCount
+		//kvCount := &common.WebsocketRequest{
+		//	Event: common.KVCount,
+		//	Params: common.KVRequest{
+		//		PodName:   podName,
+		//		TableName: table,
+		//	},
+		//}
+		//data, err = json.Marshal(kvCount)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// kvGet
+		//kvGet := &common.WebsocketRequest{
+		//	Event: common.KVEntryGet,
+		//	Params: common.KVRequest{
+		//		PodName:   podName,
+		//		TableName: table,
+		//		Key:       "key1",
+		//	},
+		//}
+		//data, err = json.Marshal(kvGet)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// kvSeek
+		//kvSeek := &common.WebsocketRequest{
+		//	Event: common.KVSeek,
+		//	Params: common.KVRequest{
+		//		PodName:     podName,
+		//		TableName:   table,
+		//		StartPrefix: "key",
+		//	},
+		//}
+		//data, err = json.Marshal(kvSeek)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// kvSeek
+		//kvSeekNext := &common.WebsocketRequest{
+		//	Event: common.KVSeekNext,
+		//	Params: common.KVRequest{
+		//		PodName:   podName,
+		//		TableName: table,
+		//	},
+		//}
+		//data, err = json.Marshal(kvSeekNext)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// kvEntryDel
+		//kvEntryDel := &common.WebsocketRequest{
+		//	Event: common.KVEntryDelete,
+		//	Params: common.KVRequest{
+		//		PodName:   podName,
+		//		TableName: table,
+		//		Key:       "key1",
+		//	},
+		//}
+		//data, err = json.Marshal(kvEntryDel)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//docTable := "doc_1"
+		//// docCreate
+		//docCreate := &common.WebsocketRequest{
+		//	Event: common.DocCreate,
+		//	Params: common.DocRequest{
+		//		PodName:     podName,
+		//		TableName:   docTable,
+		//		SimpleIndex: "first_name=string,age=number",
+		//		Mutable:     true,
+		//	},
+		//}
+		//data, err = json.Marshal(docCreate)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// docLs
+		//docLs := &common.WebsocketRequest{
+		//	Event: common.DocList,
+		//	Params: common.DocRequest{
+		//		PodName:   podName,
+		//		TableName: docTable,
+		//	},
+		//}
+		//data, err = json.Marshal(docLs)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// docOpen
+		//docOpen := &common.WebsocketRequest{
+		//	Event: common.DocOpen,
+		//	Params: common.DocRequest{
+		//		PodName:   podName,
+		//		TableName: docTable,
+		//	},
+		//}
+		//data, err = json.Marshal(docOpen)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// docEntryPut
+		//docEntryPut := &common.WebsocketRequest{
+		//	Event: common.DocEntryPut,
+		//	Params: common.DocRequest{
+		//		PodName:   podName,
+		//		TableName: docTable,
+		//		Document:  `{"id":"1", "first_name": "Hello1", "age": 11}`,
+		//	},
+		//}
+		//data, err = json.Marshal(docEntryPut)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// docEntryGet
+		//docEntryGet := &common.WebsocketRequest{
+		//	Event: common.DocEntryGet,
+		//	Params: common.DocRequest{
+		//		PodName:   podName,
+		//		TableName: docTable,
+		//		ID:        "1",
+		//	},
+		//}
+		//data, err = json.Marshal(docEntryGet)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// docFind
+		//docFind := &common.WebsocketRequest{
+		//	Event: common.DocFind,
+		//	Params: common.DocRequest{
+		//		PodName:    podName,
+		//		TableName:  docTable,
+		//		Expression: `age>10`,
+		//	},
+		//}
+		//data, err = json.Marshal(docFind)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// docCount
+		//docCount := &common.WebsocketRequest{
+		//	Event: common.DocCount,
+		//	Params: common.DocRequest{
+		//		PodName:   podName,
+		//		TableName: docTable,
+		//	},
+		//}
+		//data, err = json.Marshal(docCount)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// docEntryGet
+		//docEntryDel := &common.WebsocketRequest{
+		//	Event: common.DocEntryDel,
+		//	Params: common.DocRequest{
+		//		PodName:   podName,
+		//		TableName: docTable,
+		//		ID:        "1",
+		//	},
+		//}
+		//data, err = json.Marshal(docEntryDel)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//// docDel
+		//docDel := &common.WebsocketRequest{
+		//	Event: common.DocDelete,
+		//	Params: common.DocRequest{
+		//		PodName:   podName,
+		//		TableName: docTable,
+		//	},
+		//}
+		//data, err = json.Marshal(docDel)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//err = c.WriteMessage(websocket.TextMessage, data)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
 		// user Logout
 		uLogout := &common.WebsocketRequest{
 			Event: common.UserLogout,

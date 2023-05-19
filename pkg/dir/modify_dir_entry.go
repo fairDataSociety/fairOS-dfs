@@ -60,7 +60,7 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 	}
 
 	topic := utils.HashString(parentDir)
-	_, err = d.fd.UpdateFeed(d.userAddress, topic, data, []byte(podPassword))
+	_, err = d.fd.UpdateFeed(d.userAddress, topic, data, []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
@@ -109,7 +109,7 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	_, err = d.fd.UpdateFeed(d.userAddress, parentHash, parentData, []byte(podPassword))
+	_, err = d.fd.UpdateFeed(d.userAddress, parentHash, parentData, []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

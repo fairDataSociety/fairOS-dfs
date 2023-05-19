@@ -270,7 +270,7 @@ func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.Rea
 
 	fd := feed.New(accountInfo, a.client, a.logger)
 	topic := utils.HashString(filePath)
-	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password))
+	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -340,7 +340,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 
 	dirNameWithPath := filepath.ToSlash(dirPathToLs)
 	topic := utils.HashString(dirNameWithPath)
-	_, data, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password))
+	_, data, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
 	if err != nil { // skipcq: TCV-001
 		if dirNameWithPath == utils.PathSeparator {
 			return nil, nil, nil
@@ -362,7 +362,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			dirTopic := utils.HashString(dirPath)
 
-			_, data, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(pod.Password))
+			_, data, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
 			if err != nil { // skipcq: TCV-001
 				return nil, nil, fmt.Errorf("list dir : %v", err)
 			}
@@ -391,7 +391,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 	for _, filePath := range files {
 		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
 
-		_, data, err := fd.GetFeedData(fileTopic, accountInfo.GetAddress(), []byte(pod.Password))
+		_, data, err := fd.GetFeedData(fileTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
 		if err != nil { // skipcq: TCV-001
 			return nil, nil, fmt.Errorf("file mtdt : %v", err)
 		}
