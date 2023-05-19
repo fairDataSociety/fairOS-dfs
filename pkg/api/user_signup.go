@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -90,6 +91,7 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	// create user
 	signUp, err := h.dfsAPI.CreateUserV2(user, password, mnemonic, "")
 	if err != nil {
+		fmt.Println(err)
 		if err == u.ErrUserAlreadyPresent {
 			h.logger.Errorf("user signup: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "user signup: " + err.Error()})

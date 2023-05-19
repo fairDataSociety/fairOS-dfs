@@ -67,7 +67,7 @@ func (d *Directory) GetInode(podPassword, dirNameWithPath string) *Inode {
 		return node
 	}
 	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword))
+	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return nil
 	}

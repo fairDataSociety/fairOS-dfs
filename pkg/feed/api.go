@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/akrylysov/pogreb"
+
 	"github.com/ethersphere/bee/pkg/crypto"
 	"github.com/ethersphere/bee/pkg/soc"
 	"github.com/ethersphere/bee/pkg/swarm"
@@ -57,6 +59,7 @@ type API struct {
 	handler     *Handler
 	accountInfo *account.Info
 	logger      logging.Logger
+	db          *pogreb.DB
 }
 
 // request is a custom type that involves in the fairOS feed creation
@@ -78,6 +81,16 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 		accountInfo: accountInfo,
 		logger:      logger,
 	}
+}
+
+// SetUpdateTracker sets the update tracker for the feed
+func (a *API) SetUpdateTracker(db *pogreb.DB) {
+	a.db = db
+}
+
+// GetUpdateTracker gets the update tracker for the feed
+func (a *API) GetUpdateTracker() *pogreb.DB {
+	return a.db
 }
 
 // CreateFeed creates a feed by constructing a single owner chunk. This chunk
@@ -156,7 +169,18 @@ func (a *API) CreateFeed(user utils.Address, topic, data, encryptionPassword []b
 		return nil, err
 	}
 	// send the updated soc chunk to bee
-	return a.handler.update(id, user.ToBytes(), signature, ch.Data())
+	addr, err := a.handler.update(id, user.ToBytes(), signature, ch.Data())
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	// update the feed update tracker
+	if a.db != nil {
+		err = a.PutFeedUpdateEpoch(append(topic, user[:20]...), req.Epoch)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+	}
+	return addr, nil
 }
 
 // CreateFeedFromTopic creates a soc with the topic as identifier
@@ -214,7 +238,7 @@ func (a *API) GetSOCFromAddress(address []byte) ([]byte, error) {
 }
 
 // GetFeedData looks up feed from swarm
-func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword []byte) ([]byte, []byte, error) {
+func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword []byte, isFeedUpdater bool) ([]byte, []byte, error) {
 	if len(topic) != TopicLength {
 		return nil, nil, ErrInvalidTopicSize
 	}
@@ -226,7 +250,16 @@ func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword [
 	// create the query from values
 	q := &Query{Feed: *f}
 	q.TimeLimit = 0
-	q.Hint = lookup.NoClue
+	if a.db != nil && !isFeedUpdater {
+		epoch, err := a.GetFeedUpdateEpoch(append(topic, user[:20]...))
+		if err != nil {
+			q.Hint = lookup.NoClue
+		} else {
+			q.Hint = epoch
+		}
+	} else {
+		q.Hint = lookup.NoClue
+	}
 	_, err := a.handler.Lookup(ctx, q)
 	if err != nil {
 		return nil, nil, err
@@ -271,7 +304,7 @@ func (a *API) GetFeedDataFromTopic(topic []byte, user utils.Address) ([]byte, []
 }
 
 // UpdateFeed updates the contents of an already created feed.
-func (a *API) UpdateFeed(user utils.Address, topic, data, encryptionPassword []byte) ([]byte, error) {
+func (a *API) UpdateFeed(user utils.Address, topic, data, encryptionPassword []byte, isFeedUpdater bool) ([]byte, error) {
 	if a.accountInfo.GetPrivateKey() == nil {
 		return nil, ErrReadOnlyFeed
 	}
@@ -359,7 +392,12 @@ retry:
 		}
 		return nil, err
 	}
-
+	if a.db != nil && !isFeedUpdater {
+		err = a.PutFeedUpdateEpoch(append(topic, user[:20]...), req.Epoch)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+	}
 	return address, nil
 }
 
@@ -369,7 +407,7 @@ func (a *API) DeleteFeed(topic []byte, user utils.Address) error {
 		return ErrReadOnlyFeed
 	}
 
-	delRef, _, err := a.GetFeedData(topic, user, nil)
+	delRef, _, err := a.GetFeedData(topic, user, nil, false)
 	if err != nil && err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 		return err
 	}
@@ -406,4 +444,38 @@ func (a *API) DeleteFeedFromTopic(topic []byte, user utils.Address) error {
 // skipcq: TCV-001
 func (a *API) IsReadOnlyFeed() bool {
 	return a.accountInfo.GetPrivateKey() == nil
+}
+
+// PutFeedUpdateEpoch
+func (a *API) PutFeedUpdateEpoch(topic []byte, epoch lookup.Epoch) error {
+	data, err := epoch.MarshalBinary()
+	if err != nil {
+		return err
+	}
+	//if err := a.db.Put(topic, data); err != nil {
+	//	return err
+	//}
+	//return a.db.Sync()
+	return a.db.Put(topic, data)
+}
+
+// GetFeedUpdateEpoch
+func (a *API) GetFeedUpdateEpoch(topic []byte) (lookup.Epoch, error) {
+	epoch := lookup.Epoch{}
+	data, err := a.db.Get(topic)
+	if err != nil {
+		return epoch, err
+	}
+	err = epoch.UnmarshalBinary(data)
+	if err != nil {
+		return epoch, err
+	}
+	return epoch, nil
+}
+
+func (a *API) Close() error {
+	if a.db != nil {
+		return a.db.Close()
+	}
+	return nil
 }

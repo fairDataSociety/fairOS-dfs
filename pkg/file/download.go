@@ -69,12 +69,15 @@ func (f *File) ReadSeeker(podFileWithPath, podPassword string) (io.ReadSeekClose
 	}
 
 	// need to change the access time for podFile if it is owned by user
+	// update accessTime in a go routine, to reduce the latency
 	if !f.fd.IsReadOnlyFeed() {
 		meta.AccessTime = time.Now().Unix()
-		err = f.updateMeta(meta, podPassword)
-		if err != nil { // skipcq: TCV-001
-			return nil, 0, err
-		}
+		go func() {
+			err = f.updateMeta(meta, podPassword)
+			if err != nil { // skipcq: TCV-001
+				f.logger.Errorf("error updating meta for file %s: %s", totalFilePath, err.Error())
+			}
+		}()
 	}
 
 	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)

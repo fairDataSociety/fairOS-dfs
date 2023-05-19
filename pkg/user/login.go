@@ -92,6 +92,11 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if err = acc.LoadUserAccountFromSeed(seed); err != nil { // skipcq: TCV-001
 		return nil, err
 	}
+	db, err := u.initFeedsTracker(utils.Address(address), userName, passPhrase, fd, client)
+	if err != nil {
+		u.logger.Errorf("error initializing feeds tracker: %v", err)
+	}
+	fd.SetUpdateTracker(db)
 
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
@@ -100,6 +105,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
+
 	ui := &Info{
 		name:       userName,
 		sessionId:  sessionId,
@@ -111,7 +117,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
 	}
-
 	// set cookie and add user to map
 	if err = u.addUserAndSessionToMap(ui); err != nil { // skipcq: TCV-001
 		return nil, err
@@ -143,10 +148,10 @@ func (u *Users) Logout(sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// remove from the user map
+	ui := u.getUserFromMap(sessionId)
 	u.removeUserFromMap(sessionId)
 
-	return nil
+	return ui.feedApi.Close()
 }
 
 // IsUserLoggedIn checks if the user is logged-in from sessionID

@@ -11,7 +11,7 @@ import (
 // Chmod does all the validation for the existence of the file and changes file mode
 func (d *Directory) Chmod(dirNameWithPath, podPassword string, mode uint32) error {
 	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword))
+	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("dir chmod: %v", err)
 	}
@@ -35,7 +35,7 @@ func (d *Directory) Chmod(dirNameWithPath, podPassword string, mode uint32) erro
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	_, err = d.fd.UpdateFeed(d.userAddress, topic, metaBytes, []byte(podPassword))
+	_, err = d.fd.UpdateFeed(d.userAddress, topic, metaBytes, []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

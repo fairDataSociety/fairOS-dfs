@@ -45,6 +45,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 			sharedPodType = true
 		}
 	}
+
 	var (
 		podPassword string
 		accountInfo *account.Info
@@ -84,6 +85,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		}
 
 		fd = feed.New(accountInfo, p.client, p.logger)
+		fd.SetUpdateTracker(p.fd.GetUpdateTracker())
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -113,7 +115,6 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 			return nil, err
 		}
 	}
-
 	return podInfo, nil
 }
 
@@ -209,6 +210,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 		}
 
 		fd = feed.New(accountInfo, p.client, p.logger)
+		fd.SetUpdateTracker(p.fd.GetUpdateTracker())
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
