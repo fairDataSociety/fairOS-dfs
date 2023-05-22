@@ -18,9 +18,12 @@ package cmd
 
 import (
 	"context"
+	"embed"
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -49,6 +52,9 @@ var (
 	postageBlockId string
 	corsOrigins    []string
 	handler        *api.Handler
+
+	//go:embed .well-known
+	staticFiles embed.FS
 )
 
 const (
@@ -241,10 +247,13 @@ func startHttpService(logger logging.Logger) *http.Server {
 			httpSwagger.URL("./swagger/doc.json"),
 		)).Methods(http.MethodGet)
 	}
-	//ui := http.FileServer(http.Dir("../../../.well-known/"))
-	//router.Handle("/.well-known", http.StripPrefix("/.well-known", ui))
 
-	router.PathPrefix("/.well-known/").Handler(http.StripPrefix("/.well-known/", http.FileServer(http.Dir("./.well-known/"))))
+	var staticFS = fs.FS(staticFiles)
+	htmlContent, err := fs.Sub(staticFS, ".well-known")
+	if err != nil {
+		log.Fatal(err)
+	}
+	router.PathPrefix("/.well-known/").Handler(http.StripPrefix("/.well-known/", http.FileServer(http.FS(htmlContent))))
 
 	router.HandleFunc("/public-file", handler.PublicPodGetFileHandler)
 	router.HandleFunc("/public-dir", handler.PublicPodGetDirHandler)
