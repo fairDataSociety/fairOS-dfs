@@ -241,6 +241,11 @@ func startHttpService(logger logging.Logger) *http.Server {
 			httpSwagger.URL("./swagger/doc.json"),
 		)).Methods(http.MethodGet)
 	}
+	//ui := http.FileServer(http.Dir("../../../.well-known/"))
+	//router.Handle("/.well-known", http.StripPrefix("/.well-known", ui))
+
+	router.PathPrefix("/.well-known/").Handler(http.StripPrefix("/.well-known/", http.FileServer(http.Dir("./.well-known/"))))
+
 	router.HandleFunc("/public-file", handler.PublicPodGetFileHandler)
 	router.HandleFunc("/public-dir", handler.PublicPodGetDirHandler)
 	router.HandleFunc("/public-kv", handler.PublicPodKVEntryGetHandler)

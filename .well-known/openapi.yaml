@@ -1,0 +1,3571 @@
+openapi: 3.0.1
+info:
+  title: FairOS-dfs server
+  description: A list of the currently provided Interfaces to interact with FairOS
+    decentralised file system(dfs), implementing user, pod, file system, key value
+    store and document store
+  contact: {}
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: v0.0.0
+servers:
+  - url: /
+paths:
+  /public-dir:
+    get:
+      tags:
+        - public
+      summary: List directory content
+      description: PublicPodGetDirHandler is the api handler to list content of a
+        directory from a public pod
+      parameters:
+        - name: sharingRef
+          in: query
+          description: pod sharing reference
+          required: true
+          schema:
+            type: string
+        - name: dirPath
+          in: query
+          description: dir location in the pod
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.ListFileResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /public-file:
+    get:
+      tags:
+        - public
+      summary: download file from a shared pod
+      description: PodReceiveInfoHandler is the api handler to download file from
+        a shared pod
+      parameters:
+        - name: sharingRef
+          in: query
+          description: pod sharing reference
+          required: true
+          schema:
+            type: string
+        - name: filePath
+          in: query
+          description: file location in the pod
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /public-kv:
+    get:
+      tags:
+        - public
+      summary: get key from public pod
+      description: PublicPodKVEntryGetHandler is the api handler to get key from key
+        value store from a public pod
+      parameters:
+        - name: sharingRef
+          in: query
+          description: pod sharing reference
+          required: true
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          description: table name
+          required: true
+          schema:
+            type: string
+        - name: key
+          in: query
+          description: key to look up
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.KVResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /public/{ref}/{file}:
+    get:
+      tags:
+        - public
+      summary: download file from a shared pod
+      description: PublicPodFilePathHandler is the api handler to download file from
+        a shared pod
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/dir/chmod:
+    post:
+      tags:
+        - dir
+      summary: change mode of a directory
+      description: DirectoryModeHandler is the api handler to change mode of a directory
+      operationId: directory-mode-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: dir mode request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.DirModeRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: dir_request
+  /v1/dir/ls:
+    get:
+      tags:
+        - dir
+      summary: List directory
+      description: DirectoryLsHandler is the api handler for listing the contents
+        of a directory.
+      operationId: directory-ls-handler
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: dirPath
+          in: query
+          description: dir path
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.ListFileResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/dir/mkdir:
+    post:
+      tags:
+        - dir
+      summary: Create directory
+      description: DirectoryMkdirHandler is the api handler to create a new directory.
+      operationId: directory-mkdir-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and dir path
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.DirRequest'
+        required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: dir_request
+  /v1/dir/present:
+    get:
+      tags:
+        - dir
+      summary: Is directory present
+      description: DirectoryPresentHandler is the api handler which says if a directory
+        is present or not
+      operationId: directory-present-handler
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: dirPath
+          in: query
+          description: dir path
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.DirPresentResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/dir/rename:
+    post:
+      tags:
+        - dir
+      summary: Rename directory
+      description: DirectoryRenameHandler is the api handler to rename a directory.
+      operationId: directory-rename-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: old name and new path
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/common.RenameRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: dir_request
+  /v1/dir/rmdir:
+    delete:
+      tags:
+        - dir
+      summary: Remove directory
+      description: DirectoryRmdirHandler is the api handler to remove a directory.
+      operationId: directory-rmdir-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and dir path
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.DirRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: dir_request
+  /v1/dir/stat:
+    get:
+      tags:
+        - dir
+      summary: Directory stat
+      description: DirectoryStatHandler is the api handler which gives the information
+        about a directory
+      operationId: directory-stat-handler
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: dirPath
+          in: query
+          description: dir path
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dir.Stats'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/doc/count:
+    post:
+      tags:
+        - doc
+      summary: Count number of document in a table
+      description: DocCountHandler is the api handler to count the number of documents
+        in a given document database
+      operationId: doc-count
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: doc table info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.DocCountRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/collection.TableKeyCount'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: doc_request
+  /v1/doc/delete:
+    delete:
+      tags:
+        - doc
+      summary: Delete a doc table
+      description: DocDeleteHandler is the api handler to delete the given document
+        database
+      operationId: doc-delete
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: doc table info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.SimpleDocRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: doc_request
+  /v1/doc/entry/del:
+    delete:
+      tags:
+        - doc
+      summary: Delete a document from a document datastore
+      description: DocEntryDelHandler is the api handler to delete a document from
+        a document datastore
+      operationId: doc-entry-del
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: string
+        - name: podName
+          in: query
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/doc/entry/get:
+    get:
+      tags:
+        - doc
+      summary: Get a document from a document datastore
+      description: DocEntryGetHandler is the api handler to get a document from a
+        document datastore
+      operationId: doc-entry-get
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          description: table name
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: query
+          description: id to search for
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: base64 encoded string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.DocGet'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/doc/entry/put:
+    post:
+      tags:
+        - doc
+      summary: Add a record in document datastore
+      description: DocEntryPutHandler is the api handler add a document in to a document
+        datastore
+      operationId: doc-entry-put
+      parameters:
+        - name: doc
+          in: query
+          schema:
+            type: string
+        - name: podName
+          in: query
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/doc/find:
+    get:
+      tags:
+        - doc
+      summary: Get rows from a given doc datastore
+      description: DocFindHandler is the api handler to select rows from a given document
+        datastore
+      operationId: doc-find
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          description: table name
+          required: true
+          schema:
+            type: string
+        - name: expr
+          in: query
+          description: 'expression to search for. allowed operators in expr are =, >,
+          =>, <=, <. eg: ''first_name=>John'', ''first_name=>J.'', ''first_name=>.'',
+          ''age=>30'', ''age<=30''. if index is string, expr supports regex. we do
+          not have support for multiple conditions in expr yet'
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: number od documents
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: array of base64 encoded string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.DocFind'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/doc/indexjson:
+    post:
+      tags:
+        - doc
+      summary: Index a json file that is present in a pod, in to the given document
+        database
+      description: DocIndexJsonHandler is the api handler to index a json file that
+        is present in a pod, in to the given document database
+      operationId: doc-indexjson
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: index request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.DocIndexRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: index_request
+  /v1/doc/loadjson:
+    post:
+      tags:
+        - doc
+      summary: Load json file from local file system
+      description: DocLoadJsonHandler is the api handler that indexes a json file
+        that is present in the local file system
+      operationId: doc-loadjson
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          description: table name
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - json
+              properties:
+                json:
+                  type: string
+                  description: json to index
+                  format: binary
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/doc/ls:
+    get:
+      tags:
+        - doc
+      summary: List all doc table
+      description: DocListHandler is the api handler which lists all the document
+        database in a pod
+      operationId: doc-ls
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.DocumentDBs'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/doc/new:
+    post:
+      tags:
+        - doc
+      summary: Create in doc table
+      description: DocCreateHandler is the api handler to create a new document database
+      operationId: doc-create
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: 'doc table info. si or simple index is a comma separated list
+          of keys and their types. eg: ''first_name=string,age=number''. valid index
+          types can be ''string'', ''number'', ''map'', ''list''. default index is
+          ''id'' and it should be of type string'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.DocRequest'
+        required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: doc_request
+  /v1/doc/open:
+    post:
+      tags:
+        - doc
+      summary: Open a doc table
+      description: DocOpenHandler is the api handler to open a document database
+      operationId: doc-open
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: doc table info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.DocRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.DocumentDBs'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: doc_request
+  /v1/file/chmod:
+    post:
+      tags:
+        - file
+      summary: chmod a file
+      description: FileModeHandler is the api handler to change mode of a file
+      operationId: file-mode-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: file mode request
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/api.FileModeRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: file_request
+  /v1/file/delete:
+    delete:
+      tags:
+        - file
+      summary: Delete a file
+      description: FileReceiveHandler is the api handler to delete a file from a given
+        pod
+      operationId: file-delete-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and file path
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.FileDeleteRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: file_delete_request
+  /v1/file/download:
+    get:
+      tags:
+        - file
+      summary: Download a file
+      description: FileDownloadHandlerGet is the api handler to download a file from
+        a given pod
+      operationId: file-download-handler
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: filePath
+          in: query
+          description: file path
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: integer
+        400:
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+    post:
+      tags:
+        - file
+      summary: Download a file
+      description: FileDownloadHandlerPost is the api handler to download a file from
+        a given pod
+      operationId: file-download-handler-post
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - filePath
+                - podName
+              properties:
+                podName:
+                  type: string
+                  description: pod name
+                filePath:
+                  type: string
+                  description: file path
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: integer
+        400:
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/file/receive:
+    get:
+      tags:
+        - file
+      summary: Receive a file
+      description: FileReceiveHandler is the api handler to receive a file in a given
+        pod
+      operationId: file-receive-handler
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: sharingRef
+          in: query
+          description: sharing reference
+          required: true
+          schema:
+            type: string
+        - name: dirPath
+          in: query
+          description: file location
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.FileSharingReference'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/file/receiveinfo:
+    get:
+      tags:
+        - file
+      summary: Receive a file info
+      description: FileReceiveInfoHandler is the api handler to receive a file info
+      operationId: file-receive-info-handler
+      parameters:
+        - name: sharingRef
+          in: query
+          description: sharing reference
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user.ReceiveFileInfo'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/file/rename:
+    post:
+      tags:
+        - file
+      summary: Info of a file
+      description: FileRenameHandler is the api handler to get the information of
+        a file
+      operationId: file-rename-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: old name & new name
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/common.RenameRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: rename_request
+  /v1/file/share:
+    post:
+      tags:
+        - file
+      summary: Share a file
+      description: FileShareHandler is the api handler to share a file from a given
+        pod
+      operationId: file-share-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: file share request params
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.FileShareRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.FileSharingReference'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: file_share_request
+  /v1/file/stat:
+    get:
+      tags:
+        - file
+      summary: Info of a file
+      description: FileStatHandler is the api handler to get the information of a
+        file
+      operationId: file-stat-handler
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: filePath
+          in: query
+          description: file path
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/file.Stats'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/file/status:
+    get:
+      tags:
+        - file
+      summary: Sync status of a file
+      description: FileStatusHandler is the api handler to check sync status of a
+        file from a given pod
+      operationId: file-status-handler
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: filePath
+          in: query
+          description: file path
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/api.StatusResponse'
+        400:
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/file/update:
+    post:
+      tags:
+        - file
+      summary: Update a file
+      description: FileUpdateHandler is the api handler to update a file from a given
+        offset
+      operationId: file-update-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - file
+                - filePath
+                - offset
+                - podName
+              properties:
+                podName:
+                  type: string
+                  description: pod name
+                filePath:
+                  type: string
+                  description: location
+                file:
+                  type: string
+                  description: file content to update
+                  format: binary
+                offset:
+                  type: string
+                  description: file offset
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/file/upload:
+    post:
+      tags:
+        - file
+      summary: Upload a file
+      description: FileUploadHandler is the api handler to upload a file from a local
+        file system to the dfs
+      operationId: file-upload-handler
+      parameters:
+        - name: fairOS-dfs-Compression
+          in: header
+          description: cookie parameter
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - blockSize
+                - dirPath
+                - files
+                - podName
+              properties:
+                podName:
+                  type: string
+                  description: pod name
+                dirPath:
+                  type: string
+                  description: location
+                blockSize:
+                  type: string
+                  description: block size to break the file
+                files:
+                  type: string
+                  description: file to upload
+                  format: binary
+                overwrite:
+                  type: string
+                  description: overwrite the file if already exists
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/kv/count:
+    post:
+      tags:
+        - kv
+      summary: Count rows in a key value table
+      description: KVCountHandler is the api handler to count the number of rows in
+        a key value table
+      operationId: kv-count
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: kv table request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.KVTableRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/collection.TableKeyCount'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: kv_table_request
+  /v1/kv/delete:
+    delete:
+      tags:
+        - kv
+      summary: Delete a key value table
+      description: KVDeleteHandler is the api handler to delete a key value table
+      operationId: kv-delete
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: kv table request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.KVTableRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: kv_table_request
+  /v1/kv/entry/del:
+    delete:
+      tags:
+        - kv
+      summary: Delete key-value from the kv table
+      description: KVDelHandler is the api handler to delete a key and value from
+        the kv table
+      operationId: kv-del
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: delete request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.KVEntryDeleteRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.KVResponseRaw'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: delete_request
+  /v1/kv/entry/get:
+    get:
+      tags:
+        - kv
+      summary: get value from the kv table
+      description: KVGetHandler is the api handler to get a value from the kv table
+      operationId: kv-get
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          description: table name
+          required: true
+          schema:
+            type: string
+        - name: key
+          in: query
+          description: key
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.KVResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/kv/entry/get-data:
+    get:
+      tags:
+        - kv
+      summary: get value from the kv table
+      description: KVGetDataHandler is the api handler to get raw value from the kv
+        table
+      operationId: kv-get-data
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          description: table name
+          required: true
+          schema:
+            type: string
+        - name: key
+          in: query
+          description: key
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: format of the value
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.KVResponseRaw'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/kv/entry/present:
+    get:
+      tags:
+        - kv
+      summary: Check if a value exists in the kv table
+      description: KVPresentHandler is the api handler to check if a value exists
+        in the kv table
+      operationId: kv-present-handler
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          description: table name
+          required: true
+          schema:
+            type: string
+        - name: key
+          in: query
+          description: key
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/kv/entry/put:
+    post:
+      tags:
+        - kv
+      summary: put key and value in the kv table
+      description: KVPutHandler is the api handler to put a key-value  in the kv table
+      operationId: kv-put
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: kv entry
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.KVEntryRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: kv_entry
+  /v1/kv/export:
+    post:
+      tags:
+        - kv
+      summary: Export from a particular key with the given prefix
+      description: KVExportHandler is the api handler to export from a particular
+        key with the given prefix
+      operationId: kv-export
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: kv export info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.KVExportRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties: {}
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: export_request
+  /v1/kv/loadcsv:
+    post:
+      tags:
+        - kv
+      summary: Upload a csv file in kv table
+      description: KVLoadCSVHandler is the api handler to load a csv file as key and
+        value in a KV table
+      operationId: kv-loadcsv
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - csv
+                - podName
+                - tableName
+              properties:
+                podName:
+                  type: string
+                  description: pod name
+                tableName:
+                  type: string
+                  description: table name
+                memory:
+                  type: string
+                  description: keep in memory
+                csv:
+                  type: string
+                  description: file to upload
+                  format: binary
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/kv/ls:
+    get:
+      tags:
+        - kv
+      summary: List all key value tables
+      description: KVListHandler is the api handler to list all the key value tables
+        in a pod
+      operationId: kv-ls
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.Collections'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/kv/new:
+    post:
+      tags:
+        - kv
+      summary: Create a key value table
+      description: KVCreateHandler is the api handler to create a key value table
+      operationId: kv-create-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: kv table request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.KVTableRequest'
+        required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: kv_table_request
+  /v1/kv/open:
+    post:
+      tags:
+        - kv
+      summary: Open a key value table
+      description: KVOpenHandler is the api handler to open a key value table
+      operationId: kv-open
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: kv table request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.KVTableRequest'
+        required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: kv_table_request
+  /v1/kv/seek:
+    post:
+      tags:
+        - kv
+      summary: Seek in kv table
+      description: KVSeekHandler is the api handler to seek to a particular key with
+        the given prefix
+      operationId: kv-seek
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: kv seek info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.KVExportRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: export_request
+  /v1/kv/seek/next:
+    post:
+      tags:
+        - kv
+      summary: Get next value from last seek in kv table
+      description: KVGetNextHandler is the api handler to get the key and value from
+        the current seek position
+      operationId: kv-get-next
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          description: table name
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.KVResponse'
+        204:
+          description: No Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/pod/close:
+    post:
+      tags:
+        - pod
+      summary: Close pod
+      description: PodCloseHandler is the api handler to close an open pod
+      operationId: pod-close-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.PodNameRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/pod/delete:
+    delete:
+      tags:
+        - pod
+      summary: Delete pod
+      description: PodDeleteHandler is the api handler to delete a pod
+      operationId: pod-delete-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and user password
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.PodNameRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/pod/fork:
+    post:
+      tags:
+        - pod
+      summary: Fork a pod
+      description: PodForkHandler is the api handler to fork a pod
+      operationId: pod-fork-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and user password
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.PodForkRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/pod/fork-from-reference:
+    post:
+      tags:
+        - pod
+      summary: Fork a pod from sharing reference
+      description: PodForkFromReferenceHandler is the api handler to fork a pod from
+        a given sharing reference
+      operationId: pod-fork-from-reference-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and user password
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.PodForkFromReferenceRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/pod/ls:
+    get:
+      tags:
+        - pod
+      summary: List pods
+      description: PodListHandler is the api handler to list all pods
+      operationId: pod-list-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.PodListResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/pod/new:
+    post:
+      tags:
+        - pod
+      summary: Create pod
+      description: PodCreateHandler is the api handler to create a new pod
+      operationId: pod-create-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and user password
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.PodNameRequest'
+        required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/pod/open:
+    post:
+      tags:
+        - pod
+      summary: Open pod
+      description: PodOpenHandler is the api handler to open pod
+      operationId: pod-open-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and user password
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.PodNameRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/pod/open-async:
+    post:
+      tags:
+        - pod
+      summary: Open pod
+      description: PodOpenAsyncHandler is the api handler to open pod asynchronously
+      operationId: pod-open-async-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and user password
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.PodNameRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/pod/present:
+    get:
+      tags:
+        - pod
+      summary: Is pod present
+      description: PodPresentHandler is the api handler to check if a pod is present
+      operationId: pod-present
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/pod/receive:
+    get:
+      tags:
+        - pod
+      summary: Receive shared pod
+      description: PodReceiveHandler is the api handler to receive shared pod from
+        shared reference
+      operationId: pod-receive-handler
+      parameters:
+        - name: sharingRef
+          in: query
+          description: pod sharing reference
+          required: true
+          schema:
+            type: string
+        - name: sharedPodName
+          in: query
+          description: pod name to be saved as
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/pod/receiveinfo:
+    get:
+      tags:
+        - pod
+      summary: Receive shared pod info
+      description: PodReceiveInfoHandler is the api handler to receive shared pod
+        info from shared reference
+      operationId: pod-receive-info-handler
+      parameters:
+        - name: sharingRef
+          in: query
+          description: pod sharing reference
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/pod.ShareInfo'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/pod/share:
+    post:
+      tags:
+        - pod
+      summary: Share pod
+      description: PodShareHandler is the api handler to share a pod to the public
+      operationId: pod-share-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name and user password
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/common.PodShareRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.PodSharingReference'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/pod/stat:
+    get:
+      tags:
+        - pod
+      summary: Stats for pod
+      description: PodStatHandler is the api handler get information about a pod
+      operationId: pod-stat-handler
+      parameters:
+        - name: podName
+          in: query
+          description: pod name
+          required: true
+          schema:
+            type: string
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.PodStatResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/pod/sync:
+    post:
+      tags:
+        - pod
+      summary: Sync pod
+      description: PodSyncHandler is the api handler to sync a pod's content
+      operationId: pod-sync-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.PodNameRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/pod/sync-async:
+    post:
+      tags:
+        - pod
+      summary: Sync pod asynchronously
+      description: PodSyncAsyncHandler is the api handler to sync a pod's content
+      operationId: pod-sync-async-handler
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: pod name
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/api.PodNameRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: pod_request
+  /v1/user/delete:
+    post:
+      tags:
+        - user
+      deprecated: true
+  /v1/user/export:
+    post:
+      tags:
+        - user
+      deprecated: true
+  /v1/user/isloggedin:
+    get:
+      tags:
+        - user
+      summary: Is user logged-in
+      description: Check if the given user is logged-in
+      operationId: user-isloggedin
+      parameters:
+        - name: userName
+          in: query
+          description: username
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.LoginStatus'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/user/login:
+    post:
+      tags:
+        - user
+      deprecated: true
+  /v1/user/logout:
+    post:
+      tags:
+        - user
+      summary: Logout
+      description: logs-out user
+      operationId: user-logout
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v1/user/present:
+    get:
+      tags:
+        - user
+      deprecated: true
+  /v1/user/signup:
+    post:
+      tags:
+        - user
+      deprecated: true
+  /v1/user/stat:
+    get:
+      tags:
+        - user
+      summary: User stat
+      description: show user stats
+      operationId: user-stat
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/user.Stat'
+        400:
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v2/user/delete:
+    delete:
+      tags:
+        - user
+      summary: Delete user for ENS based authentication
+      description: deletes user info from swarm
+      operationId: user-delete-v2
+      parameters:
+        - name: Cookie
+          in: header
+          description: cookie parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: user delete request
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/api.UserDeleteRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: UserDeleteRequest
+  /v2/user/login:
+    post:
+      tags:
+        - user
+      summary: Login User
+      description: login user with the new ENS based authentication
+      operationId: user-login-v2
+      requestBody:
+        description: username
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/common.UserLoginRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+          headers:
+            Set-Cookie:
+              description: fairos-dfs session
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.UserLoginResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: user_request
+  /v2/user/present:
+    get:
+      tags:
+        - user
+      summary: Check if user is present
+      description: checks if the new user is present in the new ENS based authentication
+      operationId: user-present-v2
+      parameters:
+        - name: userName
+          in: query
+          description: username
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.PresentResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+  /v2/user/signup:
+    post:
+      tags:
+        - user
+      summary: Register New User
+      description: registers new user with the new ENS based authentication
+      operationId: user-signup-v2
+      requestBody:
+        description: username
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/common.UserSignupRequest'
+        required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.UserSignupResponse'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+        402:
+          description: Payment Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.UserSignupResponse'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api.response'
+      x-codegen-request-body-name: user_request
+components:
+  schemas:
+    api.Collection:
+      type: object
+      properties:
+        indexes:
+          type: array
+          items:
+            type: string
+        tableName:
+          type: string
+        type:
+          type: string
+    api.Collections:
+      type: object
+      properties:
+        tables:
+          type: array
+          items:
+            $ref: '#/components/schemas/api.Collection'
+    api.DirModeRequest:
+      type: object
+      properties:
+        dirPath:
+          type: string
+        mode:
+          type: string
+        podName:
+          type: string
+    api.DirPresentResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        present:
+          type: boolean
+    api.DirRequest:
+      type: object
+      properties:
+        dirPath:
+          type: string
+        podName:
+          type: string
+    api.DocCountRequest:
+      type: object
+      properties:
+        expr:
+          type: string
+        mutable:
+          type: boolean
+        podName:
+          type: string
+        si:
+          type: string
+        tableName:
+          type: string
+    api.DocFind:
+      type: object
+      properties:
+        docs:
+          type: array
+          items:
+            type: string
+    api.DocGet:
+      type: object
+      properties:
+        doc:
+          type: string
+    api.DocIndexRequest:
+      type: object
+      properties:
+        fileName:
+          type: string
+        podName:
+          type: string
+        tableName:
+          type: string
+    api.DocRequest:
+      type: object
+      properties:
+        mutable:
+          type: boolean
+        podName:
+          type: string
+        si:
+          type: string
+        tableName:
+          type: string
+    api.DocumentDBs:
+      type: object
+      properties:
+        tables:
+          type: array
+          items:
+            $ref: '#/components/schemas/api.documentDB'
+    api.FileDeleteRequest:
+      type: object
+      properties:
+        filePath:
+          type: string
+        podName:
+          type: string
+    api.FileModeRequest:
+      type: object
+      properties:
+        filePath:
+          type: string
+        mode:
+          type: string
+        podName:
+          type: string
+    api.FileShareRequest:
+      type: object
+      properties:
+        destUser:
+          type: string
+        filePath:
+          type: string
+        podName:
+          type: string
+    api.FileSharingReference:
+      type: object
+      properties:
+        fileSharingReference:
+          type: string
+    api.KVEntryDeleteRequest:
+      type: object
+      properties:
+        key:
+          type: string
+        podName:
+          type: string
+        tableName:
+          type: string
+    api.KVEntryRequest:
+      type: object
+      properties:
+        key:
+          type: string
+        podName:
+          type: string
+        tableName:
+          type: string
+        value:
+          type: string
+    api.KVExportRequest:
+      type: object
+      properties:
+        endPrefix:
+          type: string
+        limit:
+          type: string
+        podName:
+          type: string
+        startPrefix:
+          type: string
+        tableName:
+          type: string
+    api.KVResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: string
+        values:
+          type: array
+          items:
+            type: integer
+    api.KVResponseRaw:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: string
+        values:
+          type: string
+    api.KVTableRequest:
+      type: object
+      properties:
+        indexType:
+          type: string
+        podName:
+          type: string
+        tableName:
+          type: string
+    api.ListFileResponse:
+      type: object
+      properties:
+        dirs:
+          type: array
+          items:
+            $ref: '#/components/schemas/dir.Entry'
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/file.Entry'
+    api.LoginStatus:
+      type: object
+      properties:
+        loggedin:
+          type: boolean
+    api.PodForkFromReferenceRequest:
+      type: object
+      properties:
+        forkName:
+          type: string
+        podSharingReference:
+          type: string
+    api.PodForkRequest:
+      type: object
+      properties:
+        forkName:
+          type: string
+        podName:
+          type: string
+    api.PodListResponse:
+      type: object
+      properties:
+        pods:
+          type: array
+          items:
+            type: string
+        sharedPods:
+          type: array
+          items:
+            type: string
+    api.PodNameRequest:
+      type: object
+      properties:
+        podName:
+          type: string
+    api.PodSharingReference:
+      type: object
+      properties:
+        podSharingReference:
+          type: string
+    api.PodStatResponse:
+      type: object
+      properties:
+        address:
+          type: string
+        podName:
+          type: string
+    api.PresentResponse:
+      type: object
+      properties:
+        present:
+          type: boolean
+    api.SimpleDocRequest:
+      type: object
+      properties:
+        podName:
+          type: string
+        tableName:
+          type: string
+    api.StatusResponse:
+      type: object
+      properties:
+        processed:
+          type: integer
+        synced:
+          type: integer
+        total:
+          type: integer
+    api.UserDeleteRequest:
+      type: object
+      properties:
+        password:
+          type: string
+    api.UserLoginResponse:
+      type: object
+      properties:
+        address:
+          type: string
+        message:
+          type: string
+        nameHash:
+          type: string
+        publicKey:
+          type: string
+    api.UserSignupResponse:
+      type: object
+      properties:
+        address:
+          type: string
+        message:
+          type: string
+        mnemonic:
+          type: string
+        nameHash:
+          type: string
+        publicKey:
+          type: string
+    api.documentDB:
+      type: object
+      properties:
+        indexes:
+          type: array
+          items:
+            $ref: '#/components/schemas/collection.SIndex'
+        tableName:
+          type: string
+        type:
+          type: string
+    api.response:
+      type: object
+      properties:
+        message:
+          type: string
+    collection.SIndex:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: integer
+    collection.TableKeyCount:
+      type: object
+      properties:
+        count:
+          type: integer
+        tableName:
+          type: string
+    common.PodShareRequest:
+      type: object
+      properties:
+        podName:
+          type: string
+        sharedPodName:
+          type: string
+    common.RenameRequest:
+      type: object
+      properties:
+        newPath:
+          type: string
+        oldPath:
+          type: string
+        podName:
+          type: string
+    common.UserLoginRequest:
+      type: object
+      properties:
+        password:
+          type: string
+        userName:
+          type: string
+    common.UserSignupRequest:
+      type: object
+      properties:
+        mnemonic:
+          type: string
+        password:
+          type: string
+        userName:
+          type: string
+    dir.Entry:
+      type: object
+      properties:
+        accessTime:
+          type: string
+        blockSize:
+          type: string
+        contentType:
+          type: string
+        creationTime:
+          type: string
+        mode:
+          type: integer
+        modificationTime:
+          type: string
+        name:
+          type: string
+        size:
+          type: string
+    dir.Stats:
+      type: object
+      properties:
+        accessTime:
+          type: string
+        creationTime:
+          type: string
+        dirName:
+          type: string
+        dirPath:
+          type: string
+        mode:
+          type: integer
+        modificationTime:
+          type: string
+        noOfDirectories:
+          type: string
+        noOfFiles:
+          type: string
+        podName:
+          type: string
+    file.Entry:
+      type: object
+      properties:
+        accessTime:
+          type: string
+        blockSize:
+          type: string
+        contentType:
+          type: string
+        creationTime:
+          type: string
+        mode:
+          type: integer
+        modificationTime:
+          type: string
+        name:
+          type: string
+        size:
+          type: string
+    file.Stats:
+      type: object
+      properties:
+        accessTime:
+          type: string
+        blockSize:
+          type: string
+        compression:
+          type: string
+        contentType:
+          type: string
+        creationTime:
+          type: string
+        fileName:
+          type: string
+        filePath:
+          type: string
+        fileSize:
+          type: string
+        mode:
+          type: integer
+        modificationTime:
+          type: string
+        podName:
+          type: string
+    pod.ShareInfo:
+      type: object
+      properties:
+        password:
+          type: string
+        podAddress:
+          type: string
+        podName:
+          type: string
+        userAddress:
+          type: string
+    user.ReceiveFileInfo:
+      type: object
+      properties:
+        blockSize:
+          type: string
+        compression:
+          type: string
+        contentType:
+          type: string
+        destAddress:
+          type: string
+        name:
+          type: string
+        numberOfBlocks:
+          type: string
+        sharedTime:
+          type: string
+        size:
+          type: string
+        sourceAddress:
+          type: string
+    user.Stat:
+      type: object
+      properties:
+        address:
+          type: string
+        userName:
+          type: string
