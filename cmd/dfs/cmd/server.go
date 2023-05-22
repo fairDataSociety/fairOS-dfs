@@ -129,7 +129,7 @@ can consume it.`,
 			fmt.Println("\nens is not available for mainnet yet")
 			return fmt.Errorf("ens is not available for mainnet yet")
 		case "testnet":
-			ensConfig, subscriptionConfig = contracts.TestnetConfig()
+			ensConfig, subscriptionConfig = contracts.TestnetConfig(contracts.Sepolia)
 		case "play":
 			ensConfig, subscriptionConfig = contracts.PlayConfig()
 		default:
@@ -241,6 +241,11 @@ func startHttpService(logger logging.Logger) *http.Server {
 			httpSwagger.URL("./swagger/doc.json"),
 		)).Methods(http.MethodGet)
 	}
+	//ui := http.FileServer(http.Dir("../../../.well-known/"))
+	//router.Handle("/.well-known", http.StripPrefix("/.well-known", ui))
+
+	router.PathPrefix("/.well-known/").Handler(http.StripPrefix("/.well-known/", http.FileServer(http.Dir("./.well-known/"))))
+
 	router.HandleFunc("/public-file", handler.PublicPodGetFileHandler)
 	router.HandleFunc("/public-dir", handler.PublicPodGetDirHandler)
 	router.HandleFunc("/public-kv", handler.PublicPodKVEntryGetHandler)

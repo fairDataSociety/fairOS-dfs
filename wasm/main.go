@@ -134,7 +134,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 		if network == "play" {
 			config, _ = contracts.PlayConfig()
 		} else {
-			config, _ = contracts.TestnetConfig()
+			config, _ = contracts.TestnetConfig(contracts.Sepolia)
 		}
 		config.ProviderBackend = rpc
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
@@ -235,7 +235,8 @@ func login(_ js.Value, funcArgs []js.Value) interface{} {
 			ui, nameHash := loginResp.UserInfo, loginResp.NameHash
 			object := js.Global().Get("Object").New()
 			object.Set("user", ui.GetUserName())
-			object.Set("address", ui.GetAccount().GetUserAccountInfo().GetAddress().Hex())
+			addr := ui.GetAccount().GetUserAccountInfo().GetAddress()
+			object.Set("address", addr.Hex())
 			object.Set("nameHash", nameHash)
 			object.Set("sessionId", ui.GetSessionId())
 
@@ -270,7 +271,8 @@ func walletLogin(_ js.Value, funcArgs []js.Value) interface{} {
 
 			object := js.Global().Get("Object").New()
 			object.Set("user", ui.GetUserName())
-			object.Set("address", ui.GetAccount().GetUserAccountInfo().GetAddress().Hex())
+			addr := ui.GetAccount().GetUserAccountInfo().GetAddress()
+			object.Set("address", addr.Hex())
 			object.Set("nameHash", nameHash)
 			object.Set("sessionId", ui.GetSessionId())
 			resolve.Invoke(object)
