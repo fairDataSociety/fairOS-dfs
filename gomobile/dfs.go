@@ -51,7 +51,7 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 	case "play":
 		ensConfig, _ = contracts.PlayConfig()
 	case "testnet":
-		ensConfig, _ = contracts.TestnetConfig()
+		ensConfig, _ = contracts.TestnetConfig(contracts.Sepolia)
 	case "mainnet":
 		return fmt.Errorf("not supported yet")
 	default:
