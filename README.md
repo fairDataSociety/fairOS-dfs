@@ -140,7 +140,7 @@ Flags:
       --network string          network to use for authentication (mainnet/testnet/play)
       --postageBlockId string   the postage block used to store the data in bee
       --pprofPort string        pprof port (default ":9091")
-      --rpc string              rpc endpoint for ens network. xDai for mainnet | Goerli for testnet | local fdp-play rpc endpoint for play
+      --rpc string              rpc endpoint for ens network. xDai for mainnet | Sepolia for testnet | local fdp-play rpc endpoint for play
       --swag                    should run swagger-ui
 Global Flags:
       --beeApi string      full bee api endpoint (default "localhost:1633")
@@ -187,7 +187,7 @@ $ dfs server --swag
 This should run the dfs server along with swagger-ui, available at `http://localhost:9090/swagger/index.html` assuming 
 server is running on default `9090` port on your localhost
 
-### Running fairOS on goerli testnet and swarm mainnet
+### Running fairOS on sepolia testnet and swarm mainnet
 
 we need to set `network` configuration in the config file as testnet and bee configuration should point to a bee running
 on mainnet 
