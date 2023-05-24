@@ -39,6 +39,7 @@ type documentDB struct {
 //
 //	@Summary      List all doc table
 //	@Description  DocListHandler is the api handler which lists all the document database in a pod
+//	@ID		      doc-ls
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json

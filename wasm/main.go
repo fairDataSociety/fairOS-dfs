@@ -134,7 +134,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 		if network == "play" {
 			config, _ = contracts.PlayConfig()
 		} else {
-			config, _ = contracts.TestnetConfig()
+			config, _ = contracts.TestnetConfig(contracts.Sepolia)
 		}
 		config.ProviderBackend = rpc
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
@@ -142,6 +142,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 		go func() {
 			var err error
 			api, err = dfs.NewDfsAPI(
+				ctx,
 				beeEndpoint,
 				stampId,
 				config,
@@ -226,14 +227,16 @@ func login(_ js.Value, funcArgs []js.Value) interface{} {
 		password := funcArgs[1].String()
 
 		go func() {
-			ui, nameHash, _, err := api.LoginUserV2(username, password, "")
+			loginResp, err := api.LoginUserV2(username, password, "")
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("Failed to create user : %s", err.Error()))
 				return
 			}
+			ui, nameHash := loginResp.UserInfo, loginResp.NameHash
 			object := js.Global().Get("Object").New()
 			object.Set("user", ui.GetUserName())
-			object.Set("address", ui.GetAccount().GetUserAccountInfo().GetAddress().Hex())
+			addr := ui.GetAccount().GetUserAccountInfo().GetAddress()
+			object.Set("address", addr.Hex())
 			object.Set("nameHash", nameHash)
 			object.Set("sessionId", ui.GetSessionId())
 
@@ -268,7 +271,8 @@ func walletLogin(_ js.Value, funcArgs []js.Value) interface{} {
 
 			object := js.Global().Get("Object").New()
 			object.Set("user", ui.GetUserName())
-			object.Set("address", ui.GetAccount().GetUserAccountInfo().GetAddress().Hex())
+			addr := ui.GetAccount().GetUserAccountInfo().GetAddress()
+			object.Set("address", addr.Hex())
 			object.Set("nameHash", nameHash)
 			object.Set("sessionId", ui.GetSessionId())
 			resolve.Invoke(object)
@@ -708,7 +712,7 @@ func podReceive(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("podReceive failed : %s", err.Error()))
 				return
 			}
-			resolve.Invoke(fmt.Sprintf("public pod \"%s\", added as shared pod", pi.GetPodName()))
+			resolve.Invoke(fmt.Sprintf("public pod %q, added as shared pod", pi.GetPodName()))
 		}()
 		return nil
 	})

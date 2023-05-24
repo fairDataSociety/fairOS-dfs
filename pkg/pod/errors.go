@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    http:// www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,28 +19,28 @@ package pod
 import "errors"
 
 var (
-	//ErrBlankPodName
+	// ErrBlankPodName is returned when a pod name is empty.
 	ErrBlankPodName = errors.New("pod name cannot be blank")
-	//ErrInvalidPodName
+	// ErrInvalidPodName is returned when a pod name is invalid.
 	ErrInvalidPodName = errors.New("pod does not exist")
-	//ErrTooLongPodName
+	// ErrTooLongPodName is returned when a pod name is too long.
 	ErrTooLongPodName = errors.New("pod name too long")
-	//ErrPodAlreadyExists
+	// ErrPodAlreadyExists is returned when a pod already exists.
 	ErrPodAlreadyExists = errors.New("pod already exists")
-	//ErrForkAlreadyExists
+	// ErrForkAlreadyExists is returned when a pod fork already exists.
 	ErrForkAlreadyExists = errors.New("pod with fork name already exists")
-	//ErrMaxPodsReached
+	// ErrMaxPodsReached is returned when the maximum number of pods is reached.
 	ErrMaxPodsReached = errors.New("max number of pods reached")
-	//ErrPodNotOpened
+	// ErrPodNotOpened is returned when a pod is not opened.
 	ErrPodNotOpened = errors.New("pod not opened")
-	//ErrInvalidDirectory
+	// ErrInvalidDirectory is returned when a directory is invalid.
 	ErrInvalidDirectory = errors.New("invalid directory name")
-	//ErrTooLongDirectoryName
+	// ErrTooLongDirectoryName is returned when a directory name is too long.
 	ErrTooLongDirectoryName = errors.New("directory name too long")
-	//ErrInvalidFile
+	// ErrInvalidFile is returned when a file is invalid.
 	ErrInvalidFile = errors.New("file does not exist")
-	//ErrMaximumPodLimit
+	// ErrMaximumPodLimit is returned when the maximum number of pods is reached.
 	ErrMaximumPodLimit = errors.New("maximum number of pods has reached")
-	//ErrBlankPodSharingReference
+	// ErrBlankPodSharingReference is returned when a pod sharing reference is blank.
 	ErrBlankPodSharingReference = errors.New("pod sharing reference cannot be blank")
 )

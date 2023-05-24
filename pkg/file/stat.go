@@ -20,7 +20,7 @@ import (
 	"strconv"
 )
 
-// Stats
+// Stats is the structure of the file stats
 type Stats struct {
 	PodName          string `json:"podName"`
 	Mode             uint32 `json:"mode"`

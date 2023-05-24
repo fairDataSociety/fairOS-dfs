@@ -37,7 +37,7 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-// Handler
+// Handler is the main object which handles all feed related functionality
 type Handler struct {
 	accountInfo *account.Info
 	client      blockstore.Client

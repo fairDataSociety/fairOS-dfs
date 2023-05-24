@@ -134,12 +134,12 @@ func (m *BeeClient) DownloadBlob(address []byte) ([]byte, int, error) {
 }
 
 // UploadBzz downloads  data to bzz api from the Swarm network.
-func (m *BeeClient) UploadBzz(_ []byte, _ string) ([]byte, error) {
+func (*BeeClient) UploadBzz(_ []byte, _ string) ([]byte, error) {
 	return nil, nil
 }
 
 // DownloadBzz downloads bzz data from the Swarm network.
-func (m *BeeClient) DownloadBzz(_ []byte) ([]byte, int, error) {
+func (*BeeClient) DownloadBzz(_ []byte) ([]byte, int, error) {
 	return nil, 0, nil
 }
 
@@ -154,7 +154,7 @@ func (m *BeeClient) DeleteReference(address []byte) error {
 	return errors.New("chunk not found")
 }
 
-// CreateTag
+// CreateTag creates a tag
 func (m *BeeClient) CreateTag(_ []byte) (uint32, error) {
 	tag := time.Now().UnixNano()
 	m.storerMu.Lock()
@@ -163,7 +163,7 @@ func (m *BeeClient) CreateTag(_ []byte) (uint32, error) {
 	return uint32(tag), nil
 }
 
-// GetTag
+// GetTag returns the tag
 func (m *BeeClient) GetTag(tag uint32) (int64, int64, int64, error) {
 	m.storerMu.Lock()
 	defer m.storerMu.Unlock()

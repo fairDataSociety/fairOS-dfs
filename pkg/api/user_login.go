@@ -28,7 +28,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserLoginResponse
+// UserLoginResponse is the json response sent to login user
 type UserLoginResponse struct {
 	Address   string `json:"address"`
 	NameHash  string `json:"nameHash,omitempty"`
@@ -38,18 +38,19 @@ type UserLoginResponse struct {
 
 // UserLoginV2Handler godoc
 //
-//	@Summary      Login User
-//	@Description  login user with the new ENS based authentication
-//	@Tags         user
-//	@Accept       json
-//	@Produce      json
-//	@Param	      user_request body common.UserLoginRequest true "username"
-//	@Success      200  {object}  UserLoginResponse
-//	@Failure      400  {object}  response
-//	@Failure      404  {object}  response
-//	@Failure      500  {object}  response
-//	@Header	      200  {string}  Set-Cookie "fairos-dfs session"
-//	@Router       /v2/user/login [post]
+//		@Summary      Login User
+//		@Description  login user with the new ENS based authentication
+//	 @ID  	   user-login-v2
+//		@Tags         user
+//		@Accept       json
+//		@Produce      json
+//		@Param	      user_request body common.UserLoginRequest true "username"
+//		@Success      200  {object}  UserLoginResponse
+//		@Failure      400  {object}  response
+//		@Failure      404  {object}  response
+//		@Failure      500  {object}  response
+//		@Header	      200  {string}  Set-Cookie "fairos-dfs session"
+//		@Router       /v2/user/login [post]
 func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -81,7 +82,7 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// login user
-	ui, nameHash, publicKey, err := h.dfsAPI.LoginUserV2(user, password, "")
+	loginResp, err := h.dfsAPI.LoginUserV2(user, password, "")
 	if err != nil {
 		if errors.Is(err, u.ErrUserNameNotFound) {
 			h.logger.Errorf("user login: %v", err)
@@ -99,17 +100,17 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
 		return
 	}
-	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
+	err = cookie.SetSession(loginResp.UserInfo.GetSessionId(), w, h.cookieDomain)
 	if err != nil {
 		h.logger.Errorf("user login: %v", err)
 		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
 		return
 	}
-
+	addr := loginResp.UserInfo.GetAccount().GetUserAccountInfo().GetAddress()
 	jsonhttp.OK(w, &UserSignupResponse{
-		Address:   ui.GetAccount().GetUserAccountInfo().GetAddress().Hex(),
-		NameHash:  "0x" + nameHash,
-		PublicKey: publicKey,
+		Address:   addr.Hex(),
+		NameHash:  "0x" + loginResp.NameHash,
+		PublicKey: loginResp.PublicKey,
 		Message:   "user logged-in successfully",
 	})
 }

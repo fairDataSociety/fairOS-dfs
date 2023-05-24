@@ -161,7 +161,7 @@ func (lt *lsTask) Execute(context.Context) error {
 	}
 	entry := Entry{
 		Name:             dirInode.Meta.Name,
-		ContentType:      MineTypeDirectory, // per RFC2425
+		ContentType:      MimeTypeDirectory, // per RFC2425
 		CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
 		AccessTime:       strconv.FormatInt(dirInode.Meta.AccessTime, 10),
 		ModificationTime: strconv.FormatInt(dirInode.Meta.ModificationTime, 10),

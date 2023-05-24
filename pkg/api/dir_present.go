@@ -33,6 +33,7 @@ type DirPresentResponse struct {
 //
 //	@Summary      Is directory present
 //	@Description  DirectoryPresentHandler is the api handler which says if a directory is present or not
+//	@ID		      directory-present-handler
 //	@Tags         dir
 //	@Produce      json
 //	@Param	      podName query string true "pod name"

@@ -29,6 +29,7 @@ import (
 //
 //	@Summary      Update a file
 //	@Description  FileUpdateHandler is the api handler to update a file from a given offset
+//	@ID		      file-update-handler
 //	@Tags         file
 //	@Accept       mpfd
 //	@Produce      json
@@ -68,7 +69,7 @@ func (h *Handler) FileUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "file update: \"filePath\" argument missing"})
 		return
 	}
-	offset, err := strconv.Atoi(r.FormValue("offset"))
+	offset, err := strconv.ParseUint(r.FormValue("offset"), 10, 64)
 	if err != nil {
 		h.logger.Errorf("file update: \"offset\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "file update: \"offset\" argument missing or wrong"})
@@ -89,13 +90,8 @@ func (h *Handler) FileUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	//_, err = file.Seek(int64(offset), io.SeekStart)
-	//if err != nil {
-	//	h.logger.Errorf("file update: seek failed: %s", err.Error())
-	//	jsonhttp.BadRequest(w, &response{Message: "file update: seek failed: " + err.Error()})
-	//	return
-	//}
-	_, err = h.dfsAPI.WriteAtFile(podName, fileNameWithPath, sessionId, file, uint64(offset), false)
+
+	_, err = h.dfsAPI.WriteAtFile(podName, fileNameWithPath, sessionId, file, offset, false)
 	if err != nil {
 		h.logger.Errorf("file update: writeAt failed: %s", err.Error())
 		jsonhttp.BadRequest(w, &response{Message: "file update: writeAt failed: " + err.Error()})

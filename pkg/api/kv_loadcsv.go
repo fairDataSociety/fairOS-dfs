@@ -32,6 +32,7 @@ import (
 //
 //	@Summary      Upload a csv file in kv table
 //	@Description  KVLoadCSVHandler is the api handler to load a csv file as key and value in a KV table
+//	@ID		      kv-loadcsv
 //	@Tags         kv
 //	@Accept       mpfd
 //	@Produce      json

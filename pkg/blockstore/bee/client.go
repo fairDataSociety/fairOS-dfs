@@ -53,7 +53,7 @@ const (
 	swarmPinHeader         = "Swarm-Pin"
 	swarmEncryptHeader     = "Swarm-Encrypt"
 	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
-	//swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
+	// swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
 	swarmTagHeader    = "Swarm-Tag"
 	contentTypeHeader = "Content-Type"
 )
@@ -167,6 +167,8 @@ func (s *Client) checkBee(isProxy bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 	req.Close = true
 	data, err := io.ReadAll(response.Body)
@@ -190,7 +192,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 	// the postage block id to store the SOC chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
-	//req.Header.Set(swarmDeferredUploadHeader, "false")
+	// req.Header.Set(swarmDeferredUploadHeader, "false")
 
 	// TODO change this in the future when we have some alternative to pin SOC
 	// This is a temporary fix to force soc pinning
@@ -202,6 +204,8 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 	if err != nil {
 		return nil, err
 	}
+
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -253,12 +257,13 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	// the postage block id to store the chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
-	//req.Header.Set(swarmDeferredUploadHeader, "false")
+	// req.Header.Set(swarmDeferredUploadHeader, "false")
 
 	response, err := s.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -316,6 +321,7 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -368,12 +374,13 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	// the postage block id to store the blob
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
-	//req.Header.Set(swarmDeferredUploadHeader, "false")
+	// req.Header.Set(swarmDeferredUploadHeader, "false")
 
 	response, err := s.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -432,6 +439,7 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -481,6 +489,7 @@ func (s *Client) UploadBzz(data []byte, fileName string) (address []byte, err er
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -536,6 +545,7 @@ func (s *Client) DownloadBzz(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -569,7 +579,7 @@ func (s *Client) DownloadBzz(address []byte) ([]byte, int, error) {
 }
 
 // DeleteReference unpins a reference so that it will be garbage collected by the Swarm network.
-func (s *Client) DeleteReference(address []byte) error {
+func (*Client) DeleteReference(address []byte) error {
 	// TODO uncomment after unpinning is fixed
 	_ = address
 	/*
@@ -615,7 +625,7 @@ func (s *Client) CreateTag(address []byte) (uint32, error) {
 	to := time.Now()
 
 	fullUrl := s.url + tagsUrl
-	data := []byte{}
+	var data []byte
 	var err error
 	if len(address) > 0 {
 		addrString := swarm.NewAddress(address).String()
@@ -634,6 +644,7 @@ func (s *Client) CreateTag(address []byte) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true
@@ -687,6 +698,7 @@ func (s *Client) GetTag(tag uint32) (int64, int64, int64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
+	// skipcq: GO-S2307
 	defer response.Body.Close()
 
 	req.Close = true

@@ -38,6 +38,7 @@ type ListFileResponse struct {
 //
 //	@Summary      List directory
 //	@Description  DirectoryLsHandler is the api handler for listing the contents of a directory.
+//	@ID		      directory-ls-handler
 //	@Tags         dir
 //	@Produce      json
 //	@Param	      podName query string true "pod name"

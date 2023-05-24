@@ -26,15 +26,11 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// PodOpenResponse
-type PodOpenResponse struct {
-	Reference string `json:"reference"`
-}
-
 // PodOpenHandler godoc
 //
 //	@Summary      Open pod
 //	@Description  PodOpenHandler is the api handler to open pod
+//	@ID           pod-open-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
@@ -101,6 +97,7 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Open pod
 //	@Description  PodOpenAsyncHandler is the api handler to open pod asynchronously
+//	@ID           pod-open-async-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

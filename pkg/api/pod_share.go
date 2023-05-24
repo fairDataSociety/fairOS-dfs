@@ -29,7 +29,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// PodSharingReference
+// PodSharingReference is the response sent to the user when a pod is shared
 type PodSharingReference struct {
 	Reference string `json:"podSharingReference"`
 }
@@ -38,6 +38,7 @@ type PodSharingReference struct {
 //
 //	@Summary      Share pod
 //	@Description  PodShareHandler is the api handler to share a pod to the public
+//	@ID           pod-share-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
@@ -113,6 +114,7 @@ func (h *Handler) PodShareHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Receive shared pod info
 //	@Description  PodReceiveInfoHandler is the api handler to receive shared pod info from shared reference
+//	@ID           pod-receive-info-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
@@ -172,6 +174,7 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 //
 //	@Summary      Receive shared pod
 //	@Description  PodReceiveHandler is the api handler to receive shared pod from shared reference
+//	@ID		   pod-receive-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

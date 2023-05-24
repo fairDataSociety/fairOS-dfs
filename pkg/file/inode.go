@@ -18,12 +18,12 @@ package file
 
 import "github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
-// INode
+// INode is the structure of the inode
 type INode struct {
 	Blocks []*BlockInfo `json:"blocks"`
 }
 
-// BlockInfo
+// BlockInfo is the structure of the block info
 type BlockInfo struct {
 	Size           uint32          `json:"size"`
 	CompressedSize uint32          `json:"compressedSize"`

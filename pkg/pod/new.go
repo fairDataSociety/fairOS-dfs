@@ -196,7 +196,7 @@ func (p *Pod) storeUserPods(podList *List) error {
 	topic := utils.HashString(podFile)
 
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	_, err = p.fd.UpdateFeed(topic, p.acc.GetAddress(account.UserAccountIndex), data, []byte(hex.EncodeToString(privKeyBytes)))
+	_, err = p.fd.UpdateFeed(p.acc.GetAddress(account.UserAccountIndex), topic, data, []byte(hex.EncodeToString(privKeyBytes)))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

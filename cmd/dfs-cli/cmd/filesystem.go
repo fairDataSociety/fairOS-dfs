@@ -79,7 +79,7 @@ func statFileOrDirectory(podName, statElement string) {
 	args := fmt.Sprintf("podName=%s&dirPath=%s", podName, statElement)
 	data, err := fdfsAPI.getReq(apiDirStat, args)
 	if err != nil {
-		if strings.Contains(err.Error(), "directory not found") {
+		if strings.Contains(err.Error(), "directory not") {
 			args := fmt.Sprintf("podName=%s&filePath=%s", podName, statElement)
 			data, err := fdfsAPI.getReq(apiFileStat, args)
 			if err != nil {
@@ -236,7 +236,10 @@ func downloadFile(podName, localFileName, podFileName string) {
 		fmt.Println("download failed: ", err)
 		return
 	}
-	defer out.Close()
+	if err = out.Close(); err != nil {
+		fmt.Println("download failed: ", err)
+		return
+	}
 
 	args := make(map[string]string)
 	args["podName"] = podName

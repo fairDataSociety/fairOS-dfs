@@ -18,9 +18,12 @@ package cmd
 
 import (
 	"context"
+	"embed"
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -32,7 +35,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	_ "github.com/fairdatasociety/fairOS-dfs/swagger"
 	docs "github.com/fairdatasociety/fairOS-dfs/swagger"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -50,6 +52,9 @@ var (
 	postageBlockId string
 	corsOrigins    []string
 	handler        *api.Handler
+
+	//go:embed .well-known
+	staticFiles embed.FS
 )
 
 const (
@@ -81,7 +86,7 @@ can consume it.`,
 		if err := config.BindPFlag(optionCORSAllowedOrigins, cmd.Flags().Lookup("cors-origins")); err != nil {
 			return err
 		}
-		if err := config.BindPFlag(optionNetwork, cmd.Flags().Lookup("network")); err != nil {
+		if err := config.BindPFlag(optionNetwork, cmd.Flags().Lookup("ens-network")); err != nil {
 			return err
 		}
 		if err := config.BindPFlag(optionRPC, cmd.Flags().Lookup("rpc")); err != nil {
@@ -119,56 +124,23 @@ can consume it.`,
 		}
 		ensConfig := &contracts.ENSConfig{}
 		var subscriptionConfig *contracts.SubscriptionConfig
-		network := config.GetString("network")
+		network := config.GetString("ens-network")
 		rpc := config.GetString(optionRPC)
 		if rpc == "" {
 			fmt.Println("\nrpc endpoint is missing")
 			return fmt.Errorf("rpc endpoint is missing")
 		}
-		if network != "testnet" && network != "mainnet" && network != "play" {
-			if network != "" {
-				fmt.Println("\nunknown network")
-				return fmt.Errorf("unknown network")
-			}
-			network = "custom"
-			providerDomain := config.GetString(optionProviderDomain)
-			publicResolverAddress := config.GetString(optionPublicResolverAddress)
-			fdsRegistrarAddress := config.GetString(optionFDSRegistrarAddress)
-			ensRegistryAddress := config.GetString(optionENSRegistryAddress)
-
-			if providerDomain == "" {
-				fmt.Println("\nens provider domain is missing")
-				return fmt.Errorf("ens provider domain is missing")
-			}
-			if publicResolverAddress == "" {
-				fmt.Println("\npublicResolver contract address is missing")
-				return fmt.Errorf("publicResolver contract address is missing")
-			}
-			if fdsRegistrarAddress == "" {
-				fmt.Println("\nfdsRegistrar contract address is missing")
-				return fmt.Errorf("fdsRegistrar contract address is missing")
-			}
-			if ensRegistryAddress == "" {
-				fmt.Println("\nensRegistry contract address is missing")
-				return fmt.Errorf("ensRegistry contract address is missing")
-			}
-
-			ensConfig = &contracts.ENSConfig{
-				ENSRegistryAddress:    ensRegistryAddress,
-				FDSRegistrarAddress:   fdsRegistrarAddress,
-				PublicResolverAddress: publicResolverAddress,
-				ProviderDomain:        providerDomain,
-			}
-		} else {
-			switch v := strings.ToLower(network); v {
-			case "mainnet":
-				fmt.Println("\nens is not available for mainnet yet")
-				return fmt.Errorf("ens is not available for mainnet yet")
-			case "testnet":
-				ensConfig, subscriptionConfig = contracts.TestnetConfig()
-			case "play":
-				ensConfig, subscriptionConfig = contracts.PlayConfig()
-			}
+		switch v := strings.ToLower(network); v {
+		case "mainnet":
+			fmt.Println("\nens is not available for mainnet yet")
+			return fmt.Errorf("ens is not available for mainnet yet")
+		case "testnet":
+			ensConfig, subscriptionConfig = contracts.TestnetConfig(contracts.Sepolia)
+		case "play":
+			ensConfig, subscriptionConfig = contracts.PlayConfig()
+		default:
+			fmt.Println("\nunknown network")
+			return fmt.Errorf("unknown network")
 		}
 		ensConfig.ProviderBackend = rpc
 		if subscriptionConfig != nil {
@@ -195,7 +167,7 @@ can consume it.`,
 
 		logger.Info("configuration values")
 		logger.Info("version        : ", dfs.Version)
-		logger.Info("network        : ", network)
+		logger.Info("ens network    : ", network)
 		logger.Info("beeApi         : ", beeApi)
 		logger.Info("verbosity      : ", verbosity)
 		logger.Info("httpPort       : ", httpPort)
@@ -247,7 +219,7 @@ func init() {
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
 	serverCmd.Flags().String("postageBlockId", "", "the postage block used to store the data in bee")
 	serverCmd.Flags().StringSlice("cors-origins", defaultCORSAllowedOrigins, "allow CORS headers for the given origins")
-	serverCmd.Flags().String("network", "", "network to use for authentication (mainnet/testnet/play)")
+	serverCmd.Flags().String("ens-network", "testnet", "network to use for authentication [not related to swarm network] (mainnet/testnet/play)")
 	serverCmd.Flags().String("rpc", "", "rpc endpoint for ens network. xDai for mainnet | Goerli for testnet | local fdp-play rpc endpoint for play")
 	rootCmd.AddCommand(serverCmd)
 }
@@ -275,6 +247,14 @@ func startHttpService(logger logging.Logger) *http.Server {
 			httpSwagger.URL("./swagger/doc.json"),
 		)).Methods(http.MethodGet)
 	}
+
+	var staticFS = fs.FS(staticFiles)
+	htmlContent, err := fs.Sub(staticFS, ".well-known")
+	if err != nil {
+		log.Fatal(err)
+	}
+	router.PathPrefix("/.well-known/").Handler(http.StripPrefix("/.well-known/", http.FileServer(http.FS(htmlContent))))
+
 	router.HandleFunc("/public-file", handler.PublicPodGetFileHandler)
 	router.HandleFunc("/public-dir", handler.PublicPodGetDirHandler)
 	router.HandleFunc("/public-kv", handler.PublicPodKVEntryGetHandler)
@@ -432,8 +412,9 @@ func startHttpService(logger logging.Logger) *http.Server {
 
 	logger.Infof("fairOS-dfs API server listening on port: %v", httpPort)
 	srv := &http.Server{
-		Addr:    httpPort,
-		Handler: handler,
+		Addr:              httpPort,
+		Handler:           handler,
+		ReadHeaderTimeout: 3 * time.Second,
 	}
 
 	go func() {
@@ -449,7 +430,11 @@ func startHttpService(logger logging.Logger) *http.Server {
 
 func startPprofService(logger logging.Logger) {
 	logger.Infof("fairOS-dfs pprof listening on port: %v", pprofPort)
-	err := http.ListenAndServe("localhost"+pprofPort, nil)
+	server := &http.Server{
+		Addr:              "localhost" + pprofPort,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+	err := server.ListenAndServe()
 	if err != nil {
 		logger.Errorf("pprof listenAndServe: %v ", err.Error())
 		return

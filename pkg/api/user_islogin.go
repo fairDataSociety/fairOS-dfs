@@ -22,22 +22,23 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// LoginStatus
+// LoginStatus is the json response sent to check if user is logged-in
 type LoginStatus struct {
 	LoggedIn bool `json:"loggedin"`
 }
 
 // IsUserLoggedInHandler godoc
 //
-//	@Summary      Is user logged-in
-//	@Description  Check if the given user is logged-in
-//	@Tags         user
-//	@Accept       json
-//	@Produce      json
-//	@Param	      userName query string true "username"
-//	@Success      200  {object}  LoginStatus
-//	@Failure      400  {object}  response
-//	@Router       /v1/user/isloggedin [get]
+//		@Summary      Is user logged-in
+//		@Description  Check if the given user is logged-in
+//	 @ID  	   user-isloggedin
+//		@Tags         user
+//		@Accept       json
+//		@Produce      json
+//		@Param	      userName query string true "username"
+//		@Success      200  {object}  LoginStatus
+//		@Failure      400  {object}  response
+//		@Router       /v1/user/isloggedin [get]
 func (h *Handler) IsUserLoggedInHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["userName"]
 	if !ok || len(keys[0]) < 1 {

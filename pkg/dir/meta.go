@@ -17,11 +17,11 @@ limitations under the License.
 package dir
 
 var (
-	//MetaVersion
+	// MetaVersion is the version of the metadata for directories
 	MetaVersion uint8 = 2
 )
 
-// MetaData
+// MetaData is the metadata of a directory
 type MetaData struct {
 	Version          uint8  `json:"version"`
 	Path             string `json:"path"`

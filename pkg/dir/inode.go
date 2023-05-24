@@ -23,14 +23,14 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
-// Inode
+// Inode is the structure of the inode
 type Inode struct {
 	Meta           *MetaData `json:"meta"`
 	FileOrDirNames []string  `json:"fileOrDirNames"`
 }
 
 var (
-	//ErrResourceDeleted
+	// ErrResourceDeleted is returned when the resource is deleted
 	ErrResourceDeleted = errors.New("resource was deleted")
 )
 
@@ -52,7 +52,7 @@ func (in *Inode) SetFileOrDirNames(fileOrDirNames []string) {
 	in.FileOrDirNames = fileOrDirNames
 }
 
-// Unmarshal
+// Unmarshal unmarshals the data into iNode
 func (in *Inode) Unmarshal(data []byte) error {
 	if string(data) == utils.DeletedFeedMagicWord {
 		return ErrResourceDeleted
@@ -60,6 +60,7 @@ func (in *Inode) Unmarshal(data []byte) error {
 	return json.Unmarshal(data, in)
 }
 
+// GetInode returns the inode of the given directory
 func (d *Directory) GetInode(podPassword, dirNameWithPath string) *Inode {
 	node := d.GetDirFromDirectoryMap(dirNameWithPath)
 	if node != nil {

@@ -28,6 +28,7 @@ import (
 //
 //	@Summary      Logout
 //	@Description  logs-out user
+//	@ID 		  user-logout
 //	@Tags         user
 //	@Accept       json
 //	@Param	      Cookie header string true "cookie parameter"

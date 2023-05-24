@@ -20,7 +20,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UserExportResponse
+// UserExportResponse is the json response sent to export user
 type UserExportResponse struct {
 	Name    string `json:"userName"`
 	Address string `json:"address"`

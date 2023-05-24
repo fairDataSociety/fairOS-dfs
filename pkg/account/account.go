@@ -275,7 +275,7 @@ func (*Info) RemovePadFromSeed(paddedSeed []byte, passphrase string) ([]byte, er
 }
 
 // PadSeedName pads the given seed and name with random elements to be a chunk of chunkSize
-func (*Info) PadSeedName(seed []byte, username string, passphrase string) ([]byte, error) {
+func (*Info) PadSeedName(seed []byte, username, passphrase string) ([]byte, error) {
 	usernameLength := len(username)
 	if usernameLength > 255 {
 		return nil, fmt.Errorf("username length is too long")

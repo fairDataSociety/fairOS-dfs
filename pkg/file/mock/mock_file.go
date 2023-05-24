@@ -22,50 +22,51 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 )
 
-// File
+// File is the mock file
 type File struct {
 }
 
-// NewMockFile
+// NewMockFile is used for tests only
 func NewMockFile() *File {
 	return &File{}
 }
 
-// Upload
+// Upload is used for tests only
 func (*File) Upload(_ io.Reader, _ string, _ int64, _, _ uint32, _, _, _ string) error {
 	return nil
 }
 
-// Download
+// Download is used for tests only
 func (*File) Download(_, _ string) (io.ReadCloser, uint64, error) {
 	return nil, 0, nil
 }
 
-// ListFiles
+// ListFiles is used for tests only
 func (*File) ListFiles(_ []string, _ string) ([]file.Entry, error) {
 	return nil, nil
 }
 
-// GetStats
+// GetStats is used for tests only
 func (*File) GetStats(_, _, _ string) (*file.Stats, error) {
 	return nil, nil
 }
 
-// RmFile
+// RmFile is used for tests only
 func (*File) RmFile(_, _ string) error {
 	return nil
 }
 
+// Read is used for tests only
 func (*File) Read(_ []byte) (n int, err error) {
 	return 0, nil
 }
 
-// AddFileToPath
+// AddFileToPath is used for tests only
 func (*File) AddFileToPath(_, _ string) error {
 	return nil
 }
 
-// LoadFileMeta
+// LoadFileMeta is used for tests only
 func (*File) LoadFileMeta(_, _ string) error {
 	return nil
 }

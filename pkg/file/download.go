@@ -33,7 +33,7 @@ var (
 	// ErrFileNotFound denotes file is not found in dfs
 	ErrFileNotFound = errors.New("file not found in dfs")
 
-	//ErrFileTagPresent
+	// ErrFileTagPresent denotes file status is not available
 	ErrFileTagPresent = errors.New("file status is not available")
 )
 

@@ -1170,7 +1170,7 @@ func TestApis(t *testing.T) {
 		podName := fmt.Sprintf("%d", time.Now().UnixNano())
 
 		login := &common.WebsocketRequest{
-			Event:  common.UserLoginV2,
+			Event:  common.UserLogin,
 			Params: userRequest,
 		}
 
@@ -1185,7 +1185,7 @@ func TestApis(t *testing.T) {
 
 		// userPresent
 		uPresent := &common.WebsocketRequest{
-			Event: common.UserPresentV2,
+			Event: common.UserPresent,
 			Params: common.UserSignupRequest{
 				UserName: userRequest.UserName,
 			},
@@ -1365,6 +1365,7 @@ func TestApis(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
+		// skipcq: GO-S2307
 		defer file.Close()
 		body := &bytes.Buffer{}
 		_, err = io.Copy(body, file)

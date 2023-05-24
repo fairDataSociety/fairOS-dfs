@@ -38,6 +38,7 @@ type DocFind struct {
 //
 //	@Summary      Get rows from a given doc datastore
 //	@Description  DocFindHandler is the api handler to select rows from a given document datastore
+//	@ID		      doc-find
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json
