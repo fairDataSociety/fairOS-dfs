@@ -21,7 +21,7 @@ type SubscriptionConfig struct {
 	DataHubAddress string
 }
 
-// TestnetConfig defines the configuration for goerli testnet
+// TestnetConfig defines the configuration for goerli/sepolia testnet
 func TestnetConfig(chainId string) (*ENSConfig, *SubscriptionConfig) {
 	e := &ENSConfig{
 		ChainID:        chainId,
