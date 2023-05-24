@@ -37,6 +37,7 @@ type KVTableRequest struct {
 //
 //	@Summary      Create a key value table
 //	@Description  KVCreateHandler is the api handler to create a key value table
+//	@ID		   	  kv-create-handler
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json

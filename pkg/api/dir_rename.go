@@ -33,6 +33,7 @@ import (
 //
 //	@Summary      Rename directory
 //	@Description  DirectoryRenameHandler is the api handler to rename a directory.
+//	@ID		      directory-rename-handler
 //	@Tags         dir
 //	@Accept       json
 //	@Produce      json

@@ -36,6 +36,7 @@ type PodListResponse struct {
 //
 //	@Summary      List pods
 //	@Description  PodListHandler is the api handler to list all pods
+//	@ID           pod-list-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

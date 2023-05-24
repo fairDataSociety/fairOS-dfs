@@ -26,6 +26,7 @@ type PodForkFromReferenceRequest struct {
 //
 //	@Summary      Fork a pod
 //	@Description  PodForkHandler is the api handler to fork a pod
+//	@ID           pod-fork-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json
@@ -100,6 +101,7 @@ func (h *Handler) PodForkHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Fork a pod from sharing reference
 //	@Description  PodForkFromReferenceHandler is the api handler to fork a pod from a given sharing reference
+//	@ID           pod-fork-from-reference-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

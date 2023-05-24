@@ -35,6 +35,7 @@ type PodNameRequest struct {
 //
 //	@Summary      Close pod
 //	@Description  PodCloseHandler is the api handler to close an open pod
+//	@ID           pod-close-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

@@ -20,6 +20,7 @@ type StatusResponse struct {
 //
 //	@Summary      Sync status of a file
 //	@Description  FileStatusHandler is the api handler to check sync status of a file from a given pod
+//	@ID		      file-status-handler
 //	@Tags         file
 //	@Accept       json
 //	@Produce      */*

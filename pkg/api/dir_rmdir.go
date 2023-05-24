@@ -31,6 +31,7 @@ import (
 //
 //	@Summary      Remove directory
 //	@Description  DirectoryRmdirHandler is the api handler to remove a directory.
+//	@ID		      directory-rmdir-handler
 //	@Tags         dir
 //	@Accept       json
 //	@Produce      json

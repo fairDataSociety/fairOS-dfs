@@ -53,6 +53,9 @@ func (h *Handler) UserPresentHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Check if user is present
 //	@Description  checks if the new user is present in the new ENS based authentication
+//
+// @ID  	   user-present-v2
+//
 //	@Tags         user
 //	@Produce      json
 //	@Param	      userName query string true "username"

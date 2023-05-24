@@ -38,18 +38,19 @@ type UserLoginResponse struct {
 
 // UserLoginV2Handler godoc
 //
-//	@Summary      Login User
-//	@Description  login user with the new ENS based authentication
-//	@Tags         user
-//	@Accept       json
-//	@Produce      json
-//	@Param	      user_request body common.UserLoginRequest true "username"
-//	@Success      200  {object}  UserLoginResponse
-//	@Failure      400  {object}  response
-//	@Failure      404  {object}  response
-//	@Failure      500  {object}  response
-//	@Header	      200  {string}  Set-Cookie "fairos-dfs session"
-//	@Router       /v2/user/login [post]
+//		@Summary      Login User
+//		@Description  login user with the new ENS based authentication
+//	 @ID  	   user-login-v2
+//		@Tags         user
+//		@Accept       json
+//		@Produce      json
+//		@Param	      user_request body common.UserLoginRequest true "username"
+//		@Success      200  {object}  UserLoginResponse
+//		@Failure      400  {object}  response
+//		@Failure      404  {object}  response
+//		@Failure      500  {object}  response
+//		@Header	      200  {string}  Set-Cookie "fairos-dfs session"
+//		@Router       /v2/user/login [post]
 func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {

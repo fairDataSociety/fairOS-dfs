@@ -30,6 +30,7 @@ import (
 //
 //	@Summary      Create pod
 //	@Description  PodCreateHandler is the api handler to create a new pod
+//	@ID           pod-create-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

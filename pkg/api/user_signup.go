@@ -42,17 +42,18 @@ type UserSignupResponse struct {
 
 // UserSignupV2Handler godoc
 //
-//	@Summary      Register New User
-//	@Description  registers new user with the new ENS based authentication
-//	@Tags         user
-//	@Accept       json
-//	@Produce      json
-//	@Param	      user_request body common.UserSignupRequest true "username"
-//	@Success      201  {object}  UserSignupResponse
-//	@Failure      400  {object}  response
-//	@Failure      402  {object}  UserSignupResponse
-//	@Failure      500  {object}  response
-//	@Router       /v2/user/signup [post]
+//		@Summary      Register New User
+//		@Description  registers new user with the new ENS based authentication
+//	 	@ID			  user-signup-v2
+//		@Tags         user
+//		@Accept       json
+//		@Produce      json
+//		@Param	      user_request body common.UserSignupRequest true "username"
+//		@Success      201  {object}  UserSignupResponse
+//		@Failure      400  {object}  response
+//		@Failure      402  {object}  UserSignupResponse
+//		@Failure      500  {object}  response
+//		@Router       /v2/user/signup [post]
 func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
