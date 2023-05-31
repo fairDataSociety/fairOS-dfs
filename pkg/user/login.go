@@ -93,12 +93,13 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if err = acc.LoadUserAccountFromSeed(seed); err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	db, err := u.initFeedsTracker(utils.Address(address), userName, passPhrase, fd, client)
+	fmt.Println("init db")
+	_, err = u.initFeedsTracker(utils.Address(address), userName, passPhrase, fd, client)
 	if err != nil {
 		u.logger.Errorf("error initializing feeds tracker: %v", err)
 	}
-	fd.SetUpdateTracker(db)
-
+	//fd.SetUpdateTracker(db)
+	fmt.Println("init db done", err, fd.GetUpdateTracker())
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
