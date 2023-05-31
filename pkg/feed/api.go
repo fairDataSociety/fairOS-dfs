@@ -22,8 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/akrylysov/pogreb"
-
 	"github.com/ethersphere/bee/pkg/crypto"
 	"github.com/ethersphere/bee/pkg/soc"
 	"github.com/ethersphere/bee/pkg/swarm"
@@ -33,6 +31,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/syndtr/goleveldb/leveldb"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -59,7 +58,7 @@ type API struct {
 	handler     *Handler
 	accountInfo *account.Info
 	logger      logging.Logger
-	db          *pogreb.DB
+	db          *leveldb.DB
 }
 
 // request is a custom type that involves in the fairOS feed creation
@@ -84,12 +83,12 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 }
 
 // SetUpdateTracker sets the update tracker for the feed
-func (a *API) SetUpdateTracker(db *pogreb.DB) {
+func (a *API) SetUpdateTracker(db *leveldb.DB) {
 	a.db = db
 }
 
 // GetUpdateTracker gets the update tracker for the feed
-func (a *API) GetUpdateTracker() *pogreb.DB {
+func (a *API) GetUpdateTracker() *leveldb.DB {
 	return a.db
 }
 
@@ -456,13 +455,13 @@ func (a *API) PutFeedUpdateEpoch(topic []byte, epoch lookup.Epoch) error {
 	//	return err
 	//}
 	//return a.db.Sync()
-	return a.db.Put(topic, data)
+	return a.db.Put(topic, data, nil)
 }
 
 // GetFeedUpdateEpoch
 func (a *API) GetFeedUpdateEpoch(topic []byte) (lookup.Epoch, error) {
 	epoch := lookup.Epoch{}
-	data, err := a.db.Get(topic)
+	data, err := a.db.Get(topic, nil)
 	if err != nil {
 		return epoch, err
 	}
@@ -474,6 +473,7 @@ func (a *API) GetFeedUpdateEpoch(topic []byte) (lookup.Epoch, error) {
 }
 
 func (a *API) Close() error {
+	fmt.Println("Close", a.db)
 	if a.db != nil {
 		return a.db.Close()
 	}

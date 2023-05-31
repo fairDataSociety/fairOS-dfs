@@ -28,6 +28,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.1
+	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/tinygrasshopper/bettercsv v0.0.1
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/wealdtech/go-ens/v3 v3.5.5
@@ -115,5 +116,3 @@ require (
 )
 
 replace github.com/codahale/hdrhistogram => github.com/HdrHistogram/hdrhistogram-go v0.0.0-20200919145931-8dac23c8dac1
-
-replace github.com/akrylysov/pogreb => ../../onepeerlabs/pogreb
