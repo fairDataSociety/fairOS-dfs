@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	listTopic = "leveldb/storage/listtt"
+	listTopic = "leveldb/storage/files-list"
 )
 
 var (
