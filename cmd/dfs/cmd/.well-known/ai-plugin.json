@@ -10,10 +10,10 @@
   },
   "api": {
     "type": "openapi",
-    "url": "https://fairos.staging.fairdatasociety.org/.well-known/openapi.yaml",
+    "url": "https://fairos.fairdatasociety.org/.well-known/openapi.yaml",
     "has_user_authentication": false
   },
-  "logo_url": "https://fairos.staging.fairdatasociety.org/.well-known/logo.png",
+  "logo_url": "https://fairos.fairdatasociety.org/.well-known/logo.png",
   "contact_email": "hello@fairdatasociety.org",
   "legal_info_url": "hello@legal.com"
 }
