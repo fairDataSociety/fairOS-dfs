@@ -156,7 +156,7 @@ func initConfig() {
 
 func writeConfig() {
 	c := viper.New()
-	c.Set(optionFeedTracker, defaultFeedTracker)
+	c.Set(optionFeedTracker, false)
 	c.Set(optionCORSAllowedOrigins, defaultCORSAllowedOrigins)
 	c.Set(optionDFSHttpPort, defaultDFSHttpPort)
 	c.Set(optionDFSPprofPort, defaultDFSPprofPort)
