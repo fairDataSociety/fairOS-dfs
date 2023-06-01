@@ -61,6 +61,7 @@ func New(ensConfig *contracts.ENSConfig, logger logging.Logger) (*Client, error)
 		return nil, fmt.Errorf("dial eth ensm: %w", err)
 	}
 	if chainID.String() != ensConfig.ChainID {
+		fmt.Println("chainID does not match or not supported", chainID.String(), ensConfig.ChainID)
 		return nil, ErrWrongChainID
 	}
 	ensRegistry, err := ens.NewENSRegistry(common.HexToAddress(ensConfig.ENSRegistryAddress), eth)

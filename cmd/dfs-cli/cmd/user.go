@@ -53,17 +53,20 @@ func userNew(userName, mnemonic string) {
 		return
 	}
 	if resp.Message == eth.ErrInsufficientBalance.Error() {
-		fmt.Println(resp.Message)
+		fmt.Println("Failed to create new user")
+		fmt.Println("Please fund your account with some eth and try again with the following command")
+		fmt.Printf(">>> user new %s %s\n", userName, resp.Mnemonic)
 		fmt.Println("address :", resp.Address)
 		fmt.Println("=============== Mnemonic ==========================")
 		fmt.Println(resp.Mnemonic)
 		fmt.Println("=============== Mnemonic ==========================")
-	} else {
-		fmt.Println("user created with address ", resp.Address)
-		fmt.Println("Please store the 12 words mnemonic safely")
-		fmt.Println("if you loose that, you cannot recover the data in-case of an emergency.")
-		fmt.Println("you can also use that mnemonic to access the data in-case this device is lost")
+		return
 	}
+	fmt.Println("user created with address ", resp.Address)
+	fmt.Println("Please store the 12 words mnemonic safely")
+	fmt.Println("if you loose that, you cannot recover the data in-case of an emergency.")
+	fmt.Println("you can also use that mnemonic to access the data in-case this device is lost")
+	currentUser = userName
 }
 
 func userLogin(userName, apiEndpoint string) {
@@ -116,8 +119,7 @@ func logoutUser() {
 	fmt.Println(message)
 }
 
-// StatUser
-func StatUser() {
+func statUser() {
 	data, err := fdfsAPI.getReq(apiUserStat, "")
 	if err != nil {
 		fmt.Println("user stat: ", err)

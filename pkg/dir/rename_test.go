@@ -81,15 +81,15 @@ func TestRenameDirectory(t *testing.T) {
 		}
 
 		r := new(bytes.Buffer)
-		err = fileObject.Upload(r, "file1", 0, 100, 0, "/parentDir", "", podPassword)
+		err = fileObject.Upload(r, "file1", 0, file.MinBlockSize, 0, "/parentDir", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.Upload(r, "file2", 0, 100, 0, "/parentDir", "", podPassword)
+		err = fileObject.Upload(r, "file2", 0, file.MinBlockSize, 0, "/parentDir", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = fileObject.Upload(r, "file2", 0, 100, 0, "/parentDir/subDir2", "", podPassword)
+		err = fileObject.Upload(r, "file2", 0, file.MinBlockSize, 0, "/parentDir/subDir2", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -133,8 +133,7 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		dirs := []string{}
-
+		var dirs []string
 		for _, v := range dirEntries {
 			dirs = append(dirs, v.Name)
 		}
@@ -191,7 +190,7 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err := dirObject.MkDir("/", podPassword, 0)
+		err = dirObject.MkDir("/", podPassword, 0)
 		if !errors.Is(err, dir.ErrInvalidDirectoryName) {
 			t.Fatal("invalid dir name")
 		}
@@ -230,6 +229,10 @@ func TestRenameDirectory(t *testing.T) {
 
 		r := new(bytes.Buffer)
 		err = fileObject.Upload(r, "file1", 0, 100, 0, "/parentDir/subDir1/subDir11/sub111", "", podPassword)
+		if err != file.ErrInvalidBlockSize {
+			t.Fatal("block size should be invalid")
+		}
+		err = fileObject.Upload(r, "file1", 0, file.MinBlockSize, 0, "/parentDir/subDir1/subDir11/sub111", "", podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -255,7 +258,7 @@ func TestRenameDirectory(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		dirs := []string{}
+		var dirs []string
 
 		for _, v := range dirEntries {
 			dirs = append(dirs, v.Name)

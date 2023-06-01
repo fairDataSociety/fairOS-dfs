@@ -28,12 +28,12 @@ import (
 
 const (
 	nameLength = 100
-	//S_IFDIR
+	// S_IFDIR is the mode for directory
 	S_IFDIR     = 0040000
 	defaultMode = 0700
 )
 
-// MkDir
+// MkDir creates a directory in the given path
 func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) error {
 	parentPath := filepath.ToSlash(filepath.Dir(dirToCreateWithPath))
 	dirName := filepath.Base(dirToCreateWithPath)
@@ -85,12 +85,12 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) 
 	// upload the metadata as blob
 	previousAddr, _, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
 	if err == nil && previousAddr != nil {
-		_, err = d.fd.UpdateFeed(topic, d.userAddress, data, []byte(podPassword))
+		_, err = d.fd.UpdateFeed(d.userAddress, topic, data, []byte(podPassword))
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	} else {
-		_, err = d.fd.CreateFeed(topic, d.userAddress, data, []byte(podPassword))
+		_, err = d.fd.CreateFeed(d.userAddress, topic, data, []byte(podPassword))
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
@@ -120,7 +120,7 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) 
 		return err
 	}
 
-	_, err = d.fd.UpdateFeed(parentHash, d.userAddress, parentData, []byte(podPassword))
+	_, err = d.fd.UpdateFeed(d.userAddress, parentHash, parentData, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -128,7 +128,7 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) 
 	return nil
 }
 
-// MkRootDir
+// MkRootDir creates the root directory for the pod
 func (d *Directory) MkRootDir(podName, podPassword string, podAddress utils.Address, fd *feed.API) error {
 	// create the root parent dir
 	now := time.Now().Unix()
@@ -152,12 +152,12 @@ func (d *Directory) MkRootDir(podName, podPassword string, podAddress utils.Addr
 	parentHash := utils.HashString(parentPath)
 	addr, data, err := d.fd.GetFeedData(parentHash, d.userAddress, []byte(podPassword))
 	if err == nil && addr != nil && data != nil {
-		_, err = fd.UpdateFeed(parentHash, podAddress, parentData, []byte(podPassword))
+		_, err = fd.UpdateFeed(podAddress, parentHash, parentData, []byte(podPassword))
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	} else {
-		_, err = fd.CreateFeed(parentHash, podAddress, parentData, []byte(podPassword))
+		_, err = fd.CreateFeed(podAddress, parentHash, parentData, []byte(podPassword))
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
@@ -166,7 +166,7 @@ func (d *Directory) MkRootDir(podName, podPassword string, podAddress utils.Addr
 	return nil
 }
 
-// AddRootDir
+// AddRootDir adds the root directory to the directory map
 func (d *Directory) AddRootDir(podName, podPassword string, podAddress utils.Address, fd *feed.API) error {
 	parentPath := utils.CombinePathAndFile(utils.PathSeparator, "")
 	parentHash := utils.HashString(parentPath)

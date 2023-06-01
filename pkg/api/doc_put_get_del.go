@@ -52,6 +52,7 @@ type DocGet struct {
 //
 //	@Summary      Add a record in document datastore
 //	@Description  DocEntryPutHandler is the api handler add a document in to a document datastore
+//	@ID		      doc-entry-put
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json
@@ -124,6 +125,7 @@ func (h *Handler) DocEntryPutHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Get a document from a document datastore
 //	@Description  DocEntryGetHandler is the api handler to get a document from a document datastore
+//	@ID		      doc-entry-get
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json
@@ -206,6 +208,7 @@ func (h *Handler) DocEntryGetHandler(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary      Delete a document from a document datastore
 //	@Description  DocEntryDelHandler is the api handler to delete a document from a document datastore
+//	@ID		      doc-entry-del
 //	@Tags         doc
 //	@Accept       json
 //	@Produce      json

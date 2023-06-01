@@ -31,6 +31,7 @@ import (
 //
 //	@Summary      Info of a file
 //	@Description  FileRenameHandler is the api handler to get the information of a file
+//	@ID		      file-rename-handler
 //	@Tags         file
 //	@Accept       json
 //	@Produce      json

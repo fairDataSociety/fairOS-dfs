@@ -5,138 +5,136 @@ import (
 	"encoding/json"
 )
 
-// Event
+// Event is a string that represents a websocket event
 type Event string
 
 var (
-	//UserSignup
+	// UserSignup is the event for user signup
 	UserSignup Event = "/user/signup"
-	//UserLogin
+	// UserLogin is the event for user login
 	UserLogin Event = "/user/login"
-	//UserLoginV2
-	UserLoginV2 Event = "/user/loginV2"
-	//UserPresentV2
-	UserPresentV2 Event = "/user/presentV2"
-	//UserIsLoggedin
+	// UserIsLoggedin is the event for checking if a user is logged in
 	UserIsLoggedin Event = "/user/isloggedin"
-	//UserLogout
+	// UserLogout is the event for user logout
 	UserLogout Event = "/user/logout"
-	//UserDelete
+	// UserDelete is the event for user delete
 	UserDelete Event = "/user/delete"
-	//UserStat
+	// UserPresent is the event for checking if a user is present
+	UserPresent Event = "/user/present"
+	// UserStat is the event for user stat
 	UserStat Event = "/user/stat"
-	//PodNew
+	// PodNew is the event for pod new
 	PodNew Event = "/pod/new"
-	//PodOpen
+	// PodOpen is the event for pod open
 	PodOpen Event = "/pod/open"
-	//PodClose
+	// PodClose is the event for pod close
 	PodClose Event = "/pod/close"
-	//PodSync
+	// PodSync is the event for pod sync
 	PodSync Event = "/pod/sync"
-	//PodDelete
+	// PodDelete is the event for pod delete
 	PodDelete Event = "/pod/delete"
-	//PodLs
+	// PodLs is the event for listing all the pods
 	PodLs Event = "/pod/ls"
-	//PodStat
+	// PodStat is the event for pod stat
 	PodStat Event = "/pod/stat"
-	//PodShare
+	// PodShare is the event for pod share
 	PodShare Event = "/pod/share"
-	//PodReceive
+	// PodReceive is the event for pod receive with sharingReference
 	PodReceive Event = "/pod/receive"
-	//PodReceiveInfo
+	// PodReceiveInfo is the event for receive info of a pod from sharingReference
 	PodReceiveInfo Event = "/pod/receiveinfo"
-	//DirIsPresent
+	// DirIsPresent is the event for checking if a directory is present
 	DirIsPresent Event = "/dir/present"
-	//DirMkdir
+	// DirMkdir is the event for making a directory
 	DirMkdir Event = "/dir/mkdir"
-	//DirRename
+	// DirRename is the event for renaming a directory
 	DirRename Event = "/dir/rename"
-	//DirRmdir
+	// DirRmdir is the event for removing a directory
 	DirRmdir Event = "/dir/rmdir"
-	//DirLs
+	// DirLs is the event for listing content in the directory
 	DirLs Event = "/dir/ls"
-	//DirStat
+	// DirStat is the event for directory stat
 	DirStat Event = "/dir/stat"
-	//FileDownload
+	// FileDownload is the event for downloading a file
 	FileDownload Event = "/file/download"
-	//FileDownloadStream
+	// FileDownloadStream is the event for downloading a file stream
 	FileDownloadStream Event = "/file/download/stream"
-	//FileUpload
+	// FileUpload is the event for uploading a file
 	FileUpload Event = "/file/upload"
-	//FileUploadStream
+	// FileUploadStream is the event for uploading a file stream
 	FileUploadStream Event = "/file/upload/stream"
-	//FileShare
+	// FileShare is the event for sharing a file
 	FileShare Event = "/file/share"
-	//FileReceive
+	// FileReceive is the event for receiving a file from sharingReference
 	FileReceive Event = "/file/receive"
-	//FileRename
+	// FileRename is the event for renaming a file
 	FileRename Event = "/file/rename"
-	//FileReceiveInfo
+	// FileReceiveInfo is the event for receive info of a file from sharingReference
 	FileReceiveInfo Event = "/file/receiveinfo"
-	//FileDelete
+	// FileDelete is the event for deleting a file
 	FileDelete Event = "/file/delete"
-	//FileStat
+	// FileStat is the event for file stat
 	FileStat Event = "/file/stat"
-	//KVCreate
+	// KVCreate is the event for creating a KV store
 	KVCreate Event = "/kv/new"
-	//KVList
+	// KVList is the event for listing all the KV stores
 	KVList Event = "/kv/ls"
-	//KVOpen
+	// KVOpen is the event for opening a KV store
 	KVOpen Event = "/kv/open"
-	//KVDelete
+	// KVDelete is the event for deleting a KV store
 	KVDelete Event = "/kv/delete"
-	//KVCount
+	// KVCount is the event for counting the number of entries in a KV store
 	KVCount Event = "/kv/count"
-	//KVEntryPresent
+	// KVEntryPresent is the event for checking if an entry is present in a KV store
 	KVEntryPresent Event = "/kv/entry/present"
-	//KVEntryPut
+	// KVEntryPut is the event for putting an entry in a KV store
 	KVEntryPut Event = "/kv/entry/put"
-	//KVEntryGet
+	// KVEntryGet is the event for getting an entry from a KV store
 	KVEntryGet Event = "/kv/entry/get"
-	//KVEntryDelete
+	// KVEntryDelete is the event for deleting an entry from a KV store
 	KVEntryDelete Event = "/kv/entry/del"
-	//KVLoadCSV
+	// KVLoadCSV is the event for loading a CSV file into a KV store
 	KVLoadCSV Event = "/kv/loadcsv"
-	//KVLoadCSVStream
+	// KVLoadCSVStream is the event for loading a CSV file into a KV store
 	KVLoadCSVStream Event = "/kv/loadcsv/stream"
-	//KVSeek
+	// KVSeek is the event for seeking to a key in a KV store
 	KVSeek Event = "/kv/seek"
-	//KVSeekNext
+	// KVSeekNext is the event for seeking to the next key in a KV store
 	KVSeekNext Event = "/kv/seek/next"
-	//DocCreate
+	// DocCreate is the event for creating a document store
 	DocCreate Event = "/doc/new"
-	//DocList
+	// DocList is the event for listing all the document stores
 	DocList Event = "/doc/ls"
-	//DocOpen
+	// DocOpen is the event for opening a document store
 	DocOpen Event = "/doc/open"
-	//DocCount
+	// DocCount is the event for counting the number of documents in a document store
 	DocCount Event = "/doc/count"
-	//DocDelete
+	// DocDelete is the event for deleting a document store
 	DocDelete Event = "/doc/delete"
-	//DocFind
+	// DocFind is the event for finding documents in a document store
 	DocFind Event = "/doc/find"
-	//DocEntryPut
+	// DocEntryPut is the event for putting a document in a document store
 	DocEntryPut Event = "/doc/entry/put"
-	//DocEntryGet
+	// DocEntryGet is the event for getting a document from a document store
 	DocEntryGet Event = "/doc/entry/get"
-	//DocEntryDel
+	// DocEntryDel is the event for deleting a document from a document store
 	DocEntryDel Event = "/doc/entry/del"
-	//DocLoadJson
+	// DocLoadJson is the event for loading a JSON file into a document store
 	DocLoadJson Event = "/doc/loadjson"
-	//DocLoadJsonStream
+	// DocLoadJsonStream is the event for loading a JSON file into a document store
 	DocLoadJsonStream Event = "/doc/loadjson/stream"
-	//DocIndexJson
+	// DocIndexJson is the event for indexing a JSON file already in the pod into a document store
 	DocIndexJson Event = "/doc/indexjson"
 )
 
-// WebsocketRequest
+// WebsocketRequest is the request sent to the websocket
 type WebsocketRequest struct {
 	Id     string      `json:"_id"`
 	Event  Event       `json:"event"`
 	Params interface{} `json:"params,omitempty"`
 }
 
-// FileRequest
+// FileRequest is the request for file operations
 type FileRequest struct {
 	PodName       string `json:"podName,omitempty"`
 	TableName     string `json:"tableName,omitempty"`
@@ -148,13 +146,13 @@ type FileRequest struct {
 	Overwrite     bool   `json:"overwrite,omitempty"`
 }
 
-// FileDownloadRequest
+// FileDownloadRequest is the request for file download
 type FileDownloadRequest struct {
 	PodName  string `json:"podName,omitempty"`
 	Filepath string `json:"filePath,omitempty"`
 }
 
-// WebsocketResponse
+// WebsocketResponse is the response sent from the websocket
 type WebsocketResponse struct {
 	Id          string      `json:"_id"`
 	Event       Event       `json:"event"`
@@ -164,7 +162,7 @@ type WebsocketResponse struct {
 	contentType string
 }
 
-// NewWebsocketResponse
+// NewWebsocketResponse creates a new WebsocketResponse
 func NewWebsocketResponse() *WebsocketResponse {
 	return &WebsocketResponse{}
 }
@@ -173,7 +171,7 @@ func (w *WebsocketResponse) Write(bytes []byte) (int, error) {
 	return w.buf.Write(bytes)
 }
 
-// WriteJson
+// WriteJson writes the json bytes to the response
 func (w *WebsocketResponse) WriteJson(bytes []byte) (int, error) {
 	w.contentType = "json"
 	body := map[string]interface{}{}
@@ -185,7 +183,7 @@ func (w *WebsocketResponse) WriteJson(bytes []byte) (int, error) {
 	return len(bytes), nil
 }
 
-// Marshal
+// Marshal marshals the response
 func (w *WebsocketResponse) Marshal() []byte {
 	if w.contentType == "json" {
 		data, _ := json.Marshal(w)

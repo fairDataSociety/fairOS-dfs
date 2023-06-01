@@ -234,6 +234,7 @@ const docTemplate = `{
                     "dir"
                 ],
                 "summary": "change mode of a directory",
+                "operationId": "directory-mode-handler",
                 "parameters": [
                     {
                         "description": "dir mode request",
@@ -284,6 +285,7 @@ const docTemplate = `{
                     "dir"
                 ],
                 "summary": "List directory",
+                "operationId": "directory-ls-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -342,6 +344,7 @@ const docTemplate = `{
                     "dir"
                 ],
                 "summary": "Create directory",
+                "operationId": "directory-mkdir-handler",
                 "parameters": [
                     {
                         "description": "pod name and dir path",
@@ -392,6 +395,7 @@ const docTemplate = `{
                     "dir"
                 ],
                 "summary": "Is directory present",
+                "operationId": "directory-present-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -450,6 +454,7 @@ const docTemplate = `{
                     "dir"
                 ],
                 "summary": "Rename directory",
+                "operationId": "directory-rename-handler",
                 "parameters": [
                     {
                         "description": "old name and new path",
@@ -503,6 +508,7 @@ const docTemplate = `{
                     "dir"
                 ],
                 "summary": "Remove directory",
+                "operationId": "directory-rmdir-handler",
                 "parameters": [
                     {
                         "description": "pod name and dir path",
@@ -553,6 +559,7 @@ const docTemplate = `{
                     "dir"
                 ],
                 "summary": "Directory stat",
+                "operationId": "directory-stat-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -611,6 +618,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Count number of document in a table",
+                "operationId": "doc-count",
                 "parameters": [
                     {
                         "description": "doc table info",
@@ -664,6 +672,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Delete a doc table",
+                "operationId": "doc-delete",
                 "parameters": [
                     {
                         "description": "doc table info",
@@ -717,6 +726,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Delete a document from a document datastore",
+                "operationId": "doc-entry-del",
                 "parameters": [
                     {
                         "type": "string",
@@ -776,6 +786,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Get a document from a document datastore",
+                "operationId": "doc-entry-get",
                 "parameters": [
                     {
                         "type": "string",
@@ -841,6 +852,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Add a record in document datastore",
+                "operationId": "doc-entry-put",
                 "parameters": [
                     {
                         "type": "string",
@@ -900,6 +912,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Get rows from a given doc datastore",
+                "operationId": "doc-find",
                 "parameters": [
                     {
                         "type": "string",
@@ -971,6 +984,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Index a json file that is present in a pod, in to the given document database",
+                "operationId": "doc-indexjson",
                 "parameters": [
                     {
                         "description": "index request",
@@ -1024,6 +1038,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Load json file from local file system",
+                "operationId": "doc-loadjson",
                 "parameters": [
                     {
                         "type": "string",
@@ -1089,6 +1104,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "List all doc table",
+                "operationId": "doc-ls",
                 "parameters": [
                     {
                         "type": "string",
@@ -1140,6 +1156,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Create in doc table",
+                "operationId": "doc-create",
                 "parameters": [
                     {
                         "description": "doc table info. si or simple index is a comma separated list of keys and their types. eg: 'first_name=string,age=number'. valid index types can be 'string', 'number', 'map', 'list'. default index is 'id' and it should be of type string",
@@ -1193,6 +1210,7 @@ const docTemplate = `{
                     "doc"
                 ],
                 "summary": "Open a doc table",
+                "operationId": "doc-open",
                 "parameters": [
                     {
                         "description": "doc table info",
@@ -1246,6 +1264,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "chmod a file",
+                "operationId": "file-mode-handler",
                 "parameters": [
                     {
                         "description": "file mode request",
@@ -1299,6 +1318,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Delete a file",
+                "operationId": "file-delete-handler",
                 "parameters": [
                     {
                         "description": "pod name and file path",
@@ -1358,6 +1378,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Download a file",
+                "operationId": "file-download-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -1417,6 +1438,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Download a file",
+                "operationId": "file-download-handler-post",
                 "parameters": [
                     {
                         "type": "string",
@@ -1478,6 +1500,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Receive a file",
+                "operationId": "file-receive-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -1543,6 +1566,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Receive a file info",
+                "operationId": "file-receive-info-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -1594,6 +1618,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Info of a file",
+                "operationId": "file-rename-handler",
                 "parameters": [
                     {
                         "description": "old name \u0026 new name",
@@ -1653,6 +1678,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Share a file",
+                "operationId": "file-share-handler",
                 "parameters": [
                     {
                         "description": "file share request params",
@@ -1706,6 +1732,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Info of a file",
+                "operationId": "file-stat-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -1764,6 +1791,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Sync status of a file",
+                "operationId": "file-status-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -1825,6 +1853,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Update a file",
+                "operationId": "file-update-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -1897,6 +1926,7 @@ const docTemplate = `{
                     "file"
                 ],
                 "summary": "Upload a file",
+                "operationId": "file-upload-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -1984,6 +2014,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Count rows in a key value table",
+                "operationId": "kv-count",
                 "parameters": [
                     {
                         "description": "kv table request",
@@ -2037,6 +2068,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Delete a key value table",
+                "operationId": "kv-delete",
                 "parameters": [
                     {
                         "description": "kv table request",
@@ -2090,6 +2122,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Delete key-value from the kv table",
+                "operationId": "kv-del",
                 "parameters": [
                     {
                         "description": "delete request",
@@ -2143,6 +2176,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "get value from the kv table",
+                "operationId": "kv-get",
                 "parameters": [
                     {
                         "type": "string",
@@ -2208,6 +2242,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "get value from the kv table",
+                "operationId": "kv-get-data",
                 "parameters": [
                     {
                         "type": "string",
@@ -2280,6 +2315,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Check if a value exists in the kv table",
+                "operationId": "kv-present-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -2345,6 +2381,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "put key and value in the kv table",
+                "operationId": "kv-put",
                 "parameters": [
                     {
                         "description": "kv entry",
@@ -2398,6 +2435,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Export from a particular key with the given prefix",
+                "operationId": "kv-export",
                 "parameters": [
                     {
                         "description": "kv export info",
@@ -2455,6 +2493,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Upload a csv file in kv table",
+                "operationId": "kv-loadcsv",
                 "parameters": [
                     {
                         "type": "string",
@@ -2526,6 +2565,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "List all key value tables",
+                "operationId": "kv-ls",
                 "parameters": [
                     {
                         "type": "string",
@@ -2577,6 +2617,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Create a key value table",
+                "operationId": "kv-create-handler",
                 "parameters": [
                     {
                         "description": "kv table request",
@@ -2630,6 +2671,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Open a key value table",
+                "operationId": "kv-open",
                 "parameters": [
                     {
                         "description": "kv table request",
@@ -2683,6 +2725,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Seek in kv table",
+                "operationId": "kv-seek",
                 "parameters": [
                     {
                         "description": "kv seek info",
@@ -2736,6 +2779,7 @@ const docTemplate = `{
                     "kv"
                 ],
                 "summary": "Get next value from last seek in kv table",
+                "operationId": "kv-get-next",
                 "parameters": [
                     {
                         "type": "string",
@@ -2800,6 +2844,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Close pod",
+                "operationId": "pod-close-handler",
                 "parameters": [
                     {
                         "description": "pod name",
@@ -2853,6 +2898,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Delete pod",
+                "operationId": "pod-delete-handler",
                 "parameters": [
                     {
                         "description": "pod name and user password",
@@ -2906,6 +2952,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Fork a pod",
+                "operationId": "pod-fork-handler",
                 "parameters": [
                     {
                         "description": "pod name and user password",
@@ -2959,6 +3006,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Fork a pod from sharing reference",
+                "operationId": "pod-fork-from-reference-handler",
                 "parameters": [
                     {
                         "description": "pod name and user password",
@@ -3012,6 +3060,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "List pods",
+                "operationId": "pod-list-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -3056,6 +3105,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Create pod",
+                "operationId": "pod-create-handler",
                 "parameters": [
                     {
                         "description": "pod name and user password",
@@ -3109,6 +3159,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Open pod",
+                "operationId": "pod-open-handler",
                 "parameters": [
                     {
                         "description": "pod name and user password",
@@ -3162,6 +3213,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Open pod",
+                "operationId": "pod-open-async-handler",
                 "parameters": [
                     {
                         "description": "pod name and user password",
@@ -3215,6 +3267,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Is pod present",
+                "operationId": "pod-present",
                 "parameters": [
                     {
                         "type": "string",
@@ -3266,6 +3319,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Receive shared pod",
+                "operationId": "pod-receive-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -3323,6 +3377,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Receive shared pod info",
+                "operationId": "pod-receive-info-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -3374,6 +3429,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Share pod",
+                "operationId": "pod-share-handler",
                 "parameters": [
                     {
                         "description": "pod name and user password",
@@ -3427,6 +3483,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Stats for pod",
+                "operationId": "pod-stat-handler",
                 "parameters": [
                     {
                         "type": "string",
@@ -3478,6 +3535,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Sync pod",
+                "operationId": "pod-sync-handler",
                 "parameters": [
                     {
                         "description": "pod name",
@@ -3531,6 +3589,7 @@ const docTemplate = `{
                     "pod"
                 ],
                 "summary": "Sync pod asynchronously",
+                "operationId": "pod-sync-async-handler",
                 "parameters": [
                     {
                         "description": "pod name",
@@ -3602,6 +3661,7 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "Is user logged-in",
+                "operationId": "user-isloggedin",
                 "parameters": [
                     {
                         "type": "string",
@@ -3646,6 +3706,7 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "Logout",
+                "operationId": "user-logout",
                 "parameters": [
                     {
                         "type": "string",
@@ -3705,6 +3766,7 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "User stat",
+                "operationId": "user-stat",
                 "parameters": [
                     {
                         "type": "string",
@@ -3746,6 +3808,7 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "Delete user for ENS based authentication",
+                "operationId": "user-delete-v2",
                 "parameters": [
                     {
                         "description": "user delete request",
@@ -3799,6 +3862,7 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "Login User",
+                "operationId": "user-login-v2",
                 "parameters": [
                     {
                         "description": "username",
@@ -3854,6 +3918,7 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "Check if user is present",
+                "operationId": "user-present-v2",
                 "parameters": [
                     {
                         "type": "string",
@@ -3892,6 +3957,7 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "Register New User",
+                "operationId": "user-signup-v2",
                 "parameters": [
                     {
                         "description": "username",

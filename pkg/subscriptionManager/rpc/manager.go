@@ -59,7 +59,7 @@ type Client struct {
 	logger logging.Logger
 }
 
-// ShareInfo
+// ShareInfo is the structure of the share info
 type ShareInfo struct {
 	PodName     string `json:"podName"`
 	Address     string `json:"podAddress"`
@@ -188,7 +188,7 @@ func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, request
 }
 
 func (c *Client) GetSubscription(infoLocation []byte, secret [32]byte) (*ShareInfo, error) {
-	encData, respCode, err := c.getter.DownloadBlob(infoLocation[:])
+	encData, respCode, err := c.getter.DownloadBlob(infoLocation)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -247,7 +247,7 @@ func (c *Client) GetOwnSubscribablePods(owner common.Address) ([]datahub.DataHub
 	if err != nil {
 		return nil, err
 	}
-	osp := []datahub.DataHubSub{}
+	var osp []datahub.DataHubSub
 	for _, p := range s {
 		if p.Seller == owner {
 			osp = append(osp, p)

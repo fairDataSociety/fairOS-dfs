@@ -70,7 +70,7 @@ func TestWriteAt(t *testing.T) {
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
 		compression := ""
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		var offset uint64 = 3
 
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
@@ -171,7 +171,7 @@ func TestWriteAt(t *testing.T) {
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
 		compression := ""
-		blockSize := uint32(64000000)
+		blockSize := file.MinBlockSize
 		var offset uint64 = 4
 
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
@@ -297,7 +297,7 @@ func TestWriteAt(t *testing.T) {
 		filePath := string(os.PathSeparator)
 		fileName := "file1"
 		compression := ""
-		blockSize := uint32(20)
+		blockSize := file.MinBlockSize
 		var offset uint64 = 0
 
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
@@ -375,7 +375,7 @@ func TestWriteAt(t *testing.T) {
 		fileName := "file1"
 		compression := ""
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
@@ -407,11 +407,11 @@ func TestWriteAt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		rand.Seed(time.Now().UnixNano())
+		// skipcq: GSC-G404
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		min := 0
 		max := int(fileSize)
-		offset := rand.Intn((max - min + 1) + min)
+		offset := rnd.Intn((max - min + 1) + min)
 		content, err := utils.GetRandBytes(offset)
 		if err != nil {
 			t.Fatal(err)
@@ -458,7 +458,7 @@ func TestWriteAt(t *testing.T) {
 		fileName := "file2"
 		compression := "snappy"
 		fileSize := int64(100)
-		blockSize := uint32(10)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
@@ -486,10 +486,11 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		rand.Seed(time.Now().UnixNano())
+		// skipcq: GSC-G404
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		min := 0
 		max := int(fileSize)
-		offset := rand.Intn((max - min + 1) + min)
+		offset := rnd.Intn((max - min + 1) + min)
 		content, err := utils.GetRandBytes(offset)
 		if err != nil {
 			t.Fatal(err)
@@ -537,7 +538,7 @@ func TestWriteAt(t *testing.T) {
 		fileName := "file10"
 		compression := "gzip"
 		fileSize := int64(100)
-		blockSize := uint32(164000)
+		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
 		if err != nil {
@@ -568,11 +569,11 @@ func TestWriteAt(t *testing.T) {
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
 		}
-
-		rand.Seed(time.Now().UnixNano())
+		// skipcq: GSC-G404
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		min := 0
 		max := int(fileSize)
-		offset := rand.Intn((max - min + 1) + min)
+		offset := rnd.Intn((max - min + 1) + min)
 		content, err := utils.GetRandBytes(offset)
 		if err != nil {
 			t.Fatal(err)

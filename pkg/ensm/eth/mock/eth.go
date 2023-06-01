@@ -58,7 +58,7 @@ func (c *NamespaceManager) GetInfoFromNameHash(node [32]byte) (common.Address, *
 	return common.Address{}, nil, "", fmt.Errorf("info not available")
 }
 
-func (c *NamespaceManager) GetNameHash(username string) ([32]byte, error) {
+func (*NamespaceManager) GetNameHash(username string) ([32]byte, error) {
 	return goens.NameHash(username)
 }
 
@@ -74,7 +74,9 @@ func (c *NamespaceManager) GetInfo(username string) (*ecdsa.PublicKey, string, e
 	x.SetBytes(i.X[:])
 
 	y := new(big.Int)
+
 	y.SetBytes(i.Y[:])
+
 	pub := new(ecdsa.PublicKey)
 	pub.X = x
 	pub.Y = y

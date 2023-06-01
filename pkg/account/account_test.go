@@ -65,11 +65,11 @@ func TestAuthorise(t *testing.T) {
 }
 
 func TestCreateRandomKeyPair(t *testing.T) {
-	pk1, err := CreateRandomKeyPair(1)
+	pk1, err := CreateRandomKeyPair(1000000)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pk2, err := CreateRandomKeyPair(2)
+	pk2, err := CreateRandomKeyPair(9000000)
 	if err != nil {
 		t.Fatal(err)
 	}

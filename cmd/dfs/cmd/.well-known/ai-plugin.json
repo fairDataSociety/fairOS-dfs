@@ -1,0 +1,19 @@
+{
+  "schema_version": "v1.1",
+  "name_for_model": "FairOs retrieval",
+  "name_for_human": "FairOS retrival plugin",
+  "description_for_model": "Plugin for searching through the user's documents to find answers to questions and retrieve relevant information. Use it whenever a user asks something that might be found in their personal information, or asks you to save information for later.",
+  "description_for_human": "Search through your pods and documents and do whatever with your data.",
+  "auth": {
+    "type": "user_http",
+    "authorization_type": "bearer"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://fairos.staging.fairdatasociety.org/.well-known/openapi.yaml",
+    "has_user_authentication": false
+  },
+  "logo_url": "https://fairos.staging.fairdatasociety.org/.well-known/logo.png",
+  "contact_email": "hello@fairdatasociety.org",
+  "legal_info_url": "hello@legal.com"
+}

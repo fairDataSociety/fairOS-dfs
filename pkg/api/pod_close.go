@@ -26,7 +26,7 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// PodNameRequest
+// PodNameRequest is the request to open a pod
 type PodNameRequest struct {
 	PodName string `json:"podName,omitempty"`
 }
@@ -35,6 +35,7 @@ type PodNameRequest struct {
 //
 //	@Summary      Close pod
 //	@Description  PodCloseHandler is the api handler to close an open pod
+//	@ID           pod-close-handler
 //	@Tags         pod
 //	@Accept       json
 //	@Produce      json

@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-// Iterator
+// Iterator is used to iterate over the index.
 type Iterator struct {
 	index         *Index
 	indexType     IndexType
@@ -38,7 +38,7 @@ type Iterator struct {
 	error         error
 }
 
-// ManifestState
+// ManifestState is used to keep track of the current manifest and the current index of the manifest.
 type ManifestState struct {
 	currentManifest *Manifest
 	currentIndex    int
@@ -167,12 +167,12 @@ func (itr *Iterator) Next() bool {
 	return itr.nextStringKey()
 }
 
-// StringKey
+// StringKey returns the current key.
 func (itr *Iterator) StringKey() string {
 	return itr.currentKey
 }
 
-// IntegerKey
+// IntegerKey returns the current key as an integer.
 func (itr *Iterator) IntegerKey() int64 {
 	gotKey, err := strconv.ParseInt(itr.currentKey, 10, 64)
 	if err != nil {
@@ -181,12 +181,12 @@ func (itr *Iterator) IntegerKey() int64 {
 	return gotKey
 }
 
-// Value
+// Value returns the current value.
 func (itr *Iterator) Value() []byte {
 	return itr.currentValue[0]
 }
 
-// ValueAll
+// ValueAll returns all the values for the current key.
 func (itr *Iterator) ValueAll() [][]byte {
 	return itr.currentValue
 }
@@ -209,7 +209,7 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 					return nil
 				}
 
-				if entry.EType == LeafEntry && entry.Name > key {
+				if entry.EType == leafEntry && entry.Name > key {
 					manifestState := &ManifestState{
 						currentManifest: manifest,
 						currentIndex:    i,
@@ -219,7 +219,7 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 				}
 			}
 
-			if entry.EType == LeafEntry && entry.Name == key {
+			if entry.EType == leafEntry && entry.Name == key {
 				manifestState := &ManifestState{
 					currentManifest: manifest,
 					currentIndex:    i,
@@ -228,7 +228,7 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 				return nil
 			}
 
-			if entry.EType == IntermediateEntry && strings.HasPrefix(key, entry.Name) {
+			if entry.EType == intermediateEntry && strings.HasPrefix(key, entry.Name) {
 				// found a branch, push the current Manifest state
 				manifestState := &ManifestState{
 					currentManifest: manifest,
@@ -257,7 +257,7 @@ func (itr *Iterator) seekStringKey(manifest *Manifest, key string) error {
 				return err
 			}
 
-			if entry.EType == IntermediateEntry && (len(entry.Name) < len(key)) {
+			if entry.EType == intermediateEntry && (len(entry.Name) < len(key)) {
 				reducedKey := key[:len(entry.Name)]
 				for kk := 0; kk < len(entry.Name); kk++ {
 					if reducedKey[kk] == entry.Name[kk] { // skipcq: TCV-001
@@ -354,7 +354,7 @@ func (itr *Iterator) nextStringKey() bool {
 	}
 
 	// if it is a leaf entry, set the key and value
-	if entry.EType == LeafEntry {
+	if entry.EType == leafEntry {
 		actualKey := manifestState.currentManifest.Name + entry.Name
 		actualKey = strings.TrimPrefix(actualKey, itr.index.name)
 		itr.currentKey = actualKey
@@ -364,7 +364,7 @@ func (itr *Iterator) nextStringKey() bool {
 	}
 
 	// if it is an intermediate entry, get the branch Manifest and push in to the stack
-	if entry.EType == IntermediateEntry {
+	if entry.EType == intermediateEntry {
 		var newManifest *Manifest
 		if itr.index.mutable {
 			mf, err := itr.index.loadManifest(manifestState.currentManifest.Name+entry.Name, itr.index.encryptionPassword)

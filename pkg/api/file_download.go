@@ -31,6 +31,7 @@ import (
 //
 //	@Summary      Download a file
 //	@Description  FileDownloadHandlerPost is the api handler to download a file from a given pod
+//	@ID		      file-download-handler-post
 //	@Tags         file
 //	@Accept       mpfd
 //	@Produce      */*
@@ -63,6 +64,7 @@ func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request
 //
 //	@Summary      Download a file
 //	@Description  FileDownloadHandlerGet is the api handler to download a file from a given pod
+//	@ID		      file-download-handler
 //	@Tags         file
 //	@Accept       json
 //	@Produce      */*
@@ -134,6 +136,7 @@ func (h *Handler) handleDownload(w http.ResponseWriter, r *http.Request, podName
 		jsonhttp.InternalServerError(w, "download: "+err.Error())
 		return
 	}
+	// skipcq: GO-S2307
 	defer reader.Close()
 
 	sizeString := strconv.FormatUint(size, 10)

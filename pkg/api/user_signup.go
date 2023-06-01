@@ -31,7 +31,7 @@ var (
 	jsonContentType = "application/json"
 )
 
-// UserSignupResponse
+// UserSignupResponse is the json response sent for user signup
 type UserSignupResponse struct {
 	Address   string `json:"address"`
 	NameHash  string `json:"nameHash,omitempty"`
@@ -42,17 +42,18 @@ type UserSignupResponse struct {
 
 // UserSignupV2Handler godoc
 //
-//	@Summary      Register New User
-//	@Description  registers new user with the new ENS based authentication
-//	@Tags         user
-//	@Accept       json
-//	@Produce      json
-//	@Param	      user_request body common.UserSignupRequest true "username"
-//	@Success      201  {object}  UserSignupResponse
-//	@Failure      400  {object}  response
-//	@Failure      402  {object}  UserSignupResponse
-//	@Failure      500  {object}  response
-//	@Router       /v2/user/signup [post]
+//		@Summary      Register New User
+//		@Description  registers new user with the new ENS based authentication
+//	 	@ID			  user-signup-v2
+//		@Tags         user
+//		@Accept       json
+//		@Produce      json
+//		@Param	      user_request body common.UserSignupRequest true "username"
+//		@Success      201  {object}  UserSignupResponse
+//		@Failure      400  {object}  response
+//		@Failure      402  {object}  UserSignupResponse
+//		@Failure      500  {object}  response
+//		@Router       /v2/user/signup [post]
 func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != jsonContentType {
@@ -85,7 +86,7 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create user
-	address, createdMnemonic, nameHash, publicKey, ui, err := h.dfsAPI.CreateUserV2(user, password, mnemonic, "")
+	signUp, err := h.dfsAPI.CreateUserV2(user, password, mnemonic, "")
 	if err != nil {
 		if err == u.ErrUserAlreadyPresent {
 			h.logger.Errorf("user signup: %v", err)
@@ -94,10 +95,16 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 		}
 		if err == eth.ErrInsufficientBalance {
 			h.logger.Errorf("user signup: %v", err)
+			if signUp != nil {
+				jsonhttp.PaymentRequired(w, &UserSignupResponse{
+					Address:  signUp.Address,
+					Mnemonic: signUp.Mnemonic,
+					Message:  eth.ErrInsufficientBalance.Error(),
+				})
+				return
+			}
 			jsonhttp.PaymentRequired(w, &UserSignupResponse{
-				Address:  address,
-				Mnemonic: createdMnemonic,
-				Message:  eth.ErrInsufficientBalance.Error(),
+				Message: eth.ErrInsufficientBalance.Error(),
 			})
 			return
 		}
@@ -105,7 +112,7 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, &response{Message: "user signup: " + err.Error()})
 		return
 	}
-	err = cookie.SetSession(ui.GetSessionId(), w, h.cookieDomain)
+	err = cookie.SetSession(signUp.UserInfo.GetSessionId(), w, h.cookieDomain)
 	if err != nil {
 		h.logger.Errorf("user signup: %v", err)
 		jsonhttp.InternalServerError(w, &response{Message: "user signup: " + err.Error()})
@@ -113,7 +120,7 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if mnemonic == "" {
-		mnemonic = createdMnemonic
+		mnemonic = signUp.Mnemonic
 	} else {
 		mnemonic = ""
 	}
@@ -121,10 +128,10 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	// send the response
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.Created(w, &UserSignupResponse{
-		Address:   address,
+		Address:   signUp.Address,
 		Mnemonic:  mnemonic,
-		NameHash:  "0x" + nameHash,
-		PublicKey: publicKey,
+		NameHash:  "0x" + signUp.NameHash,
+		PublicKey: signUp.PublicKey,
 		Message:   "user signed-up successfully",
 	})
 }

@@ -41,7 +41,7 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("version    : ", dfs.Version)
 		fmt.Println("fdfsServer   : ", fdfsServer)
-		NewPrompt()
+		newPrompt()
 		initPrompt()
 	},
 }

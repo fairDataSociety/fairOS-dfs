@@ -27,15 +27,17 @@ import (
 )
 
 var (
-	//MetaVersion
+	// MetaVersion is the version of the meta data
 	MetaVersion uint8 = 2
 
-	//ErrDeletedFeed
+	// ErrDeletedFeed is returned when the feed is deleted
 	ErrDeletedFeed = errors.New("deleted feed")
+
+	// ErrUnknownFeed is returned when the feed is unknown
 	ErrUnknownFeed = errors.New("unknown value in feed")
 )
 
-// MetaData
+// MetaData is the structure of the file metadata
 type MetaData struct {
 	Version          uint8  `json:"version"`
 	Path             string `json:"filePath"`
@@ -84,7 +86,7 @@ func (f *File) uploadMeta(meta *MetaData, podPassword string) error {
 	// put the file meta as a feed
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
-	_, err = f.fd.CreateFeed(topic, f.userAddress, fileMetaBytes, []byte(podPassword))
+	_, err = f.fd.CreateFeed(f.userAddress, topic, fileMetaBytes, []byte(podPassword))
 	return err
 }
 
@@ -92,7 +94,7 @@ func (f *File) deleteMeta(meta *MetaData, podPassword string) error {
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
 	// update with utils.DeletedFeedMagicWord
-	_, err := f.fd.UpdateFeed(topic, f.userAddress, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
+	_, err := f.fd.UpdateFeed(f.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -110,7 +112,7 @@ func (f *File) updateMeta(meta *MetaData, podPassword string) error {
 	// put the file meta as a feed
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	topic := utils.HashString(totalPath)
-	_, err = f.fd.UpdateFeed(topic, f.userAddress, fileMetaBytes, []byte(podPassword))
+	_, err = f.fd.UpdateFeed(f.userAddress, topic, fileMetaBytes, []byte(podPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -118,7 +120,7 @@ func (f *File) updateMeta(meta *MetaData, podPassword string) error {
 	return nil
 }
 
-// BackupFromFileName
+// BackupFromFileName is used to backup a file
 func (f *File) BackupFromFileName(fileNameWithPath, podPassword string) (*MetaData, error) {
 	p, err := f.GetMetaFromFileName(fileNameWithPath, podPassword, f.userAddress)
 	if err != nil {
@@ -145,7 +147,7 @@ func (f *File) BackupFromFileName(fileNameWithPath, podPassword string) (*MetaDa
 	return p, nil
 }
 
-// RenameFromFileName
+// RenameFromFileName is used to rename a file
 func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath, podPassword string) (*MetaData, error) {
 	fileNameWithPath = filepath.ToSlash(fileNameWithPath)
 	newFileNameWithPath = filepath.ToSlash(newFileNameWithPath)
@@ -180,7 +182,7 @@ func (f *File) RenameFromFileName(fileNameWithPath, newFileNameWithPath, podPass
 	return p, nil
 }
 
-// GetMetaFromFileName
+// GetMetaFromFileName is used to get meta from file name
 func (f *File) GetMetaFromFileName(fileNameWithPath, podPassword string, userAddress utils.Address) (*MetaData, error) {
 	topic := utils.HashString(fileNameWithPath)
 	_, metaBytes, err := f.fd.GetFeedData(topic, userAddress, []byte(podPassword))
@@ -201,7 +203,7 @@ func (f *File) GetMetaFromFileName(fileNameWithPath, podPassword string, userAdd
 	return meta, nil
 }
 
-// PutMetaForFile
+// PutMetaForFile is used to put meta for a file
 func (f *File) PutMetaForFile(meta *MetaData, podPassword string) error {
 	return f.updateMeta(meta, podPassword)
 }

@@ -47,7 +47,7 @@ const (
 	DefaultIndexFieldName = "id"
 )
 
-// Document
+// Document is the main object to handle document DBs
 type Document struct {
 	podName     string
 	fd          *feed.API
@@ -61,7 +61,7 @@ type Document struct {
 	entryGetter taskmanager.TaskManagerGO
 }
 
-// DocumentDB
+// DocumentDB is the main object to handle a document DB
 type DocumentDB struct {
 	name          string
 	mutable       bool
@@ -70,7 +70,7 @@ type DocumentDB struct {
 	listIndexes   map[string]*Index
 }
 
-// DBSchema
+// DBSchema is the schema of a document DB
 type DBSchema struct {
 	Name            string   `json:"name"`
 	Mutable         bool     `json:"mutable"`
@@ -80,18 +80,18 @@ type DBSchema struct {
 	CompoundIndexes []CIndex `json:"compound_indexes,omitempty"`
 }
 
-// SIndex
+// SIndex is a simple index
 type SIndex struct {
 	FieldName string    `json:"name"`
 	FieldType IndexType `json:"type"`
 }
 
-// CIndex
+// CIndex is a compound index
 type CIndex struct {
 	SimpleIndexes []SIndex
 }
 
-// DocBatch
+// DocBatch is a batch of documents
 type DocBatch struct {
 	db      *DocumentDB
 	batches map[string]*Batch
@@ -465,7 +465,7 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 				d.logger.Errorf("counting document db: %v", err.Error())
 				return 0, err
 			}
-			matched := re.Match([]byte(itr.StringKey()))
+			matched := re.MatchString(itr.StringKey())
 			if matched {
 				refs := itr.ValueAll()
 				return uint64(len(refs)), nil
@@ -479,7 +479,7 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 			}
 
 			for itr.Next() {
-				matched := re.Match([]byte(itr.StringKey()))
+				matched := re.MatchString(itr.StringKey())
 				if matched {
 					refs := itr.ValueAll()
 					count = count + uint64(len(refs))
@@ -918,7 +918,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 				d.logger.Errorf("finding from document db: %v", err.Error())
 				return nil, err
 			}
-			matched := re.Match([]byte(itr.StringKey()))
+			matched := re.MatchString(itr.StringKey())
 			if matched {
 				references = itr.ValueAll()
 			}
@@ -930,7 +930,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 			}
 
 			for itr.Next() {
-				matched := re.Match([]byte(itr.StringKey()))
+				matched := re.MatchString(itr.StringKey())
 				if matched {
 					refs := itr.ValueAll()
 					references = append(references, refs...)
@@ -1080,7 +1080,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		d.logger.Errorf("finding from document db: ", ErrInvalidIndexType)
 		return nil, ErrInvalidIndexType
 	}
-	docs := [][]byte{}
+	var docs [][]byte
 	if idx.mutable {
 		wg := new(sync.WaitGroup)
 		mtx := &sync.Mutex{}
@@ -1178,7 +1178,7 @@ func (d *Document) storeDocumentDBSchemas(encryptionPassword string, collections
 		}
 	}
 	topic := utils.HashString(documentFile)
-	_, err := d.fd.UpdateFeed(topic, d.user, buf.Bytes(), []byte(encryptionPassword))
+	_, err := d.fd.UpdateFeed(d.user, topic, buf.Bytes(), []byte(encryptionPassword))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

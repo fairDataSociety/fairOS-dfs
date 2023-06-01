@@ -24,7 +24,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
-// Handler
+// Handler is the api handler
 type Handler struct {
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -35,10 +35,9 @@ type Handler struct {
 	cookieDomain       string
 }
 
-// New
+// New returns a new handler
 func New(ctx context.Context, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, ensConfig *contracts.ENSConfig, subscriptionConfig *contracts.SubscriptionConfig, logger logging.Logger) (*Handler, error) {
-	api, err := dfs.NewDfsAPI(beeApi, postageBlockId, ensConfig, subscriptionConfig, logger)
-
+	api, err := dfs.NewDfsAPI(ctx, beeApi, postageBlockId, ensConfig, subscriptionConfig, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +64,7 @@ func NewMockHandler(dfsAPI *dfs.API, logger logging.Logger, whitelistedOrigins [
 	}
 }
 
-// Close
+// Close closes the handler
 func (h *Handler) Close() error {
 	h.cancel()
 	return h.dfsAPI.Close()

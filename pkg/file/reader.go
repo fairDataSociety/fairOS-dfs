@@ -34,11 +34,11 @@ const (
 )
 
 var (
-	//ErrInvalidOffset
+	// ErrInvalidOffset is returned when the offset is invalid
 	ErrInvalidOffset = errors.New("invalid offset")
 )
 
-// Reader
+// Reader is a struct to read a file from the pod
 type Reader struct {
 	readOffset  int64
 	client      blockstore.Client
@@ -94,7 +94,6 @@ func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, block
 	if cache {
 		blockCache, _ = lru.New(blockCacheSize)
 	}
-
 	r := &Reader{
 		fileInode:     fileInode,
 		client:        client,
@@ -146,7 +145,6 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 			// read spans across block. so flow down and read the next block
 		}
 	}
-
 	if r.lastBlock == nil {
 		noOfBlocks := int((bytesToRead / r.blockSize) + 1)
 		for i := 0; i < noOfBlocks; i++ {
@@ -196,7 +194,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 	return 0, nil // skipcq: TCV-001
 }
 
-// Seek
+// Seek seeks to a given offset in the file and returns the offset.
 func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
 	// TODO: use whence
 	if seekOffset < 0 || seekOffset > int64(r.fileSize) {
@@ -236,7 +234,7 @@ func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
 	return seekOffset, nil
 }
 
-// ReadLine
+// ReadLine reads a line from the file
 func (r *Reader) ReadLine() ([]byte, error) {
 	if r.rlBuffer == nil {
 		buf := make([]byte, r.blockSize)
@@ -299,7 +297,7 @@ READ:
 	return destBuf, nil
 }
 
-// Close
+// Close closes the reader
 func (r *Reader) Close() error {
 	if r.blockCache != nil {
 		r.blockCache.Purge()
@@ -333,7 +331,7 @@ func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]b
 	return decompressedData, nil
 }
 
-// Decompress
+// Decompress decompresses the data
 func Decompress(dataToDecompress []byte, compression string, blockSize uint32) ([]byte, error) {
 	switch compression {
 	case "gzip":

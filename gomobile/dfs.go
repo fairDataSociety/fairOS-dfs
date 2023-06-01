@@ -3,6 +3,7 @@ package fairos
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -50,7 +51,7 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 	case "play":
 		ensConfig, _ = contracts.PlayConfig()
 	case "testnet":
-		ensConfig, _ = contracts.TestnetConfig()
+		ensConfig, _ = contracts.TestnetConfig(contracts.Sepolia)
 	case "mainnet":
 		return fmt.Errorf("not supported yet")
 	default:
@@ -58,6 +59,7 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 	}
 	ensConfig.ProviderBackend = rpc
 	api, err = dfs.NewDfsAPI(
+		context.TODO(),
 		beeEndpoint,
 		postageBlockId,
 		ensConfig,
@@ -68,10 +70,11 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 }
 
 func LoginUser(username, password string) (string, error) {
-	ui, nameHash, publicKey, err := api.LoginUserV2(username, password, "")
+	loginResp, err := api.LoginUserV2(username, password, "")
 	if err != nil {
 		return "", err
 	}
+	ui, nameHash, publicKey := loginResp.UserInfo, loginResp.NameHash, loginResp.PublicKey
 	sessionId = ui.GetSessionId()
 	savedPassword = password
 	savedUsername = username
@@ -182,7 +185,7 @@ func PodReceive(podSharingReference string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("public pod \"%s\", added as shared pod", pi.GetPodName()), nil
+	return fmt.Sprintf("public pod %q, added as shared pod", pi.GetPodName()), nil
 }
 
 func PodReceiveInfo(podSharingReference string) (string, error) {
@@ -230,8 +233,8 @@ func DirList(podName, dirPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fileList := []string{}
-	dirList := []string{}
+	var fileList []string
+	var dirList []string
 	for _, v := range files {
 		fileList = append(fileList, v.Name)
 	}
@@ -307,6 +310,7 @@ func FileUpload(podName, filePath, dirPath, compression, blockSize string, overw
 	if err != nil {
 		return err
 	}
+	// skipcq: GO-S2307
 	defer f.Close()
 	bs, err := humanize.ParseBytes(blockSize)
 	if err != nil {
@@ -325,6 +329,7 @@ func FileDownload(podName, filePath string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// skipcq: GO-S2307
 	defer r.Close()
 
 	buf := new(bytes.Buffer)
@@ -409,6 +414,7 @@ func KVLoadCSV(podName, tableName, filePath, memory string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// skipcq: GO-S2307
 	defer f.Close()
 	mem := true
 	if memory == "" {
@@ -579,6 +585,7 @@ func DocLoadJson(podName, tableName, filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// skipcq: GO-S2307
 	defer f.Close()
 	reader := bufio.NewReader(f)
 

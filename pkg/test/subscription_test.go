@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -33,7 +35,8 @@ func TestSubscription(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	addr1 := common.HexToAddress(acc1.GetUserAccountInfo().GetAddress().Hex())
+	a1 := acc1.GetUserAccountInfo().GetAddress()
+	addr1 := common.HexToAddress(a1.Hex())
 	nameHash1, err := goens.NameHash(addr1.Hex())
 	if err != nil {
 		t.Fatal(err)
@@ -85,7 +88,8 @@ func TestSubscription(t *testing.T) {
 
 	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
 	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, logger)
-	addr2 := common.HexToAddress(acc2.GetUserAccountInfo().GetAddress().Hex())
+	a2 := acc2.GetUserAccountInfo().GetAddress()
+	addr2 := common.HexToAddress(a2.Hex())
 	nameHash2, err := goens.NameHash(addr2.Hex())
 	if err != nil {
 		t.Fatal(err)
@@ -165,7 +169,7 @@ func TestSubscription(t *testing.T) {
 	if fileMeta1.Size != uint64(100) {
 		t.Fatalf("invalid file size")
 	}
-	if fileMeta1.BlockSize != uint32(10) {
+	if fileMeta1.BlockSize != file.MinBlockSize {
 		t.Fatalf("invalid block size")
 	}
 	fileMeta2 := fileObject.GetInode(podPassword, "/parentDir/file2")
@@ -181,7 +185,7 @@ func TestSubscription(t *testing.T) {
 	if fileMeta2.Size != uint64(200) {
 		t.Fatalf("invalid file size")
 	}
-	if fileMeta2.BlockSize != uint32(20) {
+	if fileMeta2.BlockSize != file.MinBlockSize {
 		t.Fatalf("invalid block size")
 	}
 

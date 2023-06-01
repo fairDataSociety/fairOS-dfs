@@ -27,12 +27,12 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// UploadFileResponse
+// UploadFileResponse is the json response from upload file api
 type UploadFileResponse struct {
 	Responses []UploadResponse
 }
 
-// UploadResponse
+// UploadResponse is the json response from upload file api
 type UploadResponse struct {
 	FileName string `json:"fileName"`
 	Message  string `json:"message,omitempty"`
@@ -40,7 +40,7 @@ type UploadResponse struct {
 
 const (
 	defaultMaxMemory = 32 << 20 // 32 MB
-	//CompressionHeader
+	// CompressionHeader is the header key for compression type
 	CompressionHeader = "fairOS-dfs-Compression"
 )
 
@@ -48,6 +48,7 @@ const (
 //
 //	@Summary      Upload a file
 //	@Description  FileUploadHandler is the api handler to upload a file from a local file system to the dfs
+//	@ID		      file-upload-handler
 //	@Tags         file
 //	@Accept       mpfd
 //	@Produce      json
@@ -138,7 +139,6 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "file upload: parameter \"files\" missing"})
 		return
 	}
-
 	// upload files one by one
 	var responses []UploadResponse
 	for _, file := range files {

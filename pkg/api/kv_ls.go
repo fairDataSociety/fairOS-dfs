@@ -23,12 +23,12 @@ import (
 	"resenje.org/jsonhttp"
 )
 
-// Collections
+// Collections is the struct which holds the list of tables
 type Collections struct {
 	Tables []Collection
 }
 
-// Collection
+// Collection is the struct which holds the table information
 type Collection struct {
 	Name           string   `json:"tableName"`
 	IndexedColumns []string `json:"indexes"`
@@ -39,6 +39,7 @@ type Collection struct {
 //
 //	@Summary      List all key value tables
 //	@Description  KVListHandler is the api handler to list all the key value tables in a pod
+//	@ID		      kv-ls
 //	@Tags         kv
 //	@Accept       json
 //	@Produce      json
