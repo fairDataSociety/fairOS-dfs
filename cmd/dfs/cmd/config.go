@@ -17,7 +17,6 @@ var (
 	optionNetwork            = "network"
 	optionRPC                = "rpc"
 
-	defaultFeedTracker        = false
 	defaultCORSAllowedOrigins = []string{}
 	defaultDFSHttpPort        = ":9090"
 	defaultDFSPprofPort       = ":9091"

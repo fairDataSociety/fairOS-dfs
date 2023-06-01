@@ -104,9 +104,14 @@ func TestTimeKeeper(t *testing.T) {
 		}
 
 		require.Equal(t, uint64(now), epoch.Time)
+
+		err = db2.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
 	})
 
-	t.Run("level-get-from-different-feed-pointer", func(t *testing.T) {
+	t.Run("level-get-from-multiple-different-feed-pointer", func(t *testing.T) {
 		fd1 := feed.New(accountInfo1, client, logger)
 		db, err := leveldb.Open(NewMemStorage(fd1, client, user1, "username", "password", logger), nil)
 		if err != nil {
