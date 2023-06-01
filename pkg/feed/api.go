@@ -473,7 +473,6 @@ func (a *API) GetFeedUpdateEpoch(topic []byte) (lookup.Epoch, error) {
 }
 
 func (a *API) Close() error {
-	fmt.Println("Close", a.db)
 	if a.db != nil {
 		return a.db.Close()
 	}

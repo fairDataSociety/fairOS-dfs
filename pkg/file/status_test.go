@@ -2,7 +2,6 @@ package file_test
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -56,7 +55,6 @@ func TestStatus(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println("total", total, "numberOfChunks", numberOfChunks)
 		if total != numberOfChunks {
 			t.Fatal("chunk count mismatch for status")
 		}

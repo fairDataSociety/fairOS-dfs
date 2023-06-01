@@ -128,12 +128,14 @@ can consume it.`,
 		}
 		ensConfig := &contracts.ENSConfig{}
 		var subscriptionConfig *contracts.SubscriptionConfig
-		network := config.GetString("ens-network")
+
 		rpc := config.GetString(optionRPC)
 		if rpc == "" {
 			fmt.Println("\nrpc endpoint is missing")
 			return fmt.Errorf("rpc endpoint is missing")
 		}
+
+		network := config.GetString("ens-network")
 		switch v := strings.ToLower(network); v {
 		case "mainnet":
 			fmt.Println("\nens is not available for mainnet yet")
@@ -229,7 +231,7 @@ can consume it.`,
 func init() {
 	serverCmd.Flags().BoolVar(&pprof, "pprof", false, "should run pprof")
 	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
-	serverCmd.Flags().BoolVar(&feedTracker, "feedTracker", defaultFeedTracker, "should run feed tracker")
+	serverCmd.Flags().BoolVar(&feedTracker, "feedTracker", false, "should run feed tracker")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
