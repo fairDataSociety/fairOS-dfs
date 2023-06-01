@@ -12,8 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -22,6 +20,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 )
 
@@ -158,7 +157,6 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-		<-time.After(time.Second)
 		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -282,7 +280,6 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent2, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-		<-time.After(time.Second)
 		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -358,7 +355,6 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-		<-time.After(time.Second)
 		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -440,7 +436,6 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-		<-time.After(time.Second)
 		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -518,7 +513,6 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-		<-time.After(time.Second)
 		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -599,7 +593,6 @@ func TestWriteAt(t *testing.T) {
 			t.Log("downloadedContent", rcvdBuffer.Bytes())
 			t.Fatal("content is different ")
 		}
-		<-time.After(time.Second)
 		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
