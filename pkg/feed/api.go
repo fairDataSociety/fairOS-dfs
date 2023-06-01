@@ -451,10 +451,6 @@ func (a *API) PutFeedUpdateEpoch(topic []byte, epoch lookup.Epoch) error {
 	if err != nil {
 		return err
 	}
-	//if err := a.db.Put(topic, data); err != nil {
-	//	return err
-	//}
-	//return a.db.Sync()
 	return a.db.Put(topic, data, nil)
 }
 
