@@ -45,6 +45,7 @@ import (
 
 var (
 	pprof          bool
+	feedTracker    bool
 	swag           bool
 	httpPort       string
 	pprofPort      string
@@ -75,6 +76,9 @@ var serverCmd = &cobra.Command{
 can consume it.`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := config.BindPFlag(optionDFSHttpPort, cmd.Flags().Lookup("httpPort")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionFeedTracker, cmd.Flags().Lookup("feedTracker")); err != nil {
 			return err
 		}
 		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
@@ -179,7 +183,18 @@ can consume it.`,
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 
-		hdlr, err := api.New(ctx, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, nil, logger)
+		opts := &api.Options{
+			BeeApiEndpoint:     beeApi,
+			CookieDomain:       cookieDomain,
+			Stamp:              postageBlockId,
+			WhitelistedOrigins: corsOrigins,
+			EnsConfig:          ensConfig,
+			SubscriptionConfig: subscriptionConfig,
+			Logger:             logger,
+			FeedTracker:        feedTracker,
+		}
+
+		hdlr, err := api.New(ctx, opts)
 		if err != nil {
 			logger.Error(err.Error())
 			return err
@@ -214,6 +229,7 @@ can consume it.`,
 func init() {
 	serverCmd.Flags().BoolVar(&pprof, "pprof", false, "should run pprof")
 	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
+	serverCmd.Flags().BoolVar(&feedTracker, "feedTracker", defaultFeedTracker, "should run feed tracker")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
