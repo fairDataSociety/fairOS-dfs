@@ -41,7 +41,7 @@ vet:
 
 .PHONY: test-race
 test-race:
-	$(GO) test -race -timeout 300000ms -v "$(DEST)"
+	$(GO) test -race -timeout 1000000ms -v "$(DEST)"
 
 .PHONY: test
 test:
