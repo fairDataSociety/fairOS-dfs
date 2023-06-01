@@ -3,7 +3,6 @@ module github.com/fairdatasociety/fairOS-dfs
 go 1.20
 
 require (
-	github.com/akrylysov/pogreb v0.10.1
 	github.com/btcsuite/btcd v0.22.3
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.1
