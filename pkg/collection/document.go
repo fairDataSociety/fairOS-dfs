@@ -289,21 +289,6 @@ func (d *Document) OpenDocumentDB(dbName, encryptionPassword string) error {
 	return nil
 }
 
-// CloseDocumentDB closes a document database.
-func (d *Document) CloseDocumentDB(dbName string) error {
-	d.logger.Info("closing document db: ", dbName)
-	// check if the db is already present and opened
-	if !d.IsDBOpened(dbName) { // skipcq: TCV-001
-		d.logger.Errorf("closing document db: %v", ErrDocumentDBNotOpened)
-		return ErrDocumentDBNotOpened
-	}
-
-	// add to the open DB map
-	d.removeFromOpenedDB(dbName)
-	d.logger.Info("document db closed: ", dbName)
-	return nil
-}
-
 // DeleteDocumentDB a document DB, all its data and its related indxes.
 func (d *Document) DeleteDocumentDB(dbName, encryptionPassword string) error {
 	d.logger.Info("deleting document db: ", dbName)
@@ -1298,7 +1283,7 @@ func (d *Document) NearestNodes(dbName, podPassword, index string, v []float32, 
 func (d *Document) LoadDocumentDBSchemas(encryptionPassword string) (map[string]DBSchema, error) {
 	collections := make(map[string]DBSchema)
 	topic := utils.HashString(documentFile)
-	_, data, err := d.fd.GetFeedData(topic, d.user, []byte(encryptionPassword))
+	_, data, err := d.fd.GetFeedData(topic, d.user, []byte(encryptionPassword), false)
 	if err != nil {
 		if err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 			return collections, err
@@ -1350,7 +1335,7 @@ func (d *Document) storeDocumentDBSchemas(encryptionPassword string, collections
 		}
 	}
 	topic := utils.HashString(documentFile)
-	_, err := d.fd.UpdateFeed(d.user, topic, buf.Bytes(), []byte(encryptionPassword))
+	_, err := d.fd.UpdateFeed(d.user, topic, buf.Bytes(), []byte(encryptionPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

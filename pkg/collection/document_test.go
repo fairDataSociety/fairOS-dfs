@@ -762,12 +762,6 @@ func TestDocumentStore(t *testing.T) {
 		err = docStore.DocBatchWrite(docBatch, "")
 		require.NoError(t, err)
 
-		err = docStore.CloseDocumentDB("docdb_11")
-		require.NoError(t, err)
-
-		err = docStore.OpenDocumentDB("docdb_11", podPassword)
-		require.NoError(t, err)
-
 		// count the total docs using id field
 		count1, err := docStore.Count("docdb_11", "")
 		require.NoError(t, err)
@@ -791,6 +785,7 @@ func TestDocumentStore(t *testing.T) {
 		err = docStore.DeleteDocumentDB("docdb_11", podPassword)
 		require.NoError(t, err)
 	})
+
 	t.Run("vector_index", func(t *testing.T) {
 		// create a document DB
 		si := make(map[string]collection.IndexType)

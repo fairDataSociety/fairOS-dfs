@@ -51,20 +51,23 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 	case "play":
 		ensConfig, _ = contracts.PlayConfig()
 	case "testnet":
-		ensConfig, _ = contracts.TestnetConfig()
+		ensConfig, _ = contracts.TestnetConfig(contracts.Sepolia)
 	case "mainnet":
 		return fmt.Errorf("not supported yet")
 	default:
 		return fmt.Errorf("unknown network")
 	}
 	ensConfig.ProviderBackend = rpc
+	opts := &dfs.Options{
+		Stamp:              postageBlockId,
+		BeeApiEndpoint:     beeEndpoint,
+		EnsConfig:          ensConfig,
+		SubscriptionConfig: nil,
+		Logger:             logger,
+	}
 	api, err = dfs.NewDfsAPI(
 		context.TODO(),
-		beeEndpoint,
-		postageBlockId,
-		ensConfig,
-		nil,
-		logger,
+		opts,
 	)
 	return err
 }

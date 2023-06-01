@@ -81,19 +81,10 @@ rpc: http://localhost:9545
 ```
 
 ##### Custom configuration for ENS based Registration
-For ENS based authentication we can either use a `network` configuration in the config file 
+For ENS based authentication we can either use a `ens-network` configuration in the config file 
 ```
 // define network for ens authtication
-network: "testnet"
-```
-OR define custom configuration for ENS based Registration
-##### Custom configuration for ENS based Registration
-```
-ens:
-  ens-registry-address: 0x26b4AFb60d6C903165150C6F0AA14F8016bE4aec
-  provider-domain: fds
-  public-resolver-address: 0xA94B7f0465E98609391C623d0560C5720a3f2D33
-  fds-registrar-address: 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe
+ens-network: "testnet"
 ```
 
 #### Other configuration
@@ -149,7 +140,7 @@ Flags:
       --network string          network to use for authentication (mainnet/testnet/play)
       --postageBlockId string   the postage block used to store the data in bee
       --pprofPort string        pprof port (default ":9091")
-      --rpc string              rpc endpoint for ens network. xDai for mainnet | Goerli for testnet | local fdp-play rpc endpoint for play
+      --rpc string              rpc endpoint for ens network. xDai for mainnet | Sepolia for testnet | local fdp-play rpc endpoint for play
       --swag                    should run swagger-ui
 Global Flags:
       --beeApi string      full bee api endpoint (default "localhost:1633")
@@ -196,7 +187,7 @@ $ dfs server --swag
 This should run the dfs server along with swagger-ui, available at `http://localhost:9090/swagger/index.html` assuming 
 server is running on default `9090` port on your localhost
 
-### Running fairOS on goerli testnet and swarm mainnet
+### Running fairOS on sepolia testnet and swarm mainnet
 
 we need to set `network` configuration in the config file as testnet and bee configuration should point to a bee running
 on mainnet 

@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -68,14 +67,19 @@ func (f *File) ReadSeeker(podFileWithPath, podPassword string) (io.ReadSeekClose
 		return nil, 0, err
 	}
 
-	// need to change the access time for podFile if it is owned by user
-	if !f.fd.IsReadOnlyFeed() {
-		meta.AccessTime = time.Now().Unix()
-		err = f.updateMeta(meta, podPassword)
-		if err != nil { // skipcq: TCV-001
-			return nil, 0, err
+	/*
+		// Disabling access time update for now to reduce latency
+		// need to change the access time for podFile if it is owned by user
+		if !f.fd.IsReadOnlyFeed() {
+			meta.AccessTime = time.Now().Unix()
+			go func() {
+				err = f.updateMeta(meta, podPassword)
+				if err != nil { // skipcq: TCV-001
+					f.logger.Errorf("error updating meta for file %s: %s", totalFilePath, err.Error())
+				}
+			}()
 		}
-	}
+	*/
 
 	reader := NewReader(fileInode, f.getClient(), meta.Size, meta.BlockSize, meta.Compression, false)
 	return reader, meta.Size, nil
