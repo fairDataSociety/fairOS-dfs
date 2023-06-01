@@ -785,6 +785,7 @@ func TestDocumentStore(t *testing.T) {
 		err = docStore.DeleteDocumentDB("docdb_11", podPassword)
 		require.NoError(t, err)
 	})
+
 	t.Run("vector_index", func(t *testing.T) {
 		// create a document DB
 		si := make(map[string]collection.IndexType)
