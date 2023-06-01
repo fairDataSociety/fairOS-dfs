@@ -211,7 +211,6 @@ func TestUpload(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		<-time.After(1 * time.Second)
 		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
@@ -255,7 +254,6 @@ func TestUpload(t *testing.T) {
 		if meta.BlockSize != blockSize {
 			t.Fatalf("invalid block size in meta")
 		}
-		<-time.After(1 * time.Second)
 
 		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
@@ -316,8 +314,6 @@ func TestUpload(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		<-time.After(time.Second)
-
 		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
 		if err != nil {
 			t.Fatal(err)
