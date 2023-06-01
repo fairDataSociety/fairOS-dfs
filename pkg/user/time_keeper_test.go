@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -30,7 +31,7 @@ func TestTimeKeeper(t *testing.T) {
 
 	t.Run("level-get-from-same-feed-pointer", func(t *testing.T) {
 		fd1 := feed.New(accountInfo1, client, logger)
-		db, err := leveldb.Open(NewMemStorage(fd1, client, user1, "username", "password"), nil)
+		db, err := leveldb.Open(NewMemStorage(fd1, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -66,7 +67,7 @@ func TestTimeKeeper(t *testing.T) {
 
 	t.Run("level-get-from-different-feed-pointer", func(t *testing.T) {
 		fd1 := feed.New(accountInfo1, client, logger)
-		db, err := leveldb.Open(NewMemStorage(fd1, client, user1, "username", "password"), nil)
+		db, err := leveldb.Open(NewMemStorage(fd1, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -92,7 +93,7 @@ func TestTimeKeeper(t *testing.T) {
 		}
 
 		fd2 := feed.New(accountInfo1, client, logger)
-		db2, err := leveldb.Open(NewMemStorage(fd2, client, user1, "username", "password"), nil)
+		db2, err := leveldb.Open(NewMemStorage(fd2, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -103,5 +104,89 @@ func TestTimeKeeper(t *testing.T) {
 		}
 
 		require.Equal(t, uint64(now), epoch.Time)
+	})
+
+	t.Run("level-get-from-different-feed-pointer", func(t *testing.T) {
+		fd1 := feed.New(accountInfo1, client, logger)
+		db, err := leveldb.Open(NewMemStorage(fd1, client, user1, "username", "password", logger), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fd1.SetUpdateTracker(db)
+
+		now := time.Now().Unix()
+		for i := 0; i < 10000; i++ {
+			topic := utils.HashString(fmt.Sprintf("topic-%d", i))
+			err = fd1.PutFeedUpdateEpoch(topic, lookup.Epoch{
+				Time:  uint64(now + int64(i)),
+				Level: 31,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		err = db.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fd2 := feed.New(accountInfo1, client, logger)
+		db2, err := leveldb.Open(NewMemStorage(fd2, client, user1, "username", "password", logger), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fd2.SetUpdateTracker(db2)
+		for i := 0; i < 10000; i++ {
+			topic := utils.HashString(fmt.Sprintf("topic-%d", i))
+			epoch, err := fd2.GetFeedUpdateEpoch(topic)
+			if err != nil {
+				t.Fatal(err)
+			}
+			require.Equal(t, uint64(now+int64(i)), epoch.Time)
+
+		}
+		err = db2.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		fd3 := feed.New(accountInfo1, client, logger)
+		db3, err := leveldb.Open(NewMemStorage(fd3, client, user1, "username", "password", logger), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fd3.SetUpdateTracker(db3)
+		for i := 0; i < 10000; i++ {
+			topic := utils.HashString(fmt.Sprintf("topic-%d", i))
+			epoch, err := fd3.GetFeedUpdateEpoch(topic)
+			if err != nil {
+				t.Fatal(err)
+			}
+			require.Equal(t, uint64(now+int64(i)), epoch.Time)
+
+		}
+		err = db3.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		fd4 := feed.New(accountInfo1, client, logger)
+		db4, err := leveldb.Open(NewMemStorage(fd4, client, user1, "username", "password", logger), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fd4.SetUpdateTracker(db4)
+		for i := 0; i < 10000; i++ {
+			topic := utils.HashString(fmt.Sprintf("topic-%d", i))
+			epoch, err := fd4.GetFeedUpdateEpoch(topic)
+			if err != nil {
+				t.Fatal(err)
+			}
+			require.Equal(t, uint64(now+int64(i)), epoch.Time)
+
+		}
+		err = db4.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
 	})
 }
