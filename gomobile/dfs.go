@@ -58,13 +58,16 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 		return fmt.Errorf("unknown network")
 	}
 	ensConfig.ProviderBackend = rpc
+	opts := &dfs.Options{
+		Stamp:              postageBlockId,
+		BeeApiEndpoint:     beeEndpoint,
+		EnsConfig:          ensConfig,
+		SubscriptionConfig: nil,
+		Logger:             logger,
+	}
 	api, err = dfs.NewDfsAPI(
 		context.TODO(),
-		beeEndpoint,
-		postageBlockId,
-		ensConfig,
-		nil,
-		logger,
+		opts,
 	)
 	return err
 }

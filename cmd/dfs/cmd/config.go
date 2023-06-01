@@ -7,15 +7,17 @@ import (
 
 var (
 	optionCORSAllowedOrigins = "cors-allowed-origins"
+	optionFeedTracker        = "dfs.feed-tracker"
 	optionDFSHttpPort        = "dfs.ports.http-port"
 	optionDFSPprofPort       = "dfs.ports.pprof-port"
 	optionVerbosity          = "verbosity"
 	optionBeeApi             = "bee.bee-api-endpoint"
 	optionBeePostageBatchId  = "bee.postage-batch-id"
 	optionCookieDomain       = "cookie-domain"
-	optionNetwork            = "ens-network"
+	optionNetwork            = "network"
 	optionRPC                = "rpc"
 
+	defaultFeedTracker        = false
 	defaultCORSAllowedOrigins = []string{}
 	defaultDFSHttpPort        = ":9090"
 	defaultDFSPprofPort       = ":9091"

@@ -27,7 +27,7 @@ func (a *API) CreateUserV2(userName, passPhrase, mnemonic, sessionId string) (*u
 
 // LoginUserV2 is a controller function which calls the users login function.
 func (a *API) LoginUserV2(userName, passPhrase, sessionId string) (*user.LoginResponse, error) {
-	return a.users.LoginUserV2(userName, passPhrase, a.client, a.tm, a.sm, sessionId)
+	return a.users.LoginUserV2(userName, passPhrase, a.client, a.tm, a.sm, sessionId, a.shouldInitFeedTracker)
 }
 
 // LoadLiteUser is a controller function which loads user from mnemonic and doesn't store any user info on chain

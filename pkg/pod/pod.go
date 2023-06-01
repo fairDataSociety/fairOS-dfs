@@ -69,8 +69,7 @@ type List struct {
 }
 
 // NewPod creates the main pod object which has all the methods related to the pods.
-func NewPod(client blockstore.Client, feed *feed.API, account *account.Account,
-	m taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, logger logging.Logger) *Pod {
+func NewPod(client blockstore.Client, feed *feed.API, account *account.Account, m taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, logger logging.Logger) *Pod {
 	return &Pod{
 		fd:     feed,
 		acc:    account,

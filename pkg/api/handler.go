@@ -26,27 +26,45 @@ import (
 
 // Handler is the api handler
 type Handler struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-	dfsAPI *dfs.API
-	logger logging.Logger
-
+	ctx                context.Context
+	cancel             context.CancelFunc
+	dfsAPI             *dfs.API
+	logger             logging.Logger
 	whitelistedOrigins []string
 	cookieDomain       string
 }
 
+type Options struct {
+	BeeApiEndpoint     string
+	CookieDomain       string
+	Stamp              string
+	WhitelistedOrigins []string
+	EnsConfig          *contracts.ENSConfig
+	SubscriptionConfig *contracts.SubscriptionConfig
+	Logger             logging.Logger
+	FeedTracker        bool
+}
+
 // New returns a new handler
-func New(ctx context.Context, beeApi, cookieDomain, postageBlockId string, whitelistedOrigins []string, ensConfig *contracts.ENSConfig, subscriptionConfig *contracts.SubscriptionConfig, logger logging.Logger) (*Handler, error) {
-	api, err := dfs.NewDfsAPI(ctx, beeApi, postageBlockId, ensConfig, subscriptionConfig, logger)
+func New(ctx context.Context, opts *Options) (*Handler, error) {
+	dfsOpts := &dfs.Options{
+		BeeApiEndpoint:     opts.BeeApiEndpoint,
+		Stamp:              opts.Stamp,
+		EnsConfig:          opts.EnsConfig,
+		SubscriptionConfig: opts.SubscriptionConfig,
+		Logger:             opts.Logger,
+		FeedTracker:        opts.FeedTracker,
+	}
+	api, err := dfs.NewDfsAPI(ctx, dfsOpts)
 	if err != nil {
 		return nil, err
 	}
 	newContext, cancel := context.WithCancel(ctx)
 	return &Handler{
 		dfsAPI:             api,
-		logger:             logger,
-		whitelistedOrigins: whitelistedOrigins,
-		cookieDomain:       cookieDomain,
+		logger:             opts.Logger,
+		whitelistedOrigins: opts.WhitelistedOrigins,
+		cookieDomain:       opts.CookieDomain,
 		ctx:                newContext,
 		cancel:             cancel,
 	}, nil
