@@ -289,21 +289,6 @@ func (d *Document) OpenDocumentDB(dbName, encryptionPassword string) error {
 	return nil
 }
 
-// CloseDocumentDB closes a document database.
-func (d *Document) CloseDocumentDB(dbName string) error {
-	d.logger.Info("closing document db: ", dbName)
-	// check if the db is already present and opened
-	if !d.IsDBOpened(dbName) { // skipcq: TCV-001
-		d.logger.Errorf("closing document db: %v", ErrDocumentDBNotOpened)
-		return ErrDocumentDBNotOpened
-	}
-
-	// add to the open DB map
-	d.removeFromOpenedDB(dbName)
-	d.logger.Info("document db closed: ", dbName)
-	return nil
-}
-
 // DeleteDocumentDB a document DB, all its data and its related indxes.
 func (d *Document) DeleteDocumentDB(dbName, encryptionPassword string) error {
 	d.logger.Info("deleting document db: ", dbName)
