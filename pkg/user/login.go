@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/tracker"
+
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -95,7 +97,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 
 	if initFeedTracker {
-		_, err = u.initFeedsTracker(utils.Address(address), userName, passPhrase, fd, client, u.logger)
+		_, err = tracker.InitFeedsTracker(utils.Address(address), userName, passPhrase, fd, client, u.logger)
 		if err != nil {
 			u.logger.Errorf("error initializing feeds tracker: %v", err)
 		}

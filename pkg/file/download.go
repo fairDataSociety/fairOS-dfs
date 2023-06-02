@@ -55,12 +55,10 @@ func (f *File) ReadSeeker(podFileWithPath, podPassword string) (io.ReadSeekClose
 	if meta == nil { // skipcq: TCV-001
 		return nil, 0, ErrFileNotFound
 	}
-
 	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
 	if err != nil { // skipcq: TCV-001
 		return nil, 0, err
 	}
-
 	var fileInode INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001

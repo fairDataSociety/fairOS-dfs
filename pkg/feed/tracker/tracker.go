@@ -1,4 +1,4 @@
-package user
+package tracker
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
@@ -17,14 +18,14 @@ import (
 )
 
 const (
-	listTopic = "leveldb/storage/files-list"
+	listTopic = "leveldb/storage/files-list2"
 )
 
 var (
 	errFileOpen = errors.New("leveldb/storage: file still open")
 )
 
-func (*Users) initFeedsTracker(address utils.Address, username, password string, fd *feed.API, client blockstore.Client, logger logging.Logger) (*leveldb.DB, error) {
+func InitFeedsTracker(address utils.Address, username, password string, fd *feed.API, client blockstore.Client, logger logging.Logger) (*leveldb.DB, error) {
 	db, err := leveldb.Open(NewMemStorage(fd, client, address, username, password, logger), nil)
 	if err != nil {
 		return nil, err
@@ -64,7 +65,7 @@ type memStorage struct {
 // NewMemStorage returns a new memory-backed storage implementation.
 func NewMemStorage(fd *feed.API, client blockstore.Client, address utils.Address, username string, password string, logger logging.Logger) storage.Storage {
 	list := make(map[string]storage.FileDesc)
-	topic := utils.HashString(listTopic + username + password)
+	topic := getTopic([]string{listTopic, username, password})
 	_, dt, err := fd.GetFeedData(topic, address, []byte(password), true)
 	if err == nil {
 		_ = json.Unmarshal(dt, &list)
@@ -128,7 +129,7 @@ func (ms *memStorage) Open(fd storage.FileDesc) (storage.Reader, error) {
 	m.password = ms.password
 	m.address = ms.address
 	m.client = ms.client
-	topic := utils.HashString(fd.String() + ms.username + ms.password)
+	topic := getTopic([]string{fd.String(), ms.username, ms.password})
 	_, ref, err := ms.fd.GetFeedData(topic, ms.address, []byte(ms.password), true)
 	if err != nil && err.Error() != "feed does not exist or was not updated yet" {
 		return nil, os.ErrNotExist
@@ -167,13 +168,24 @@ func (ms *memStorage) Create(fd storage.FileDesc) (storage.Writer, error) {
 		m.client = ms.client
 
 		m.Buffer = bytes.NewBuffer([]byte{})
+
+		ref, err := ms.client.UploadBlob(m.Buffer.Bytes(), 0, false)
+		if err != nil {
+			return nil, err
+		}
+
+		topic := getTopic([]string{fd.String(), ms.username, ms.password})
+		_, err = ms.fd.UpdateFeed(ms.address, topic, ref, []byte(ms.password), true)
+		if err != nil {
+			return nil, err
+		}
 		ms.files[fd.String()] = m
 	}
 	m.open = true
 	ms.list[fd.String()] = fd
 	dt, err := json.Marshal(ms.list)
 	if err == nil {
-		topic := utils.HashString(listTopic + ms.username + ms.password)
+		topic := getTopic([]string{listTopic, ms.username, ms.password})
 		_, err = ms.fd.UpdateFeed(ms.address, topic, dt, []byte(ms.password), true)
 		if err != nil {
 			ms.logging.Error("error updating list", "error", err)
@@ -192,13 +204,20 @@ func (ms *memStorage) Remove(fd storage.FileDesc) error {
 	defer ms.mu.Unlock()
 	if _, exist := ms.files[fd.String()]; exist {
 		delete(ms.files, fd.String())
+		topic := getTopic([]string{fd.String(), ms.username, ms.password})
+
+		_, err := ms.fd.UpdateFeed(ms.address, topic, []byte(utils.DeletedFeedMagicWord), []byte(ms.password), true)
+		if err != nil {
+			return err
+		}
+
 		delete(ms.list, fd.String())
 		dt, err := json.Marshal(ms.list)
 		if err != nil {
 			return err
 		}
-		topic := utils.HashString(listTopic + ms.username + ms.password)
-		_, err = ms.fd.UpdateFeed(ms.address, topic, dt, []byte(ms.password), true)
+		lTopic := getTopic([]string{listTopic, ms.username, ms.password})
+		_, err = ms.fd.UpdateFeed(ms.address, lTopic, dt, []byte(ms.password), true)
 		if err != nil {
 			return err
 		}
@@ -226,7 +245,34 @@ func (ms *memStorage) Rename(oldfd, newfd storage.FileDesc) error {
 		return errFileOpen
 	}
 	delete(ms.files, oldfd.String())
+	delete(ms.list, oldfd.String())
+
 	ms.files[newfd.String()] = oldm
+	ms.list[newfd.String()] = newfd
+
+	topic := getTopic([]string{oldfd.String(), ms.username, ms.password})
+	_, ref, err := ms.fd.GetFeedData(topic, ms.address, []byte(ms.password), true)
+	if err != nil {
+		return err
+	}
+
+	topic = getTopic([]string{newfd.String(), ms.username, ms.password})
+	_, err = ms.fd.UpdateFeed(ms.address, topic, ref, []byte(ms.password), true)
+	if err != nil {
+		return err
+	}
+
+	dt, err := json.Marshal(ms.list)
+	if err != nil {
+		return err
+	}
+
+	lTopic := getTopic([]string{listTopic, ms.username, ms.password})
+	_, err = ms.fd.UpdateFeed(ms.address, lTopic, dt, []byte(ms.password), true)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -239,7 +285,7 @@ func (ms *memStorage) setMeta(fd storage.FileDesc) error {
 	// Check and backup old CURRENT file.
 	currentPath := "CURRENT"
 
-	topic := utils.HashString(currentPath + ms.username + ms.password)
+	topic := getTopic([]string{currentPath, ms.username, ms.password})
 	_, dt, err := ms.fd.GetFeedData(topic, ms.address, []byte(ms.password), true)
 	if err != nil && err.Error() != "feed does not exist or was not updated yet" {
 		return err
@@ -276,7 +322,7 @@ func (ms *memStorage) GetMeta() (storage.FileDesc, error) {
 		// Try
 		// - CURRENT
 		currentPath := "CURRENT"
-		topic := utils.HashString(currentPath + ms.username + ms.password)
+		topic := getTopic([]string{currentPath, ms.username, ms.password})
 		_, dt, err := ms.fd.GetFeedData(topic, ms.address, []byte(ms.password), true)
 		if err != nil {
 			return meta, os.ErrNotExist
@@ -310,7 +356,6 @@ type memReader struct {
 }
 
 func (mr *memReader) Close() error {
-
 	mr.ms.mu.Lock()
 	defer mr.ms.mu.Unlock()
 	if mr.closed {
@@ -338,7 +383,7 @@ func (mw *memWriter) Write(p []byte) (n int, err error) {
 		return
 	}
 
-	topic := utils.HashString(mw.name + mw.username + mw.password)
+	topic := getTopic([]string{mw.name, mw.username, mw.password})
 	_, err = mw.fd.UpdateFeed(mw.address, topic, ref, []byte(mw.password), true)
 	return
 }
@@ -348,7 +393,6 @@ func (mw *memWriter) Sync() error {
 }
 
 func (mw *memWriter) Close() error {
-
 	mw.ms.mu.Lock()
 	defer mw.ms.mu.Unlock()
 	if mw.closed {
@@ -388,4 +432,8 @@ func fsParseNamePtr(name string, fd *storage.FileDesc) bool {
 		*fd = _fd
 	}
 	return ok
+}
+
+func getTopic(segments []string) []byte {
+	return utils.HashString(strings.Join(segments, "/"))
 }
