@@ -78,7 +78,7 @@ can consume it.`,
 		if err := config.BindPFlag(optionDFSHttpPort, cmd.Flags().Lookup("httpPort")); err != nil {
 			return err
 		}
-		if err := config.BindPFlag(optionFeedTracker, cmd.Flags().Lookup("feedTracker")); err != nil {
+		if err := config.BindPFlag(optionFeedTracker, cmd.Flags().Lookup("feed-tracker")); err != nil {
 			return err
 		}
 		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
@@ -135,13 +135,13 @@ can consume it.`,
 			return fmt.Errorf("rpc endpoint is missing")
 		}
 
-		network := config.GetString("ens-network")
+		network := config.GetString("network")
 		switch v := strings.ToLower(network); v {
 		case "mainnet":
 			fmt.Println("\nens is not available for mainnet yet")
 			return fmt.Errorf("ens is not available for mainnet yet")
 		case "testnet":
-			ensConfig, subscriptionConfig = contracts.TestnetConfig(contracts.Sepolia)
+			ensConfig, subscriptionConfig = contracts.TestnetConfig(contracts.Goerli)
 		case "play":
 			ensConfig, subscriptionConfig = contracts.PlayConfig()
 		default:
@@ -231,7 +231,7 @@ can consume it.`,
 func init() {
 	serverCmd.Flags().BoolVar(&pprof, "pprof", false, "should run pprof")
 	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
-	serverCmd.Flags().BoolVar(&feedTracker, "feedTracker", false, "should run feed tracker")
+	serverCmd.Flags().BoolVar(&feedTracker, "feed-tracker", false, "should run feed tracker")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
