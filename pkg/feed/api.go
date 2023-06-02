@@ -259,10 +259,18 @@ func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword [
 	} else {
 		q.Hint = lookup.NoClue
 	}
-	_, err := a.handler.Lookup(ctx, q)
-	if err != nil {
-		return nil, nil, err
+	if q.Hint == lookup.NoClue {
+		_, err := a.handler.Lookup(ctx, q)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		_, err := a.handler.LookupEpoch(ctx, q)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
+
 	addr, encryptedData, err := a.handler.GetContent(&q.Feed)
 	if err != nil { // skipcq: TCV-001
 		return nil, nil, err
