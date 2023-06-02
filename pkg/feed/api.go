@@ -255,30 +255,22 @@ func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword [
 			q.Hint = lookup.NoClue
 		} else {
 			q.Hint = epoch
-			_, err := a.handler.LookupEpoch(ctx, q)
-			if err != nil {
-				return nil, nil, err
-			}
-			addr, encryptedData, err := a.handler.GetContent(&q.Feed)
-			if err != nil { // skipcq: TCV-001
-				return nil, nil, err
-			}
-			if encryptionPassword == nil || string(encryptedData) == utils.DeletedFeedMagicWord {
-				return addr.Bytes(), encryptedData, nil
-			}
-			data, err := utils.DecryptBytes(encryptionPassword, encryptedData)
-			if err != nil { // skipcq: TCV-001
-				return nil, nil, err
-			}
-			return addr.Bytes(), data, nil
 		}
 	} else {
 		q.Hint = lookup.NoClue
 	}
-	_, err := a.handler.Lookup(ctx, q)
-	if err != nil {
-		return nil, nil, err
+	if q.Hint == lookup.NoClue {
+		_, err := a.handler.Lookup(ctx, q)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		_, err := a.handler.LookupEpoch(ctx, q)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
+
 	addr, encryptedData, err := a.handler.GetContent(&q.Feed)
 	if err != nil { // skipcq: TCV-001
 		return nil, nil, err
@@ -481,7 +473,6 @@ func (a *API) GetFeedUpdateEpoch(topic []byte) (lookup.Epoch, error) {
 	if err != nil {
 		return epoch, err
 	}
-	fmt.Println("Got Epoch", epoch)
 	return epoch, nil
 }
 
