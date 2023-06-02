@@ -175,6 +175,41 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 	return h.updateCache(request)
 }
 
+// LookupEpoch retrieves a specific query
+func (h *Handler) LookupEpoch(ctx context.Context, query *Query) (*CacheEntry, error) {
+	if query.Hint == lookup.NoClue {
+		return nil, NewError(errInvalidValue, "hint is required for epoch lookup")
+	}
+
+	// we can't look for anything without a store
+	if h.client == nil { // skipcq: TCV-001
+		return nil, NewError(errInit, "invalid blockstore")
+	}
+
+	id := ID{
+		Feed:  query.Feed,
+		Epoch: query.Hint,
+	}
+	ctx, cancel := context.WithTimeout(ctx, defaultRetrieveTimeout)
+	defer cancel()
+
+	addr, err := h.getAddress(id.Topic, query.Feed.User, query.Hint)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	data, err := h.client.DownloadChunk(ctx, addr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	ch := swarm.NewChunk(addr, data)
+	var request request
+	if err := h.fromChunk(ch, &request, query, &id); err != nil {
+		return nil, err
+	}
+
+	return h.updateCache(&request)
+}
+
 // fromChunk populates this structure from chunk data. It does not verify the signature is valid.
 func (*Handler) fromChunk(chunk swarm.Chunk, r *request, q *Query, id *ID) error {
 	chunkdata := chunk.Data()
