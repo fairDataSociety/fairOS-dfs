@@ -141,7 +141,7 @@ can consume it.`,
 			fmt.Println("\nens is not available for mainnet yet")
 			return fmt.Errorf("ens is not available for mainnet yet")
 		case "testnet":
-			ensConfig, subscriptionConfig = contracts.TestnetConfig(contracts.Goerli)
+			ensConfig, subscriptionConfig = contracts.TestnetConfig(contracts.Sepolia)
 		case "play":
 			ensConfig, subscriptionConfig = contracts.PlayConfig()
 		default:
