@@ -11,7 +11,7 @@
   "api": {
     "type": "openapi",
     "url": "https://fairos.staging.fairdatasociety.org/.well-known/openapi.yaml",
-    "has_user_authentication": false
+    "has_user_authentication": true
   },
   "logo_url": "https://fairos.staging.fairdatasociety.org/.well-known/logo.png",
   "contact_email": "info@fairdatasociety.org",
