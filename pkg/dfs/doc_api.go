@@ -50,6 +50,22 @@ func (a *API) DocOpen(sessionId, podName, name string) error {
 	return podInfo.GetDocStore().OpenDocumentDB(name, podInfo.GetPodPassword())
 }
 
+// IsDBOpened is a controller function which checks if documentDB is open
+func (a *API) IsDBOpened(sessionId, podName, name string) (bool, error) {
+	// get the logged-in user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return false, ErrUserNotLoggedIn
+	}
+
+	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
+	if err != nil {
+		return false, err
+	}
+
+	return podInfo.GetDocStore().IsDBOpened(name), nil
+}
+
 // DocDelete is a controller function which does all the checks before deleting a documentDB.
 func (a *API) DocDelete(sessionId, podName, name string) error {
 	// get the logged-in user information

@@ -248,8 +248,9 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	}
 
 	kv.openKVTMu.Lock()
-	defer kv.openKVTMu.Unlock()
-	if table, ok := kv.openKVTables[name]; ok {
+	table, ok := kv.openKVTables[name]
+	kv.openKVTMu.Unlock()
+	if ok {
 		switch table.indexType {
 		case StringIndex:
 			return table.index.Put(key, value, StringIndex, false)
@@ -275,8 +276,9 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 // KVGet retrieves a value from the KV table given a key.
 func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 	kv.openKVTMu.Lock()
-	defer kv.openKVTMu.Unlock()
-	if table, ok := kv.openKVTables[name]; ok {
+	table, ok := kv.openKVTables[name]
+	kv.openKVTMu.Unlock()
+	if ok {
 		value, err := table.index.Get(key)
 		if err != nil {
 			return nil, nil, err

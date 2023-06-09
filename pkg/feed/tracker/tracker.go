@@ -31,6 +31,7 @@ func InitFeedsTracker(address utils.Address, username, password string, fd *feed
 		return nil, err
 	}
 	fd.SetUpdateTracker(db)
+	logger.Debugf("feed tracker initialised for %s\n", username)
 	return db, nil
 }
 

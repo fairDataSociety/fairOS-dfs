@@ -20,16 +20,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/tracker"
-
-	"github.com/ethereum/go-ethereum/crypto"
-
 	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
-
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
@@ -37,6 +29,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -96,12 +90,12 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		return nil, err
 	}
 
-	if initFeedTracker {
-		_, err = tracker.InitFeedsTracker(utils.Address(address), userName, passPhrase, fd, client, u.logger)
-		if err != nil {
-			u.logger.Errorf("error initializing feeds tracker: %v", err)
-		}
-	}
+	//if initFeedTracker {
+	//	_, err = tracker.InitFeedsTracker(utils.Address(address), userName, passPhrase, fd, client, u.logger)
+	//	if err != nil {
+	//		u.logger.Errorf("error initializing feeds tracker: %v", err)
+	//	}
+	//}
 
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
