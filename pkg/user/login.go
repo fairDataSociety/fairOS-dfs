@@ -93,12 +93,12 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		return nil, err
 	}
 
-	if initFeedTracker {
-		_, err = tracker.InitFeedsTracker(utils.Address(address), userName, passPhrase, fd, client, u.logger)
-		if err != nil {
-			u.logger.Errorf("error initializing feeds tracker: %v", err)
-		}
-	}
+	//if initFeedTracker {
+	//	_, err = tracker.InitFeedsTracker(utils.Address(address), userName, passPhrase, fd, client, u.logger)
+	//	if err != nil {
+	//		u.logger.Errorf("error initializing feeds tracker: %v", err)
+	//	}
+	//}
 
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
