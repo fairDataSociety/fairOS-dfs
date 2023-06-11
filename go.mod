@@ -34,7 +34,7 @@ require (
 	golang.org/x/crypto v0.9.0
 	golang.org/x/term v0.8.0
 	gopkg.in/yaml.v2 v2.4.0
-	resenje.org/jsonhttp v0.2.0
+	resenje.org/jsonhttp v0.2.3
 )
 
 require (
