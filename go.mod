@@ -7,7 +7,7 @@ require (
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ethereum/go-ethereum v1.11.6
-	github.com/ethersphere/bee v1.15.0
+	github.com/ethersphere/bee v1.16.1
 	github.com/ethersphere/bmt v0.1.4
 	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb
