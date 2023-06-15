@@ -3,7 +3,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"resenje.org/jsonhttp"
@@ -58,16 +59,16 @@ func (h *Handler) FileStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get values from cookie
-	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	// get sessionId from request
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
-		h.logger.Errorf("status: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
+		h.logger.Errorf("sessionId parse failed: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("status: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, &response{Message: "status: \"cookie-id\" parameter missing in cookie"})
+		h.logger.Error("sessionId not set: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 

@@ -21,8 +21,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
+
 	"github.com/dustin/go-humanize"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"resenje.org/jsonhttp"
 )
@@ -105,16 +107,16 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// get values from cookie
-	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	// get sessionId from request
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
-		h.logger.Errorf("file upload: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
+		h.logger.Errorf("sessionId parse failed: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("file upload: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, &response{Message: "file upload: \"cookie-id\" parameter missing in cookie"})
+		h.logger.Error("sessionId not set: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 
