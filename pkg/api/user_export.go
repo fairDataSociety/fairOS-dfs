@@ -16,7 +16,6 @@ package api
 import (
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"resenje.org/jsonhttp"
 )
 
@@ -32,17 +31,5 @@ type UserExportResponse struct {
 //	@Deprecated
 //	@Router       /v1/user/export [post]
 func (h *Handler) ExportUserHandler(w http.ResponseWriter, r *http.Request) {
-	// get values from cookie
-	sessionId, err := cookie.GetSessionIdFromCookie(r)
-	if err != nil {
-		h.logger.Errorf("user export: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
-		return
-	}
-	if sessionId == "" {
-		h.logger.Errorf("user export: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, &response{Message: "user export: \"cookie-id\" parameter missing in cookie"})
-		return
-	}
 	jsonhttp.BadRequest(w, &response{Message: "user export: deprecated"})
 }

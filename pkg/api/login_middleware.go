@@ -20,7 +20,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/cookie"
 	"resenje.org/jsonhttp"
 )
 
@@ -29,6 +31,18 @@ import (
 // proceed for execution.
 func (h *Handler) LoginMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sessionId, err := jwt.GetSessionIdFromToken(r)
+		if err != nil && err != jwt.ErrNoTokenInRequest {
+			h.logger.Errorf("jwt: invalid token: %v", err)
+			jsonhttp.BadRequest(w, &response{Message: "jwt: invalid token"})
+			return
+		}
+
+		if sessionId != "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		sessionId, loginTimeout, err := cookie.GetSessionIdAndLoginTimeFromCookie(r)
 		if err != nil {
 			h.logger.Errorf("cookie: invalid cookie: %v", err)

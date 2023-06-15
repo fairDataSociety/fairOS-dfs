@@ -21,9 +21,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
-
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/cookie"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
 )
@@ -108,9 +107,10 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	addr := loginResp.UserInfo.GetAccount().GetUserAccountInfo().GetAddress()
 	jsonhttp.OK(w, &UserSignupResponse{
-		Address:   addr.Hex(),
-		NameHash:  "0x" + loginResp.NameHash,
-		PublicKey: loginResp.PublicKey,
-		Message:   "user logged-in successfully",
+		Address:     addr.Hex(),
+		NameHash:    "0x" + loginResp.NameHash,
+		PublicKey:   loginResp.PublicKey,
+		Message:     "user logged-in successfully",
+		AccessToken: loginResp.AccessToken,
 	})
 }

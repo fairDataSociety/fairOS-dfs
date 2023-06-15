@@ -19,9 +19,10 @@ package api
 import (
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
+
 	"resenje.org/jsonhttp"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -65,16 +66,16 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	directory := keys[0]
 
-	// get values from cookie
-	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	// get sessionId from request
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
-		h.logger.Errorf("ls: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
+		h.logger.Errorf("sessionId parse failed: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("ls: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, &response{Message: "ls: \"cookie-id\" parameter missing in cookie"})
+		h.logger.Error("sessionId not set: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 
