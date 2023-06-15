@@ -20,8 +20,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
+
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"resenje.org/jsonhttp"
@@ -80,16 +82,16 @@ func (h *Handler) FileRenameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get values from cookie
-	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	// get sessionId from request
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
-		h.logger.Errorf("file rename: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
+		h.logger.Errorf("sessionId parse failed: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("file rename: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, &response{Message: "file rename: \"cookie-id\" parameter missing in cookie"})
+		h.logger.Error("sessionId not set: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 	// rename file

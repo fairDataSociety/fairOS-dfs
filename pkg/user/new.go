@@ -20,19 +20,17 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -128,7 +126,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
 	if sessionId == "" {
-		sessionId = cookie.GetUniqueSessionId()
+		sessionId = auth.GetUniqueSessionId()
 	}
 
 	ui := &Info{
