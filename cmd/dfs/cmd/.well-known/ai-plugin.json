@@ -1,7 +1,7 @@
 {
   "schema_version": "v1",
   "name_for_model": "FairOS_retrieval",
-  "name_for_human": "FairOS retrival plugin",
+  "name_for_human": "FairOS retrieval plugin",
   "description_for_model": "Plugin for searching through the user's documents to find answers to questions and retrieve relevant information. Use it whenever a user asks something that might be found in their personal information, or asks you to save information for later.",
   "description_for_human": "Search through your pods and documents and do whatever with your data.",
   "auth": {
