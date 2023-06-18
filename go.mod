@@ -10,6 +10,7 @@ require (
 	github.com/ethersphere/bee v1.16.1
 	github.com/ethersphere/bmt v0.1.4
 	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d
+	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/mux v1.8.0
@@ -32,7 +33,7 @@ require (
 	github.com/wealdtech/go-ens/v3 v3.5.5
 	go.uber.org/goleak v1.2.1
 	golang.org/x/crypto v0.9.0
-	golang.org/x/term v0.8.0
+	golang.org/x/term v0.9.0
 	gopkg.in/yaml.v2 v2.4.0
 	resenje.org/jsonhttp v0.2.3
 )
@@ -54,7 +55,6 @@ require (
 	github.com/go-openapi/spec v0.20.7 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
-	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
@@ -104,7 +104,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
