@@ -17,9 +17,6 @@ limitations under the License.
 package cookie
 
 import (
-	"crypto/rand"
-	"encoding/base64"
-	"io"
 	"net/http"
 	"time"
 
@@ -37,15 +34,6 @@ const (
 var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
-
-// GetUniqueSessionId generates a sessionId for each logged-in user
-func GetUniqueSessionId() string {
-	b := make([]byte, 32)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		return ""
-	}
-	return base64.URLEncoding.EncodeToString(b)
-}
 
 // SetSession sets the cookie in the http.Response
 func SetSession(sessionId string, response http.ResponseWriter, cookieDomain string) error {

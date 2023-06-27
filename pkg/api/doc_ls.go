@@ -19,8 +19,10 @@ package api
 import (
 	"net/http"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+
 	"resenje.org/jsonhttp"
 )
 
@@ -63,19 +65,18 @@ func (h *Handler) DocListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get values from cookie
-	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	// get sessionId from request
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
-		h.logger.Errorf("doc ls: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
+		h.logger.Errorf("sessionId parse failed: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("doc ls: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, &response{Message: "doc ls: \"cookie-id\" parameter missing in cookie"})
+		h.logger.Error("sessionId not set: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
-
 	collections, err := h.dfsAPI.DocList(sessionId, podName)
 	if err != nil {
 		h.logger.Errorf("doc ls: %v", err)

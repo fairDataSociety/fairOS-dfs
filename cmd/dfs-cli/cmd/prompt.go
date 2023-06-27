@@ -1026,6 +1026,9 @@ func help() {
 	fmt.Println(" - pod <sync> (pod-name) - sync the contents of a logged-in pod from Swarm")
 	fmt.Println(" - pod <close>  - close a opened pod")
 	fmt.Println(" - pod <ls> - lists all the pods created for this account")
+	fmt.Println(" - pod <share> (pod-name) - share a pod and get sharing reference")
+	fmt.Println(" - pod <receive> (sharing-reference) - add a pod with the given sharing reference")
+	fmt.Println(" - pod <receiveinfo> (sharing-reference) - check a pod metadata with the given sharing reference")
 
 	fmt.Println(" - kv <new> (table-name) - creates a new key value store")
 	fmt.Println(" - kv <delete> (table-name) - deletes the key value store")
