@@ -20,30 +20,29 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
 
 	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
-
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 // LoginResponse is the response of a successful login
 type LoginResponse struct {
-	Address   string `json:"address"`
-	NameHash  string `json:"nameHash"`
-	PublicKey string `json:"publicKey"`
-	UserInfo  *Info  `json:"userInfo"`
+	Address     string `json:"address"`
+	NameHash    string `json:"nameHash"`
+	PublicKey   string `json:"publicKey"`
+	UserInfo    *Info  `json:"userInfo"`
+	AccessToken string `json:"accessToken"`
 }
 
 // LoginUserV2 checks if the user is present and logs in the user. It also creates the required information
@@ -83,7 +82,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		return nil, fmt.Errorf("public key not found")
 	}
 
-	// decrypt and remove pad from private ley
+	// decrypt and remove pad from private key
 	seed, err := accountInfo.RemovePadFromSeed(key, passPhrase)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
@@ -99,7 +98,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
 	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	if sessionId == "" {
-		sessionId = cookie.GetUniqueSessionId()
+		sessionId = auth.GetUniqueSessionId()
 	}
 	ui := &Info{
 		name:       userName,
@@ -118,11 +117,17 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		return nil, err
 	}
 
+	token, err := jwt.GenerateToken(sessionId)
+	if err != nil {
+		u.logger.Errorf("error generating token: %v\n", err)
+	}
+
 	return &LoginResponse{
-		Address:   address.Hex(),
-		NameHash:  nameHash,
-		PublicKey: utils.Encode(crypto.FromECDSAPub(publicKey)),
-		UserInfo:  ui,
+		Address:     address.Hex(),
+		NameHash:    nameHash,
+		PublicKey:   utils.Encode(crypto.FromECDSAPub(publicKey)),
+		UserInfo:    ui,
+		AccessToken: token,
 	}, nil
 }
 
@@ -245,7 +250,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
 	dir := d.NewDirectory(addressHex, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	if sessionId == "" {
-		sessionId = cookie.GetUniqueSessionId()
+		sessionId = auth.GetUniqueSessionId()
 	}
 	ui := &Info{
 		name:       username,

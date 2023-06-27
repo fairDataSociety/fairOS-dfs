@@ -3,16 +3,16 @@ package user
 import (
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 )
 
@@ -37,7 +37,7 @@ func (u *Users) LoadLiteUser(userName, _, mnemonic, sessionId string, tm taskman
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
 	if sessionId == "" {
-		sessionId = cookie.GetUniqueSessionId()
+		sessionId = auth.GetUniqueSessionId()
 	}
 
 	ui := &Info{

@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"resenje.org/jsonhttp"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+	"resenje.org/jsonhttp"
 )
 
 // ReceiveFileResponse represents the response for receiving a file
@@ -93,16 +93,16 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get values from cookie
-	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	// get sessionId from request
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
-		h.logger.Errorf("file share: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
+		h.logger.Errorf("sessionId parse failed: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("file share: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, &response{Message: "file share: \"cookie-id\" parameter missing in cookie"})
+		h.logger.Error("sessionId not set: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 
@@ -170,16 +170,16 @@ func (h *Handler) FileReceiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	dir := keys1[0]
 
-	// get values from cookie
-	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	// get sessionId from request
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
-		h.logger.Errorf("file receive: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
+		h.logger.Errorf("sessionId parse failed: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("file receive: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, &response{Message: "file receive: \"cookie-id\" parameter missing in cookie"})
+		h.logger.Error("sessionId not set: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 
@@ -224,16 +224,16 @@ func (h *Handler) FileReceiveInfoHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// get values from cookie
-	sessionId, err := cookie.GetSessionIdFromCookie(r)
+	// get sessionId from request
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
-		h.logger.Errorf("file receive info: invalid cookie: %v", err)
-		jsonhttp.BadRequest(w, &response{Message: ErrInvalidCookie.Error()})
+		h.logger.Errorf("sessionId parse failed: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 	if sessionId == "" {
-		h.logger.Errorf("file receive info: \"cookie-id\" parameter missing in cookie")
-		jsonhttp.BadRequest(w, &response{Message: "file receive info: \"cookie-id\" parameter missing in cookie"})
+		h.logger.Error("sessionId not set: ", err)
+		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
 

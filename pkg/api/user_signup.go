@@ -21,7 +21,8 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/cookie"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	u "github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"resenje.org/jsonhttp"
@@ -33,11 +34,12 @@ var (
 
 // UserSignupResponse is the json response sent for user signup
 type UserSignupResponse struct {
-	Address   string `json:"address"`
-	NameHash  string `json:"nameHash,omitempty"`
-	PublicKey string `json:"publicKey,omitempty"`
-	Message   string `json:"message,omitempty"`
-	Mnemonic  string `json:"mnemonic,omitempty"`
+	Address     string `json:"address"`
+	NameHash    string `json:"nameHash,omitempty"`
+	PublicKey   string `json:"publicKey,omitempty"`
+	Message     string `json:"message,omitempty"`
+	Mnemonic    string `json:"mnemonic,omitempty"`
+	AccessToken string `json:"accessToken,omitempty"`
 }
 
 // UserSignupV2Handler godoc

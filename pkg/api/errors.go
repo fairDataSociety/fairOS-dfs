@@ -21,4 +21,6 @@ import "errors"
 var (
 	// ErrInvalidCookie is used if the cookie is invalid
 	ErrInvalidCookie = errors.New("invalid cookie")
+
+	ErrUnauthorized = errors.New("unauthorized")
 )
