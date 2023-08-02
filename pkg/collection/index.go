@@ -141,12 +141,14 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	if string(oldData) == utils.DeletedFeedMagicWord { //  skipcq: TCV-001
 		_, err = fd.UpdateFeed(user, topic, ref, []byte(encryptionPassword), false)
 		if err != nil {
+			fmt.Println("failed to create index UpdateFeed:", err.Error())
 			return ErrManifestCreate
 		}
 		return nil
 	}
 	_, err = fd.CreateFeed(user, topic, ref, []byte(encryptionPassword))
 	if err != nil { //  skipcq: TCV-001
+		fmt.Println("failed to create index CreateFeed:", err.Error())
 		return ErrManifestCreate
 	}
 	return nil
@@ -287,7 +289,6 @@ func (idx *Index) loadManifest(manifestPath, encryptionPassword string) (*Manife
 	if err != nil { //  skipcq: TCV-001
 		return nil, ErrManifestUnmarshall
 	}
-
 	return &manifest, nil
 }
 
@@ -307,6 +308,7 @@ func (idx *Index) updateManifest(manifest *Manifest, encryptionPassword string) 
 	topic := utils.HashString(manifest.Name)
 	_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
 	if err != nil { //  skipcq: TCV-001
+		idx.logger.Errorf("failed to updateManifest : %s", err.Error())
 		return ErrManifestCreate
 	}
 	return nil
@@ -320,12 +322,11 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 	}
 	logStr := fmt.Sprintf("storing Manifest: %s, data len = %d", manifest.Name, len(data))
 	idx.logger.Debug(logStr)
-
 	ref, err := idx.client.UploadBlob(data, 0, true)
 	// TODO: once the tags issue is fixed i bytes.
 	//  remove the error string check
 	if err != nil { //  skipcq: TCV-001
-		idx.logger.Errorf("uploadBlob failed in storeManifest : %s", err.Error())
+		idx.logger.Errorf("uploadBlob failed in storeManifest : %s, retrying\n", err.Error())
 		return ErrManifestCreate
 	}
 	topic := utils.HashString(manifest.Name)
@@ -334,10 +335,12 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 		if strings.Contains(err.Error(), "chunk already exists") {
 			_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
 			if err != nil { //  skipcq: TCV-001
-				return ErrManifestCreate
+				idx.logger.Errorf("failed to store manifest : %s, retrying\n", err.Error())
+				return err
 			}
 		} else {
-			return ErrManifestCreate
+			idx.logger.Errorf("failed to store manifest : %s, retrying\n", err.Error())
+			return err
 		}
 	}
 	return nil

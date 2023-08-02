@@ -34,7 +34,7 @@ type Feed struct {
 // userAddr common.AddressLength bytes
 const feedLength = TopicLength + utils.AddressLength
 
-// mapKey calculates a unique id for this feed. Used by the cache map in `Handler`
+// mapKey calculates a unique Id for this feed. Used by the cache map in `Handler`
 func (f *Feed) mapKey() (uint64, error) {
 	serializedData := make([]byte, feedLength)
 	err := f.binaryPut(serializedData)

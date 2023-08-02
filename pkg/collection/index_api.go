@@ -19,12 +19,21 @@ package collection
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/ethersphere/bee/pkg/file/joiner"
+	"github.com/ethersphere/bee/pkg/swarm"
+
+	"github.com/ethersphere/bee/pkg/file"
+	"github.com/ethersphere/bee/pkg/file/pipeline/builder"
+	"github.com/ethersphere/bee/pkg/storage"
 )
 
 const (
@@ -53,7 +62,6 @@ func (idx *Index) Put(key string, refValue []byte, idxType IndexType, apnd bool)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
 	ctx := context.Background()
 	return idx.addOrUpdateStringEntry(ctx, manifest, key, idxType, refValue, false, apnd)
 }
@@ -133,7 +141,7 @@ func (idx *Index) Delete(key string) ([][]byte, error) {
 
 func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest, key string, idxType IndexType, value []byte, memory, apnd bool) error {
 	entryAdded := false
-
+	update := false
 	for i := range manifest.Entries {
 		entry := manifest.Entries[i] // we change the entry so don't simplify this
 
@@ -151,6 +159,7 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 			entry.Ref = append(refs, value) // skipcq: CRT-D0001
 			manifest.dirtyFlag = true
 			entryAdded = true
+			update = true
 			break
 		}
 
@@ -248,6 +257,15 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 					}
 					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory, apnd)
 				} else { // skipcq: TCV-001
+					if entry.Manifest == nil {
+
+						man, err := idx.loadManifest(manifest.Name+entry.Name, idx.encryptionPassword)
+						if err != nil { //  skipcq: TCV-001
+							idx.logger.Error("Manifest load error: ", manifest.Name+entry.Name)
+							continue
+						}
+						entry.Manifest = man
+					}
 					return idx.addOrUpdateStringEntry(ctx, entry.Manifest, keySuffix, idxType, value, memory, apnd)
 				}
 
@@ -260,6 +278,15 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 					}
 					return idx.addOrUpdateStringEntry(ctx, intermediateManifest, keySuffix, idxType, value, memory, apnd)
 				} else { // skipcq: TCV-001
+					if entry.Manifest == nil {
+
+						man, err := idx.loadManifest(manifest.Name+entry.Name, idx.encryptionPassword)
+						if err != nil { //  skipcq: TCV-001
+							idx.logger.Error("Manifest load error: ", manifest.Name+entry.Name)
+							continue
+						}
+						entry.Manifest = man
+					}
 					return idx.addOrUpdateStringEntry(ctx, entry.Manifest, keySuffix, idxType, value, memory, apnd)
 				}
 
@@ -320,10 +347,268 @@ func (idx *Index) addOrUpdateStringEntry(ctx context.Context, manifest *Manifest
 
 	if entryAdded && !memory {
 		// update the count
-		atomic.AddUint64(&idx.count, 1)
-		manifest.Count = idx.count
+		if !update {
+			atomic.AddUint64(&idx.count, 1)
+			manifest.Count = idx.count
+		}
 
 		return idx.updateManifest(manifest, idx.encryptionPassword)
+	}
+	return nil // skipcq: TCV-001
+}
+
+func (idx *Index) addOrUpdateStringEntryIntoStore(ctx context.Context, manifest *Manifest, key string, idxType IndexType, value []byte, store *Store, socStore *SocStore) error {
+	entryAdded := false
+	for i := range manifest.Entries {
+		entry := manifest.Entries[i] // we change the entry so don't simplify this
+
+		// add new entry with key equal to the Manifest name
+		if key == "" {
+			break
+		}
+
+		// this is the update of an existing entry
+		if entry.EType == leafEntry && entry.Name == key {
+			var refs [][]byte
+			entry.Ref = append(refs, value) // skipcq: CRT-D0001
+			manifest.dirtyFlag = true
+			entryAdded = true
+			break
+		}
+
+		// if there is no common prefix, skip to next entry
+		prefix, entrySuffix, keySuffix := longestCommonPrefix(entry.Name, key)
+		if prefix == "" {
+			continue
+		}
+
+		if entry.EType == leafEntry {
+			var newManifest Manifest
+			newManifest.Name = manifest.Name + prefix
+			newManifest.IdxType = idxType
+			newManifest.CreationTime = time.Now().Unix()
+			var refs1 [][]byte
+			refs1 = append(refs1, value)
+			entry1 := &Entry{
+				Name:  keySuffix,
+				EType: leafEntry,
+				Ref:   refs1,
+			}
+			idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
+			entry2 := &Entry{
+				Name:  entrySuffix,
+				EType: leafEntry,
+				Ref:   entry.Ref,
+			}
+			idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
+
+			// store the new Manifest with two leaves
+			data, err := json.Marshal(newManifest)
+			if err != nil {
+				return err
+			}
+			p := builder.NewPipelineBuilder(context.Background(), store, storage.ModePutUpload, false)
+			dataReader := file.NewSimpleReadCloser(data)
+			ref, err := builder.FeedPipeline(context.Background(), p, dataReader)
+			if err != nil {
+				return err
+			}
+			err = socStore.Put(newManifest.Name, ref.Bytes())
+			if err != nil {
+				return err
+			}
+
+			// convert the existing leaf to intermediate node
+			entry.Name = prefix
+			entry.EType = intermediateEntry
+			manifest.dirtyFlag = true
+			entryAdded = true
+			break
+		}
+
+		if entry.EType == intermediateEntry {
+			if len(keySuffix) > 0 && len(entrySuffix) > 0 {
+				// create the new Manifest with two entries
+				var newManifest Manifest
+				newManifest.Name = manifest.Name + prefix
+				newManifest.IdxType = idxType
+				newManifest.CreationTime = time.Now().Unix()
+				// add the new entry as a leaf
+				var refs2 [][]byte
+				refs2 = append(refs2, value)
+				entry1 := &Entry{
+					Name:  keySuffix,
+					EType: leafEntry,
+					Ref:   refs2,
+				}
+				idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
+				// add the old intermediate branch as another entry
+				entry2 := &Entry{
+					Name:  entrySuffix,
+					EType: intermediateEntry,
+				}
+				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
+				data, err := json.Marshal(newManifest)
+				if err != nil {
+					return err
+				}
+				p := builder.NewPipelineBuilder(context.Background(), store, storage.ModePutUpload, false)
+				dataReader := file.NewSimpleReadCloser(data)
+				ref, err := builder.FeedPipeline(context.Background(), p, dataReader)
+				if err != nil {
+					return err
+				}
+				err = socStore.Put(newManifest.Name, ref.Bytes())
+				if err != nil {
+					return err
+				}
+
+				// update the existing intermediate nodes name
+				entry.Name = prefix
+				entry.EType = intermediateEntry
+				manifest.dirtyFlag = true
+				entryAdded = true
+				break
+			} else if len(keySuffix) > 0 {
+				refBytes, err := socStore.Get(manifest.Name + entry.Name)
+				if err != nil {
+					return err
+				}
+
+				r, l, err := joiner.New(ctx, store, swarm.NewAddress(refBytes))
+				if err != nil {
+					return err
+				}
+
+				var resultData []byte
+				for i := 0; i < int(l); i += swarm.ChunkSize {
+					readData := make([]byte, swarm.ChunkSize)
+					_, err := r.Read(readData)
+					if err != nil {
+						if errors.Is(err, io.EOF) {
+							break
+						}
+						return err
+					}
+					resultData = append(resultData, readData...)
+				}
+				intermediateManifest := &Manifest{}
+				err = json.Unmarshal(resultData[:l], intermediateManifest)
+				if err != nil {
+					return err
+				}
+
+				return idx.addOrUpdateStringEntryIntoStore(ctx, intermediateManifest, keySuffix, idxType, value, store, socStore)
+
+			} else if entrySuffix == "" && keySuffix == "" {
+				refBytes, err := socStore.Get(manifest.Name + prefix)
+				if err != nil {
+					return err
+				}
+
+				r, l, err := joiner.New(ctx, store, swarm.NewAddress(refBytes))
+				if err != nil {
+					return err
+				}
+
+				var resultData []byte
+				for i := 0; i < int(l); i += swarm.ChunkSize {
+					readData := make([]byte, swarm.ChunkSize)
+					_, err := r.Read(readData)
+					if err != nil {
+						if errors.Is(err, io.EOF) {
+							break
+						}
+						return err
+					}
+					resultData = append(resultData, readData...)
+				}
+				intermediateManifest := &Manifest{}
+				err = json.Unmarshal(resultData[:l], intermediateManifest)
+				if err != nil {
+					return err
+				}
+
+				return idx.addOrUpdateStringEntryIntoStore(ctx, intermediateManifest, keySuffix, idxType, value, store, socStore)
+			} else if len(entrySuffix) > 0 {
+				// create the new Manifest with two entries
+				var newManifest Manifest
+				newManifest.Name = manifest.Name + prefix
+				newManifest.IdxType = idxType
+				newManifest.CreationTime = time.Now().Unix()
+				// add the new entry as a leaf
+				var refs3 [][]byte
+				refs3 = append(refs3, value)
+				entry1 := &Entry{
+					Name:  keySuffix,
+					EType: leafEntry,
+					Ref:   refs3,
+				}
+				idx.addEntryToManifestSortedLexicographically(&newManifest, entry1)
+				// add the old intermediate branch as another entry
+				entry2 := &Entry{
+					Name:  entrySuffix,
+					EType: intermediateEntry,
+				}
+				idx.addEntryToManifestSortedLexicographically(&newManifest, entry2)
+
+				data, err := json.Marshal(newManifest)
+				if err != nil {
+					return err
+				}
+				p := builder.NewPipelineBuilder(context.Background(), store, storage.ModePutUpload, false)
+				dataReader := file.NewSimpleReadCloser(data)
+				ref, err := builder.FeedPipeline(context.Background(), p, dataReader)
+				if err != nil {
+					return err
+				}
+				err = socStore.Put(newManifest.Name, ref.Bytes())
+				if err != nil {
+					return err
+				}
+
+				// update the existing intermediate nodes name
+				entry.Name = key
+				entry.EType = intermediateEntry
+				manifest.dirtyFlag = true
+				entryAdded = true
+				break
+			}
+		}
+	}
+
+	// if the Manifest is not already changed, then this is a new entry
+	if !entryAdded {
+		var refs [][]byte
+		newEntry := Entry{
+			Name:  key,
+			EType: leafEntry,
+			Ref:   append(refs, value),
+		}
+		idx.addEntryToManifestSortedLexicographically(manifest, &newEntry)
+		manifest.dirtyFlag = true
+		entryAdded = true
+	}
+
+	if entryAdded {
+		// update the count
+		atomic.AddUint64(&idx.count, 1)
+		manifest.Count = idx.count
+		data, err := json.Marshal(manifest)
+		if err != nil {
+			return err
+		}
+		p := builder.NewPipelineBuilder(context.Background(), store, storage.ModePutUpload, false)
+		dataReader := file.NewSimpleReadCloser(data)
+		ref, err := builder.FeedPipeline(context.Background(), p, dataReader)
+		if err != nil {
+			return err
+		}
+		err = socStore.Put(manifest.Name, ref.Bytes())
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 	return nil // skipcq: TCV-001
 }

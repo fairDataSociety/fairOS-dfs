@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -338,6 +339,77 @@ func TestFeed(t *testing.T) {
 		err = nilFd.DeleteFeedFromTopic(topic, user1)
 		if !errors.Is(err, feed.ErrReadOnlyFeed) {
 			t.Fatal("read only feed")
+		}
+	})
+
+	t.Run("create-soc-upload as chunk-download as we download soc", func(t *testing.T) {
+		fd := feed.New(accountInfo1, client, logger)
+		store := feed.NewStore()
+		for i := 0; i < 10; i++ {
+			payload := []byte(fmt.Sprintf("fooooooooooooooooooooooooooooooo-%d", i))
+			err = store.Put(fmt.Sprintf("topic-%d", i), payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		for i := 0; i < 10; i++ {
+			payload := []byte(fmt.Sprintf("foo-%d", i))
+			err = store.Put(fmt.Sprintf("topic-%d", i), payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		store.Mtx.Lock()
+		for topic, v := range store.Store {
+			_, err := fd.CreateFeed(user1, utils.HashString(topic), v, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+		}
+		store.Mtx.Unlock()
+		for i := 0; i < 10; i++ {
+			topic := utils.HashString(fmt.Sprintf("topic-%d", i))
+			_, rcvdData, err := fd.GetFeedData(topic, user1, nil, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !bytes.Equal([]byte(fmt.Sprintf("foo-%d", i)), rcvdData) {
+				t.Fatal(err)
+			}
+		}
+		store = feed.NewStore()
+		for i := 0; i < 10; i++ {
+			payload := []byte(fmt.Sprintf("foobar-%d", i))
+			err = store.Put(fmt.Sprintf("topic-%d", i), payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		store.Mtx.Lock()
+		for topic, v := range store.Store {
+			_, err := fd.CreateFeed(user1, utils.HashString(topic), v, nil)
+			if err != nil && strings.Contains(err.Error(), "chunk already exists") {
+				_, err = fd.UpdateFeed(user1, utils.HashString(topic), v, nil, false)
+				if err != nil { //  skipcq: TCV-001
+					t.Fatal(err)
+				}
+			}
+
+		}
+		store.Mtx.Unlock()
+		for i := 0; i < 10; i++ {
+			topic := utils.HashString(fmt.Sprintf("topic-%d", i))
+			_, rcvdData, err := fd.GetFeedData(topic, user1, nil, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !bytes.Equal([]byte(fmt.Sprintf("foobar-%d", i)), rcvdData) {
+				t.Fatal(err)
+			}
 		}
 	})
 }

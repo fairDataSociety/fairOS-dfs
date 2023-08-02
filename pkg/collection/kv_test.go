@@ -27,6 +27,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -533,6 +536,65 @@ func TestKeyValueStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		now := time.Now()
+		columns := []string{"c1", "c2", "c3"}
+		batch, err := kvStore.KVBatch("kv_table_batch_2", columns)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		value := []byte("v1,v2,v3")
+		for i := 0; i < 10; i++ {
+			err = batch.Put(fmt.Sprintf("key%d", 1), value, false, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		_, err = batch.Write("")
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println("Time taken", time.Since(now))
+		gotColumns, gotValue, err := kvStore.KVGet("kv_table_batch_2", "key1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check the columns returned
+		for i, c := range columns {
+			if c != gotColumns[i] {
+				t.Fatal("columns do not match", c, gotColumns[i])
+			}
+		}
+
+		// also check the values returned
+		if !bytes.Equal(value, gotValue) {
+			t.Fatal("values do not match", string(value), string(gotValue))
+		}
+
+		// check the count
+		countObject, err := kvStore.KVCount("kv_table_batch_2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if countObject.Count != 10 {
+			t.Fatal("kv count value should be ten")
+		}
+	})
+
+	t.Run("batch_columns_and_get_values_twice", func(t *testing.T) {
+		beeClient := bee.NewBeeClient("http://localhost:1633", "3d2a618f927af0e5acc461eec3159766c2b551f149e85e82a8bb56bd1e453bb7", true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), beeClient, logger)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, beeClient, logger)
+		err := kvStore.CreateKVTable("kv_table_batch_2", podPassword, collection.StringIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = kvStore.OpenKVTable("kv_table_batch_2", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		columns := []string{"c1", "c2", "c3"}
 		batch, err := kvStore.KVBatch("kv_table_batch_2", columns)
@@ -544,6 +606,13 @@ func TestKeyValueStore(t *testing.T) {
 		err = batch.Put("key1", value, false, false)
 		if err != nil {
 			t.Fatal(err)
+		}
+		for i := 0; i < 10; i++ {
+			key, _ := utils.GetRandString(10)
+			err = batch.Put(key, value, false, false)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		_, err = batch.Write("")
@@ -568,13 +637,70 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal("values do not match", string(value), string(gotValue))
 		}
 
+		batch2, err := kvStore.KVBatch("kv_table_batch_2", columns)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		value2 := []byte("v1,v2,v3,v4")
+		err = batch2.Put("key2", value2, false, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; i < 10; i++ {
+			key, _ := utils.GetRandString(10)
+			err = batch2.Put(key, value, false, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		_, err = batch2.Write("")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		gotColumns, gotValue, err = kvStore.KVGet("kv_table_batch_2", "key1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check the columns returned
+		for i, c := range columns {
+			if c != gotColumns[i] {
+				t.Fatal("columns do not match", c, gotColumns[i])
+			}
+		}
+
+		// also check the values returned
+		if !bytes.Equal(value, gotValue) {
+			t.Fatal("values do not match", string(value), string(gotValue))
+		}
+
+		gotColumns, gotValue, err = kvStore.KVGet("kv_table_batch_2", "key2")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// check the columns returned
+		for i, c := range columns {
+			if c != gotColumns[i] {
+				t.Fatal("columns do not match", c, gotColumns[i])
+			}
+		}
+
+		// also check the values returned
+		if !bytes.Equal(value2, gotValue) {
+			t.Fatal("values do not match", string(value2), string(gotValue))
+		}
+
 		// check the count
 		countObject, err := kvStore.KVCount("kv_table_batch_2")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if countObject.Count != 1 {
-			t.Fatal("kv count value should be one")
+		if countObject.Count != 22 {
+			t.Fatal("kv count value should be 22")
 		}
 	})
 

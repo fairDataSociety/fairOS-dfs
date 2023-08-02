@@ -40,9 +40,15 @@ type Batch struct {
 
 // NewBatch creates a new batch index to be used in a KV table or a Document database.
 func NewBatch(idx *Index) (*Batch, error) {
-	return &Batch{
+	b := &Batch{
 		idx: idx,
-	}, nil
+	}
+
+	memDb, err := b.idx.loadManifest(idx.name, b.idx.encryptionPassword)
+	if err == nil && memDb != nil {
+		b.memDb = memDb
+	}
+	return b, nil
 }
 
 // PutNumber inserts index as a number.
@@ -178,6 +184,7 @@ func (b *Batch) Write(podFile string) (*Manifest, error) {
 		if err != nil && errors.Is(err, ErrNoManifestFound) { // skipcq: TCV-001
 			return nil, err
 		}
+
 		diskManifest.PodFile = podFile
 		b.memDb.PodFile = podFile
 		b.idx.podFile = podFile
@@ -247,11 +254,8 @@ func (b *Batch) emptyManifestStack() error {
 
 // skipcq: TCV-001
 func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
-	/*
-		var wg sync.WaitGroup
-		errC := make(chan error)
-		wgDone := make(chan bool)
-	*/
+	//var wg sync.WaitGroup
+	//errCh := make(chan error)
 
 	// store any branches in this manifest
 	for _, entry := range manifest.Entries {
@@ -262,45 +266,44 @@ func (b *Batch) storeMemoryManifest(manifest *Manifest, depth int) error {
 				entry.Manifest = nil
 				return nil
 			}
-			// wg.Add(1)
-			// go func() {
-			// defer func() {
-			//	 wg.Done()
-			// }()
+
 			err := b.storeMemoryManifest(entry.Manifest, depth+1)
 			if err != nil {
 				return err
 			}
-			// }()
 
+			//wg.Add(1)
+			//go func(entry *Entry) {
+			//	defer wg.Done()
+			//	err := b.storeMemoryManifest(entry.Manifest, depth+1)
+			//	if err != nil {
+			//		errCh <- err
+			//	}
+			//}(entry)
 		}
 	}
-
-	// go func() {
-	//	 wg.Wait()
-	//	 close(wgDone)
-	// }()
 	//
-	// select {
-	// case <-wgDone:
-	//	 break
-	// case err := <-errC:
-	//	 close(errC)
-	//	 return err
-	// }
+	//go func() {
+	//	wg.Wait()
+	//	close(errCh)
+	//}()
+	//
+	//for err := range errCh {
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 
-	// store this manifest
-	// go func() {
 	err := b.idx.storeManifest(manifest, b.idx.encryptionPassword)
 	if err != nil {
 		return err
 	}
+
 	atomic.AddUint64(&b.storageCount, 1)
 	count := atomic.LoadUint64(&b.storageCount)
 	if count%100 == 0 {
 		fmt.Println(count)
 	}
 
-	// }()
 	return nil
 }

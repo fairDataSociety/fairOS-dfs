@@ -126,7 +126,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 		}
 	}
 
-	// we can't look for anything without a store
+	// we can't look for anything without a Store
 	if h.client == nil { // skipcq: TCV-001
 		return nil, NewError(errInit, "invalid blockstore")
 	}
@@ -181,7 +181,7 @@ func (h *Handler) LookupEpoch(ctx context.Context, query *Query) (*CacheEntry, e
 		return nil, NewError(errInvalidValue, "hint is required for epoch lookup")
 	}
 
-	// we can't look for anything without a store
+	// we can't look for anything without a Store
 	if h.client == nil { // skipcq: TCV-001
 		return nil, NewError(errInit, "invalid blockstore")
 	}

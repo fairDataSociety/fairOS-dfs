@@ -107,7 +107,7 @@ func (h *Handler) KVLoadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	rowCount := 0
 	successCount := 0
 	failureCount := 0
-	var batch *collection.Batch
+	var batch *collection.Batcher
 	for {
 		// read one row from csv (assuming
 		record, err := reader.ReadString('\n')

@@ -158,7 +158,7 @@ func TestBatchIndex(t *testing.T) {
 			t.Fatal(err)
 		}
 		if itr2.Next() {
-			t.Fatal("should be not element")
+			t.Fatal("should be not element", itr2.StringKey())
 		}
 	})
 }

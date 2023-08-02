@@ -314,7 +314,7 @@ func (kv *KeyValue) KVDelete(name, key string) ([]byte, error) {
 }
 
 // KVBatch prepares the index to do a batch insert if keys and values.
-func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
+func (kv *KeyValue) KVBatch(name string, columns []string) (*Batcher, error) {
 	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return nil, ErrReadOnlyIndex
 	}
@@ -322,13 +322,13 @@ func (kv *KeyValue) KVBatch(name string, columns []string) (*Batch, error) {
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
 		table.columns = columns
-		return NewBatch(table.index)
+		return NewBatcher(table.index)
 	}
 	return nil, ErrKVTableNotOpened
 }
 
 // KVBatchPut inserts a key and value in to the memory for batch.
-func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
+func (kv *KeyValue) KVBatchPut(batch *Batcher, key string, value []byte) error {
 	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}
@@ -344,7 +344,7 @@ func (kv *KeyValue) KVBatchPut(batch *Batch, key string, value []byte) error {
 }
 
 // KVBatchWrite commits all the batch entries in to the key value table.
-func (kv *KeyValue) KVBatchWrite(batch *Batch) error {
+func (kv *KeyValue) KVBatchWrite(batch *Batcher) error {
 	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
 		return ErrReadOnlyIndex
 	}

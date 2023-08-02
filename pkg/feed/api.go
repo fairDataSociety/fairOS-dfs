@@ -92,7 +92,7 @@ func (a *API) GetUpdateTracker() *leveldb.DB {
 	return a.db
 }
 
-// CreateFeed creates a feed by constructing a single owner chunk. This chunk
+// CreateFeed creates a feed by constructing a single Owner chunk. This chunk
 // can only be accessed if the pod address is known. Also, no one else can spoof this
 // chunk since this is signed by the pod.
 func (a *API) CreateFeed(user utils.Address, topic, data, encryptionPassword []byte) ([]byte, error) {
@@ -128,12 +128,12 @@ func (a *API) CreateFeed(user utils.Address, topic, data, encryptionPassword []b
 	// Add initial feed data
 	req.data = encryptedData
 
-	// create the id, hash(topic, epoc)
+	// create the Id, hash(topic, epoc)
 	id, err := a.handler.getId(req.Topic, req.Time, req.Level)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	// get the payload id BMT(span, payload)
+	// get the payload Id BMT(span, payload)
 	payloadId, err := a.handler.getPayloadId(encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
@@ -347,12 +347,12 @@ retry:
 	}
 	req.Time = uint64(time.Now().Unix())
 	req.data = encryptedData
-	// create the id, hash(topic, epoc)
+	// create the Id, hash(topic, epoc)
 	id, err := a.handler.getId(req.Topic, req.Time, req.Level)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	// get the payload id BMT(span, payload)
+	// get the payload Id BMT(span, payload)
 	payloadId, err := a.handler.getPayloadId(encryptedData)
 	if err != nil { // skipcq: TCV-001
 		return nil, err

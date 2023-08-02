@@ -26,7 +26,11 @@ import (
 	"hash"
 	"io"
 	"net/http"
+	"strings"
+	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
@@ -273,7 +277,7 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 		return nil, errors.New("error uploading data")
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusCreated {
 		var beeErr *beeError
 		err = json.Unmarshal(addrData, &beeErr)
 		if err != nil {
@@ -298,6 +302,122 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload chunk: ")
 
 	return addrResp.Reference.Bytes(), nil
+}
+
+type putOp struct {
+	ch   swarm.Chunk
+	errc chan<- error
+}
+
+var successWsMsg = []byte{}
+
+// StreamChunks stream a chunks to Swarm network.
+func (s *Client) StreamChunks(ctx context.Context, chs ...swarm.Chunk) (exist []bool, err error) {
+	fullUrl := fmt.Sprintf(strings.Replace(s.url, "http", "ws", 1) + chunkUploadDownloadUrl + "/stream")
+	reqHeader := http.Header{}
+	reqHeader.Set(contentTypeHeader, "application/octet-stream")
+	reqHeader.Set(swarmPostageBatchId, s.postageBlockId)
+	if s.shouldPin {
+		reqHeader.Set(swarmPinHeader, "true")
+	}
+
+	dialer := websocket.Dialer{
+		ReadBufferSize:  swarm.ChunkSize,
+		WriteBufferSize: swarm.ChunkSize,
+	}
+
+	conn, _, err := dialer.DialContext(ctx, fullUrl, reqHeader)
+	if err != nil {
+		return nil, fmt.Errorf("failed creating connection %s: %w", fullUrl, err)
+	}
+
+	var wsErr string
+	serverClosed := make(chan struct{})
+	conn.SetCloseHandler(func(code int, text string) error {
+		wsErr = fmt.Sprintf("websocket connection closed code:%d msg:%s", code, text)
+		close(serverClosed)
+		return nil
+	})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	opChan := make(chan putOp)
+	go func() {
+		defer conn.Close()
+		defer wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case op, more := <-opChan:
+				if !more {
+					return
+				}
+				select {
+				case <-serverClosed:
+					return
+				case <-ctx.Done():
+					return
+				default:
+				}
+				err := conn.SetWriteDeadline(time.Now().Add(time.Second * 4))
+				if err != nil {
+					op.errc <- fmt.Errorf("failed setting write deadline %w", err)
+					continue
+				}
+				fmt.Println("uploading chunk", op.ch.Address().String())
+				err = conn.WriteMessage(websocket.BinaryMessage, op.ch.Data())
+				if err != nil {
+					op.errc <- fmt.Errorf("failed writing message %w", err)
+					continue
+				}
+
+				err = conn.SetReadDeadline(time.Now().Add(time.Second * 4))
+				if err != nil {
+					// server sent close message with error
+					if wsErr != "" {
+						op.errc <- errors.New(wsErr)
+						continue
+					}
+					op.errc <- fmt.Errorf("failed setting read deadline %w", err)
+					continue
+				}
+				mt, msg, err := conn.ReadMessage()
+				if err != nil {
+					op.errc <- fmt.Errorf("failed reading message %w", err)
+					continue
+				}
+				if mt != websocket.BinaryMessage || !bytes.Equal(successWsMsg, msg) {
+					op.errc <- errors.New("invalid msg returned on success")
+					continue
+				}
+				fmt.Println("uploaded chunk", op.ch.Address().String())
+				op.errc <- nil
+			}
+		}
+	}()
+	for _, ch := range chs {
+		errc := make(chan error, 1)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case opChan <- putOp{ch: ch, errc: errc}:
+		}
+
+		select {
+		case err := <-errc:
+			if err != nil {
+				return nil, fmt.Errorf("failed putting chunk %w", err)
+			}
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	fmt.Println("waiting")
+	close(opChan)
+	wg.Wait()
+	fmt.Println("done waiting")
+	return make([]bool, len(chs)), nil
 }
 
 // DownloadChunk downloads a chunk with given address from the Swarm network

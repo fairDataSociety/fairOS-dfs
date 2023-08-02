@@ -88,6 +88,10 @@ func (m *BeeClient) UploadSOC(owner, id, signature string, data []byte) (address
 	return signedChunk.Address().Bytes(), nil
 }
 
+func (s *BeeClient) StreamChunks(ctx context.Context, chs ...swarm.Chunk) (exist []bool, err error) {
+	return nil, errors.New("not implemented")
+}
+
 // UploadChunk into swarm
 func (m *BeeClient) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	m.storerMu.Lock()
