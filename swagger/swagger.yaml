@@ -2180,7 +2180,12 @@ paths:
           description: OK
           schema:
             items:
-              additionalProperties: true
+              additionalProperties:
+                items:
+                  additionalProperties:
+                    type: string
+                  type: object
+                type: array
               type: object
             type: array
         "400":
