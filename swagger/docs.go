@@ -2477,7 +2477,15 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "type": "object",
-                                "additionalProperties": true
+                                "additionalProperties": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
