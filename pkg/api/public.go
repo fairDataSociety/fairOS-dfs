@@ -97,6 +97,8 @@ func (h *Handler) PublicPodGetFileHandler(w http.ResponseWriter, r *http.Request
 //	@Tags         public
 //	@Accept       json
 //	@Produce      json
+//	@Param	      ref path string true "pod sharing reference"
+//	@Param	      file path string true "file location in the pod"
 //	@Success      200  {array}  byte
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
