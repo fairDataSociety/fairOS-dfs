@@ -28,7 +28,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/tracker"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
