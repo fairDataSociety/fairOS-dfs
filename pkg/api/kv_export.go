@@ -32,7 +32,7 @@ type KVExportRequest struct {
 //	@Produce      json
 //	@Param	      export_request body KVExportRequest true "kv export info"
 //	@Param	      Cookie header string true "cookie parameter"
-//	@Success      200  {object}  []map[string]interface{}
+//	@Success      200  {object}  []map[string][]map[string]string
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/kv/export [Post]
@@ -111,7 +111,7 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.InternalServerError(w, &response{Message: "kv export: " + err.Error()})
 		return
 	}
-	var items []map[string]interface{}
+	var items []map[string]string
 	var i int64
 	for i = 0; i < noOfRows; i++ {
 		if itr == nil {
@@ -121,11 +121,11 @@ func (h *Handler) KVExportHandler(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			break
 		}
-		item := map[string]interface{}{}
+		item := map[string]string{}
 		item[itr.StringKey()] = string(itr.Value())
 		items = append(items, item)
 	}
-	resp := map[string]interface{}{}
+	resp := map[string][]map[string]string{}
 	resp["items"] = items
 	w.Header().Set("Content-Type", "application/json")
 	jsonhttp.OK(w, &resp)
