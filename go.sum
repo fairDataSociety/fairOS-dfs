@@ -170,8 +170,8 @@ github.com/ethereum/c-kzg-4844 v0.3.1 h1:sR65+68+WdnMKxseNWxSJuAv2tsUrihTpVBTfM/
 github.com/ethereum/go-ethereum v1.10.4/go.mod h1:nEE0TP5MtxGzOMd7egIrbPJMQBnhVU3ELNxhBglIzhg=
 github.com/ethereum/go-ethereum v1.12.2 h1:eGHJ4ij7oyVqUQn48LBz3B7pvQ8sV0wGJiIE6gDq/6Y=
 github.com/ethereum/go-ethereum v1.12.2/go.mod h1:1cRAEV+rp/xX0zraSCBnu9Py3HQ+geRMj3HdR+k0wfI=
-github.com/ethersphere/bee v1.16.1 h1:eS3Y2fei1508SQnNPwPM5evtorjDdBlHoeynP7JSnGI=
-github.com/ethersphere/bee v1.16.1/go.mod h1:KH/BT0hLu5fvvufQApHZesHD8mYepzou1zxKrmwgvtM=
+github.com/ethersphere/bee v1.17.2 h1:5jyfby+1URBWuFC0mO3ZltF6cRUQ6RRF+f+ZuZ8EyLg=
+github.com/ethersphere/bee v1.17.2/go.mod h1:CSAz9XYUHZMOBDH4e6ybjv/E1o7bK4vhYMbmgHND8nA=
 github.com/ethersphere/bmt v0.1.4 h1:+rkWYNtMgDx6bkNqGdWu+U9DgGI1rRZplpSW3YhBr1Q=
 github.com/ethersphere/bmt v0.1.4/go.mod h1:Yd8ft1U69WDuHevZc/rwPxUv1rzPSMpMnS6xbU53aY8=
 github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d h1:4QgyFcv+J02YdPZ92oiCjjQ8QtGl/UbLTAypKb+WfZc=
