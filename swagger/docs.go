@@ -196,6 +196,22 @@ const docTemplate = `{
                     "public"
                 ],
                 "summary": "download file from a shared pod",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod sharing reference",
+                        "name": "ref",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "file location in the pod",
+                        "name": "file",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2461,7 +2477,15 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "type": "object",
-                                "additionalProperties": true
+                                "additionalProperties": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
@@ -3214,6 +3238,7 @@ const docTemplate = `{
                 ],
                 "summary": "Open pod",
                 "operationId": "pod-open-async-handler",
+                "deprecated": true,
                 "parameters": [
                     {
                         "description": "pod name and user password",
@@ -4439,6 +4464,9 @@ const docTemplate = `{
         "api.UserSignupResponse": {
             "type": "object",
             "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
                 "address": {
                     "type": "string"
                 },

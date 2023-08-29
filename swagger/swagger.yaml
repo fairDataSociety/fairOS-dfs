@@ -281,6 +281,8 @@ definitions:
     type: object
   api.UserSignupResponse:
     properties:
+      accessToken:
+        type: string
       address:
         type: string
       message:
@@ -606,6 +608,17 @@ paths:
       - application/json
       description: PublicPodFilePathHandler is the api handler to download file from
         a shared pod
+      parameters:
+      - description: pod sharing reference
+        in: path
+        name: ref
+        required: true
+        type: string
+      - description: file location in the pod
+        in: path
+        name: file
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -2167,7 +2180,12 @@ paths:
           description: OK
           schema:
             items:
-              additionalProperties: true
+              additionalProperties:
+                items:
+                  additionalProperties:
+                    type: string
+                  type: object
+                type: array
               type: object
             type: array
         "400":
@@ -2672,6 +2690,7 @@ paths:
     post:
       consumes:
       - application/json
+      deprecated: true
       description: PodOpenAsyncHandler is the api handler to open pod asynchronously
       operationId: pod-open-async-handler
       parameters:
