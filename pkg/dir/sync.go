@@ -27,7 +27,7 @@ import (
 // SyncDirectory syncs all the latest entries under a given directory.
 func (d *Directory) SyncDirectory(dirNameWithPath, podPassword string) error {
 	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
-	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
+	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return nil // pod is empty
 	}
@@ -64,7 +64,7 @@ func (d *Directory) SyncDirectory(dirNameWithPath, podPassword string) error {
 // SyncDirectoryAsync syncs all the latest entries under a given directory concurrently.
 func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath, podPassword string, wg *sync.WaitGroup) error {
 	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, ""))
-	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
+	_, data, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return nil // pod is empty
 	}

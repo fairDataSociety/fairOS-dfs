@@ -55,7 +55,7 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 
 	topic := utils.HashString(dirNameWithPath)
 	newTopic := utils.HashString(newDirNameWithPath)
-	_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
+	_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
 	if err != nil {
 		return err
 	}
@@ -77,9 +77,9 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 		return err
 	}
 
-	previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword))
+	previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword), false)
 	if err == nil && previousAddr != nil {
-		_, err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
+		_, err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword), false)
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
@@ -92,7 +92,7 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 
 	// delete old meta
 	// update with utils.DeletedFeedMagicWord
-	_, err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
+	_, err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -130,7 +130,7 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 			filePath := utils.CombinePathAndFile(totalPath, fileName)
 			newFilePath := utils.CombinePathAndFile(newTotalPath, fileName)
 			topic := utils.HashString(filePath)
-			_, metaBytes, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
+			_, metaBytes, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
 			if err != nil {
 				return err
 			}
@@ -153,9 +153,9 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 				return err
 			}
 
-			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword))
+			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword), false)
 			if err == nil && previousAddr != nil {
-				_, err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
+				_, err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword), false)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
@@ -168,7 +168,7 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 
 			// delete old meta
 			// update with utils.DeletedFeedMagicWord
-			_, err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
+			_, err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
@@ -182,7 +182,7 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 			}
 			topic := utils.HashString(pathWithDir)
 			newTopic := utils.HashString(newPathWithDir)
-			_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
+			_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
 			if err != nil {
 				return err
 			}
@@ -199,9 +199,9 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
-			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword))
+			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword), false)
 			if err == nil && previousAddr != nil {
-				_, err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
+				_, err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword), false)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
@@ -214,7 +214,7 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 
 			// delete old meta
 			// update with utils.DeletedFeedMagicWord
-			_, err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
+			_, err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}

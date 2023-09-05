@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"testing"
 
@@ -57,13 +56,13 @@ func TestFeed(t *testing.T) {
 			t.Fatal(err)
 		}
 		longTopic := append(topic, topic...) // skipcq: CRT-D0001
-		_, _, err = fd.GetFeedData(longTopic, user1, nil)
+		_, _, err = fd.GetFeedData(longTopic, user1, nil, false)
 		if !errors.Is(err, feed.ErrInvalidTopicSize) {
 			t.Fatal("invalid topic size")
 		}
 
 		// check if the data and address is present and is same as stored
-		rcvdAddr, rcvdData, err := fd.GetFeedData(topic, user1, nil)
+		rcvdAddr, rcvdData, err := fd.GetFeedData(topic, user1, nil, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -95,7 +94,7 @@ func TestFeed(t *testing.T) {
 
 		// check if you can read the data from user2
 		fd2 := feed.New(accountInfo2, client, logger)
-		rcvdAddr, rcvdData, err := fd2.GetFeedData(topic, user1, nil)
+		rcvdAddr, rcvdData, err := fd2.GetFeedData(topic, user1, nil, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -112,7 +111,7 @@ func TestFeed(t *testing.T) {
 		topic := utils.HashString("topic2")
 
 		// check if the data and address is present and is same as stored
-		_, _, err := fd.GetFeedData(topic, user1, nil)
+		_, _, err := fd.GetFeedData(topic, user1, nil, false)
 		if err != nil && err.Error() != "feed does not exist or was not updated yet" {
 			t.Fatal(err)
 		}
@@ -139,7 +138,7 @@ func TestFeed(t *testing.T) {
 
 		// check if you can read the data from user2
 		fd2 := feed.New(accountInfo2, client, logger)
-		rcvdAddr, rcvdData, err := fd2.GetFeedData(topic, user2, nil)
+		rcvdAddr, rcvdData, err := fd2.GetFeedData(topic, user2, nil, false)
 		if err != nil && err.Error() != "feed does not exist or was not updated yet" {
 			t.Fatal(err)
 		}
@@ -161,11 +160,11 @@ func TestFeed(t *testing.T) {
 			buf := make([]byte, 4)
 			binary.LittleEndian.PutUint16(buf, uint16(i))
 
-			_, err = fd.UpdateFeed(user1, topic, buf, nil)
+			_, err = fd.UpdateFeed(user1, topic, buf, nil, false)
 			if err != nil {
 				t.Fatal(err)
 			}
-			getAddr, rcvdData, err := fd.GetFeedData(topic, user1, nil)
+			getAddr, rcvdData, err := fd.GetFeedData(topic, user1, nil, false)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -175,7 +174,6 @@ func TestFeed(t *testing.T) {
 			if !bytes.Equal(buf, rcvdData) {
 				t.Fatal("data not matching", buf, rcvdData)
 			}
-			fmt.Println("update ", i, " Done")
 		}
 	})
 
@@ -288,13 +286,13 @@ func TestFeed(t *testing.T) {
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-		_, err = nilFd.UpdateFeed(user1, topic, data, nil)
+		_, err = nilFd.UpdateFeed(user1, topic, data, nil, false)
 		if !errors.Is(err, feed.ErrReadOnlyFeed) {
 			t.Fatal("read only feed")
 		}
 
 		longTopic := append(topic, topic...) // skipcq: CRT-D0001
-		_, err = fd.UpdateFeed(user1, longTopic, data, nil)
+		_, err = fd.UpdateFeed(user1, longTopic, data, nil, false)
 		if !errors.Is(err, feed.ErrInvalidTopicSize) {
 			t.Fatal("invalid topic size")
 		}
@@ -303,7 +301,7 @@ func TestFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = fd.UpdateFeed(user1, topic, longData, nil)
+		_, err = fd.UpdateFeed(user1, topic, longData, nil, false)
 		if !errors.Is(err, feed.ErrInvalidPayloadSize) {
 			t.Fatal("invalid payload size")
 		}

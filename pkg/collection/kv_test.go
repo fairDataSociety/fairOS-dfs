@@ -337,7 +337,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		countObject, err := kvStore.KVCount("kv_table_8", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_8")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -376,7 +376,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		countObject, err := kvStore.KVCount("kv_table_bytes", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_bytes")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -457,6 +457,15 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal("values do not match", string(value), "value1")
 		}
 
+		// test count
+		countObject, err := kvStore.KVCount("kv_table_11")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if countObject.Count != 2 {
+			t.Fatal("kv count value should be two")
+		}
 		// delete the key
 		_, err = kvStore.KVDelete("kv_table_11", "key1")
 		if err != nil {
@@ -558,6 +567,15 @@ func TestKeyValueStore(t *testing.T) {
 		if !bytes.Equal(value, gotValue) {
 			t.Fatal("values do not match", string(value), string(gotValue))
 		}
+
+		// check the count
+		countObject, err := kvStore.KVCount("kv_table_batch_2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if countObject.Count != 1 {
+			t.Fatal("kv count value should be one")
+		}
 	})
 
 	t.Run("batch_put_columns_and_get_values", func(t *testing.T) {
@@ -615,7 +633,15 @@ func TestKeyValueStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		countObject, err := kvStore.KVCount("kv_table_batch_count", podPassword)
+		_, err = kvStore.KVCount("kv_table_batch_count")
+		if err != collection.ErrKVTableNotOpened {
+			t.Fatal("should have returned error ", collection.ErrKVTableNotOpened)
+		}
+		err = kvStore.OpenKVTable("kv_table_batch_count", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		countObject, err := kvStore.KVCount("kv_table_batch_count")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -637,6 +663,15 @@ func TestKeyValueStore(t *testing.T) {
 		keys, values, err := addRandomStrings(t, kvStore, 100, "kv_table_Itr_0")
 		if err != nil {
 			t.Fatal(err)
+		}
+
+		// check the count
+		countObject, err := kvStore.KVCount("kv_table_Itr_0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if countObject.Count != 100 {
+			t.Fatal("kv count value should be 100")
 		}
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
 
@@ -816,6 +851,14 @@ func TestKeyValueStore(t *testing.T) {
 			}
 		}
 
+		// check the count
+		count, err := kvStore.KVCount(fmt.Sprintf("kv_table_Itr_1%d", tableNo))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count.Count != uint64(len(list)) {
+			t.Fatal("count mismatch", count, len(list))
+		}
 		startIndex := 0
 		endIndex := 0
 
