@@ -95,43 +95,43 @@ func Test_ExecuteCommand(t *testing.T) {
 		}
 	})
 
-	//t.Run("server-ens-err", func(t *testing.T) {
-	//	tempDir, err := os.MkdirTemp("", ".dfs")
-	//	require.NoError(t, err)
-	//
-	//	defer os.RemoveAll(tempDir)
-	//	b := bytes.NewBufferString("")
-	//	rootCmd.SetOut(b)
-	//
-	//	rootCmd.SetArgs([]string{"server", "--rpc", "http://localhost:1633", "--postageBlockId",
-	//		"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552", "--config",
-	//		filepath.Join(tempDir, ".dfs.yaml")})
-	//	err = rootCmd.Execute()
-	//	if err != nil && err.Error() != "could not connect to eth backend" {
-	//		t.Fatal("server should fail")
-	//	}
-	//})
-	//
-	//t.Run("server-network-err", func(t *testing.T) {
-	//	tempDir, err := os.MkdirTemp("", ".dfs")
-	//	require.NoError(t, err)
-	//
-	//	defer os.RemoveAll(tempDir)
-	//	b := bytes.NewBufferString("")
-	//	rootCmd.SetOut(b)
-	//
-	//	rootCmd.SetArgs([]string{
-	//		"server",
-	//		"--beeHost",
-	//		"http://localhost:1633",
-	//		"--rpc",
-	//		"http://localhost:9545",
-	//		"--postageBlockId",
-	//		"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552",
-	//	})
-	//	err = rootCmd.Execute()
-	//	if err != nil && err.Error() != "could not connect to eth backend" {
-	//		t.Fatal("server should fail")
-	//	}
-	//})
+	t.Run("server-ens-err", func(t *testing.T) {
+		tempDir, err := os.MkdirTemp("", ".dfs")
+		require.NoError(t, err)
+
+		defer os.RemoveAll(tempDir)
+		b := bytes.NewBufferString("")
+		rootCmd.SetOut(b)
+
+		rootCmd.SetArgs([]string{"server", "--rpc", "http://localhost:1633", "--postageBlockId",
+			"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552", "--config",
+			filepath.Join(tempDir, ".dfs.yaml")})
+		err = rootCmd.Execute()
+		if err != nil && err.Error() != "could not connect to eth backend" {
+			t.Fatal("server should fail")
+		}
+	})
+
+	t.Run("server-network-err", func(t *testing.T) {
+		tempDir, err := os.MkdirTemp("", ".dfs")
+		require.NoError(t, err)
+
+		defer os.RemoveAll(tempDir)
+		b := bytes.NewBufferString("")
+		rootCmd.SetOut(b)
+
+		rootCmd.SetArgs([]string{
+			"server",
+			"--beeHost",
+			"http://localhost:1633",
+			"--rpc",
+			"http://localhost:9545",
+			"--postageBlockId",
+			"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552",
+		})
+		err = rootCmd.Execute()
+		if err != nil && err.Error() != "could not connect to eth backend" {
+			t.Fatal("server should fail")
+		}
+	})
 }
