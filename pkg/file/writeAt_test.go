@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"math/rand"
 	"os"
@@ -360,7 +359,6 @@ func TestWriteAt(t *testing.T) {
 			t.Fatal(err)
 		}
 		meta2 := fileObject.GetInode(podPassword, fp)
-		fmt.Println(meta2)
 		assert.Equal(t, meta2, (*file.MetaData)(nil))
 	})
 

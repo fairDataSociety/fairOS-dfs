@@ -128,6 +128,8 @@ func Test_ExecuteCommand(t *testing.T) {
 			"http://localhost:9545",
 			"--postageBlockId",
 			"c108266827eb7ba357797de2707bea00446919346b51954f773560b79765d552",
+			"--config",
+			filepath.Join(tempDir, ".dfs.yaml"),
 		})
 		err = rootCmd.Execute()
 		if err != nil && err.Error() != "could not connect to eth backend" {

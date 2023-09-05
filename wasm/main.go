@@ -141,13 +141,16 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 
 		go func() {
 			var err error
+			opts := &dfs.Options{
+				Stamp:              stampId,
+				BeeApiEndpoint:     beeEndpoint,
+				EnsConfig:          config,
+				SubscriptionConfig: nil,
+				Logger:             logger,
+			}
 			api, err = dfs.NewDfsAPI(
 				ctx,
-				beeEndpoint,
-				stampId,
-				config,
-				nil,
-				logger,
+				opts,
 			)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("failed to connect to fairOS: %s", err.Error()))

@@ -156,7 +156,7 @@ func initConfig() {
 
 func writeConfig() {
 	c := viper.New()
-	c.Set(optionFeedTracker, false)
+	//c.Set(optionFeedTracker, false)
 	c.Set(optionCORSAllowedOrigins, defaultCORSAllowedOrigins)
 	c.Set(optionDFSHttpPort, defaultDFSHttpPort)
 	c.Set(optionDFSPprofPort, defaultDFSPprofPort)
@@ -166,7 +166,7 @@ func writeConfig() {
 	c.Set(optionCookieDomain, defaultCookieDomain)
 
 	if err := c.WriteConfigAs(cfgFile); err != nil {
-		fmt.Println("failed to write config file")
+		fmt.Println("failed to write config file", err.Error())
 		os.Exit(1)
 	}
 }

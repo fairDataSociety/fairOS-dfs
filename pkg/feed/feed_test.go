@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"testing"
 
@@ -175,7 +174,6 @@ func TestFeed(t *testing.T) {
 			if !bytes.Equal(buf, rcvdData) {
 				t.Fatal("data not matching", buf, rcvdData)
 			}
-			fmt.Println("update ", i, " Done")
 		}
 	})
 
