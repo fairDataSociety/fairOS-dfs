@@ -114,7 +114,7 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 		}
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		fd.SetUpdateTracker(p.fd.GetUpdateTracker())
+		//fd.SetUpdateTracker(p.fd.GetUpdateTracker())
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 

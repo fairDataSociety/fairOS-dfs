@@ -14,7 +14,7 @@ var (
 	optionBeeApi             = "bee.bee-api-endpoint"
 	optionBeePostageBatchId  = "bee.postage-batch-id"
 	optionCookieDomain       = "cookie-domain"
-	optionNetwork            = "network"
+	optionNetwork            = "ens-network"
 	optionRPC                = "rpc"
 
 	defaultCORSAllowedOrigins = []string{}

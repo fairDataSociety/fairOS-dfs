@@ -24,7 +24,6 @@ import (
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/tracker"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -86,10 +85,10 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		}
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		_, err = tracker.InitFeedsTracker(accountInfo.GetAddress(), podName, podPassword, fd, p.client, p.logger)
-		if err != nil {
-			p.logger.Errorf("error initializing feeds tracker: %v", err)
-		}
+		//_, err = tracker.InitFeedsTracker(accountInfo.GetAddress(), podName, podPassword, fd, p.client, p.logger)
+		//if err != nil {
+		//	p.logger.Errorf("error initializing feeds tracker: %v", err)
+		//}
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -214,7 +213,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 		}
 
 		fd = feed.New(accountInfo, p.client, p.logger)
-		fd.SetUpdateTracker(p.fd.GetUpdateTracker())
+		//fd.SetUpdateTracker(p.fd.GetUpdateTracker())
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 

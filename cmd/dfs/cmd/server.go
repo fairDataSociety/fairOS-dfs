@@ -135,7 +135,8 @@ can consume it.`,
 			return fmt.Errorf("rpc endpoint is missing")
 		}
 
-		network := config.GetString("network")
+		network := config.GetString(optionNetwork)
+		fmt.Println("network: ", network)
 		switch v := strings.ToLower(network); v {
 		case "mainnet":
 			fmt.Println("\nens is not available for mainnet yet")
