@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine AS build
+FROM golang:1.20.2-alpine AS build
 
 WORKDIR /usr/fairos
 COPY go.mod go.sum /usr/fairos/
@@ -9,7 +9,7 @@ COPY . /usr/fairos/
 RUN apk add --update --no-cache make gcc git musl-dev libc-dev linux-headers bash \
     && make binary
 
-FROM alpine:3.15
+FROM alpine:3.18
 
 ARG CONFIG
 ENV CONFIG=$CONFIG
