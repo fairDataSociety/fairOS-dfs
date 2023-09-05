@@ -52,7 +52,7 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 	err = f.client.DeleteReference(meta.InodeAddress)
 	if err != nil {
 		f.logger.Errorf("could not delete file inode %s", swarm.NewAddress(meta.InodeAddress).String())
-		return fmt.Errorf("could not delete file inode %v", swarm.NewAddress(meta.InodeAddress).String())
+		return fmt.Errorf("could not delete file inode %s: %s", swarm.NewAddress(meta.InodeAddress).String(), err.Error())
 	}
 	for _, fblocks := range fInode.Blocks {
 		err = f.client.DeleteReference(fblocks.Reference.Bytes())
