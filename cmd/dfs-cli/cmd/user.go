@@ -54,7 +54,7 @@ func userNew(userName, mnemonic string) {
 	}
 	if resp.Message == eth.ErrInsufficientBalance.Error() {
 		fmt.Println("Failed to create new user")
-		fmt.Println("Please fund your account with some eth and try again with the following command")
+		fmt.Println("Please fund your account with some eth and try again with the following command. This is not related with bee wallet")
 		fmt.Printf(">>> user new %s %s\n", userName, resp.Mnemonic)
 		fmt.Println("address :", resp.Address)
 		fmt.Println("=============== Mnemonic ==========================")

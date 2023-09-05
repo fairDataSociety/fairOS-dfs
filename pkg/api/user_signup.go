@@ -101,7 +101,7 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 				jsonhttp.PaymentRequired(w, &UserSignupResponse{
 					Address:  signUp.Address,
 					Mnemonic: signUp.Mnemonic,
-					Message:  eth.ErrInsufficientBalance.Error(),
+					Message:  eth.ErrInsufficientBalance.Error() + " for creating account on fairOS-dfs and not related with bee wallet.",
 				})
 				return
 			}
