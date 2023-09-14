@@ -930,7 +930,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 	d.logger.Info("finding from document db: ", dbName, expr, limit)
 	db := d.getOpenedDb(dbName)
 	if db == nil { // skipcq: TCV-001
-		d.logger.Errorf("finding from document db: ", ErrDocumentDBNotOpened)
+		d.logger.Errorf("finding from document db: %v", ErrDocumentDBNotOpened)
 		return nil, ErrDocumentDBNotOpened
 	}
 
@@ -938,7 +938,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 	if expr == "" {
 		idx, found := db.simpleIndexes[DefaultIndexFieldName]
 		if !found { // skipcq: TCV-001
-			d.logger.Errorf("finding from document db: ", ErrIndexNotPresent)
+			d.logger.Errorf("finding from document db: %v", ErrIndexNotPresent)
 			return nil, ErrIndexNotPresent
 		}
 		return idx.Get("")
@@ -946,7 +946,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 
 	fieldName, operator, fieldValue, err := d.resolveExpression(expr)
 	if err != nil { // skipcq: TCV-001
-		d.logger.Errorf("finding from document db: ", err.Error())
+		d.logger.Errorf("finding from document db: %v", err.Error())
 		return nil, err
 	}
 
@@ -956,7 +956,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		if !found { // skipcq: TCV-001
 			idx, found = db.listIndexes[fieldName]
 			if !found {
-				d.logger.Errorf("finding from document db: ", ErrIndexNotPresent)
+				d.logger.Errorf("finding from document db: %v", ErrIndexNotPresent)
 				return nil, ErrIndexNotPresent
 			}
 		} else {
@@ -969,7 +969,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 	case StringIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", -1)
 		if err != nil { // skipcq: TCV-001
-			d.logger.Errorf("finding from document db: ", err.Error())
+			d.logger.Errorf("finding from document db: %v", err.Error())
 			return nil, err
 		}
 		switch operator {
@@ -1004,7 +1004,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 	case MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", int64(limit))
 		if err != nil { // skipcq: TCV-001
-			d.logger.Errorf("finding from document db: ", err.Error())
+			d.logger.Errorf("finding from document db: %v", err.Error())
 			return nil, err
 		}
 		switch operator {
@@ -1038,7 +1038,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		if operator != "<" && operator != "<=" {
 			start, err = strconv.ParseInt(fieldValue, 10, 64)
 			if err != nil { // skipcq: TCV-001
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 				return nil, err
 			}
 		} else if operator == "!=" {
@@ -1046,7 +1046,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		}
 		itr, err := idx.NewIntIterator(start, -1, int64(limit))
 		if err != nil { // skipcq: TCV-001
-			d.logger.Errorf("finding from document db: ", err.Error())
+			d.logger.Errorf("finding from document db: %v", err.Error())
 			return nil, err
 		}
 		switch operator {
@@ -1084,7 +1084,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		case "<":
 			end, err := strconv.ParseInt(fieldValue, 10, 64)
 			if err != nil { // skipcq: TCV-001
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 				break
 			}
 			for itr.Next() {
@@ -1104,7 +1104,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		case "<=":
 			end, err := strconv.ParseInt(fieldValue, 10, 64)
 			if err != nil { // skipcq: TCV-001
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 				break
 			}
 			for itr.Next() {
@@ -1136,10 +1136,10 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 			return nil, fmt.Errorf("operator is not available: %s", operator)
 		}
 	case BytesIndex: // skipcq: TCV-001
-		d.logger.Errorf("finding from document db: ", ErrIndexNotSupported)
+		d.logger.Errorf("finding from document db: %v", ErrIndexNotSupported)
 		return nil, ErrIndexNotSupported
 	default: // skipcq: TCV-001
-		d.logger.Errorf("finding from document db: ", ErrInvalidIndexType)
+		d.logger.Errorf("finding from document db: %v", ErrInvalidIndexType)
 		return nil, ErrInvalidIndexType
 	}
 	var docs [][]byte
@@ -1155,7 +1155,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 			et := newEntryTask(d.client, &docs, ref, mtx)
 			err := et.Execute(context.TODO())
 			if err != nil { // skipcq: TCV-001
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 			}
 			wg.Done()
 		}
@@ -1175,7 +1175,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 			}
 			data, err := d.getLineFromFile(idx.podFile, podPassword, seekOffset)
 			if err != nil {
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 				return nil, err
 			}
 			docs = append(docs, data)
@@ -1200,13 +1200,13 @@ func (d *Document) NearestNodes(dbName, podPassword, index string, v []float32, 
 
 	idx, found := db.vectorIndexes[index]
 	if !found {
-		d.logger.Errorf("finding from document db: ", ErrIndexNotPresent)
+		d.logger.Errorf("finding from document db: %v", ErrIndexNotPresent)
 		return nil, ErrIndexNotPresent
 	}
 
 	itr, err := idx.NewStringIterator("", "", -1)
 	if err != nil { // skipcq: TCV-001
-		d.logger.Errorf("finding from document db: ", err.Error())
+		d.logger.Errorf("finding from document db: %v", err.Error())
 		return nil, err
 	}
 
@@ -1223,7 +1223,7 @@ func (d *Document) NearestNodes(dbName, podPassword, index string, v []float32, 
 		}
 		err = gob.NewDecoder(bytes.NewBuffer(vectorBytes)).Decode(&vector)
 		if err != nil {
-			d.logger.Errorf("finding from document db: ", err.Error())
+			d.logger.Errorf("finding from document db: %v", err.Error())
 			return nil, err
 		}
 		dist, err := NormalizedDistance(v, vector)
@@ -1249,7 +1249,7 @@ func (d *Document) NearestNodes(dbName, podPassword, index string, v []float32, 
 			et := newEntryTask(d.client, &docs, ref, mtx)
 			err := et.Execute(context.TODO())
 			if err != nil { // skipcq: TCV-001
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 			}
 			wg.Done()
 		}
@@ -1269,7 +1269,7 @@ func (d *Document) NearestNodes(dbName, podPassword, index string, v []float32, 
 			}
 			data, err := d.getLineFromFile(idx.podFile, podPassword, seekOffset)
 			if err != nil {
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 				return nil, err
 			}
 			docs = append(docs, data)

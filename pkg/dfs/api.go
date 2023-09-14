@@ -70,7 +70,7 @@ func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
 		}
 		return nil, errEthClient
 	}
-	c := bee.NewBeeClient(opts.BeeApiEndpoint, opts.Stamp, false, logger)
+	c := bee.NewBeeClient(opts.BeeApiEndpoint, opts.Stamp, true, logger)
 	if !c.CheckConnection() {
 		logger.Errorf("dfs: bee client initialisation failed")
 		return nil, errBeeClient
