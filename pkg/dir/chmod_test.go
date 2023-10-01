@@ -7,8 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
@@ -16,11 +20,19 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
 )
 
 func TestChmod(t *testing.T) {
-	mockClient := bm.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {

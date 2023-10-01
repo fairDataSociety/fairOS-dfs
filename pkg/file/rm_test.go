@@ -22,24 +22,31 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-
-	"github.com/plexsysio/taskmanager"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRemoveFile(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	require.NoError(t, err)

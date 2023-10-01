@@ -2,9 +2,14 @@ package test_test
 
 import (
 	"context"
-	"os"
+	"io"
 	"testing"
 	"time"
+
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/sirupsen/logrus"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
@@ -22,9 +27,15 @@ import (
 )
 
 func TestSubscription(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
 
-	logger := logging.New(os.Stdout, 0)
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc1 := account.New(logger)
 	_, _, err := acc1.CreateUserAccount("")
 	if err != nil {
