@@ -7,18 +7,28 @@ import (
 	"testing"
 	"time"
 
-	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
-
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
 )
 
 func TestLite(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())

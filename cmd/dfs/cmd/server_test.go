@@ -17,6 +17,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -43,9 +49,16 @@ func randStringRunes(n int) string {
 }
 
 func TestApis(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	ens := mock2.NewMockNamespaceManager()
-	logger := logging.New(io.Discard, logrus.ErrorLevel)
 
 	users := user.NewUsers(mockClient, ens, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
