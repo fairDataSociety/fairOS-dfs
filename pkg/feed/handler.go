@@ -157,6 +157,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 		}
 		ch := swarm.NewChunk(addr, data)
 		var request request
+
 		if err := h.fromChunk(ch, &request, query, &id); err != nil {
 			return nil, nil
 		}

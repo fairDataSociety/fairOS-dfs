@@ -27,6 +27,12 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
+
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/sirupsen/logrus"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -43,14 +49,21 @@ func TestMain(m *testing.M) {
 }
 
 func TestKeyValueStore(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 	kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -684,7 +697,7 @@ func TestKeyValueStore(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
-				t.Fatal("keys do not match", itr.StringKey(), sortedKeys[i])
+				t.Fatal("keys do not match", i, itr.StringKey(), sortedKeys[i])
 			}
 			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
 				t.Fatal("values do not match", string(itr.Value()), sortedValues[i])
@@ -1205,6 +1218,7 @@ func addRandomStrings(t *testing.T, kvStore *collection.KeyValue, count int, tab
 		}
 		keys = append(keys, key)
 		values = append(values, key)
+		<-time.After(800 * time.Millisecond)
 	}
 	return keys, values, nil
 }

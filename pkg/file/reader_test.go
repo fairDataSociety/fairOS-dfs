@@ -23,6 +23,12 @@ import (
 	"math/big"
 	"testing"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/sirupsen/logrus"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -31,7 +37,15 @@ import (
 )
 
 func TestFileReader(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 
 	t.Run("read-entire-file-shorter-than-block", func(t *testing.T) {
 		fileSize := uint64(15)
@@ -302,7 +316,7 @@ func TestFileReader(t *testing.T) {
 	})
 }
 
-func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.BeeClient) ([]byte, file.INode) {
+func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *bee.Client) ([]byte, file.INode) {
 	var fileBlocks []*file.BlockInfo
 	noOfBlocks := fileSize / uint64(blockSize)
 	if fileSize%uint64(blockSize) != 0 {
@@ -347,7 +361,7 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 	}
 }
 
-func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *mock.BeeClient, linesPerBlock uint32) ([]byte, file.INode, int, []byte, int, []byte) { // skipcq: GO-C4008
+func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, compression string, mockClient *bee.Client, linesPerBlock uint32) ([]byte, file.INode, int, []byte, int, []byte) { // skipcq: GO-C4008
 	var fileBlocks []*file.BlockInfo
 	noOfBlocks := fileSize / uint64(blockSize)
 	if fileSize%uint64(blockSize) != 0 {
