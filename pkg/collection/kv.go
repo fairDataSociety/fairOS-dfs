@@ -450,7 +450,7 @@ func (kv *KeyValue) storeKVTables(collections map[string][]string, encryptionPas
 	if buf.Len() == 0 {
 		data = []byte(utils.DeletedFeedMagicWord)
 	}
-	_, err := kv.fd.UpdateFeed(kv.user, topic, data, []byte(encryptionPassword), false)
+	err := kv.fd.UpdateFeed(kv.user, topic, data, []byte(encryptionPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

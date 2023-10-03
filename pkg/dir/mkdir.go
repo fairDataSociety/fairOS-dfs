@@ -85,12 +85,12 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) 
 	// upload the metadata as blob
 	previousAddr, _, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
 	if err == nil && previousAddr != nil {
-		_, err = d.fd.UpdateFeed(d.userAddress, topic, data, []byte(podPassword), false)
+		err = d.fd.UpdateFeed(d.userAddress, topic, data, []byte(podPassword), false)
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	} else {
-		_, err = d.fd.CreateFeed(d.userAddress, topic, data, []byte(podPassword))
+		err = d.fd.CreateFeed(d.userAddress, topic, data, []byte(podPassword))
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
@@ -120,7 +120,7 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) 
 		return err
 	}
 
-	_, err = d.fd.UpdateFeed(d.userAddress, parentHash, parentData, []byte(podPassword), false)
+	err = d.fd.UpdateFeed(d.userAddress, parentHash, parentData, []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -150,14 +150,14 @@ func (d *Directory) MkRootDir(podName, podPassword string, podAddress utils.Addr
 	}
 	parentPath := utils.CombinePathAndFile(utils.PathSeparator, "")
 	parentHash := utils.HashString(parentPath)
-	addr, data, err := d.fd.GetFeedData(parentHash, d.userAddress, []byte(podPassword), false)
-	if err == nil && addr != nil && data != nil {
-		_, err = fd.UpdateFeed(podAddress, parentHash, parentData, []byte(podPassword), false)
+	_, data, err := d.fd.GetFeedData(parentHash, d.userAddress, []byte(podPassword), false)
+	if err == nil && data != nil {
+		err = fd.UpdateFeed(podAddress, parentHash, parentData, []byte(podPassword), false)
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
 	} else {
-		_, err = fd.CreateFeed(podAddress, parentHash, parentData, []byte(podPassword))
+		err = fd.CreateFeed(podAddress, parentHash, parentData, []byte(podPassword))
 		if err != nil { // skipcq: TCV-001
 			return err
 		}

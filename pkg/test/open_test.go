@@ -92,7 +92,8 @@ func TestOpen(t *testing.T) {
 
 		// create some dir and files
 		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
-
+		fd.CommitFeeds()
+		<-time.After(time.Second)
 		// open the pod
 		podInfo, err := pod1.OpenPod(podName1)
 		if err != nil {

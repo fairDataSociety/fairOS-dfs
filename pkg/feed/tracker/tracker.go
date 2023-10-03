@@ -176,7 +176,7 @@ func (ms *memStorage) Create(fd storage.FileDesc) (storage.Writer, error) {
 		}
 
 		topic := getTopic([]string{fd.String(), ms.username, ms.password})
-		_, err = ms.fd.UpdateFeed(ms.address, topic, ref, []byte(ms.password), true)
+		err = ms.fd.UpdateFeed(ms.address, topic, ref, []byte(ms.password), true)
 		if err != nil {
 			return nil, err
 		}
@@ -187,7 +187,7 @@ func (ms *memStorage) Create(fd storage.FileDesc) (storage.Writer, error) {
 	dt, err := json.Marshal(ms.list)
 	if err == nil {
 		topic := getTopic([]string{listTopic, ms.username, ms.password})
-		_, err = ms.fd.UpdateFeed(ms.address, topic, dt, []byte(ms.password), true)
+		err = ms.fd.UpdateFeed(ms.address, topic, dt, []byte(ms.password), true)
 		if err != nil {
 			ms.logging.Error("error updating list", "error", err)
 		}
@@ -207,7 +207,7 @@ func (ms *memStorage) Remove(fd storage.FileDesc) error {
 		delete(ms.files, fd.String())
 		topic := getTopic([]string{fd.String(), ms.username, ms.password})
 
-		_, err := ms.fd.UpdateFeed(ms.address, topic, []byte(utils.DeletedFeedMagicWord), []byte(ms.password), true)
+		err := ms.fd.UpdateFeed(ms.address, topic, []byte(utils.DeletedFeedMagicWord), []byte(ms.password), true)
 		if err != nil {
 			return err
 		}
@@ -218,7 +218,7 @@ func (ms *memStorage) Remove(fd storage.FileDesc) error {
 			return err
 		}
 		lTopic := getTopic([]string{listTopic, ms.username, ms.password})
-		_, err = ms.fd.UpdateFeed(ms.address, lTopic, dt, []byte(ms.password), true)
+		err = ms.fd.UpdateFeed(ms.address, lTopic, dt, []byte(ms.password), true)
 		if err != nil {
 			return err
 		}
@@ -258,7 +258,7 @@ func (ms *memStorage) Rename(oldfd, newfd storage.FileDesc) error {
 	}
 
 	topic = getTopic([]string{newfd.String(), ms.username, ms.password})
-	_, err = ms.fd.UpdateFeed(ms.address, topic, ref, []byte(ms.password), true)
+	err = ms.fd.UpdateFeed(ms.address, topic, ref, []byte(ms.password), true)
 	if err != nil {
 		return err
 	}
@@ -269,7 +269,7 @@ func (ms *memStorage) Rename(oldfd, newfd storage.FileDesc) error {
 	}
 
 	lTopic := getTopic([]string{listTopic, ms.username, ms.password})
-	_, err = ms.fd.UpdateFeed(ms.address, lTopic, dt, []byte(ms.password), true)
+	err = ms.fd.UpdateFeed(ms.address, lTopic, dt, []byte(ms.password), true)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (ms *memStorage) setMeta(fd storage.FileDesc) error {
 		return nil
 	}
 
-	_, err = ms.fd.UpdateFeed(ms.address, topic, []byte(content), []byte(ms.password), true)
+	err = ms.fd.UpdateFeed(ms.address, topic, []byte(content), []byte(ms.password), true)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -385,7 +385,7 @@ func (mw *memWriter) Write(p []byte) (n int, err error) {
 	}
 
 	topic := getTopic([]string{mw.name, mw.username, mw.password})
-	_, err = mw.fd.UpdateFeed(mw.address, topic, ref, []byte(mw.password), true)
+	err = mw.fd.UpdateFeed(mw.address, topic, ref, []byte(mw.password), true)
 	return
 }
 

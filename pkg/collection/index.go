@@ -139,13 +139,13 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	}
 
 	if string(oldData) == utils.DeletedFeedMagicWord { //  skipcq: TCV-001
-		_, err = fd.UpdateFeed(user, topic, ref, []byte(encryptionPassword), false)
+		err = fd.UpdateFeed(user, topic, ref, []byte(encryptionPassword), false)
 		if err != nil {
 			return ErrManifestCreate
 		}
 		return nil
 	}
-	_, err = fd.CreateFeed(user, topic, ref, []byte(encryptionPassword))
+	err = fd.CreateFeed(user, topic, ref, []byte(encryptionPassword))
 	if err != nil { //  skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -188,7 +188,7 @@ func (idx *Index) DeleteIndex(encryptionPassword string) error {
 
 	//  erase the top Manifest
 	topic := utils.HashString(idx.name)
-	_, err := idx.feed.UpdateFeed(idx.user, topic, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword), false)
+	err := idx.feed.UpdateFeed(idx.user, topic, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword), false)
 	if err != nil { //  skipcq: TCV-001
 		return ErrDeleteingIndex
 	}
@@ -305,7 +305,7 @@ func (idx *Index) updateManifest(manifest *Manifest, encryptionPassword string) 
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
+	err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
 	if err != nil { //  skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -329,10 +329,10 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 		return ErrManifestCreate
 	}
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.CreateFeed(idx.user, topic, ref, []byte(encryptionPassword))
+	err = idx.feed.CreateFeed(idx.user, topic, ref, []byte(encryptionPassword))
 	if err != nil { //  skipcq: TCV-001
 		if strings.Contains(err.Error(), "chunk already exists") {
-			_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
+			err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
 			if err != nil { //  skipcq: TCV-001
 				return ErrManifestCreate
 			}

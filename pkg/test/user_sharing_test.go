@@ -121,6 +121,9 @@ func TestSharing(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fd1.CommitFeeds()
+		pod1.GetFeed().CommitFeeds()
+		info1.GetFeed().CommitFeeds()
 		// share file with another user
 		sharingRefString, err := userObject1.ShareFileWithUser("pod1", podPassword, "/parentDir1/file1", "user2", ui0, pod1, info1.GetPodAddress())
 		if err != nil {
