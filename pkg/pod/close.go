@@ -23,6 +23,12 @@ func (p *Pod) ClosePod(podName string) error {
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
+	if err := podInfo.feed.Close(); err != nil {
+		return err
+	}
+	if err := p.fd.Close(); err != nil {
+		return err
+	}
 
 	podIndex, err := p.getPodIndex(podName)
 	if err != nil { // skipcq: TCV-001

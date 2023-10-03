@@ -70,7 +70,7 @@ func TestLiteUser(t *testing.T) {
 			PodName: randStringRunes(16),
 		}
 
-		_, err = dfsApi.CreatePod(podRequest.PodName, sessionId)
+		pi, err := dfsApi.CreatePod(podRequest.PodName, sessionId)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -286,7 +286,7 @@ func TestLiteUser(t *testing.T) {
 				}
 			}
 		}
-
+		pi.GetFeed().CommitFeeds()
 		err = dfsApi.LogoutUser(sessionId)
 		if err != nil {
 			t.Fatal(err)

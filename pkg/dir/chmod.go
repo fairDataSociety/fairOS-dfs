@@ -35,7 +35,7 @@ func (d *Directory) Chmod(dirNameWithPath, podPassword string, mode uint32) erro
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	_, err = d.fd.UpdateFeed(d.userAddress, topic, metaBytes, []byte(podPassword), false)
+	err = d.fd.UpdateFeed(d.userAddress, topic, metaBytes, []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

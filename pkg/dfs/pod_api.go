@@ -53,7 +53,6 @@ func (a *API) CreatePod(podName, sessionId string) (*pod.Info, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	// Add podName in the login user session
 	ui.AddPodName(podName, pi)
 	return pi, nil

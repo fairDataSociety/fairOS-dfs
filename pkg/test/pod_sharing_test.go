@@ -467,6 +467,8 @@ func TestShare(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		pod7.GetFeed().CommitFeeds()
+		info.GetFeed().CommitFeeds()
 		// receive pod info
 		ref, err := utils.ParseHexReference(sharingRef)
 		if err != nil {
@@ -505,6 +507,9 @@ func TestShare(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		pod7.GetFeed().CommitFeeds()
+		gotInfo.GetFeed().CommitFeeds()
 		// check shared pod entry
 		gotSharedPodInfo, err := pod8.OpenPod(podName7)
 		if err != nil {
