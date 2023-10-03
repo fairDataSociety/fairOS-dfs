@@ -43,6 +43,8 @@ func (a *API) LogoutUser(sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
+	ui.GetFeed().CommitFeeds()
+
 	return a.users.LogoutUser(ui.GetUserName(), sessionId)
 }
 

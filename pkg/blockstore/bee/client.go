@@ -599,7 +599,7 @@ func (s *Client) DeleteReference(address []byte) error {
 	defer response.Body.Close()
 
 	req.Close = true
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNotFound {
 		respData, err := io.ReadAll(response.Body)
 		if err != nil {
 			return err

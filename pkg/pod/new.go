@@ -40,19 +40,16 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 	if err != nil {
 		return nil, err
 	}
-
 	// check if pods is present and get free index
 	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
 	pods := map[int]string{}
 	sharedPods := map[string]string{}
 	for _, pod := range podList.Pods {
 		pods[pod.Index] = pod.Name
 	}
-
 	for _, pod := range podList.SharedPods {
 		sharedPods[pod.Address] = pod.Name
 	}
@@ -101,23 +98,19 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 		if p.checkIfSharedPodPresent(podList, podName) {
 			return nil, ErrPodAlreadyExists
 		}
-
 		freeId, err := p.getFreeId(pods)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-
 		// create a child account for the userAddress and other data structures for the pod
 		accountInfo, err = p.acc.CreatePodAccount(freeId, true)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-
 		fd = feed.New(accountInfo, p.client, p.logger)
 		//fd.SetUpdateTracker(p.fd.GetUpdateTracker())
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
-
 		// store the pod file
 		pods[freeId] = podName
 		pod := &ListItem{
@@ -197,7 +190,7 @@ func (p *Pod) storeUserPods(podList *List) error {
 	topic := utils.HashString(podFile)
 
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	_, err = p.fd.UpdateFeed(p.acc.GetAddress(account.UserAccountIndex), topic, data, []byte(hex.EncodeToString(privKeyBytes)), false)
+	err = p.fd.UpdateFeed(p.acc.GetAddress(account.UserAccountIndex), topic, data, []byte(hex.EncodeToString(privKeyBytes)), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

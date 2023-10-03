@@ -1335,7 +1335,7 @@ func (d *Document) storeDocumentDBSchemas(encryptionPassword string, collections
 		}
 	}
 	topic := utils.HashString(documentFile)
-	_, err := d.fd.UpdateFeed(d.user, topic, buf.Bytes(), []byte(encryptionPassword), false)
+	err := d.fd.UpdateFeed(d.user, topic, buf.Bytes(), []byte(encryptionPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

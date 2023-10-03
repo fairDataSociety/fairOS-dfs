@@ -32,6 +32,10 @@ import (
 // it loads all the data structures related to the pod. Also, it syncs all the
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPod(podName string) (*Info, error) {
+	pi, _, _ := p.GetPodInfoFromPodMap(podName)
+	if pi != nil {
+		return pi, nil
+	}
 	// check if pods is present and get the index of the pod
 	podList, err := p.loadUserPods()
 	if err != nil { // skipcq: TCV-001
@@ -83,7 +87,6 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-
 		fd = feed.New(accountInfo, p.client, p.logger)
 		//_, err = tracker.InitFeedsTracker(accountInfo.GetAddress(), podName, podPassword, fd, p.client, p.logger)
 		//if err != nil {
@@ -110,7 +113,6 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		kvStore:     kvStore,
 		docStore:    docStore,
 	}
-
 	p.addPodToPodMap(podName, podInfo)
 	if !sharedPodType {
 		err = podInfo.GetDirectory().AddRootDir(podInfo.GetPodName(), podInfo.GetPodPassword(), podInfo.GetPodAddress(), podInfo.GetFeed())
