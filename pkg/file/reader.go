@@ -25,7 +25,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/golang/snappy"
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2/simplelru"
 	"github.com/klauspost/pgzip"
 )
 
@@ -50,7 +50,7 @@ type Reader struct {
 	blockCursor uint32
 	totalSize   uint64
 	compression string
-	blockCache  *lru.Cache
+	blockCache  *lru.LRU[string, []byte]
 
 	rlBuffer      []byte
 	rlOffset      int
@@ -90,10 +90,6 @@ func (f *File) OpenFileForIndex(podFile, podPassword string) (*Reader, error) {
 
 // NewReader create a new reader object to read a file from the pod based on its configuration.
 func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string, cache bool) *Reader {
-	var blockCache *lru.Cache
-	if cache {
-		blockCache, _ = lru.New(blockCacheSize)
-	}
 	r := &Reader{
 		fileInode:     fileInode,
 		client:        client,
@@ -101,8 +97,10 @@ func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, block
 		fileSize:      fileSize,
 		blockSize:     blockSize,
 		compression:   compression,
-		blockCache:    blockCache,
 		rlReadNewLine: false,
+	}
+	if cache {
+		r.blockCache, _ = lru.NewLRU[string, []byte](blockCacheSize, func(key string, value []byte) {})
 	}
 	return r
 }
@@ -195,7 +193,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 }
 
 // Seek seeks to a given offset in the file and returns the offset.
-func (r *Reader) Seek(seekOffset int64, whence int) (int64, error) {
+func (r *Reader) Seek(seekOffset int64, _ int) (int64, error) {
 	// TODO: use whence
 	if seekOffset < 0 || seekOffset > int64(r.fileSize) {
 		return 0, ErrInvalidOffset
@@ -312,7 +310,7 @@ func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]b
 	refStr := utils.NewReference(ref).String()
 	if r.blockCache != nil {
 		if data, found := r.blockCache.Get(refStr); found {
-			return data.([]byte), nil
+			return data, nil
 		}
 	}
 	stdoutBytes, _, err := r.client.DownloadBlob(ref)

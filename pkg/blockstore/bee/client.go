@@ -31,7 +31,7 @@ import (
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2/simplelru"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/sha3"
 )
@@ -63,9 +63,9 @@ type Client struct {
 	url                string
 	client             *http.Client
 	hasher             *bmtlegacy.Hasher
-	chunkCache         *lru.Cache
-	uploadBlockCache   *lru.Cache
-	downloadBlockCache *lru.Cache
+	chunkCache         *lru.LRU[string, string]
+	uploadBlockCache   *lru.LRU[string, []byte]
+	downloadBlockCache *lru.LRU[string, []byte]
 	postageBlockId     string
 	logger             logging.Logger
 	isProxy            bool
@@ -100,15 +100,15 @@ type beeError struct {
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
 func NewBeeClient(apiUrl, postageBlockId string, shouldPin bool, logger logging.Logger) *Client {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
-	cache, err := lru.New(chunkCacheSize)
+	cache, err := lru.NewLRU(chunkCacheSize, func(key string, value string) {})
 	if err != nil {
 		logger.Warningf("could not initialise chunkCache. system will be slow")
 	}
-	uploadBlockCache, err := lru.New(uploadBlockCacheSize)
+	uploadBlockCache, err := lru.NewLRU(uploadBlockCacheSize, func(key string, value []byte) {})
 	if err != nil {
 		logger.Warningf("could not initialise blockCache. system will be slow")
 	}
-	downloadBlockCache, err := lru.New(downloadBlockCacheSize)
+	downloadBlockCache, err := lru.NewLRU(downloadBlockCacheSize, func(key string, value []byte) {})
 	if err != nil {
 		logger.Warningf("could not initialise blockCache. system will be slow")
 	}
@@ -411,10 +411,8 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload blob: ")
 
-	// add the data and ref if itis not in cache
-	if !s.inBlockCache(s.uploadBlockCache, string(data)) {
-		s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
-	}
+	// add the data in cache
+	s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
 
 	return resp.Reference.Bytes(), nil
 }
@@ -771,24 +769,22 @@ func (s *Client) getFromChunkCache(key string) []byte {
 	return nil
 }
 
-func (*Client) addToBlockCache(cache *lru.Cache, key string, value []byte) {
+func (*Client) addToBlockCache(cache *lru.LRU[string, []byte], key string, value []byte) {
 	if cache != nil {
 		cache.Add(key, value)
 	}
 }
 
-func (*Client) inBlockCache(cache *lru.Cache, key string) bool {
-	if cache != nil {
-		return cache.Contains(key)
-	}
-	return false
+func (*Client) inBlockCache(cache *lru.LRU[string, []byte], key string) bool {
+	_, in := cache.Get(key)
+	return in
 }
 
-func (*Client) getFromBlockCache(cache *lru.Cache, key string) []byte {
+func (*Client) getFromBlockCache(cache *lru.LRU[string, []byte], key string) []byte {
 	if cache != nil {
 		value, ok := cache.Get(key)
 		if ok {
-			return value.([]byte)
+			return value
 		}
 		return nil
 	}
