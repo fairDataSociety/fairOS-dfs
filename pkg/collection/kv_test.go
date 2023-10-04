@@ -64,11 +64,13 @@ func TestKeyValueStore(t *testing.T) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	user := acc.GetAddress(account.UserAccountIndex)
-	kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
-	podPassword, _ := utils.GetRandString(pod.PasswordLength)
+
 	t.Run("table_not_opened", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1314", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -95,6 +97,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("nil_itr", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1312", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -117,6 +124,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_kv_table_with_string_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_0", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -144,6 +156,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_kv_table_with_number_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -171,6 +188,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("check_delete", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_2", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -193,6 +215,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_multiple_kv_tables_and_delete", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_31", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -273,6 +300,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_open_and_delete", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_4", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -293,6 +325,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("delete_without_create", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		// delete the last table
 		err = kvStore.DeleteKVTable("kv_table_5", podPassword)
 		if !errors.Is(err, collection.ErrKVTableNotPresent) {
@@ -301,6 +338,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("open_table", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_6", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -318,6 +360,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("open_without_create", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err = kvStore.OpenKVTable("kv_table_7", podPassword)
 		if !errors.Is(err, collection.ErrKVTableNotPresent) {
 			t.Fatal("was able to open table without creating it")
@@ -325,6 +372,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_string_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_8", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -360,6 +412,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_bytes_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_bytes", podPassword, collection.BytesIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -399,6 +456,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_chinese_string_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_9", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -426,6 +488,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_string_in_number_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_10", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -441,6 +508,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_get_del_get_string_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_11", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -494,6 +566,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_without_opening_table", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_12", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -505,6 +582,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("delete_non_existent_string_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_13", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -526,6 +608,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("batch_without_open", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_batch_1", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -538,6 +625,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("batch_columns_and_get_values", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_batch_2", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -592,6 +684,11 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("batch_put_columns_and_get_values", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_batch_9", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -642,6 +739,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("count_columns_and_get_values", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_batch_count", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -664,6 +765,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_string_keys", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_0", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -706,6 +811,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_seek_limit_string_keys", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		tableNo := 0
 	research:
 		tableNo++
@@ -759,6 +868,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_seek_start_end_string_keys", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		tableNo := 0
 	research:
 		tableNo++
@@ -829,6 +942,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_seek_start_end_string_keys_over_a_known_failing_keys", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		tableNo := 486
 		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), podPassword, collection.StringIndex)
 		if err != nil {
@@ -915,6 +1032,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_string_of_numbers_keys", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_3", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -948,6 +1069,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_numbers_keys", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_4", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -982,6 +1107,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_numbers_start_end_keys", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_5", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1035,6 +1164,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_numbers_start_and_limit_keys", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_6", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1082,6 +1215,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("get_non_existent_string_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1313", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1112,6 +1249,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_byte_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1316", podPassword, collection.BytesIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1132,6 +1273,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_seek_list_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1317", podPassword, collection.ListIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1148,6 +1293,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_seek_map_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1318", podPassword, collection.MapIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1164,6 +1313,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_seek_invalid_index", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1319", podPassword, collection.InvalidIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1180,6 +1333,10 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("seek_unopened_table", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1320", podPassword, collection.ListIndex)
 		if err != nil {
 			t.Fatal(err)
