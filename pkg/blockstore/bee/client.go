@@ -31,7 +31,7 @@ import (
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	lru "github.com/hashicorp/golang-lru/v2/simplelru"
+	lru "github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/sha3"
 )
@@ -100,19 +100,9 @@ type beeError struct {
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
 func NewBeeClient(apiUrl, postageBlockId string, shouldPin bool, logger logging.Logger) *Client {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
-	cache, err := lru.NewLRU(chunkCacheSize, func(key string, value string) {})
-	if err != nil {
-		logger.Warningf("could not initialise chunkCache. system will be slow")
-	}
-	uploadBlockCache, err := lru.NewLRU(uploadBlockCacheSize, func(key string, value []byte) {})
-	if err != nil {
-		logger.Warningf("could not initialise blockCache. system will be slow")
-	}
-	downloadBlockCache, err := lru.NewLRU(downloadBlockCacheSize, func(key string, value []byte) {})
-	if err != nil {
-		logger.Warningf("could not initialise blockCache. system will be slow")
-	}
-
+	cache := lru.NewLRU(chunkCacheSize, func(key string, value string) {}, 0)
+	uploadBlockCache := lru.NewLRU(uploadBlockCacheSize, func(key string, value []byte) {}, 0)
+	downloadBlockCache := lru.NewLRU(downloadBlockCacheSize, func(key string, value []byte) {}, 0)
 	return &Client{
 		url:                apiUrl,
 		client:             createHTTPClient(),

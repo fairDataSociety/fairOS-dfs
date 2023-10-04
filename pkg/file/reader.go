@@ -25,7 +25,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/golang/snappy"
-	lru "github.com/hashicorp/golang-lru/v2/simplelru"
+	lru "github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/klauspost/pgzip"
 )
 
@@ -100,7 +100,7 @@ func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, block
 		rlReadNewLine: false,
 	}
 	if cache {
-		r.blockCache, _ = lru.NewLRU[string, []byte](blockCacheSize, func(key string, value []byte) {})
+		r.blockCache = lru.NewLRU[string, []byte](blockCacheSize, func(key string, value []byte) {}, 0)
 	}
 	return r
 }
