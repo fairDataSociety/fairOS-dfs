@@ -24,6 +24,11 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
+const (
+	feedCacheSize = 100
+	feedCacheTTL  = 0
+)
+
 // Handler is the api handler
 type Handler struct {
 	ctx                context.Context
@@ -54,6 +59,8 @@ func New(ctx context.Context, opts *Options) (*Handler, error) {
 		SubscriptionConfig: opts.SubscriptionConfig,
 		Logger:             opts.Logger,
 		FeedTracker:        opts.FeedTracker,
+		FeedCacheSize:      feedCacheSize,
+		FeedCacheTTL:       feedCacheTTL,
 	}
 	api, err := dfs.NewDfsAPI(ctx, dfsOpts)
 	if err != nil {

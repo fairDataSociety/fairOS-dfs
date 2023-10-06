@@ -60,7 +60,7 @@ func TestFeed(t *testing.T) {
 		}
 		user := acc.GetAddress(account.UserAccountIndex)
 		accountInfo := acc.GetUserAccountInfo()
-		fd := feed.New(accountInfo, client, logger)
+		fd := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 		err = fd.CreateFeed(user, topic, data, nil)
@@ -94,7 +94,7 @@ func TestFeed(t *testing.T) {
 		accountInfo := acc.GetUserAccountInfo()
 
 		// create feed from user
-		fd1 := feed.New(accountInfo, client, logger)
+		fd1 := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 		err = fd1.CreateFeed(user, topic, data, nil)
@@ -103,7 +103,7 @@ func TestFeed(t *testing.T) {
 		}
 		fd1.CommitFeeds()
 		// check if you can read the data from user2
-		fd2 := feed.New(accountInfo, client, logger)
+		fd2 := feed.New(accountInfo, client, 500, 0, logger)
 		_, rcvdData, err := fd2.GetFeedData(topic, user, nil, false)
 		if err != nil {
 			t.Fatal(err)
@@ -123,7 +123,7 @@ func TestFeed(t *testing.T) {
 		user := acc.GetAddress(account.UserAccountIndex)
 		accountInfo := acc.GetUserAccountInfo()
 
-		fd := feed.New(accountInfo, client, logger)
+		fd := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("topic2")
 
 		// check if the data and address is present and is same as stored
@@ -143,7 +143,7 @@ func TestFeed(t *testing.T) {
 		user := acc.GetAddress(account.UserAccountIndex)
 
 		// create feed from user
-		fd1 := feed.New(accountInfo, client, logger)
+		fd1 := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 		err = fd1.CreateFeed(user, topic, data, nil)
@@ -160,7 +160,7 @@ func TestFeed(t *testing.T) {
 		user2 := acc2.GetAddress(account.UserAccountIndex)
 
 		// check if you can read the data from user2
-		fd2 := feed.New(accountInfo2, client, logger)
+		fd2 := feed.New(accountInfo2, client, 500, 0, logger)
 		rcvdAddr, rcvdData, err := fd2.GetFeedData(topic, user2, nil, false)
 		if err != nil && err.Error() != "feed does not exist or was not updated yet" {
 			t.Fatal(err)
@@ -179,7 +179,7 @@ func TestFeed(t *testing.T) {
 		}
 		user := acc.GetAddress(account.UserAccountIndex)
 		accountInfo := acc.GetUserAccountInfo()
-		fd := feed.New(accountInfo, client, logger)
+		fd := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("topic3")
 		data := []byte{0}
 		err = fd.CreateFeed(user, topic, data, nil)
@@ -224,7 +224,7 @@ func TestFeed(t *testing.T) {
 		}
 		user := acc.GetAddress(account.UserAccountIndex)
 		accountInfo := acc.GetUserAccountInfo()
-		fd := feed.New(accountInfo, client, logger)
+		fd := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 		addr, err := fd.CreateFeedFromTopic(topic, user, data)
@@ -258,7 +258,7 @@ func TestFeed(t *testing.T) {
 		}
 		user := acc.GetAddress(account.UserAccountIndex)
 		accountInfo := acc.GetUserAccountInfo()
-		fd := feed.New(accountInfo, client, logger)
+		fd := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 		_, err = fd.CreateFeedFromTopic(topic, user, data)
@@ -284,9 +284,9 @@ func TestFeed(t *testing.T) {
 		}
 		user := acc.GetAddress(account.UserAccountIndex)
 		accountInfo := acc.GetUserAccountInfo()
-		nilFd := feed.New(&account.Info{}, client, logger)
+		nilFd := feed.New(&account.Info{}, client, 500, 0, logger)
 
-		fd := feed.New(accountInfo, client, logger)
+		fd := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
@@ -312,7 +312,7 @@ func TestFeed(t *testing.T) {
 	})
 
 	t.Run("create-feed-from-topic-errors", func(t *testing.T) {
-		nilFd := feed.New(&account.Info{}, client, logger)
+		nilFd := feed.New(&account.Info{}, client, 500, 0, logger)
 		acc := account.New(logger)
 		_, _, err := acc.CreateUserAccount("")
 		if err != nil {
@@ -320,7 +320,7 @@ func TestFeed(t *testing.T) {
 		}
 		user := acc.GetAddress(account.UserAccountIndex)
 		accountInfo := acc.GetUserAccountInfo()
-		fd := feed.New(accountInfo, client, logger)
+		fd := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
@@ -346,7 +346,7 @@ func TestFeed(t *testing.T) {
 	})
 
 	t.Run("feed-update-errors", func(t *testing.T) {
-		nilFd := feed.New(&account.Info{}, client, logger)
+		nilFd := feed.New(&account.Info{}, client, 500, 0, logger)
 		acc := account.New(logger)
 		_, _, err := acc.CreateUserAccount("")
 		if err != nil {
@@ -354,7 +354,7 @@ func TestFeed(t *testing.T) {
 		}
 		user := acc.GetAddress(account.UserAccountIndex)
 		accountInfo := acc.GetUserAccountInfo()
-		fd := feed.New(accountInfo, client, logger)
+		fd := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
@@ -380,7 +380,7 @@ func TestFeed(t *testing.T) {
 	})
 
 	t.Run("feed-delete-errors", func(t *testing.T) {
-		nilFd := feed.New(&account.Info{}, client, logger)
+		nilFd := feed.New(&account.Info{}, client, 500, 0, logger)
 		acc := account.New(logger)
 		_, _, err := acc.CreateUserAccount("")
 		if err != nil {
@@ -388,7 +388,7 @@ func TestFeed(t *testing.T) {
 		}
 		user := acc.GetAddress(account.UserAccountIndex)
 		accountInfo := acc.GetUserAccountInfo()
-		fd := feed.New(accountInfo, client, logger)
+		fd := feed.New(accountInfo, client, 500, 0, logger)
 		topic := utils.HashString("feed-topic1")
 		data := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
@@ -409,7 +409,7 @@ func TestFeed(t *testing.T) {
 	})
 
 	t.Run("feed-from-topic-delete-errors", func(t *testing.T) {
-		nilFd := feed.New(&account.Info{}, client, logger)
+		nilFd := feed.New(&account.Info{}, client, 500, 0, logger)
 		acc := account.New(logger)
 		_, _, err := acc.CreateUserAccount("")
 		if err != nil {

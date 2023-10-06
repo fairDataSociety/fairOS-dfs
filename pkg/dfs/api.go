@@ -47,6 +47,8 @@ type API struct {
 	tm                    *taskmanager.TaskManager
 	sm                    subscriptionManager.SubscriptionManager
 	shouldInitFeedTracker bool
+	feedCacheSize         int
+	feedCacheTTL          time.Duration
 	io.Closer
 }
 
@@ -57,6 +59,8 @@ type Options struct {
 	SubscriptionConfig *contracts.SubscriptionConfig
 	Logger             logging.Logger
 	FeedTracker        bool
+	FeedCacheSize      int
+	FeedCacheTTL       time.Duration
 }
 
 // NewDfsAPI is the main entry point for the df controller.
@@ -75,7 +79,7 @@ func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
 		logger.Errorf("dfs: bee client initialisation failed")
 		return nil, errBeeClient
 	}
-	users := user.NewUsers(c, ens, logger)
+	users := user.NewUsers(c, ens, opts.FeedCacheSize, opts.FeedCacheTTL, logger)
 
 	var sm subscriptionManager.SubscriptionManager
 	if opts.SubscriptionConfig != nil {
@@ -99,6 +103,8 @@ func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
 		logger:                logger,
 		tm:                    taskmanager.New(10, defaultMaxWorkers, time.Second*15, tmLogger),
 		sm:                    sm,
+		feedCacheSize:         opts.FeedCacheSize,
+		feedCacheTTL:          opts.FeedCacheTTL,
 	}, nil
 }
 

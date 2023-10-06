@@ -71,10 +71,10 @@ type request struct {
 }
 
 // New create the main feed object which is used to create/update/delete feeds.
-func New(accountInfo *account.Info, client blockstore.Client, logger logging.Logger) *API {
+func New(accountInfo *account.Info, client blockstore.Client, feedCacheSize int, feedCacheTTL time.Duration, logger logging.Logger) *API {
 	bmtPool := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	return &API{
-		handler:     NewHandler(accountInfo, client, bmtPool),
+		handler:     NewHandler(accountInfo, client, bmtPool, feedCacheSize, feedCacheTTL, logger),
 		accountInfo: accountInfo,
 		logger:      logger,
 	}
