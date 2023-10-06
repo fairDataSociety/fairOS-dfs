@@ -19,6 +19,7 @@ package pod
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
 
@@ -38,14 +39,16 @@ const (
 
 // Pod is the main struct which acts on pods
 type Pod struct {
-	fd     *feed.API
-	acc    *account.Account
-	client blockstore.Client
-	podMap map[string]*Info //  podName -> dir
-	podMu  *sync.RWMutex
-	logger logging.Logger
-	tm     taskmanager.TaskManagerGO
-	sm     subscriptionManager.SubscriptionManager
+	fd            *feed.API
+	acc           *account.Account
+	client        blockstore.Client
+	podMap        map[string]*Info //  podName -> dir
+	podMu         *sync.RWMutex
+	logger        logging.Logger
+	tm            taskmanager.TaskManagerGO
+	sm            subscriptionManager.SubscriptionManager
+	feedCacheSize int
+	feedCacheTTL  time.Duration
 }
 
 // ListItem defines the structure for pod item
@@ -69,16 +72,18 @@ type List struct {
 }
 
 // NewPod creates the main pod object which has all the methods related to the pods.
-func NewPod(client blockstore.Client, feed *feed.API, account *account.Account, m taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, logger logging.Logger) *Pod {
+func NewPod(client blockstore.Client, feed *feed.API, account *account.Account, m taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, feedCacheSize int, feedCacheTTL time.Duration, logger logging.Logger) *Pod {
 	return &Pod{
-		fd:     feed,
-		acc:    account,
-		client: client,
-		podMap: make(map[string]*Info),
-		podMu:  &sync.RWMutex{},
-		logger: logger,
-		tm:     m,
-		sm:     sm,
+		fd:            feed,
+		acc:           account,
+		client:        client,
+		podMap:        make(map[string]*Info),
+		podMu:         &sync.RWMutex{},
+		logger:        logger,
+		tm:            m,
+		sm:            sm,
+		feedCacheSize: feedCacheSize,
+		feedCacheTTL:  feedCacheTTL,
 	}
 }
 

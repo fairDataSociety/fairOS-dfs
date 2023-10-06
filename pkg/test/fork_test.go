@@ -56,10 +56,10 @@ func TestFork(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
 	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, 500, 0, logger)
 	podName1 := "test1"
 
 	t.Run("fork-pod", func(t *testing.T) {

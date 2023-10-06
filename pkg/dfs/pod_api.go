@@ -267,7 +267,7 @@ func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.Rea
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, a.client, a.logger)
+	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 	topic := utils.HashString(filePath)
 	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
 	if err != nil {
@@ -307,7 +307,7 @@ func (a *API) PublicPodKVEntryGet(pod *pod.ShareInfo, name, key string) ([]strin
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, a.client, a.logger)
+	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 	kvStore := c.NewKeyValueStore(pod.PodName, fd, accountInfo, address, a.client, a.logger)
 
 	err := kvStore.OpenKVTable(name, pod.Password)
@@ -324,7 +324,7 @@ func (a *API) PublicPodKVGetter(pod *pod.ShareInfo) KVGetter {
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, a.client, a.logger)
+	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 	return c.NewKeyValueStore(pod.PodName, fd, accountInfo, address, a.client, a.logger)
 }
 
@@ -335,7 +335,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, a.client, a.logger)
+	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 
 	dirNameWithPath := filepath.ToSlash(dirPathToLs)
 	topic := utils.HashString(dirNameWithPath)

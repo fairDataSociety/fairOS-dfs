@@ -50,7 +50,7 @@ func TestWriteAt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(pod1AccountInfo, mockClient, logger)
+	fd := feed.New(pod1AccountInfo, mockClient, 500, 0, logger)
 	user := acc.GetAddress(1)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {

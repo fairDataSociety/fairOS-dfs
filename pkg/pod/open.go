@@ -69,7 +69,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		address := utils.HexToAddress(addressString)
 		accountInfo.SetAddress(address)
 
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -87,7 +87,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 		//_, err = tracker.InitFeedsTracker(accountInfo.GetAddress(), podName, podPassword, fd, p.client, p.logger)
 		//if err != nil {
 		//	p.logger.Errorf("error initializing feeds tracker: %v", err)
@@ -128,7 +128,7 @@ func (p *Pod) OpenFromShareInfo(si *ShareInfo) (*Info, error) {
 	address := utils.HexToAddress(si.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, p.client, p.logger)
+	fd := feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 	file := f.NewFile(si.PodName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 	dir := d.NewDirectory(si.PodName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -195,7 +195,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 		address := utils.HexToAddress(addressString)
 		accountInfo.SetAddress(address)
 
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -214,7 +214,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 			return nil, err
 		}
 
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 		//fd.SetUpdateTracker(p.fd.GetUpdateTracker())
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)

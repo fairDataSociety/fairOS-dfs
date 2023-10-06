@@ -33,7 +33,7 @@ func TestHandler(t *testing.T) {
 
 		accountInfo := acc.GetUserAccountInfo()
 		bmtPool := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
-		handler := NewHandler(accountInfo, client, bmtPool)
+		handler := NewHandler(accountInfo, client, bmtPool, 500, 0, logger)
 		//defer handler.Close()
 
 		if handler == nil {
@@ -50,7 +50,7 @@ func TestHandler(t *testing.T) {
 
 		accountInfo := acc.GetUserAccountInfo()
 		bmtPool := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
-		handler := NewHandler(accountInfo, client, bmtPool)
+		handler := NewHandler(accountInfo, client, bmtPool, 500, 0, logger)
 		//defer handler.Close()
 
 		if handler == nil {

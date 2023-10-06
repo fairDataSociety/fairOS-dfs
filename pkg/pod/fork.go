@@ -64,7 +64,7 @@ func (p *Pod) PodForkFromRef(forkName, refString string) error {
 	address := utils.HexToAddress(shareInfo.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, p.client, p.logger)
+	fd := feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 	file := f.NewFile(shareInfo.PodName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 	dir := d.NewDirectory(shareInfo.PodName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 	podInfo := &Info{

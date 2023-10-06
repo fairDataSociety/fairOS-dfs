@@ -57,14 +57,14 @@ func TestPodNew(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
 	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, 500, 0, logger)
 
 	podName1 := "test1"
 	podName2 := "test2"
