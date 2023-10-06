@@ -60,7 +60,7 @@ func TestApis(t *testing.T) {
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	ens := mock2.NewMockNamespaceManager()
 
-	users := user.NewUsers(mockClient, ens, logger)
+	users := user.NewUsers(mockClient, ens, 500, 0, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
 	handler = api.NewMockHandler(dfsApi, logger, []string{"http://localhost:3000"})
 	defer handler.Close()
@@ -77,7 +77,7 @@ func TestApis(t *testing.T) {
 		}
 	}()
 
-	// wait 10 seconds for the server to start
+	// wait for the server to start
 	<-time.After(time.Second * 3)
 	t.Run("login-fail-test", func(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}

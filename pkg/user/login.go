@@ -66,7 +66,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	// load encrypted private key
-	fd := feed.New(accountInfo, client, u.logger)
+	fd := feed.New(accountInfo, client, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
 	if err != nil {
 		return nil, ErrInvalidPassword
@@ -94,7 +94,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
@@ -184,7 +184,7 @@ func (u *Users) ConnectWallet(userName, passPhrase, walletAddressHex, signature 
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	// load encrypted private key
-	fd := feed.New(accountInfo, client, u.logger)
+	fd := feed.New(accountInfo, client, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
 	if err != nil {
 		u.logger.Errorf(err.Error())
@@ -217,7 +217,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	// load encrypted private key
-	fd := feed.New(accountInfo, client, u.logger)
+	fd := feed.New(accountInfo, client, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), addressHex, signature, fd)
 	if err != nil {
 		u.logger.Errorf(err.Error())
@@ -246,7 +246,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(addressHex, client, fd, accountInfo.GetAddress(), tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	dir := d.NewDirectory(addressHex, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()

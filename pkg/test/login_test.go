@@ -59,7 +59,7 @@ func TestLogin(t *testing.T) {
 	t.Run("login-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers(mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, 500, 0, logger)
 		sr, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
@@ -114,7 +114,7 @@ func TestLogin(t *testing.T) {
 		user1 := "multicredtester"
 		pass := "password1password1"
 		// create user
-		userObject := user.NewUsers(mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, 500, 0, logger)
 		sr, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
@@ -173,7 +173,7 @@ func TestLogin(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		user1 := "multicredtester"
 		// create user
-		userObject := user.NewUsers(mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, 500, 0, logger)
 		pass := "password1password1"
 		sr, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if err != nil {

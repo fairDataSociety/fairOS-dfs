@@ -24,6 +24,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"hash"
 	"strings"
 	"sync"
@@ -59,8 +60,8 @@ type Handler struct {
 	HashSize    int
 	cache       map[uint64]*CacheEntry
 	cacheLock   sync.RWMutex
-
-	pool *expirable.LRU[string, *feedItem]
+	logger      logging.Logger
+	pool        *expirable.LRU[string, *feedItem]
 }
 
 // hashPool contains a pool of ready hashers
@@ -76,12 +77,13 @@ func init() {
 }
 
 // NewHandler the main handler object that handles all the feed related functions.
-func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool *bmtlegacy.TreePool) *Handler {
+func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool *bmtlegacy.TreePool, feedCacheSize int, feedCacheTTL time.Duration, logger logging.Logger) *Handler {
 	fh := &Handler{
 		accountInfo: accountInfo,
 		client:      client,
 		hasherPool:  hasherPool,
 		cache:       make(map[uint64]*CacheEntry),
+		logger:      logger,
 	}
 	for i := 0; i < hasherCount; i++ {
 		hashfunc := crypto.SHA256.New()
@@ -90,22 +92,21 @@ func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool 
 		}
 		hashPool.Put(hashfunc)
 	}
-	fh.pool = expirable.NewLRU(100, func(key string, value *feedItem) {
+	fh.pool = expirable.NewLRU(feedCacheSize, func(key string, value *feedItem) {
 		if value.ShouldCreate {
 			_, _, err := fh.createSoc(value.User, value.AccountInfo, value.Topic, value.Data)
 			if err != nil {
-				// TODO log error
-				fmt.Println("failed to createSoc onEvict", err)
+				logger.Errorf("failed to createSoc onEvict from  : %v\n", err)
 				return
 			}
 		}
 		_, _, err := fh.updateSoc(value.User, value.AccountInfo, value.Topic, value.Data)
 		if err != nil {
-			// TODO log error
+			logger.Errorf("failed to updateSoc onEvict: %v\n", err)
 			fmt.Println("failed to updateSoc onEvict", err)
 			return
 		}
-	}, 0)
+	}, feedCacheTTL)
 	return fh
 }
 

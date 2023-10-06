@@ -71,7 +71,7 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 		address := utils.HexToAddress(addressString)
 		accountInfo.SetAddress(address)
 
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -107,7 +107,7 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 		//fd.SetUpdateTracker(p.fd.GetUpdateTracker())
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
