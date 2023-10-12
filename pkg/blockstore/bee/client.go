@@ -37,25 +37,25 @@ import (
 )
 
 const (
-	maxIdleConnections     = 20
-	maxConnectionsPerHost  = 256
-	requestTimeout         = 6000
-	chunkCacheSize         = 1024
-	uploadBlockCacheSize   = 100
-	downloadBlockCacheSize = 100
-	healthUrl              = "/health"
-	chunkUploadDownloadUrl = "/chunks"
-	bytesUploadDownloadUrl = "/bytes"
-	bzzUrl                 = "/bzz"
-	tagsUrl                = "/tags"
-	pinsUrl                = "/pins/"
-	_                      = pinsUrl
-	swarmPinHeader         = "Swarm-Pin"
-	swarmEncryptHeader     = "Swarm-Encrypt"
-	swarmPostageBatchId    = "Swarm-Postage-Batch-Id"
-	// swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
-	swarmTagHeader    = "Swarm-Tag"
-	contentTypeHeader = "Content-Type"
+	maxIdleConnections        = 20
+	maxConnectionsPerHost     = 256
+	requestTimeout            = 6000
+	chunkCacheSize            = 1024
+	uploadBlockCacheSize      = 100
+	downloadBlockCacheSize    = 100
+	healthUrl                 = "/health"
+	chunkUploadDownloadUrl    = "/chunks"
+	bytesUploadDownloadUrl    = "/bytes"
+	bzzUrl                    = "/bzz"
+	tagsUrl                   = "/tags"
+	pinsUrl                   = "/pins/"
+	_                         = pinsUrl
+	swarmPinHeader            = "Swarm-Pin"
+	swarmEncryptHeader        = "Swarm-Encrypt"
+	swarmPostageBatchId       = "Swarm-Postage-Batch-Id"
+	swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
+	swarmTagHeader            = "Swarm-Tag"
+	contentTypeHeader         = "Content-Type"
 )
 
 // Client is a bee http client that satisfies blockstore.Client
@@ -192,7 +192,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 	// the postage block id to store the SOC chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
-	// req.Header.Set(swarmDeferredUploadHeader, "false")
+	req.Header.Set(swarmDeferredUploadHeader, "true")
 
 	// TODO change this in the future when we have some alternative to pin SOC
 	// This is a temporary fix to force soc pinning
@@ -257,7 +257,7 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	// the postage block id to store the chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
-	// req.Header.Set(swarmDeferredUploadHeader, "false")
+	req.Header.Set(swarmDeferredUploadHeader, "true")
 
 	response, err := s.client.Do(req)
 	if err != nil {
@@ -374,7 +374,7 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	// the postage block id to store the blob
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 
-	// req.Header.Set(swarmDeferredUploadHeader, "false")
+	req.Header.Set(swarmDeferredUploadHeader, "true")
 
 	response, err := s.client.Do(req)
 	if err != nil {
