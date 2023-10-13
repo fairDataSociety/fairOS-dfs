@@ -52,7 +52,7 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 	err = f.client.DeleteReference(meta.InodeAddress)
 	if err != nil {
 		f.logger.Errorf("could not delete file inode %s", swarm.NewAddress(meta.InodeAddress).String())
-		return fmt.Errorf("could not delete file inode %v", swarm.NewAddress(meta.InodeAddress).String())
+		return fmt.Errorf("could not delete file inode %s: %s", swarm.NewAddress(meta.InodeAddress).String(), err.Error())
 	}
 	for _, fblocks := range fInode.Blocks {
 		err = f.client.DeleteReference(fblocks.Reference.Bytes())
@@ -63,11 +63,10 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 	}
 	// remove the meta
 	topic := utils.HashString(totalFilePath)
-	_, err = f.fd.UpdateFeed(f.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword)) // empty byte array will fail, so some 1 byte
-	if err != nil {                                                                                         // skipcq: TCV-001
+	_, err = f.fd.UpdateFeed(f.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false) // empty byte array will fail, so some 1 byte
+	if err != nil {                                                                                                // skipcq: TCV-001
 		return err
 	}
-
 	// remove the file from file map
 	f.RemoveFromFileMap(totalFilePath)
 

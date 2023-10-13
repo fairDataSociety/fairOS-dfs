@@ -39,19 +39,30 @@ const (
 
 // API is the go api for fairOS
 type API struct {
-	context context.Context
-	cancel  context.CancelFunc
-	client  blockstore.Client
-	users   *user.Users
-	logger  logging.Logger
-	tm      *taskmanager.TaskManager
-	sm      subscriptionManager.SubscriptionManager
+	context               context.Context
+	cancel                context.CancelFunc
+	client                blockstore.Client
+	users                 *user.Users
+	logger                logging.Logger
+	tm                    *taskmanager.TaskManager
+	sm                    subscriptionManager.SubscriptionManager
+	shouldInitFeedTracker bool
 	io.Closer
 }
 
+type Options struct {
+	BeeApiEndpoint     string
+	Stamp              string
+	EnsConfig          *contracts.ENSConfig
+	SubscriptionConfig *contracts.SubscriptionConfig
+	Logger             logging.Logger
+	FeedTracker        bool
+}
+
 // NewDfsAPI is the main entry point for the df controller.
-func NewDfsAPI(ctx context.Context, apiUrl, postageBlockId string, ensConfig *contracts.ENSConfig, subConfig *contracts.SubscriptionConfig, logger logging.Logger) (*API, error) {
-	ens, err := ethClient.New(ensConfig, logger)
+func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
+	logger := opts.Logger
+	ens, err := ethClient.New(opts.EnsConfig, logger)
 	if err != nil {
 		logger.Errorf("dfs: ens initialisation failed %s", err.Error())
 		if errors.Is(err, ethClient.ErrWrongChainID) {
@@ -59,7 +70,7 @@ func NewDfsAPI(ctx context.Context, apiUrl, postageBlockId string, ensConfig *co
 		}
 		return nil, errEthClient
 	}
-	c := bee.NewBeeClient(apiUrl, postageBlockId, false, logger)
+	c := bee.NewBeeClient(opts.BeeApiEndpoint, opts.Stamp, true, logger)
 	if !c.CheckConnection() {
 		logger.Errorf("dfs: bee client initialisation failed")
 		return nil, errBeeClient
@@ -67,9 +78,9 @@ func NewDfsAPI(ctx context.Context, apiUrl, postageBlockId string, ensConfig *co
 	users := user.NewUsers(c, ens, logger)
 
 	var sm subscriptionManager.SubscriptionManager
-	if subConfig != nil {
+	if opts.SubscriptionConfig != nil {
 		logger.Infof("dfs: subscriptionManager initialisation")
-		sm, err = rpc.New(subConfig, logger, c, c)
+		sm, err = rpc.New(opts.SubscriptionConfig, logger, c, c)
 		if err != nil {
 			logger.Errorf("dfs: subscriptionManager initialisation failed %s", err.Error())
 			return nil, errSubManager
@@ -80,13 +91,14 @@ func NewDfsAPI(ctx context.Context, apiUrl, postageBlockId string, ensConfig *co
 	tmLogger := logging.New(io.Discard, 0)
 	ctx2, cancel := context.WithCancel(ctx)
 	return &API{
-		context: ctx2,
-		cancel:  cancel,
-		client:  c,
-		users:   users,
-		logger:  logger,
-		tm:      taskmanager.New(10, defaultMaxWorkers, time.Second*15, tmLogger),
-		sm:      sm,
+		context:               ctx2,
+		cancel:                cancel,
+		shouldInitFeedTracker: opts.FeedTracker,
+		client:                c,
+		users:                 users,
+		logger:                logger,
+		tm:                    taskmanager.New(10, defaultMaxWorkers, time.Second*15, tmLogger),
+		sm:                    sm,
 	}, nil
 }
 

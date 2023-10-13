@@ -122,8 +122,6 @@ func Test_ExecuteCommand(t *testing.T) {
 
 		rootCmd.SetArgs([]string{
 			"server",
-			"--ens-network",
-			"play",
 			"--beeHost",
 			"http://localhost:1633",
 			"--rpc",

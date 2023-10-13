@@ -20,12 +20,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -47,7 +46,7 @@ type LoginResponse struct {
 
 // LoginUserV2 checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*LoginResponse, error) {
+func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string, initFeedTracker bool) (*LoginResponse, error) {
 	// check if sessionId is still active
 	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
 		return nil, ErrUserAlreadyLoggedIn
@@ -93,6 +92,13 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		return nil, err
 	}
 
+	//if initFeedTracker {
+	//	_, err = tracker.InitFeedsTracker(utils.Address(address), userName, passPhrase, fd, client, u.logger)
+	//	if err != nil {
+	//		u.logger.Errorf("error initializing feeds tracker: %v", err)
+	//	}
+	//}
+
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
@@ -100,6 +106,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
+
 	ui := &Info{
 		name:       userName,
 		sessionId:  sessionId,
@@ -111,7 +118,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
 	}
-
 	// set cookie and add user to map
 	if err = u.addUserAndSessionToMap(ui); err != nil { // skipcq: TCV-001
 		return nil, err
@@ -143,10 +149,10 @@ func (u *Users) Logout(sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// remove from the user map
+	ui := u.getUserFromMap(sessionId)
 	u.removeUserFromMap(sessionId)
 
-	return nil
+	return ui.feedApi.Close()
 }
 
 // IsUserLoggedIn checks if the user is logged-in from sessionID

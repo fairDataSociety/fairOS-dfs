@@ -21,10 +21,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/gob"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -68,6 +71,7 @@ type DocumentDB struct {
 	simpleIndexes map[string]*Index
 	mapIndexes    map[string]*Index
 	listIndexes   map[string]*Index
+	vectorIndexes map[string]*Index
 }
 
 // DBSchema is the schema of a document DB
@@ -77,6 +81,7 @@ type DBSchema struct {
 	SimpleIndexes   []SIndex `json:"simple_indexes,omitempty"`
 	MapIndexes      []SIndex `json:"map_indexes,omitempty"`
 	ListIndexes     []SIndex `json:"list_indexes,omitempty"`
+	VectorIndexes   []SIndex `json:"vector_indexes,omitempty"`
 	CompoundIndexes []CIndex `json:"compound_indexes,omitempty"`
 }
 
@@ -146,6 +151,7 @@ func (d *Document) CreateDocumentDB(dbName, encryptionPassword string, indexes m
 
 	var simpleIndexes []SIndex
 	var mapIndexes []SIndex
+	var vectorIndexes []SIndex
 	var listIndexes []SIndex
 
 	// create the default index
@@ -172,6 +178,9 @@ func (d *Document) CreateDocumentDB(dbName, encryptionPassword string, indexes m
 		} else if fieldType == ListIndex {
 			d.logger.Info("created list index: ", dbName, fieldName, fieldType, mutable)
 			listIndexes = append(listIndexes, newIndex)
+		} else if fieldType == VectorIndex {
+			d.logger.Info("created vector index: ", dbName, fieldName, fieldType, mutable)
+			vectorIndexes = append(vectorIndexes, newIndex)
 		} else {
 			d.logger.Info("created simple index: ", dbName, fieldName, fieldType, mutable)
 			simpleIndexes = append(simpleIndexes, newIndex)
@@ -185,6 +194,7 @@ func (d *Document) CreateDocumentDB(dbName, encryptionPassword string, indexes m
 		SimpleIndexes: simpleIndexes,
 		MapIndexes:    mapIndexes,
 		ListIndexes:   listIndexes,
+		VectorIndexes: vectorIndexes,
 	}
 
 	err = d.storeDocumentDBSchemas(encryptionPassword, docTables)
@@ -216,7 +226,6 @@ func (d *Document) OpenDocumentDB(dbName, encryptionPassword string) error {
 		d.logger.Errorf("opening document db: %v", ErrDocumentDBNotPresent)
 		return ErrDocumentDBNotPresent
 	}
-
 	// open the simple indexes
 	simpleIndexs := make(map[string]*Index)
 	for _, si := range schema.SimpleIndexes {
@@ -253,6 +262,17 @@ func (d *Document) OpenDocumentDB(dbName, encryptionPassword string) error {
 		listIndexes[li.FieldName] = idx
 	}
 
+	// open the vector indexes
+	vectorIndexes := make(map[string]*Index)
+	for _, vi := range schema.VectorIndexes {
+		d.logger.Info("opening vector index: ", vi.FieldName)
+		idx, err := OpenIndex(d.podName, dbName, vi.FieldName, encryptionPassword, d.fd, d.ai, d.user, d.client, d.logger)
+		if err != nil { // skipcq: TCV-001
+			d.logger.Errorf("opening vector index: %v", err.Error())
+			return err
+		}
+		vectorIndexes[vi.FieldName] = idx
+	}
 	// create the document DB index map
 	docDB := &DocumentDB{
 		name:          schema.Name,
@@ -260,6 +280,7 @@ func (d *Document) OpenDocumentDB(dbName, encryptionPassword string) error {
 		simpleIndexes: simpleIndexs,
 		mapIndexes:    mapIndexs,
 		listIndexes:   listIndexes,
+		vectorIndexes: vectorIndexes,
 	}
 
 	// add to the open DB map
@@ -322,7 +343,15 @@ func (d *Document) DeleteDocumentDB(dbName, encryptionPassword string) error {
 		d.logger.Info("deleting list index: ", li.name, li.indexType)
 		err = li.DeleteIndex(encryptionPassword)
 		if err != nil { // skipcq: TCV-001
-			d.logger.Errorf("deleting map index: %v", err.Error())
+			d.logger.Errorf("deleting map list: %v", err.Error())
+			return err
+		}
+	}
+	for _, vi := range docDB.vectorIndexes {
+		d.logger.Info("deleting vector index: ", vi.name, vi.indexType)
+		err = vi.DeleteIndex(encryptionPassword)
+		if err != nil { // skipcq: TCV-001
+			d.logger.Errorf("deleting vector index: %v", err.Error())
 			return err
 		}
 	}
@@ -396,7 +425,14 @@ func (d *Document) DeleteAllDocumentDBs(encryptionPassword string) error {
 				return err
 			}
 		}
-
+		for _, vi := range docDB.vectorIndexes {
+			d.logger.Info("deleting vector index: ", vi.name, vi.indexType)
+			err = vi.DeleteIndex(encryptionPassword)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("deleting vector index: %v", err.Error())
+				return err
+			}
+		}
 		// delete the document db from the DB file
 		delete(docTables, dbName)
 
@@ -442,8 +478,11 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 		if !found {
 			idx, found = db.listIndexes[fieldName]
 			if !found { // skipcq: TCV-001
-				d.logger.Errorf("counting document db: %v", ErrIndexNotPresent)
-				return 0, ErrIndexNotPresent
+				idx, found = db.vectorIndexes[fieldName]
+				if !found { // skipcq: TCV-001
+					d.logger.Errorf("counting document db: %v", ErrIndexNotPresent)
+					return 0, ErrIndexNotPresent
+				}
 			}
 		} else {
 			fieldValue = strings.ReplaceAll(fieldValue, ":", "")
@@ -451,6 +490,9 @@ func (d *Document) Count(dbName, expr string) (uint64, error) {
 	}
 
 	switch idx.indexType {
+	case VectorIndex:
+		d.logger.Errorf("counting document db: vector index is not supported")
+		return 0, fmt.Errorf("vector index is not supported")
 	case StringIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", -1)
 		if err != nil { // skipcq: TCV-001
@@ -651,9 +693,29 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	for field, index := range db.listIndexes {
 		indexes[field] = index
 	}
+	for field, index := range db.vectorIndexes {
+		indexes[field] = index
+	}
 	for field, index := range indexes {
 		v := docMap[field] // it is already checked to be present
 		switch index.indexType {
+		case VectorIndex:
+			embedding := v.([]interface{})
+			vector := make([]float32, 0, len(embedding))
+			for _, vec := range embedding {
+				vector = append(vector, float32(vec.(float64)))
+			}
+			var buf bytes.Buffer
+			if err = gob.NewEncoder(&buf).Encode(vector); err != nil {
+				d.logger.Errorf("inserting in to document db: ", err.Error())
+				return err
+			}
+			embeddingHex := hex.EncodeToString(buf.Bytes())
+			err := index.Put(embeddingHex, ref, StringIndex, true)
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("inserting in to document db: ", err.Error())
+				return err
+			}
 		case StringIndex:
 			apnd := true
 			if field == DefaultIndexFieldName {
@@ -868,7 +930,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 	d.logger.Info("finding from document db: ", dbName, expr, limit)
 	db := d.getOpenedDb(dbName)
 	if db == nil { // skipcq: TCV-001
-		d.logger.Errorf("finding from document db: ", ErrDocumentDBNotOpened)
+		d.logger.Errorf("finding from document db: %v", ErrDocumentDBNotOpened)
 		return nil, ErrDocumentDBNotOpened
 	}
 
@@ -876,7 +938,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 	if expr == "" {
 		idx, found := db.simpleIndexes[DefaultIndexFieldName]
 		if !found { // skipcq: TCV-001
-			d.logger.Errorf("finding from document db: ", ErrIndexNotPresent)
+			d.logger.Errorf("finding from document db: %v", ErrIndexNotPresent)
 			return nil, ErrIndexNotPresent
 		}
 		return idx.Get("")
@@ -884,7 +946,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 
 	fieldName, operator, fieldValue, err := d.resolveExpression(expr)
 	if err != nil { // skipcq: TCV-001
-		d.logger.Errorf("finding from document db: ", err.Error())
+		d.logger.Errorf("finding from document db: %v", err.Error())
 		return nil, err
 	}
 
@@ -894,7 +956,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		if !found { // skipcq: TCV-001
 			idx, found = db.listIndexes[fieldName]
 			if !found {
-				d.logger.Errorf("finding from document db: ", ErrIndexNotPresent)
+				d.logger.Errorf("finding from document db: %v", ErrIndexNotPresent)
 				return nil, ErrIndexNotPresent
 			}
 		} else {
@@ -907,7 +969,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 	case StringIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", -1)
 		if err != nil { // skipcq: TCV-001
-			d.logger.Errorf("finding from document db: ", err.Error())
+			d.logger.Errorf("finding from document db: %v", err.Error())
 			return nil, err
 		}
 		switch operator {
@@ -942,7 +1004,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 	case MapIndex, ListIndex:
 		itr, err := idx.NewStringIterator(fieldValue, "", int64(limit))
 		if err != nil { // skipcq: TCV-001
-			d.logger.Errorf("finding from document db: ", err.Error())
+			d.logger.Errorf("finding from document db: %v", err.Error())
 			return nil, err
 		}
 		switch operator {
@@ -976,7 +1038,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		if operator != "<" && operator != "<=" {
 			start, err = strconv.ParseInt(fieldValue, 10, 64)
 			if err != nil { // skipcq: TCV-001
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 				return nil, err
 			}
 		} else if operator == "!=" {
@@ -984,7 +1046,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		}
 		itr, err := idx.NewIntIterator(start, -1, int64(limit))
 		if err != nil { // skipcq: TCV-001
-			d.logger.Errorf("finding from document db: ", err.Error())
+			d.logger.Errorf("finding from document db: %v", err.Error())
 			return nil, err
 		}
 		switch operator {
@@ -1022,7 +1084,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		case "<":
 			end, err := strconv.ParseInt(fieldValue, 10, 64)
 			if err != nil { // skipcq: TCV-001
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 				break
 			}
 			for itr.Next() {
@@ -1042,7 +1104,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 		case "<=":
 			end, err := strconv.ParseInt(fieldValue, 10, 64)
 			if err != nil { // skipcq: TCV-001
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 				break
 			}
 			for itr.Next() {
@@ -1074,13 +1136,14 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 			return nil, fmt.Errorf("operator is not available: %s", operator)
 		}
 	case BytesIndex: // skipcq: TCV-001
-		d.logger.Errorf("finding from document db: ", ErrIndexNotSupported)
+		d.logger.Errorf("finding from document db: %v", ErrIndexNotSupported)
 		return nil, ErrIndexNotSupported
 	default: // skipcq: TCV-001
-		d.logger.Errorf("finding from document db: ", ErrInvalidIndexType)
+		d.logger.Errorf("finding from document db: %v", ErrInvalidIndexType)
 		return nil, ErrInvalidIndexType
 	}
 	var docs [][]byte
+
 	if idx.mutable {
 		wg := new(sync.WaitGroup)
 		mtx := &sync.Mutex{}
@@ -1092,7 +1155,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 			et := newEntryTask(d.client, &docs, ref, mtx)
 			err := et.Execute(context.TODO())
 			if err != nil { // skipcq: TCV-001
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 			}
 			wg.Done()
 		}
@@ -1112,7 +1175,7 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 			}
 			data, err := d.getLineFromFile(idx.podFile, podPassword, seekOffset)
 			if err != nil {
-				d.logger.Errorf("finding from document db: ", err.Error())
+				d.logger.Errorf("finding from document db: %v", err.Error())
 				return nil, err
 			}
 			docs = append(docs, data)
@@ -1122,11 +1185,105 @@ func (d *Document) Find(dbName, expr, podPassword string, limit int) ([][]byte, 
 	}
 }
 
+// NearestNodes does something TODO
+func (d *Document) NearestNodes(dbName, podPassword, index string, v []float32, force float32, limit int) ([][]byte, error) {
+	d.logger.Info("finding distance from document db: ", dbName, v, limit)
+	db := d.getOpenedDb(dbName)
+	if db == nil { // skipcq: TCV-001
+		d.logger.Errorf("finding distance from document db: ", ErrDocumentDBNotOpened)
+		return nil, ErrDocumentDBNotOpened
+	}
+
+	if len(v) == 0 {
+		return nil, fmt.Errorf("vector is empty")
+	}
+
+	idx, found := db.vectorIndexes[index]
+	if !found {
+		d.logger.Errorf("finding from document db: %v", ErrIndexNotPresent)
+		return nil, ErrIndexNotPresent
+	}
+
+	itr, err := idx.NewStringIterator("", "", -1)
+	if err != nil { // skipcq: TCV-001
+		d.logger.Errorf("finding from document db: %v", err.Error())
+		return nil, err
+	}
+
+	var references [][]byte
+	for itr.Next() {
+		if limit > 0 && references != nil && len(references) > limit { // skipcq: TCV-001
+			break
+		}
+		vectorString := itr.StringKey()
+		vector := []float32{}
+		vectorBytes, err := hex.DecodeString(vectorString)
+		if err != nil {
+			continue
+		}
+		err = gob.NewDecoder(bytes.NewBuffer(vectorBytes)).Decode(&vector)
+		if err != nil {
+			d.logger.Errorf("finding from document db: %v", err.Error())
+			return nil, err
+		}
+		dist, err := NormalizedDistance(v, vector)
+		if err != nil {
+			continue
+		}
+
+		if dist < force {
+			refs := itr.ValueAll()
+			references = append(references, refs...)
+		}
+	}
+
+	var docs [][]byte
+	if idx.mutable {
+		wg := new(sync.WaitGroup)
+		mtx := &sync.Mutex{}
+		for _, ref := range references {
+			if limit > 0 && len(docs) >= limit {
+				break
+			}
+			wg.Add(1)
+			et := newEntryTask(d.client, &docs, ref, mtx)
+			err := et.Execute(context.TODO())
+			if err != nil { // skipcq: TCV-001
+				d.logger.Errorf("finding from document db: %v", err.Error())
+			}
+			wg.Done()
+		}
+		wg.Wait()
+		d.logger.Info("found document from document db: ", dbName, len(docs))
+		return docs, nil
+	} else { // skipcq: TCV-001
+		for _, ref := range references {
+			if limit > 0 && len(docs) >= limit {
+				break
+			}
+			b := bytes.NewBuffer(ref)
+			seekOffset, err := binary.ReadUvarint(b)
+			if err != nil {
+				d.logger.Errorf("getting from document db: ", err.Error())
+				return nil, err
+			}
+			data, err := d.getLineFromFile(idx.podFile, podPassword, seekOffset)
+			if err != nil {
+				d.logger.Errorf("finding from document db: %v", err.Error())
+				return nil, err
+			}
+			docs = append(docs, data)
+		}
+		d.logger.Info("found document from document db: ", dbName, len(docs))
+		return docs, nil
+	}
+}
+
 // LoadDocumentDBSchemas loads the schema of all documents belonging to a pod.
 func (d *Document) LoadDocumentDBSchemas(encryptionPassword string) (map[string]DBSchema, error) {
 	collections := make(map[string]DBSchema)
 	topic := utils.HashString(documentFile)
-	_, data, err := d.fd.GetFeedData(topic, d.user, []byte(encryptionPassword))
+	_, data, err := d.fd.GetFeedData(topic, d.user, []byte(encryptionPassword), false)
 	if err != nil {
 		if err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 			return collections, err
@@ -1178,7 +1335,7 @@ func (d *Document) storeDocumentDBSchemas(encryptionPassword string, collections
 		}
 	}
 	topic := utils.HashString(documentFile)
-	_, err := d.fd.UpdateFeed(d.user, topic, buf.Bytes(), []byte(encryptionPassword))
+	_, err := d.fd.UpdateFeed(d.user, topic, buf.Bytes(), []byte(encryptionPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -1286,7 +1443,6 @@ func (d *Document) CreateDocBatch(dbName, podPassword string) (*DocBatch, error)
 			docBatch.batches[fieldName] = batch
 			d.logger.Info("created list batch index: ", fieldName)
 		}
-
 		d.logger.Info("created batch for inserting in document db: ", dbName)
 		return &docBatch, nil
 	}
@@ -1642,4 +1798,35 @@ func (et *entryTask) Execute(context.Context) error {
 // Name
 func (et *entryTask) Name() string {
 	return string(et.ref)
+}
+
+// NormalizedDistance between two arbitrary vectors, errors if dimensions don't
+// match, will return results between 0 (no distance) and 1 (maximum distance)
+func NormalizedDistance(a, b []float32) (float32, error) {
+	sim, err := cosineSim(a, b)
+	if err != nil {
+		return 1, fmt.Errorf("normalized distance: %v", err)
+	}
+
+	return (1 - sim) / 2, nil
+}
+
+func cosineSim(a, b []float32) (float32, error) {
+	if len(a) != len(b) {
+		return 0, fmt.Errorf("vectors have different dimensions")
+	}
+
+	var (
+		sumProduct float64
+		sumASquare float64
+		sumBSquare float64
+	)
+
+	for i := range a {
+		sumProduct += float64(a[i] * b[i])
+		sumASquare += float64(a[i] * a[i])
+		sumBSquare += float64(b[i] * b[i])
+	}
+
+	return float32(sumProduct / (math.Sqrt(sumASquare) * math.Sqrt(sumBSquare))), nil
 }

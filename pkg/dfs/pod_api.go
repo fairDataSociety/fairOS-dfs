@@ -270,7 +270,7 @@ func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.Rea
 
 	fd := feed.New(accountInfo, a.client, a.logger)
 	topic := utils.HashString(filePath)
-	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password))
+	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -319,6 +319,16 @@ func (a *API) PublicPodKVEntryGet(pod *pod.ShareInfo, name, key string) ([]strin
 	return kvStore.KVGet(name, key)
 }
 
+// PublicPodKVGetter gets a kv store getter interface
+func (a *API) PublicPodKVGetter(pod *pod.ShareInfo) KVGetter {
+	accountInfo := &account.Info{}
+	address := utils.HexToAddress(pod.Address)
+	accountInfo.SetAddress(address)
+
+	fd := feed.New(accountInfo, a.client, a.logger)
+	return c.NewKeyValueStore(pod.PodName, fd, accountInfo, address, a.client, a.logger)
+}
+
 // PublicPodDisLs lists a directory from a public pod
 func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entry, []file.Entry, error) {
 
@@ -330,7 +340,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 
 	dirNameWithPath := filepath.ToSlash(dirPathToLs)
 	topic := utils.HashString(dirNameWithPath)
-	_, data, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password))
+	_, data, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
 	if err != nil { // skipcq: TCV-001
 		if dirNameWithPath == utils.PathSeparator {
 			return nil, nil, nil
@@ -352,7 +362,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
 			dirTopic := utils.HashString(dirPath)
 
-			_, data, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(pod.Password))
+			_, data, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
 			if err != nil { // skipcq: TCV-001
 				return nil, nil, fmt.Errorf("list dir : %v", err)
 			}
@@ -381,7 +391,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 	for _, filePath := range files {
 		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
 
-		_, data, err := fd.GetFeedData(fileTopic, accountInfo.GetAddress(), []byte(pod.Password))
+		_, data, err := fd.GetFeedData(fileTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
 		if err != nil { // skipcq: TCV-001
 			return nil, nil, fmt.Errorf("file mtdt : %v", err)
 		}

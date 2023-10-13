@@ -114,6 +114,7 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 		}
 
 		fd = feed.New(accountInfo, p.client, p.logger)
+		//fd.SetUpdateTracker(p.fd.GetUpdateTracker())
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -162,7 +163,7 @@ func (p *Pod) loadUserPods() (*List, error) {
 	// The userAddress pod file topic should be in the name of the userAddress account
 	topic := utils.HashString(podFile)
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex), []byte(hex.EncodeToString(privKeyBytes)))
+	_, data, err := p.fd.GetFeedData(topic, p.acc.GetAddress(account.UserAccountIndex), []byte(hex.EncodeToString(privKeyBytes)), false)
 	if err != nil { // skipcq: TCV-001
 		if err.Error() != "feed does not exist or was not updated yet" {
 			return nil, err
@@ -196,7 +197,7 @@ func (p *Pod) storeUserPods(podList *List) error {
 	topic := utils.HashString(podFile)
 
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	_, err = p.fd.UpdateFeed(p.acc.GetAddress(account.UserAccountIndex), topic, data, []byte(hex.EncodeToString(privKeyBytes)))
+	_, err = p.fd.UpdateFeed(p.acc.GetAddress(account.UserAccountIndex), topic, data, []byte(hex.EncodeToString(privKeyBytes)), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

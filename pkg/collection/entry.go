@@ -24,6 +24,7 @@ type Manifest struct {
 	IdxType      IndexType `json:"index_type"`
 	CreationTime int64     `json:"creation_time"`
 	Entries      []*Entry  `json:"entries,omitempty"`
+	Count        uint64    `json:"count,omitempty"` // number of entries in the kv table, this should be updated on root manifest
 	dirtyFlag    bool
 }
 

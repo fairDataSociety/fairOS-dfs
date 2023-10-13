@@ -49,6 +49,8 @@ const (
 	MapIndex
 	// ListIndex is returned when the index type is list
 	ListIndex
+
+	VectorIndex
 )
 
 func (e IndexType) String() string {
@@ -63,6 +65,8 @@ func (e IndexType) String() string {
 		return "MapIndex"
 	case ListIndex:
 		return "ListIndex"
+	case VectorIndex: //  skipcq: TCV-001
+		return "VectorIndex"
 	default:
 		return "InvalidIndex"
 	}
@@ -80,6 +84,8 @@ func toIndexTypeEnum(s string) IndexType {
 		return MapIndex
 	case "ListIndex":
 		return ListIndex
+	case "VectorIndex": //  skipcq: TCV-001
+		return VectorIndex
 	default:
 		return InvalidIndex
 	}
@@ -113,7 +119,7 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	}
 	actualIndexName := podName + collectionName + indexName
 	topic := utils.HashString(actualIndexName)
-	_, oldData, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
+	_, oldData, err := fd.GetFeedData(topic, user, []byte(encryptionPassword), false)
 	if err == nil && len(oldData) != 0 && string(oldData) != utils.DeletedFeedMagicWord {
 		//  if the feed is present, and it has some data means there index is still valid
 		return ErrIndexAlreadyPresent
@@ -133,7 +139,7 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	}
 
 	if string(oldData) == utils.DeletedFeedMagicWord { //  skipcq: TCV-001
-		_, err = fd.UpdateFeed(user, topic, ref, []byte(encryptionPassword))
+		_, err = fd.UpdateFeed(user, topic, ref, []byte(encryptionPassword), false)
 		if err != nil {
 			return ErrManifestCreate
 		}
@@ -153,7 +159,6 @@ func OpenIndex(podName, collectionName, indexName, podPassword string, fd *feed.
 	if manifest == nil {
 		return nil, ErrIndexNotPresent
 	}
-
 	idx := &Index{
 		name:               manifest.Name,
 		encryptionPassword: podPassword,
@@ -164,7 +169,7 @@ func OpenIndex(podName, collectionName, indexName, podPassword string, fd *feed.
 		accountInfo:        ai,
 		feed:               fd,
 		client:             client,
-		count:              0,
+		count:              manifest.Count,
 		memDB:              manifest,
 		logger:             logger,
 	}
@@ -183,11 +188,23 @@ func (idx *Index) DeleteIndex(encryptionPassword string) error {
 
 	//  erase the top Manifest
 	topic := utils.HashString(idx.name)
-	_, err := idx.feed.UpdateFeed(idx.user, topic, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword))
+	_, err := idx.feed.UpdateFeed(idx.user, topic, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword), false)
 	if err != nil { //  skipcq: TCV-001
 		return ErrDeleteingIndex
 	}
 	return nil
+}
+
+func (idx *Index) IsEmpty(encryptionPassword string) (bool, error) {
+	if idx.memDB == nil || idx.memDB.Entries == nil {
+		manifest, err := idx.loadManifest(idx.name, encryptionPassword)
+		if err != nil {
+			return true, err
+		}
+		idx.memDB = manifest
+	}
+
+	return len(idx.memDB.Entries) == 0, nil
 }
 
 // CountIndex counts the entries in an index.
@@ -253,7 +270,7 @@ func (idx *Index) loadManifest(manifestPath, encryptionPassword string) (*Manife
 	//  get feed data and unmarshall the Manifest
 	idx.logger.Info("loading Manifest: ", manifestPath)
 	topic := utils.HashString(manifestPath)
-	_, refData, err := idx.feed.GetFeedData(topic, idx.user, []byte(encryptionPassword))
+	_, refData, err := idx.feed.GetFeedData(topic, idx.user, []byte(encryptionPassword), false)
 	if err != nil { //  skipcq: TCV-001
 		return nil, ErrNoManifestFound
 	}
@@ -288,7 +305,7 @@ func (idx *Index) updateManifest(manifest *Manifest, encryptionPassword string) 
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword))
+	_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
 	if err != nil { //  skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -315,7 +332,7 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 	_, err = idx.feed.CreateFeed(idx.user, topic, ref, []byte(encryptionPassword))
 	if err != nil { //  skipcq: TCV-001
 		if strings.Contains(err.Error(), "chunk already exists") {
-			_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword))
+			_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
 			if err != nil { //  skipcq: TCV-001
 				return ErrManifestCreate
 			}
@@ -355,7 +372,7 @@ func longestCommonPrefix(str1, str2 string) (string, string, string) {
 func getRootManifestOfIndex(actualIndexName, encryptionPassword string, fd *feed.API, user utils.Address, client blockstore.Client) *Manifest {
 	var manifest Manifest
 	topic := utils.HashString(actualIndexName)
-	_, addr, err := fd.GetFeedData(topic, user, []byte(encryptionPassword))
+	_, addr, err := fd.GetFeedData(topic, user, []byte(encryptionPassword), false)
 	if err != nil {
 		return nil
 	}

@@ -45,6 +45,7 @@ import (
 
 var (
 	pprof          bool
+	feedTracker    bool
 	swag           bool
 	httpPort       string
 	pprofPort      string
@@ -77,6 +78,9 @@ can consume it.`,
 		if err := config.BindPFlag(optionDFSHttpPort, cmd.Flags().Lookup("httpPort")); err != nil {
 			return err
 		}
+		//if err := config.BindPFlag(optionFeedTracker, cmd.Flags().Lookup("feed-tracker")); err != nil {
+		//	return err
+		//}
 		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
 			return err
 		}
@@ -124,12 +128,15 @@ can consume it.`,
 		}
 		ensConfig := &contracts.ENSConfig{}
 		var subscriptionConfig *contracts.SubscriptionConfig
-		network := config.GetString("ens-network")
+
 		rpc := config.GetString(optionRPC)
 		if rpc == "" {
 			fmt.Println("\nrpc endpoint is missing")
 			return fmt.Errorf("rpc endpoint is missing")
 		}
+
+		network := config.GetString(optionNetwork)
+
 		switch v := strings.ToLower(network); v {
 		case "mainnet":
 			fmt.Println("\nens is not available for mainnet yet")
@@ -179,7 +186,18 @@ can consume it.`,
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 
-		hdlr, err := api.New(ctx, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, nil, logger)
+		opts := &api.Options{
+			BeeApiEndpoint:     beeApi,
+			CookieDomain:       cookieDomain,
+			Stamp:              postageBlockId,
+			WhitelistedOrigins: corsOrigins,
+			EnsConfig:          ensConfig,
+			SubscriptionConfig: subscriptionConfig,
+			Logger:             logger,
+			FeedTracker:        feedTracker,
+		}
+
+		hdlr, err := api.New(ctx, opts)
 		if err != nil {
 			logger.Error(err.Error())
 			return err
@@ -214,6 +232,7 @@ can consume it.`,
 func init() {
 	serverCmd.Flags().BoolVar(&pprof, "pprof", false, "should run pprof")
 	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
+	//serverCmd.Flags().BoolVar(&feedTracker, "feed-tracker", false, "should run feed tracker")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
