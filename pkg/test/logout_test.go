@@ -58,7 +58,7 @@ func TestLogout(t *testing.T) {
 
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers(mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, 500, 0, logger)
 		sr, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)

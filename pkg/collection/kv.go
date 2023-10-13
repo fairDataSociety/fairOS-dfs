@@ -141,6 +141,10 @@ func (kv *KeyValue) DeleteKVTable(name, encryptionPassword string) error {
 	return kv.storeKVTables(kvtables, encryptionPassword)
 }
 
+func (kv *KeyValue) Commit() {
+	kv.fd.CommitFeeds()
+}
+
 // DeleteAllKVTables deletes all key value tables with all their index and data entries.
 func (kv *KeyValue) DeleteAllKVTables(encryptionPassword string) error {
 	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001

@@ -41,7 +41,7 @@ func TestSubscription(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc1.GetUserAccountInfo(), mockClient, logger)
+	fd := feed.New(acc1.GetUserAccountInfo(), mockClient, 500, 0, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
@@ -54,7 +54,7 @@ func TestSubscription(t *testing.T) {
 	}
 
 	sm := mock2.NewMockSubscriptionManager()
-	pod1 := pod.NewPod(mockClient, fd, acc1, tm, sm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc1, tm, sm, 500, 0, logger)
 
 	randomLongPodName1, err := utils.GetRandString(64)
 	if err != nil {
@@ -97,8 +97,8 @@ func TestSubscription(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, logger)
+	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, 500, 0, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, 500, 0, logger)
 	a2 := acc2.GetUserAccountInfo().GetAddress()
 	addr2 := common.HexToAddress(a2.Hex())
 	nameHash2, err := goens.NameHash(addr2.Hex())

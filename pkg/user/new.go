@@ -78,7 +78,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
-	fd := feed.New(accountInfo, u.client, u.logger)
+	fd := feed.New(accountInfo, u.client, u.feedCacheSize, u.feedCacheTTL, u.logger)
 
 	// create a new base user account with the mnemonic
 	mnemonic, seed, err := acc.CreateUserAccount(mnemonic)
@@ -124,7 +124,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), tm, u.logger)
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}

@@ -42,7 +42,7 @@ func TestTimeKeeper(t *testing.T) {
 	client := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 
 	t.Run("level-get-from-same-feed-pointer", func(t *testing.T) {
-		fd1 := feed.New(accountInfo1, client, logger)
+		fd1 := feed.New(accountInfo1, client, 500, 0, logger)
 		db, err := leveldb.Open(NewMemStorage(fd1, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
@@ -78,7 +78,7 @@ func TestTimeKeeper(t *testing.T) {
 	})
 
 	t.Run("level-get-from-different-feed-pointer", func(t *testing.T) {
-		fd1 := feed.New(accountInfo1, client, logger)
+		fd1 := feed.New(accountInfo1, client, 500, 0, logger)
 		db, err := leveldb.Open(NewMemStorage(fd1, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
@@ -104,7 +104,7 @@ func TestTimeKeeper(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		fd2 := feed.New(accountInfo1, client, logger)
+		fd2 := feed.New(accountInfo1, client, 500, 0, logger)
 		db2, err := leveldb.Open(NewMemStorage(fd2, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
@@ -124,7 +124,7 @@ func TestTimeKeeper(t *testing.T) {
 	})
 
 	t.Run("level-get-from-multiple-different-feed-pointer", func(t *testing.T) {
-		fd1 := feed.New(accountInfo1, client, logger)
+		fd1 := feed.New(accountInfo1, client, 500, 0, logger)
 		db, err := leveldb.Open(NewMemStorage(fd1, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
@@ -148,7 +148,7 @@ func TestTimeKeeper(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		fd2 := feed.New(accountInfo1, client, logger)
+		fd2 := feed.New(accountInfo1, client, 500, 0, logger)
 		db2, err := leveldb.Open(NewMemStorage(fd2, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
@@ -167,7 +167,7 @@ func TestTimeKeeper(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fd3 := feed.New(accountInfo1, client, logger)
+		fd3 := feed.New(accountInfo1, client, 500, 0, logger)
 		db3, err := leveldb.Open(NewMemStorage(fd3, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
@@ -186,7 +186,7 @@ func TestTimeKeeper(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fd4 := feed.New(accountInfo1, client, logger)
+		fd4 := feed.New(accountInfo1, client, 500, 0, logger)
 		db4, err := leveldb.Open(NewMemStorage(fd4, client, user1, "username", "password", logger), nil)
 		if err != nil {
 			t.Fatal(err)
