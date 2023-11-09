@@ -16,6 +16,8 @@ limitations under the License.
 
 package pod
 
+import "fmt"
+
 // ClosePod closed an already opened pod and removes its information from directory and file
 // data structures.
 func (p *Pod) ClosePod(podName string) error {
@@ -40,5 +42,16 @@ func (p *Pod) ClosePod(podName string) error {
 	podInfo.file.RemoveAllFromFileMap()
 	p.removePodFromPodMap(podName)
 	p.acc.DeletePodAccount(podIndex)
+	return nil
+}
+
+// CloseAllPods closes all opened pods and removes their information from directory and file
+// data structures.
+func (p *Pod) CloseAllPods() error {
+	for podName := range p.podMap {
+		if err := p.ClosePod(podName); err != nil {
+			return fmt.Errorf("error closing pod %s: %w", podName, err)
+		}
+	}
 	return nil
 }

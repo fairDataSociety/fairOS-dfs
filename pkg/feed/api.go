@@ -102,7 +102,7 @@ func (a *API) CreateFeed(user utils.Address, topic, data, encryptionPassword []b
 	var err error
 
 	encryptedData := data
-	if encryptionPassword != nil { // skipcq: TCV-001
+	if len(encryptionPassword) != 0 { // skipcq: TCV-001
 		encryptedData, err = utils.EncryptBytes(encryptionPassword, data)
 		if err != nil { // skipcq: TCV-001
 			return err
@@ -186,7 +186,7 @@ func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword [
 	if err != nil {
 		return nil, nil, err
 	}
-	if encryptionPassword == nil || string(data) == utils.DeletedFeedMagicWord {
+	if len(encryptionPassword) == 0 || string(data) == utils.DeletedFeedMagicWord {
 		return addr, data, nil
 	}
 	decryptedData, err := utils.DecryptBytes(encryptionPassword, data)
@@ -238,7 +238,7 @@ func (a *API) UpdateFeed(user utils.Address, topic, data, encryptionPassword []b
 	var err error
 
 	encryptedData := data
-	if encryptionPassword != nil && string(data) != utils.DeletedFeedMagicWord {
+	if len(encryptionPassword) != 0 && string(data) != utils.DeletedFeedMagicWord {
 		encryptedData, err = utils.EncryptBytes(encryptionPassword, data)
 		if err != nil { // skipcq: TCV-001
 			return err

@@ -120,6 +120,14 @@ func NewMockDfsAPI(client blockstore.Client, users *user.Users, logger logging.L
 
 // Close stops the taskmanager
 func (a *API) Close() error {
+	users := a.users.GetUsersLoggedIn()
+	for sessionId, v := range users {
+		err := a.LogoutUser(sessionId)
+		if err != nil {
+			a.logger.Errorf("dfs: error logging out user %s", v.GetUserName())
+		}
+	}
+
 	ctx, cancel := context.WithTimeout(a.context, time.Minute)
 	defer func() {
 		cancel()

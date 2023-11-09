@@ -43,6 +43,10 @@ func (a *API) LogoutUser(sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
+	err := ui.GetPod().CloseAllPods()
+	if err != nil {
+		a.logger.Errorf("error closing all pods: %v", err)
+	}
 	ui.GetFeed().CommitFeeds()
 
 	return a.users.LogoutUser(ui.GetUserName(), sessionId)

@@ -78,6 +78,12 @@ func (u *Users) isUserPresentInMap(sessionId string) bool {
 	return false
 }
 
+func (u *Users) getUserMap() map[string]*Info {
+	u.userMu.Lock()
+	defer u.userMu.Unlock()
+	return u.userMap
+}
+
 func (u *Users) isUserNameInMap(userName string) bool {
 	u.userMu.Lock()
 	defer u.userMu.Unlock()
