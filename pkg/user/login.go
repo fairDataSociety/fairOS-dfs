@@ -163,6 +163,11 @@ func (u *Users) IsUserNameLoggedIn(userName string) bool {
 	return u.isUserNameInMap(userName)
 }
 
+// GetUsersLoggedIn returns all the users that are loggedin
+func (u *Users) GetUsersLoggedIn() map[string]*Info {
+	return u.getUserMap()
+}
+
 // ConnectWallet connects user with wallet.
 func (u *Users) ConnectWallet(userName, passPhrase, walletAddressHex, signature string, client blockstore.Client) error {
 	// check if username is available (user created)

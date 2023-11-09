@@ -137,6 +137,16 @@ func (a *API) ClosePod(podName, sessionId string) error {
 	return nil
 }
 
+// CommitPodFeeds commits feed for a pod on swarm
+func (a *API) CommitPodFeeds(podName, sessionId string) error {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+	return ui.GetPod().CommitFeeds(podName)
+}
+
 // PodStat returns the pod stat
 func (a *API) PodStat(podName, sessionId string) (*pod.Stat, error) {
 	// get the logged-in user information

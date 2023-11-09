@@ -153,19 +153,24 @@ func (s *Client) checkBee(isProxy bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	response, err := s.client.Do(req)
+	req.Close = true
+	// skipcq: GO-S2307
+	response, err := s.Do(req)
 	if err != nil {
 		return "", err
 	}
 
-	// skipcq: GO-S2307
 	defer response.Body.Close()
-	req.Close = true
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
 	return string(data), nil
+}
+
+// Do dispatches the HTTP request to the network
+func (s *Client) Do(req *http.Request) (*http.Response, error) {
+	return s.client.Do(req)
 }
 
 // UploadSOC is used construct and send a Single Owner Chunk to the Swarm bee client.
@@ -178,6 +183,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	// the postage block id to store the SOC chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
@@ -190,15 +196,13 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 		req.Header.Set(swarmPinHeader, "true")
 	}
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	addrData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -239,6 +243,7 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
@@ -249,14 +254,12 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 
 	req.Header.Set(swarmDeferredUploadHeader, "true")
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	addrData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -304,17 +307,16 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	req = req.WithContext(ctx)
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return nil, errors.New("error downloading data")
@@ -348,6 +350,7 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
@@ -366,14 +369,12 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 
 	req.Header.Set(swarmDeferredUploadHeader, "true")
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -422,15 +423,14 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -469,18 +469,17 @@ func (s *Client) UploadBzz(data []byte, fileName string) (address []byte, err er
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 	req.Header.Set(contentTypeHeader, "application/json")
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -528,15 +527,14 @@ func (s *Client) DownloadBzz(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -579,20 +577,22 @@ func (s *Client) DeleteReference(address []byte) error {
 	if err != nil {
 		return err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return err
 	}
 	defer response.Body.Close()
 
-	req.Close = true
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNotFound {
 		respData, err := io.ReadAll(response.Body)
 		if err != nil {
 			return err
 		}
 		return fmt.Errorf("failed to unpin reference : %s", respData)
+	} else {
+		_, _ = io.Copy(io.Discard, response.Body)
 	}
 
 	fields := logrus.Fields{
@@ -627,15 +627,14 @@ func (s *Client) CreateTag(address []byte) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return 0, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -681,15 +680,14 @@ func (s *Client) GetTag(tag uint32) (int64, int64, int64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {

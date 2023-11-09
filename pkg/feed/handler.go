@@ -62,6 +62,7 @@ type Handler struct {
 	cacheLock   sync.RWMutex
 	logger      logging.Logger
 	pool        *expirable.LRU[string, *feedItem]
+	evictLock   sync.Mutex
 }
 
 // hashPool contains a pool of ready hashers
@@ -93,6 +94,8 @@ func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool 
 		hashPool.Put(hashfunc)
 	}
 	fh.pool = expirable.NewLRU(feedCacheSize, func(key string, value *feedItem) {
+		fh.evictLock.Lock()
+		defer fh.evictLock.Unlock()
 		if value.ShouldCreate {
 			_, _, err := fh.createSoc(value.User, value.AccountInfo, value.Topic, value.Data)
 			if err != nil {
@@ -132,7 +135,6 @@ func (h *Handler) getSoc(topic []byte, user utils.Address, hint lookup.Epoch) ([
 		return nil, item.Data, nil
 	}
 	ctx := context.TODO()
-
 	f := new(Feed)
 	f.User = user
 	copy(f.Topic[:], topic)
@@ -152,7 +154,6 @@ func (h *Handler) getSoc(topic []byte, user utils.Address, hint lookup.Epoch) ([
 			return nil, nil, err
 		}
 	}
-
 	addr, data, err := h.GetContent(&q.Feed)
 	if err != nil { // skipcq: TCV-001
 		return nil, nil, err
