@@ -46,7 +46,7 @@ type LoginResponse struct {
 
 // LoginUserV2 checks if the user is present and logs in the user. It also creates the required information
 // to execute user function and stores it in memory.
-func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string, initFeedTracker bool) (*LoginResponse, error) {
+func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*LoginResponse, error) {
 	// check if sessionId is still active
 	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
 		return nil, ErrUserAlreadyLoggedIn
@@ -91,13 +91,6 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	if err = acc.LoadUserAccountFromSeed(seed); err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-
-	//if initFeedTracker {
-	//	_, err = tracker.InitFeedsTracker(utils.Address(address), userName, passPhrase, fd, client, u.logger)
-	//	if err != nil {
-	//		u.logger.Errorf("error initializing feeds tracker: %v", err)
-	//	}
-	//}
 
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)

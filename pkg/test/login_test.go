@@ -59,18 +59,18 @@ func TestLogin(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, err = userObject.LoginUserV2("not_an_username", "password1", mockClient, tm, sm, "", false)
+		_, err = userObject.LoginUserV2("not_an_username", "password1", mockClient, tm, sm, "")
 		if !errors.Is(err, user.ErrUserNameNotFound) {
 			t.Fatal(err)
 		}
 
-		_, err = userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "wrong_password", mockClient, tm, sm, "", false)
+		_, err = userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "wrong_password", mockClient, tm, sm, "")
 		if !errors.Is(err, user.ErrInvalidPassword) {
 			t.Fatal(err)
 		}
 
 		// addUserAndSessionToMap user again
-		sr1, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", mockClient, tm, sm, "", false)
+		sr1, err := userObject.LoginUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -139,12 +139,12 @@ func TestLogin(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		lr1, err := userObject.LoginUserV2(user1, pass, mockClient, tm, sm, "", false)
+		lr1, err := userObject.LoginUserV2(user1, pass, mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 		login1 := lr1.UserInfo
-		lr2, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, sm, "", false)
+		lr2, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -212,12 +212,12 @@ func TestLogin(t *testing.T) {
 		}
 		ui2 := sr2.UserInfo
 
-		lr1, err := userObject.LoginUserV2(user1, pass, mockClient, tm, sm, "", false)
+		lr1, err := userObject.LoginUserV2(user1, pass, mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 		login1 := lr1.UserInfo
-		lr2, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, sm, "", false)
+		lr2, err := userObject.LoginUserV2(user1, pass+pass, mockClient, tm, sm, "")
 		if err != nil {
 			t.Fatal(err)
 		}

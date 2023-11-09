@@ -31,7 +31,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-	"github.com/syndtr/goleveldb/leveldb"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -58,7 +57,6 @@ type API struct {
 	handler     *Handler
 	accountInfo *account.Info
 	logger      logging.Logger
-	db          *leveldb.DB
 }
 
 // request is a custom type that involves in the fairOS feed creation
@@ -80,16 +78,6 @@ func New(accountInfo *account.Info, client blockstore.Client, logger logging.Log
 		accountInfo: accountInfo,
 		logger:      logger,
 	}
-}
-
-// SetUpdateTracker sets the update tracker for the feed
-func (a *API) SetUpdateTracker(db *leveldb.DB) {
-	a.db = db
-}
-
-// GetUpdateTracker gets the update tracker for the feed
-func (a *API) GetUpdateTracker() *leveldb.DB {
-	return a.db
 }
 
 // CreateFeed creates a feed by constructing a single owner chunk. This chunk
@@ -172,13 +160,6 @@ func (a *API) CreateFeed(user utils.Address, topic, data, encryptionPassword []b
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	// update the feed update tracker
-	if a.db != nil {
-		err = a.PutFeedUpdateEpoch(append(topic, user[:20]...), req.Epoch)
-		if err != nil { // skipcq: TCV-001
-			return nil, err
-		}
-	}
 	return addr, nil
 }
 
@@ -249,16 +230,7 @@ func (a *API) GetFeedData(topic []byte, user utils.Address, encryptionPassword [
 	// create the query from values
 	q := &Query{Feed: *f}
 	q.TimeLimit = 0
-	if a.db != nil && !isFeedUpdater {
-		epoch, err := a.GetFeedUpdateEpoch(append(topic, user[:20]...))
-		if err != nil {
-			q.Hint = lookup.NoClue
-		} else {
-			q.Hint = epoch
-		}
-	} else {
-		q.Hint = lookup.NoClue
-	}
+	q.Hint = lookup.NoClue
 	if q.Hint == lookup.NoClue {
 		_, err := a.handler.Lookup(ctx, q)
 		if err != nil {
@@ -399,12 +371,6 @@ retry:
 		}
 		return nil, err
 	}
-	if a.db != nil && !isFeedUpdater {
-		err = a.PutFeedUpdateEpoch(append(topic, user[:20]...), req.Epoch)
-		if err != nil { // skipcq: TCV-001
-			return nil, err
-		}
-	}
 	return address, nil
 }
 
@@ -453,32 +419,6 @@ func (a *API) IsReadOnlyFeed() bool {
 	return a.accountInfo.GetPrivateKey() == nil
 }
 
-// PutFeedUpdateEpoch
-func (a *API) PutFeedUpdateEpoch(topic []byte, epoch lookup.Epoch) error {
-	data, err := epoch.MarshalBinary()
-	if err != nil {
-		return err
-	}
-	return a.db.Put(topic, data, nil)
-}
-
-// GetFeedUpdateEpoch
-func (a *API) GetFeedUpdateEpoch(topic []byte) (lookup.Epoch, error) {
-	epoch := lookup.Epoch{}
-	data, err := a.db.Get(topic, nil)
-	if err != nil {
-		return epoch, err
-	}
-	err = epoch.UnmarshalBinary(data)
-	if err != nil {
-		return epoch, err
-	}
-	return epoch, nil
-}
-
 func (a *API) Close() error {
-	if a.db != nil {
-		return a.db.Close()
-	}
 	return nil
 }
