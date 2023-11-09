@@ -42,7 +42,6 @@ type Options struct {
 	EnsConfig          *contracts.ENSConfig
 	SubscriptionConfig *contracts.SubscriptionConfig
 	Logger             logging.Logger
-	FeedTracker        bool
 }
 
 // New returns a new handler
@@ -53,7 +52,6 @@ func New(ctx context.Context, opts *Options) (*Handler, error) {
 		EnsConfig:          opts.EnsConfig,
 		SubscriptionConfig: opts.SubscriptionConfig,
 		Logger:             opts.Logger,
-		FeedTracker:        opts.FeedTracker,
 	}
 	api, err := dfs.NewDfsAPI(ctx, dfsOpts)
 	if err != nil {

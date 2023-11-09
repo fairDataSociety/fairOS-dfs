@@ -45,7 +45,6 @@ import (
 
 var (
 	pprof          bool
-	feedTracker    bool
 	swag           bool
 	httpPort       string
 	pprofPort      string
@@ -78,9 +77,6 @@ can consume it.`,
 		if err := config.BindPFlag(optionDFSHttpPort, cmd.Flags().Lookup("httpPort")); err != nil {
 			return err
 		}
-		//if err := config.BindPFlag(optionFeedTracker, cmd.Flags().Lookup("feed-tracker")); err != nil {
-		//	return err
-		//}
 		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
 			return err
 		}
@@ -194,7 +190,6 @@ can consume it.`,
 			EnsConfig:          ensConfig,
 			SubscriptionConfig: subscriptionConfig,
 			Logger:             logger,
-			FeedTracker:        feedTracker,
 		}
 
 		hdlr, err := api.New(ctx, opts)
@@ -232,7 +227,6 @@ can consume it.`,
 func init() {
 	serverCmd.Flags().BoolVar(&pprof, "pprof", false, "should run pprof")
 	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
-	//serverCmd.Flags().BoolVar(&feedTracker, "feed-tracker", false, "should run feed tracker")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")

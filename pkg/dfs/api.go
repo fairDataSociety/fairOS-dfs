@@ -39,14 +39,13 @@ const (
 
 // API is the go api for fairOS
 type API struct {
-	context               context.Context
-	cancel                context.CancelFunc
-	client                blockstore.Client
-	users                 *user.Users
-	logger                logging.Logger
-	tm                    *taskmanager.TaskManager
-	sm                    subscriptionManager.SubscriptionManager
-	shouldInitFeedTracker bool
+	context context.Context
+	cancel  context.CancelFunc
+	client  blockstore.Client
+	users   *user.Users
+	logger  logging.Logger
+	tm      *taskmanager.TaskManager
+	sm      subscriptionManager.SubscriptionManager
 	io.Closer
 }
 
@@ -56,7 +55,6 @@ type Options struct {
 	EnsConfig          *contracts.ENSConfig
 	SubscriptionConfig *contracts.SubscriptionConfig
 	Logger             logging.Logger
-	FeedTracker        bool
 }
 
 // NewDfsAPI is the main entry point for the df controller.
@@ -91,14 +89,13 @@ func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
 	tmLogger := logging.New(io.Discard, 0)
 	ctx2, cancel := context.WithCancel(ctx)
 	return &API{
-		context:               ctx2,
-		cancel:                cancel,
-		shouldInitFeedTracker: opts.FeedTracker,
-		client:                c,
-		users:                 users,
-		logger:                logger,
-		tm:                    taskmanager.New(10, defaultMaxWorkers, time.Second*15, tmLogger),
-		sm:                    sm,
+		context: ctx2,
+		cancel:  cancel,
+		client:  c,
+		users:   users,
+		logger:  logger,
+		tm:      taskmanager.New(10, defaultMaxWorkers, time.Second*15, tmLogger),
+		sm:      sm,
 	}, nil
 }
 
