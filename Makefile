@@ -41,11 +41,11 @@ vet:
 
 .PHONY: test-race
 test-race:
-	$(GO) test -race -timeout 5000000ms -v "$(DEST)"
+	$(GO) test -race -timeout 30m -v "$(DEST)"
 
 .PHONY: test
 test:
-	$(GO) test -v "$(DEST)"
+	$(GO) test -v "$(DEST)" -timeout=30m
 
 .PHONY: githooks
 githooks:
