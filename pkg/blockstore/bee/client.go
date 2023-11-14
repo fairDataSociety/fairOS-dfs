@@ -19,7 +19,6 @@ package bee
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -63,7 +62,7 @@ type Client struct {
 	url                string
 	client             *http.Client
 	hasher             *bmtlegacy.Hasher
-	chunkCache         *lru.LRU[string, string]
+	chunkCache         *lru.LRU[string, []byte]
 	uploadBlockCache   *lru.LRU[string, []byte]
 	downloadBlockCache *lru.LRU[string, []byte]
 	postageBlockId     string
@@ -100,7 +99,7 @@ type beeError struct {
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
 func NewBeeClient(apiUrl, postageBlockId string, shouldPin bool, logger logging.Logger) *Client {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
-	cache := lru.NewLRU(chunkCacheSize, func(key string, value string) {}, 0)
+	cache := lru.NewLRU(chunkCacheSize, func(key string, value []byte) {}, 0)
 	uploadBlockCache := lru.NewLRU(uploadBlockCacheSize, func(key string, value []byte) {}, 0)
 	downloadBlockCache := lru.NewLRU(downloadBlockCacheSize, func(key string, value []byte) {}, 0)
 	return &Client{
@@ -224,9 +223,6 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 		return nil, err
 	}
 
-	if s.inChunkCache(addrResp.Reference.String()) {
-		s.addToChunkCache(addrResp.Reference.String(), data)
-	}
 	fields := logrus.Fields{
 		"reference": addrResp.Reference.String(),
 		"duration":  time.Since(to).String(),
@@ -281,9 +277,6 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 		return nil, err
 	}
 
-	if s.inChunkCache(ch.Address().String()) {
-		s.addToChunkCache(ch.Address().String(), ch.Data())
-	}
 	fields := logrus.Fields{
 		"reference": ch.Address().String(),
 		"duration":  time.Since(to).String(),
@@ -297,9 +290,6 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte, err error) {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
-	if s.inChunkCache(addrString) {
-		return s.getFromChunkCache(swarm.NewAddress(address).String()), nil
-	}
 
 	path := chunkUploadDownloadUrl + "/" + addrString
 	fullUrl := fmt.Sprintf(s.url + path)
@@ -326,8 +316,6 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
-
-	s.addToChunkCache(addrString, data)
 	fields := logrus.Fields{
 		"reference": addrString,
 		"duration":  time.Since(to).String(),
@@ -727,34 +715,6 @@ func createHTTPClient() *http.Client {
 		},
 	}
 	return client
-}
-
-func (s *Client) addToChunkCache(key string, value []byte) {
-	if s.chunkCache != nil {
-		s.chunkCache.Add(key, hex.EncodeToString(value))
-	}
-}
-
-func (s *Client) inChunkCache(key string) bool {
-	if s.chunkCache != nil {
-		return s.chunkCache.Contains(key)
-	}
-	return false
-}
-
-func (s *Client) getFromChunkCache(key string) []byte {
-	if s.chunkCache != nil {
-		value, ok := s.chunkCache.Get(key)
-		if ok {
-			data, err := hex.DecodeString(fmt.Sprintf("%v", value))
-			if err != nil {
-				return nil
-			}
-			return data
-		}
-		return nil
-	}
-	return nil
 }
 
 func (*Client) addToBlockCache(cache *lru.LRU[string, []byte], key string, value []byte) {

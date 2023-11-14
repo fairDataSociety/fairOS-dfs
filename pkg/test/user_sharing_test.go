@@ -70,8 +70,8 @@ func TestSharing(t *testing.T) {
 	}()
 	sm := mock3.NewMockSubscriptionManager()
 
-	fd1 := feed.New(acc1.GetUserAccountInfo(), mockClient, 500, 0, logger)
-	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, sm, 500, 0, logger)
+	fd1 := feed.New(acc1.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, sm, -1, 0, logger)
 	podName1 := "test1"
 
 	acc2 := account.New(logger)
@@ -83,14 +83,14 @@ func TestSharing(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, 500, 0, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, 500, 0, logger)
+	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, -1, 0, logger)
 	podName2 := "test2"
 
 	t.Run("sharing-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create source user
-		userObject1 := user.NewUsers(mockClient, ens, 500, 0, logger)
+		userObject1 := user.NewUsers(mockClient, ens, -1, 0, logger)
 		sr0, err := userObject1.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
@@ -131,7 +131,7 @@ func TestSharing(t *testing.T) {
 		}
 
 		// create destination user
-		userObject2 := user.NewUsers(mockClient, ens, 500, 0, logger)
+		userObject2 := user.NewUsers(mockClient, ens, -1, 0, logger)
 		sr, err := userObject2.CreateNewUserV2("user2", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)

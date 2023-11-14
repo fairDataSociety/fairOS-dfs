@@ -33,7 +33,7 @@ func TestHandler(t *testing.T) {
 
 		accountInfo := acc.GetUserAccountInfo()
 		bmtPool := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
-		handler := NewHandler(accountInfo, client, bmtPool, 500, 0, logger)
+		handler := NewHandler(accountInfo, client, bmtPool, -1, 0, logger)
 		//defer handler.Close()
 
 		if handler == nil {
@@ -50,11 +50,28 @@ func TestHandler(t *testing.T) {
 
 		accountInfo := acc.GetUserAccountInfo()
 		bmtPool := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
-		handler := NewHandler(accountInfo, client, bmtPool, 500, 0, logger)
+		handler := NewHandler(accountInfo, client, bmtPool, -1, 0, logger)
 		//defer handler.Close()
 
 		if handler == nil {
 			t.Fatal("handler is nil")
+		}
+	})
+
+	t.Run("new-handler-nil pool", func(t *testing.T) {
+		acc := account.New(logger)
+		_, _, err := acc.CreateUserAccount("")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		accountInfo := acc.GetUserAccountInfo()
+		bmtPool := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
+		handler := NewHandler(accountInfo, client, bmtPool, -1, 0, logger)
+		//defer handler.Close()
+
+		if handler.pool != nil {
+			t.Fatal("poll is nol nil")
 		}
 	})
 }

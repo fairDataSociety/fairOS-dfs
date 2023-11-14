@@ -61,8 +61,8 @@ func TestSync(t *testing.T) {
 	}()
 	sm := mock2.NewMockSubscriptionManager()
 
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, 500, 0, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 	podName1 := "test1"
 
 	t.Run("sync-pod", func(t *testing.T) {

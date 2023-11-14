@@ -57,14 +57,14 @@ func TestShare(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
 	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, 500, 0, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 	podName1 := "test1"
 
 	acc2 := account.New(logger)
@@ -72,8 +72,8 @@ func TestShare(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, 500, 0, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, 500, 0, logger)
+	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, -1, 0, logger)
 	podName2 := "test2"
 
 	acc3 := account.New(logger)
@@ -81,8 +81,8 @@ func TestShare(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd3 := feed.New(acc3.GetUserAccountInfo(), mockClient, 500, 0, logger)
-	pod3 := pod.NewPod(mockClient, fd3, acc3, tm, sm, 500, 0, logger)
+	fd3 := feed.New(acc3.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod3 := pod.NewPod(mockClient, fd3, acc3, tm, sm, -1, 0, logger)
 	podName3 := "test3"
 
 	acc4 := account.New(logger)
@@ -90,8 +90,8 @@ func TestShare(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd4 := feed.New(acc4.GetUserAccountInfo(), mockClient, 500, 0, logger)
-	pod4 := pod.NewPod(mockClient, fd4, acc4, tm, sm, 500, 0, logger)
+	fd4 := feed.New(acc4.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod4 := pod.NewPod(mockClient, fd4, acc4, tm, sm, -1, 0, logger)
 	podName4 := "test4"
 
 	acc5 := account.New(logger)
@@ -99,8 +99,8 @@ func TestShare(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd5 := feed.New(acc5.GetUserAccountInfo(), mockClient, 500, 0, logger)
-	pod5 := pod.NewPod(mockClient, fd5, acc5, tm, sm, 500, 0, logger)
+	fd5 := feed.New(acc5.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod5 := pod.NewPod(mockClient, fd5, acc5, tm, sm, -1, 0, logger)
 	podName5 := "test5"
 
 	acc6 := account.New(logger)
@@ -108,8 +108,8 @@ func TestShare(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd6 := feed.New(acc6.GetUserAccountInfo(), mockClient, 500, 0, logger)
-	pod6 := pod.NewPod(mockClient, fd6, acc6, tm, sm, 500, 0, logger)
+	fd6 := feed.New(acc6.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod6 := pod.NewPod(mockClient, fd6, acc6, tm, sm, -1, 0, logger)
 	podName6 := "test6"
 
 	t.Run("share-pod", func(t *testing.T) {
@@ -433,8 +433,8 @@ func TestShare(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fd7 := feed.New(acc7.GetUserAccountInfo(), mockClient, 500, 0, logger)
-		pod7 := pod.NewPod(mockClient, fd7, acc7, tm, sm, 500, 0, logger)
+		fd7 := feed.New(acc7.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		pod7 := pod.NewPod(mockClient, fd7, acc7, tm, sm, -1, 0, logger)
 		podName7 := "test7"
 
 		acc8 := account.New(logger)
@@ -442,8 +442,8 @@ func TestShare(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fd8 := feed.New(acc8.GetUserAccountInfo(), mockClient, 500, 0, logger)
-		pod8 := pod.NewPod(mockClient, fd8, acc8, tm, sm, 500, 0, logger)
+		fd8 := feed.New(acc8.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		pod8 := pod.NewPod(mockClient, fd8, acc8, tm, sm, -1, 0, logger)
 
 		// create sending pod and receiving pod
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)

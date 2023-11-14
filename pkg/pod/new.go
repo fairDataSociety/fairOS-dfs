@@ -89,7 +89,6 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 
 		// set the userAddress as the pod address we got from shared pod
 		user = address
-
 	} else {
 		// your own pod, so create a new account with private key
 		if p.checkIfPodPresent(podList, podName) {

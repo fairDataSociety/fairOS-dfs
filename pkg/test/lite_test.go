@@ -39,7 +39,7 @@ func TestLite(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
 		// create user
-		userObject := user.NewUsers(mockClient, ens, 500, 0, logger)
+		userObject := user.NewUsers(mockClient, ens, -1, 0, logger)
 		_, _, _, err := userObject.LoadLiteUser("", "password1", "", "", tm, sm)
 		if !errors.Is(err, user.ErrInvalidUserName) {
 			t.Fatal(err)
@@ -50,7 +50,7 @@ func TestLite(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 
 		// create user
-		userObject := user.NewUsers(mockClient, ens, 500, 0, logger)
+		userObject := user.NewUsers(mockClient, ens, -1, 0, logger)
 		mnemonic, _, ui, err := userObject.LoadLiteUser("user1", "password1", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)

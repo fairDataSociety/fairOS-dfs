@@ -12,6 +12,8 @@ var (
 	optionVerbosity          = "verbosity"
 	optionBeeApi             = "bee.bee-api-endpoint"
 	optionBeePostageBatchId  = "bee.postage-batch-id"
+	optionFeedCacheSize      = "feed.cache-size"
+	optionFeedCacheTTL       = "feed.cache-ttl"
 	optionCookieDomain       = "cookie-domain"
 	optionNetwork            = "ens-network"
 	optionRPC                = "rpc"
