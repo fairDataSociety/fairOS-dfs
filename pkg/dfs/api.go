@@ -89,6 +89,12 @@ func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
 		}
 	}
 
+	// Setting cache size 0 will disable the cache. This is to change the default behaviour of lru itself.
+	// We have this -1 check hard coded in the feed package. -1 will disable the feed pool off. and write directly to swarm.
+	if opts.FeedCacheSize == 0 {
+		opts.FeedCacheSize = -1
+	}
+
 	// discard tm logs as it creates too much noise
 	tmLogger := logging.New(io.Discard, 0)
 	ctx2, cancel := context.WithCancel(ctx)

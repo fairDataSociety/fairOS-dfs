@@ -80,6 +80,15 @@ can consume it.`,
 		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
 			return err
 		}
+		if err := config.BindPFlag(optionFeedCacheSize, cmd.Flags().Lookup("feedCacheSize")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionFeedCacheTTL, cmd.Flags().Lookup("feedCacheTTL")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
+			return err
+		}
 		if err := config.BindPFlag(optionCookieDomain, cmd.Flags().Lookup("cookieDomain")); err != nil {
 			return err
 		}
@@ -175,9 +184,11 @@ can consume it.`,
 		logger.Info("verbosity      : ", verbosity)
 		logger.Info("httpPort       : ", httpPort)
 		logger.Info("pprofPort      : ", pprofPort)
+		logger.Info("pprofPort      : ", pprofPort)
+		logger.Info("pprofPort      : ", pprofPort)
 		logger.Info("cookieDomain   : ", cookieDomain)
-		logger.Info("postageBlockId : ", postageBlockId)
-		logger.Info("corsOrigins    : ", corsOrigins)
+		logger.Info("feedCacheSize  : ", config.GetInt(optionFeedCacheSize))
+		logger.Info("feedCacheTTL   : ", config.GetString(optionFeedCacheTTL))
 
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
@@ -190,6 +201,8 @@ can consume it.`,
 			EnsConfig:          ensConfig,
 			SubscriptionConfig: subscriptionConfig,
 			Logger:             logger,
+			FeedCacheSize:      config.GetInt(optionFeedCacheSize),
+			FeedCacheTTL:       config.GetString(optionFeedCacheTTL),
 		}
 
 		hdlr, err := api.New(ctx, opts)
@@ -229,6 +242,8 @@ func init() {
 	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
+	serverCmd.Flags().Int("feedCacheSize", -1, "Keep feed updates in lru cache for faster access. -1 to disable")
+	serverCmd.Flags().String("feedCacheTTL", "0s", "How long to keep feed updates in lru cache. 0s to disable")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
 	serverCmd.Flags().String("postageBlockId", "", "the postage block used to store the data in bee")
 	serverCmd.Flags().StringSlice("cors-origins", defaultCORSAllowedOrigins, "allow CORS headers for the given origins")

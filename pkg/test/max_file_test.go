@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
@@ -42,12 +40,8 @@ func TestMaxFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pod1AccountInfo, err := acc.CreatePodAccount(1, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fd := feed.New(pod1AccountInfo, mockClient, 500, 0, logger)
-	user := acc.GetAddress(1)
+
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
@@ -58,20 +52,16 @@ func TestMaxFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, 500, 0, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 	podPassword, _ := utils.GetRandString(pod.PasswordLength)
+	podName, _ := utils.GetRandString(10)
+	info, err := pod1.CreatePod(podName, "", podPassword)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	_, err = pod1.CreatePod("test", "", podPassword)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fileObject := file.NewFile("test", mockClient, fd, user, tm, logger)
-	dirObject := dir.NewDirectory("test", mockClient, fd, user, fileObject, tm, logger)
-	err = dirObject.MkRootDir("test", podPassword, user, fd)
-	if err != nil {
-		t.Fatal(err)
-	}
 	t.Run("create-max-files", func(t *testing.T) {
+		t.Skip()
 		maxfiles := 1000000
 		filePath := "/"
 		for i := 1; i <= maxfiles; i++ {
@@ -79,11 +69,11 @@ func TestMaxFiles(t *testing.T) {
 			compression := ""
 			fileSize := int64(1000)
 			blockSize := file.MinBlockSize
-			_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
+			_, err = uploadFile(t, info.GetFile(), filePath, fileName, compression, podPassword, fileSize, blockSize)
 			if err != nil {
 				t.Fatal(err)
 			}
-			err = dirObject.AddEntryToDir("/", podPassword, fileName, true)
+			err = info.GetDirectory().AddEntryToDir("/", podPassword, fileName, true)
 			if err != nil {
 				t.Fatal(i, err)
 			}

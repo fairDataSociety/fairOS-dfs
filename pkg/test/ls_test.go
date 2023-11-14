@@ -53,14 +53,14 @@ func TestPod_ListPods(t *testing.T) {
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	accountInfo := acc.GetUserAccountInfo()
-	fd := feed.New(accountInfo, mockClient, 500, 0, logger)
+	fd := feed.New(accountInfo, mockClient, -1, 0, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
 	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, 500, 0, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)

@@ -49,7 +49,7 @@ func TestLiteUser(t *testing.T) {
 	logger := logging.New(io.Discard, logrus.DebugLevel)
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 
-	users := user.NewUsers(mockClient, ens, 500, 0, logger)
+	users := user.NewUsers(mockClient, ens, -1, 0, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
 	defer dfsApi.Close()
 	t.Run("signup-login-pod-dir-file-rename", func(t *testing.T) {

@@ -50,7 +50,7 @@ func TestWriteAt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(pod1AccountInfo, mockClient, 500, 0, logger)
+	fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
 	user := acc.GetAddress(1)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
@@ -374,20 +374,21 @@ func TestWriteAt(t *testing.T) {
 	})
 
 	t.Run("upload-update-small-file", func(t *testing.T) {
-		filePath := "/dir11111"
+		filePath := string(os.PathSeparator)
 		fileName, _ := utils.GetRandString(10)
 		compression := ""
-		fileSize := int64(100)
+		fileSize := int64(1000)
 		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
+		pp := ""
+		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, pp, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check for meta
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)
-		meta := fileObject.GetInode(podPassword, fp)
+		meta := fileObject.GetInode(pp, fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -406,28 +407,30 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		err = fileObject.LoadFileMeta(filePath+"/"+fileName, podPassword)
+		err = fileObject.LoadFileMeta(filepath.ToSlash(filePath+fileName), pp)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// skipcq: GSC-G404
 		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-		min := 0
+		min := int(fileSize / 2)
 		max := int(fileSize)
 		offset := rnd.Intn((max - min + 1) + min)
+
 		content, err := utils.GetRandBytes(offset)
 		if err != nil {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		n, err := fileObject.WriteAt(fp, podPassword, r, uint64(offset), false)
+		n, err := fileObject.WriteAt(fp, pp, r, uint64(offset), false)
 		if n != offset {
 			t.Fatalf("Failed to update %d bytes", offset-n)
 		}
 		if err != nil {
 			t.Fatal(err)
 		}
-		reader, _, err := fileObject.Download(fp, podPassword)
+
+		reader, _, err := fileObject.Download(fp, pp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -445,12 +448,13 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-		err = fileObject.RmFile(fp, podPassword)
+
+		err = fileObject.RmFile(fp, pp)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		meta2 := fileObject.GetInode(podPassword, fp)
+		meta2 := fileObject.GetInode(pp, fp)
 		assert.Equal(t, meta2, (*file.MetaData)(nil))
 	})
 

@@ -57,7 +57,7 @@ func TestIndexIterator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("iterate_all_string_keys", func(t *testing.T) {

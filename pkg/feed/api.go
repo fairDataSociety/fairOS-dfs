@@ -109,14 +109,23 @@ func (a *API) CreateFeed(user utils.Address, topic, data, encryptionPassword []b
 		}
 	}
 
-	item := &feedItem{
-		User:         user,
-		AccountInfo:  a.accountInfo,
-		Topic:        topic,
-		Data:         encryptedData,
-		ShouldCreate: true,
+	if a.handler.pool != nil {
+		item := &feedItem{
+			User:         user,
+			AccountInfo:  a.accountInfo,
+			Topic:        topic,
+			Data:         encryptedData,
+			ShouldCreate: true,
+		}
+		a.handler.putInPool(topic, item)
+		return nil
+
 	}
-	a.handler.putInPool(topic, item)
+	_, _, err = a.handler.createSoc(user, a.accountInfo, topic, encryptedData)
+	if err != nil {
+		a.handler.logger.Errorf("failed to createSoc: %v\n", err)
+		return err
+	}
 	return nil
 }
 
@@ -244,15 +253,22 @@ func (a *API) UpdateFeed(user utils.Address, topic, data, encryptionPassword []b
 			return err
 		}
 	}
-
-	item := &feedItem{
-		User:         user,
-		AccountInfo:  a.accountInfo,
-		Topic:        topic,
-		Data:         encryptedData,
-		ShouldCreate: false,
+	if a.handler.pool != nil {
+		item := &feedItem{
+			User:         user,
+			AccountInfo:  a.accountInfo,
+			Topic:        topic,
+			Data:         encryptedData,
+			ShouldCreate: false,
+		}
+		a.handler.putInPool(topic, item)
+		return nil
 	}
-	a.handler.putInPool(topic, item)
+	_, _, err = a.handler.updateSoc(user, a.accountInfo, topic, encryptedData)
+	if err != nil {
+		a.handler.logger.Errorf("failed to updateSoc: %v\n", err)
+		return err
+	}
 	return nil
 }
 

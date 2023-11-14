@@ -66,7 +66,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -104,7 +104,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -138,7 +138,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -177,7 +177,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -216,7 +216,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -250,7 +250,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -342,7 +342,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -374,7 +374,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -394,7 +394,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -423,7 +423,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -442,7 +442,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -489,7 +489,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -540,7 +540,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -579,7 +579,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -606,7 +606,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -671,7 +671,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -694,7 +694,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -727,7 +727,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -751,7 +751,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -817,7 +817,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		defer fd.CommitFeeds()
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
@@ -879,7 +879,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -929,7 +929,7 @@ func TestKeyValueStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		fd.CommitFeeds()
 		// check the count
 		countObject, err := kvStore.KVCount("kv_table_Itr_0")
 		if err != nil {
@@ -965,7 +965,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1007,7 +1007,7 @@ func TestKeyValueStore(t *testing.T) {
 		for i := startIndex; i < startIndex+10; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
-				t.Fatalf("key mismatch: %s : %s\n", itr.StringKey(), sortedKeys[i])
+				t.Fatalf("key mismatch: %s : %s at %d\n", itr.StringKey(), sortedKeys[i], i)
 			}
 			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
 				t.Fatalf("value mismatch: %s : %s\n", itr.StringKey(), sortedKeys[i])
@@ -1029,7 +1029,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1110,7 +1110,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1207,7 +1207,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1251,7 +1251,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1296,7 +1296,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1360,7 +1360,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1418,7 +1418,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1459,7 +1459,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1490,7 +1490,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1517,7 +1517,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1544,7 +1544,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -1571,7 +1571,7 @@ func TestKeyValueStore(t *testing.T) {
 			Post:            mockpost.New(mockpost.WithAcceptAll()),
 		})
 		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
-		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		user := acc.GetAddress(account.UserAccountIndex)
 		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)

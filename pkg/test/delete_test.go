@@ -54,7 +54,7 @@ func TestDelete(t *testing.T) {
 	t.Run("delete-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers(mockClient, ens, 500, 0, logger)
+		userObject := user.NewUsers(mockClient, ens, -1, 0, logger)
 		sr, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)

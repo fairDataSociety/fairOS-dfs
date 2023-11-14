@@ -68,7 +68,7 @@ func TestDocumentStore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
@@ -79,7 +79,7 @@ func TestDocumentStore(t *testing.T) {
 	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, tm, mockClient, logger)
 	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("create_document_db_errors", func(t *testing.T) {
-		nilFd := feed.New(&account.Info{}, mockClient, 500, 0, logger)
+		nilFd := feed.New(&account.Info{}, mockClient, -1, 0, logger)
 		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, tm, mockClient, logger)
 		err := nilDocStore.CreateDocumentDB("docdb_err", podPassword, nil, true)
 		if !errors.Is(err, collection.ErrReadOnlyIndex) {

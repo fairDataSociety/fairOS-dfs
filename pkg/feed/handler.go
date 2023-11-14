@@ -93,28 +93,31 @@ func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool 
 		}
 		hashPool.Put(hashfunc)
 	}
-	fh.pool = expirable.NewLRU(feedCacheSize, func(key string, value *feedItem) {
-		fh.evictLock.Lock()
-		defer fh.evictLock.Unlock()
-		if value.ShouldCreate {
-			_, _, err := fh.createSoc(value.User, value.AccountInfo, value.Topic, value.Data)
+	if feedCacheSize != -1 {
+		fh.pool = expirable.NewLRU(feedCacheSize, func(key string, value *feedItem) {
+			fh.evictLock.Lock()
+			defer fh.evictLock.Unlock()
+			if value.ShouldCreate {
+				_, _, err := fh.createSoc(value.User, value.AccountInfo, value.Topic, value.Data)
+				if err != nil {
+					logger.Errorf("failed to createSoc onEvict from  : %v\n", err)
+					return
+				}
+			}
+			_, _, err := fh.updateSoc(value.User, value.AccountInfo, value.Topic, value.Data)
 			if err != nil {
-				logger.Errorf("failed to createSoc onEvict from  : %v\n", err)
+				logger.Errorf("failed to updateSoc onEvict: %v\n", err)
 				return
 			}
-		}
-		_, _, err := fh.updateSoc(value.User, value.AccountInfo, value.Topic, value.Data)
-		if err != nil {
-			logger.Errorf("failed to updateSoc onEvict: %v\n", err)
-			fmt.Println("failed to updateSoc onEvict", err)
-			return
-		}
-	}, feedCacheTTL)
+		}, feedCacheTTL)
+	}
 	return fh
 }
 
 func (h *Handler) commit() {
-	h.pool.Purge()
+	if h.pool != nil {
+		h.pool.Purge()
+	}
 }
 
 func (h *Handler) putInPool(topic []byte, item *feedItem) {
@@ -130,9 +133,11 @@ func (h *Handler) putInPool(topic []byte, item *feedItem) {
 func (h *Handler) getSoc(topic []byte, user utils.Address, hint lookup.Epoch) ([]byte, []byte, error) {
 	topicHex := hex.EncodeToString(topic)
 	key := fmt.Sprintf("%s-%s", topicHex, user.String())
-	item, ok := h.pool.Get(key)
-	if ok {
-		return nil, item.Data, nil
+	if h.pool != nil {
+		item, ok := h.pool.Get(key)
+		if ok {
+			return nil, item.Data, nil
+		}
 	}
 	ctx := context.TODO()
 	f := new(Feed)

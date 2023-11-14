@@ -54,7 +54,7 @@ func TestRemoveFile(t *testing.T) {
 	pod1AccountInfo, err := acc.CreatePodAccount(1, false)
 	require.NoError(t, err)
 
-	fd := feed.New(pod1AccountInfo, mockClient, 500, 0, logger)
+	fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
 	user := acc.GetAddress(1)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {

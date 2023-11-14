@@ -63,7 +63,7 @@ func TestMkdir(t *testing.T) {
 		_ = tm.Stop(context.Background())
 	}()
 
-	fd := feed.New(pod1AccountInfo, mockClient, 500, 0, logger)
+	fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
 	user := acc.GetAddress(1)
 	mockFile := fm.NewMockFile()
 
