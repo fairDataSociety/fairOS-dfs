@@ -17,14 +17,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
-
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-
 	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
-
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
