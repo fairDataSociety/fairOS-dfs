@@ -1,4 +1,4 @@
-FROM golang:1.20.2-alpine AS build
+FROM golang:1.21.4-alpine AS build
 
 WORKDIR /usr/fairos
 COPY go.mod go.sum /usr/fairos/

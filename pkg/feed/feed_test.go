@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"errors"
-	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -347,7 +346,7 @@ func TestFeed(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			fmt.Println(i, buf, rcvdData)
+
 			require.Equal(t, buf, rcvdData)
 			<-time.After(time.Second)
 		}
