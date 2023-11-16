@@ -33,7 +33,7 @@ func (p *Pod) PodStat(podName string) (*Stat, error) {
 			PodAddress: podInfo.userAddress.String(),
 		}, nil
 	}
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil {
 		return nil, err
 	}

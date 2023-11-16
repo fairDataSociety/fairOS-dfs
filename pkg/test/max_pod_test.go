@@ -2,10 +2,11 @@ package test_test
 
 import (
 	"context"
-	"errors"
 	"io"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
@@ -39,7 +40,7 @@ func TestMaxPods(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, time.Second*10, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
@@ -49,10 +50,8 @@ func TestMaxPods(t *testing.T) {
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 
 	t.Run("create-max-pods", func(t *testing.T) {
-		// t.SkipNow()
-
-		maxPodId := 30
-		for i := 1; i <= maxPodId; i++ {
+		maxPodId := 10000
+		for i := 0; i < maxPodId; i++ {
 			name, err := utils.GetRandString(utils.MaxPodNameLength)
 			if err != nil {
 				t.Fatal(err)
@@ -63,14 +62,11 @@ func TestMaxPods(t *testing.T) {
 				t.Fatalf("error creating pod %s with index %d: %s", name, i, err)
 			}
 		}
-		name, err := utils.GetRandString(utils.MaxPodNameLength)
+
+		ownPods, _, err := pod1.ListPods()
 		if err != nil {
 			t.Fatal(err)
 		}
-		podPassword, _ := utils.GetRandString(pod.PasswordLength)
-		_, err = pod1.CreatePod(name, "", podPassword)
-		if !errors.Is(err, pod.ErrMaximumPodLimit) {
-			t.Fatalf("maximum pod limit should have been reached")
-		}
+		require.Equal(t, maxPodId, len(ownPods))
 	})
 }

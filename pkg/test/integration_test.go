@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"io"
 	"math/big"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -46,7 +47,7 @@ func TestLiteUser(t *testing.T) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 
-	logger := logging.New(io.Discard, logrus.DebugLevel)
+	logger := logging.New(os.Stdout, logrus.DebugLevel)
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 
 	users := user.NewUsers(mockClient, ens, -1, 0, logger)

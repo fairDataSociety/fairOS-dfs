@@ -37,7 +37,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		return pi, nil
 	}
 	// check if pods is present and get the index of the pod
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (p *Pod) OpenFromShareInfo(si *ShareInfo) (*Info, error) {
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	// check if pods is present and get the index of the pod
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}

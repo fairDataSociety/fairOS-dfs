@@ -16,11 +16,20 @@ limitations under the License.
 
 package pod
 
+import "fmt"
+
 // ListPods List all the available pods belonging to a user.
 func (p *Pod) ListPods() ([]string, []string, error) {
-	podList, err := p.loadUserPods()
-	if err != nil { // skipcq: TCV-001
-		return nil, nil, err
+	podList, err := p.loadUserPodsV2()
+	if err != nil {
+		podList, err = p.loadUserPods()
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+		err := p.storeUserPodsV2(podList)
+		if err != nil {
+			fmt.Println("error storing podsV2", err)
+		}
 	}
 
 	var listPods []string
@@ -38,5 +47,19 @@ func (p *Pod) ListPods() ([]string, []string, error) {
 
 // PodList lists all the available pods belonging to a user in json format.
 func (p *Pod) PodList() (*List, error) {
-	return p.loadUserPods()
+	//We first check if the podsV2 list is present
+	podList, err := p.loadUserPodsV2()
+	if err != nil {
+		// If v2 is not present we check if v1 is present
+		podList, err = p.loadUserPods()
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+		// we store the v1 list as v2
+		err := p.storeUserPodsV2(podList)
+		if err != nil {
+			fmt.Println("error storing podsV2", err)
+		}
+	}
+	return podList, nil
 }
