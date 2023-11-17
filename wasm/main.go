@@ -113,8 +113,8 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
-		if len(funcArgs) != 4 {
-			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, rpc, network)\" or \"connect(beeEndpoint, stampId, rpc, network, subRpc, subContractAddress)\"")
+		if len(funcArgs) != 6 {
+			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, rpc, network, subRpc, subContractAddress)\"")
 			return nil
 		}
 		beeEndpoint := funcArgs[0].String()
