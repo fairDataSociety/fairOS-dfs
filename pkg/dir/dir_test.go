@@ -71,7 +71,7 @@ func TestDirRmAllFromMap(t *testing.T) {
 		}
 
 		dirObject.RemoveAllFromDirectoryMap()
-		node := dirObject.GetInode(podPassword, "/baseDir")
+		node, _ := dirObject.GetInode(podPassword, "/baseDir")
 		if node == nil {
 			t.Fatal("node should not be nil, metadata should be available in blockstore")
 		}
@@ -80,7 +80,7 @@ func TestDirRmAllFromMap(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		node = dirObject.GetInode(podPassword, "/baseDir")
+		node, _ = dirObject.GetInode(podPassword, "/baseDir")
 		if node != nil {
 			t.Fatal("node should be  nil")
 		}

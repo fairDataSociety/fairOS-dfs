@@ -91,11 +91,11 @@ func TestClose(t *testing.T) {
 			t.Fatalf("pod should be open")
 		}
 		dirObject := gotPodInfo.GetDirectory()
-		dirInode1 := dirObject.GetInode(podPassword, "/parentDir/subDir1")
+		dirInode1, _ := dirObject.GetInode(podPassword, "/parentDir/subDir1")
 		if dirInode1 == nil {
 			t.Fatalf("dir should nil be nil")
 		}
-		dirInode2 := dirObject.GetInode(podPassword, "/parentDir/subDir2")
+		dirInode2, _ := dirObject.GetInode(podPassword, "/parentDir/subDir2")
 		if dirInode2 == nil {
 			t.Fatalf("dir should nil be nil")
 		}

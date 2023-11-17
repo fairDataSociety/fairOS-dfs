@@ -103,7 +103,7 @@ func TestFork(t *testing.T) {
 
 		// validate if the directory and files are synced
 		dirObject := gotInfo.GetDirectory()
-		dirInode1 := dirObject.GetInode(podPassword, "/parentDir/subDir1")
+		dirInode1, _ := dirObject.GetInode(podPassword, "/parentDir/subDir1")
 		if dirInode1 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -113,7 +113,7 @@ func TestFork(t *testing.T) {
 		if dirInode1.Meta.Name != "subDir1" {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode2 := dirObject.GetInode(podPassword, "/parentDir/subDir2")
+		dirInode2, _ := dirObject.GetInode(podPassword, "/parentDir/subDir2")
 		if dirInode2 == nil {
 			t.Fatalf("invalid dir entry")
 		}

@@ -60,6 +60,7 @@ func (p *Pod) PodList() (*List, error) {
 		if err != nil {
 			fmt.Println("error storing podsV2", err)
 		}
+		// TODO remove old v1 podList
 	}
 	return podList, nil
 }

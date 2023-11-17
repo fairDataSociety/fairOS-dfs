@@ -52,11 +52,13 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) 
 	topic := utils.HashString(totalPath)
 
 	// check if parent path exists
-	if d.GetInode(podPassword, parentPath) == nil {
+	_, err := d.GetInode(podPassword, parentPath)
+	if err != nil {
 		return ErrDirectoryNotPresent
 	}
 
-	if d.GetInode(podPassword, totalPath) != nil {
+	_, err = d.GetInode(podPassword, totalPath)
+	if err == nil {
 		return ErrDirectoryAlreadyPresent
 	}
 

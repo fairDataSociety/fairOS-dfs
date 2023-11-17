@@ -17,12 +17,20 @@ limitations under the License.
 package dir
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+)
+
+const (
+	indexFileName = "index.dfs"
 )
 
 // AddEntryToDir adds a new entry (directory/file) to a given directory.
@@ -38,9 +46,9 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 		return ErrInvalidFileOrDirectoryName
 	}
 
-	dirInode := d.GetInode(podPassword, parentDir)
+	dirInode, err := d.GetInode(podPassword, parentDir)
 	// check if parent directory present
-	if dirInode == nil {
+	if err != nil {
 		return ErrDirectoryNotPresent
 	}
 
@@ -59,11 +67,17 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 		return fmt.Errorf("modify dir entry : %v", err)
 	}
 
-	topic := utils.HashString(parentDir)
-	err = d.fd.UpdateFeed(d.userAddress, topic, data, []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
-		return fmt.Errorf("modify dir entry : %v", err)
+	// change the upload logic here
+	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(data)), "indexFileName", int64(len(data)), file.MinBlockSize, 0, parentDir, "gzip", podPassword)
+	if err != nil {
+		return err
 	}
+
+	//topic := utils.HashString(parentDir)
+	//err = d.fd.UpdateFeed(d.userAddress, topic, data, []byte(podPassword), false)
+	//if err != nil { // skipcq: TCV-001
+	//	return fmt.Errorf("modify dir entry : %v", err)
+	//}
 	d.AddToDirectoryMap(parentDir, dirInode)
 	return nil
 }
@@ -81,9 +95,9 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 		return ErrInvalidFileOrDirectoryName
 	}
 	parentDir = filepath.ToSlash(parentDir)
-	parentDirInode := d.GetInode(podPassword, parentDir)
+	parentDirInode, err := d.GetInode(podPassword, parentDir)
 	// check if parent directory present
-	if parentDirInode == nil {
+	if err != nil {
 		d.logger.Errorf("remove entry from dir: parent directory not present %s\n", parentDir)
 		return ErrDirectoryNotPresent
 	}

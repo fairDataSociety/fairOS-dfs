@@ -19,6 +19,7 @@ package dir
 import (
 	"encoding/json"
 	"errors"
+	"io"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -61,21 +62,32 @@ func (in *Inode) Unmarshal(data []byte) error {
 }
 
 // GetInode returns the inode of the given directory
-func (d *Directory) GetInode(podPassword, dirNameWithPath string) *Inode {
+func (d *Directory) GetInode(podPassword, dirNameWithPath string) (*Inode, error) {
 	node := d.GetDirFromDirectoryMap(dirNameWithPath)
 	if node != nil {
-		return node
+		return node, nil
 	}
-	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
+
+	data := []byte{}
+	r, _, err := d.file.Download(utils.CombinePathAndFile(dirNameWithPath, indexFileName), podPassword)
 	if err != nil { // skipcq: TCV-001
-		return nil
+		topic := utils.HashString(dirNameWithPath)
+		_, data, err = d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+		// TODO remove this and upload to indexfile
+	} else {
+		data, err = io.ReadAll(r)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
 	}
 	var inode Inode
 	err = inode.Unmarshal(data)
 	if err != nil { // skipcq: TCV-001
-		return nil
+		return nil, err
 	}
 	d.AddToDirectoryMap(dirNameWithPath, &inode)
-	return &inode
+	return &inode, nil
 }

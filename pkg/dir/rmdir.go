@@ -47,8 +47,8 @@ func (d *Directory) RmDir(directoryNameWithPath, podPassword string) error {
 		totalPath = utils.CombinePathAndFile(parentPath, dirToDelete)
 	}
 	// recursive delete
-	dirInode := d.GetInode(podPassword, totalPath)
-	if dirInode == nil {
+	dirInode, err := d.GetInode(podPassword, totalPath)
+	if err != nil {
 		return ErrDirectoryNotPresent
 	}
 
@@ -80,7 +80,7 @@ func (d *Directory) RmDir(directoryNameWithPath, podPassword string) error {
 
 	// remove the feed and clear the data structure
 	topic := utils.HashString(totalPath)
-	err := d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
+	err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
