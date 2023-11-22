@@ -67,14 +67,13 @@ func (d *Directory) GetInode(podPassword, dirNameWithPath string) (*Inode, error
 	if node != nil {
 		return node, nil
 	}
-
 	data := []byte{}
 	r, _, err := d.file.Download(utils.CombinePathAndFile(dirNameWithPath, indexFileName), podPassword)
 	if err != nil { // skipcq: TCV-001
 		topic := utils.HashString(dirNameWithPath)
 		_, data, err = d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
 		if err != nil { // skipcq: TCV-001
-			return nil, err
+			return nil, ErrDirectoryNotPresent
 		}
 		// TODO remove this and upload to indexfile
 	} else {

@@ -1,26 +1,18 @@
 package dir
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 )
 
 // Chmod does all the validation for the existence of the file and changes file mode
 func (d *Directory) Chmod(dirNameWithPath, podPassword string, mode uint32) error {
-	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
-		return fmt.Errorf("dir chmod: %v", err)
-	}
-	if string(data) == utils.DeletedFeedMagicWord {
-		return ErrDirectoryNotPresent
-	}
-
-	var dirInode Inode
-	err = json.Unmarshal(data, &dirInode)
+	dirInode, err := d.GetInode(podPassword, dirNameWithPath)
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("dir chmod: %v", err)
 	}
@@ -35,10 +27,10 @@ func (d *Directory) Chmod(dirNameWithPath, podPassword string, mode uint32) erro
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	err = d.fd.UpdateFeed(d.userAddress, topic, metaBytes, []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
+	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(metaBytes)), indexFileName, int64(len(metaBytes)), file.MinBlockSize, 0, dirNameWithPath, "gzip", podPassword)
+	if err != nil {
 		return err
 	}
-	d.AddToDirectoryMap(dirNameWithPath, &dirInode)
+	d.AddToDirectoryMap(dirNameWithPath, dirInode)
 	return nil
 }

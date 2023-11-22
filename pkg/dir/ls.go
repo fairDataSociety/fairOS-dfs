@@ -47,12 +47,10 @@ type Entry struct {
 // function can give information about those files.
 func (d *Directory) ListDir(dirNameWithPath, podPassword string) ([]Entry, []string, error) {
 	dirNameWithPath = filepath.ToSlash(dirNameWithPath)
-
-	dirInode, err := d.GetInode(dirNameWithPath, podPassword)
+	dirInode, err := d.GetInode(podPassword, dirNameWithPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("list dir : %v", err)
 	}
-
 	wg := new(sync.WaitGroup)
 	mtx := &sync.Mutex{}
 	listEntries := &[]Entry{}

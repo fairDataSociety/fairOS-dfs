@@ -25,8 +25,6 @@ import (
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 const (
@@ -68,7 +66,7 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 	}
 
 	// change the upload logic here
-	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(data)), "indexFileName", int64(len(data)), file.MinBlockSize, 0, parentDir, "gzip", podPassword)
+	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(data)), indexFileName, int64(len(data)), file.MinBlockSize, 0, parentDir, "gzip", podPassword)
 	if err != nil {
 		return err
 	}
@@ -102,8 +100,6 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 		return ErrDirectoryNotPresent
 	}
 
-	parentHash := utils.HashString(parentDir)
-
 	if isFile {
 		itemToDelete = "_F_" + itemToDelete
 	} else {
@@ -123,8 +119,16 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	err = d.fd.UpdateFeed(d.userAddress, parentHash, parentData, []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
+
+	//parentHash := utils.HashString(parentDir)
+	//err = d.fd.UpdateFeed(d.userAddress, parentHash, parentData, []byte(podPassword), false)
+	//if err != nil { // skipcq: TCV-001
+	//	return err
+	//}
+
+	// change the upload logic here
+	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(parentData)), indexFileName, int64(len(parentData)), file.MinBlockSize, 0, parentDir, "gzip", podPassword)
+	if err != nil {
 		return err
 	}
 	d.AddToDirectoryMap(parentDir, parentDirInode)

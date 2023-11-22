@@ -1,6 +1,7 @@
 package dir
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -56,16 +57,7 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 		return err
 	}
 
-	topic := utils.HashString(dirNameWithPath)
-	newTopic := utils.HashString(newDirNameWithPath)
-	_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
-	if err != nil {
-		return err
-	}
-
-	// unmarshall the data and rename the directory entry
-	var inode *Inode
-	err = json.Unmarshal(inodeData, &inode)
+	inode, err := d.GetInode(podPassword, dirNameWithPath)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -80,25 +72,16 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 		return err
 	}
 
-	previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword), false)
-	if err == nil && previousAddr != nil {
-		err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword), false)
-		if err != nil { // skipcq: TCV-001
-			return err
-		}
-	} else {
-		err = d.fd.CreateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
-		if err != nil { // skipcq: TCV-001
-			return err
-		}
-	}
-
-	// delete old meta
-	// update with utils.DeletedFeedMagicWord
-	err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
+	err = d.file.Upload(bufio.NewReader(strings.NewReader(string(fileMetaBytes))), indexFileName, int64(len(fileMetaBytes)), file.MinBlockSize, 0, newDirNameWithPath, "gzip", podPassword)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
+
+	err = d.file.RmFile(utils.CombinePathAndFile(dirNameWithPath, indexFileName), podPassword)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
 	d.RemoveFromDirectoryMap(dirNameWithPath)
 
 	// get the parent directory entry and add this new directory to its list of children
@@ -183,18 +166,12 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
-			topic := utils.HashString(pathWithDir)
-			newTopic := utils.HashString(newPathWithDir)
-			_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
-			if err != nil {
-				return err
-			}
-			// unmarshall the data and add the directory entry to the parent
-			var inode *Inode
-			err = json.Unmarshal(inodeData, &inode)
+
+			inode, err := d.GetInode(podPassword, pathWithDir)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
+
 			inode.Meta.Path = newTotalPath
 			inode.Meta.ModificationTime = time.Now().Unix()
 			// upload meta
@@ -202,22 +179,14 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
-			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword), false)
-			if err == nil && previousAddr != nil {
-				err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword), false)
-				if err != nil { // skipcq: TCV-001
-					return err
-				}
-			} else {
-				err = d.fd.CreateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
-				if err != nil { // skipcq: TCV-001
-					return err
-				}
+
+			err = d.file.Upload(bufio.NewReader(strings.NewReader(string(fileMetaBytes))), indexFileName, int64(len(fileMetaBytes)), file.MinBlockSize, 0, newPathWithDir, "gzip", podPassword)
+			if err != nil { // skipcq: TCV-001
+				return err
 			}
 
 			// delete old meta
-			// update with utils.DeletedFeedMagicWord
-			err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
+			err = d.file.RmFile(utils.CombinePathAndFile(pathWithDir, indexFileName), podPassword)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}

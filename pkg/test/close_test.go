@@ -85,7 +85,7 @@ func TestClose(t *testing.T) {
 
 		gotPodInfo, _, err = pod1.GetPodInfo(podName1)
 		if err != nil {
-			t.Fatalf("pod should be open")
+			t.Fatalf("pod should be open %s\n", err)
 		}
 		if gotPodInfo == nil {
 			t.Fatalf("pod should be open")

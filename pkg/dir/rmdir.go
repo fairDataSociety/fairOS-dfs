@@ -79,11 +79,11 @@ func (d *Directory) RmDir(directoryNameWithPath, podPassword string) error {
 	}
 
 	// remove the feed and clear the data structure
-	topic := utils.HashString(totalPath)
-	err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
+	err = d.file.RmFile(utils.CombinePathAndFile(directoryNameWithPath, indexFileName), podPassword)
+	if err != nil {
 		return err
 	}
+
 	d.RemoveFromDirectoryMap(totalPath)
 	// return if root directory
 	if parentPath == utils.PathSeparator && filepath.ToSlash(dirToDelete) == utils.PathSeparator {
@@ -134,9 +134,8 @@ func (d *Directory) RmRootDir(podPassword string) error {
 	}
 
 	// remove the feed and clear the data structure
-	topic := utils.HashString(totalPath)
-	err := d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
+	err := d.file.RmFile(utils.CombinePathAndFile(totalPath, indexFileName), podPassword)
+	if err != nil {
 		return err
 	}
 	d.RemoveFromDirectoryMap(totalPath)

@@ -17,12 +17,8 @@ limitations under the License.
 package dir
 
 import (
-	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 // Stats represents a given directory
@@ -40,24 +36,17 @@ type Stats struct {
 
 // DirStat returns all the information related to a given directory.
 func (d *Directory) DirStat(podName, podPassword, dirNameWithPath string) (*Stats, error) {
-	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
+	dirInode, err := d.GetInode(podPassword, dirNameWithPath)
 	if err != nil { // skipcq: TCV-001
-		return nil, fmt.Errorf("dir stat: %v", err)
-	}
-	if string(data) == utils.DeletedFeedMagicWord {
-		return nil, ErrDirectoryNotPresent
-	}
-
-	var dirInode Inode
-	err = json.Unmarshal(data, &dirInode)
-	if err != nil { // skipcq: TCV-001
-		return nil, fmt.Errorf("dir stat: %v", err)
+		d.logger.Errorf("dir stat : %v", err)
+		return nil, err
 	}
 
 	if dirInode.Meta == nil && dirInode.FileOrDirNames == nil { // skipcq: TCV-001
 		return nil, ErrDirectoryNotPresent
 	}
+
+	d.AddToDirectoryMap(dirNameWithPath, dirInode)
 
 	files := 0
 	dirs := 0
