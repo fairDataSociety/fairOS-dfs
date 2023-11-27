@@ -78,20 +78,7 @@ func (d *Directory) RmDir(directoryNameWithPath, podPassword string) error {
 		}
 	}
 
-	// remove the feed and clear the data structure
-	err = d.file.RmFile(utils.CombinePathAndFile(directoryNameWithPath, indexFileName), podPassword)
-	if err != nil {
-		return err
-	}
-
-	d.RemoveFromDirectoryMap(totalPath)
-	// return if root directory
-	if parentPath == utils.PathSeparator && filepath.ToSlash(dirToDelete) == utils.PathSeparator {
-		return nil
-	}
-	// remove the directory entry from the parent dir
-
-	return d.RemoveEntryFromDir(parentPath, podPassword, dirToDelete, false)
+	return d.RemoveInode(podPassword, directoryNameWithPath)
 }
 
 // RmRootDir removes root directory and all the entries (file/directory) under that.
@@ -133,12 +120,5 @@ func (d *Directory) RmRootDir(podPassword string) error {
 		}
 	}
 
-	// remove the feed and clear the data structure
-	err := d.file.RmFile(utils.CombinePathAndFile(totalPath, indexFileName), podPassword)
-	if err != nil {
-		return err
-	}
-	d.RemoveFromDirectoryMap(totalPath)
-
-	return nil
+	return d.RemoveInode(podPassword, dirToDelete)
 }

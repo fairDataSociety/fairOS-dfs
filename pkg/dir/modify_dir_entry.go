@@ -17,14 +17,8 @@ limitations under the License.
 package dir
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/json"
-	"fmt"
 	"path/filepath"
 	"time"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 )
 
 const (
@@ -59,25 +53,7 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 	dirInode.FileOrDirNames = append(dirInode.FileOrDirNames, itemToAdd)
 	dirInode.Meta.ModificationTime = time.Now().Unix()
 
-	// update the feed of the dir and the data structure with the latest info
-	data, err := json.Marshal(dirInode)
-	if err != nil { // skipcq: TCV-001
-		return fmt.Errorf("modify dir entry : %v", err)
-	}
-
-	// change the upload logic here
-	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(data)), indexFileName, int64(len(data)), file.MinBlockSize, 0, parentDir, "gzip", podPassword)
-	if err != nil {
-		return err
-	}
-
-	//topic := utils.HashString(parentDir)
-	//err = d.fd.UpdateFeed(d.userAddress, topic, data, []byte(podPassword), false)
-	//if err != nil { // skipcq: TCV-001
-	//	return fmt.Errorf("modify dir entry : %v", err)
-	//}
-	d.AddToDirectoryMap(parentDir, dirInode)
-	return nil
+	return d.SetInode(podPassword, dirInode)
 }
 
 // RemoveEntryFromDir removes an entry (directory/file) under the given directory.
@@ -115,22 +91,5 @@ func (d *Directory) RemoveEntryFromDir(parentDir, podPassword, itemToDelete stri
 	parentDirInode.FileOrDirNames = fileNames
 	parentDirInode.Meta.ModificationTime = time.Now().Unix()
 
-	parentData, err := json.Marshal(parentDirInode)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-
-	//parentHash := utils.HashString(parentDir)
-	//err = d.fd.UpdateFeed(d.userAddress, parentHash, parentData, []byte(podPassword), false)
-	//if err != nil { // skipcq: TCV-001
-	//	return err
-	//}
-
-	// change the upload logic here
-	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(parentData)), indexFileName, int64(len(parentData)), file.MinBlockSize, 0, parentDir, "gzip", podPassword)
-	if err != nil {
-		return err
-	}
-	d.AddToDirectoryMap(parentDir, parentDirInode)
-	return nil
+	return d.SetInode(podPassword, parentDirInode)
 }

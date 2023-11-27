@@ -46,8 +46,6 @@ func (d *Directory) DirStat(podName, podPassword, dirNameWithPath string) (*Stat
 		return nil, ErrDirectoryNotPresent
 	}
 
-	d.AddToDirectoryMap(dirNameWithPath, dirInode)
-
 	files := 0
 	dirs := 0
 	for _, k := range dirInode.FileOrDirNames {

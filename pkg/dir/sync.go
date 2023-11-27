@@ -61,7 +61,6 @@ func (d *Directory) SyncDirectoryAsync(ctx context.Context, dirNameWithPath, pod
 		return nil // pod is empty
 	}
 
-	d.AddToDirectoryMap(dirNameWithPath, dirInode)
 	for _, fileOrDirName := range dirInode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_F_") {
 			wg.Add(1)

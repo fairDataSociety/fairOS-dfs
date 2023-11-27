@@ -174,19 +174,14 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 
 			inode.Meta.Path = newTotalPath
 			inode.Meta.ModificationTime = time.Now().Unix()
-			// upload meta
-			fileMetaBytes, err := json.Marshal(inode)
-			if err != nil { // skipcq: TCV-001
-				return err
-			}
 
-			err = d.file.Upload(bufio.NewReader(strings.NewReader(string(fileMetaBytes))), indexFileName, int64(len(fileMetaBytes)), file.MinBlockSize, 0, newPathWithDir, "gzip", podPassword)
+			err = d.SetInode(podPassword, inode)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
 
 			// delete old meta
-			err = d.file.RmFile(utils.CombinePathAndFile(pathWithDir, indexFileName), podPassword)
+			err = d.RemoveInode(podPassword, pathWithDir)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}

@@ -225,21 +225,6 @@ func (p *Pod) storeUserPodsV2(podList *List) error {
 	return f2.Upload(bytes.NewReader(data), podFileV2, int64(len(data)), f.MinBlockSize, 0, "/", "gzip", hex.EncodeToString(privKeyBytes))
 }
 
-func (p *Pod) storeUserPods(podList *List) error {
-	data, err := json.Marshal(podList)
-	if err != nil {
-		return err
-	}
-
-	if len(data) > utils.MaxChunkLength {
-		return ErrMaximumPodLimit
-	}
-	topic := utils.HashString(podFile)
-
-	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	return p.fd.UpdateFeed(p.acc.GetAddress(account.UserAccountIndex), topic, data, []byte(hex.EncodeToString(privKeyBytes)), false)
-}
-
 func (*Pod) getFreeId(pods map[int]string) (int, error) {
 	for i := 0; i < maxPodId; i++ {
 		if _, ok := pods[i]; !ok {

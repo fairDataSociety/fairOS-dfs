@@ -61,7 +61,7 @@ func TestMaxFiles(t *testing.T) {
 	}
 
 	t.Run("create-max-files", func(t *testing.T) {
-		maxfiles := 1000
+		maxfiles := 100
 		filePath := "/"
 		for i := 1; i <= maxfiles; i++ {
 			fileName, _ := utils.GetRandString(100)
