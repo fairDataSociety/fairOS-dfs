@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -1271,8 +1272,16 @@ func kvList(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("kvList failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(collections)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			list := js.Global().Get("Array").New()
+			count := 0
+			for i, _ := range collections {
+				list.SetIndex(count, js.ValueOf(i))
+				count++
+			}
+
+			object.Set("tables", list)
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -1356,8 +1365,10 @@ func kvCount(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("kvCount failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(count)
-			resolve.Invoke(resp)
+			object := js.Global().Get("Object").New()
+			object.Set("count", count.Count)
+			object.Set("tableName", count.TableName)
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -1416,20 +1427,16 @@ func kvEntryGet(_ js.Value, funcArgs []js.Value) interface{} {
 		key := funcArgs[3].String()
 
 		go func() {
-			columns, data, err := api.KVGet(sessionId, podName, tableName, key)
+			_, data, err := api.KVGet(sessionId, podName, tableName, key)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("kvEntryGet failed : %s", err.Error()))
 				return
 			}
-			var res KVResponse
-			if columns != nil {
-				res.Keys = columns
-			} else {
-				res.Keys = []string{key}
-			}
-			res.Values = data
-			resp, _ := json.Marshal(res)
-			resolve.Invoke(resp)
+			object := js.Global().Get("Object").New()
+			object.Set("key", key)
+			object.Set("value", base64.StdEncoding.EncodeToString(data))
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -1471,15 +1478,14 @@ func kvLoadCSV(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
-		if len(funcArgs) != 5 {
-			reject.Invoke("not enough arguments. \"kvLoadCSV(sessionId, podName, tableName, memory, file)\"")
+		if len(funcArgs) != 4 {
+			reject.Invoke("not enough arguments. \"kvLoadCSV(sessionId, podName, tableName, file)\"")
 			return nil
 		}
 		sessionId := funcArgs[0].String()
 		podName := funcArgs[1].String()
 		tableName := funcArgs[2].String()
-		memory := funcArgs[3].Bool()
-		array := funcArgs[4]
+		array := funcArgs[3]
 
 		go func() {
 			inBuf := make([]uint8, array.Get("byteLength").Int())
@@ -1513,7 +1519,7 @@ func kvLoadCSV(_ js.Value, funcArgs []js.Value) interface{} {
 						return
 					}
 
-					err = batch.Put(collection.CSVHeaderKey, []byte(record), false, memory)
+					err = batch.Put(collection.CSVHeaderKey, []byte(record), false, false)
 					if err != nil {
 						failureCount++
 						readHeader = true
@@ -1525,7 +1531,7 @@ func kvLoadCSV(_ js.Value, funcArgs []js.Value) interface{} {
 				}
 
 				key := strings.Split(record, ",")[0]
-				err = batch.Put(key, []byte(record), false, memory)
+				err = batch.Put(key, []byte(record), false, false)
 				if err != nil {
 					failureCount++
 					continue
@@ -1593,20 +1599,17 @@ func kvSeekNext(_ js.Value, funcArgs []js.Value) interface{} {
 		tableName := funcArgs[2].String()
 
 		go func() {
-			columns, key, data, err := api.KVGetNext(sessionId, podName, tableName)
+			_, key, data, err := api.KVGetNext(sessionId, podName, tableName)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("kvSeekNext failed : %s", err.Error()))
 				return
 			}
-			var res KVResponse
-			if columns != nil {
-				res.Keys = columns
-			} else {
-				res.Keys = []string{key}
-			}
-			res.Values = data
-			resp, _ := json.Marshal(res)
-			resolve.Invoke(resp)
+
+			object := js.Global().Get("Object").New()
+			object.Set("key", key)
+			object.Set("value", base64.StdEncoding.EncodeToString(data))
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
