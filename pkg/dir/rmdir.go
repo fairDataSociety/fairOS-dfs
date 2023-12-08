@@ -91,7 +91,6 @@ func (d *Directory) RmRootDir(podPassword string) error {
 	if d.GetDirFromDirectoryMap(totalPath) == nil { // skipcq: TCV-001
 		return ErrDirectoryNotPresent
 	}
-
 	// recursive delete
 	dirInode := d.GetDirFromDirectoryMap(totalPath)
 	if dirInode.FileOrDirNames != nil && len(dirInode.FileOrDirNames) > 0 {
@@ -119,6 +118,5 @@ func (d *Directory) RmRootDir(podPassword string) error {
 			}
 		}
 	}
-
 	return d.RemoveInode(podPassword, dirToDelete)
 }

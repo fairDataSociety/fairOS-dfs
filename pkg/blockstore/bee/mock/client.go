@@ -184,7 +184,7 @@ func NewTestBeeServer(t *testing.T, o TestServerOptions) string {
 	if o.BeeMode == api.UnknownMode {
 		o.BeeMode = api.FullMode
 	}
-
+	o.CORSAllowedOrigins = append(o.CORSAllowedOrigins, "*")
 	s := api.New(o.PublicKey, o.PSSPublicKey, o.EthereumAddress, o.Logger, transaction, o.BatchStore, o.BeeMode, true, true, backend, o.CORSAllowedOrigins, inmemstore.New())
 	testutil.CleanupCloser(t, s)
 

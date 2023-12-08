@@ -71,6 +71,7 @@ func (d *Directory) GetInode(podPassword, dirNameWithPath string) (*Inode, error
 	if node != nil {
 		return node, nil
 	}
+	var inode Inode
 	var data []byte
 	r, _, err := d.file.Download(utils.CombinePathAndFile(dirNameWithPath, indexFileName), podPassword)
 	if err != nil { // skipcq: TCV-001
@@ -79,17 +80,26 @@ func (d *Directory) GetInode(podPassword, dirNameWithPath string) (*Inode, error
 		if err != nil { // skipcq: TCV-001
 			return nil, ErrDirectoryNotPresent
 		}
-		// TODO remove this and upload to indexfile
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+		err = d.SetInode(podPassword, &inode)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+
+		// ignore delete error
+		_ = d.fd.DeleteFeedFromTopic(topic, d.getAddress())
 	} else {
 		data, err = io.ReadAll(r)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-	}
-	var inode Inode
-	err = inode.Unmarshal(data)
-	if err != nil { // skipcq: TCV-001
-		return nil, err
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
 	}
 	d.AddToDirectoryMap(dirNameWithPath, &inode)
 	return &inode, nil
