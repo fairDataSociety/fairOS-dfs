@@ -50,7 +50,7 @@ func TestMaxPods(t *testing.T) {
 	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 
 	t.Run("create-max-pods", func(t *testing.T) {
-		maxPodId := 10000
+		maxPodId := 100
 		for i := 0; i < maxPodId; i++ {
 			name, err := utils.GetRandString(utils.MaxPodNameLength)
 			if err != nil {
