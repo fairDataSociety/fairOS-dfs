@@ -4,5 +4,5 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-      day: sunday
+      day: monday
     target-branch: "staging"
