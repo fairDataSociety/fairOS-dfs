@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -81,7 +82,7 @@ func (h *Handler) PodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// delete pod
 	err = h.dfsAPI.DeletePod(podName, sessionId)
 	if err != nil {
-		if err == dfs.ErrUserNotLoggedIn {
+		if errors.Is(err, dfs.ErrUserNotLoggedIn) {
 			h.logger.Errorf("delete pod: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "delete pod: " + err.Error()})
 			return

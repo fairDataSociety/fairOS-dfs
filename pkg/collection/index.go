@@ -19,16 +19,17 @@ package collection
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"runtime"
-	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -139,13 +140,13 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 	}
 
 	if string(oldData) == utils.DeletedFeedMagicWord { //  skipcq: TCV-001
-		_, err = fd.UpdateFeed(user, topic, ref, []byte(encryptionPassword), false)
+		err = fd.UpdateFeed(user, topic, ref, []byte(encryptionPassword), false)
 		if err != nil {
 			return ErrManifestCreate
 		}
 		return nil
 	}
-	_, err = fd.CreateFeed(user, topic, ref, []byte(encryptionPassword))
+	err = fd.CreateFeed(user, topic, ref, []byte(encryptionPassword))
 	if err != nil { //  skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -188,7 +189,7 @@ func (idx *Index) DeleteIndex(encryptionPassword string) error {
 
 	//  erase the top Manifest
 	topic := utils.HashString(idx.name)
-	_, err := idx.feed.UpdateFeed(idx.user, topic, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword), false)
+	err := idx.feed.UpdateFeed(idx.user, topic, []byte(utils.DeletedFeedMagicWord), []byte(encryptionPassword), false)
 	if err != nil { //  skipcq: TCV-001
 		return ErrDeleteingIndex
 	}
@@ -305,7 +306,7 @@ func (idx *Index) updateManifest(manifest *Manifest, encryptionPassword string) 
 	}
 
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
+	err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
 	if err != nil { //  skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -329,16 +330,19 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 		return ErrManifestCreate
 	}
 	topic := utils.HashString(manifest.Name)
-	_, err = idx.feed.CreateFeed(idx.user, topic, ref, []byte(encryptionPassword))
-	if err != nil { //  skipcq: TCV-001
-		if strings.Contains(err.Error(), "chunk already exists") {
-			_, err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
-			if err != nil { //  skipcq: TCV-001
-				return ErrManifestCreate
-			}
-		} else {
+	_, _, err = idx.feed.GetFeedData(topic, idx.user, []byte(encryptionPassword), false)
+	if err == nil || errors.Is(err, file.ErrDeletedFeed) {
+		err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
+		if err != nil { //  skipcq: TCV-001
+			idx.logger.Errorf("updateFeed failed in storeManifest : %s", err.Error())
 			return ErrManifestCreate
 		}
+		return nil
+	}
+	err = idx.feed.CreateFeed(idx.user, topic, ref, []byte(encryptionPassword))
+	if err != nil { //  skipcq: TCV-001
+		idx.logger.Errorf("createFeed failed in storeManifest : %s", err.Error())
+		return ErrManifestCreate
 	}
 	return nil
 }

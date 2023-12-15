@@ -25,6 +25,11 @@ import (
 	"testing"
 	"time"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/sirupsen/logrus"
+
 	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -40,8 +45,15 @@ import (
 )
 
 func TestSharing(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 
 	acc1 := account.New(logger)
 	_, _, err := acc1.CreateUserAccount("")
@@ -58,8 +70,8 @@ func TestSharing(t *testing.T) {
 	}()
 	sm := mock3.NewMockSubscriptionManager()
 
-	fd1 := feed.New(acc1.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, sm, logger)
+	fd1 := feed.New(acc1.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod1 := pod.NewPod(mockClient, fd1, acc1, tm, sm, -1, 0, logger)
 	podName1 := "test1"
 
 	acc2 := account.New(logger)
@@ -71,14 +83,14 @@ func TestSharing(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, logger)
+	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, -1, 0, logger)
 	podName2 := "test2"
 
 	t.Run("sharing-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create source user
-		userObject1 := user.NewUsers(mockClient, ens, logger)
+		userObject1 := user.NewUsers(mockClient, ens, -1, 0, logger)
 		sr0, err := userObject1.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
@@ -109,6 +121,9 @@ func TestSharing(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fd1.CommitFeeds()
+		pod1.GetFeed().CommitFeeds()
+		info1.GetFeed().CommitFeeds()
 		// share file with another user
 		sharingRefString, err := userObject1.ShareFileWithUser("pod1", podPassword, "/parentDir1/file1", "user2", ui0, pod1, info1.GetPodAddress())
 		if err != nil {
@@ -116,7 +131,7 @@ func TestSharing(t *testing.T) {
 		}
 
 		// create destination user
-		userObject2 := user.NewUsers(mockClient, ens, logger)
+		userObject2 := user.NewUsers(mockClient, ens, -1, 0, logger)
 		sr, err := userObject2.CreateNewUserV2("user2", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)

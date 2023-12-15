@@ -17,9 +17,14 @@ limitations under the License.
 package dir
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
+	"path/filepath"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -61,21 +66,80 @@ func (in *Inode) Unmarshal(data []byte) error {
 }
 
 // GetInode returns the inode of the given directory
-func (d *Directory) GetInode(podPassword, dirNameWithPath string) *Inode {
+func (d *Directory) GetInode(podPassword, dirNameWithPath string) (*Inode, error) {
 	node := d.GetDirFromDirectoryMap(dirNameWithPath)
 	if node != nil {
-		return node
-	}
-	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
-		return nil
+		return node, nil
 	}
 	var inode Inode
-	err = inode.Unmarshal(data)
+	var data []byte
+	r, _, err := d.file.Download(utils.CombinePathAndFile(dirNameWithPath, indexFileName), podPassword)
 	if err != nil { // skipcq: TCV-001
-		return nil
+		topic := utils.HashString(dirNameWithPath)
+		_, data, err = d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
+		if err != nil { // skipcq: TCV-001
+			return nil, ErrDirectoryNotPresent
+		}
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+		err = d.SetInode(podPassword, &inode)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+
+		// ignore delete error
+		_ = d.fd.DeleteFeedFromTopic(topic, d.getAddress())
+	} else {
+		data, err = io.ReadAll(r)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
 	}
 	d.AddToDirectoryMap(dirNameWithPath, &inode)
-	return &inode
+	return &inode, nil
+}
+
+// SetInode saves the inode of the given directory
+func (d *Directory) SetInode(podPassword string, iNode *Inode) error {
+	totalPath := utils.CombinePathAndFile(iNode.Meta.Path, iNode.Meta.Name)
+	data, err := json.Marshal(iNode)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
+	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(data)), indexFileName, int64(len(data)), file.MinBlockSize, 0, totalPath, "gzip", podPassword)
+	if err != nil {
+		return err
+	}
+	d.AddToDirectoryMap(totalPath, iNode)
+	return nil
+}
+
+// RemoveInode removes the inode of the given directory
+func (d *Directory) RemoveInode(podPassword, dirNameWithPath string) error {
+	parentPath := filepath.ToSlash(filepath.Dir(dirNameWithPath))
+	dirToDelete := filepath.Base(dirNameWithPath)
+	var totalPath string
+	if parentPath == utils.PathSeparator && filepath.ToSlash(dirToDelete) == utils.PathSeparator {
+		totalPath = utils.CombinePathAndFile(parentPath, "")
+	} else {
+		totalPath = utils.CombinePathAndFile(parentPath, dirToDelete)
+	}
+	err := d.file.RmFile(utils.CombinePathAndFile(totalPath, indexFileName), podPassword)
+	if err != nil {
+		return err
+	}
+	d.RemoveFromDirectoryMap(totalPath)
+	// return if root directory
+	if parentPath == "" || (parentPath == utils.PathSeparator && filepath.ToSlash(totalPath) == utils.PathSeparator) {
+		return nil
+	}
+	// remove the directory entry from the parent dir
+	return d.RemoveEntryFromDir(filepath.ToSlash(filepath.Dir(parentPath)), podPassword, filepath.Base(totalPath), false)
 }

@@ -141,6 +141,10 @@ func (kv *KeyValue) DeleteKVTable(name, encryptionPassword string) error {
 	return kv.storeKVTables(kvtables, encryptionPassword)
 }
 
+func (kv *KeyValue) Commit() {
+	kv.fd.CommitFeeds()
+}
+
 // DeleteAllKVTables deletes all key value tables with all their index and data entries.
 func (kv *KeyValue) DeleteAllKVTables(encryptionPassword string) error {
 	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
@@ -450,7 +454,7 @@ func (kv *KeyValue) storeKVTables(collections map[string][]string, encryptionPas
 	if buf.Len() == 0 {
 		data = []byte(utils.DeletedFeedMagicWord)
 	}
-	_, err := kv.fd.UpdateFeed(kv.user, topic, data, []byte(encryptionPassword), false)
+	err := kv.fd.UpdateFeed(kv.user, topic, data, []byte(encryptionPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

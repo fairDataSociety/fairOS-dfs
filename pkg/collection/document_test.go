@@ -24,6 +24,11 @@ import (
 	"testing"
 	"time"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/sirupsen/logrus"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -48,15 +53,22 @@ type TestDocument struct {
 }
 
 func TestDocumentStore(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
@@ -67,7 +79,7 @@ func TestDocumentStore(t *testing.T) {
 	docStore := collection.NewDocumentStore("pod1", fd, ai, user, file, tm, mockClient, logger)
 	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("create_document_db_errors", func(t *testing.T) {
-		nilFd := feed.New(&account.Info{}, mockClient, logger)
+		nilFd := feed.New(&account.Info{}, mockClient, -1, 0, logger)
 		nilDocStore := collection.NewDocumentStore("pod1", nilFd, ai, user, file, tm, mockClient, logger)
 		err := nilDocStore.CreateDocumentDB("docdb_err", podPassword, nil, true)
 		if !errors.Is(err, collection.ErrReadOnlyIndex) {

@@ -8,6 +8,10 @@ import (
 	"testing"
 	"time"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -34,11 +38,18 @@ func randStringRunes(n int) string {
 }
 
 func TestLiteUser(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
 	ens := mock2.NewMockNamespaceManager()
-	logger := logging.New(io.Discard, logrus.ErrorLevel)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
 
-	users := user.NewUsers(mockClient, ens, logger)
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+
+	users := user.NewUsers(mockClient, ens, -1, 0, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
 	defer dfsApi.Close()
 	t.Run("signup-login-pod-dir-file-rename", func(t *testing.T) {
@@ -275,7 +286,7 @@ func TestLiteUser(t *testing.T) {
 				}
 			}
 		}
-
+		//pi.GetFeed().CommitFeeds()
 		err = dfsApi.LogoutUser(sessionId)
 		if err != nil {
 			t.Fatal(err)

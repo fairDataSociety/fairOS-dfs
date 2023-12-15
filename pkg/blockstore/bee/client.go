@@ -19,7 +19,6 @@ package bee
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,7 +30,7 @@ import (
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/sha3"
 )
@@ -63,9 +62,9 @@ type Client struct {
 	url                string
 	client             *http.Client
 	hasher             *bmtlegacy.Hasher
-	chunkCache         *lru.Cache
-	uploadBlockCache   *lru.Cache
-	downloadBlockCache *lru.Cache
+	chunkCache         *lru.LRU[string, []byte]
+	uploadBlockCache   *lru.LRU[string, []byte]
+	downloadBlockCache *lru.LRU[string, []byte]
 	postageBlockId     string
 	logger             logging.Logger
 	isProxy            bool
@@ -100,19 +99,9 @@ type beeError struct {
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
 func NewBeeClient(apiUrl, postageBlockId string, shouldPin bool, logger logging.Logger) *Client {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
-	cache, err := lru.New(chunkCacheSize)
-	if err != nil {
-		logger.Warningf("could not initialise chunkCache. system will be slow")
-	}
-	uploadBlockCache, err := lru.New(uploadBlockCacheSize)
-	if err != nil {
-		logger.Warningf("could not initialise blockCache. system will be slow")
-	}
-	downloadBlockCache, err := lru.New(downloadBlockCacheSize)
-	if err != nil {
-		logger.Warningf("could not initialise blockCache. system will be slow")
-	}
-
+	cache := lru.NewLRU(chunkCacheSize, func(key string, value []byte) {}, 0)
+	uploadBlockCache := lru.NewLRU(uploadBlockCacheSize, func(key string, value []byte) {}, 0)
+	downloadBlockCache := lru.NewLRU(downloadBlockCacheSize, func(key string, value []byte) {}, 0)
 	return &Client{
 		url:                apiUrl,
 		client:             createHTTPClient(),
@@ -163,19 +152,24 @@ func (s *Client) checkBee(isProxy bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	response, err := s.client.Do(req)
+	req.Close = true
+	// skipcq: GO-S2307
+	response, err := s.Do(req)
 	if err != nil {
 		return "", err
 	}
 
-	// skipcq: GO-S2307
 	defer response.Body.Close()
-	req.Close = true
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
 	return string(data), nil
+}
+
+// Do dispatches the HTTP request to the network
+func (s *Client) Do(req *http.Request) (*http.Response, error) {
+	return s.client.Do(req)
 }
 
 // UploadSOC is used construct and send a Single Owner Chunk to the Swarm bee client.
@@ -188,6 +182,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	// the postage block id to store the SOC chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
@@ -200,15 +195,13 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 		req.Header.Set(swarmPinHeader, "true")
 	}
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	addrData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -230,9 +223,6 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 		return nil, err
 	}
 
-	if s.inChunkCache(addrResp.Reference.String()) {
-		s.addToChunkCache(addrResp.Reference.String(), data)
-	}
 	fields := logrus.Fields{
 		"reference": addrResp.Reference.String(),
 		"duration":  time.Since(to).String(),
@@ -249,6 +239,7 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
@@ -259,14 +250,12 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 
 	req.Header.Set(swarmDeferredUploadHeader, "true")
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	addrData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -288,9 +277,6 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 		return nil, err
 	}
 
-	if s.inChunkCache(ch.Address().String()) {
-		s.addToChunkCache(ch.Address().String(), ch.Data())
-	}
 	fields := logrus.Fields{
 		"reference": ch.Address().String(),
 		"duration":  time.Since(to).String(),
@@ -304,9 +290,6 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte, err error) {
 	to := time.Now()
 	addrString := swarm.NewAddress(address).String()
-	if s.inChunkCache(addrString) {
-		return s.getFromChunkCache(swarm.NewAddress(address).String()), nil
-	}
 
 	path := chunkUploadDownloadUrl + "/" + addrString
 	fullUrl := fmt.Sprintf(s.url + path)
@@ -314,17 +297,16 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	req = req.WithContext(ctx)
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	if response.StatusCode != http.StatusOK {
 		return nil, errors.New("error downloading data")
@@ -334,8 +316,6 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 	if err != nil {
 		return nil, errors.New("error downloading data")
 	}
-
-	s.addToChunkCache(addrString, data)
 	fields := logrus.Fields{
 		"reference": addrString,
 		"duration":  time.Since(to).String(),
@@ -358,6 +338,7 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
@@ -376,14 +357,12 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 
 	req.Header.Set(swarmDeferredUploadHeader, "true")
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -411,10 +390,8 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	}
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload blob: ")
 
-	// add the data and ref if itis not in cache
-	if !s.inBlockCache(s.uploadBlockCache, string(data)) {
-		s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
-	}
+	// add the data in cache
+	s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
 
 	return resp.Reference.Bytes(), nil
 }
@@ -434,15 +411,14 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -481,18 +457,17 @@ func (s *Client) UploadBzz(data []byte, fileName string) (address []byte, err er
 	if err != nil {
 		return nil, err
 	}
+	req.Close = true
 
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 	req.Header.Set(contentTypeHeader, "application/json")
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -540,15 +515,14 @@ func (s *Client) DownloadBzz(address []byte) ([]byte, int, error) {
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return nil, http.StatusNotFound, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -591,20 +565,22 @@ func (s *Client) DeleteReference(address []byte) error {
 	if err != nil {
 		return err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return err
 	}
 	defer response.Body.Close()
 
-	req.Close = true
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNotFound {
 		respData, err := io.ReadAll(response.Body)
 		if err != nil {
 			return err
 		}
 		return fmt.Errorf("failed to unpin reference : %s", respData)
+	} else {
+		_, _ = io.Copy(io.Discard, response.Body)
 	}
 
 	fields := logrus.Fields{
@@ -639,15 +615,14 @@ func (s *Client) CreateTag(address []byte) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return 0, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -693,15 +668,14 @@ func (s *Client) GetTag(tag uint32) (int64, int64, int64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
+	req.Close = true
 
-	response, err := s.client.Do(req)
+	response, err := s.Do(req)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 	// skipcq: GO-S2307
 	defer response.Body.Close()
-
-	req.Close = true
 
 	respData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -743,52 +717,22 @@ func createHTTPClient() *http.Client {
 	return client
 }
 
-func (s *Client) addToChunkCache(key string, value []byte) {
-	if s.chunkCache != nil {
-		s.chunkCache.Add(key, hex.EncodeToString(value))
-	}
-}
-
-func (s *Client) inChunkCache(key string) bool {
-	if s.chunkCache != nil {
-		return s.chunkCache.Contains(key)
-	}
-	return false
-}
-
-func (s *Client) getFromChunkCache(key string) []byte {
-	if s.chunkCache != nil {
-		value, ok := s.chunkCache.Get(key)
-		if ok {
-			data, err := hex.DecodeString(fmt.Sprintf("%v", value))
-			if err != nil {
-				return nil
-			}
-			return data
-		}
-		return nil
-	}
-	return nil
-}
-
-func (*Client) addToBlockCache(cache *lru.Cache, key string, value []byte) {
+func (*Client) addToBlockCache(cache *lru.LRU[string, []byte], key string, value []byte) {
 	if cache != nil {
 		cache.Add(key, value)
 	}
 }
 
-func (*Client) inBlockCache(cache *lru.Cache, key string) bool {
-	if cache != nil {
-		return cache.Contains(key)
-	}
-	return false
+func (*Client) inBlockCache(cache *lru.LRU[string, []byte], key string) bool {
+	_, in := cache.Get(key)
+	return in
 }
 
-func (*Client) getFromBlockCache(cache *lru.Cache, key string) []byte {
+func (*Client) getFromBlockCache(cache *lru.LRU[string, []byte], key string) []byte {
 	if cache != nil {
 		value, ok := cache.Get(key)
 		if ok {
-			return value.([]byte)
+			return value
 		}
 		return nil
 	}

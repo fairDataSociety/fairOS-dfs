@@ -6,22 +6,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
-	"github.com/plexsysio/taskmanager"
-
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
 )
 
 func TestDirRmAllFromMap(t *testing.T) {
-	mockClient := bm.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
@@ -31,13 +41,13 @@ func TestDirRmAllFromMap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(pod1AccountInfo, mockClient, logger)
+	fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
 	user := acc.GetAddress(1)
-	mockFile := fm.NewMockFile()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	mockFile := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 	t.Run("dir-rm-all-from-map", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -62,7 +72,7 @@ func TestDirRmAllFromMap(t *testing.T) {
 		}
 
 		dirObject.RemoveAllFromDirectoryMap()
-		node := dirObject.GetInode(podPassword, "/baseDir")
+		node, _ := dirObject.GetInode(podPassword, "/baseDir")
 		if node == nil {
 			t.Fatal("node should not be nil, metadata should be available in blockstore")
 		}
@@ -71,7 +81,7 @@ func TestDirRmAllFromMap(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		node = dirObject.GetInode(podPassword, "/baseDir")
+		node, _ = dirObject.GetInode(podPassword, "/baseDir")
 		if node != nil {
 			t.Fatal("node should be  nil")
 		}

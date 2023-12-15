@@ -25,7 +25,7 @@ func (u *Users) LoadLiteUser(userName, _, mnemonic, sessionId string, tm taskman
 
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
-	fd := feed.New(accountInfo, u.client, u.logger)
+	fd := feed.New(accountInfo, u.client, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	// create a new base user account with the mnemonic
 	mnemonic, _, err := acc.CreateUserAccount(mnemonic)
 	if err != nil { // skipcq: TCV-001
@@ -35,7 +35,7 @@ func (u *Users) LoadLiteUser(userName, _, mnemonic, sessionId string, tm taskman
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), tm, u.logger)
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}

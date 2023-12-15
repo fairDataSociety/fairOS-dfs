@@ -18,6 +18,7 @@ package user
 
 import (
 	"sync"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/ensm"
@@ -31,17 +32,22 @@ type Users struct {
 	userMu  *sync.RWMutex
 	logger  logging.Logger
 	ens     ensm.ENSManager
+
+	feedCacheSize int
+	feedCacheTTL  time.Duration
 }
 
 // NewUsers creates the main user object which stores all the logged-in users and there respective
 // other data structures.
-func NewUsers(client blockstore.Client, ens ensm.ENSManager, logger logging.Logger) *Users {
+func NewUsers(client blockstore.Client, ens ensm.ENSManager, feedCacheSize int, feedCacheTTL time.Duration, logger logging.Logger) *Users {
 	return &Users{
-		client:  client,
-		userMap: make(map[string]*Info),
-		userMu:  &sync.RWMutex{},
-		logger:  logger,
-		ens:     ens,
+		client:        client,
+		userMap:       make(map[string]*Info),
+		userMu:        &sync.RWMutex{},
+		logger:        logger,
+		ens:           ens,
+		feedCacheSize: feedCacheSize,
+		feedCacheTTL:  feedCacheTTL,
 	}
 }
 
@@ -70,6 +76,12 @@ func (u *Users) isUserPresentInMap(sessionId string) bool {
 		return true
 	}
 	return false
+}
+
+func (u *Users) getUserMap() map[string]*Info {
+	u.userMu.Lock()
+	defer u.userMu.Unlock()
+	return u.userMap
 }
 
 func (u *Users) isUserNameInMap(userName string) bool {

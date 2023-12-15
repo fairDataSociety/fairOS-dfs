@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -80,8 +81,8 @@ func (h *Handler) PodOpenHandler(w http.ResponseWriter, r *http.Request) {
 	// open pod
 	_, err = h.dfsAPI.OpenPod(pod, sessionId)
 	if err != nil {
-		if err == dfs.ErrUserNotLoggedIn ||
-			err == p.ErrInvalidPodName {
+		if errors.Is(err, dfs.ErrUserNotLoggedIn) ||
+			errors.Is(err, p.ErrInvalidPodName) {
 			h.logger.Errorf("pod open: %v", err)
 			jsonhttp.NotFound(w, &response{Message: "pod open: " + err.Error()})
 			return

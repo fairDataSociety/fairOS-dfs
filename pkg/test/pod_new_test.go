@@ -19,10 +19,15 @@ package test_test
 import (
 	"context"
 	"errors"
-	"os"
+	"io"
 	"strings"
 	"testing"
 	"time"
+
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/sirupsen/logrus"
 
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
 
@@ -38,21 +43,28 @@ import (
 )
 
 func TestPodNew(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(os.Stdout, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
 	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 
 	podName1 := "test1"
 	podName2 := "test2"

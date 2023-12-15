@@ -25,6 +25,11 @@ import (
 	"testing"
 	"time"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/sirupsen/logrus"
+
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -40,8 +45,15 @@ import (
 )
 
 func TestOpen(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
@@ -53,8 +65,8 @@ func TestOpen(t *testing.T) {
 	}()
 	sm := mock2.NewMockSubscriptionManager()
 
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 	podName1 := "test1"
 	podName2 := "test2"
 
@@ -80,7 +92,8 @@ func TestOpen(t *testing.T) {
 
 		// create some dir and files
 		addFilesAndDirectories(t, info, pod1, podName1, podPassword)
-
+		fd.CommitFeeds()
+		<-time.After(time.Second)
 		// open the pod
 		podInfo, err := pod1.OpenPod(podName1)
 		if err != nil {

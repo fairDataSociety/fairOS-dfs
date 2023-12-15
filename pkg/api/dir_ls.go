@@ -20,13 +20,11 @@ import (
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
-
-	"resenje.org/jsonhttp"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"resenje.org/jsonhttp"
 )
 
 // ListFileResponse is used to list directories and files

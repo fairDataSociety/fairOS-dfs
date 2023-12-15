@@ -121,7 +121,9 @@ func (a *API) ListDir(podName, currentDir, sessionId string) ([]dir.Entry, []f.E
 
 	// check if directory present
 	totalPath := utils.CombinePathAndFile(currentDir, "")
-	if directory.GetInode(podInfo.GetPodPassword(), totalPath) == nil {
+	_, err = directory.GetInode(podInfo.GetPodPassword(), totalPath)
+	if err != nil {
+		a.logger.Errorf("dir not found: %s: %s", currentDir, err.Error())
 		return nil, nil, dir.ErrDirectoryNotPresent
 	}
 	dEntries, fileList, err := directory.ListDir(currentDir, podInfo.GetPodPassword())
@@ -154,8 +156,8 @@ func (a *API) DirectoryStat(podName, directoryPath, sessionId string) (*dir.Stat
 	directoryPath = filepath.ToSlash(directoryPath)
 	if directoryPath != utils.PathSeparator {
 		parent := filepath.ToSlash(filepath.Dir(directoryPath))
-		inode := directory.GetInode(podInfo.GetPodPassword(), parent)
-		if inode == nil {
+		inode, err := directory.GetInode(podInfo.GetPodPassword(), parent)
+		if err != nil {
 			return nil, dir.ErrDirectoryNotPresent
 		}
 		found := false
@@ -189,8 +191,8 @@ func (a *API) DirectoryInode(podName, directoryName, sessionId string) (*dir.Ino
 		return nil, err
 	}
 	directory := podInfo.GetDirectory()
-	inode := directory.GetInode(podInfo.GetPodPassword(), directoryName)
-	if inode == nil {
+	inode, err := directory.GetInode(podInfo.GetPodPassword(), directoryName)
+	if err != nil {
 		a.logger.Errorf("dir not found: %s", directoryName)
 		return nil, fmt.Errorf("dir not found")
 	}
@@ -268,8 +270,8 @@ func (a *API) FileStat(podName, podFileWithPath, sessionId string) (*f.Stats, er
 	}
 	podFileWithPath = filepath.ToSlash(podFileWithPath)
 	directory := podInfo.GetDirectory()
-	inode := directory.GetInode(podInfo.GetPodPassword(), filepath.ToSlash(filepath.Dir(podFileWithPath)))
-	if inode != nil {
+	inode, err := directory.GetInode(podInfo.GetPodPassword(), filepath.ToSlash(filepath.Dir(podFileWithPath)))
+	if err == nil {
 		found := false
 		fileName := filepath.Base(podFileWithPath)
 		for _, name := range inode.FileOrDirNames {

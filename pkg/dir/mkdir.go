@@ -17,7 +17,6 @@ limitations under the License.
 package dir
 
 import (
-	"encoding/json"
 	"path/filepath"
 	"strings"
 	"time"
@@ -49,14 +48,15 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) 
 
 	// check if directory already present
 	totalPath := utils.CombinePathAndFile(parentPath, dirName)
-	topic := utils.HashString(totalPath)
 
 	// check if parent path exists
-	if d.GetInode(podPassword, parentPath) == nil {
+	_, err := d.GetInode(podPassword, parentPath)
+	if err != nil {
 		return ErrDirectoryNotPresent
 	}
 
-	if d.GetInode(podPassword, totalPath) != nil {
+	_, err = d.GetInode(podPassword, totalPath)
+	if err == nil {
 		return ErrDirectoryAlreadyPresent
 	}
 
@@ -77,55 +77,13 @@ func (d *Directory) MkDir(dirToCreateWithPath, podPassword string, mode uint32) 
 	dirInode := &Inode{
 		Meta: &meta,
 	}
-	data, err := json.Marshal(dirInode)
+
+	err = d.SetInode(podPassword, dirInode)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
-	// upload the metadata as blob
-	previousAddr, _, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
-	if err == nil && previousAddr != nil {
-		_, err = d.fd.UpdateFeed(d.userAddress, topic, data, []byte(podPassword), false)
-		if err != nil { // skipcq: TCV-001
-			return err
-		}
-	} else {
-		_, err = d.fd.CreateFeed(d.userAddress, topic, data, []byte(podPassword))
-		if err != nil { // skipcq: TCV-001
-			return err
-		}
-	}
-
-	d.AddToDirectoryMap(totalPath, dirInode)
-
-	// get the parent directory entry and add this new directory to its list of children
-	parentHash := utils.HashString(utils.CombinePathAndFile(parentPath, ""))
-	dirName = "_D_" + dirName
-	_, parentData, err := d.fd.GetFeedData(parentHash, d.userAddress, []byte(podPassword), false)
-	if err != nil {
-		return err
-	}
-
-	// unmarshall the data and add the directory entry to the parent
-	var parentDirInode *Inode
-	err = json.Unmarshal(parentData, &parentDirInode)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-	parentDirInode.FileOrDirNames = append(parentDirInode.FileOrDirNames, dirName)
-
-	// marshall it back and update the parent feed
-	parentData, err = json.Marshal(parentDirInode)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-
-	_, err = d.fd.UpdateFeed(d.userAddress, parentHash, parentData, []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-	d.AddToDirectoryMap(parentPath, parentDirInode)
-	return nil
+	return d.AddEntryToDir(parentPath, podPassword, dirName, false)
 }
 
 // MkRootDir creates the root directory for the pod
@@ -143,42 +101,15 @@ func (d *Directory) MkRootDir(podName, podPassword string, podAddress utils.Addr
 	parentDirInode := &Inode{
 		Meta: &meta,
 	}
-
-	parentData, err := json.Marshal(&parentDirInode)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-	parentPath := utils.CombinePathAndFile(utils.PathSeparator, "")
-	parentHash := utils.HashString(parentPath)
-	addr, data, err := d.fd.GetFeedData(parentHash, d.userAddress, []byte(podPassword), false)
-	if err == nil && addr != nil && data != nil {
-		_, err = fd.UpdateFeed(podAddress, parentHash, parentData, []byte(podPassword), false)
-		if err != nil { // skipcq: TCV-001
-			return err
-		}
-	} else {
-		_, err = fd.CreateFeed(podAddress, parentHash, parentData, []byte(podPassword))
-		if err != nil { // skipcq: TCV-001
-			return err
-		}
-	}
-	d.AddToDirectoryMap(utils.PathSeparator, parentDirInode)
-	return nil
+	return d.SetInode(podPassword, parentDirInode)
 }
 
 // AddRootDir adds the root directory to the directory map
 func (d *Directory) AddRootDir(podName, podPassword string, podAddress utils.Address, fd *feed.API) error {
-	parentPath := utils.CombinePathAndFile(utils.PathSeparator, "")
-	parentHash := utils.HashString(parentPath)
-	_, parentDataBytes, err := fd.GetFeedData(parentHash, podAddress, []byte(podPassword), false)
+	parentDirInode, err := d.GetInode(podPassword, utils.CombinePathAndFile(utils.PathSeparator, ""))
 	if err != nil {
 		return err
 	}
-	var parentDirInode Inode
-	err = parentDirInode.Unmarshal(parentDataBytes)
-	if err != nil {
-		return err
-	}
-	d.AddToDirectoryMap(utils.PathSeparator, &parentDirInode)
+	d.AddToDirectoryMap(utils.PathSeparator, parentDirInode)
 	return nil
 }

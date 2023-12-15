@@ -22,29 +22,37 @@ import (
 	"testing"
 	"time"
 
-	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
-	"github.com/plexsysio/taskmanager"
-
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
 )
 
 func TestClose(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
@@ -52,7 +60,7 @@ func TestClose(t *testing.T) {
 
 	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 	podName1 := "test1"
 
 	t.Run("close-pod", func(t *testing.T) {
@@ -77,17 +85,17 @@ func TestClose(t *testing.T) {
 
 		gotPodInfo, _, err = pod1.GetPodInfo(podName1)
 		if err != nil {
-			t.Fatalf("pod should be open")
+			t.Fatalf("pod should be open %s\n", err)
 		}
 		if gotPodInfo == nil {
 			t.Fatalf("pod should be open")
 		}
 		dirObject := gotPodInfo.GetDirectory()
-		dirInode1 := dirObject.GetInode(podPassword, "/parentDir/subDir1")
+		dirInode1, _ := dirObject.GetInode(podPassword, "/parentDir/subDir1")
 		if dirInode1 == nil {
 			t.Fatalf("dir should nil be nil")
 		}
-		dirInode2 := dirObject.GetInode(podPassword, "/parentDir/subDir2")
+		dirInode2, _ := dirObject.GetInode(podPassword, "/parentDir/subDir2")
 		if dirInode2 == nil {
 			t.Fatalf("dir should nil be nil")
 		}

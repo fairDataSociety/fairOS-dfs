@@ -17,7 +17,7 @@ import (
 // ListPodInMarketplace will save the pod info in the subscriptionManager smart contract with its owner and price
 // we keep the pod info in the smart contract, with a `list` flag
 func (p *Pod) ListPodInMarketplace(podName, title, desc, thumbnail string, price uint64, daysValid uint16, category, nameHash [32]byte) error {
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

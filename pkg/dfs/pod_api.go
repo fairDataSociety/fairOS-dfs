@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,9 +28,8 @@ import (
 	"strconv"
 	"strings"
 
-	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/datahub"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -53,7 +53,6 @@ func (a *API) CreatePod(podName, sessionId string) (*pod.Info, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	// Add podName in the login user session
 	ui.AddPodName(podName, pi)
 	return pi, nil
@@ -66,7 +65,6 @@ func (a *API) DeletePod(podName, sessionId string) error {
 	if ui == nil {
 		return ErrUserNotLoggedIn
 	}
-
 	// delete all the directory, files, and database tables under this pod from
 	// the Swarm network.
 	podInfo, _, err := ui.GetPod().GetPodInfo(podName)
@@ -74,7 +72,6 @@ func (a *API) DeletePod(podName, sessionId string) error {
 		return err
 	}
 	directory := podInfo.GetDirectory()
-
 	// check if this is a shared pod
 	if podInfo.GetFeed().IsReadOnlyFeed() {
 		// delete the pod and close if it is opened
@@ -87,18 +84,15 @@ func (a *API) DeletePod(podName, sessionId string) error {
 		ui.RemovePodName(podName)
 		return nil
 	}
-
 	err = directory.RmRootDir(podInfo.GetPodPassword())
-	if err != nil {
+	if err != nil && !errors.Is(err, file.ErrFileNotFound) {
 		return err
 	}
-
 	// delete the pod and close if it is opened
 	err = ui.GetPod().DeleteOwnPod(podName)
 	if err != nil {
 		return err
 	}
-
 	ui.RemovePodName(podName)
 	return nil
 }
@@ -136,6 +130,16 @@ func (a *API) ClosePod(podName, sessionId string) error {
 	// delete podName in the login user session
 	ui.RemovePodName(podName)
 	return nil
+}
+
+// CommitPodFeeds commits feed for a pod on swarm
+func (a *API) CommitPodFeeds(podName, sessionId string) error {
+	// get the loggedin user information
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+	return ui.GetPod().CommitFeeds(podName)
 }
 
 // PodStat returns the pod stat
@@ -268,7 +272,7 @@ func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.Rea
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, a.client, a.logger)
+	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 	topic := utils.HashString(filePath)
 	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
 	if err != nil {
@@ -308,7 +312,7 @@ func (a *API) PublicPodKVEntryGet(pod *pod.ShareInfo, name, key string) ([]strin
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, a.client, a.logger)
+	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 	kvStore := c.NewKeyValueStore(pod.PodName, fd, accountInfo, address, a.client, a.logger)
 
 	err := kvStore.OpenKVTable(name, pod.Password)
@@ -325,7 +329,7 @@ func (a *API) PublicPodKVGetter(pod *pod.ShareInfo) KVGetter {
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, a.client, a.logger)
+	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 	return c.NewKeyValueStore(pod.PodName, fd, accountInfo, address, a.client, a.logger)
 }
 
@@ -336,7 +340,7 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, a.client, a.logger)
+	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 
 	dirNameWithPath := filepath.ToSlash(dirPathToLs)
 	topic := utils.HashString(dirNameWithPath)

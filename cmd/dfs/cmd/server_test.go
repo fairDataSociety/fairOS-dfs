@@ -17,8 +17,11 @@ import (
 	"testing"
 	"time"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
@@ -43,11 +46,18 @@ func randStringRunes(n int) string {
 }
 
 func TestApis(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	ens := mock2.NewMockNamespaceManager()
-	logger := logging.New(io.Discard, logrus.ErrorLevel)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
 
-	users := user.NewUsers(mockClient, ens, logger)
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	ens := mock2.NewMockNamespaceManager()
+
+	users := user.NewUsers(mockClient, ens, 500, 0, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
 	handler = api.NewMockHandler(dfsApi, logger, []string{"http://localhost:3000"})
 	defer handler.Close()
@@ -64,7 +74,7 @@ func TestApis(t *testing.T) {
 		}
 	}()
 
-	// wait 10 seconds for the server to start
+	// wait for the server to start
 	<-time.After(time.Second * 3)
 	t.Run("login-fail-test", func(t *testing.T) {
 		c := http.Client{Timeout: time.Duration(1) * time.Minute}

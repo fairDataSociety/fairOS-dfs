@@ -18,11 +18,19 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
+
+const (
+	defaultFeedCacheSize = -1
+)
+
+var errInvalidDuration = fmt.Errorf("invalid duration")
 
 // Handler is the api handler
 type Handler struct {
@@ -42,6 +50,8 @@ type Options struct {
 	EnsConfig          *contracts.ENSConfig
 	SubscriptionConfig *contracts.SubscriptionConfig
 	Logger             logging.Logger
+	FeedCacheSize      int
+	FeedCacheTTL       string
 }
 
 // New returns a new handler
@@ -52,6 +62,17 @@ func New(ctx context.Context, opts *Options) (*Handler, error) {
 		EnsConfig:          opts.EnsConfig,
 		SubscriptionConfig: opts.SubscriptionConfig,
 		Logger:             opts.Logger,
+	}
+	if opts.FeedCacheSize == 0 {
+		opts.FeedCacheSize = defaultFeedCacheSize
+	} else {
+		dfsOpts.FeedCacheSize = opts.FeedCacheSize
+
+		ttl, err := time.ParseDuration(opts.FeedCacheTTL)
+		if err != nil {
+			return nil, errInvalidDuration
+		}
+		dfsOpts.FeedCacheTTL = ttl
 	}
 	api, err := dfs.NewDfsAPI(ctx, dfsOpts)
 	if err != nil {

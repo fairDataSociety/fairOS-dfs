@@ -2,9 +2,14 @@ package test_test
 
 import (
 	"context"
-	"os"
+	"io"
 	"testing"
 	"time"
+
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/sirupsen/logrus"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
@@ -22,15 +27,21 @@ import (
 )
 
 func TestSubscription(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
 
-	logger := logging.New(os.Stdout, 0)
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc1 := account.New(logger)
 	_, _, err := acc1.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc1.GetUserAccountInfo(), mockClient, logger)
+	fd := feed.New(acc1.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
@@ -43,7 +54,7 @@ func TestSubscription(t *testing.T) {
 	}
 
 	sm := mock2.NewMockSubscriptionManager()
-	pod1 := pod.NewPod(mockClient, fd, acc1, tm, sm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc1, tm, sm, -1, 0, logger)
 
 	randomLongPodName1, err := utils.GetRandString(64)
 	if err != nil {
@@ -86,8 +97,8 @@ func TestSubscription(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, logger)
-	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, logger)
+	fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, -1, 0, logger)
+	pod2 := pod.NewPod(mockClient, fd2, acc2, tm, sm, -1, 0, logger)
 	a2 := acc2.GetUserAccountInfo().GetAddress()
 	addr2 := common.HexToAddress(a2.Hex())
 	nameHash2, err := goens.NameHash(addr2.Hex())
