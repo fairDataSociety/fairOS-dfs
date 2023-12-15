@@ -33,7 +33,7 @@ require (
 	github.com/wealdtech/go-ens/v3 v3.5.5
 	go.uber.org/goleak v1.2.1
 	golang.org/x/crypto v0.15.0
-	golang.org/x/term v0.14.0
+	golang.org/x/term v0.15.0
 	gopkg.in/yaml.v2 v2.4.0
 	resenje.org/jsonhttp v0.2.3
 )
@@ -142,7 +142,7 @@ require (
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.18.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.15.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
