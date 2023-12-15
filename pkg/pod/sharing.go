@@ -37,7 +37,7 @@ type ShareInfo struct {
 // required to import this pod.
 func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 	// check if pods is present and get the index of the pod
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
@@ -84,7 +84,7 @@ func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 // GetPodSharingInfo returns the raw shareInfo
 func (p *Pod) GetPodSharingInfo(podName string) (*ShareInfo, error) {
 	// check if pods is present and get the index of the pod
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}

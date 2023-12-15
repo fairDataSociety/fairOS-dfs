@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
@@ -30,7 +32,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -59,11 +60,11 @@ func TestDirPresent(t *testing.T) {
 	}
 	fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
 	user := acc.GetAddress(1)
-	mockFile := fm.NewMockFile()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	mockFile := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 	t.Run("dir-present", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)

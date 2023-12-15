@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
@@ -38,7 +40,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
@@ -61,15 +62,15 @@ func TestListDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
-	user := acc.GetAddress(1)
-	mockFile := fm.NewMockFile()
-	tm := taskmanager.New(1, 10, time.Second*15, logger)
-	defer func() {
-		_ = tm.Stop(context.Background())
-	}()
 
 	t.Run("list-dir", func(t *testing.T) {
+		fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
+		user := acc.GetAddress(1)
+		tm := taskmanager.New(1, 10, time.Second*15, logger)
+		defer func() {
+			_ = tm.Stop(context.Background())
+		}()
+		mockFile := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 
@@ -166,6 +167,13 @@ func TestListDirectory(t *testing.T) {
 	})
 
 	t.Run("list-dir-from-different-dir-object", func(t *testing.T) {
+		fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
+		user := acc.GetAddress(1)
+		tm := taskmanager.New(1, 10, time.Second*15, logger)
+		defer func() {
+			_ = tm.Stop(context.Background())
+		}()
+		mockFile := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 

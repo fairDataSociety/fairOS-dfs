@@ -17,11 +17,12 @@ limitations under the License.
 package pod
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 
 	"github.com/ethereum/go-ethereum/crypto"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -31,7 +32,8 @@ import (
 )
 
 const (
-	podFile = "Pods"
+	podFile   = "Pods"
+	podFileV2 = "PodsV2"
 )
 
 // CreatePod creates a new pod for a given user.
@@ -40,8 +42,9 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 	if err != nil {
 		return nil, err
 	}
+
 	// check if pods is present and get free index
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -82,7 +85,7 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 			Password: podPassword,
 		}
 		podList.SharedPods = append(podList.SharedPods, *sharedPod)
-		err = p.storeUserPods(podList)
+		err = p.storeUserPodsV2(podList)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
@@ -118,7 +121,7 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 			Password: podPassword,
 		}
 		podList.Pods = append(podList.Pods, *pod)
-		err = p.storeUserPods(podList)
+		err = p.storeUserPodsV2(podList)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
@@ -177,23 +180,49 @@ func (p *Pod) loadUserPods() (*List, error) {
 	return podList, nil
 }
 
-func (p *Pod) storeUserPods(podList *List) error {
+func (p *Pod) loadUserPodsV2() (*List, error) {
+	f2 := f.NewFile("", p.client, p.fd, p.acc.GetAddress(account.UserAccountIndex), p.tm, p.logger)
+	topicString := utils.CombinePathAndFile("", podFileV2)
+	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
+	r, _, err := f2.Download(topicString, hex.EncodeToString(privKeyBytes))
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	podList := &List{
+		Pods:       []ListItem{},
+		SharedPods: []SharedListItem{},
+	}
+	data, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		return podList, nil
+	}
+
+	err = json.Unmarshal(data, podList)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+
+	return podList, nil
+}
+
+func (p *Pod) storeUserPodsV2(podList *List) error {
+
 	data, err := json.Marshal(podList)
 	if err != nil {
 		return err
 	}
 
-	if len(data) > utils.MaxChunkLength {
-		return ErrMaximumPodLimit
-	}
-	topic := utils.HashString(podFile)
-
+	// store data as file and get metadata
+	// This is a very hacky way to store pod data, but it works for now
+	// We create a new file object with the user account address and upload the data
+	// We use the user private key to encrypt data.
+	f2 := f.NewFile("", p.client, p.fd, p.acc.GetAddress(account.UserAccountIndex), p.tm, p.logger)
 	privKeyBytes := crypto.FromECDSA(p.acc.GetUserAccountInfo().GetPrivateKey())
-	err = p.fd.UpdateFeed(p.acc.GetAddress(account.UserAccountIndex), topic, data, []byte(hex.EncodeToString(privKeyBytes)), false)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-	return nil
+	return f2.Upload(bytes.NewReader(data), podFileV2, int64(len(data)), f.MinBlockSize, 0, "/", "gzip", hex.EncodeToString(privKeyBytes))
 }
 
 func (*Pod) getFreeId(pods map[int]string) (int, error) {
@@ -228,7 +257,7 @@ func (*Pod) checkIfSharedPodPresent(pods *List, podName string) bool {
 }
 
 func (p *Pod) getPodIndex(podName string) (podIndex int, err error) {
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil {
 		return -1, err
 	} // skipcq: TCV-001

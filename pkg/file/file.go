@@ -140,7 +140,6 @@ func (f *File) GetInode(podPassword, filePath string) *MetaData { // skipcq: TCV
 	if err != nil { // skipcq: TCV-001
 		return nil
 	}
-
 	f.AddToFileMap(filePath, meta)
 	return meta
 }

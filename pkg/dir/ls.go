@@ -47,21 +47,10 @@ type Entry struct {
 // function can give information about those files.
 func (d *Directory) ListDir(dirNameWithPath, podPassword string) ([]Entry, []string, error) {
 	dirNameWithPath = filepath.ToSlash(dirNameWithPath)
-	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
-		if dirNameWithPath == utils.PathSeparator {
-			return nil, nil, nil
-		}
-		return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
-	}
-
-	dirInode := &Inode{}
-	err = dirInode.Unmarshal(data)
+	dirInode, err := d.GetInode(podPassword, dirNameWithPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("list dir : %v", err)
 	}
-
 	wg := new(sync.WaitGroup)
 	mtx := &sync.Mutex{}
 	listEntries := &[]Entry{}

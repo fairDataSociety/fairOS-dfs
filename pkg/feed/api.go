@@ -119,7 +119,6 @@ func (a *API) CreateFeed(user utils.Address, topic, data, encryptionPassword []b
 		}
 		a.handler.putInPool(topic, item)
 		return nil
-
 	}
 	_, _, err = a.handler.createSoc(user, a.accountInfo, topic, encryptedData)
 	if err != nil {

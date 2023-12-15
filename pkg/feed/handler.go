@@ -175,7 +175,7 @@ func (h *Handler) createSoc(user utils.Address, accountInfo *account.Info, topic
 	// fill Feed and Epoc related details
 	copy(req.ID.Topic[:], topic)
 	req.ID.User = user
-	req.Epoch.Level = 31
+	req.Epoch.Level = lookup.HighestLevel
 	req.Epoch.Time = uint64(time.Now().Unix())
 
 	// Add initial feed data
@@ -225,7 +225,6 @@ func (h *Handler) createSoc(user utils.Address, accountInfo *account.Info, topic
 	if err != nil { // skipcq: TCV-001
 		return epoch, nil, err
 	}
-
 	return req.Epoch, addr, nil
 }
 
@@ -562,9 +561,12 @@ func (h *Handler) newRequest(ctx context.Context, feed *Feed) (request2 *request
 	}
 
 	request2.Feed = *feed
-
 	// if we already have an update, then find next epoch
 	if feedUpdate != nil {
+		if feedUpdate.Epoch.Level == 0 && feedUpdate.Epoch.Time == now {
+			<-time.After(time.Second)
+			now = TimestampProvider.Now().Time
+		}
 		request2.Epoch = lookup.GetNextEpoch(feedUpdate.Epoch, now)
 	} else {
 		request2.Epoch = lookup.GetFirstEpoch(now)

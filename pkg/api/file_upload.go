@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"errors"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -152,7 +153,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		err = h.handleFileUpload(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs), overwrite)
 		if err != nil {
-			if err == dfs.ErrPodNotOpen {
+			if errors.Is(err, dfs.ErrPodNotOpen) {
 				h.logger.Errorf("file upload: %v", err)
 				jsonhttp.BadRequest(w, &response{Message: "file upload: " + err.Error()})
 				return

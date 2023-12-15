@@ -61,8 +61,7 @@ func TestMaxFiles(t *testing.T) {
 	}
 
 	t.Run("create-max-files", func(t *testing.T) {
-		t.Skip()
-		maxfiles := 1000000
+		maxfiles := 100
 		filePath := "/"
 		for i := 1; i <= maxfiles; i++ {
 			fileName, _ := utils.GetRandString(100)
@@ -77,6 +76,15 @@ func TestMaxFiles(t *testing.T) {
 			if err != nil {
 				t.Fatal(i, err)
 			}
+		}
+
+		// check if the files are present
+		dirInode, err := info.GetDirectory().GetInode(podPassword, filePath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(dirInode.FileOrDirNames) != maxfiles {
+			t.Fatal("files not present")
 		}
 	})
 }

@@ -516,11 +516,11 @@ func TestShare(t *testing.T) {
 			t.Fatal(err)
 		}
 		dirObject8 := gotSharedPodInfo.GetDirectory()
-		dirInode1 := dirObject8.GetInode(podPassword, "/parentDir/subDir1")
+		dirInode1, _ := dirObject8.GetInode(podPassword, "/parentDir/subDir1")
 		if dirInode1 != nil {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode1 = dirObject8.GetInode(podPassword, "/parentDir/newSubDir1")
+		dirInode1, _ = dirObject8.GetInode(podPassword, "/parentDir/newSubDir1")
 		if dirInode1 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -530,7 +530,7 @@ func TestShare(t *testing.T) {
 		if dirInode1.Meta.Name != "newSubDir1" {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode2 := dirObject8.GetInode(podPassword, "/parentDir/subDir2")
+		dirInode2, _ := dirObject8.GetInode(podPassword, "/parentDir/subDir2")
 		if dirInode2 == nil {
 			t.Fatalf("invalid dir entry")
 		}

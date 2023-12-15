@@ -1,26 +1,13 @@
 package dir
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 // Chmod does all the validation for the existence of the file and changes file mode
 func (d *Directory) Chmod(dirNameWithPath, podPassword string, mode uint32) error {
-	topic := utils.HashString(dirNameWithPath)
-	_, data, err := d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
-		return fmt.Errorf("dir chmod: %v", err)
-	}
-	if string(data) == utils.DeletedFeedMagicWord {
-		return ErrDirectoryNotPresent
-	}
-
-	var dirInode Inode
-	err = json.Unmarshal(data, &dirInode)
+	dirInode, err := d.GetInode(podPassword, dirNameWithPath)
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("dir chmod: %v", err)
 	}
@@ -31,14 +18,5 @@ func (d *Directory) Chmod(dirNameWithPath, podPassword string, mode uint32) erro
 
 	dirInode.Meta.Mode = S_IFDIR | mode
 	dirInode.Meta.AccessTime = time.Now().Unix()
-	metaBytes, err := json.Marshal(dirInode)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-	err = d.fd.UpdateFeed(d.userAddress, topic, metaBytes, []byte(podPassword), false)
-	if err != nil { // skipcq: TCV-001
-		return err
-	}
-	d.AddToDirectoryMap(dirNameWithPath, &dirInode)
-	return nil
+	return d.SetInode(podPassword, dirInode)
 }

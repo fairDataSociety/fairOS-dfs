@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
@@ -37,7 +39,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
@@ -62,11 +63,11 @@ func TestStat(t *testing.T) {
 	}
 	fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
 	user := acc.GetAddress(1)
-	mockFile := fm.NewMockFile()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	mockFile := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 	t.Run("stat-dir", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -91,16 +92,6 @@ func TestStat(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// just add dummy file entry as file listing is not tested here
-		err = dirObject.AddEntryToDir("/dirToStat", podPassword, "file1", true)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = dirObject.AddEntryToDir("/dirToStat", podPassword, "file2", true)
-		if err != nil {
-			t.Fatal(err)
-		}
-
 		// stat the directory
 		dirStats, err := dirObject.DirStat("pod1", podPassword, "/dirToStat")
 		if err != nil {
@@ -123,7 +114,7 @@ func TestStat(t *testing.T) {
 		if dirStats.NoOfDirectories != strconv.FormatUint(2, 10) {
 			t.Fatalf("invalid directory count")
 		}
-		if dirStats.NoOfFiles != strconv.FormatUint(2, 10) {
+		if dirStats.NoOfFiles != strconv.FormatUint(0, 10) {
 			t.Fatalf("invalid files count")
 		}
 
@@ -134,7 +125,7 @@ func TestStat(t *testing.T) {
 
 		_, err = dirObject.DirStat("pod1", podPassword, "/dirToStat")
 		if !errors.Is(err, dir.ErrDirectoryNotPresent) {
-			t.Fatal("dir should not be present")
+			t.Fatal("dir should not be present", err)
 		}
 	})
 }
