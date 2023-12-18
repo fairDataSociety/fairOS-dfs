@@ -6,7 +6,7 @@ require (
 	github.com/btcsuite/btcd v0.22.3
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.1
-	github.com/ethereum/go-ethereum v1.13.4
+	github.com/ethereum/go-ethereum v1.13.5
 	github.com/ethersphere/bee v1.17.6
 	github.com/ethersphere/bmt v0.1.4
 	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d
@@ -52,11 +52,11 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
-	github.com/crate-crypto/go-kzg-4844 v0.3.0 // indirect
+	github.com/crate-crypto/go-kzg-4844 v0.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
-	github.com/ethereum/c-kzg-4844 v0.3.1 // indirect
+	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
 	github.com/ethersphere/go-price-oracle-abi v0.1.0 // indirect
 	github.com/ethersphere/go-storage-incentives-abi v0.5.0 // indirect
 	github.com/ethersphere/go-sw3-abi v0.4.0 // indirect
