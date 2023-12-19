@@ -7,7 +7,7 @@ require (
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ethereum/go-ethereum v1.13.4
-	github.com/ethersphere/bee v1.17.6
+	github.com/ethersphere/bee v1.18.2
 	github.com/ethersphere/bmt v0.1.4
 	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d
 	github.com/golang-jwt/jwt/v5 v5.2.0
@@ -58,7 +58,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/ethereum/c-kzg-4844 v0.3.1 // indirect
 	github.com/ethersphere/go-price-oracle-abi v0.1.0 // indirect
-	github.com/ethersphere/go-storage-incentives-abi v0.5.0 // indirect
+	github.com/ethersphere/go-storage-incentives-abi v0.6.0 // indirect
 	github.com/ethersphere/go-sw3-abi v0.4.0 // indirect
 	github.com/ethersphere/langos v1.0.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect

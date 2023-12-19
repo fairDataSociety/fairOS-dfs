@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethersphere/bee/pkg/storageincentives/redistribution"
+
 	"github.com/ethereum/go-ethereum/common"
 	accountingmock "github.com/ethersphere/bee/pkg/accounting/mock"
 	"github.com/ethersphere/bee/pkg/api"
@@ -312,14 +314,14 @@ func (m *mockContract) IsWinner(context.Context) (bool, error) {
 	return false, nil
 }
 
-func (m *mockContract) Claim(context.Context) (common.Hash, error) {
+func (m *mockContract) Claim(context.Context, redistribution.ChunkInclusionProofs) (common.Hash, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	m.callsList = append(m.callsList, claimCall)
 	return common.Hash{}, nil
 }
 
-func (m *mockContract) Commit(context.Context, []byte, *big.Int) (common.Hash, error) {
+func (m *mockContract) Commit(context.Context, []byte, uint64) (common.Hash, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	m.callsList = append(m.callsList, commitCall)
