@@ -13,7 +13,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gorilla/websocket v1.5.1
 	github.com/hashicorp/golang-lru/v2 v2.0.7
@@ -32,7 +32,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/wealdtech/go-ens/v3 v3.5.5
 	go.uber.org/goleak v1.3.0
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.17.0
 	golang.org/x/term v0.15.0
 	gopkg.in/yaml.v2 v2.4.0
 	resenje.org/jsonhttp v0.2.3
