@@ -56,6 +56,7 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 	for _, pod := range podList.SharedPods {
 		sharedPods[pod.Address] = pod.Name
 	}
+
 	var accountInfo *account.Info
 	var fd *feed.API
 	var file *f.File
