@@ -186,7 +186,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 
 	// the postage block id to store the SOC chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
-
+	req.Header.Set(contentTypeHeader, "application/octet-stream")
 	req.Header.Set(swarmDeferredUploadHeader, "true")
 
 	// TODO change this in the future when we have some alternative to pin SOC
@@ -244,6 +244,8 @@ func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
 	}
+
+	req.Header.Set(contentTypeHeader, "application/octet-stream")
 
 	// the postage block id to store the chunk
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
@@ -339,6 +341,8 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 		return nil, err
 	}
 	req.Close = true
+
+	req.Header.Set(contentTypeHeader, "application/octet-stream")
 
 	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")

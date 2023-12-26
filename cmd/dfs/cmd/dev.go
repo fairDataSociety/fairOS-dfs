@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -53,7 +52,7 @@ func startDevServer() {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 	fmt.Println("Bee running at: ", beeUrl)
-	logger := logging.New(io.Discard, logrus.DebugLevel)
+	logger := logging.New(os.Stdout, logrus.DebugLevel)
 	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	ens := mock2.NewMockNamespaceManager()
 
