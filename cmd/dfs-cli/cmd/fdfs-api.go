@@ -42,9 +42,9 @@ const (
 
 // fdfsClient is the http client for dfs
 type fdfsClient struct {
-	url    string
-	client *http.Client
-	cookie *http.Cookie
+	url         string
+	client      *http.Client
+	accessToken string
 }
 
 func newFdfsClient(fdfsServer string) (*fdfsClient, error) {
@@ -97,6 +97,14 @@ func (s *fdfsClient) CheckConnection() bool {
 	return err == nil
 }
 
+func (s *fdfsClient) setAccessToken(token string) {
+	s.accessToken = token
+}
+
+func (s *fdfsClient) getAccessToken() string {
+	return s.accessToken
+}
+
 func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, error) {
 	// prepare the  request
 	fullUrl := fmt.Sprintf(s.url + urlPath)
@@ -118,8 +126,8 @@ func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		}
 	}
 
-	if s.cookie != nil {
-		req.AddCookie(s.cookie)
+	if s.accessToken != "" {
+		req.Header.Add("Authorization", "Bearer "+s.accessToken)
 	}
 	// execute the request
 	response, err := s.client.Do(req)
@@ -148,10 +156,6 @@ func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 			return data, nil
 		}
 		return nil, errors.New(resp.Message)
-	}
-
-	if len(response.Cookies()) > 0 {
-		s.cookie = response.Cookies()[0]
 	}
 
 	data, err := io.ReadAll(response.Body)
@@ -190,8 +194,8 @@ func (s *fdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 		}
 	}
 
-	if s.cookie != nil {
-		req.AddCookie(s.cookie)
+	if s.accessToken != "" {
+		req.Header.Add("Authorization", "Bearer "+s.accessToken)
 	}
 
 	// execute the request
@@ -217,10 +221,6 @@ func (s *fdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 			return nil, errors.New("error unmarshalling error response")
 		}
 		return nil, errors.New(resp.Message)
-	}
-
-	if len(response.Cookies()) > 0 {
-		s.cookie = response.Cookies()[0]
 	}
 
 	data, err := io.ReadAll(response.Body)
@@ -283,8 +283,8 @@ func (s *fdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 		req.Header.Set(api.CompressionHeader, compValue)
 	}
 
-	if s.cookie != nil {
-		req.AddCookie(s.cookie)
+	if s.accessToken != "" {
+		req.Header.Add("Authorization", "Bearer "+s.accessToken)
 	}
 
 	// execute the request
@@ -338,8 +338,8 @@ func (s *fdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 	req.Header.Add("Content-Type", contentType)
 	req.Header.Add("Content-Length", strconv.Itoa(len(body.Bytes())))
 
-	if s.cookie != nil {
-		req.AddCookie(s.cookie)
+	if s.accessToken != "" {
+		req.Header.Add("Authorization", "Bearer "+s.accessToken)
 	}
 
 	// execute the request
