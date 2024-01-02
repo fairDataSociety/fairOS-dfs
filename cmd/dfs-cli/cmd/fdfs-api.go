@@ -126,8 +126,8 @@ func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 		}
 	}
 
-	if s.accessToken != "" {
-		req.Header.Add("Authorization", "Bearer "+s.accessToken)
+	if s.getAccessToken() != "" {
+		req.Header.Add("Authorization", "Bearer "+s.getAccessToken())
 	}
 	// execute the request
 	response, err := s.client.Do(req)
@@ -194,8 +194,8 @@ func (s *fdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
 		}
 	}
 
-	if s.accessToken != "" {
-		req.Header.Add("Authorization", "Bearer "+s.accessToken)
+	if s.getAccessToken() != "" {
+		req.Header.Add("Authorization", "Bearer "+s.getAccessToken())
 	}
 
 	// execute the request
@@ -283,8 +283,8 @@ func (s *fdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 		req.Header.Set(api.CompressionHeader, compValue)
 	}
 
-	if s.accessToken != "" {
-		req.Header.Add("Authorization", "Bearer "+s.accessToken)
+	if s.getAccessToken() != "" {
+		req.Header.Add("Authorization", "Bearer "+s.getAccessToken())
 	}
 
 	// execute the request
@@ -338,8 +338,8 @@ func (s *fdfsClient) downloadMultipartFile(method, urlPath string, arguments map
 	req.Header.Add("Content-Type", contentType)
 	req.Header.Add("Content-Length", strconv.Itoa(len(body.Bytes())))
 
-	if s.accessToken != "" {
-		req.Header.Add("Authorization", "Bearer "+s.accessToken)
+	if s.getAccessToken() != "" {
+		req.Header.Add("Authorization", "Bearer "+s.getAccessToken())
 	}
 
 	// execute the request
