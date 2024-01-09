@@ -17,6 +17,7 @@ limitations under the License.
 package user
 
 import (
+	"errors"
 	"regexp"
 	"sync"
 
@@ -101,7 +102,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		nameHash, err = u.createENS(userName, accountInfo)
 		if err != nil { // skipcq: TCV-001
 			u.logger.Errorf("user: create: create ens failed for user %s: %v", userName, err)
-			if err == eth.ErrInsufficientBalance { // skipcq: TCV-001
+			if errors.Is(err, eth.ErrInsufficientBalance) { // skipcq: TCV-001
 				return signUp, err
 			}
 			return nil, err // skipcq: TCV-001
