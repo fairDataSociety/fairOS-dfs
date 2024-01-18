@@ -43,7 +43,6 @@ func (a *ACL) RemoveGroup(groupName, ownerAddress string) error {
 func (a *ACL) GetGroupMembers(groupName, ownerAddress string) (map[string]uint8, error) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
-
 	return a.listMap[ownerAddress][groupName], nil
 }
 

@@ -239,13 +239,13 @@ func TestEncryption(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	uEnc := base64.URLEncoding.EncodeToString([]byte(encData))
+	uEnc := base64.URLEncoding.EncodeToString(encData)
 	fmt.Println(uEnc)
 
 	b, _ := pubKey.Curve.ScalarMult(pubKey.X, pubKey.Y, VpvtKey.D.Bytes())
 	secretB := sha256.Sum256(b.Bytes())
 
-	data2, err := utils.DecryptBytes(secretB[:], []byte(encData))
+	data2, err := utils.DecryptBytes(secretB[:], encData)
 	if err != nil {
 		t.Fatal(err)
 	}

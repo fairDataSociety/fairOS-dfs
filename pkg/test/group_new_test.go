@@ -60,7 +60,7 @@ func TestGroupNew(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		mockAcl := mockacl.NewMockACL()
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
-		groupName1 := "test1"
+		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -86,8 +86,8 @@ func TestGroupNew(t *testing.T) {
 		mockAcl := mockacl.NewMockACL()
 
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
-		groupName1 := "test11"
-		groupName2 := "test21"
+		groupName1, _ := utils.GetRandString(10)
+		groupName2, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -111,7 +111,7 @@ func TestGroupNew(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		mockAcl := mockacl.NewMockACL()
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
-		groupName1 := "test12"
+		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -157,7 +157,7 @@ func TestGroupNew(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		mockAcl := mockacl.NewMockACL()
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
-		groupName1 := "test12"
+		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -225,7 +225,7 @@ func TestGroupNew(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		mockAcl := mockacl.NewMockACL()
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
-		groupName1 := "test12"
+		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -291,7 +291,7 @@ func TestGroupNew(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		mockAcl := mockacl.NewMockACL()
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
-		groupName1 := "test12"
+		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -380,7 +380,7 @@ func TestGroupNew(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		mockAcl := mockacl.NewMockACL()
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
-		groupName1 := "test12"
+		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -429,7 +429,7 @@ func TestGroupNew(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		mockAcl := mockacl.NewMockACL()
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
-		groupName1 := "test12"
+		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -477,4 +477,46 @@ func TestGroupNew(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+
+	t.Run("group-add-multiple-member", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		mockAcl := mockacl.NewMockACL()
+		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
+		groupName1, _ := utils.GetRandString(10)
+		_, err = group.CreateGroup(groupName1)
+		if err != nil {
+			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
+		}
+
+		_, err = group.ListGroup()
+		if err != nil {
+			t.Fatalf("error getting groups")
+		}
+		_, err = group.OpenGroup(groupName1)
+		if err != nil {
+			t.Fatalf("error opening group %s: %s", groupName1, err.Error())
+		}
+		userCount := 10
+		for i := 0; i < userCount; i++ {
+			acc2 := account.New(logger)
+			_, _, err = acc2.CreateUserAccount("")
+			if err != nil {
+				t.Fatal(err)
+			}
+			addr := acc2.GetUserAccountInfo().GetAddress()
+			addrStr := addr.Hex()
+			_, err = group.AddMember(groupName1, common.HexToAddress(addrStr), acc2.GetUserAccountInfo().GetPublicKey(), acl.PermissionWrite)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		users, err := group.GetGroupMembers(groupName1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(users) != userCount {
+			t.Fatal("users not added")
+		}
+	})
+
 }

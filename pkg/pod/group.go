@@ -276,27 +276,6 @@ func (*Group) checkIfPodPresent(groups *GroupList, name string) bool {
 	return false
 }
 
-func (*Group) checkIfOwnPodPresent(groups *GroupList, name string) bool {
-	if groups == nil || groups.Groups == nil {
-		return false
-	}
-	for _, group := range groups.Groups {
-		if group.Name == name {
-			return true
-		}
-	}
-	return false
-}
-
-func (*Group) checkIfSharedPodPresent(groups *GroupList, name string) bool {
-	for _, pod := range groups.SharedGroups {
-		if pod.Name == name {
-			return true
-		}
-	}
-	return false
-}
-
 func (g *Group) ListGroup() (*GroupList, error) {
 	// load groups from GroupsFile
 	return g.load()

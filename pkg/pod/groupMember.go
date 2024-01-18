@@ -32,7 +32,7 @@ func (g *Group) AddMember(groupName string, memberAddress common.Address, member
 	a, _ := memberPublicKey.Curve.ScalarMult(memberPublicKey.X, memberPublicKey.Y, g.acc.GetUserAccountInfo().GetPrivateKey().D.Bytes())
 	secret := sha256.Sum256(a.Bytes())
 
-	gr := &GroupItem{}
+	var gr *GroupItem
 	for _, group := range groups.Groups {
 		if group.Name == groupName {
 			gr = &group
@@ -182,7 +182,7 @@ func (g *Group) GetGroupMembers(groupName string) (map[string]uint8, error) {
 	}
 	address := g.acc.GetUserAccountInfo().GetAddress()
 	addressStr := common.HexToAddress(address.Hex()).Hex()
-	return g.acl.GetGroupMembers(addressStr, groupName)
+	return g.acl.GetGroupMembers(groupName, addressStr)
 }
 
 func (g *Group) GetAllGroups() (map[string]map[string]uint8, error) {
