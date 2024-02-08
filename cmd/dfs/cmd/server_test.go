@@ -17,6 +17,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
+	"github.com/stretchr/testify/assert"
+
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -1078,6 +1081,120 @@ func TestApis(t *testing.T) {
 					t.Fatal("file stat failed")
 				}
 			}
+		}
+	})
+
+	t.Run("group-test", func(t *testing.T) {
+		c := http.Client{Timeout: time.Duration(1) * time.Minute}
+		userRequest := &common.UserSignupRequest{
+			UserName: randStringRunes(16),
+			Password: randStringRunes(12),
+		}
+
+		userBytes, err := json.Marshal(userRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		signupRequestDataHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev2, string(common.UserSignup)), bytes.NewBuffer(userBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		signupRequestDataHttpReq.Header.Add("Content-Type", "application/json")
+		signupRequestDataHttpReq.Header.Add("Content-Length", strconv.Itoa(len(userBytes)))
+		signupRequestResp, err := c.Do(signupRequestDataHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = signupRequestResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if signupRequestResp.StatusCode != http.StatusCreated {
+			t.Fatal("Signup failed", signupRequestResp.StatusCode)
+		}
+
+		userLoginHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev2, string(common.UserLogin)), bytes.NewBuffer(userBytes))
+		if err != nil {
+			t.Fatal(err)
+
+		}
+		userLoginHttpReq.Header.Add("Content-Type", "application/json")
+		userLoginHttpReq.Header.Add("Content-Length", strconv.Itoa(len(userBytes)))
+		userLoginResp, err := c.Do(userLoginHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = userLoginResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if userLoginResp.StatusCode != http.StatusOK {
+			t.Fatal("user should be able to login")
+		}
+		cookie := userLoginResp.Header["Set-Cookie"]
+		groupRequest := &api.GroupNameRequest{
+			GroupName: randStringRunes(16),
+		}
+
+		groupBytes, err := json.Marshal(groupRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		groupNewHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, "/group/new"), bytes.NewBuffer(groupBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		groupNewHttpReq.Header.Set("Cookie", cookie[0])
+		groupNewHttpReq.Header.Add("Content-Type", "application/json")
+		groupNewHttpReq.Header.Add("Content-Length", strconv.Itoa(len(groupBytes)))
+		groupNewResp, err := c.Do(groupNewHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = groupNewResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if groupNewResp.StatusCode != 201 {
+			t.Fatal("group creation failed")
+		}
+
+		// check for own permission
+		groupPermHttpReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?groupName=%s", basev1, "/group/permission", groupRequest.GroupName), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		groupPermHttpReq.Header.Set("Cookie", cookie[0])
+		groupPermHttpReq.Header.Add("Content-Type", "application/json")
+		groupPermHttpReq.Header.Add("Content-Length", strconv.Itoa(len(groupBytes)))
+		groupPermResp, err := c.Do(groupPermHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		permResp, err := io.ReadAll(groupPermResp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		perm := &api.GroupPermissionResponse{}
+		err = json.Unmarshal(permResp, &perm)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = groupPermResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if groupPermResp.StatusCode != 200 {
+			t.Fatal("group permission failed")
+		}
+
+		if !assert.Equal(t, perm.Permission, acl.PermissionWrite) {
+			t.Fatal("permission should be write")
 		}
 	})
 

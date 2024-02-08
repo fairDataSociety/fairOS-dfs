@@ -7,7 +7,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/acl"
+	aclController "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -106,12 +106,12 @@ func (g *Group) AcceptGroupInvite(ref []byte) error {
 	addressStr := commonAddr.Hex()
 
 	// check smart contract for permission
-	perm, err := g.acl.GetPermission(group.Name, group.OwnerAddress.Hex(), addressStr)
+	perm, err := g.acl.GetPermission(group.Name, group.OwnerAddress, addressStr)
 	if err != nil {
 		return err
 	}
 
-	if perm != acl.PermissionRead && perm != acl.PermissionWrite {
+	if perm != aclController.PermissionRead && perm != aclController.PermissionWrite {
 		return ErrPermissionDenied
 	}
 	// Save in te groups list
@@ -153,7 +153,7 @@ func (g *Group) UpdatePermission(groupName string, memberAddress common.Address,
 	return g.acl.UpdatePermission(groupName, addressStr, memberAddress.String(), permission)
 }
 
-func (g *Group) GetPermission(groupName string, ownerAddress common.Address) (uint8, error) {
+func (g *Group) GetPermission(groupName string) (uint8, error) {
 	// check if group exists
 	groupName = strings.TrimSpace(groupName)
 
@@ -164,9 +164,29 @@ func (g *Group) GetPermission(groupName string, ownerAddress common.Address) (ui
 	if !g.checkIfPodPresent(groups, groupName) {
 		return 0, ErrGroupDoesNotExist
 	}
+
+	var gr *GroupItem
+	for _, group := range groups.Groups {
+		if group.Name == groupName {
+			gr = &group
+			break
+		}
+	}
+	if gr == nil {
+		for _, group := range groups.SharedGroups {
+			if group.Name == groupName {
+				gr = &group
+				break
+			}
+		}
+	}
+	if gr == nil {
+		return 0, ErrGroupDoesNotExist
+	}
+
 	address := g.acc.GetUserAccountInfo().GetAddress()
 	addressStr := common.HexToAddress(address.Hex()).Hex()
-	return g.acl.GetPermission(groupName, ownerAddress.String(), addressStr)
+	return g.acl.GetPermission(groupName, gr.OwnerAddress, addressStr)
 }
 
 func (g *Group) GetGroupMembers(groupName string) (map[string]uint8, error) {
@@ -185,8 +205,9 @@ func (g *Group) GetGroupMembers(groupName string) (map[string]uint8, error) {
 	return g.acl.GetGroupMembers(groupName, addressStr)
 }
 
-func (g *Group) GetAllGroups() (map[string]map[string]uint8, error) {
-	address := g.acc.GetUserAccountInfo().GetAddress()
-	addressStr := common.HexToAddress(address.Hex()).Hex()
-	return g.acl.GetAllGroups(addressStr)
-}
+//
+//func (g *Group) GetAllGroups() (map[string]map[string]uint8, error) {
+//	address := g.acc.GetUserAccountInfo().GetAddress()
+//	addressStr := common.HexToAddress(address.Hex()).Hex()
+//	return g.acl.GetAllGroups(addressStr)
+//}

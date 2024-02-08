@@ -18,25 +18,22 @@ package test_test
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"testing"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/acl"
-
 	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	mockacl "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -58,7 +55,7 @@ func TestGroupNew(t *testing.T) {
 
 	t.Run("create-first-group", func(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		mockAcl := mockacl.NewMockACL()
+		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
@@ -83,7 +80,7 @@ func TestGroupNew(t *testing.T) {
 
 	t.Run("create-second-group", func(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		mockAcl := mockacl.NewMockACL()
+		mockAcl := acl.NewACL(mockClient, fd, logger)
 
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
@@ -109,7 +106,7 @@ func TestGroupNew(t *testing.T) {
 
 	t.Run("group-file-upload", func(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		mockAcl := mockacl.NewMockACL()
+		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
@@ -155,9 +152,10 @@ func TestGroupNew(t *testing.T) {
 
 	t.Run("group-member-add", func(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		mockAcl := mockacl.NewMockACL()
+		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
+		fmt.Println("group name", groupName1)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -221,9 +219,67 @@ func TestGroupNew(t *testing.T) {
 		}
 	})
 
+	t.Run("group-member-check-no-permission", func(t *testing.T) {
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		mockAcl := acl.NewACL(mockClient, fd, logger)
+		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
+		groupName1, _ := utils.GetRandString(10)
+		_, err = group.CreateGroup(groupName1)
+		if err != nil {
+			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
+		}
+
+		_, err = group.ListGroup()
+		if err != nil {
+			t.Fatalf("error getting groups")
+		}
+
+		_, err = group.OpenGroup(groupName1)
+		if err != nil {
+			t.Fatalf("error opening group %s: %s", groupName1, err.Error())
+		}
+
+		acc2 := account.New(logger)
+		_, _, err = acc2.CreateUserAccount("")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fd2 := feed.New(acc2.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		mockAcl2 := acl.NewACL(mockClient, fd2, logger)
+
+		group2 := pod.NewGroup(mockClient, fd2, acc2, mockAcl2, logger)
+		groupName2, _ := utils.GetRandString(10)
+		_, err = group2.CreateGroup(groupName2)
+		if err != nil {
+			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
+		}
+
+		_, err = group2.OpenGroup(groupName2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		perm, err := group2.GetPermission(groupName2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println("permission", perm)
+		if perm != acl.PermissionWrite {
+			t.Fatal("permission does not match")
+		}
+
+		perm1, err := group.GetPermission(groupName1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if perm1 != acl.PermissionWrite {
+			t.Fatal("permission does not match")
+		}
+	})
+
 	t.Run("group-member-check-permission", func(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		mockAcl := mockacl.NewMockACL()
+		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
@@ -264,9 +320,8 @@ func TestGroupNew(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		addr1 := acc.GetUserAccountInfo().GetAddress()
-		addrStr1 := addr1.Hex()
-		perm, err := group2.GetPermission(groupName1, common.HexToAddress(addrStr1))
+
+		perm, err := group2.GetPermission(groupName1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -278,7 +333,7 @@ func TestGroupNew(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		perm, err = group2.GetPermission(groupName1, common.HexToAddress(addrStr1))
+		perm, err = group2.GetPermission(groupName1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -289,7 +344,7 @@ func TestGroupNew(t *testing.T) {
 
 	t.Run("group-member-upload-files", func(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		mockAcl := mockacl.NewMockACL()
+		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
@@ -378,7 +433,7 @@ func TestGroupNew(t *testing.T) {
 
 	t.Run("group-member-remove", func(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		mockAcl := mockacl.NewMockACL()
+		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
@@ -427,7 +482,7 @@ func TestGroupNew(t *testing.T) {
 
 	t.Run("group-remove", func(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		mockAcl := mockacl.NewMockACL()
+		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
@@ -480,7 +535,7 @@ func TestGroupNew(t *testing.T) {
 
 	t.Run("group-add-multiple-member", func(t *testing.T) {
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		mockAcl := mockacl.NewMockACL()
+		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
 		_, err = group.CreateGroup(groupName1)
@@ -514,7 +569,7 @@ func TestGroupNew(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(users) != userCount {
+		if len(users) != userCount+1 {
 			t.Fatal("users not added")
 		}
 	})

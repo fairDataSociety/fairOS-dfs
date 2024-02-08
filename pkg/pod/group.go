@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/acl"
+	aclController "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
@@ -53,11 +54,11 @@ type Group struct {
 
 // GroupItem defines the structure for a group
 type GroupItem struct {
-	Name           string         `json:"name"`
-	OwnerPublicKey []byte         `json:"ownerPublicKey"`
-	OwnerAddress   common.Address `json:"ownerAddress"`
-	Password       string         `json:"password"`
-	Secret         []byte         `json:"secret"`
+	Name           string `json:"name"`
+	OwnerPublicKey []byte `json:"ownerPublicKey"`
+	OwnerAddress   string `json:"ownerAddress"`
+	Password       string `json:"password"`
+	Secret         []byte `json:"secret"`
 }
 
 // GroupList lists all the groups
@@ -143,7 +144,7 @@ func (g *Group) CreateGroup(name string) (*Info, error) {
 		Name:           name,
 		Secret:         key,
 		OwnerPublicKey: crypto.FromECDSAPub(g.acc.GetUserAccountInfo().GetPublicKey()),
-		OwnerAddress:   commonAddr,
+		OwnerAddress:   commonAddr.Hex(),
 		Password:       podPassword,
 	}
 
@@ -234,8 +235,8 @@ func (g *Group) RemoveGroup(groupName string) error {
 	return g.store(groups)
 }
 
-// RemovSharedGroup removes a group from sharedGroup list
-func (g *Group) RemovSharedGroup(groupName string) error {
+// RemoveSharedGroup removes a group from sharedGroup list
+func (g *Group) RemoveSharedGroup(groupName string) error {
 	// check if group exists
 	groupName = strings.TrimSpace(groupName)
 
@@ -295,6 +296,7 @@ func (g *Group) OpenGroup(name string) (*Info, error) {
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
+
 	var gr *GroupItem
 	shared := false
 	for _, group := range groups.Groups {
@@ -312,9 +314,11 @@ func (g *Group) OpenGroup(name string) (*Info, error) {
 			}
 		}
 	}
+
 	if gr == nil {
 		return nil, ErrGroupDoesNotExist
 	}
+
 	var (
 		accountInfo *account.Info
 		file        *f.File
@@ -322,12 +326,12 @@ func (g *Group) OpenGroup(name string) (*Info, error) {
 		dir         *d.Directory
 	)
 	if shared {
-		permission, err := g.GetPermission(gr.Name, gr.OwnerAddress)
+		permission, err := g.GetPermission(gr.Name)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-		if permission != acl.PermissionRead && permission != acl.PermissionWrite {
-			_ = g.RemovSharedGroup(gr.Name)
+		if permission != aclController.PermissionRead && permission != aclController.PermissionWrite {
+			_ = g.RemoveSharedGroup(gr.Name)
 			return nil, ErrPermissionDenied
 		}
 		ownerPublicKey, err := crypto.UnmarshalPubkey(gr.OwnerPublicKey)
@@ -347,7 +351,7 @@ func (g *Group) OpenGroup(name string) (*Info, error) {
 		}
 		accountInfo = acc.GetUserAccountInfo()
 
-		if permission == acl.PermissionRead {
+		if permission == aclController.PermissionRead {
 			readAccount := g.acc.GetEmptyAccountInfo()
 			readAccount.SetAddress(accountInfo.GetAddress())
 
@@ -379,7 +383,6 @@ func (g *Group) OpenGroup(name string) (*Info, error) {
 	}
 	kvStore := c.NewKeyValueStore(name, fd, accountInfo, accountInfo.GetAddress(), g.client, g.logger)
 	docStore := c.NewDocumentStore(name, fd, accountInfo, accountInfo.GetAddress(), file, nil, g.client, g.logger)
-
 	podInfo := &Info{
 		podName:     name,
 		podPassword: gr.Password,

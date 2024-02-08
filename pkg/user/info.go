@@ -35,6 +35,7 @@ type Info struct {
 	file       *f.File
 	dir        *d.Directory
 	pod        *pod.Pod
+	group      *pod.Group
 	openPods   map[string]*pod.Info
 	openPodsMu *sync.RWMutex
 }
@@ -52,6 +53,11 @@ func (i *Info) GetSessionId() string {
 // GetPod returns user pod handler
 func (i *Info) GetPod() *pod.Pod {
 	return i.pod
+}
+
+// GetGroup returns user group handler
+func (i *Info) GetGroup() *pod.Group {
+	return i.group
 }
 
 // GetAccount returns user account info

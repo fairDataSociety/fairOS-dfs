@@ -122,6 +122,60 @@ definitions:
       fileSharingReference:
         type: string
     type: object
+  api.GroupAddMemberRequest:
+    properties:
+      groupName:
+        type: string
+      member:
+        type: string
+      permission:
+        type: integer
+    type: object
+  api.GroupAddMemberResponse:
+    properties:
+      invite:
+        type: string
+    type: object
+  api.GroupInviteRequest:
+    properties:
+      reference:
+        type: string
+    type: object
+  api.GroupListResponse:
+    properties:
+      groups:
+        items:
+          $ref: '#/definitions/pod.GroupItem'
+        type: array
+      sharedGroups:
+        items:
+          $ref: '#/definitions/pod.GroupItem'
+        type: array
+    type: object
+  api.GroupMembersResponse:
+    properties:
+      members:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  api.GroupNameRequest:
+    properties:
+      groupName:
+        type: string
+    type: object
+  api.GroupPermissionResponse:
+    properties:
+      permission:
+        type: integer
+    type: object
+  api.GroupRemoveMemberRequest:
+    properties:
+      groupName:
+        type: string
+      member:
+        type: string
+    type: object
   api.KVEntryDeleteRequest:
     properties:
       key:
@@ -439,6 +493,23 @@ definitions:
         type: string
       podName:
         type: string
+    type: object
+  pod.GroupItem:
+    properties:
+      name:
+        type: string
+      ownerAddress:
+        type: string
+      ownerPublicKey:
+        items:
+          type: integer
+        type: array
+      password:
+        type: string
+      secret:
+        items:
+          type: integer
+        type: array
     type: object
   pod.ShareInfo:
     properties:
@@ -1866,6 +1937,432 @@ paths:
       summary: Upload a file
       tags:
       - file
+  /v1/group/accept:
+    post:
+      consumes:
+      - application/json
+      description: GroupAcceptInviteHandler is the api handler to accept a group invite
+      operationId: group-accept-invite-handler
+      parameters:
+      - description: reference of the invite
+        in: body
+        name: reference
+        required: true
+        schema:
+          $ref: '#/definitions/api.GroupInviteRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Accept group membersion
+      tags:
+      - group
+  /v1/group/add:
+    post:
+      consumes:
+      - application/json
+      description: GroupAddMemberHandler is the api handler to add a member to a group
+      operationId: group-add-member-handler
+      parameters:
+      - description: group name, member name and permission
+        in: body
+        name: group_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GroupAddMemberRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.GroupAddMemberResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Add member to group
+      tags:
+      - group
+  /v1/group/close:
+    post:
+      consumes:
+      - application/json
+      description: GroupCloseHandler is the api handler to close a group
+      operationId: group-close-handler
+      parameters:
+      - description: group name
+        in: body
+        name: groupRequest
+        required: true
+        schema:
+          $ref: '#/definitions/api.GroupNameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Close group
+      tags:
+      - group
+  /v1/group/delete:
+    delete:
+      consumes:
+      - application/json
+      description: GroupDeleteHandler is the api handler to delete a new group
+      operationId: group-delete-handler
+      parameters:
+      - description: group name
+        in: body
+        name: group_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GroupNameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Delete group
+      tags:
+      - group
+  /v1/group/delete-shared:
+    delete:
+      consumes:
+      - application/json
+      description: GroupDeleteSharedHandler is the api handler to delete a shared
+        group
+      operationId: group-delete-shared-handler
+      parameters:
+      - description: group name
+        in: body
+        name: group_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GroupNameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Delete shared group
+      tags:
+      - group
+  /v1/group/ls:
+    get:
+      consumes:
+      - application/json
+      description: List groups
+      operationId: group_list
+      parameters:
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.GroupListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: List groups
+      tags:
+      - group
+  /v1/group/members:
+    get:
+      consumes:
+      - application/json
+      description: GroupGetMembers is the api handler to get the members of a group
+      operationId: group-get-members
+      parameters:
+      - description: group name
+        in: query
+        name: groupName
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.GroupMembersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Get group members
+      tags:
+      - group
+  /v1/group/new:
+    post:
+      consumes:
+      - application/json
+      description: GroupCreateHandler is the api handler to create a new group
+      operationId: group-create-handler
+      parameters:
+      - description: group name
+        in: body
+        name: group_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GroupNameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Create group
+      tags:
+      - group
+  /v1/group/open:
+    post:
+      consumes:
+      - application/json
+      description: GroupOpenHandler is the api handler to open a group
+      operationId: group-open
+      parameters:
+      - description: group name
+        in: body
+        name: group_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GroupNameRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Open group
+      tags:
+      - group
+  /v1/group/permission:
+    get:
+      consumes:
+      - application/json
+      description: Get the permission of the user in the group
+      parameters:
+      - description: Group name
+        in: query
+        name: groupName
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.GroupPermissionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Get the permission of the user in the group
+      tags:
+      - group
+  /v1/group/remove:
+    post:
+      consumes:
+      - application/json
+      description: GroupRemoveMemberHandler is the api handler to remove a member
+        from a group
+      operationId: group-remove-member-handler
+      parameters:
+      - description: group name and member name
+        in: body
+        name: group_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GroupRemoveMemberRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Remove member from group
+      tags:
+      - group
+  /v1/group/update-permission:
+    post:
+      consumes:
+      - application/json
+      description: GroupUpdatePermissionHandler is the api handler to update a group
+        permission
+      operationId: group-update-permission-handler
+      parameters:
+      - description: group name, member name and permission
+        in: body
+        name: group_request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GroupAddMemberRequest'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Update group permission
+      tags:
+      - group
   /v1/kv/count:
     post:
       consumes:
