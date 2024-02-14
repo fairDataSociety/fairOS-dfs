@@ -32,7 +32,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/wealdtech/go-ens/v3 v3.6.0
 	go.uber.org/goleak v1.3.0
-	golang.org/x/crypto v0.17.0
+	golang.org/x/crypto v0.19.0
 	golang.org/x/term v0.17.0
 	gopkg.in/yaml.v2 v2.4.0
 	resenje.org/jsonhttp v0.2.3
