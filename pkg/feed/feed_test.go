@@ -314,6 +314,51 @@ func TestFeed(t *testing.T) {
 		require.Equal(t, finalData, rcvdData)
 	})
 
+	t.Run("update-feed-read-from-different-user", func(t *testing.T) {
+
+		acc := account.New(logger)
+		_, _, err := acc.CreateUserAccount("")
+		if err != nil {
+			t.Fatal(err)
+		}
+		user := acc.GetAddress(account.UserAccountIndex)
+		accountInfo := acc.GetUserAccountInfo()
+		fd := feed.New(accountInfo, client, 500, 0, logger)
+
+		topic := utils.HashString("topic3")
+		data := []byte{0}
+		err = fd.CreateFeed(user, topic, data, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for i := 1; i < 256; i++ {
+			buf := make([]byte, 4)
+			_, _ = rand.Read(buf)
+			err = fd.UpdateFeed(user, topic, buf, nil, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			fd.CommitFeeds()
+			<-time.After(time.Second)
+			acc2 := account.New(logger)
+			_, _, err = acc2.CreateUserAccount("")
+			if err != nil {
+				t.Fatal(err)
+			}
+			accountInfo2 := acc2.GetUserAccountInfo()
+
+			// check if you can read the data from user2
+			fd2 := feed.New(accountInfo2, client, -1, 0, logger)
+			_, rcvdData2, err := fd2.GetFeedData(topic, user, nil, false)
+			if err != nil && err.Error() != "feed does not exist or was not updated yet" {
+				t.Fatal(err)
+			}
+
+			require.Equal(t, buf, rcvdData2)
+		}
+	})
+
 	t.Run("update-feed-nil-feed-cache", func(t *testing.T) {
 
 		acc := account.New(logger)

@@ -362,6 +362,21 @@ func startHttpService(logger logging.Logger) *http.Server {
 	podRouter.HandleFunc("/fork", handler.PodForkHandler).Methods("POST")
 	podRouter.HandleFunc("/fork-from-reference", handler.PodForkFromReferenceHandler).Methods("POST")
 
+	groupRouter := baseRouter.PathPrefix("/group/").Subrouter()
+	groupRouter.Use(handler.LoginMiddleware)
+	groupRouter.HandleFunc("/new", handler.GroupCreateHandler).Methods("POST")
+	groupRouter.HandleFunc("/ls", handler.GroupListHandler).Methods("GET")
+	groupRouter.HandleFunc("/delete", handler.GroupDeleteHandler).Methods("DELETE")
+	groupRouter.HandleFunc("/delete-shared", handler.GroupDeleteSharedHandler).Methods("DELETE")
+	groupRouter.HandleFunc("/accept", handler.GroupAcceptInviteHandler).Methods("POST")
+	groupRouter.HandleFunc("/invite", handler.GroupAddMemberHandler).Methods("POST")
+	groupRouter.HandleFunc("/remove", handler.GroupRemoveMemberHandler).Methods("POST")
+	groupRouter.HandleFunc("/update-permission", handler.GroupUpdatePermissionHandler).Methods("POST")
+	groupRouter.HandleFunc("/close", handler.GroupCloseHandler).Methods("POST")
+	groupRouter.HandleFunc("/members", handler.GroupGetMembers).Methods("GET")
+	groupRouter.HandleFunc("/permission", handler.GroupGetPermission).Methods("GET")
+	groupRouter.HandleFunc("/open", handler.GroupOpenHandler).Methods("POST")
+
 	// directory related handlers
 	dirRouter := baseRouter.PathPrefix("/dir/").Subrouter()
 	dirRouter.Use(handler.LoginMiddleware)
