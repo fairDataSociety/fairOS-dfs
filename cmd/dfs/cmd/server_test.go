@@ -1338,7 +1338,6 @@ func TestApis(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				fmt.Println("uploadResp.StatusCode", uploadResp.StatusCode)
 				if uploadResp.StatusCode != 200 {
 					t.Fatal("upload failed")
 				}

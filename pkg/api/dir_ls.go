@@ -51,7 +51,7 @@ type ListFileResponse struct {
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	driveName, isGroup := "", false
 	keys, ok := r.URL.Query()["groupName"]
-	if ok || len(keys[0]) > 0 {
+	if ok || (len(keys) == 1 && len(keys[0]) > 0) {
 		driveName = keys[0]
 		isGroup = true
 	} else {
