@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -31,6 +32,7 @@ import (
 // DirRequest is used to create directory
 type DirRequest struct {
 	PodName       string `json:"podName,omitempty"`
+	GroupName     string `json:"groupName,omitempty"`
 	DirectoryPath string `json:"dirPath,omitempty"`
 }
 
@@ -64,12 +66,15 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 		jsonhttp.BadRequest(w, &response{Message: "mkdir: could not decode arguments"})
 		return
 	}
-
-	podName := fsReq.PodName
-	if podName == "" {
-		h.logger.Errorf("mkdir: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "mkdir: \"podName\" argument missing"})
-		return
+	driveName, isGroup := fsReq.GroupName, true
+	if driveName == "" {
+		driveName = fsReq.PodName
+		isGroup = false
+		if driveName == "" {
+			h.logger.Errorf("mkdir: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "mkdir: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	dirToCreateWithPath := fsReq.DirectoryPath
@@ -93,12 +98,12 @@ func (h *Handler) DirectoryMkdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// make directory
-	err = h.dfsAPI.Mkdir(podName, dirToCreateWithPath, sessionId, 0)
+	err = h.dfsAPI.Mkdir(driveName, dirToCreateWithPath, sessionId, 0, isGroup)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
-			err == p.ErrInvalidDirectory ||
-			err == p.ErrTooLongDirectoryName ||
-			err == p.ErrPodNotOpened {
+		if errors.Is(err, dfs.ErrPodNotOpen) || errors.Is(err, dfs.ErrUserNotLoggedIn) ||
+			errors.Is(err, p.ErrInvalidDirectory) ||
+			errors.Is(err, p.ErrTooLongDirectoryName) ||
+			errors.Is(err, p.ErrPodNotOpened) {
 			h.logger.Errorf("mkdir: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "mkdir: " + err.Error()})
 			return

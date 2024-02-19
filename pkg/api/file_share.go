@@ -38,6 +38,7 @@ type FileSharingReference struct {
 // FileShareRequest is the request to share a file
 type FileShareRequest struct {
 	PodName     string `json:"podName,omitempty"`
+	GroupName   string `json:"groupName,omitempty"`
 	FilePath    string `json:"filePath,omitempty"`
 	Destination string `json:"destUser,omitempty"`
 }
@@ -72,20 +73,23 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "file share: could not decode arguments"})
 		return
 	}
-
-	podName := fsReq.PodName
-	if podName == "" {
-		h.logger.Errorf("file share: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file share: \"podName\" argument missing"})
-		return
+	driveName, isGroup := fsReq.GroupName, true
+	if driveName == "" {
+		driveName = fsReq.PodName
+		isGroup = false
+		if driveName == "" {
+			h.logger.Errorf("file share: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "file share: \"podName\" argument missing"})
+			return
+		}
 	}
-
 	podFileWithPath := fsReq.FilePath
 	if podFileWithPath == "" {
 		h.logger.Errorf("file share: \"filePath\" argument missing")
 		jsonhttp.BadRequest(w, &response{Message: "file share: \"filePath\" argument missing"})
 		return
 	}
+
 	destinationRef := fsReq.Destination
 	if destinationRef == "" {
 		h.logger.Errorf("file share: \"destUser\" argument missing")
@@ -106,7 +110,7 @@ func (h *Handler) FileShareHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sharingRef, err := h.dfsAPI.ShareFile(podName, podFileWithPath, destinationRef, sessionId)
+	sharingRef, err := h.dfsAPI.ShareFile(driveName, podFileWithPath, destinationRef, sessionId, isGroup)
 	if err != nil {
 		h.logger.Errorf("file share: %v", err)
 		jsonhttp.InternalServerError(w, &response{Message: "file share: " + err.Error()})

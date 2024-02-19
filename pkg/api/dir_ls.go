@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -48,13 +49,25 @@ type ListFileResponse struct {
 //	@Failure      500  {object}  response
 //	@Router       /v1/dir/ls [get]
 func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["podName"]
-	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("ls: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "ls: \"podName\" argument missing"})
-		return
+	driveName, isGroup := "", false
+	keys, ok := r.URL.Query()["groupName"]
+	if ok || len(keys[0]) > 0 {
+		driveName = keys[0]
+		isGroup = true
+	} else {
+		keys, ok = r.URL.Query()["podName"]
+		if !ok || len(keys[0]) < 1 {
+			h.logger.Errorf("ls: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "ls: \"podName\" argument missing"})
+			return
+		}
+		driveName = keys[0]
+		if driveName == "" {
+			h.logger.Errorf("ls: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "ls: \"podName\" argument missing"})
+			return
+		}
 	}
-	podName := keys[0]
 
 	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
@@ -78,15 +91,15 @@ func (h *Handler) DirectoryLsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// list directory
-	dEntries, fEntries, err := h.dfsAPI.ListDir(podName, directory, sessionId)
+	dEntries, fEntries, err := h.dfsAPI.ListDir(driveName, directory, sessionId, isGroup)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
-			err == p.ErrPodNotOpened {
+		if errors.Is(err, dfs.ErrPodNotOpen) || errors.Is(err, dfs.ErrUserNotLoggedIn) ||
+			errors.Is(err, p.ErrPodNotOpened) {
 			h.logger.Errorf("ls: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "ls: " + err.Error()})
 			return
 		}
-		if err == dir.ErrDirectoryNotPresent {
+		if errors.Is(err, dir.ErrDirectoryNotPresent) {
 			h.logger.Errorf("ls: %v", err)
 			jsonhttp.NotFound(w, &response{Message: "ls: " + err.Error()})
 			return

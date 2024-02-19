@@ -13,9 +13,10 @@ import (
 
 // DirModeRequest is used for changing dir mode
 type DirModeRequest struct {
-	PodName string `json:"podName,omitempty"`
-	DirPath string `json:"dirPath,omitempty"`
-	Mode    string `json:"mode,omitempty"`
+	PodName   string `json:"podName,omitempty"`
+	GroupName string `json:"groupName,omitempty"`
+	DirPath   string `json:"dirPath,omitempty"`
+	Mode      string `json:"mode,omitempty"`
 }
 
 // DirectoryModeHandler godoc
@@ -49,11 +50,15 @@ func (h *Handler) DirectoryModeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	podName := chmodReq.PodName
-	if podName == "" {
-		h.logger.Errorf("dir chmod: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "dir chmod: \"podName\" argument missing"})
-		return
+	driveName, isGroup := chmodReq.GroupName, true
+	if driveName == "" {
+		driveName = chmodReq.PodName
+		isGroup = false
+		if driveName == "" {
+			h.logger.Errorf("dir chmod: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "dir chmod: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	dirPath := chmodReq.DirPath
@@ -90,7 +95,7 @@ func (h *Handler) DirectoryModeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.ChmodDir(podName, dirPath, sessionId, uint32(mode))
+	err = h.dfsAPI.ChmodDir(driveName, dirPath, sessionId, uint32(mode), isGroup)
 	if err != nil {
 		h.logger.Errorf("dir chmod: %v", err)
 		jsonhttp.BadRequest(w, &response{Message: err.Error()})

@@ -26,6 +26,7 @@ type StatusResponse struct {
 //	@Accept       json
 //	@Produce      */*
 //	@Param	      podName query string true "pod name"
+//	@Param	      groupName query string true "group name"
 //	@Param	      filePath query string true "file path"
 //	@Param	      Cookie header string true "cookie parameter"
 //	@Success      200  {array}  StatusResponse
@@ -33,17 +34,24 @@ type StatusResponse struct {
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/status [get]
 func (h *Handler) FileStatusHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["podName"]
-	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("status \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "status: \"podName\" argument missing"})
-		return
-	}
-	podName := keys[0]
-	if podName == "" {
-		h.logger.Errorf("status: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "status: \"podName\" argument missing"})
-		return
+	driveName, isGroup := "", false
+	keys, ok := r.URL.Query()["groupName"]
+	if ok || len(keys[0]) > 0 {
+		driveName = keys[0]
+		isGroup = true
+	} else {
+		keys, ok = r.URL.Query()["podName"]
+		if !ok || len(keys[0]) < 1 {
+			h.logger.Errorf("status \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "status: \"podName\" argument missing"})
+			return
+		}
+		driveName = keys[0]
+		if driveName == "" {
+			h.logger.Errorf("status: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "status: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	keys, ok = r.URL.Query()["filePath"]
@@ -73,7 +81,7 @@ func (h *Handler) FileStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// status of file
-	t, p, s, err := h.dfsAPI.StatusFile(podName, podFileWithPath, sessionId)
+	t, p, s, err := h.dfsAPI.StatusFile(driveName, podFileWithPath, sessionId, isGroup)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("status: %v", err)

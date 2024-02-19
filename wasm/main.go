@@ -1153,7 +1153,7 @@ func dirPresent(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			present, err := api.IsDirPresent(podName, dirPath, sessionId)
+			present, err := api.IsDirPresent(podName, dirPath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirPresent failed : %s", err.Error()))
 				return
@@ -1185,7 +1185,7 @@ func dirMake(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			err := api.Mkdir(podName, dirPath, sessionId, 0)
+			err := api.Mkdir(podName, dirPath, sessionId, 0, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirMake failed : %s", err.Error()))
 				return
@@ -1213,7 +1213,7 @@ func dirRemove(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			err := api.RmDir(podName, dirPath, sessionId)
+			err := api.RmDir(podName, dirPath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirRemove failed : %s", err.Error()))
 				return
@@ -1241,7 +1241,7 @@ func dirList(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			dirs, files, err := api.ListDir(podName, dirPath, sessionId)
+			dirs, files, err := api.ListDir(podName, dirPath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirList failed : %s", err.Error()))
 				return
@@ -1299,7 +1299,7 @@ func dirStat(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			stat, err := api.DirectoryStat(podName, dirPath, sessionId)
+			stat, err := api.DirectoryStat(podName, dirPath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirStat failed : %s", err.Error()))
 				return
@@ -1337,7 +1337,7 @@ func fileDownload(_ js.Value, funcArgs []js.Value) interface{} {
 		filePath := funcArgs[2].String()
 
 		go func() {
-			r, _, err := api.DownloadFile(podName, filePath, sessionId)
+			r, _, err := api.DownloadFile(podName, filePath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileDownload failed : %s", err.Error()))
 				return
@@ -1393,7 +1393,7 @@ func fileUpload(_ js.Value, funcArgs []js.Value) interface{} {
 			js.CopyBytesToGo(inBuf, array)
 			reader := bytes.NewReader(inBuf)
 
-			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), 0, true)
+			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), 0, true, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileUpload failed : %s", err.Error()))
 				return
@@ -1421,7 +1421,7 @@ func fileShare(_ js.Value, funcArgs []js.Value) interface{} {
 		destinationUser := funcArgs[3].String()
 
 		go func() {
-			ref, err := api.ShareFile(podName, dirPath, destinationUser, sessionId)
+			ref, err := api.ShareFile(podName, dirPath, destinationUser, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileShare failed : %s", err.Error()))
 				return
@@ -1523,7 +1523,7 @@ func fileDelete(_ js.Value, funcArgs []js.Value) interface{} {
 		filePath := funcArgs[2].String()
 
 		go func() {
-			err := api.DeleteFile(podName, filePath, sessionId)
+			err := api.DeleteFile(podName, filePath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileDelete failed : %s", err.Error()))
 				return
@@ -1551,7 +1551,7 @@ func fileStat(_ js.Value, funcArgs []js.Value) interface{} {
 		filePath := funcArgs[2].String()
 
 		go func() {
-			stat, err := api.FileStat(podName, filePath, sessionId)
+			stat, err := api.FileStat(podName, filePath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileStat failed : %s", err.Error()))
 				return
