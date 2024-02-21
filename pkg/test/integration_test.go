@@ -137,13 +137,13 @@ func TestLiteUser(t *testing.T) {
 
 		for _, v := range entries {
 			if v.isDir {
-				err = dfsApi.Mkdir(podRequest.PodName, v.path, sessionId, 0)
+				err = dfsApi.Mkdir(podRequest.PodName, v.path, sessionId, 0, false)
 				if err != nil {
 					t.Fatal(err)
 				}
 			} else {
 				reader := &io.LimitedReader{R: rand.Reader, N: v.size}
-				err = dfsApi.UploadFile(podRequest.PodName, filepath.Base(v.path), sessionId, v.size, reader, filepath.Dir(v.path), "", file.MinBlockSize, 0, false)
+				err = dfsApi.UploadFile(podRequest.PodName, filepath.Base(v.path), sessionId, v.size, reader, filepath.Dir(v.path), "", file.MinBlockSize, 0, false, false)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -152,12 +152,12 @@ func TestLiteUser(t *testing.T) {
 
 		for _, v := range entries {
 			if v.isDir {
-				_, err := dfsApi.DirectoryStat(podRequest.PodName, v.path, sessionId)
+				_, err := dfsApi.DirectoryStat(podRequest.PodName, v.path, sessionId, false)
 				if err != nil {
 					t.Fatal("DirectoryStat failed for ", v.path, err)
 				}
 			} else {
-				_, err := dfsApi.FileStat(podRequest.PodName, v.path, sessionId)
+				_, err := dfsApi.FileStat(podRequest.PodName, v.path, sessionId, false)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -200,12 +200,12 @@ func TestLiteUser(t *testing.T) {
 		}
 		for _, v := range renames {
 			if v.isDir {
-				err = dfsApi.RenameDir(podRequest.PodName, v.oldPath, v.newPath, sessionId)
+				err = dfsApi.RenameDir(podRequest.PodName, v.oldPath, v.newPath, sessionId, false)
 				if err != nil {
 					t.Fatal(err)
 				}
 			} else {
-				err = dfsApi.RenameFile(podRequest.PodName, v.oldPath, v.newPath, sessionId)
+				err = dfsApi.RenameFile(podRequest.PodName, v.oldPath, v.newPath, sessionId, false)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -273,13 +273,13 @@ func TestLiteUser(t *testing.T) {
 		}
 		for _, v := range newEntries {
 			if v.isDir {
-				_, err := dfsApi.DirectoryStat(podRequest.PodName, v.path, sessionId)
+				_, err := dfsApi.DirectoryStat(podRequest.PodName, v.path, sessionId, false)
 				if err != nil {
 					t.Fatal(err)
 
 				}
 			} else {
-				_, err := dfsApi.FileStat(podRequest.PodName, v.path, sessionId)
+				_, err := dfsApi.FileStat(podRequest.PodName, v.path, sessionId, false)
 				if err != nil {
 					t.Fatal(err)
 
@@ -308,12 +308,12 @@ func TestLiteUser(t *testing.T) {
 			}
 			for _, v := range newEntries {
 				if v.isDir {
-					_, err := dfsApi.DirectoryStat(podRequest.PodName, v.path, sessionId)
+					_, err := dfsApi.DirectoryStat(podRequest.PodName, v.path, sessionId, false)
 					if err != nil {
 						t.Fatal(err)
 					}
 				} else {
-					_, err := dfsApi.FileStat(podRequest.PodName, v.path, sessionId)
+					_, err := dfsApi.FileStat(podRequest.PodName, v.path, sessionId, false)
 					if err != nil {
 						t.Fatal(err, v.path)
 					}

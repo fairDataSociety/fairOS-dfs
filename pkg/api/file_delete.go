@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -29,8 +30,9 @@ import (
 
 // FileDeleteRequest is used in the file delete request
 type FileDeleteRequest struct {
-	PodName  string `json:"podName,omitempty"`
-	FilePath string `json:"filePath,omitempty"`
+	PodName   string `json:"podName,omitempty"`
+	GroupName string `json:"groupName,omitempty"`
+	FilePath  string `json:"filePath,omitempty"`
 }
 
 // FileDeleteHandler godoc
@@ -64,12 +66,15 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "file delete: could not decode arguments"})
 		return
 	}
-
-	podName := fsReq.PodName
-	if podName == "" {
-		h.logger.Errorf("file delete: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file delete: \"podName\" argument missing"})
-		return
+	driveName, isGroup := fsReq.GroupName, true
+	if driveName == "" {
+		driveName = fsReq.PodName
+		isGroup = false
+		if driveName == "" {
+			h.logger.Errorf("file delete: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "file delete: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	podFileWithPath := fsReq.FilePath
@@ -92,14 +97,14 @@ func (h *Handler) FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// delete file
-	err = h.dfsAPI.DeleteFile(podName, podFileWithPath, sessionId)
+	err = h.dfsAPI.DeleteFile(driveName, podFileWithPath, sessionId, isGroup)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen {
+		if errors.Is(err, dfs.ErrPodNotOpen) {
 			h.logger.Errorf("file delete: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "file delete: " + err.Error()})
 			return
 		}
-		if err == pod.ErrInvalidFile {
+		if errors.Is(err, pod.ErrInvalidFile) {
 			h.logger.Errorf("file delete: %v", err)
 			jsonhttp.NotFound(w, &response{Message: "file delete: " + err.Error()})
 			return

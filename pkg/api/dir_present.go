@@ -45,13 +45,25 @@ type DirPresentResponse struct {
 //	@Failure      500  {object}  response
 //	@Router       /v1/dir/present [get]
 func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["podName"]
-	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("dir present: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "dir present: \"podName\" argument missing"})
-		return
+	driveName, isGroup := "", false
+	keys, ok := r.URL.Query()["groupName"]
+	if ok || (len(keys) == 1 && len(keys[0]) > 0) {
+		driveName = keys[0]
+		isGroup = true
+	} else {
+		keys, ok = r.URL.Query()["podName"]
+		if !ok || len(keys[0]) < 1 {
+			h.logger.Errorf("dir present: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "dir present: \"podName\" argument missing"})
+			return
+		}
+		driveName = keys[0]
+		if driveName == "" {
+			h.logger.Errorf("dir present: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "dir present: \"podName\" argument missing"})
+			return
+		}
 	}
-	podName := keys[0]
 
 	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
@@ -75,7 +87,7 @@ func (h *Handler) DirectoryPresentHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// check if user is present
-	present, err := h.dfsAPI.IsDirPresent(podName, dirToCheck, sessionId)
+	present, err := h.dfsAPI.IsDirPresent(driveName, dirToCheck, sessionId, isGroup)
 	if err != nil {
 		jsonhttp.OK(w, &DirPresentResponse{
 			Present: present,

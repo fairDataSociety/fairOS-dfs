@@ -53,6 +53,7 @@ type PodReceiveRequest struct {
 // FileSystemRequest is the request body for file system operations
 type FileSystemRequest struct {
 	PodName       string `json:"podName,omitempty"`
+	GroupName     string `json:"groupName,omitempty"`
 	DirectoryPath string `json:"dirPath,omitempty"`
 	DirectoryName string `json:"dirName,omitempty"`
 	FilePath      string `json:"filePath,omitempty"`
@@ -62,9 +63,10 @@ type FileSystemRequest struct {
 
 // RenameRequest is the request body for file rename
 type RenameRequest struct {
-	PodName string `json:"podName,omitempty"`
-	OldPath string `json:"oldPath,omitempty"`
-	NewPath string `json:"newPath,omitempty"`
+	PodName   string `json:"podName,omitempty"`
+	GroupName string `json:"groupName,omitempty"`
+	OldPath   string `json:"oldPath,omitempty"`
+	NewPath   string `json:"newPath,omitempty"`
 }
 
 // FileReceiveRequest is the request body for file receiving

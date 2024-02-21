@@ -22,6 +22,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 
 	"github.com/dustin/go-humanize"
@@ -67,13 +69,16 @@ const (
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/upload [Post]
 func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
-	podName := r.FormValue("podName")
-	if podName == "" {
-		h.logger.Errorf("file upload: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file upload: \"podName\" argument missing"})
-		return
+	driveName, isGroup := r.FormValue("groupName"), true
+	if driveName == "" {
+		isGroup = false
+		driveName = r.FormValue("podName")
+		if driveName == "" {
+			h.logger.Errorf("file upload: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "file upload: \"podName\" argument missing"})
+			return
+		}
 	}
-
 	podPath := r.FormValue("dirPath")
 	if podPath == "" {
 		h.logger.Errorf("file upload: \"dirPath\" argument missing")
@@ -151,16 +156,21 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 			responses = append(responses, UploadResponse{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
-		err = h.handleFileUpload(podName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs), overwrite)
+		err = h.handleFileUpload(driveName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs), overwrite, isGroup)
 		if err != nil {
+			if errors.Is(err, pod.ErrInvalidPodName) {
+				h.logger.Errorf("file upload: %v", err)
+				jsonhttp.NotFound(w, &response{Message: "file upload: " + err.Error()})
+				return
+			}
 			if errors.Is(err, dfs.ErrPodNotOpen) {
 				h.logger.Errorf("file upload: %v", err)
 				jsonhttp.BadRequest(w, &response{Message: "file upload: " + err.Error()})
 				return
 			}
 			h.logger.Errorf("file upload: %v", err)
-			responses = append(responses, UploadResponse{FileName: file.Filename, Message: err.Error()})
-			continue
+			jsonhttp.InternalServerError(w, &response{Message: "file upload: " + err.Error()})
+			return
 		}
 		responses = append(responses, UploadResponse{FileName: file.Filename, Message: "uploaded successfully"})
 	}
@@ -171,7 +181,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) handleFileUpload(podName, podFileName, sessionId string, fileSize int64, f multipart.File, podPath, compression string, blockSize uint32, overwrite bool) error {
+func (h *Handler) handleFileUpload(podName, podFileName, sessionId string, fileSize int64, f multipart.File, podPath, compression string, blockSize uint32, overwrite, isGroup bool) error {
 	defer f.Close()
-	return h.dfsAPI.UploadFile(podName, podFileName, sessionId, fileSize, f, podPath, compression, blockSize, 0, overwrite)
+	return h.dfsAPI.UploadFile(podName, podFileName, sessionId, fileSize, f, podPath, compression, blockSize, 0, overwrite, isGroup)
 }
