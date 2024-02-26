@@ -20,12 +20,13 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
+	acl2 "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -67,7 +68,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	// load encrypted private key
-	fd := feed.New(accountInfo, client, u.logger)
+	fd := feed.New(accountInfo, client, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
 	if err != nil {
 		return nil, ErrInvalidPassword
@@ -95,11 +96,14 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
+	acl := acl2.NewACL(u.client, fd, u.logger)
+	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
 	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
+
 	ui := &Info{
 		name:       userName,
 		sessionId:  sessionId,
@@ -108,10 +112,10 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		file:       file,
 		dir:        dir,
 		pod:        pod,
+		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
 	}
-
 	// set cookie and add user to map
 	if err = u.addUserAndSessionToMap(ui); err != nil { // skipcq: TCV-001
 		return nil, err
@@ -143,10 +147,10 @@ func (u *Users) Logout(sessionId string) error {
 		return ErrUserNotLoggedIn
 	}
 
-	// remove from the user map
+	ui := u.getUserFromMap(sessionId)
 	u.removeUserFromMap(sessionId)
 
-	return nil
+	return ui.feedApi.Close()
 }
 
 // IsUserLoggedIn checks if the user is logged-in from sessionID
@@ -162,6 +166,11 @@ func (u *Users) GetLoggedInUserInfo(sessionId string) *Info {
 // IsUserNameLoggedIn checks if the user is logged-in from username
 func (u *Users) IsUserNameLoggedIn(userName string) bool {
 	return u.isUserNameInMap(userName)
+}
+
+// GetUsersLoggedIn returns all the users that are loggedin
+func (u *Users) GetUsersLoggedIn() map[string]*Info {
+	return u.getUserMap()
 }
 
 // ConnectWallet connects user with wallet.
@@ -185,7 +194,7 @@ func (u *Users) ConnectWallet(userName, passPhrase, walletAddressHex, signature 
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	// load encrypted private key
-	fd := feed.New(accountInfo, client, u.logger)
+	fd := feed.New(accountInfo, client, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), userName, passPhrase, fd)
 	if err != nil {
 		u.logger.Errorf(err.Error())
@@ -218,7 +227,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 	acc := account.New(u.logger)
 	accountInfo := acc.GetUserAccountInfo()
 	// load encrypted private key
-	fd := feed.New(accountInfo, client, u.logger)
+	fd := feed.New(accountInfo, client, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	key, err := u.downloadPortableAccount(utils.Address(address), addressHex, signature, fd)
 	if err != nil {
 		u.logger.Errorf(err.Error())
@@ -247,7 +256,9 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 
 	// Instantiate pod, dir & file objects
 	file := f.NewFile(addressHex, client, fd, accountInfo.GetAddress(), tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, sm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
+	acl := acl2.NewACL(u.client, fd, u.logger)
+	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
 	dir := d.NewDirectory(addressHex, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
@@ -260,6 +271,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 		file:       file,
 		dir:        dir,
 		pod:        pod,
+		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
 	}

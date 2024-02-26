@@ -165,7 +165,7 @@ func writeConfig() {
 	c.Set(optionCookieDomain, defaultCookieDomain)
 
 	if err := c.WriteConfigAs(cfgFile); err != nil {
-		fmt.Println("failed to write config file")
+		fmt.Println("failed to write config file", err.Error())
 		os.Exit(1)
 	}
 }

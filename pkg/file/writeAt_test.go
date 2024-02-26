@@ -11,7 +11,10 @@ import (
 	"testing"
 	"time"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -19,6 +22,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 )
 
@@ -27,8 +32,15 @@ func TestMain(m *testing.M) {
 }
 
 func TestWriteAt(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
@@ -38,7 +50,7 @@ func TestWriteAt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(pod1AccountInfo, mockClient, logger)
+	fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
 	user := acc.GetAddress(1)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
@@ -49,7 +61,7 @@ func TestWriteAt(t *testing.T) {
 
 	t.Run("writeAt-non-existent-file", func(t *testing.T) {
 		filePath := string(os.PathSeparator)
-		fileName := "file1"
+		fileName, _ := utils.GetRandString(10)
 
 		var offset uint64 = 3
 
@@ -68,7 +80,7 @@ func TestWriteAt(t *testing.T) {
 
 	t.Run("upload-update-known-very-small-file", func(t *testing.T) {
 		filePath := string(os.PathSeparator)
-		fileName := "file1"
+		fileName, _ := utils.GetRandString(10)
 		compression := ""
 		blockSize := file.MinBlockSize
 		var offset uint64 = 3
@@ -155,21 +167,18 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-
-		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
+		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		meta2 := fileObject.GetInode(podPassword, fp)
-		if meta2 != nil {
-			t.Fatal("meta2 should be nil")
-		}
+		assert.Equal(t, meta2, (*file.MetaData)(nil))
+
 	})
 
 	t.Run("upload-update-known-very-small-file-two", func(t *testing.T) {
 		filePath := string(os.PathSeparator)
-		fileName := "file1"
+		fileName, _ := utils.GetRandString(10)
 		compression := ""
 		blockSize := file.MinBlockSize
 		var offset uint64 = 4
@@ -281,21 +290,19 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent2, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-
-		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
+		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		meta2 := fileObject.GetInode(podPassword, fp)
-		if meta2 != nil {
-			t.Fatal("meta2 should be nil")
-		}
+		assert.Equal(t, meta2, (*file.MetaData)(nil))
+
 	})
 
 	t.Run("upload-update-truncate-known-very-small-file", func(t *testing.T) {
 		filePath := string(os.PathSeparator)
-		fileName := "file1"
+		fileName, _ := utils.GetRandString(10)
 		compression := ""
 		blockSize := file.MinBlockSize
 		var offset uint64 = 0
@@ -358,33 +365,30 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-
-		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
+		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		meta2 := fileObject.GetInode(podPassword, fp)
-		if meta2 != nil {
-			t.Fatal("meta2 should be nil")
-		}
+		assert.Equal(t, meta2, (*file.MetaData)(nil))
 	})
 
 	t.Run("upload-update-small-file", func(t *testing.T) {
-		filePath := "/dir1"
-		fileName := "file1"
+		filePath := string(os.PathSeparator)
+		fileName, _ := utils.GetRandString(10)
 		compression := ""
-		fileSize := int64(100)
+		fileSize := int64(1000)
 		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
-		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, blockSize)
+		pp := ""
+		dt, err := uploadFile(t, fileObject, filePath, fileName, compression, pp, fileSize, blockSize)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// check for meta
 		fp := utils.CombinePathAndFile(filepath.ToSlash(filePath), fileName)
-		meta := fileObject.GetInode(podPassword, fp)
+		meta := fileObject.GetInode(pp, fp)
 		if meta == nil {
 			t.Fatalf("file not added in file map")
 		}
@@ -403,28 +407,30 @@ func TestWriteAt(t *testing.T) {
 			t.Fatalf("invalid block size in meta")
 		}
 
-		err = fileObject.LoadFileMeta(filePath+"/"+fileName, podPassword)
+		err = fileObject.LoadFileMeta(filepath.ToSlash(filePath+fileName), pp)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// skipcq: GSC-G404
 		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-		min := 0
+		min := int(fileSize / 2)
 		max := int(fileSize)
 		offset := rnd.Intn((max - min + 1) + min)
+
 		content, err := utils.GetRandBytes(offset)
 		if err != nil {
 			t.Fatal(err)
 		}
 		r := bytes.NewReader(content)
-		n, err := fileObject.WriteAt(fp, podPassword, r, uint64(offset), false)
+		n, err := fileObject.WriteAt(fp, pp, r, uint64(offset), false)
 		if n != offset {
 			t.Fatalf("Failed to update %d bytes", offset-n)
 		}
 		if err != nil {
 			t.Fatal(err)
 		}
-		reader, _, err := fileObject.Download(fp, podPassword)
+
+		reader, _, err := fileObject.Download(fp, pp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -442,20 +448,19 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
+
+		err = fileObject.RmFile(fp, pp)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		meta2 := fileObject.GetInode(podPassword, fp)
-		if meta2 != nil {
-			t.Fatal("meta2 should be nil")
-		}
+		meta2 := fileObject.GetInode(pp, fp)
+		assert.Equal(t, meta2, (*file.MetaData)(nil))
 	})
 
 	t.Run("upload-update-small-file-at-root-with-prefix-snappy", func(t *testing.T) {
 		filePath := string(os.PathSeparator)
-		fileName := "file2"
+		fileName, _ := utils.GetRandString(10)
 		compression := "snappy"
 		fileSize := int64(100)
 		blockSize := file.MinBlockSize
@@ -521,21 +526,19 @@ func TestWriteAt(t *testing.T) {
 		if !bytes.Equal(updatedContent, rcvdBuffer.Bytes()) {
 			t.Fatal("content is different")
 		}
-
-		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
+		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		meta2 := fileObject.GetInode(podPassword, fp)
-		if meta2 != nil {
-			t.Fatal("meta2 should be nil")
-		}
+		assert.Equal(t, meta2, (*file.MetaData)(nil))
+
 	})
 
 	t.Run("upload-update-small-file-at-root-with-prefix-gzip", func(t *testing.T) {
 		filePath := "/dir1"
-		fileName := "file10"
+		fileName, _ := utils.GetRandString(10)
 		compression := "gzip"
 		fileSize := int64(100)
 		blockSize := file.MinBlockSize
@@ -603,16 +606,14 @@ func TestWriteAt(t *testing.T) {
 			t.Log("downloadedContent", rcvdBuffer.Bytes())
 			t.Fatal("content is different ")
 		}
-
-		err = fileObject.RmFile(utils.CombinePathAndFile(filepath.ToSlash(filePath), filepath.ToSlash(string(os.PathSeparator)+fileName)), podPassword)
+		err = fileObject.RmFile(fp, podPassword)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		meta2 := fileObject.GetInode(podPassword, fp)
-		if meta2 != nil {
-			t.Fatal("meta2 should be nil")
-		}
+		assert.Equal(t, meta2, (*file.MetaData)(nil))
+
 	})
 }
 

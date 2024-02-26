@@ -23,6 +23,11 @@ import (
 	"net/http"
 	"testing"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/sirupsen/logrus"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
@@ -34,15 +39,22 @@ import (
 )
 
 func TestIndexAPI(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	user := acc.GetAddress(account.UserAccountIndex)
 	podPassword, _ := utils.GetRandString(pod.PasswordLength)
 	t.Run("get-doc", func(t *testing.T) {
@@ -140,7 +152,7 @@ func TestIndexAPI(t *testing.T) {
 
 }
 
-func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *mock.BeeClient, apnd bool) {
+func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *bee.Client, apnd bool) {
 	ref, err := client.UploadBlob(value, 0, false)
 	if err != nil {
 		t.Fatalf("could not add doc %s:%s, %v", key, value, err)
@@ -151,7 +163,7 @@ func addDoc(t *testing.T, key string, value []byte, index *collection.Index, cli
 	}
 }
 
-func getDoc(t *testing.T, key string, index *collection.Index, client *mock.BeeClient) []byte {
+func getDoc(t *testing.T, key string, index *collection.Index, client *bee.Client) []byte {
 	ref, err := index.Get(key)
 	if err != nil {
 		if errors.Is(err, collection.ErrEntryNotFound) {
@@ -168,7 +180,7 @@ func getDoc(t *testing.T, key string, index *collection.Index, client *mock.BeeC
 	}
 	return data
 }
-func getAllDocs(t *testing.T, key string, index *collection.Index, client *mock.BeeClient) [][]byte {
+func getAllDocs(t *testing.T, key string, index *collection.Index, client *bee.Client) [][]byte {
 	refs, err := index.Get(key)
 	if err != nil {
 		if errors.Is(err, collection.ErrEntryNotFound) {
@@ -191,7 +203,7 @@ func getAllDocs(t *testing.T, key string, index *collection.Index, client *mock.
 	return data
 }
 
-func getValue(t *testing.T, ref []byte, client *mock.BeeClient) []byte {
+func getValue(t *testing.T, ref []byte, client *bee.Client) []byte {
 	data, respCode, err := client.DownloadBlob(ref)
 	if err != nil {
 		t.Fatal(err)
@@ -202,7 +214,7 @@ func getValue(t *testing.T, ref []byte, client *mock.BeeClient) []byte {
 	return data
 }
 
-func delDoc(t *testing.T, key string, index *collection.Index, client *mock.BeeClient) []byte {
+func delDoc(t *testing.T, key string, index *collection.Index, client *bee.Client) []byte {
 	ref, err := index.Delete(key)
 	if err != nil {
 		t.Fatal(err)
@@ -218,7 +230,7 @@ func delDoc(t *testing.T, key string, index *collection.Index, client *mock.BeeC
 
 }
 
-func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.BeeClient) map[string][]byte {
+func addLotOfDocs(t *testing.T, index *collection.Index, client *bee.Client) map[string][]byte {
 	// Initialize the values
 	kvMap := make(map[string][]byte)
 	kvMap["key1"] = []byte("value1")
@@ -252,7 +264,7 @@ func addLotOfDocs(t *testing.T, index *collection.Index, client *mock.BeeClient)
 	return kvMap
 }
 
-func addBatchDocs(t *testing.T, batch *collection.Batch, client *mock.BeeClient) map[string][]byte {
+func addBatchDocs(t *testing.T, batch *collection.Batch, client *bee.Client) map[string][]byte {
 	kvMap := make(map[string][]byte)
 	kvMap["key1"] = []byte("value1")
 	kvMap["key11"] = []byte("value11")

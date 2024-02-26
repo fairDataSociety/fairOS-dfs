@@ -20,6 +20,11 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 )
 
+type KVGetter interface {
+	KVGet(name, key string) ([]string, []byte, error)
+	OpenKVTable(name, encryptionPassword string) error
+}
+
 // KVCreate does validation checks and calls the create KVtable function.
 func (a *API) KVCreate(sessionId, podName, name string, indexType collection.IndexType) error {
 	// get the logged-in user information
@@ -97,7 +102,7 @@ func (a *API) KVCount(sessionId, podName, name string) (*collection.TableKeyCoun
 		return nil, err
 	}
 
-	return podInfo.GetKVStore().KVCount(name, podInfo.GetPodPassword())
+	return podInfo.GetKVStore().KVCount(name)
 }
 
 // KVPut does validation checks and calls the put KVtable function.

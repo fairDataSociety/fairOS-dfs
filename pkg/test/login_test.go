@@ -24,8 +24,13 @@ import (
 	"testing"
 	"time"
 
-	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 
+	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+	"github.com/sirupsen/logrus"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -36,8 +41,15 @@ import (
 )
 
 func TestLogin(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
@@ -47,7 +59,7 @@ func TestLogin(t *testing.T) {
 	t.Run("login-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers(mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, -1, 0, logger)
 		sr, err := userObject.CreateNewUserV2("7e4567e7cb003804992eef11fd5c757275a4c", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
@@ -102,7 +114,7 @@ func TestLogin(t *testing.T) {
 		user1 := "multicredtester"
 		pass := "password1password1"
 		// create user
-		userObject := user.NewUsers(mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, -1, 0, logger)
 		sr, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)
@@ -161,7 +173,7 @@ func TestLogin(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		user1 := "multicredtester"
 		// create user
-		userObject := user.NewUsers(mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, -1, 0, logger)
 		pass := "password1password1"
 		sr, err := userObject.CreateNewUserV2(user1, pass, "", "", tm, sm)
 		if err != nil {

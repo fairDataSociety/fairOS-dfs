@@ -58,13 +58,16 @@ func Connect(beeEndpoint, postageBlockId, network, rpc string, logLevel int) err
 		return fmt.Errorf("unknown network")
 	}
 	ensConfig.ProviderBackend = rpc
+	opts := &dfs.Options{
+		Stamp:              postageBlockId,
+		BeeApiEndpoint:     beeEndpoint,
+		EnsConfig:          ensConfig,
+		SubscriptionConfig: nil,
+		Logger:             logger,
+	}
 	api, err = dfs.NewDfsAPI(
 		context.TODO(),
-		beeEndpoint,
-		postageBlockId,
-		ensConfig,
-		nil,
-		logger,
+		opts,
 	)
 	return err
 }
@@ -202,7 +205,7 @@ func PodReceiveInfo(podSharingReference string) (string, error) {
 }
 
 func DirPresent(podName, dirPath string) (string, error) {
-	present, err := api.IsDirPresent(podName, dirPath, sessionId)
+	present, err := api.IsDirPresent(podName, dirPath, sessionId, false)
 	if err != nil {
 		return "", err
 	}
@@ -213,7 +216,7 @@ func DirPresent(podName, dirPath string) (string, error) {
 }
 
 func DirMake(podName, dirPath string) (string, error) {
-	err := api.Mkdir(podName, dirPath, sessionId, 0)
+	err := api.Mkdir(podName, dirPath, sessionId, 0, false)
 	if err != nil {
 		return "", err
 	}
@@ -221,7 +224,7 @@ func DirMake(podName, dirPath string) (string, error) {
 }
 
 func DirRemove(podName, dirPath string) (string, error) {
-	err := api.RmDir(podName, dirPath, sessionId)
+	err := api.RmDir(podName, dirPath, sessionId, false)
 	if err != nil {
 		return "", err
 	}
@@ -229,7 +232,7 @@ func DirRemove(podName, dirPath string) (string, error) {
 }
 
 func DirList(podName, dirPath string) (string, error) {
-	dirs, files, err := api.ListDir(podName, dirPath, sessionId)
+	dirs, files, err := api.ListDir(podName, dirPath, sessionId, false)
 	if err != nil {
 		return "", err
 	}
@@ -249,7 +252,7 @@ func DirList(podName, dirPath string) (string, error) {
 }
 
 func DirStat(podName, dirPath string) (string, error) {
-	stat, err := api.DirectoryStat(podName, dirPath, sessionId)
+	stat, err := api.DirectoryStat(podName, dirPath, sessionId, false)
 	if err != nil {
 		return "", err
 	}
@@ -258,7 +261,7 @@ func DirStat(podName, dirPath string) (string, error) {
 }
 
 func FileShare(podName, dirPath, destinationUser string) (string, error) {
-	ref, err := api.ShareFile(podName, dirPath, destinationUser, sessionId)
+	ref, err := api.ShareFile(podName, dirPath, destinationUser, sessionId, false)
 	if err != nil {
 		return "", err
 	}
@@ -289,11 +292,11 @@ func FileReceiveInfo(podName, fileSharingReference string) (string, error) {
 }
 
 func FileDelete(podName, filePath string) error {
-	return api.DeleteFile(podName, filePath, sessionId)
+	return api.DeleteFile(podName, filePath, sessionId, false)
 }
 
 func FileStat(podName, filePath string) (string, error) {
-	stat, err := api.FileStat(podName, filePath, sessionId)
+	stat, err := api.FileStat(podName, filePath, sessionId, false)
 	if err != nil {
 		return "", err
 	}
@@ -316,16 +319,16 @@ func FileUpload(podName, filePath, dirPath, compression, blockSize string, overw
 	if err != nil {
 		return err
 	}
-	return api.UploadFile(podName, fileInfo.Name(), sessionId, fileInfo.Size(), f, dirPath, compression, uint32(bs), 0, overwrite)
+	return api.UploadFile(podName, fileInfo.Name(), sessionId, fileInfo.Size(), f, dirPath, compression, uint32(bs), 0, overwrite, false)
 }
 
 func BlobUpload(data []byte, podName, fileName, dirPath, compression string, size, blockSize int64, overwrite bool) error {
 	r := bytes.NewReader(data)
-	return api.UploadFile(podName, fileName, sessionId, size, r, dirPath, compression, uint32(blockSize), 0, overwrite)
+	return api.UploadFile(podName, fileName, sessionId, size, r, dirPath, compression, uint32(blockSize), 0, overwrite, false)
 }
 
 func FileDownload(podName, filePath string) ([]byte, error) {
-	r, _, err := api.DownloadFile(podName, filePath, sessionId)
+	r, _, err := api.DownloadFile(podName, filePath, sessionId, false)
 	if err != nil {
 		return nil, err
 	}

@@ -141,6 +141,10 @@ func (kv *KeyValue) DeleteKVTable(name, encryptionPassword string) error {
 	return kv.storeKVTables(kvtables, encryptionPassword)
 }
 
+func (kv *KeyValue) Commit() {
+	kv.fd.CommitFeeds()
+}
+
 // DeleteAllKVTables deletes all key value tables with all their index and data entries.
 func (kv *KeyValue) DeleteAllKVTables(encryptionPassword string) error {
 	if kv.fd.IsReadOnlyFeed() { // skipcq: TCV-001
@@ -219,32 +223,26 @@ func (kv *KeyValue) OpenKVTable(name, encryptionPassword string) error {
 }
 
 // KVCount counts the number of entries in the given key value table.
-func (kv *KeyValue) KVCount(name, encryptionPassword string) (*TableKeyCount, error) {
+func (kv *KeyValue) KVCount(name string) (*TableKeyCount, error) {
 	kv.openKVTMu.Lock()
 	defer kv.openKVTMu.Unlock()
 	if table, ok := kv.openKVTables[name]; ok {
-		count, err := table.index.CountIndex(table.index.encryptionPassword)
-		if err != nil {
-			return nil, err
-		}
 		return &TableKeyCount{
-			Count:     count,
-			TableName: name,
-		}, nil
-	} else {
-		idx, err := OpenIndex(kv.podName, defaultCollectionName, name, encryptionPassword, kv.fd, kv.ai, kv.user, kv.client, kv.logger)
-		if err != nil {
-			return nil, err
-		}
-		count, err := idx.CountIndex(idx.encryptionPassword)
-		if err != nil {
-			return nil, err
-		}
-		return &TableKeyCount{
-			Count:     count,
+			Count:     table.index.count,
 			TableName: name,
 		}, nil
 	}
+	return nil, ErrKVTableNotOpened
+}
+
+// IsEmpty checks if the given key value table is empty.
+func (kv *KeyValue) IsEmpty(name string) (bool, error) {
+	kv.openKVTMu.Lock()
+	defer kv.openKVTMu.Unlock()
+	if table, ok := kv.openKVTables[name]; ok {
+		return table.index.IsEmpty(table.index.encryptionPassword)
+	}
+	return false, ErrKVTableNotOpened
 }
 
 // KVPut inserts a given key and value in to the KV table.
@@ -254,8 +252,9 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 	}
 
 	kv.openKVTMu.Lock()
-	defer kv.openKVTMu.Unlock()
-	if table, ok := kv.openKVTables[name]; ok {
+	table, ok := kv.openKVTables[name]
+	kv.openKVTMu.Unlock()
+	if ok {
 		switch table.indexType {
 		case StringIndex:
 			return table.index.Put(key, value, StringIndex, false)
@@ -281,8 +280,9 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 // KVGet retrieves a value from the KV table given a key.
 func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 	kv.openKVTMu.Lock()
-	defer kv.openKVTMu.Unlock()
-	if table, ok := kv.openKVTables[name]; ok {
+	table, ok := kv.openKVTables[name]
+	kv.openKVTMu.Unlock()
+	if ok {
 		value, err := table.index.Get(key)
 		if err != nil {
 			return nil, nil, err
@@ -415,7 +415,7 @@ func (kv *KeyValue) KVGetNext(name string) ([]string, string, []byte, error) {
 func (kv *KeyValue) LoadKVTables(encryptionPassword string) (map[string][]string, error) {
 	collections := make(map[string][]string)
 	topic := utils.HashString(kvFile)
-	_, data, err := kv.fd.GetFeedData(topic, kv.user, []byte(encryptionPassword))
+	_, data, err := kv.fd.GetFeedData(topic, kv.user, []byte(encryptionPassword), false)
 	if err != nil {
 		if err.Error() != "feed does not exist or was not updated yet" { // skipcq: TCV-001
 			return collections, err
@@ -454,7 +454,7 @@ func (kv *KeyValue) storeKVTables(collections map[string][]string, encryptionPas
 	if buf.Len() == 0 {
 		data = []byte(utils.DeletedFeedMagicWord)
 	}
-	_, err := kv.fd.UpdateFeed(kv.user, topic, data, []byte(encryptionPassword))
+	err := kv.fd.UpdateFeed(kv.user, topic, data, []byte(encryptionPassword), false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}

@@ -1,4 +1,4 @@
-//go:build js
+//go:build wasm
 
 package main
 
@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -70,6 +71,19 @@ func registerWasmFunctions() {
 	js.Global().Set("encryptSubscription", js.FuncOf(encryptSubscription))
 	js.Global().Set("openSubscribedPodFromReference", js.FuncOf(openSubscribedPodFromReference))
 
+	js.Global().Set("groupNew", js.FuncOf(groupNew))
+	js.Global().Set("groupOpen", js.FuncOf(groupOpen))
+	js.Global().Set("groupClose", js.FuncOf(groupClose))
+	js.Global().Set("groupDelete", js.FuncOf(groupDelete))
+	js.Global().Set("groupDeleteShared", js.FuncOf(groupDeleteShared))
+	js.Global().Set("groupList", js.FuncOf(groupList))
+	js.Global().Set("groupInvite", js.FuncOf(groupInvite))
+	js.Global().Set("groupAccept", js.FuncOf(groupAccept))
+	js.Global().Set("groupRemoveMember", js.FuncOf(groupRemoveMember))
+	js.Global().Set("groupUpdatePermission", js.FuncOf(groupUpdatePermission))
+	js.Global().Set("groupMembers", js.FuncOf(groupMembers))
+	js.Global().Set("groupPermission", js.FuncOf(groupPermission))
+
 	js.Global().Set("dirPresent", js.FuncOf(dirPresent))
 	js.Global().Set("dirMake", js.FuncOf(dirMake))
 	js.Global().Set("dirRemove", js.FuncOf(dirRemove))
@@ -83,6 +97,18 @@ func registerWasmFunctions() {
 	js.Global().Set("fileStat", js.FuncOf(fileStat))
 	js.Global().Set("fileUpload", js.FuncOf(fileUpload))
 	js.Global().Set("fileDownload", js.FuncOf(fileDownload))
+
+	js.Global().Set("groupDirPresent", js.FuncOf(groupDirPresent))
+	js.Global().Set("groupDirMake", js.FuncOf(groupDirMake))
+	js.Global().Set("groupDirRemove", js.FuncOf(groupDirRemove))
+	js.Global().Set("groupDirList", js.FuncOf(groupDirList))
+	js.Global().Set("groupDirStat", js.FuncOf(groupDirStat))
+
+	js.Global().Set("groupFileShare", js.FuncOf(groupFileShare))
+	js.Global().Set("groupFileDelete", js.FuncOf(groupFileDelete))
+	js.Global().Set("groupFileStat", js.FuncOf(groupFileStat))
+	js.Global().Set("groupFileUpload", js.FuncOf(groupFileUpload))
+	js.Global().Set("groupFileDownload", js.FuncOf(groupFileDownload))
 
 	js.Global().Set("kvNewStore", js.FuncOf(kvNewStore))
 	js.Global().Set("kvList", js.FuncOf(kvList))
@@ -113,41 +139,51 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
-		if len(funcArgs) != 4 {
-			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, rpc, network)\"")
+		if len(funcArgs) != 6 {
+			reject.Invoke("not enough arguments. \"connect(beeEndpoint, stampId, rpc, network, subRpc, subContractAddress)\"")
 			return nil
 		}
 		beeEndpoint := funcArgs[0].String()
 		stampId := funcArgs[1].String()
 		rpc := funcArgs[2].String()
 		network := funcArgs[3].String()
-		//subRpc := funcArgs[4].String()
-		//subContractAddress := funcArgs[5].String()
+		subRpc := funcArgs[4].String()
+		subContractAddress := funcArgs[5].String()
 		if network != "testnet" && network != "play" {
 			reject.Invoke("unknown network. \"use play or testnet\"")
 			return nil
 		}
 		var (
-			config *contracts.ENSConfig
+			config    *contracts.ENSConfig
+			subConfig *contracts.SubscriptionConfig
 		)
 
 		if network == "play" {
-			config, _ = contracts.PlayConfig()
+			config, subConfig = contracts.PlayConfig()
 		} else {
-			config, _ = contracts.TestnetConfig(contracts.Sepolia)
+			config, subConfig = contracts.TestnetConfig(contracts.Sepolia)
 		}
 		config.ProviderBackend = rpc
+		if subRpc != "" {
+			subConfig.RPC = subRpc
+		}
+		if subContractAddress != "" {
+			subConfig.DataHubAddress = subContractAddress
+		}
 		logger := logging.New(os.Stdout, logrus.DebugLevel)
 
 		go func() {
 			var err error
+			opts := &dfs.Options{
+				Stamp:              stampId,
+				BeeApiEndpoint:     beeEndpoint,
+				EnsConfig:          config,
+				SubscriptionConfig: subConfig,
+				Logger:             logger,
+			}
 			api, err = dfs.NewDfsAPI(
 				ctx,
-				beeEndpoint,
-				stampId,
-				config,
-				nil,
-				logger,
+				opts,
 			)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("failed to connect to fairOS: %s", err.Error()))
@@ -510,7 +546,7 @@ func podClose(_ js.Value, funcArgs []js.Value) interface{} {
 		reject := args[1]
 
 		if len(funcArgs) != 2 {
-			reject.Invoke("not enough arguments. \"podOpen(sessionId, podName)\"")
+			reject.Invoke("not enough arguments. \"podClose(sessionId, podName)\"")
 			return nil
 		}
 		sessionId := funcArgs[0].String()
@@ -760,6 +796,361 @@ func podReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 	return promiseConstructor.New(handler)
 }
 
+func groupNew(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"groupNew(sessionId, groupName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+
+		go func() {
+			_, err := api.CreateGroup(sessionId, groupName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupNew failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("group created successfully")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupOpen(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"groupOpen(sessionId, groupName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+
+		go func() {
+			_, err := api.OpenGroup(sessionId, groupName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupOpen failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("group opened successfully")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupClose(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"groupClose(sessionId, groupName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+
+		go func() {
+			err := api.CloseGroup(sessionId, groupName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupClose failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("group closed")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupDelete(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"groupDelete(sessionId, groupName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+
+		go func() {
+			err := api.RemoveGroup(sessionId, groupName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupDelete failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("group deleted")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupDeleteShared(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"groupDeleteShared(sessionId, groupName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+
+		go func() {
+			err := api.RemoveSharedGroup(sessionId, groupName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupDelete failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("shared group deleted")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupList(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 1 {
+			reject.Invoke("not enough arguments. \"groupList(sessionId)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+
+		go func() {
+			groups, err := api.ListGroups(sessionId)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("podList failed : %s", err.Error()))
+				return
+			}
+
+			object := js.Global().Get("Object").New()
+			gs := js.Global().Get("Array").New(len(groups.Groups))
+			for i, v := range groups.Groups {
+				gs.SetIndex(i, js.ValueOf(v))
+			}
+
+			sgs := js.Global().Get("Array").New(len(groups.SharedGroups))
+			for i, v := range groups.SharedGroups {
+				sgs.SetIndex(i, js.ValueOf(v))
+			}
+
+			object.Set("groups", gs)
+			object.Set("sharedGroups", sgs)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupInvite(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 4 {
+			reject.Invoke("not enough arguments. \"groupInvite(sessionId, groupName, member, permission)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		member := funcArgs[2].String()
+		permission := funcArgs[3].Int()
+
+		go func() {
+			reference, err := api.AddMember(sessionId, groupName, member, uint8(permission))
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupInvite failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("groupInviteReference", reference)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupAccept(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"groupInvite(sessionId, groupInviteReference)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupInviteReference := funcArgs[1].String()
+
+		go func() {
+			err := api.AcceptGroupInvite(sessionId, []byte(groupInviteReference))
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupInvite failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("group invite accepted")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupRemoveMember(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"groupRemoveMember(sessionId, groupName, member)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		member := funcArgs[2].String()
+
+		go func() {
+			err := api.RemoveMember(groupName, member, sessionId)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupRemoveMember failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("member removed from group")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupUpdatePermission(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 4 {
+			reject.Invoke("not enough arguments. \"groupUpdatePermission(sessionId, groupName, member, permission)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		member := funcArgs[2].String()
+		permission := funcArgs[3].Int()
+
+		go func() {
+			err := api.UpdatePermission(sessionId, groupName, member, uint8(permission))
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupInvite failed : %s", err.Error()))
+				return
+			}
+
+			resolve.Invoke("group permission updated successfully")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupMembers(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"groupMembers(sessionId, groupName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+
+		go func() {
+			members, err := api.GetGroupMembers(sessionId, groupName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupMembers failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			for name, perm := range members {
+				object.Set(name, perm)
+			}
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupPermission(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"groupPermission(sessionId, groupName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+
+		go func() {
+			perm, err := api.GetPermission(sessionId, groupName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupMembers failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("permission", perm)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
 func dirPresent(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
@@ -774,7 +1165,7 @@ func dirPresent(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			present, err := api.IsDirPresent(podName, dirPath, sessionId)
+			present, err := api.IsDirPresent(podName, dirPath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirPresent failed : %s", err.Error()))
 				return
@@ -806,7 +1197,7 @@ func dirMake(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			err := api.Mkdir(podName, dirPath, sessionId, 0)
+			err := api.Mkdir(podName, dirPath, sessionId, 0, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirMake failed : %s", err.Error()))
 				return
@@ -834,7 +1225,7 @@ func dirRemove(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			err := api.RmDir(podName, dirPath, sessionId)
+			err := api.RmDir(podName, dirPath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirRemove failed : %s", err.Error()))
 				return
@@ -862,7 +1253,7 @@ func dirList(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			dirs, files, err := api.ListDir(podName, dirPath, sessionId)
+			dirs, files, err := api.ListDir(podName, dirPath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirList failed : %s", err.Error()))
 				return
@@ -920,7 +1311,7 @@ func dirStat(_ js.Value, funcArgs []js.Value) interface{} {
 		dirPath := funcArgs[2].String()
 
 		go func() {
-			stat, err := api.DirectoryStat(podName, dirPath, sessionId)
+			stat, err := api.DirectoryStat(podName, dirPath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("dirStat failed : %s", err.Error()))
 				return
@@ -958,7 +1349,7 @@ func fileDownload(_ js.Value, funcArgs []js.Value) interface{} {
 		filePath := funcArgs[2].String()
 
 		go func() {
-			r, _, err := api.DownloadFile(podName, filePath, sessionId)
+			r, _, err := api.DownloadFile(podName, filePath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileDownload failed : %s", err.Error()))
 				return
@@ -1014,7 +1405,7 @@ func fileUpload(_ js.Value, funcArgs []js.Value) interface{} {
 			js.CopyBytesToGo(inBuf, array)
 			reader := bytes.NewReader(inBuf)
 
-			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), 0, true)
+			err := api.UploadFile(podName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), 0, true, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileUpload failed : %s", err.Error()))
 				return
@@ -1042,7 +1433,7 @@ func fileShare(_ js.Value, funcArgs []js.Value) interface{} {
 		destinationUser := funcArgs[3].String()
 
 		go func() {
-			ref, err := api.ShareFile(podName, dirPath, destinationUser, sessionId)
+			ref, err := api.ShareFile(podName, dirPath, destinationUser, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileShare failed : %s", err.Error()))
 				return
@@ -1144,7 +1535,7 @@ func fileDelete(_ js.Value, funcArgs []js.Value) interface{} {
 		filePath := funcArgs[2].String()
 
 		go func() {
-			err := api.DeleteFile(podName, filePath, sessionId)
+			err := api.DeleteFile(podName, filePath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileDelete failed : %s", err.Error()))
 				return
@@ -1172,9 +1563,378 @@ func fileStat(_ js.Value, funcArgs []js.Value) interface{} {
 		filePath := funcArgs[2].String()
 
 		go func() {
-			stat, err := api.FileStat(podName, filePath, sessionId)
+			stat, err := api.FileStat(podName, filePath, sessionId, false)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("fileStat failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("podName", stat.PodName)
+			object.Set("mode", stat.Mode)
+			object.Set("filePath", stat.FilePath)
+			object.Set("fileName", stat.FileName)
+			object.Set("fileSize", stat.FileSize)
+			object.Set("blockSize", stat.BlockSize)
+			object.Set("compression", stat.Compression)
+			object.Set("contentType", stat.ContentType)
+			object.Set("creationTime", stat.CreationTime)
+			object.Set("modificationTime", stat.ModificationTime)
+			object.Set("accessTime", stat.AccessTime)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupDirPresent(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"groupDirPresent(sessionId, groupName, dirPath)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		dirPath := funcArgs[2].String()
+
+		go func() {
+			present, err := api.IsDirPresent(groupName, dirPath, sessionId, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupDirRemove failed : %s", err.Error()))
+				return
+			}
+
+			object := js.Global().Get("Object").New()
+			object.Set("present", present)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupDirMake(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"groupDirMake(sessionId, groupName, dirPath)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		dirPath := funcArgs[2].String()
+
+		go func() {
+			err := api.Mkdir(groupName, dirPath, sessionId, 0, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupDirRemove failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("directory created successfully")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupDirRemove(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"groupDirRemove(sessionId, groupName, dirPath)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		dirPath := funcArgs[2].String()
+
+		go func() {
+			err := api.RmDir(groupName, dirPath, sessionId, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupDirRemove failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("directory removed successfully")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupDirList(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"groupDirList(sessionId, groupName, dirPath)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		dirPath := funcArgs[2].String()
+
+		go func() {
+			dirs, files, err := api.ListDir(groupName, dirPath, sessionId, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupDirList failed : %s", err.Error()))
+				return
+			}
+			filesList := js.Global().Get("Array").New(len(files))
+			for i, v := range files {
+				file := js.Global().Get("Object").New()
+				file.Set("name", v.Name)
+				file.Set("contentType", v.ContentType)
+				file.Set("size", v.Size)
+				file.Set("blockSize", v.BlockSize)
+				file.Set("creationTime", v.CreationTime)
+				file.Set("modificationTime", v.ModificationTime)
+				file.Set("accessTime", v.AccessTime)
+				file.Set("mode", v.Mode)
+				filesList.SetIndex(i, file)
+			}
+			dirsList := js.Global().Get("Array").New(len(dirs))
+			for i, v := range dirs {
+				dir := js.Global().Get("Object").New()
+				dir.Set("name", v.Name)
+				dir.Set("contentType", v.ContentType)
+				dir.Set("size", v.Size)
+				dir.Set("mode", v.Mode)
+				dir.Set("blockSize", v.BlockSize)
+				dir.Set("creationTime", v.CreationTime)
+				dir.Set("modificationTime", v.ModificationTime)
+				dir.Set("accessTime", v.AccessTime)
+				dirsList.SetIndex(i, dir)
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("files", filesList)
+			object.Set("dirs", dirsList)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupDirStat(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"groupDirStat(sessionId, groupName, dirPath)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		dirPath := funcArgs[2].String()
+
+		go func() {
+			stat, err := api.DirectoryStat(groupName, dirPath, sessionId, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupDirStat failed : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("podName", stat.PodName)
+			object.Set("dirPath", stat.DirPath)
+			object.Set("dirName", stat.DirName)
+			object.Set("mode", stat.Mode)
+			object.Set("creationTime", stat.CreationTime)
+			object.Set("modificationTime", stat.ModificationTime)
+			object.Set("accessTime", stat.AccessTime)
+			object.Set("noOfDirectories", stat.NoOfDirectories)
+			object.Set("noOfFiles", stat.NoOfFiles)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupFileDownload(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"groupFileDownload(sessionId, groupName, filePath)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		filePath := funcArgs[2].String()
+
+		go func() {
+			r, _, err := api.DownloadFile(groupName, filePath, sessionId, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupFileDownload failed : %s", err.Error()))
+				return
+			}
+			defer r.Close()
+
+			buf := new(bytes.Buffer)
+			_, err = buf.ReadFrom(r)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupFileDownload failed : %s", err.Error()))
+				return
+			}
+			a := js.Global().Get("Uint8Array").New(buf.Len())
+			js.CopyBytesToJS(a, buf.Bytes())
+			resolve.Invoke(a)
+		}()
+		return nil
+	})
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupFileUpload(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if len(funcArgs) != 8 {
+			reject.Invoke("not enough arguments. \"groupFileUpload(sessionId, groupName, dirPath, file, name, size, blockSize, compression)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		dirPath := funcArgs[2].String()
+		array := funcArgs[3]
+		fileName := funcArgs[4].String()
+		size := funcArgs[5].Int()
+		blockSize := funcArgs[6].String()
+		compression := funcArgs[7].String()
+		if compression != "" {
+			if compression != "snappy" && compression != "gzip" {
+				reject.Invoke("invalid compression value")
+				return nil
+			}
+		}
+		bs, err := humanize.ParseBytes(blockSize)
+		if err != nil {
+			reject.Invoke("invalid blockSize value")
+			return nil
+		}
+
+		go func() {
+			inBuf := make([]uint8, array.Get("byteLength").Int())
+			js.CopyBytesToGo(inBuf, array)
+			reader := bytes.NewReader(inBuf)
+
+			err := api.UploadFile(groupName, fileName, sessionId, int64(size), reader, dirPath, compression, uint32(bs), 0, true, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupFileUpload failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("file uploaded")
+		}()
+		return nil
+	})
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupFileShare(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 4 {
+			reject.Invoke("not enough arguments. \"groupFileShare(sessionId, groupName, dirPath, destinationUser)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		dirPath := funcArgs[2].String()
+		destinationUser := funcArgs[3].String()
+
+		go func() {
+			ref, err := api.ShareFile(groupName, dirPath, destinationUser, sessionId, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupFileShare failed : %s", err.Error()))
+				return
+			}
+
+			object := js.Global().Get("Object").New()
+			object.Set("fileSharingReference", ref)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupFileDelete(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"groupFileDelete(sessionId, groupName, podFileWithPath)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		filePath := funcArgs[2].String()
+
+		go func() {
+			err := api.DeleteFile(groupName, filePath, sessionId, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupFileDelete failed : %s", err.Error()))
+				return
+			}
+			resolve.Invoke("file deleted successfully")
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func groupFileStat(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"groupFileStat(sessionId, groupName, podFileWithPath)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		groupName := funcArgs[1].String()
+		filePath := funcArgs[2].String()
+
+		go func() {
+			stat, err := api.FileStat(groupName, filePath, sessionId, true)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("groupFileStat failed : %s", err.Error()))
 				return
 			}
 			object := js.Global().Get("Object").New()
@@ -1261,8 +2021,16 @@ func kvList(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("kvList failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(collections)
-			resolve.Invoke(string(resp))
+			object := js.Global().Get("Object").New()
+			list := js.Global().Get("Array").New()
+			count := 0
+			for i, _ := range collections {
+				list.SetIndex(count, js.ValueOf(i))
+				count++
+			}
+
+			object.Set("tables", list)
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -1346,8 +2114,10 @@ func kvCount(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("kvCount failed : %s", err.Error()))
 				return
 			}
-			resp, _ := json.Marshal(count)
-			resolve.Invoke(resp)
+			object := js.Global().Get("Object").New()
+			object.Set("count", count.Count)
+			object.Set("tableName", count.TableName)
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -1406,20 +2176,16 @@ func kvEntryGet(_ js.Value, funcArgs []js.Value) interface{} {
 		key := funcArgs[3].String()
 
 		go func() {
-			columns, data, err := api.KVGet(sessionId, podName, tableName, key)
+			_, data, err := api.KVGet(sessionId, podName, tableName, key)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("kvEntryGet failed : %s", err.Error()))
 				return
 			}
-			var res KVResponse
-			if columns != nil {
-				res.Keys = columns
-			} else {
-				res.Keys = []string{key}
-			}
-			res.Values = data
-			resp, _ := json.Marshal(res)
-			resolve.Invoke(resp)
+			object := js.Global().Get("Object").New()
+			object.Set("key", key)
+			object.Set("value", base64.StdEncoding.EncodeToString(data))
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})
@@ -1461,15 +2227,14 @@ func kvLoadCSV(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
-		if len(funcArgs) != 5 {
-			reject.Invoke("not enough arguments. \"kvLoadCSV(sessionId, podName, tableName, memory, file)\"")
+		if len(funcArgs) != 4 {
+			reject.Invoke("not enough arguments. \"kvLoadCSV(sessionId, podName, tableName, file)\"")
 			return nil
 		}
 		sessionId := funcArgs[0].String()
 		podName := funcArgs[1].String()
 		tableName := funcArgs[2].String()
-		memory := funcArgs[3].Bool()
-		array := funcArgs[4]
+		array := funcArgs[3]
 
 		go func() {
 			inBuf := make([]uint8, array.Get("byteLength").Int())
@@ -1503,7 +2268,7 @@ func kvLoadCSV(_ js.Value, funcArgs []js.Value) interface{} {
 						return
 					}
 
-					err = batch.Put(collection.CSVHeaderKey, []byte(record), false, memory)
+					err = batch.Put(collection.CSVHeaderKey, []byte(record), false, false)
 					if err != nil {
 						failureCount++
 						readHeader = true
@@ -1515,7 +2280,7 @@ func kvLoadCSV(_ js.Value, funcArgs []js.Value) interface{} {
 				}
 
 				key := strings.Split(record, ",")[0]
-				err = batch.Put(key, []byte(record), false, memory)
+				err = batch.Put(key, []byte(record), false, false)
 				if err != nil {
 					failureCount++
 					continue
@@ -1583,20 +2348,17 @@ func kvSeekNext(_ js.Value, funcArgs []js.Value) interface{} {
 		tableName := funcArgs[2].String()
 
 		go func() {
-			columns, key, data, err := api.KVGetNext(sessionId, podName, tableName)
+			_, key, data, err := api.KVGetNext(sessionId, podName, tableName)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("kvSeekNext failed : %s", err.Error()))
 				return
 			}
-			var res KVResponse
-			if columns != nil {
-				res.Keys = columns
-			} else {
-				res.Keys = []string{key}
-			}
-			res.Values = data
-			resp, _ := json.Marshal(res)
-			resolve.Invoke(resp)
+
+			object := js.Global().Get("Object").New()
+			object.Set("key", key)
+			object.Set("value", base64.StdEncoding.EncodeToString(data))
+
+			resolve.Invoke(object)
 		}()
 		return nil
 	})

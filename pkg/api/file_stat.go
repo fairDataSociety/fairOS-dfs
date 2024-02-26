@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -42,17 +43,24 @@ import (
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/stat [get]
 func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["podName"]
-	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("file stat: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file stat: \"podName\" argument missing"})
-		return
-	}
-	podName := keys[0]
-	if podName == "" {
-		h.logger.Errorf("file stat: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file stat: \"podName\" argument missing"})
-		return
+	driveName, isGroup := "", false
+	keys, ok := r.URL.Query()["groupName"]
+	if ok || (len(keys) == 1 && len(keys[0]) > 0) {
+		driveName = keys[0]
+		isGroup = true
+	} else {
+		keys, ok = r.URL.Query()["podName"]
+		if !ok || len(keys[0]) < 1 {
+			h.logger.Errorf("file stat: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "file stat: \"podName\" argument missing"})
+			return
+		}
+		driveName = keys[0]
+		if driveName == "" {
+			h.logger.Errorf("file stat: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "file stat: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	keys, ok = r.URL.Query()["filePath"]
@@ -82,9 +90,9 @@ func (h *Handler) FileStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get file stat
-	stat, err := h.dfsAPI.FileStat(podName, podFileWithPath, sessionId)
+	stat, err := h.dfsAPI.FileStat(driveName, podFileWithPath, sessionId, isGroup)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen {
+		if errors.Is(err, dfs.ErrPodNotOpen) {
 			h.logger.Errorf("file stat: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "file stat: " + err.Error()})
 			return

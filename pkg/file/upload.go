@@ -79,7 +79,6 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 		ModificationTime: now,
 		Mode:             mode,
 	}
-
 	var totalLength uint64
 	i := 0
 	errC := make(chan error)

@@ -123,8 +123,17 @@ func initPrompt() {
 		prompt.OptionPrefix(currentPrompt),
 		prompt.OptionLivePrefix(changeLivePrefix),
 		prompt.OptionTitle("dfs"),
+		prompt.OptionSetExitCheckerOnInput(exitChecker),
 	)
 	p.Run()
+}
+
+func exitChecker(in string, breakline bool) bool {
+	if breakline && strings.TrimSpace(in) == "exit" {
+		fmt.Println("exiting dfs-cli")
+		return true
+	}
+	return false
 }
 
 func changeLivePrefix() (string, bool) {
@@ -261,7 +270,6 @@ func executor(in string) {
 	case "help":
 		help()
 	case "exit":
-		os.Exit(0)
 	case "user":
 		if len(blocks) < 2 {
 			log.Println("invalid command.")

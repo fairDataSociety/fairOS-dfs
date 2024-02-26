@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -59,11 +60,15 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	podName := fsReq.PodName
-	if podName == "" {
-		h.logger.Errorf("rmdir: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "rmdir: \"podName\" argument missing"})
-		return
+	driveName, isGroup := fsReq.GroupName, true
+	if driveName == "" {
+		driveName = fsReq.PodName
+		isGroup = false
+		if driveName == "" {
+			h.logger.Errorf("rmdir: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "rmdir: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	dir := fsReq.DirectoryPath
@@ -87,10 +92,10 @@ func (h *Handler) DirectoryRmdirHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// remove directory
-	err = h.dfsAPI.RmDir(podName, dir, sessionId)
+	err = h.dfsAPI.RmDir(driveName, dir, sessionId, isGroup)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
-			err == p.ErrPodNotOpened {
+		if errors.Is(err, dfs.ErrUserNotLoggedIn) || errors.Is(err, dfs.ErrPodNotOpen) ||
+			errors.Is(err, p.ErrPodNotOpened) {
 			h.logger.Errorf("rmdir: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "rmdir: " + err.Error()})
 			return

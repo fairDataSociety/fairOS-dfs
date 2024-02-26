@@ -21,12 +21,18 @@ import (
 	"context"
 	"crypto"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"hash"
+	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
+	bCrypto "github.com/ethersphere/bee/pkg/crypto"
+	"github.com/ethersphere/bee/pkg/soc"
 	"github.com/ethersphere/bee/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	utilsSigner "github.com/fairdatasociety/fairOS-dfs-utils/signer"
@@ -34,8 +40,17 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+	"github.com/hashicorp/golang-lru/v2/expirable"
 	"golang.org/x/crypto/sha3"
 )
+
+type feedItem struct {
+	User         utils.Address
+	AccountInfo  *account.Info
+	Topic        []byte
+	Data         []byte
+	ShouldCreate bool
+}
 
 // Handler is the main object which handles all feed related functionality
 type Handler struct {
@@ -45,6 +60,9 @@ type Handler struct {
 	HashSize    int
 	cache       map[uint64]*CacheEntry
 	cacheLock   sync.RWMutex
+	logger      logging.Logger
+	pool        *expirable.LRU[string, *feedItem]
+	evictLock   sync.Mutex
 }
 
 // hashPool contains a pool of ready hashers
@@ -60,12 +78,13 @@ func init() {
 }
 
 // NewHandler the main handler object that handles all the feed related functions.
-func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool *bmtlegacy.TreePool) *Handler {
+func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool *bmtlegacy.TreePool, feedCacheSize int, feedCacheTTL time.Duration, logger logging.Logger) *Handler {
 	fh := &Handler{
 		accountInfo: accountInfo,
 		client:      client,
 		hasherPool:  hasherPool,
 		cache:       make(map[uint64]*CacheEntry),
+		logger:      logger,
 	}
 	for i := 0; i < hasherCount; i++ {
 		hashfunc := crypto.SHA256.New()
@@ -74,7 +93,213 @@ func NewHandler(accountInfo *account.Info, client blockstore.Client, hasherPool 
 		}
 		hashPool.Put(hashfunc)
 	}
+	if feedCacheSize != -1 {
+		fh.pool = expirable.NewLRU(feedCacheSize, func(key string, value *feedItem) {
+			fh.evictLock.Lock()
+			defer fh.evictLock.Unlock()
+			if value.ShouldCreate {
+				_, _, err := fh.createSoc(value.User, value.AccountInfo, value.Topic, value.Data)
+				if err != nil {
+					logger.Errorf("failed to createSoc onEvict from  : %v\n", err)
+					return
+				}
+			}
+			_, _, err := fh.updateSoc(value.User, value.AccountInfo, value.Topic, value.Data)
+			if err != nil {
+				logger.Errorf("failed to updateSoc onEvict: %v\n", err)
+				return
+			}
+		}, feedCacheTTL)
+	}
 	return fh
+}
+
+func (h *Handler) commit() {
+	if h.pool != nil {
+		h.pool.Purge()
+	}
+}
+
+func (h *Handler) putInPool(topic []byte, item *feedItem) {
+	topicHex := hex.EncodeToString(topic)
+	key := fmt.Sprintf("%s-%s", topicHex, item.User.String())
+	it, ok := h.pool.Get(key)
+	if ok && it.ShouldCreate {
+		item.ShouldCreate = it.ShouldCreate
+	}
+	h.pool.Add(key, item)
+}
+
+func (h *Handler) getSoc(topic []byte, user utils.Address, hint lookup.Epoch) ([]byte, []byte, error) {
+	topicHex := hex.EncodeToString(topic)
+	key := fmt.Sprintf("%s-%s", topicHex, user.String())
+	if h.pool != nil {
+		item, ok := h.pool.Get(key)
+		if ok {
+			return nil, item.Data, nil
+		}
+	}
+	ctx := context.TODO()
+	f := new(Feed)
+	f.User = user
+	copy(f.Topic[:], topic)
+
+	// create the query from values
+	q := &Query{Feed: *f}
+	q.TimeLimit = 0
+	q.Hint = hint
+	if hint == lookup.NoClue {
+		_, err := h.Lookup(ctx, q)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		_, err := h.LookupEpoch(ctx, q)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	addr, data, err := h.GetContent(&q.Feed)
+	if err != nil { // skipcq: TCV-001
+		return nil, nil, err
+	}
+	return addr.Bytes(), data, nil
+}
+
+func (h *Handler) createSoc(user utils.Address, accountInfo *account.Info, topic, data []byte) (lookup.Epoch, []byte, error) {
+	var (
+		req   request
+		epoch lookup.Epoch
+	)
+
+	// fill Feed and Epoc related details
+	copy(req.ID.Topic[:], topic)
+	req.ID.User = user
+	req.Epoch.Level = lookup.HighestLevel
+	req.Epoch.Time = uint64(time.Now().Unix())
+
+	// Add initial feed data
+	req.data = data
+
+	// create the id, hash(topic, epoc)
+	id, err := h.getId(req.Topic, req.Time, req.Level)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// get the payload id BMT(span, payload)
+	payloadId, err := h.getPayloadId(data)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// create the signer and the content addressed chunk
+	signer := bCrypto.NewDefaultSigner(accountInfo.GetPrivateKey())
+	ch, err := utils.NewChunkWithSpan(data)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// generate the data to sign
+	toSignBytes, err := toSignDigest(id, ch.Address().Bytes())
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// sign the chunk
+	signature, err := signer.Sign(toSignBytes)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// set the address and the data for the soc chunk
+	req.idAddr = sch.Address()
+	req.binaryData = sch.Data()
+	// set signature and binary data fields
+	_, err = h.toChunkContent(&req, id, payloadId)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// send the updated soc chunk to bee
+	addr, err := h.update(id, user.ToBytes(), signature, ch.Data())
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	return req.Epoch, addr, nil
+}
+
+func (h *Handler) updateSoc(user utils.Address, accountInfo *account.Info, topic, data []byte) (lookup.Epoch, []byte, error) {
+	var (
+		epoch lookup.Epoch
+	)
+	retries := 0
+retry:
+	ctx := context.Background()
+	f := new(Feed)
+	f.User = user
+	copy(f.Topic[:], topic)
+
+	// get the existing request from DB
+	req, err := h.newRequest(ctx, f)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	req.Time = uint64(time.Now().Unix())
+	req.data = data
+	// create the id, hash(topic, epoc)
+	id, err := h.getId(req.Topic, req.Time, req.Level)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// get the payload id BMT(span, payload)
+	payloadId, err := h.getPayloadId(data)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// create the signer and the content addressed chunk
+	signer := bCrypto.NewDefaultSigner(accountInfo.GetPrivateKey())
+	ch, err := utils.NewChunkWithSpan(data)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	s := soc.New(id, ch)
+	sch, err := s.Sign(signer)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// generate the data to sign
+	toSignBytes, err := toSignDigest(id, ch.Address().Bytes())
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// sign the chunk
+	signature, err := signer.Sign(toSignBytes)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+	// set the address and the data for the soc chunk
+	req.idAddr = sch.Address()
+	req.binaryData = sch.Data()
+	// set signature and binary data fields
+	_, err = h.toChunkContent(req, id, payloadId)
+	if err != nil { // skipcq: TCV-001
+		return epoch, nil, err
+	}
+
+	address, err := h.update(id, user.ToBytes(), signature, ch.Data())
+	if err != nil {
+		// updating same feed in the same second will lead to "chunk already exists" error.
+		// This will wait for 1 second and retry the update maxUpdateRetry times.
+		// It is a very dirty fix for this issue. We should find a better way to handle this.
+		if strings.Contains(err.Error(), "chunk already exists") && retries < maxUpdateRetry {
+			retries++
+			<-time.After(1 * time.Second)
+			goto retry
+		}
+		return epoch, nil, err
+	}
+
+	return req.Epoch, address, nil
 }
 
 func (h *Handler) update(id, owner, signature, data []byte) ([]byte, error) {
@@ -157,6 +382,7 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 		}
 		ch := swarm.NewChunk(addr, data)
 		var request request
+
 		if err := h.fromChunk(ch, &request, query, &id); err != nil {
 			return nil, nil
 		}
@@ -173,6 +399,41 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 		return nil, NewError(errNotFound, "feed does not exist or was not updated yet")
 	}
 	return h.updateCache(request)
+}
+
+// LookupEpoch retrieves a specific query
+func (h *Handler) LookupEpoch(ctx context.Context, query *Query) (*CacheEntry, error) {
+	if query.Hint == lookup.NoClue {
+		return nil, NewError(errInvalidValue, "hint is required for epoch lookup")
+	}
+
+	// we can't look for anything without a store
+	if h.client == nil { // skipcq: TCV-001
+		return nil, NewError(errInit, "invalid blockstore")
+	}
+
+	id := ID{
+		Feed:  query.Feed,
+		Epoch: query.Hint,
+	}
+	ctx, cancel := context.WithTimeout(ctx, defaultRetrieveTimeout)
+	defer cancel()
+
+	addr, err := h.getAddress(id.Topic, query.Feed.User, query.Hint)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	data, err := h.client.DownloadChunk(ctx, addr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	ch := swarm.NewChunk(addr, data)
+	var request request
+	if err := h.fromChunk(ch, &request, query, &id); err != nil {
+		return nil, err
+	}
+
+	return h.updateCache(&request)
 }
 
 // fromChunk populates this structure from chunk data. It does not verify the signature is valid.
@@ -300,9 +561,12 @@ func (h *Handler) newRequest(ctx context.Context, feed *Feed) (request2 *request
 	}
 
 	request2.Feed = *feed
-
 	// if we already have an update, then find next epoch
 	if feedUpdate != nil {
+		if feedUpdate.Epoch.Level == 0 && feedUpdate.Epoch.Time == now {
+			<-time.After(time.Second)
+			now = TimestampProvider.Now().Time
+		}
 		request2.Epoch = lookup.GetNextEpoch(feedUpdate.Epoch, now)
 	} else {
 		request2.Epoch = lookup.GetFirstEpoch(now)

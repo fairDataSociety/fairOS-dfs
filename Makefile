@@ -1,6 +1,6 @@
 GO ?= go
 GOLANGCI_LINT ?= $$($(GO) env GOPATH)/bin/golangci-lint
-GOLANGCI_LINT_VERSION ?= v1.52.2
+GOLANGCI_LINT_VERSION ?= v1.55.2
 GOGOPROTOBUF ?= protoc-gen-gogofaster
 GOGOPROTOBUF_VERSION ?= v1.3.1
 
@@ -41,11 +41,11 @@ vet:
 
 .PHONY: test-race
 test-race:
-	$(GO) test -race -timeout 300000ms -v "$(DEST)"
+	$(GO) test -race -timeout 30m -v "$(DEST)"
 
 .PHONY: test
 test:
-	$(GO) test -v "$(DEST)"
+	$(GO) test -v "$(DEST)" -timeout=30m
 
 .PHONY: githooks
 githooks:
@@ -74,7 +74,7 @@ release:
 		-v `pwd`:/go/src/github.com/fairDataSociety/fairOS-dfs \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/fairDataSociety/fairOS-dfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.20.2 release --rm-dist
+		ghcr.io/goreleaser/goreleaser-cross:v1.21.0 release --rm-dist
 
 .PHONY: release-dry-run
 release-dry-run:
@@ -84,7 +84,7 @@ release-dry-run:
 		-v `pwd`:/go/src/github.com/fairDataSociety/fairOS-dfs \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/fairDataSociety/fairOS-dfs \
-		ghcr.io/goreleaser/goreleaser-cross:v1.20.2 release --rm-dist \
+		ghcr.io/goreleaser/goreleaser-cross:v1.21.0 release --rm-dist \
 		--skip-validate=true \
 		--skip-publish
 

@@ -1,6 +1,7 @@
 package dir
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -36,33 +37,27 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 	}
 
 	// check if directory exists
-	if d.GetInode(podPassword, dirNameWithPath) == nil { // skipcq: TCV-001
+	_, err := d.GetInode(podPassword, dirNameWithPath)
+	if err != nil { // skipcq: TCV-001
 		return ErrDirectoryNotPresent
 	}
 
 	// check if parent directory exists
-	if d.GetInode(podPassword, parentPath) == nil { // skipcq: TCV-001
+	_, err = d.GetInode(podPassword, parentPath)
+	if err != nil { // skipcq: TCV-001
 		return ErrDirectoryNotPresent
 	}
-	if d.GetInode(podPassword, newDirNameWithPath) != nil {
+	_, err = d.GetInode(podPassword, newDirNameWithPath)
+	if err == nil {
 		return ErrDirectoryAlreadyPresent
 	}
 
-	err := d.mapChildrenToNewPath(dirNameWithPath, newDirNameWithPath, podPassword)
+	err = d.mapChildrenToNewPath(dirNameWithPath, newDirNameWithPath, podPassword)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
-	topic := utils.HashString(dirNameWithPath)
-	newTopic := utils.HashString(newDirNameWithPath)
-	_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
-	if err != nil {
-		return err
-	}
-
-	// unmarshall the data and rename the directory entry
-	var inode *Inode
-	err = json.Unmarshal(inodeData, &inode)
+	inode, err := d.GetInode(podPassword, dirNameWithPath)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -77,25 +72,16 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 		return err
 	}
 
-	previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword))
-	if err == nil && previousAddr != nil {
-		_, err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
-		if err != nil { // skipcq: TCV-001
-			return err
-		}
-	} else {
-		_, err = d.fd.CreateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
-		if err != nil { // skipcq: TCV-001
-			return err
-		}
-	}
-
-	// delete old meta
-	// update with utils.DeletedFeedMagicWord
-	_, err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
+	err = d.file.Upload(bufio.NewReader(strings.NewReader(string(fileMetaBytes))), indexFileName, int64(len(fileMetaBytes)), file.MinBlockSize, 0, newDirNameWithPath, "gzip", podPassword)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
+
+	err = d.file.RmFile(utils.CombinePathAndFile(dirNameWithPath, indexFileName), podPassword)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
 	d.RemoveFromDirectoryMap(dirNameWithPath)
 
 	// get the parent directory entry and add this new directory to its list of children
@@ -130,7 +116,7 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 			filePath := utils.CombinePathAndFile(totalPath, fileName)
 			newFilePath := utils.CombinePathAndFile(newTotalPath, fileName)
 			topic := utils.HashString(filePath)
-			_, metaBytes, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
+			_, metaBytes, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword), false)
 			if err != nil {
 				return err
 			}
@@ -153,14 +139,14 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 				return err
 			}
 
-			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword))
+			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword), false)
 			if err == nil && previousAddr != nil {
-				_, err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
+				err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword), false)
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
 			} else {
-				_, err = d.fd.CreateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
+				err = d.fd.CreateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
 				if err != nil { // skipcq: TCV-001
 					return err
 				}
@@ -168,7 +154,7 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 
 			// delete old meta
 			// update with utils.DeletedFeedMagicWord
-			_, err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
+			err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword), false)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
@@ -180,41 +166,22 @@ func (d *Directory) mapChildrenToNewPath(totalPath, newTotalPath, podPassword st
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
-			topic := utils.HashString(pathWithDir)
-			newTopic := utils.HashString(newPathWithDir)
-			_, inodeData, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
-			if err != nil {
-				return err
-			}
-			// unmarshall the data and add the directory entry to the parent
-			var inode *Inode
-			err = json.Unmarshal(inodeData, &inode)
+
+			inode, err := d.GetInode(podPassword, pathWithDir)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
+
 			inode.Meta.Path = newTotalPath
 			inode.Meta.ModificationTime = time.Now().Unix()
-			// upload meta
-			fileMetaBytes, err := json.Marshal(inode)
+
+			err = d.SetInode(podPassword, inode)
 			if err != nil { // skipcq: TCV-001
 				return err
-			}
-			previousAddr, _, err := d.fd.GetFeedData(newTopic, d.userAddress, []byte(podPassword))
-			if err == nil && previousAddr != nil {
-				_, err = d.fd.UpdateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
-				if err != nil { // skipcq: TCV-001
-					return err
-				}
-			} else {
-				_, err = d.fd.CreateFeed(d.userAddress, newTopic, fileMetaBytes, []byte(podPassword))
-				if err != nil { // skipcq: TCV-001
-					return err
-				}
 			}
 
 			// delete old meta
-			// update with utils.DeletedFeedMagicWord
-			_, err = d.fd.UpdateFeed(d.userAddress, topic, []byte(utils.DeletedFeedMagicWord), []byte(podPassword))
+			err = d.RemoveInode(podPassword, pathWithDir)
 			if err != nil { // skipcq: TCV-001
 				return err
 			}

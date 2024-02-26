@@ -16,16 +16,11 @@ limitations under the License.
 
 package dir
 
-import (
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-)
-
 // IsDirectoryPresent this function check if a given directory is present inside the pod.
 func (d *Directory) IsDirectoryPresent(directoryNameWithPath, podPassword string) bool {
-	topic := utils.HashString(directoryNameWithPath)
-	_, metaBytes, err := d.fd.GetFeedData(topic, d.userAddress, []byte(podPassword))
-	if string(metaBytes) == utils.DeletedFeedMagicWord {
+	in, err := d.GetInode(podPassword, directoryNameWithPath)
+	if err != nil {
 		return false
 	}
-	return err == nil
+	return in != nil
 }

@@ -18,7 +18,6 @@ package dir
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"sync"
@@ -150,15 +149,11 @@ func newLsTask(d *Directory, topic []byte, path, podPassword string, l *[]Entry,
 // Execute
 func (lt *lsTask) Execute(context.Context) error {
 	defer lt.wg.Done()
-	_, data, err := lt.d.fd.GetFeedData(lt.topic, lt.d.getAddress(), []byte(lt.podPassword))
+	dirInode, err := lt.d.GetInode(lt.podPassword, lt.path)
 	if err != nil { // skipcq: TCV-001
 		return fmt.Errorf("list dir : %v", err)
 	}
-	var dirInode *Inode
-	err = json.Unmarshal(data, &dirInode)
-	if err != nil { // skipcq: TCV-001
-		return fmt.Errorf("list dir : %v", err)
-	}
+
 	entry := Entry{
 		Name:             dirInode.Meta.Name,
 		ContentType:      MimeTypeDirectory, // per RFC2425

@@ -33,10 +33,13 @@ the blockchain as ens record. whenever a user created a pod for himself, a new k
 is created using this mnemonic.
 
 ## What is a pod?
-A pod is a personal drive created by a user in fairOS-dfs. It is used to store files and related metadata in a decentralised fashion. A pod is always under the control of the user who created it. A user can create and store any number of files or directories in a pod. 
+A pod is a personal drive created by a user. It is used to store files and related metadata in a decentralised fashion. A pod is always under the control of the user who created it. A user can create and store any number of files or directories in a pod. 
 The user can share files in his pod with any other user just like in other centralised drives like dropbox. Not only users, a pod can be used by decentralised applications (DApp's) to store data related to that user.
 
 Pod creation is cheap. A user can create multiple pods and use it to organise his data. for ex: Personal-Pod, Applications-Pod etc.
+
+## (NEW) What is a group? 
+A group is a shared drive created by a user. It is basically a pod, but on steroids. Group Owner can add members and update permissions. Members with "write" permission can create and store any number of files or directories in a group.
 
 ## How to run FairOS-dfs?
 Run the following command to download the latest release

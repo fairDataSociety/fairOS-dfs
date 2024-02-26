@@ -22,22 +22,31 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-
-	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
-
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
+	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
 )
 
 func TestFork(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
@@ -47,10 +56,10 @@ func TestFork(t *testing.T) {
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
+	fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 	sm := mock2.NewMockSubscriptionManager()
 
-	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, logger)
+	pod1 := pod.NewPod(mockClient, fd, acc, tm, sm, -1, 0, logger)
 	podName1 := "test1"
 
 	t.Run("fork-pod", func(t *testing.T) {
@@ -94,7 +103,7 @@ func TestFork(t *testing.T) {
 
 		// validate if the directory and files are synced
 		dirObject := gotInfo.GetDirectory()
-		dirInode1 := dirObject.GetInode(podPassword, "/parentDir/subDir1")
+		dirInode1, _ := dirObject.GetInode(podPassword, "/parentDir/subDir1")
 		if dirInode1 == nil {
 			t.Fatalf("invalid dir entry")
 		}
@@ -104,7 +113,7 @@ func TestFork(t *testing.T) {
 		if dirInode1.Meta.Name != "subDir1" {
 			t.Fatalf("invalid dir entry")
 		}
-		dirInode2 := dirObject.GetInode(podPassword, "/parentDir/subDir2")
+		dirInode2, _ := dirObject.GetInode(podPassword, "/parentDir/subDir2")
 		if dirInode2 == nil {
 			t.Fatalf("invalid dir entry")
 		}

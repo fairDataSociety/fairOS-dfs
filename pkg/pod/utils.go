@@ -31,7 +31,7 @@ func (p *Pod) IsOwnPodPresent(podName string) bool {
 		return false
 	}
 	// check if pods is present and get free index
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return false
 	}
@@ -48,7 +48,7 @@ func (p *Pod) IsPodPresent(podName string) bool {
 		return false
 	}
 	// check if pods is present and get free index
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return false
 	}

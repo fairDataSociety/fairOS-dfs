@@ -80,6 +80,15 @@ can consume it.`,
 		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
 			return err
 		}
+		if err := config.BindPFlag(optionFeedCacheSize, cmd.Flags().Lookup("feedCacheSize")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionFeedCacheTTL, cmd.Flags().Lookup("feedCacheTTL")); err != nil {
+			return err
+		}
+		if err := config.BindPFlag(optionDFSPprofPort, cmd.Flags().Lookup("pprofPort")); err != nil {
+			return err
+		}
 		if err := config.BindPFlag(optionCookieDomain, cmd.Flags().Lookup("cookieDomain")); err != nil {
 			return err
 		}
@@ -124,12 +133,15 @@ can consume it.`,
 		}
 		ensConfig := &contracts.ENSConfig{}
 		var subscriptionConfig *contracts.SubscriptionConfig
-		network := config.GetString("ens-network")
+
 		rpc := config.GetString(optionRPC)
 		if rpc == "" {
 			fmt.Println("\nrpc endpoint is missing")
 			return fmt.Errorf("rpc endpoint is missing")
 		}
+
+		network := config.GetString(optionNetwork)
+
 		switch v := strings.ToLower(network); v {
 		case "mainnet":
 			fmt.Println("\nens is not available for mainnet yet")
@@ -172,14 +184,28 @@ can consume it.`,
 		logger.Info("verbosity      : ", verbosity)
 		logger.Info("httpPort       : ", httpPort)
 		logger.Info("pprofPort      : ", pprofPort)
+		logger.Info("pprofPort      : ", pprofPort)
+		logger.Info("pprofPort      : ", pprofPort)
 		logger.Info("cookieDomain   : ", cookieDomain)
-		logger.Info("postageBlockId : ", postageBlockId)
-		logger.Info("corsOrigins    : ", corsOrigins)
+		logger.Info("feedCacheSize  : ", config.GetInt(optionFeedCacheSize))
+		logger.Info("feedCacheTTL   : ", config.GetString(optionFeedCacheTTL))
 
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 
-		hdlr, err := api.New(ctx, beeApi, cookieDomain, postageBlockId, corsOrigins, ensConfig, nil, logger)
+		opts := &api.Options{
+			BeeApiEndpoint:     beeApi,
+			CookieDomain:       cookieDomain,
+			Stamp:              postageBlockId,
+			WhitelistedOrigins: corsOrigins,
+			EnsConfig:          ensConfig,
+			SubscriptionConfig: subscriptionConfig,
+			Logger:             logger,
+			FeedCacheSize:      config.GetInt(optionFeedCacheSize),
+			FeedCacheTTL:       config.GetString(optionFeedCacheTTL),
+		}
+
+		hdlr, err := api.New(ctx, opts)
 		if err != nil {
 			logger.Error(err.Error())
 			return err
@@ -216,6 +242,8 @@ func init() {
 	serverCmd.Flags().BoolVar(&swag, "swag", false, "should run swagger-ui")
 	serverCmd.Flags().String("httpPort", defaultDFSHttpPort, "http port")
 	serverCmd.Flags().String("pprofPort", defaultDFSPprofPort, "pprof port")
+	serverCmd.Flags().Int("feedCacheSize", -1, "Keep feed updates in lru cache for faster access. -1 to disable")
+	serverCmd.Flags().String("feedCacheTTL", "0s", "How long to keep feed updates in lru cache. 0s to disable")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
 	serverCmd.Flags().String("postageBlockId", "", "the postage block used to store the data in bee")
 	serverCmd.Flags().StringSlice("cors-origins", defaultCORSAllowedOrigins, "allow CORS headers for the given origins")
@@ -333,6 +361,21 @@ func startHttpService(logger logging.Logger) *http.Server {
 	podRouter.HandleFunc("/receiveinfo", handler.PodReceiveInfoHandler).Methods("GET")
 	podRouter.HandleFunc("/fork", handler.PodForkHandler).Methods("POST")
 	podRouter.HandleFunc("/fork-from-reference", handler.PodForkFromReferenceHandler).Methods("POST")
+
+	groupRouter := baseRouter.PathPrefix("/group/").Subrouter()
+	groupRouter.Use(handler.LoginMiddleware)
+	groupRouter.HandleFunc("/new", handler.GroupCreateHandler).Methods("POST")
+	groupRouter.HandleFunc("/ls", handler.GroupListHandler).Methods("GET")
+	groupRouter.HandleFunc("/delete", handler.GroupDeleteHandler).Methods("DELETE")
+	groupRouter.HandleFunc("/delete-shared", handler.GroupDeleteSharedHandler).Methods("DELETE")
+	groupRouter.HandleFunc("/accept", handler.GroupAcceptInviteHandler).Methods("POST")
+	groupRouter.HandleFunc("/invite", handler.GroupAddMemberHandler).Methods("POST")
+	groupRouter.HandleFunc("/remove", handler.GroupRemoveMemberHandler).Methods("POST")
+	groupRouter.HandleFunc("/update-permission", handler.GroupUpdatePermissionHandler).Methods("POST")
+	groupRouter.HandleFunc("/close", handler.GroupCloseHandler).Methods("POST")
+	groupRouter.HandleFunc("/members", handler.GroupGetMembers).Methods("GET")
+	groupRouter.HandleFunc("/permission", handler.GroupGetPermission).Methods("GET")
+	groupRouter.HandleFunc("/open", handler.GroupOpenHandler).Methods("POST")
 
 	// directory related handlers
 	dirRouter := baseRouter.PathPrefix("/dir/").Subrouter()

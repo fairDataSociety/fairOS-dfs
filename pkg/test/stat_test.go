@@ -23,20 +23,32 @@ import (
 	"testing"
 	"time"
 
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+
 	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
+	"github.com/sirupsen/logrus"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 
 	"github.com/plexsysio/taskmanager"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
 func TestUserStat(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
@@ -46,7 +58,7 @@ func TestUserStat(t *testing.T) {
 	t.Run("stat-nonexistent-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers(mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, -1, 0, logger)
 		ui := &user.Info{}
 		//  stat the user
 		_, err := userObject.GetUserStat(ui)
@@ -58,7 +70,7 @@ func TestUserStat(t *testing.T) {
 	t.Run("stat-user", func(t *testing.T) {
 		ens := mock2.NewMockNamespaceManager()
 		// create user
-		userObject := user.NewUsers(mockClient, ens, logger)
+		userObject := user.NewUsers(mockClient, ens, -1, 0, logger)
 		sr, err := userObject.CreateNewUserV2("user1", "password1twelve", "", "", tm, sm)
 		if err != nil {
 			t.Fatal(err)

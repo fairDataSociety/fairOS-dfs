@@ -27,6 +27,12 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
+
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/sirupsen/logrus"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -43,19 +49,28 @@ func TestMain(m *testing.M) {
 }
 
 func TestKeyValueStore(t *testing.T) {
-	mockClient := mock.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(acc.GetUserAccountInfo(), mockClient, logger)
-	user := acc.GetAddress(account.UserAccountIndex)
-	kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
-	podPassword, _ := utils.GetRandString(pod.PasswordLength)
+
 	t.Run("table_not_opened", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1314", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -82,6 +97,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("nil_itr", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1312", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -104,6 +131,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_kv_table_with_string_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_0", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -131,6 +170,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_kv_table_with_number_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -158,6 +209,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("check_delete", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_2", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -180,6 +243,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_multiple_kv_tables_and_delete", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_31", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -260,6 +335,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("create_open_and_delete", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_4", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -280,6 +367,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("delete_without_create", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		// delete the last table
 		err = kvStore.DeleteKVTable("kv_table_5", podPassword)
 		if !errors.Is(err, collection.ErrKVTableNotPresent) {
@@ -288,6 +387,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("open_table", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_6", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -305,6 +416,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("open_without_create", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err = kvStore.OpenKVTable("kv_table_7", podPassword)
 		if !errors.Is(err, collection.ErrKVTableNotPresent) {
 			t.Fatal("was able to open table without creating it")
@@ -312,6 +435,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_string_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_8", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -337,7 +472,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		countObject, err := kvStore.KVCount("kv_table_8", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_8")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -347,6 +482,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_bytes_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_bytes", podPassword, collection.BytesIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -376,7 +523,7 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		countObject, err := kvStore.KVCount("kv_table_bytes", podPassword)
+		countObject, err := kvStore.KVCount("kv_table_bytes")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -386,6 +533,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_chinese_string_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_9", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -413,6 +572,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_string_in_number_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_10", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -428,6 +599,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_get_del_get_string_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_11", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -457,6 +640,15 @@ func TestKeyValueStore(t *testing.T) {
 			t.Fatal("values do not match", string(value), "value1")
 		}
 
+		// test count
+		countObject, err := kvStore.KVCount("kv_table_11")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if countObject.Count != 2 {
+			t.Fatal("kv count value should be two")
+		}
 		// delete the key
 		_, err = kvStore.KVDelete("kv_table_11", "key1")
 		if err != nil {
@@ -472,6 +664,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("put_without_opening_table", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_12", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -483,6 +687,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("delete_non_existent_string_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_13", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -504,6 +720,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("batch_without_open", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_batch_1", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -516,6 +744,18 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("batch_columns_and_get_values", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_batch_2", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -558,9 +798,30 @@ func TestKeyValueStore(t *testing.T) {
 		if !bytes.Equal(value, gotValue) {
 			t.Fatal("values do not match", string(value), string(gotValue))
 		}
+
+		// check the count
+		countObject, err := kvStore.KVCount("kv_table_batch_2")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if countObject.Count != 1 {
+			t.Fatal("kv count value should be one")
+		}
 	})
 
 	t.Run("batch_put_columns_and_get_values", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		defer fd.CommitFeeds()
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_batch_9", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -611,11 +872,30 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("count_columns_and_get_values", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_batch_count", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
 		}
-		countObject, err := kvStore.KVCount("kv_table_batch_count", podPassword)
+		_, err = kvStore.KVCount("kv_table_batch_count")
+		if !errors.Is(err, collection.ErrKVTableNotOpened) {
+			t.Fatal("should have returned error ", collection.ErrKVTableNotOpened)
+		}
+		err = kvStore.OpenKVTable("kv_table_batch_count", podPassword)
+		if err != nil {
+			t.Fatal(err)
+		}
+		countObject, err := kvStore.KVCount("kv_table_batch_count")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -625,6 +905,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_string_keys", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, 500, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_0", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -638,6 +929,15 @@ func TestKeyValueStore(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fd.CommitFeeds()
+		// check the count
+		countObject, err := kvStore.KVCount("kv_table_Itr_0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if countObject.Count != 100 {
+			t.Fatal("kv count value should be 100")
+		}
 		sortedKeys, sortedValues := sortLexicographically(t, keys, values)
 
 		itr, err := kvStore.KVSeek("kv_table_Itr_0", "", "", -1)
@@ -649,7 +949,7 @@ func TestKeyValueStore(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
-				t.Fatal("keys do not match", itr.StringKey(), sortedKeys[i])
+				t.Fatal("keys do not match", i, itr.StringKey(), sortedKeys[i])
 			}
 			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
 				t.Fatal("values do not match", string(itr.Value()), sortedValues[i])
@@ -658,6 +958,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_seek_limit_string_keys", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		tableNo := 0
 	research:
 		tableNo++
@@ -696,7 +1007,7 @@ func TestKeyValueStore(t *testing.T) {
 		for i := startIndex; i < startIndex+10; i++ {
 			itr.Next()
 			if itr.StringKey() != sortedKeys[i] {
-				t.Fatalf("key mismatch: %s : %s\n", itr.StringKey(), sortedKeys[i])
+				t.Fatalf("key mismatch: %s : %s at %d\n", itr.StringKey(), sortedKeys[i], i)
 			}
 			if !bytes.Equal(itr.Value(), []byte(sortedValues[i])) {
 				t.Fatalf("value mismatch: %s : %s\n", itr.StringKey(), sortedKeys[i])
@@ -711,6 +1022,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_seek_start_end_string_keys", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		tableNo := 0
 	research:
 		tableNo++
@@ -781,6 +1103,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_seek_start_end_string_keys_over_a_known_failing_keys", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		tableNo := 486
 		err := kvStore.CreateKVTable(fmt.Sprintf("kv_table_Itr_1%d", tableNo), podPassword, collection.StringIndex)
 		if err != nil {
@@ -816,6 +1149,14 @@ func TestKeyValueStore(t *testing.T) {
 			}
 		}
 
+		// check the count
+		count, err := kvStore.KVCount(fmt.Sprintf("kv_table_Itr_1%d", tableNo))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count.Count != uint64(len(list)) {
+			t.Fatal("count mismatch", count, len(list))
+		}
 		startIndex := 0
 		endIndex := 0
 
@@ -859,6 +1200,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_string_of_numbers_keys", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_3", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -892,6 +1244,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_numbers_keys", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_4", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -926,6 +1289,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_numbers_start_end_keys", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_5", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -979,6 +1353,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("Iterate_numbers_start_and_limit_keys", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_Itr_6", podPassword, collection.NumberIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1026,6 +1411,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("get_non_existent_string_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1313", podPassword, collection.StringIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1056,6 +1452,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_byte_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1316", podPassword, collection.BytesIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1076,6 +1483,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_seek_list_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1317", podPassword, collection.ListIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1092,6 +1510,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_seek_map_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1318", podPassword, collection.MapIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1108,6 +1537,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("err_seek_invalid_index", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1319", podPassword, collection.InvalidIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1124,6 +1564,17 @@ func TestKeyValueStore(t *testing.T) {
 	})
 
 	t.Run("seek_unopened_table", func(t *testing.T) {
+		storer := mockstorer.New()
+		beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+			Storer:          storer,
+			PreventRedirect: true,
+			Post:            mockpost.New(mockpost.WithAcceptAll()),
+		})
+		mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
+		user := acc.GetAddress(account.UserAccountIndex)
+		kvStore := collection.NewKeyValueStore("pod1", fd, ai, user, mockClient, logger)
+		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		err := kvStore.CreateKVTable("kv_table_1320", podPassword, collection.ListIndex)
 		if err != nil {
 			t.Fatal(err)
@@ -1136,7 +1587,7 @@ func TestKeyValueStore(t *testing.T) {
 	})
 }
 
-func addRandomStrings(t *testing.T, kvStore *collection.KeyValue, count int, tableName string) ([]string, []string, error) {
+func addRandomStrings(_ *testing.T, kvStore *collection.KeyValue, count int, tableName string) ([]string, []string, error) {
 	var keys []string
 	var values []string
 	for i := 0; i < count; i++ {
@@ -1162,11 +1613,12 @@ func addRandomStrings(t *testing.T, kvStore *collection.KeyValue, count int, tab
 		}
 		keys = append(keys, key)
 		values = append(values, key)
+		<-time.After(800 * time.Millisecond)
 	}
 	return keys, values, nil
 }
 
-func addRandomNumbersAsString(t *testing.T, kvStore *collection.KeyValue, count int, tableName string) ([]string, []string, error) {
+func addRandomNumbersAsString(_ *testing.T, kvStore *collection.KeyValue, count int, tableName string) ([]string, []string, error) {
 	var keys []string
 	var values []string
 	for i := 0; i < count; i++ {
@@ -1193,7 +1645,7 @@ func addRandomNumbersAsString(t *testing.T, kvStore *collection.KeyValue, count 
 	return keys, values, nil
 }
 
-func addRandomNumbers(t *testing.T, kvStore *collection.KeyValue, count int, tableName string) ([]int, []int, error) {
+func addRandomNumbers(_ *testing.T, kvStore *collection.KeyValue, count int, tableName string) ([]int, []int, error) {
 	var keys []int
 	var values []int
 	for i := 0; i < count; i++ {

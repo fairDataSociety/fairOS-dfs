@@ -23,15 +23,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
+	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	bm "github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
-	fm "github.com/fairdatasociety/fairOS-dfs/pkg/file/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/plexsysio/taskmanager"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/goleak"
 )
 
@@ -40,8 +45,15 @@ func TestMain(m *testing.M) {
 }
 
 func TestSync(t *testing.T) {
-	mockClient := bm.NewMockBeeClient()
-	logger := logging.New(io.Discard, 0)
+	storer := mockstorer.New()
+	beeUrl := mock.NewTestBeeServer(t, mock.TestServerOptions{
+		Storer:          storer,
+		PreventRedirect: true,
+		Post:            mockpost.New(mockpost.WithAcceptAll()),
+	})
+
+	logger := logging.New(io.Discard, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
@@ -51,13 +63,13 @@ func TestSync(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fd := feed.New(pod1AccountInfo, mockClient, logger)
+	fd := feed.New(pod1AccountInfo, mockClient, -1, 0, logger)
 	user := acc.GetAddress(1)
-	mockFile := fm.NewMockFile()
 	tm := taskmanager.New(1, 10, time.Second*15, logger)
 	defer func() {
 		_ = tm.Stop(context.Background())
 	}()
+	mockFile := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
 	t.Run("sync-dir", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
@@ -82,15 +94,7 @@ func TestSync(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// just add dummy file entry as file listing is not tested here
-		err = dirObject.AddEntryToDir("/dirToStat", podPassword, "file1", true)
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = dirObject.AddEntryToDir("/dirToStat", podPassword, "file2", true)
-		if err != nil {
-			t.Fatal(err)
-		}
+
 		dirObject2 := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
 		if dirObject2.GetDirFromDirectoryMap("/") != nil {
 			t.Fatal("it should be nil before sync")

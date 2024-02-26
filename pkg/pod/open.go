@@ -32,8 +32,12 @@ import (
 // it loads all the data structures related to the pod. Also, it syncs all the
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPod(podName string) (*Info, error) {
+	pi, _, _ := p.GetPodInfoFromPodMap(podName)
+	if pi != nil {
+		return pi, nil
+	}
 	// check if pods is present and get the index of the pod
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -45,6 +49,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 			sharedPodType = true
 		}
 	}
+
 	var (
 		podPassword string
 		accountInfo *account.Info
@@ -64,7 +69,7 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		address := utils.HexToAddress(addressString)
 		accountInfo.SetAddress(address)
 
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -82,14 +87,16 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
+		//_, err = tracker.InitFeedsTracker(accountInfo.GetAddress(), podName, podPassword, fd, p.client, p.logger)
+		//if err != nil {
+		//	p.logger.Errorf("error initializing feeds tracker: %v", err)
+		//}
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
 		user = p.acc.GetAddress(index)
 	}
-
 	kvStore := c.NewKeyValueStore(podName, fd, accountInfo, user, p.client, p.logger)
 	docStore := c.NewDocumentStore(podName, fd, accountInfo, user, file, p.tm, p.client, p.logger)
 
@@ -105,7 +112,6 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 		kvStore:     kvStore,
 		docStore:    docStore,
 	}
-
 	p.addPodToPodMap(podName, podInfo)
 	if !sharedPodType {
 		err = podInfo.GetDirectory().AddRootDir(podInfo.GetPodName(), podInfo.GetPodPassword(), podInfo.GetPodAddress(), podInfo.GetFeed())
@@ -113,7 +119,6 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 			return nil, err
 		}
 	}
-
 	return podInfo, nil
 }
 
@@ -122,7 +127,7 @@ func (p *Pod) OpenFromShareInfo(si *ShareInfo) (*Info, error) {
 	address := utils.HexToAddress(si.Address)
 	accountInfo.SetAddress(address)
 
-	fd := feed.New(accountInfo, p.client, p.logger)
+	fd := feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 	file := f.NewFile(si.PodName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 	dir := d.NewDirectory(si.PodName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -156,7 +161,7 @@ func (p *Pod) OpenFromShareInfo(si *ShareInfo) (*Info, error) {
 // files and directories under this pod from the Swarm network.
 func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 	// check if pods is present and get the index of the pod
-	podList, err := p.loadUserPods()
+	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -189,7 +194,7 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 		address := utils.HexToAddress(addressString)
 		accountInfo.SetAddress(address)
 
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
@@ -208,7 +213,8 @@ func (p *Pod) OpenPodAsync(ctx context.Context, podName string) (*Info, error) {
 			return nil, err
 		}
 
-		fd = feed.New(accountInfo, p.client, p.logger)
+		fd = feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
+		//fd.SetUpdateTracker(p.fd.GetUpdateTracker())
 		file = f.NewFile(podName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
 		dir = d.NewDirectory(podName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
 
