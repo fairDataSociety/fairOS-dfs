@@ -13,9 +13,10 @@ import (
 
 // FileModeRequest is used to change file permission mode
 type FileModeRequest struct {
-	PodName  string `json:"podName,omitempty"`
-	FilePath string `json:"filePath,omitempty"`
-	Mode     string `json:"mode,omitempty"`
+	PodName   string `json:"podName,omitempty"`
+	GroupName string `json:"groupName,omitempty"`
+	FilePath  string `json:"filePath,omitempty"`
+	Mode      string `json:"mode,omitempty"`
 }
 
 // FileModeHandler godoc
@@ -48,12 +49,15 @@ func (h *Handler) FileModeHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "file chmod: could not decode arguments"})
 		return
 	}
-
-	podName := chmodReq.PodName
-	if podName == "" {
-		h.logger.Errorf("file chmod: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file chmod: \"podName\" argument missing"})
-		return
+	driveName, isGroup := chmodReq.GroupName, true
+	if driveName == "" {
+		driveName = chmodReq.PodName
+		isGroup = false
+		if driveName == "" {
+			h.logger.Errorf("file chmod: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "file chmod: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	filePath := chmodReq.FilePath
@@ -90,7 +94,7 @@ func (h *Handler) FileModeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.dfsAPI.ChmodFile(podName, filePath, sessionId, uint32(mode))
+	err = h.dfsAPI.ChmodFile(driveName, filePath, sessionId, uint32(mode), isGroup)
 	if err != nil {
 		h.logger.Errorf("file chmod: %v", err)
 		jsonhttp.BadRequest(w, &response{Message: err.Error()})

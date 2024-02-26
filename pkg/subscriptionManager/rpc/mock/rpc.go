@@ -57,9 +57,9 @@ func (s *SubscriptionManager) AddPodToMarketplace(podAddress, owner common.Addre
 		Price:             new(big.Int).SetUint64(price),
 		Active:            true,
 		Earned:            nil,
-		Bids:              0,
-		Sells:             0,
-		Reports:           0,
+		Bids:              new(big.Int).SetUint64(0),
+		Sells:             new(big.Int).SetUint64(0),
+		Reports:           new(big.Int).SetUint64(0),
 	}
 	s.lock.Lock()
 	defer s.lock.Unlock()

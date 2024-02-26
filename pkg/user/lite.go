@@ -3,6 +3,8 @@ package user
 import (
 	"sync"
 
+	acl2 "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -36,6 +38,8 @@ func (u *Users) LoadLiteUser(userName, _, mnemonic, sessionId string, tm taskman
 	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), tm, u.logger)
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
+	acl := acl2.NewACL(u.client, fd, u.logger)
+	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
@@ -48,6 +52,7 @@ func (u *Users) LoadLiteUser(userName, _, mnemonic, sessionId string, tm taskman
 		file:       file,
 		dir:        dir,
 		pod:        pod,
+		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
 	}

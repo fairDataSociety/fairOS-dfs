@@ -17,8 +17,11 @@ limitations under the License.
 package user
 
 import (
+	"errors"
 	"regexp"
 	"sync"
+
+	acl2 "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -101,7 +104,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		nameHash, err = u.createENS(userName, accountInfo)
 		if err != nil { // skipcq: TCV-001
 			u.logger.Errorf("user: create: create ens failed for user %s: %v", userName, err)
-			if err == eth.ErrInsufficientBalance { // skipcq: TCV-001
+			if errors.Is(err, eth.ErrInsufficientBalance) { // skipcq: TCV-001
 				return signUp, err
 			}
 			return nil, err // skipcq: TCV-001
@@ -125,6 +128,8 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	file := f.NewFile(userName, u.client, fd, accountInfo.GetAddress(), tm, u.logger)
 	dir := d.NewDirectory(userName, u.client, fd, accountInfo.GetAddress(), file, tm, u.logger)
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
+	acl := acl2.NewACL(u.client, fd, u.logger)
+	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
@@ -137,6 +142,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		file:       file,
 		dir:        dir,
 		pod:        pod,
+		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
 	}

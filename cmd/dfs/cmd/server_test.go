@@ -17,6 +17,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
+	"github.com/stretchr/testify/assert"
+
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -1076,6 +1079,267 @@ func TestApis(t *testing.T) {
 				}
 				if statResp.StatusCode != 200 {
 					t.Fatal("file stat failed")
+				}
+			}
+		}
+	})
+
+	t.Run("group-test", func(t *testing.T) {
+		c := http.Client{Timeout: time.Duration(1) * time.Minute}
+		userRequest := &common.UserSignupRequest{
+			UserName: randStringRunes(16),
+			Password: randStringRunes(12),
+		}
+
+		userBytes, err := json.Marshal(userRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		signupRequestDataHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev2, string(common.UserSignup)), bytes.NewBuffer(userBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		signupRequestDataHttpReq.Header.Add("Content-Type", "application/json")
+		signupRequestDataHttpReq.Header.Add("Content-Length", strconv.Itoa(len(userBytes)))
+		signupRequestResp, err := c.Do(signupRequestDataHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = signupRequestResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if signupRequestResp.StatusCode != http.StatusCreated {
+			t.Fatal("Signup failed", signupRequestResp.StatusCode)
+		}
+
+		userLoginHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev2, string(common.UserLogin)), bytes.NewBuffer(userBytes))
+		if err != nil {
+			t.Fatal(err)
+
+		}
+		userLoginHttpReq.Header.Add("Content-Type", "application/json")
+		userLoginHttpReq.Header.Add("Content-Length", strconv.Itoa(len(userBytes)))
+		userLoginResp, err := c.Do(userLoginHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = userLoginResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if userLoginResp.StatusCode != http.StatusOK {
+			t.Fatal("user should be able to login")
+		}
+		cookie := userLoginResp.Header["Set-Cookie"]
+		groupRequest := &api.GroupNameRequest{
+			GroupName: randStringRunes(16),
+		}
+
+		groupBytes, err := json.Marshal(groupRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		groupNewHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, "/group/new"), bytes.NewBuffer(groupBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		groupNewHttpReq.Header.Set("Cookie", cookie[0])
+		groupNewHttpReq.Header.Add("Content-Type", "application/json")
+		groupNewHttpReq.Header.Add("Content-Length", strconv.Itoa(len(groupBytes)))
+		groupNewResp, err := c.Do(groupNewHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = groupNewResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if groupNewResp.StatusCode != 201 {
+			t.Fatal("group creation failed")
+		}
+
+		// check for own permission
+		groupPermHttpReq, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s?groupName=%s", basev1, "/group/permission", groupRequest.GroupName), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		groupPermHttpReq.Header.Set("Cookie", cookie[0])
+		groupPermHttpReq.Header.Add("Content-Type", "application/json")
+		groupPermHttpReq.Header.Add("Content-Length", strconv.Itoa(len(groupBytes)))
+		groupPermResp, err := c.Do(groupPermHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		permResp, err := io.ReadAll(groupPermResp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		perm := &api.GroupPermissionResponse{}
+		err = json.Unmarshal(permResp, &perm)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = groupPermResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if groupPermResp.StatusCode != 200 {
+			t.Fatal("group permission failed")
+		}
+
+		if !assert.Equal(t, perm.Permission, acl.PermissionWrite) {
+			t.Fatal("permission should be write")
+		}
+
+		entries := []struct {
+			path    string
+			isDir   bool
+			size    int64
+			content []byte
+		}{
+			{
+				path:  "/dir1",
+				isDir: true,
+			},
+			{
+				path:  "/dir2",
+				isDir: true,
+			},
+			{
+				path:  "/dir3",
+				isDir: true,
+			},
+			{
+				path: "/file1",
+				size: 1024 * 1024,
+			},
+			{
+				path: "/dir1/file11",
+				size: 1024 * 512,
+			},
+			{
+				path: "/dir1/file12",
+				size: 1024 * 1024,
+			},
+			{
+				path: "/dir3/file31",
+				size: 1024 * 1024,
+			},
+			{
+				path: "/dir3/file32",
+				size: 1024 * 1024,
+			},
+			{
+				path: "/dir3/file33",
+				size: 1024,
+			},
+			{
+				path:  "/dir2/dir4",
+				isDir: true,
+			},
+			{
+				path:  "/dir2/dir4/dir5",
+				isDir: true,
+			},
+			{
+				path: "/dir2/dir4/file241",
+				size: 5 * 1024 * 1024,
+			},
+			{
+				path: "/dir2/dir4/dir5/file2451",
+				size: 10 * 1024 * 1024,
+			},
+		}
+
+		for _, v := range entries {
+			if v.isDir {
+				mkdirRqst := common.FileSystemRequest{
+					GroupName:     groupRequest.GroupName,
+					DirectoryPath: v.path,
+				}
+				mkDirBytes, err := json.Marshal(mkdirRqst)
+				if err != nil {
+					t.Fatal(err)
+				}
+				mkDirHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(common.DirMkdir)), bytes.NewBuffer(mkDirBytes))
+				if err != nil {
+					t.Fatal(err)
+
+				}
+				mkDirHttpReq.Header.Set("Cookie", cookie[0])
+				mkDirHttpReq.Header.Add("Content-Type", "application/json")
+				mkDirHttpReq.Header.Add("Content-Length", strconv.Itoa(len(mkDirBytes)))
+				mkDirResp, err := c.Do(mkDirHttpReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = mkDirResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if mkDirResp.StatusCode != 201 {
+					t.Fatal("mkdir failed")
+				}
+			} else {
+				body := new(bytes.Buffer)
+				writer := multipart.NewWriter(body)
+				contentLength := fmt.Sprintf("%d", v.size)
+
+				err = writer.WriteField("groupName", groupRequest.GroupName)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = writer.WriteField("contentLength", contentLength)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = writer.WriteField("dirPath", filepath.Dir(v.path))
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = writer.WriteField("blockSize", "1Mb")
+				if err != nil {
+					t.Fatal(err)
+				}
+				part, err := writer.CreateFormFile("files", filepath.Base(v.path))
+				if err != nil {
+					t.Fatal(err)
+				}
+				reader := &io.LimitedReader{R: rand.Reader, N: v.size}
+				_, err = io.Copy(part, reader)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				err = writer.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				uploadReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(common.FileUpload)), body)
+				if err != nil {
+					t.Fatal(err)
+
+				}
+				uploadReq.Header.Set("Cookie", cookie[0])
+				contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
+				uploadReq.Header.Add("Content-Type", contentType)
+				uploadResp, err := c.Do(uploadReq)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = uploadResp.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if uploadResp.StatusCode != 200 {
+					t.Fatal("upload failed")
 				}
 			}
 		}

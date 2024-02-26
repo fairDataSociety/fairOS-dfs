@@ -94,7 +94,7 @@ func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, titl
 	var a [32]byte
 	copy(a[:], ref)
 
-	tx, err := c.datahub.ListSub(opts, nameHash, a, new(big.Int).SetUint64(price), category, podAddress, daysValid)
+	tx, err := c.datahub.ListSub(opts, nameHash, a, new(big.Int).SetUint64(price), category, podAddress, new(big.Int).SetUint64(uint64(daysValid)))
 	if err != nil {
 		return err
 	}

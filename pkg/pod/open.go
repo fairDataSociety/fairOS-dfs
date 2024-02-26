@@ -116,7 +116,6 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	if !sharedPodType {
 		err = podInfo.GetDirectory().AddRootDir(podInfo.GetPodName(), podInfo.GetPodPassword(), podInfo.GetPodAddress(), podInfo.GetFeed())
 		if err != nil {
-			fmt.Println("err", err)
 			return nil, err
 		}
 	}

@@ -44,11 +44,24 @@ import (
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/download [post]
 func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request) {
-	podName := r.FormValue("podName")
-	if podName == "" {
-		h.logger.Errorf("download: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
-		return
+	driveName, isGroup := "", false
+	keys, ok := r.URL.Query()["groupName"]
+	if ok || (len(keys) == 1 && len(keys[0]) > 0) {
+		driveName = keys[0]
+		isGroup = true
+	} else {
+		keys, ok := r.URL.Query()["podName"]
+		if !ok || len(keys[0]) < 1 {
+			h.logger.Errorf("download \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
+			return
+		}
+		driveName = keys[0]
+		if driveName == "" {
+			h.logger.Errorf("download: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	podFileWithPath := r.FormValue("filePath")
@@ -58,7 +71,7 @@ func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	h.handleDownload(w, r, podName, podFileWithPath)
+	h.handleDownload(w, r, driveName, podFileWithPath, isGroup)
 }
 
 // FileDownloadHandlerGet godoc
@@ -77,17 +90,24 @@ func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/download [get]
 func (h *Handler) FileDownloadHandlerGet(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["podName"]
-	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("download \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
-		return
-	}
-	podName := keys[0]
-	if podName == "" {
-		h.logger.Errorf("download: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
-		return
+	driveName, isGroup := "", false
+	keys, ok := r.URL.Query()["groupName"]
+	if ok || (len(keys) == 1 && len(keys[0]) > 0) {
+		driveName = keys[0]
+		isGroup = true
+	} else {
+		keys, ok := r.URL.Query()["podName"]
+		if !ok || len(keys[0]) < 1 {
+			h.logger.Errorf("download \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
+			return
+		}
+		driveName = keys[0]
+		if driveName == "" {
+			h.logger.Errorf("download: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	keys, ok = r.URL.Query()["filePath"]
@@ -103,10 +123,10 @@ func (h *Handler) FileDownloadHandlerGet(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	h.handleDownload(w, r, podName, podFileWithPath)
+	h.handleDownload(w, r, driveName, podFileWithPath, isGroup)
 }
 
-func (h *Handler) handleDownload(w http.ResponseWriter, r *http.Request, podName, podFileWithPath string) {
+func (h *Handler) handleDownload(w http.ResponseWriter, r *http.Request, podName, podFileWithPath string, isGroup bool) {
 	// get sessionId from request
 	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
@@ -121,7 +141,7 @@ func (h *Handler) handleDownload(w http.ResponseWriter, r *http.Request, podName
 	}
 
 	// download file from bee
-	reader, size, err := h.dfsAPI.DownloadFile(podName, podFileWithPath, sessionId)
+	reader, size, err := h.dfsAPI.DownloadFile(podName, podFileWithPath, sessionId, false)
 	if err != nil {
 		if err == dfs.ErrPodNotOpen {
 			h.logger.Errorf("download: %v", err)

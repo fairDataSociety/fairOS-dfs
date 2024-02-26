@@ -38,6 +38,9 @@ The user can share files in his pod with any other user just like in other centr
 
 Pod creation is cheap. A user can create multiple pods and use it to organise his data. for ex: Personal-Pod, Applications-Pod etc.
 
+## (NEW) What is a group? 
+A group is a shared drive created by a user. It is basically a pod, but on steroids. Group Owner can add members and update permissions. Members with "write" permission can create and store any number of files or directories in a group.
+
 ## How to run FairOS-dfs?
 Run the following command to download the latest release
 

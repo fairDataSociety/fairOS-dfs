@@ -2,9 +2,14 @@ package test_test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
+	"fmt"
 	"io"
 	"testing"
 	"time"
+
+	"github.com/ethereum/go-ethereum/crypto"
 
 	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
@@ -200,4 +205,50 @@ func TestSubscription(t *testing.T) {
 		t.Fatalf("invalid block size")
 	}
 
+}
+
+//
+
+func TestEncryption(t *testing.T) {
+	pvtSrt := "153cd9f51ceee5418270957c584b2c8de11f64df6fa2189087aaa89b7deea66e"
+	VpvtSrt := "cb1b8338e66bd1a94e5a0e69a869e84ada4ef0e7bc18ddd7c7edcb25bcbd6312"
+	pvtKey, err := crypto.HexToECDSA(pvtSrt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	VpvtKey, err := crypto.HexToECDSA(VpvtSrt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pubKey := pvtKey.PublicKey
+	VpubKey := VpvtKey.PublicKey
+	crypto.PubkeyToAddress(pubKey)
+	fmt.Println(pubKey)
+	fmt.Println(crypto.PubkeyToAddress(pubKey).String())
+	fmt.Println(crypto.FromECDSAPub(&pubKey))
+
+	data := "This is a test string"
+	fmt.Println(VpubKey.Curve)
+	a, _ := VpubKey.Curve.ScalarMult(VpubKey.X, VpubKey.Y, pvtKey.D.Bytes())
+	secret := sha256.Sum256(a.Bytes())
+	fmt.Println(base64.URLEncoding.EncodeToString(secret[:]))
+	encData, err := utils.EncryptBytes(secret[:], []byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	uEnc := base64.URLEncoding.EncodeToString(encData)
+	fmt.Println(uEnc)
+
+	b, _ := pubKey.Curve.ScalarMult(pubKey.X, pubKey.Y, VpvtKey.D.Bytes())
+	secretB := sha256.Sum256(b.Bytes())
+
+	data2, err := utils.DecryptBytes(secretB[:], encData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(string(data2))
 }

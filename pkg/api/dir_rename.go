@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -60,12 +61,15 @@ func (h *Handler) DirectoryRenameHandler(w http.ResponseWriter, r *http.Request)
 		jsonhttp.BadRequest(w, &response{Message: "rename-dir: could not decode arguments"})
 		return
 	}
-
-	podName := renameReq.PodName
-	if podName == "" {
-		h.logger.Errorf("rename-dir: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "rename-dir: \"podName\" argument missing"})
-		return
+	driveName, isGroup := renameReq.GroupName, true
+	if driveName == "" {
+		driveName = renameReq.PodName
+		isGroup = false
+		if driveName == "" {
+			h.logger.Errorf("rename-dir: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "rename-dir: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	oldPath := renameReq.OldPath
@@ -96,12 +100,12 @@ func (h *Handler) DirectoryRenameHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// make directory
-	err = h.dfsAPI.RenameDir(podName, oldPath, newPath, sessionId)
+	err = h.dfsAPI.RenameDir(driveName, oldPath, newPath, sessionId, isGroup)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
-			err == p.ErrInvalidDirectory ||
-			err == p.ErrTooLongDirectoryName ||
-			err == p.ErrPodNotOpened {
+		if errors.Is(err, dfs.ErrPodNotOpen) || errors.Is(err, dfs.ErrUserNotLoggedIn) ||
+			errors.Is(err, p.ErrInvalidDirectory) ||
+			errors.Is(err, p.ErrTooLongDirectoryName) ||
+			errors.Is(err, p.ErrPodNotOpened) {
 			h.logger.Errorf("rename-dir: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "rename-dir: " + err.Error()})
 			return

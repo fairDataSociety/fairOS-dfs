@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -61,11 +62,15 @@ func (h *Handler) FileRenameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	podName := renameReq.PodName
-	if podName == "" {
-		h.logger.Errorf("file rename: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file rename: \"podName\" argument missing"})
-		return
+	driveName, isGroup := renameReq.GroupName, true
+	if driveName == "" {
+		driveName = renameReq.PodName
+		isGroup = false
+		if driveName == "" {
+			h.logger.Errorf("file rename: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "file rename: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	podFileWithPath := renameReq.OldPath
@@ -95,14 +100,14 @@ func (h *Handler) FileRenameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// rename file
-	err = h.dfsAPI.RenameFile(podName, podFileWithPath, newPodFileWithPath, sessionId)
+	err = h.dfsAPI.RenameFile(driveName, podFileWithPath, newPodFileWithPath, sessionId, isGroup)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen {
+		if errors.Is(err, dfs.ErrPodNotOpen) {
 			h.logger.Errorf("file rename: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "file rename: " + err.Error()})
 			return
 		}
-		if err == pod.ErrInvalidFile {
+		if errors.Is(err, pod.ErrInvalidFile) {
 			h.logger.Errorf("file rename: %v", err)
 			jsonhttp.NotFound(w, &response{Message: "file rename: " + err.Error()})
 			return

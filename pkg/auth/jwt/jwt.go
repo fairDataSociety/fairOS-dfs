@@ -44,7 +44,7 @@ func GenerateToken(sessionId string) (string, error) {
 	return token.SignedString(secret)
 }
 
-func Parse(tokenStr string) (string, error) {
+func parse(tokenStr string) (string, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return secret, nil
@@ -77,5 +77,5 @@ func GetSessionIdFromToken(request *http.Request) (sessionId string, err error) 
 	if tokenStr == "" {
 		return "", ErrNoTokenInRequest
 	}
-	return Parse(tokenStr)
+	return parse(tokenStr)
 }

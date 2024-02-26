@@ -55,12 +55,15 @@ func (h *Handler) FileUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
 		return
 	}
-
-	podName := r.FormValue("podName")
-	if podName == "" {
-		h.logger.Errorf("file update: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "file update: \"podName\" argument missing"})
-		return
+	driveName, isGroup := r.FormValue("groupName"), true
+	if driveName == "" {
+		isGroup = false
+		driveName = r.FormValue("podName")
+		if driveName == "" {
+			h.logger.Errorf("file update: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "file update: \"podName\" argument missing"})
+			return
+		}
 	}
 
 	fileNameWithPath := r.FormValue("filePath")
@@ -91,7 +94,7 @@ func (h *Handler) FileUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	_, err = h.dfsAPI.WriteAtFile(podName, fileNameWithPath, sessionId, file, offset, false)
+	_, err = h.dfsAPI.WriteAtFile(driveName, fileNameWithPath, sessionId, file, offset, false, isGroup)
 	if err != nil {
 		h.logger.Errorf("file update: writeAt failed: %s", err.Error())
 		jsonhttp.BadRequest(w, &response{Message: "file update: writeAt failed: " + err.Error()})

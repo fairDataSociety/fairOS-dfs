@@ -34,7 +34,7 @@ func TestnetConfig(chainId string) (*ENSConfig, *SubscriptionConfig) {
 		e.FDSRegistrarAddress = "0xFBF00389140C00384d88d458239833E3231a7414"
 		e.PublicResolverAddress = "0xC904989B579c2B216A75723688C784038AA99B56"
 
-		s.DataHubAddress = "0xbF38b92a9baE1e23e150A66c7A44412828210371"
+		s.DataHubAddress = "0xBE41b272e3cDe3aeC8fE4a144C5b7cE71D9e6498"
 	case Goerli:
 		e.ENSRegistryAddress = "0x42B22483e3c8dF794f351939620572d1a3193c12"
 		e.FDSRegistrarAddress = "0xF4C9Cd25031E3BB8c5618299bf35b349c1aAb6A9"

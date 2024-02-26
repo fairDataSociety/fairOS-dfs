@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -42,14 +43,25 @@ import (
 //	@Failure      500  {object}  response
 //	@Router       /v1/dir/stat [get]
 func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["podName"]
-	if !ok || len(keys[0]) < 1 {
-		h.logger.Errorf("dir: \"podName\" argument missing")
-		jsonhttp.BadRequest(w, &response{Message: "dir: \"podName\" argument missing"})
-		return
+	driveName, isGroup := "", false
+	keys, ok := r.URL.Query()["groupName"]
+	if ok || (len(keys) == 1 && len(keys[0]) > 0) {
+		driveName = keys[0]
+		isGroup = true
+	} else {
+		keys, ok = r.URL.Query()["podName"]
+		if !ok || len(keys[0]) < 1 {
+			h.logger.Errorf("dir: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "dir: \"podName\" argument missing"})
+			return
+		}
+		driveName = keys[0]
+		if driveName == "" {
+			h.logger.Errorf("dir: \"podName\" argument missing")
+			jsonhttp.BadRequest(w, &response{Message: "dir: \"podName\" argument missing"})
+			return
+		}
 	}
-	podName := keys[0]
-
 	keys, ok = r.URL.Query()["dirPath"]
 	if !ok || len(keys[0]) < 1 {
 		h.logger.Errorf("dir present: \"dirPath\" argument missing")
@@ -72,10 +84,10 @@ func (h *Handler) DirectoryStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// stat directory
-	ds, err := h.dfsAPI.DirectoryStat(podName, dir, sessionId)
+	ds, err := h.dfsAPI.DirectoryStat(driveName, dir, sessionId, isGroup)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen || err == dfs.ErrUserNotLoggedIn ||
-			err == p.ErrPodNotOpened {
+		if errors.Is(err, dfs.ErrPodNotOpen) || errors.Is(err, dfs.ErrUserNotLoggedIn) ||
+			errors.Is(err, p.ErrPodNotOpened) {
 			h.logger.Errorf("dir stat: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "dir stat: " + err.Error()})
 			return

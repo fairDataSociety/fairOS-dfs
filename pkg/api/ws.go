@@ -694,7 +694,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			err = h.dfsAPI.Mkdir(fsReq.PodName, fsReq.DirectoryPath, sessionID, 0)
+			err = h.dfsAPI.Mkdir(fsReq.PodName, fsReq.DirectoryPath, sessionID, 0, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -726,7 +726,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			err = h.dfsAPI.RmDir(fsReq.PodName, fsReq.DirectoryPath, sessionID)
+			err = h.dfsAPI.RmDir(fsReq.PodName, fsReq.DirectoryPath, sessionID, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -758,7 +758,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			dEntries, fEntries, err := h.dfsAPI.ListDir(fsReq.PodName, fsReq.DirectoryPath, sessionID)
+			dEntries, fEntries, err := h.dfsAPI.ListDir(fsReq.PodName, fsReq.DirectoryPath, sessionID, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -797,7 +797,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			ds, err := h.dfsAPI.DirectoryStat(fsReq.PodName, fsReq.DirectoryPath, sessionID)
+			ds, err := h.dfsAPI.DirectoryStat(fsReq.PodName, fsReq.DirectoryPath, sessionID, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -827,7 +827,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			present, err := h.dfsAPI.IsDirPresent(fsReq.PodName, fsReq.DirectoryPath, sessionID)
+			present, err := h.dfsAPI.IsDirPresent(fsReq.PodName, fsReq.DirectoryPath, sessionID, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -952,7 +952,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			data, n, err := h.dfsAPI.DownloadFile(fsReq.PodName, fsReq.Filepath, sessionID)
+			data, n, err := h.dfsAPI.DownloadFile(fsReq.PodName, fsReq.Filepath, sessionID, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -1077,7 +1077,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			err = h.dfsAPI.UploadFile(fsReq.PodName, fileName, sessionID, int64(len(data.Bytes())), data, fsReq.DirPath, compression, uint32(bs), 0, fsReq.Overwrite)
+			err = h.dfsAPI.UploadFile(fsReq.PodName, fileName, sessionID, int64(len(data.Bytes())), data, fsReq.DirPath, compression, uint32(bs), 0, fsReq.Overwrite, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -1107,7 +1107,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			sharingRef, err := h.dfsAPI.ShareFile(fsReq.PodName, fsReq.DirectoryPath, fsReq.Destination, sessionID)
+			sharingRef, err := h.dfsAPI.ShareFile(fsReq.PodName, fsReq.DirectoryPath, fsReq.Destination, sessionID, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -1201,7 +1201,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			err = h.dfsAPI.DeleteFile(fsReq.PodName, fsReq.FilePath, sessionID)
+			err = h.dfsAPI.DeleteFile(fsReq.PodName, fsReq.FilePath, sessionID, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
@@ -1233,7 +1233,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			stat, err := h.dfsAPI.FileStat(fsReq.PodName, fsReq.DirectoryPath, sessionID)
+			stat, err := h.dfsAPI.FileStat(fsReq.PodName, fsReq.DirectoryPath, sessionID, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue
