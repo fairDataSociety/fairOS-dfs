@@ -44,19 +44,10 @@ import (
 //	@Failure      500  {object}  response
 //	@Router       /v1/file/download [post]
 func (h *Handler) FileDownloadHandlerPost(w http.ResponseWriter, r *http.Request) {
-	driveName, isGroup := "", false
-	keys, ok := r.URL.Query()["groupName"]
-	if ok || (len(keys) == 1 && len(keys[0]) > 0) {
-		driveName = keys[0]
-		isGroup = true
-	} else {
-		keys, ok := r.URL.Query()["podName"]
-		if !ok || len(keys[0]) < 1 {
-			h.logger.Errorf("download \"podName\" argument missing")
-			jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
-			return
-		}
-		driveName = keys[0]
+	driveName, isGroup := r.FormValue("groupName"), true
+	if driveName == "" {
+		isGroup = false
+		driveName = r.FormValue("podName")
 		if driveName == "" {
 			h.logger.Errorf("download: \"podName\" argument missing")
 			jsonhttp.BadRequest(w, &response{Message: "download: \"podName\" argument missing"})
