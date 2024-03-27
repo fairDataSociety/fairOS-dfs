@@ -23,8 +23,8 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"

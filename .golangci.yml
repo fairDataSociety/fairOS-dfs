@@ -1,7 +1,12 @@
 run:
   timeout: 10m
+  concurrency: 4
+  tests: false
+
 linters:
   enable:
     - misspell
     - gofmt
     - unconvert
+issues:
+  exclude-dirs: ["wasm"]

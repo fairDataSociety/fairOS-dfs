@@ -8,8 +8,8 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 
 	mock3 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
 	"github.com/sirupsen/logrus"

@@ -19,7 +19,7 @@ package blockstore
 import (
 	"context"
 
-	"github.com/ethersphere/bee/pkg/swarm"
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 )
 
 // Client is the interface for block store
