@@ -1,6 +1,6 @@
 module github.com/fairdatasociety/fairOS-dfs
 
-go 1.22
+go 1.21
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
