@@ -20,8 +20,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 	"github.com/stretchr/testify/assert"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"

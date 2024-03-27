@@ -27,7 +27,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ethersphere/bee/pkg/swarm"
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	lru "github.com/hashicorp/golang-lru/v2/expirable"
@@ -48,7 +48,6 @@ const (
 	bzzUrl                    = "/bzz"
 	tagsUrl                   = "/tags"
 	pinsUrl                   = "/pins/"
-	_                         = pinsUrl
 	swarmPinHeader            = "Swarm-Pin"
 	swarmEncryptHeader        = "Swarm-Encrypt"
 	swarmPostageBatchId       = "Swarm-Postage-Batch-Id"

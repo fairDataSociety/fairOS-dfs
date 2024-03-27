@@ -9,7 +9,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	goens "github.com/wealdtech/go-ens/v3"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/ethereum/go-ethereum/common"
 )
 
