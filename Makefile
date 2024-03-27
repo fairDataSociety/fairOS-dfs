@@ -1,6 +1,6 @@
 GO ?= go
 GOLANGCI_LINT ?= $$($(GO) env GOPATH)/bin/golangci-lint
-GOLANGCI_LINT_VERSION ?= v1.55.2
+GOLANGCI_LINT_VERSION ?= v1.57.1
 GOGOPROTOBUF ?= protoc-gen-gogofaster
 GOGOPROTOBUF_VERSION ?= v1.3.1
 
@@ -24,7 +24,7 @@ dist:
 
 .PHONY: lint
 lint: linter
-	$(GOLANGCI_LINT) run --skip-dirs wasm
+	$(GOLANGCI_LINT) run
 
 .PHONY: linter
 linter:

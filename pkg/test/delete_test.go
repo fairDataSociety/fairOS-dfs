@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"

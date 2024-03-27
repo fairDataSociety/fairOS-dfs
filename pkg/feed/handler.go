@@ -31,9 +31,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	bCrypto "github.com/ethersphere/bee/pkg/crypto"
-	"github.com/ethersphere/bee/pkg/soc"
-	"github.com/ethersphere/bee/pkg/swarm"
+	bCrypto "github.com/ethersphere/bee/v2/pkg/crypto"
+	"github.com/ethersphere/bee/v2/pkg/soc"
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	utilsSigner "github.com/fairdatasociety/fairOS-dfs-utils/signer"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"

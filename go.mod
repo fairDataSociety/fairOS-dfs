@@ -1,16 +1,16 @@
 module github.com/fairdatasociety/fairOS-dfs
 
-go 1.21
+go 1.22
 
 require (
-	github.com/btcsuite/btcd v0.22.3
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.1
-	github.com/ethereum/go-ethereum v1.13.12
-	github.com/ethersphere/bee v1.18.2
+	github.com/ethereum/go-ethereum v1.13.14
+	github.com/ethersphere/bee/v2 v2.0.0
 	github.com/ethersphere/bmt v0.1.4
 	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d
-	github.com/golang-jwt/jwt/v5 v5.2.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/mux v1.8.1
@@ -45,7 +45,7 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
+	github.com/btcsuite/btcd v0.22.3 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/casbin/casbin/v2 v2.35.0 // indirect
@@ -57,9 +57,10 @@ require (
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
-	github.com/ethersphere/go-price-oracle-abi v0.1.0 // indirect
-	github.com/ethersphere/go-storage-incentives-abi v0.6.0 // indirect
-	github.com/ethersphere/go-sw3-abi v0.4.0 // indirect
+	github.com/ethersphere/bee v1.10.0 // indirect
+	github.com/ethersphere/go-price-oracle-abi v0.2.0 // indirect
+	github.com/ethersphere/go-storage-incentives-abi v0.6.2 // indirect
+	github.com/ethersphere/go-sw3-abi v0.6.5 // indirect
 	github.com/ethersphere/langos v1.0.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -83,7 +84,8 @@ require (
 	github.com/ipfs/go-cid v0.4.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
+	github.com/klauspost/reedsolomon v1.11.8 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-libp2p v0.30.0 // indirect
