@@ -40,7 +40,7 @@ func TestSubscription(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 	acc1 := account.New(logger)
 	_, _, err := acc1.CreateUserAccount("")
 	if err != nil {

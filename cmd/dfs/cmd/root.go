@@ -162,6 +162,7 @@ func writeConfig() {
 	c.Set(optionVerbosity, defaultVerbosity)
 	c.Set(optionBeeApi, defaultBeeApi)
 	c.Set(optionBeePostageBatchId, "")
+	c.Set(optionBeeRedundancyLevel, 0)
 	c.Set(optionCookieDomain, defaultCookieDomain)
 
 	if err := c.WriteConfigAs(cfgFile); err != nil {

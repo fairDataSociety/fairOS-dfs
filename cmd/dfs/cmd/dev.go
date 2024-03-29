@@ -53,7 +53,7 @@ func startDevServer() {
 	})
 	fmt.Println("Bee running at: ", beeUrl)
 	logger := logging.New(os.Stdout, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 	ens := mock2.NewMockNamespaceManager()
 
 	users := user.NewUsers(mockClient, ens, -1, 0, logger)
