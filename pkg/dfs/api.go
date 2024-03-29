@@ -59,6 +59,7 @@ type Options struct {
 	Logger             logging.Logger
 	FeedCacheSize      int
 	FeedCacheTTL       time.Duration
+	RedundancyLevel    uint8
 }
 
 // NewDfsAPI is the main entry point for the df controller.
@@ -72,7 +73,7 @@ func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
 		}
 		return nil, errEthClient
 	}
-	c := bee.NewBeeClient(opts.BeeApiEndpoint, opts.Stamp, true, logger)
+	c := bee.NewBeeClient(opts.BeeApiEndpoint, opts.Stamp, true, opts.RedundancyLevel, logger)
 	if !c.CheckConnection() {
 		logger.Errorf("dfs: bee client initialisation failed")
 		return nil, errBeeClient

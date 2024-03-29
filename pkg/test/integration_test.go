@@ -47,7 +47,7 @@ func TestLiteUser(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 
 	users := user.NewUsers(mockClient, ens, -1, 0, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)

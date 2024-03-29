@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -211,7 +212,7 @@ func (p *Pod) loadUserPodsV2() (*List, error) {
 }
 
 func (p *Pod) storeUserPodsV2(podList *List) error {
-
+	fmt.Println("storeUserPodsV2")
 	data, err := json.Marshal(podList)
 	if err != nil {
 		return err

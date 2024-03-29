@@ -49,7 +49,7 @@ func TestFeed(t *testing.T) {
 		Storer: storer,
 		Post:   mockpost.New(mockpost.WithAcceptAll()),
 	})
-	client := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	client := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 
 	t.Run("create-feed", func(t *testing.T) {
 		acc := account.New(logger)

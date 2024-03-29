@@ -48,7 +48,7 @@ func TestPodDelete(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 	acc := account.New(logger)
 
 	_, _, err := acc.CreateUserAccount("")

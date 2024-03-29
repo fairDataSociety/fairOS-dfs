@@ -99,6 +99,7 @@ func (a *API) DeletePod(podName, sessionId string) error {
 
 // OpenPod opens a pod
 func (a *API) OpenPod(podName, sessionId string) (*pod.Info, error) {
+	fmt.Println("OpenPod 1")
 	// get the loggedin user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {

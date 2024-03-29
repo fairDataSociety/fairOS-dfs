@@ -50,7 +50,7 @@ func TestPod_ListPods(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 	acc := account.New(logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, mockClient, -1, 0, logger)
