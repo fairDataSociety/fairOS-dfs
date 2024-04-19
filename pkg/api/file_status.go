@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
@@ -83,12 +84,12 @@ func (h *Handler) FileStatusHandler(w http.ResponseWriter, r *http.Request) {
 	// status of file
 	t, p, s, err := h.dfsAPI.StatusFile(driveName, podFileWithPath, sessionId, isGroup)
 	if err != nil {
-		if err == dfs.ErrPodNotOpen {
+		if errors.Is(err, dfs.ErrPodNotOpen) {
 			h.logger.Errorf("status: %v", err)
 			jsonhttp.BadRequest(w, "status: "+err.Error())
 			return
 		}
-		if err == file.ErrFileNotFound {
+		if errors.Is(err, file.ErrFileNotFound) {
 			h.logger.Errorf("status: %v", err)
 			jsonhttp.NotFound(w, "status: "+err.Error())
 			return

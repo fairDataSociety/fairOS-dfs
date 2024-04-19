@@ -22,10 +22,19 @@ func GetUniqueSessionId() string {
 func GetSessionIdFromRequest(r *http.Request) (string, error) {
 	sessionId, err := cookie.GetSessionIdFromCookie(r)
 	if err != nil {
-		sessionId, err = jwt.GetSessionIdFromToken(r)
+		sessionId, err = jwt.GetSessionIdFromRequest(r)
 		if err != nil {
 			return "", err
 		}
+	}
+
+	return sessionId, err
+}
+
+func GetSessionIdFromGitRequest(r *http.Request) (string, error) {
+	sessionId, err := jwt.GetSessionIdFromGitRequest(r)
+	if err != nil {
+		return "", err
 	}
 
 	return sessionId, err
