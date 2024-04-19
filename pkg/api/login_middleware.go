@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -31,10 +32,11 @@ import (
 // proceed for execution.
 func (h *Handler) LoginMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionId, err := jwt.GetSessionIdFromToken(r)
-		if err != nil && err != jwt.ErrNoTokenInRequest {
+
+		sessionId, err := jwt.GetSessionIdFromRequest(r)
+		if err != nil && !errors.Is(err, jwt.ErrNoTokenInRequest) {
 			h.logger.Errorf("jwt: invalid token: %v", err)
-			jsonhttp.BadRequest(w, &response{Message: "jwt: invalid token"})
+			jsonhttp.Unauthorized(w, &response{Message: "jwt: invalid token"})
 			return
 		}
 
@@ -46,7 +48,7 @@ func (h *Handler) LoginMiddleware(next http.Handler) http.Handler {
 		sessionId, loginTimeout, err := cookie.GetSessionIdAndLoginTimeFromCookie(r)
 		if err != nil {
 			h.logger.Errorf("cookie: invalid cookie: %v", err)
-			jsonhttp.BadRequest(w, &response{Message: "cookie: invalid cookie: " + err.Error()})
+			jsonhttp.Unauthorized(w, &response{Message: "cookie: invalid cookie: " + err.Error()})
 			return
 		}
 
@@ -54,14 +56,14 @@ func (h *Handler) LoginMiddleware(next http.Handler) http.Handler {
 		loginTime, err := time.Parse(time.RFC3339, loginTimeout)
 		if err != nil {
 			h.logger.Errorf("cookie: invalid login timeout")
-			jsonhttp.BadRequest(w, &response{Message: "cookie: invalid login timeout"})
+			jsonhttp.Unauthorized(w, &response{Message: "cookie: invalid login timeout"})
 			return
 		}
 		if loginTime.Before(time.Now()) {
 			err = h.dfsAPI.LogoutUser(sessionId)
 			if err == nil {
 				h.logger.Errorf("Logging out as cookie login timeout expired")
-				jsonhttp.BadRequest(w, &response{Message: "logging out as cookie login timeout expired"})
+				jsonhttp.Unauthorized(w, &response{Message: "logging out as cookie login timeout expired"})
 				return
 			}
 		}
