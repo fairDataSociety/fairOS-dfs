@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -91,15 +90,19 @@ func (h *Handler) GitInfoRef(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Expires", "Fri, 01 Jan 1980 00:00:00 GMT")
+	w.Header().Set("Expires", "Fri, 01 Jan 2080 00:00:00 GMT")
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
 	w.Header().Set("Content-Type", fmt.Sprintf("application/x-%s-advertisement", serviceType))
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(packetWrite("# service=" + serviceType + "\n"))
+	_, _ = w.Write([]byte(packetWrite("# service=" + serviceType + "\n")))
 	_, _ = w.Write([]byte("0000"))
 	if refLine != "" {
-		_, _ = w.Write(packetWrite(refLine))
+		_, _ = w.Write([]byte(packetWrite(refLine)))
+	} else {
+		capabilities := "report-status object-format=sha1"
+		emptyList := fmt.Sprintf("0000000000000000000000000000000000000000 capabilities^{}\000%s\n", capabilities)
+		_, _ = w.Write([]byte(packetWrite(emptyList)))
 	}
 	_, _ = w.Write([]byte("0000"))
 }
@@ -140,6 +143,7 @@ func (h *Handler) GitUploadPack(w http.ResponseWriter, r *http.Request) {
 		jsonhttp.BadRequest(w, &response{Message: "ref not found"})
 		return
 	}
+	_, _ = w.Write([]byte(packetWrite(fmt.Sprintf("ACK %s\n", commitDetailsArr[0]))))
 	_, err = io.Copy(w, packReader)
 	if err != nil {
 		h.logger.Errorf("download: %v", err)
@@ -168,20 +172,22 @@ func (h *Handler) GitReceivePack(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error reading request body: %v", err), http.StatusInternalServerError)
 		return
 	}
-	packIndex := bytes.Index(buf.Bytes(), []byte("\u00000000PACK"))
+
+	packIndex := bytes.Index(buf.Bytes(), []byte("PACK"))
 	if packIndex == -1 {
 		h.logger.Errorf("PACK signature not found in request body")
 		http.Error(w, "PACK signature not found in request body", http.StatusBadRequest)
 		return
 	}
 	commitDetails := strings.TrimSpace(buf.String()[:packIndex])
+	fmt.Println(commitDetails)
 	commitDetailsArr := strings.Split(commitDetails, " ")
 
 	vars := mux.Vars(r)
 	pod := vars["repo"]
-	oldHash, newHash, branch := commitDetailsArr[0][4:], commitDetailsArr[1], commitDetailsArr[2]
+	oldHash, newHash, ref := commitDetailsArr[0][4:], commitDetailsArr[1], commitDetailsArr[2]
 
-	fmt.Println(oldHash, newHash, branch)
+	fmt.Println(oldHash, newHash, ref)
 
 	_, _, _, err = h.dfsAPI.StatusFile(pod, fmt.Sprintf("/%s", refFile), sessionId, false)
 	if err != nil && !errors.Is(err, file.ErrFileNotFound) {
@@ -194,35 +200,29 @@ func (h *Handler) GitReceivePack(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Cannot push"), http.StatusInternalServerError)
 		return
 	}
-	err = h.dfsAPI.UploadFile(pod, refFile, sessionId, int64(len(newHash+" "+branch)), strings.NewReader(newHash+" "+branch), "/", "", file.MinBlockSize, 0, false, false)
-	fmt.Println("====================== uploading ref file ======================", err)
+	err = h.dfsAPI.UploadFile(pod, refFile, sessionId, int64(len(newHash+" "+ref)), strings.NewReader(newHash+" "+ref), "/", "", file.MinBlockSize, 0, false, false)
 	if err != nil {
 		h.logger.Errorf("Error uploading commit: %v", err)
 		http.Error(w, fmt.Sprintf("Error uploading file: %v", err), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(buf.String()[packIndex+5:])
-	fmt.Println("====================================")
-	fmt.Println("====================================")
-	fmt.Println("====================================")
-	fmt.Println("====================================")
-	fmt.Println(string(packetWrite(buf.String()[packIndex+5:])))
-	packData := bytes.NewReader(packetWrite(buf.String()[packIndex+5:]))
+	fmt.Println(buf.String()[packIndex:])
+
+	packData := bytes.NewReader(buf.Bytes()[packIndex:])
 	err = h.dfsAPI.UploadFile(pod, newHash, sessionId, int64(packData.Len()), packData, "/", "", file.MinBlockSize, 0, false, false)
-	fmt.Println("====================== uploading pack file ======================", err)
 	if err != nil {
 		h.logger.Errorf("Error uploading packfile: %v", err)
 		http.Error(w, fmt.Sprintf("Error uploading file: %v", err), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-receive-pack-result"))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(packetWrite("unpack ok\n")))
+	w.Write([]byte(packetWrite("ok " + ref + "\n")))
 	w.Write([]byte("0000"))
 }
 
-func packetWrite(str string) []byte {
-	s := strconv.FormatInt(int64(len(str)+4), 16)
-	if len(s)%4 != 0 {
-		s = strings.Repeat("0", 4-len(s)%4) + s
-	}
-	return []byte(s + str)
+func packetWrite(data string) string {
+	length := len(data) + 4 // 4 bytes for the length itself
+	return fmt.Sprintf("%04x%s", length, data)
 }
