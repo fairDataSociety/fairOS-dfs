@@ -201,3 +201,90 @@ bee:
   bee-api-endpoint: http://localhost:1633 # bee running on mainnet  
   postage-batch-id: <BATCH>
 ```
+
+### Integrating git with dfs
+
+To integrate git with dfs, we need to set the `git` configuration in the config file. We only need to set the credential helper for local git repositories.
+
+We create a file `.git-credentials` with the following content at any given location
+```
+#!/bin/bash
+token_file="<ABSOLUTE PATH FOR STRING ACCESS TOKEN>" # this needs to be absolute path
+
+username="<USERNAME>"
+password="<PASSWORD>"
+
+dfs="<FAIROS-DFS SERVER URL>" # http://localhost:9090 for local running fairOS-dfs server
+
+# Function to get the access token using the username and password
+get_access_token() {
+    local response=$(curl -s -X POST "$dfs/v2/user/login" -H "Content-Type: application/json" -d "{\"userName\": \"$username\", \"password\": \"$password\"}")
+    access_token=$(echo "$response" | jq -r '.accessToken')
+    # check if response has access token
+    if [ "$access_token" == "null"  ]; then
+        exit 1
+    fi
+    echo "$access_token" > "$token_file"
+    echo "$access_token"
+}
+
+get_saved_access_token() {
+    if [[ -f "$token_file" ]]; then
+        local saved_token=$(sed -n '1p' "$token_file")
+        if [ "$saved_token" == "null" ] || [ "$saved_token" == "" ]; then
+            return 1
+        fi
+        local response=$(curl --write-out '%{http_code}' --silent --output /dev/null  -s -X POST "$dfs/v1/user/stat" -H "Content-Type: application/json" -H "Authorisation: Bearer $saved_token" )
+        # check if response had success http code
+        if [[ response -eq 200 ]]; then
+            echo "$saved_token"
+            return 0
+        else
+            rm "$token_file"
+            return 1
+        fi
+    fi
+    return 1
+}
+
+access_token=$(get_saved_access_token)
+if [[ $? -ne 0 ]]; then
+    access_token=$(get_access_token)
+fi
+echo "username=$username"
+echo "password=$access_token"
+
+exit 0
+```
+
+After creating this file, we need to set the `credential.helper` in the git configuration
+
+```
+git config --local credential.helper "<Absolute path to .git-credentials file>"
+```
+
+#### How to push to dfs
+
+Currently, we only support pushing once, so its sort of archive. We can push the git repository to dfs using the following command
+
+```
+git init # initialize the git repository, run this inside the directory that you want to push to dfs
+git add . # add all the files to the git repository
+git commit -m "Initial commit" # commit the changes
+git remote add origin <DFS SERVER>/v1/git/<USERNAME>/<PODNAME>.git # add the remote origin
+git config --local credential.helper "<Absolute path to .git-credentials file>" # set the credential helper
+git push -u origin master # push the changes to the remote origin
+```
+
+### How to clone from dfs
+
+```
+git config --local credential.helper "<Absolute path to .git-credentials file>"
+git clone <DFS SERVER>/v1/git/<USERNAME>/<PODNAME>.git
+```
+
+NOTE: Before pushing into a pod, we have to first create a pod if it does not exist. A pod can not be used as two different repos. 
+Dfs stores the files of the repo as a git pack file. So, we cannot access each file of the repo individually. although we can access other files from dfs api as expected.
+
+
+
