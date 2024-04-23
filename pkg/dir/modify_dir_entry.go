@@ -17,7 +17,6 @@ limitations under the License.
 package dir
 
 import (
-	"fmt"
 	"path/filepath"
 	"time"
 )
@@ -44,7 +43,6 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 	if err != nil {
 		return ErrDirectoryNotPresent
 	}
-	fmt.Println(" =============== dirInode", dirInode.FileOrDirNames)
 	// add file or directory entry
 	if isFile {
 		itemToAdd = "_F_" + itemToAdd

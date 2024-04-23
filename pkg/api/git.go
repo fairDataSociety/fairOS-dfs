@@ -25,7 +25,6 @@ var (
 // GitAuthMiddleware checks the Authorization header for git auth credentials
 func (h *Handler) GitAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("GitAuthMiddleware", r.Header)
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
@@ -180,14 +179,11 @@ func (h *Handler) GitReceivePack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	commitDetails := strings.TrimSpace(buf.String()[:packIndex])
-	fmt.Println(commitDetails)
 	commitDetailsArr := strings.Split(commitDetails, " ")
 
 	vars := mux.Vars(r)
 	pod := vars["repo"]
-	oldHash, newHash, ref := commitDetailsArr[0][4:], commitDetailsArr[1], commitDetailsArr[2]
-
-	fmt.Println(oldHash, newHash, ref)
+	newHash, ref := commitDetailsArr[1], commitDetailsArr[2]
 
 	_, _, _, err = h.dfsAPI.StatusFile(pod, fmt.Sprintf("/%s", refFile), sessionId, false)
 	if err != nil && !errors.Is(err, file.ErrFileNotFound) {
@@ -206,7 +202,6 @@ func (h *Handler) GitReceivePack(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error uploading file: %v", err), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(buf.String()[packIndex:])
 
 	packData := bytes.NewReader(buf.Bytes()[packIndex:])
 	err = h.dfsAPI.UploadFile(pod, newHash, sessionId, int64(packData.Len()), packData, "/", "", file.MinBlockSize, 0, false, false)
