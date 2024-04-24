@@ -5,15 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/cookie"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/gorilla/mux"
 	"resenje.org/jsonhttp"
 )
@@ -40,19 +37,6 @@ func (h *Handler) GitAuthMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-// validateCredentials checks the provided username and password
-func (h *Handler) validateCredentials(w http.ResponseWriter, username, password string) bool {
-	loginResp, err := h.dfsAPI.LoginUserV2(username, password, "")
-	if err != nil {
-		return false
-	}
-	err = cookie.SetSession(loginResp.UserInfo.GetSessionId(), w, h.cookieDomain)
-	if err != nil {
-		return false
-	}
-	return true
 }
 
 func (h *Handler) GitInfoRef(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +67,7 @@ func (h *Handler) GitInfoRef(w http.ResponseWriter, r *http.Request) {
 	reader, _, err := h.dfsAPI.DownloadFile(pod, fmt.Sprintf("/%s", refFile), sessionId, false)
 	if err == nil {
 		defer reader.Close()
-		refData, _ := ioutil.ReadAll(reader)
+		refData, _ := io.ReadAll(reader)
 		if len(refData) != 0 {
 			refLine = fmt.Sprintf("%s\n", refData)
 		}
@@ -120,7 +104,7 @@ func (h *Handler) GitUploadPack(w http.ResponseWriter, r *http.Request) {
 	}
 	vars := mux.Vars(r)
 	pod := vars["repo"]
-	w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-upload-pack-result"))
+	w.Header().Set("Content-Type", "application/x-git-upload-pack-result")
 
 	reader, _, err := h.dfsAPI.DownloadFile(pod, fmt.Sprintf("/%s", refFile), sessionId, false)
 	if err != nil {
@@ -193,7 +177,7 @@ func (h *Handler) GitReceivePack(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == nil {
 		h.logger.Errorf("Cannot push. ref file already exists")
-		http.Error(w, fmt.Sprintf("Cannot push"), http.StatusInternalServerError)
+		http.Error(w, "Cannot push", http.StatusInternalServerError)
 		return
 	}
 	err = h.dfsAPI.UploadFile(pod, refFile, sessionId, int64(len(newHash+" "+ref)), strings.NewReader(newHash+" "+ref), "/", "", file.MinBlockSize, 0, false, false)
@@ -210,11 +194,11 @@ func (h *Handler) GitReceivePack(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error uploading file: %v", err), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-receive-pack-result"))
+	w.Header().Set("Content-Type", "application/x-git-receive-pack-result")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(packetWrite("unpack ok\n")))
-	w.Write([]byte(packetWrite("ok " + ref + "\n")))
-	w.Write([]byte("0000"))
+	_, _ = w.Write([]byte(packetWrite("unpack ok\n")))
+	_, _ = w.Write([]byte(packetWrite("ok " + ref + "\n")))
+	_, _ = w.Write([]byte("0000"))
 }
 
 func packetWrite(data string) string {
