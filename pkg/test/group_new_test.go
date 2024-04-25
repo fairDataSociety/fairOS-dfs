@@ -18,13 +18,12 @@ package test_test
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
@@ -46,7 +45,7 @@ func TestGroupNew(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
@@ -155,7 +154,6 @@ func TestGroupNew(t *testing.T) {
 		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
-		fmt.Println("group name", groupName1)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -263,7 +261,6 @@ func TestGroupNew(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println("permission", perm)
 		if perm != acl.PermissionWrite {
 			t.Fatal("permission does not match")
 		}

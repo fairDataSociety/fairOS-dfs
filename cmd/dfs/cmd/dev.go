@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"testing"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -53,14 +53,14 @@ func startDevServer() {
 	})
 	fmt.Println("Bee running at: ", beeUrl)
 	logger := logging.New(os.Stdout, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 	ens := mock2.NewMockNamespaceManager()
 
 	users := user.NewUsers(mockClient, ens, -1, 0, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
 	handler = api.NewMockHandler(dfsApi, logger, []string{"http://localhost:3000"})
 	defer handler.Close()
-	httpPort = ":9090"
+	httpPort = ":9093"
 	pprofPort = ":9091"
 	srv := startHttpService(logger)
 	fmt.Printf("Server running at:http://127.0.0.1%s\n", httpPort)

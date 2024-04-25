@@ -23,8 +23,8 @@ import (
 	"math/big"
 	"testing"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/sirupsen/logrus"
@@ -45,7 +45,7 @@ func TestFileReader(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 
 	t.Run("read-entire-file-shorter-than-block", func(t *testing.T) {
 		fileSize := uint64(15)

@@ -211,7 +211,6 @@ func (p *Pod) loadUserPodsV2() (*List, error) {
 }
 
 func (p *Pod) storeUserPodsV2(podList *List) error {
-
 	data, err := json.Marshal(podList)
 	if err != nil {
 		return err

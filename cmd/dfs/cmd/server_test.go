@@ -20,8 +20,8 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 	"github.com/stretchr/testify/assert"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
@@ -57,7 +57,7 @@ func TestApis(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 	ens := mock2.NewMockNamespaceManager()
 
 	users := user.NewUsers(mockClient, ens, 500, 0, logger)

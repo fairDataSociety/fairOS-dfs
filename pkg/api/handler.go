@@ -52,6 +52,7 @@ type Options struct {
 	Logger             logging.Logger
 	FeedCacheSize      int
 	FeedCacheTTL       string
+	RedundancyLevel    uint8
 }
 
 // New returns a new handler
@@ -62,6 +63,7 @@ func New(ctx context.Context, opts *Options) (*Handler, error) {
 		EnsConfig:          opts.EnsConfig,
 		SubscriptionConfig: opts.SubscriptionConfig,
 		Logger:             opts.Logger,
+		RedundancyLevel:    opts.RedundancyLevel,
 	}
 	if opts.FeedCacheSize == 0 {
 		opts.FeedCacheSize = defaultFeedCacheSize

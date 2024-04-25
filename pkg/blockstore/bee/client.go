@@ -25,9 +25,10 @@ import (
 	"hash"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
-	"github.com/ethersphere/bee/pkg/swarm"
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	lru "github.com/hashicorp/golang-lru/v2/expirable"
@@ -48,11 +49,11 @@ const (
 	bzzUrl                    = "/bzz"
 	tagsUrl                   = "/tags"
 	pinsUrl                   = "/pins/"
-	_                         = pinsUrl
 	swarmPinHeader            = "Swarm-Pin"
 	swarmEncryptHeader        = "Swarm-Encrypt"
 	swarmPostageBatchId       = "Swarm-Postage-Batch-Id"
 	swarmDeferredUploadHeader = "Swarm-Deferred-Upload"
+	SwarmErasureCodingHeader  = "Swarm-Redundancy-Level"
 	swarmTagHeader            = "Swarm-Tag"
 	contentTypeHeader         = "Content-Type"
 )
@@ -69,6 +70,7 @@ type Client struct {
 	logger             logging.Logger
 	isProxy            bool
 	shouldPin          bool
+	redundancyLevel    uint8
 }
 
 func hashFunc() hash.Hash {
@@ -97,7 +99,7 @@ type beeError struct {
 }
 
 // NewBeeClient creates a new client which connects to the Swarm bee node to access the Swarm network.
-func NewBeeClient(apiUrl, postageBlockId string, shouldPin bool, logger logging.Logger) *Client {
+func NewBeeClient(apiUrl, postageBlockId string, shouldPin bool, redundancyLevel uint8, logger logging.Logger) *Client {
 	p := bmtlegacy.NewTreePool(hashFunc, swarm.Branches, bmtlegacy.PoolSize)
 	cache := lru.NewLRU(chunkCacheSize, func(key string, value []byte) {}, 0)
 	uploadBlockCache := lru.NewLRU(uploadBlockCacheSize, func(key string, value []byte) {}, 0)
@@ -343,6 +345,7 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	req.Close = true
 
 	req.Header.Set(contentTypeHeader, "application/octet-stream")
+	req.Header.Set(SwarmErasureCodingHeader, strconv.Itoa(int(s.redundancyLevel)))
 
 	if s.shouldPin {
 		req.Header.Set(swarmPinHeader, "true")
@@ -465,6 +468,7 @@ func (s *Client) UploadBzz(data []byte, fileName string) (address []byte, err er
 
 	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
 	req.Header.Set(contentTypeHeader, "application/json")
+	req.Header.Set(SwarmErasureCodingHeader, strconv.Itoa(int(s.redundancyLevel)))
 
 	response, err := s.Do(req)
 	if err != nil {

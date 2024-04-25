@@ -26,8 +26,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
@@ -49,7 +49,7 @@ func TestFeed(t *testing.T) {
 		Storer: storer,
 		Post:   mockpost.New(mockpost.WithAcceptAll()),
 	})
-	client := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	client := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
 
 	t.Run("create-feed", func(t *testing.T) {
 		acc := account.New(logger)
