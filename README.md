@@ -206,7 +206,7 @@ bee:
 
 To integrate git with dfs, we need to set the `git` configuration in the config file. We only need to set the credential helper for local git repositories.
 
-We create a file `.git-credentials` with the following content at any given location
+We create a file `.dfs-credentials` with the following content at any given location
 ```
 #!/bin/bash
 token_file="<ABSOLUTE PATH FOR STRING ACCESS TOKEN>" # this needs to be absolute path
@@ -260,7 +260,7 @@ exit 0
 After creating this file, we need to set the `credential.helper` in the git configuration
 
 ```
-git config --local credential.helper "<Absolute path to .git-credentials file>"
+git config --local credential.helper "<Absolute path to .dfs-credentials file>"
 ```
 
 #### How to push to dfs
@@ -272,14 +272,14 @@ git init # initialize the git repository, run this inside the directory that you
 git add . # add all the files to the git repository
 git commit -m "Initial commit" # commit the changes
 git remote add origin <DFS SERVER>/v1/git/<USERNAME>/<PODNAME>.git # add the remote origin
-git config --local credential.helper "<Absolute path to .git-credentials file>" # set the credential helper
+git config --local credential.helper "<Absolute path to .dfs-credentials file>" # set the credential helper
 git push -u origin master # push the changes to the remote origin
 ```
 
 ### How to clone from dfs
 
 ```
-git config --local credential.helper "<Absolute path to .git-credentials file>"
+git config --local credential.helper "<Absolute path to .dfs-credentials file>"
 git clone <DFS SERVER>/v1/git/<USERNAME>/<PODNAME>.git
 ```
 
