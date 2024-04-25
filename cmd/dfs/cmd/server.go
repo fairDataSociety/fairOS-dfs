@@ -447,6 +447,13 @@ func startHttpService(logger logging.Logger) *http.Server {
 	docRouter.HandleFunc("/entry/get", handler.DocEntryGetHandler).Methods("GET")
 	docRouter.HandleFunc("/entry/del", handler.DocEntryDelHandler).Methods("DELETE")
 
+	gitRouter := baseRouter.PathPrefix("/git/").Subrouter()
+	gitRouter.Use(handler.GitAuthMiddleware)
+	gitRouter.HandleFunc("/{user}/{repo}.git/HEAD", handler.GitInfoRef).Methods("GET")
+	gitRouter.HandleFunc("/{user}/{repo}.git/info/refs", handler.GitInfoRef).Methods("GET")
+	gitRouter.HandleFunc("/{user}/{repo}.git/git-upload-pack", handler.GitUploadPack).Methods("POST")
+	gitRouter.HandleFunc("/{user}/{repo}.git/git-receive-pack", handler.GitReceivePack).Methods("POST")
+
 	var origins []string
 	for _, c := range corsOrigins {
 		c = strings.TrimSpace(c)

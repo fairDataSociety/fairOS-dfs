@@ -18,7 +18,6 @@ package test_test
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"testing"
 
@@ -155,7 +154,6 @@ func TestGroupNew(t *testing.T) {
 		mockAcl := acl.NewACL(mockClient, fd, logger)
 		group := pod.NewGroup(mockClient, fd, acc, mockAcl, logger)
 		groupName1, _ := utils.GetRandString(10)
-		fmt.Println("group name", groupName1)
 		_, err = group.CreateGroup(groupName1)
 		if err != nil {
 			t.Fatalf("error creating group %s: %s", groupName1, err.Error())
@@ -263,7 +261,6 @@ func TestGroupNew(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println("permission", perm)
 		if perm != acl.PermissionWrite {
 			t.Fatal("permission does not match")
 		}
