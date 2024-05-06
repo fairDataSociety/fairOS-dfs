@@ -60,7 +60,7 @@ func startDevServer() {
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)
 	handler = api.NewMockHandler(dfsApi, logger, []string{"http://localhost:3000"})
 	defer handler.Close()
-	httpPort = ":9093"
+	httpPort = ":9090"
 	pprofPort = ":9091"
 	srv := startHttpService(logger)
 	fmt.Printf("Server running at:http://127.0.0.1%s\n", httpPort)

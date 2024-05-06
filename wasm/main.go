@@ -45,6 +45,7 @@ func registerWasmFunctions() {
 	js.Global().Set("connectWallet", js.FuncOf(connectWallet))
 	js.Global().Set("login", js.FuncOf(login))
 	js.Global().Set("walletLogin", js.FuncOf(walletLogin))
+	js.Global().Set("signatureLogin", js.FuncOf(signatureLogin))
 	js.Global().Set("userPresent", js.FuncOf(userPresent))
 	js.Global().Set("userIsLoggedIn", js.FuncOf(userIsLoggedIn))
 	js.Global().Set("userLogout", js.FuncOf(userLogout))
@@ -133,6 +134,8 @@ func registerWasmFunctions() {
 	js.Global().Set("docEntryDelete", js.FuncOf(docEntryDelete))
 	js.Global().Set("docLoadJson", js.FuncOf(docLoadJson))
 	js.Global().Set("docIndexJson", js.FuncOf(docIndexJson))
+
+	js.Global().Set("publicPod", js.FuncOf(publicPod))
 }
 
 func connect(_ js.Value, funcArgs []js.Value) interface{} {
@@ -310,6 +313,39 @@ func walletLogin(_ js.Value, funcArgs []js.Value) interface{} {
 			addr := ui.GetAccount().GetUserAccountInfo().GetAddress()
 			object.Set("address", addr.Hex())
 			object.Set("nameHash", nameHash)
+			object.Set("sessionId", ui.GetSessionId())
+			resolve.Invoke(object)
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func signatureLogin(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"signatureLogin(signature, password)\"")
+			return nil
+		}
+		signature := funcArgs[0].String()
+		password := funcArgs[1].String()
+
+		go func() {
+			lr, err := api.LoginUserWithSignature(signature, password, "")
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("Failed to login user : %s", err.Error()))
+				return
+			}
+			ui := lr.UserInfo
+			object := js.Global().Get("Object").New()
+			object.Set("user", ui.GetUserName())
+			object.Set("address", lr.Address)
 			object.Set("sessionId", ui.GetSessionId())
 			resolve.Invoke(object)
 		}()
@@ -749,6 +785,59 @@ func podReceive(_ js.Value, funcArgs []js.Value) interface{} {
 				return
 			}
 			resolve.Invoke(fmt.Sprintf("public pod %q, added as shared pod", pi.GetPodName()))
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func publicPod(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"publicPod(podSharingReference, filepath)\"")
+			return nil
+		}
+		podSharingReference := funcArgs[0].String()
+		filepath := funcArgs[1].String()
+
+		go func() {
+			ref, err := utils.ParseHexReference(podSharingReference)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod downlod failed : %s", err.Error()))
+				return
+			}
+			shareInfo, err := api.PublicPodReceiveInfo(ref)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod downlod failed : %s", err.Error()))
+				return
+			}
+			filePath := filepath
+			if filePath == "" {
+				filePath = "/index.html"
+			} else {
+				filePath = "/" + filePath
+			}
+			r, _, err := api.PublicPodFileDownload(shareInfo, filePath)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
+				return
+			}
+			defer r.Close()
+
+			buf := new(bytes.Buffer)
+			_, err = buf.ReadFrom(r)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
+				return
+			}
+			a := js.Global().Get("Uint8Array").New(buf.Len())
+			js.CopyBytesToJS(a, buf.Bytes())
+			resolve.Invoke(a)
 		}()
 		return nil
 	})
