@@ -157,6 +157,7 @@ func (w *Wallet) GenerateWalletFromSignature(signature, password string) (accoun
 		if err != nil { // skipcq: TCV-001
 			return accounts.Account{}, "", err
 		}
+		_ = wallet
 	}
 
 	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
