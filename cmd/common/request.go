@@ -29,6 +29,12 @@ type UserLoginRequest struct {
 	Password string `json:"password,omitempty"`
 }
 
+// UserSignatureLoginRequest is the request body for user login with signature
+type UserSignatureLoginRequest struct {
+	Signature string `json:"signature,omitempty"`
+	Password  string `json:"password,omitempty"`
+}
+
 // PodRequest is the request body for pod creation
 type PodRequest struct {
 	PodName       string `json:"podName,omitempty"`

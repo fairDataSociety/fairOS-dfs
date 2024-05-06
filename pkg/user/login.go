@@ -135,6 +135,66 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}, nil
 }
 
+// LoginUserWithSignature logs an user with  a provided signature
+func (u *Users) LoginUserWithSignature(signature, password string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*LoginResponse, error) {
+	// check if sessionId is still active
+	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
+		return nil, ErrUserAlreadyLoggedIn
+	}
+
+	// create account
+	acc := account.New(u.logger)
+	accountInfo := acc.GetUserAccountInfo()
+	// load encrypted private key
+	fd := feed.New(accountInfo, client, u.feedCacheSize, u.feedCacheTTL, u.logger)
+
+	_, _, err := acc.GenerateUserAccountFromSignature(signature, password)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	addr := accountInfo.GetAddress()
+	// Instantiate pod, dir & file objects
+	file := f.NewFile(addr.String(), u.client, fd, addr, tm, u.logger)
+	dir := d.NewDirectory(addr.String(), u.client, fd, addr, file, tm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
+	acl := acl2.NewACL(u.client, fd, u.logger)
+	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
+	if sessionId == "" {
+		sessionId = auth.GetUniqueSessionId()
+	}
+
+	ui := &Info{
+		name:       addr.String(),
+		sessionId:  sessionId,
+		feedApi:    fd,
+		account:    acc,
+		file:       file,
+		dir:        dir,
+		pod:        pod,
+		group:      group,
+		openPods:   make(map[string]*p.Info),
+		openPodsMu: &sync.RWMutex{},
+	}
+
+	// set cookie and add user to map
+	err = u.addUserAndSessionToMap(ui)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := jwt.GenerateToken(sessionId)
+	if err != nil {
+		u.logger.Errorf("error generating token: %v\n", err)
+	}
+
+	return &LoginResponse{
+		Address:     addr.Hex(),
+		PublicKey:   utils.Encode(crypto.FromECDSAPub(accountInfo.GetPublicKey())),
+		UserInfo:    ui,
+		AccessToken: token,
+	}, nil
+}
+
 func (u *Users) addUserAndSessionToMap(ui *Info) error {
 	u.addUserToMap(ui)
 	return nil

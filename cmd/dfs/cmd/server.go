@@ -333,6 +333,7 @@ func startHttpService(logger logging.Logger) *http.Server {
 	baseRouterV2.Use(handler.LogMiddleware)
 	baseRouterV2.HandleFunc("/user/signup", handler.UserSignupV2Handler).Methods("POST")
 	baseRouterV2.HandleFunc("/user/login", handler.UserLoginV2Handler).Methods("POST")
+	baseRouterV2.HandleFunc("/user/login-with-signature", handler.UserLoginWithSignature).Methods("POST")
 	baseRouterV2.HandleFunc("/user/present", handler.UserPresentV2Handler).Methods("GET")
 	userRouterV2 := baseRouterV2.PathPrefix("/user/").Subrouter()
 	userRouterV2.Use(handler.LoginMiddleware)

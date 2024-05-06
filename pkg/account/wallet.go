@@ -17,10 +17,13 @@ limitations under the License.
 package account
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethersphere/bee/v2/pkg/crypto"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 	"github.com/tyler-smith/go-bip39"
 )
@@ -28,6 +31,8 @@ import (
 const (
 	rootPath    = "m/44'/60'/0'/0/0"
 	genericPath = "m/44'/60'/0'/0/"
+
+	MaxEntropyLength = 32
 )
 
 // Wallet is used to create root and pod accounts of user
@@ -121,4 +126,63 @@ func (*Wallet) IsValidMnemonic(mnemonic string) error {
 		return fmt.Errorf("one or more of the mnemonic words is not in bip39 word list")
 	}
 	return nil
+}
+
+// GenerateWalletFromSignature is used to create an account from a given signature
+func (w *Wallet) GenerateWalletFromSignature(signature, password string) (accounts.Account, string, error) {
+	if signature == "" {
+		return accounts.Account{}, "", fmt.Errorf("signature is empty")
+	}
+	signatureBytes, err := hex.DecodeString(signature)
+	if err != nil {
+		return accounts.Account{}, "", err
+	}
+	wallet, acc, mnemonic, err := signatureToWallet(signatureBytes)
+	if err != nil { // skipcq: TCV-001
+		return accounts.Account{}, "", err
+	}
+	if password != "" {
+		pk, err := wallet.PrivateKey(acc)
+		if err != nil { // skipcq: TCV-001
+			return accounts.Account{}, "", err
+		}
+		signer := crypto.NewDefaultSigner(pk)
+		passBytes := sha256.Sum256([]byte(password))
+		signatureBytes, err = signer.Sign([]byte("0x" + hex.EncodeToString(passBytes[:])))
+		if err != nil {
+			return accounts.Account{}, "", err
+		}
+
+		wallet, acc, mnemonic, err = signatureToWallet(signatureBytes)
+		if err != nil { // skipcq: TCV-001
+			return accounts.Account{}, "", err
+		}
+	}
+
+	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
+	if err != nil { // skipcq: TCV-001
+		return accounts.Account{}, "", err
+	}
+	w.seed = seed
+	return acc, mnemonic, nil
+}
+
+func signatureToWallet(signatureBytes []byte) (*hdwallet.Wallet, accounts.Account, string, error) {
+	slicedSignature := signatureBytes[0:MaxEntropyLength]
+
+	mnemonic, err := bip39.NewMnemonic(slicedSignature)
+	if err != nil { // skipcq: TCV-001
+		return nil, accounts.Account{}, "", err
+	}
+	wallet, err := hdwallet.NewFromMnemonic(mnemonic)
+	if err != nil { // skipcq: TCV-001
+		return nil, accounts.Account{}, "", err
+	}
+
+	path := hdwallet.MustParseDerivationPath(rootPath)
+	acc, err := wallet.Derive(path, false)
+	if err != nil { // skipcq: TCV-001
+		return nil, accounts.Account{}, "", err
+	}
+	return wallet, acc, mnemonic, nil
 }
