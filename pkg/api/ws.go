@@ -1077,7 +1077,7 @@ func (h *Handler) handleEvents(conn *websocket.Conn) error {
 				respondWithError(res, err)
 				continue
 			}
-			err = h.dfsAPI.UploadFile(fsReq.PodName, fileName, sessionID, int64(len(data.Bytes())), data, fsReq.DirPath, compression, uint32(bs), 0, fsReq.Overwrite, false)
+			err = h.dfsAPI.UploadFile(fsReq.PodName, fileName, sessionID, int64(len(data.Bytes())), data, fsReq.DirPath, compression, bs, 0, fsReq.Overwrite, false)
 			if err != nil {
 				respondWithError(res, err)
 				continue

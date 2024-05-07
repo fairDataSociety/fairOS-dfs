@@ -333,9 +333,9 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	to := time.Now()
 
 	// return the ref if this data is already in swarm
-	if s.inBlockCache(s.uploadBlockCache, string(data)) {
-		return s.getFromBlockCache(s.uploadBlockCache, string(data)), nil
-	}
+	//if s.inBlockCache(s.uploadBlockCache, string(data)) {
+	//	return s.getFromBlockCache(s.uploadBlockCache, string(data)), nil
+	//}
 
 	fullUrl := s.url + bytesUploadDownloadUrl
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
@@ -398,7 +398,7 @@ func (s *Client) UploadBlob(data []byte, tag uint32, encrypt bool) (address []by
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "upload blob: ")
 
 	// add the data in cache
-	s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
+	//s.addToBlockCache(s.uploadBlockCache, string(data), resp.Reference.Bytes())
 
 	return resp.Reference.Bytes(), nil
 }
@@ -409,9 +409,9 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 
 	// return the data if this address is already in cache
 	addrString := swarm.NewAddress(address).String()
-	if s.inBlockCache(s.downloadBlockCache, addrString) {
-		return s.getFromBlockCache(s.downloadBlockCache, addrString), 200, nil
-	}
+	//if s.inBlockCache(s.downloadBlockCache, addrString) {
+	//	return s.getFromBlockCache(s.downloadBlockCache, addrString), 200, nil
+	//}
 
 	fullUrl := s.url + bytesUploadDownloadUrl + "/" + addrString
 	req, err := http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
@@ -449,9 +449,9 @@ func (s *Client) DownloadBlob(address []byte) ([]byte, int, error) {
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "download blob: ")
 
 	// add the data and ref if it is not in cache
-	if !s.inBlockCache(s.downloadBlockCache, addrString) {
-		s.addToBlockCache(s.downloadBlockCache, addrString, respData)
-	}
+	//if !s.inBlockCache(s.downloadBlockCache, addrString) {
+	//	s.addToBlockCache(s.downloadBlockCache, addrString, respData)
+	//}
 	return respData, response.StatusCode, nil
 }
 

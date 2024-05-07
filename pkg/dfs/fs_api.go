@@ -335,7 +335,7 @@ func (a *API) FileStat(podName, podFileWithPath, sessionId string, isGroup bool)
 // UploadFile is a controller function which validates if the user is logged-in,
 //
 //	pod is open and calls the upload function.
-func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize, mode uint32, overwrite, isGroup bool) error {
+func (a *API) UploadFile(podName, podFileName, sessionId string, fileSize int64, fd io.Reader, podPath, compression string, blockSize uint64, mode uint32, overwrite, isGroup bool) error {
 	// get the logged-in user information
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {

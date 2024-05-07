@@ -319,12 +319,12 @@ func FileUpload(podName, filePath, dirPath, compression, blockSize string, overw
 	if err != nil {
 		return err
 	}
-	return api.UploadFile(podName, fileInfo.Name(), sessionId, fileInfo.Size(), f, dirPath, compression, uint32(bs), 0, overwrite, false)
+	return api.UploadFile(podName, fileInfo.Name(), sessionId, fileInfo.Size(), f, dirPath, compression, bs, 0, overwrite, false)
 }
 
 func BlobUpload(data []byte, podName, fileName, dirPath, compression string, size, blockSize int64, overwrite bool) error {
 	r := bytes.NewReader(data)
-	return api.UploadFile(podName, fileName, sessionId, size, r, dirPath, compression, uint32(blockSize), 0, overwrite, false)
+	return api.UploadFile(podName, fileName, sessionId, size, r, dirPath, compression, uint64(blockSize), 0, overwrite, false)
 }
 
 func FileDownload(podName, filePath string) ([]byte, error) {

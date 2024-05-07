@@ -156,7 +156,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 			responses = append(responses, UploadResponse{FileName: file.Filename, Message: err.Error()})
 			continue
 		}
-		err = h.handleFileUpload(driveName, file.Filename, sessionId, file.Size, fd, podPath, compression, uint32(bs), overwrite, isGroup)
+		err = h.handleFileUpload(driveName, file.Filename, sessionId, file.Size, fd, podPath, compression, bs, overwrite, isGroup)
 		if err != nil {
 			if errors.Is(err, pod.ErrInvalidPodName) {
 				h.logger.Errorf("file upload: %v", err)
@@ -181,7 +181,7 @@ func (h *Handler) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) handleFileUpload(podName, podFileName, sessionId string, fileSize int64, f multipart.File, podPath, compression string, blockSize uint32, overwrite, isGroup bool) error {
+func (h *Handler) handleFileUpload(podName, podFileName, sessionId string, fileSize int64, f multipart.File, podPath, compression string, blockSize uint64, overwrite, isGroup bool) error {
 	defer f.Close()
 	return h.dfsAPI.UploadFile(podName, podFileName, sessionId, fileSize, f, podPath, compression, blockSize, 0, overwrite, isGroup)
 }

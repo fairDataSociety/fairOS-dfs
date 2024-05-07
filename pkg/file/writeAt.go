@@ -71,8 +71,8 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 		newDataSize = endofst
 	}
 
-	startingBlock := offset / uint64(meta.BlockSize)
-	readStartPoint := startingBlock * uint64(meta.BlockSize)
+	startingBlock := offset / meta.BlockSize
+	readStartPoint := startingBlock * meta.BlockSize
 	reader.Next(int(readStartPoint))
 	blockOffset := offset - readStartPoint
 	var totalLength = readStartPoint
@@ -125,8 +125,8 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 				totalLength += uint64(n)
 			}
 
-			if totalLength >= offset && totalLength < endofst && uint32(len(data)) != meta.BlockSize {
-				temp := make([]byte, meta.BlockSize-uint32(n))
+			if totalLength >= offset && totalLength < endofst && uint64(len(data)) != meta.BlockSize {
+				temp := make([]byte, meta.BlockSize-uint64(n))
 				n, err = updater.Read(temp)
 				if err != nil {
 					if err == io.EOF {
@@ -147,14 +147,14 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 				}
 			}
 
-			if uint32(len(data)) != meta.BlockSize && !truncate {
-				if totalLength < dataSize && uint32(len(data)) != meta.BlockSize {
+			if uint64(len(data)) != meta.BlockSize && !truncate {
+				if totalLength < dataSize && uint64(len(data)) != meta.BlockSize {
 					size := meta.BlockSize
-					if dataSize < uint64(meta.BlockSize) {
-						size = uint32(dataSize)
+					if dataSize < meta.BlockSize {
+						size = dataSize
 					}
 
-					temp := make([]byte, size-uint32(len(data)))
+					temp := make([]byte, size-uint64(len(data)))
 					n, err = reader.Read(temp)
 					if err != nil {
 						if err == io.EOF {

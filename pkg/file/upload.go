@@ -34,8 +34,8 @@ import (
 )
 
 const (
-	MinBlockSize uint32 = 1000000
-	MaxBlockSize uint32 = 8000000
+	MinBlockSize uint64 = 1000000
+	MaxBlockSize uint64 = 8000000000
 
 	// S_IFREG is the regular file type
 	S_IFREG     = 0100000
@@ -51,7 +51,7 @@ var (
 // Upload uploads a given blob of bytes as a file in the pod. It also splits the file into number of blocks. the
 // size of the block is provided during upload. This function also does compression of the blocks gzip/snappy if it is
 // requested during the upload.
-func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize, mode uint32, podPath, compression, podPassword string) error {
+func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSize uint64, mode uint32, podPath, compression, podPassword string) error {
 	podPath = filepath.ToSlash(podPath)
 	if blockSize < MinBlockSize || blockSize > MaxBlockSize {
 		return ErrInvalidBlockSize
@@ -83,7 +83,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	i := 0
 	errC := make(chan error)
 	doneC := make(chan bool)
-	worker := make(chan bool, noOfParallelWorkers)
+	worker := make(chan bool, 2)
 	var wg sync.WaitGroup
 	refMap := make(map[int]*BlockInfo)
 	refMapMu := sync.RWMutex{}
@@ -221,7 +221,7 @@ func (*File) getContentType(bufferReader *bufio.Reader) string {
 }
 
 // Compress data
-func Compress(dataToCompress []byte, compression string, blockSize uint32) ([]byte, error) {
+func Compress(dataToCompress []byte, compression string, blockSize uint64) ([]byte, error) {
 	switch compression {
 	case "gzip":
 		var b bytes.Buffer

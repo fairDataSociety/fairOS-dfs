@@ -43,7 +43,7 @@ type MetaData struct {
 	Path             string `json:"filePath"`
 	Name             string `json:"fileName"`
 	Size             uint64 `json:"fileSize"`
-	BlockSize        uint32 `json:"blockSize"`
+	BlockSize        uint64 `json:"blockSize"`
 	ContentType      string `json:"contentType"`
 	Compression      string `json:"compression"`
 	CreationTime     int64  `json:"creationTime"`

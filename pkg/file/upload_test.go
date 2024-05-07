@@ -286,7 +286,7 @@ func TestUpload(t *testing.T) {
 		blockSize := file.MinBlockSize
 		fileObject := file.NewFile("pod1", mockClient, fd, user, tm, logger)
 
-		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, uint32(10))
+		_, err = uploadFile(t, fileObject, filePath, fileName, compression, podPassword, fileSize, uint64(10))
 		if !errors.Is(file.ErrInvalidBlockSize, err) {
 			t.Fatal("should provide higher block size")
 		}
@@ -336,7 +336,7 @@ func TestUpload(t *testing.T) {
 	})
 }
 
-func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint32) ([]byte, error) {
+func uploadFile(t *testing.T, fileObject *file.File, filePath, fileName, compression, podPassword string, fileSize int64, blockSize uint64) ([]byte, error) {
 	// create a temp file
 	fd, err := os.CreateTemp("", fileName)
 	if err != nil {

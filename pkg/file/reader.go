@@ -46,8 +46,8 @@ type Reader struct {
 	fileC       chan []byte
 	lastBlock   []byte
 	fileSize    uint64
-	blockSize   uint32
-	blockCursor uint32
+	blockSize   uint64
+	blockCursor uint64
 	totalSize   uint64
 	compression string
 	blockCache  *lru.LRU[string, []byte]
@@ -89,7 +89,7 @@ func (f *File) OpenFileForIndex(podFile, podPassword string) (*Reader, error) {
 }
 
 // NewReader create a new reader object to read a file from the pod based on its configuration.
-func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint32, compression string, cache bool) *Reader {
+func NewReader(fileInode INode, client blockstore.Client, fileSize uint64, blockSize uint64, compression string, cache bool) *Reader {
 	r := &Reader{
 		fileInode:     fileInode,
 		client:        client,
@@ -111,7 +111,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 	if r.totalSize >= r.fileSize {
 		return 0, io.EOF
 	}
-	bytesToRead := uint32(len(b))
+	bytesToRead := uint64(len(b))
 	bytesRead := 0
 	if r.lastBlock != nil {
 		remDataSize := r.blockSize - r.blockCursor
@@ -124,7 +124,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 				r.lastBlock = nil
 				r.blockCursor = 0
 			}
-			r.totalSize += uint64(bytesToRead)
+			r.totalSize += bytesToRead
 			return bytesRead, nil
 		} else {
 			copy(b, r.lastBlock[r.blockCursor:r.blockSize])
@@ -133,7 +133,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 			r.readOffset += int64(remDataSize)
 			bytesRead += int(remDataSize)
 			bytesToRead -= remDataSize
-			r.totalSize += uint64(remDataSize)
+			r.totalSize += remDataSize
 
 			// this situation comes when the block ends
 			if r.totalSize >= r.fileSize {
@@ -158,7 +158,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 				if err != nil { // skipcq: TCV-001
 					return bytesRead, err
 				}
-				r.blockSize = uint32(len(r.lastBlock))
+				r.blockSize = uint64(len(r.lastBlock))
 			}
 
 			// if length of bytes to read is greater than block size
@@ -166,13 +166,13 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 				bytesToRead = r.blockSize
 			}
 
-			if uint32(len(r.lastBlock)) < bytesToRead { // skipcq: TCV-001
-				bytesToRead = uint32(len(r.lastBlock))
+			if uint64(len(r.lastBlock)) < bytesToRead { // skipcq: TCV-001
+				bytesToRead = uint64(len(r.lastBlock))
 			}
 
-			cursor := uint32(bytesRead)
+			cursor := uint64(bytesRead)
 			copy(b[cursor:cursor+bytesToRead], r.lastBlock[:bytesToRead])
-			r.totalSize += uint64(bytesToRead)
+			r.totalSize += bytesToRead
 			if bytesToRead == r.blockSize {
 				r.lastBlock = nil
 				r.blockCursor = 0
@@ -208,7 +208,7 @@ func (r *Reader) Seek(seekOffset int64, _ int) (int64, error) {
 		r.lastBlock = blockData
 		r.blockCursor = 0
 		r.readOffset = 0
-		r.blockSize = uint32(len(r.lastBlock))
+		r.blockSize = uint64(len(r.lastBlock))
 		r.totalSize = 0
 		r.rlBuffer = nil
 		r.rlOffset = 0
@@ -223,9 +223,9 @@ func (r *Reader) Seek(seekOffset int64, _ int) (int64, error) {
 		return 0, err
 	}
 	r.lastBlock = blockData
-	r.blockCursor = uint32(blockOffset)
+	r.blockCursor = uint64(blockOffset)
 	r.readOffset = seekOffset
-	r.blockSize = uint32(len(r.lastBlock))
+	r.blockSize = uint64(len(r.lastBlock))
 	r.totalSize = uint64(seekOffset)
 	r.rlBuffer = nil
 	r.rlOffset = 0
@@ -306,7 +306,7 @@ func (r *Reader) Close() error {
 	return nil
 }
 
-func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]byte, error) {
+func (r *Reader) getBlock(ref []byte, compression string, blockSize uint64) ([]byte, error) {
 	refStr := utils.NewReference(ref).String()
 	if r.blockCache != nil {
 		if data, found := r.blockCache.Get(refStr); found {
@@ -330,7 +330,7 @@ func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]b
 }
 
 // Decompress decompresses the data
-func Decompress(dataToDecompress []byte, compression string, blockSize uint32) ([]byte, error) {
+func Decompress(dataToDecompress []byte, compression string, blockSize uint64) ([]byte, error) {
 	switch compression {
 	case "gzip":
 		br := bytes.NewReader(dataToDecompress)
