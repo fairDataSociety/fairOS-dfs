@@ -1818,6 +1818,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "group name",
+                        "name": "groupName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "file path",
                         "name": "filePath",
                         "in": "query",
@@ -4567,6 +4574,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/v2/user/login-with-signature": {
+            "post": {
+                "description": "login user with signature described in https://github.com/fairDataSociety/FIPs/blob/master/text/0063-external-account-generator.md",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Login User with signature",
+                "operationId": "user-login-signature",
+                "parameters": [
+                    {
+                        "description": "signature and password",
+                        "name": "user_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/common.UserSignatureLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.UserLoginResponse"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "fairos-dfs session"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v2/user/present": {
             "get": {
                 "description": "checks if the new user is present in the new ENS based authentication",
@@ -4692,6 +4752,9 @@ const docTemplate = `{
                 "dirPath": {
                     "type": "string"
                 },
+                "groupName": {
+                    "type": "string"
+                },
                 "mode": {
                     "type": "string"
                 },
@@ -4715,6 +4778,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "dirPath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "podName": {
@@ -4809,6 +4875,9 @@ const docTemplate = `{
                 "filePath": {
                     "type": "string"
                 },
+                "groupName": {
+                    "type": "string"
+                },
                 "podName": {
                     "type": "string"
                 }
@@ -4818,6 +4887,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "filePath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "mode": {
@@ -4835,6 +4907,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "filePath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "podName": {
@@ -5264,6 +5339,9 @@ const docTemplate = `{
         "common.RenameRequest": {
             "type": "object",
             "properties": {
+                "groupName": {
+                    "type": "string"
+                },
                 "newPath": {
                     "type": "string"
                 },
@@ -5282,6 +5360,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "common.UserSignatureLoginRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "signature": {
                     "type": "string"
                 }
             }

@@ -102,6 +102,36 @@ func userLogin(userName, apiEndpoint string) {
 	fmt.Println(message)
 }
 
+func signatureLogin(signature, apiEndpoint string) {
+	password := getPassword()
+	loginUser := common.UserSignatureLoginRequest{
+		Signature: signature,
+		Password:  password,
+	}
+	jsonData, err := json.Marshal(loginUser)
+	if err != nil {
+		fmt.Println("login user: error marshalling request")
+		return
+	}
+	data, err := fdfsAPI.postReq(http.MethodPost, apiEndpoint, jsonData)
+	if err != nil {
+		fmt.Println("login user: ", err)
+		return
+	}
+	var resp api.UserSignupResponse
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		fmt.Println("create user: ", err)
+		return
+	}
+
+	currentUser = resp.Address
+	message := strings.ReplaceAll(string(data), "\n", "")
+	fdfsAPI.setAccessToken(resp.AccessToken)
+
+	fmt.Println(message)
+}
+
 func deleteUser(apiEndpoint string) {
 	password := getPassword()
 	delUser := common.UserSignupRequest{

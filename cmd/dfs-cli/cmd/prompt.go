@@ -96,10 +96,11 @@ const (
 	apiDocLoadJson     = apiVersion + "/doc/loadjson"
 	apiDocIndexJson    = apiVersion + "/doc/indexjson"
 
-	apiUserSignupV2  = apiVersionV2 + "/user/signup"
-	apiUserLoginV2   = apiVersionV2 + "/user/login"
-	apiUserPresentV2 = apiVersionV2 + "/user/present"
-	apiUserDeleteV2  = apiVersionV2 + "/user/delete"
+	apiUserSignupV2       = apiVersionV2 + "/user/signup"
+	apiUserLoginV2        = apiVersionV2 + "/user/login"
+	apiUserSignatureLogin = apiVersionV2 + "/user/login-with-signature"
+	apiUserPresentV2      = apiVersionV2 + "/user/present"
+	apiUserDeleteV2       = apiVersionV2 + "/user/delete"
 )
 
 func newPrompt() {
@@ -144,6 +145,7 @@ var userSuggestions = []prompt.Suggest{
 	{Text: "new", Description: "create a new user (v2)"},
 	{Text: "del", Description: "delete a existing user (v2)"},
 	{Text: "login", Description: "login to a existing user (v2)"},
+	{Text: "signatureLogin", Description: "login with signature"},
 	{Text: "logout", Description: "logout from a logged-in user"},
 	{Text: "present", Description: "is user present (v2)"},
 	{Text: "stat", Description: "shows information about a user"},
@@ -305,6 +307,17 @@ func executor(in string) {
 			}
 			userName := blocks[2]
 			userLogin(userName, apiUserLoginV2)
+			currentPod = ""
+			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
+		case "signatureLogin":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"signature\" argument")
+				return
+			}
+			signature := blocks[2]
+			fmt.Println("signatureLogin", signature)
+			signatureLogin(signature, apiUserSignatureLogin)
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
@@ -1023,6 +1036,7 @@ func help() {
 	fmt.Println(" - user <new> (user-name) (mnemonic) - create a new user and login as that user")
 	fmt.Println(" - user <del> - deletes a logged-in user")
 	fmt.Println(" - user <login> (user-name) - login as a given user")
+	fmt.Println(" - user <signatureLogin> (signature) - login with signature")
 	fmt.Println(" - user <logout> - logout a logged-in user")
 	fmt.Println(" - user <present> (user-name) - returns true if the user is present, false otherwise")
 	fmt.Println(" - user <stat> - shows information about a user")

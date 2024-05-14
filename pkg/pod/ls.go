@@ -26,9 +26,11 @@ func (p *Pod) ListPods() ([]string, []string, error) {
 		if err != nil { // skipcq: TCV-001
 			return nil, nil, err
 		}
-		err := p.storeUserPodsV2(podList)
-		if err != nil {
-			fmt.Println("error storing podsV2", err)
+		if len(podList.Pods) != 0 || len(podList.SharedPods) != 0 {
+			err := p.storeUserPodsV2(podList)
+			if err != nil {
+				fmt.Println("error storing podsV2", err)
+			}
 		}
 	}
 
