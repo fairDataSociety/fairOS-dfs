@@ -335,7 +335,6 @@ func (a *API) PublicPodKVGetter(pod *pod.ShareInfo) KVGetter {
 
 // PublicPodDisLs lists a directory from a public pod
 func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entry, []file.Entry, error) {
-
 	accountInfo := &account.Info{}
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
@@ -343,45 +342,116 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 
 	dirNameWithPath := filepath.ToSlash(dirPathToLs)
-	topic := utils.HashString(dirNameWithPath)
-	_, data, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
-	if err != nil { // skipcq: TCV-001
-		if dirNameWithPath == utils.PathSeparator {
-			return nil, nil, nil
-		}
-		return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
-	}
+	var (
+		inode dir.Inode
+		data  []byte
+	)
 
-	dirInode := &dir.Inode{}
-	err = dirInode.Unmarshal(data)
-	if err != nil {
-		return nil, nil, fmt.Errorf("list dir : %v", err)
+	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, dir.IndexFileName))
+	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+	if err != nil { // skipcq: TCV-001
+		topic = utils.HashString(dirNameWithPath)
+		_, data, err = fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+		if err != nil {
+			return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
+		}
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+	} else {
+		if string(metaBytes) == utils.DeletedFeedMagicWord {
+			a.logger.Errorf("found deleted feed for %s\n", dirNameWithPath)
+			return nil, nil, file.ErrDeletedFeed
+		}
+
+		var meta *file.MetaData
+		err = json.Unmarshal(metaBytes, &meta)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+		fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+
+		var fileInode file.INode
+		err = json.Unmarshal(fileInodeBytes, &fileInode)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+		r := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+		data, err = io.ReadAll(r)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
 	}
 
 	var listEntries []dir.Entry
 	var files []string
-	for _, fileOrDirName := range dirInode.FileOrDirNames {
+	for _, fileOrDirName := range inode.FileOrDirNames {
 		if strings.HasPrefix(fileOrDirName, "_D_") {
 			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
 			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
-			dirTopic := utils.HashString(dirPath)
+			var (
+				inode dir.Inode
+				data  []byte
+			)
 
-			_, data, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
+			dirTopic := utils.HashString(utils.CombinePathAndFile(dirPath, dir.IndexFileName))
+			_, indexBytes, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
 			if err != nil { // skipcq: TCV-001
-				return nil, nil, fmt.Errorf("list dir : %v", err)
-			}
-			var dirInode *dir.Inode
-			err = json.Unmarshal(data, &dirInode)
-			if err != nil { // skipcq: TCV-001
-				return nil, nil, fmt.Errorf("list dir : %v", err)
+				topic = utils.HashString(dirName)
+				_, data, err = fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+				if err != nil {
+					return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
+				}
+				err = inode.Unmarshal(data)
+				if err != nil { // skipcq: TCV-001
+					return nil, nil, err
+				}
+			} else {
+				if string(indexBytes) == utils.DeletedFeedMagicWord {
+					a.logger.Errorf("found deleted feed for %s\n", dirNameWithPath)
+					return nil, nil, file.ErrDeletedFeed
+				}
+
+				var meta *file.MetaData
+				err = json.Unmarshal(indexBytes, &meta)
+				if err != nil { // skipcq: TCV-001
+					return nil, nil, err
+				}
+				fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+				if err != nil { // skipcq: TCV-001
+					return nil, nil, err
+				}
+
+				var fileInode file.INode
+				err = json.Unmarshal(fileInodeBytes, &fileInode)
+				if err != nil { // skipcq: TCV-001
+					return nil, nil, err
+				}
+				r := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+				data, err = io.ReadAll(r)
+				if err != nil { // skipcq: TCV-001
+					return nil, nil, err
+				}
+				err = inode.Unmarshal(data)
+				if err != nil { // skipcq: TCV-001
+					return nil, nil, err
+				}
 			}
 			entry := dir.Entry{
-				Name:             dirInode.Meta.Name,
+				Name:             inode.Meta.Name,
 				ContentType:      dir.MimeTypeDirectory, // per RFC2425
-				CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
-				AccessTime:       strconv.FormatInt(dirInode.Meta.AccessTime, 10),
-				ModificationTime: strconv.FormatInt(dirInode.Meta.ModificationTime, 10),
-				Mode:             dirInode.Meta.Mode,
+				CreationTime:     strconv.FormatInt(inode.Meta.CreationTime, 10),
+				AccessTime:       strconv.FormatInt(inode.Meta.AccessTime, 10),
+				ModificationTime: strconv.FormatInt(inode.Meta.ModificationTime, 10),
+				Mode:             inode.Meta.Mode,
 			}
 			listEntries = append(listEntries, entry)
 		} else if strings.HasPrefix(fileOrDirName, "_F_") {
