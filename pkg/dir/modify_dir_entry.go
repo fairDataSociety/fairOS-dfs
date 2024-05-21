@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	indexFileName = "index.dfs"
+	IndexFileName = "index.dfs"
 )
 
 // AddEntryToDir adds a new entry (directory/file) to a given directory.

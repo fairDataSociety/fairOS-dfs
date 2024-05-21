@@ -72,12 +72,12 @@ func (d *Directory) RenameDir(dirNameWithPath, newDirNameWithPath, podPassword s
 		return err
 	}
 
-	err = d.file.Upload(bufio.NewReader(strings.NewReader(string(fileMetaBytes))), indexFileName, int64(len(fileMetaBytes)), file.MinBlockSize, 0, newDirNameWithPath, "gzip", podPassword)
+	err = d.file.Upload(bufio.NewReader(strings.NewReader(string(fileMetaBytes))), IndexFileName, int64(len(fileMetaBytes)), file.MinBlockSize, 0, newDirNameWithPath, "gzip", podPassword)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 
-	err = d.file.RmFile(utils.CombinePathAndFile(dirNameWithPath, indexFileName), podPassword)
+	err = d.file.RmFile(utils.CombinePathAndFile(dirNameWithPath, IndexFileName), podPassword)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
