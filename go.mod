@@ -9,7 +9,6 @@ require (
 	github.com/ethereum/go-ethereum v1.14.3
 	github.com/ethersphere/bee/v2 v2.0.1
 	github.com/ethersphere/bmt v0.1.4
-	github.com/fairdatasociety/fairOS-dfs-utils v0.0.0-20221230123929-aec4ed8b854d
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -57,7 +56,6 @@ require (
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/ethereum/c-kzg-4844 v1.0.0 // indirect
-	github.com/ethersphere/bee v1.10.0 // indirect
 	github.com/ethersphere/go-price-oracle-abi v0.2.0 // indirect
 	github.com/ethersphere/go-storage-incentives-abi v0.6.2 // indirect
 	github.com/ethersphere/go-sw3-abi v0.6.5 // indirect
@@ -108,6 +106,7 @@ require (
 	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/multiformats/go-multistream v0.5.0 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
+	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/onsi/gomega v1.27.10 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect

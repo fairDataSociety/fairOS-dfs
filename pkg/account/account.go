@@ -26,7 +26,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/fairdatasociety/fairOS-dfs-utils/crypto"
+	"github.com/ethersphere/bee/v2/pkg/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"

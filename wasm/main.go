@@ -950,8 +950,7 @@ func publicPodDir(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("public pod downlod failed : %s", err.Error()))
 				return
 			}
-			filePath := filepath.ToSlash(filepath.Dir(fp))
-			fmt.Println("filePath", filePath)
+			filePath := filepath.ToSlash(fp)
 			dirs, files, err := api.PublicPodDisLs(shareInfo, filePath)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
