@@ -19,6 +19,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/sirupsen/logrus"
@@ -137,6 +138,7 @@ func registerWasmFunctions() {
 	js.Global().Set("docIndexJson", js.FuncOf(docIndexJson))
 
 	js.Global().Set("publicPodFile", js.FuncOf(publicPodFile))
+	js.Global().Set("publicPodFileMeta", js.FuncOf(publicPodFileMeta))
 	js.Global().Set("publicPodDir", js.FuncOf(publicPodDir))
 	js.Global().Set("publicPodReceiveInfo", js.FuncOf(publicPodReceiveInfo))
 }
@@ -176,7 +178,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 		if subContractAddress != "" {
 			subConfig.DataHubAddress = subContractAddress
 		}
-		logger := logging.New(os.Stdout, logrus.DebugLevel)
+		logger := logging.New(os.Stdout, logrus.ErrorLevel)
 
 		go func() {
 			var err error
@@ -882,7 +884,7 @@ func publicPodFile(_ js.Value, funcArgs []js.Value) interface{} {
 		}
 
 		if len(funcArgs) != 2 {
-			reject.Invoke("not enough arguments. \"publicPod(podSharingReference, filepath)\"")
+			reject.Invoke("not enough arguments. \"publicPodFile(podSharingReference, filepath)\"")
 			return nil
 		}
 		podSharingReference := funcArgs[0].String()
@@ -906,15 +908,87 @@ func publicPodFile(_ js.Value, funcArgs []js.Value) interface{} {
 			}
 			defer r.Close()
 
-			buf := new(bytes.Buffer)
-			_, err = buf.ReadFrom(r)
+			chunkSize := 64 * 1024 // 64 KB chunks
+			buf := make([]byte, chunkSize)
+			for {
+				n, err := r.Read(buf)
+				if err != nil {
+					if err.Error() == "EOF" {
+						break
+					}
+					reject.Invoke(fmt.Sprintf("public pod file download failed: %s", err.Error()))
+					return
+				}
+
+				if n > 0 {
+					chunk := buf[:n]
+					a := js.Global().Get("Uint8Array").New(len(chunk))
+					js.CopyBytesToJS(a, chunk)
+					resolve.Invoke(a, false)
+				}
+			}
+
+			// Signal the end of the download
+			resolve.Invoke(js.Null(), true)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func publicPodFileMeta(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 1 {
+			reject.Invoke("not enough arguments. \"publicPodFileMeta(metadata)\"")
+			return nil
+		}
+		metadata := funcArgs[0].String()
+		meta := &file.MetaData{}
+		err := json.Unmarshal([]byte(metadata), meta)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("public pod file meta failed : %s", err.Error()))
+			return nil
+		}
+		go func() {
+
+			r, _, err := api.PublicPodFileDownloadFromMetadata(meta)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
 				return
 			}
-			a := js.Global().Get("Uint8Array").New(buf.Len())
-			js.CopyBytesToJS(a, buf.Bytes())
-			resolve.Invoke(a)
+			defer r.Close()
+
+			chunkSize := 64 * 1024 // 64 KB chunks
+			buf := make([]byte, chunkSize)
+			for {
+				n, err := r.Read(buf)
+				if err != nil {
+					if err.Error() == "EOF" {
+						break
+					}
+					reject.Invoke(fmt.Sprintf("public pod file download failed: %s", err.Error()))
+					return
+				}
+
+				if n > 0 {
+					chunk := buf[:n]
+					a := js.Global().Get("Uint8Array").New(len(chunk))
+					js.CopyBytesToJS(a, chunk)
+					resolve.Invoke(a, false)
+				}
+			}
+
+			// Signal the end of the download
+			resolve.Invoke(js.Null(), true)
 		}()
 		return nil
 	})
@@ -933,7 +1007,7 @@ func publicPodDir(_ js.Value, funcArgs []js.Value) interface{} {
 		}
 
 		if len(funcArgs) != 2 {
-			reject.Invoke("not enough arguments. \"publicPod(podSharingReference, filepath)\"")
+			reject.Invoke("not enough arguments. \"publicPodDir(podSharingReference, filepath)\"")
 			return nil
 		}
 		podSharingReference := funcArgs[0].String()
@@ -1712,15 +1786,28 @@ func fileDownload(_ js.Value, funcArgs []js.Value) interface{} {
 			}
 			defer r.Close()
 
-			buf := new(bytes.Buffer)
-			_, err = buf.ReadFrom(r)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("fileDownload failed : %s", err.Error()))
-				return
+			chunkSize := 64 * 1024 // 64 KB chunks
+			buf := make([]byte, chunkSize)
+			for {
+				n, err := r.Read(buf)
+				if err != nil {
+					if err.Error() == "EOF" {
+						break
+					}
+					reject.Invoke(fmt.Sprintf("public pod file download failed: %s", err.Error()))
+					return
+				}
+
+				if n > 0 {
+					chunk := buf[:n]
+					a := js.Global().Get("Uint8Array").New(len(chunk))
+					js.CopyBytesToJS(a, chunk)
+					resolve.Invoke(a, false)
+				}
 			}
-			a := js.Global().Get("Uint8Array").New(buf.Len())
-			js.CopyBytesToJS(a, buf.Bytes())
-			resolve.Invoke(a)
+
+			// Signal the end of the download
+			resolve.Invoke(js.Null(), true)
 		}()
 		return nil
 	})
@@ -2199,15 +2286,28 @@ func groupFileDownload(_ js.Value, funcArgs []js.Value) interface{} {
 			}
 			defer r.Close()
 
-			buf := new(bytes.Buffer)
-			_, err = buf.ReadFrom(r)
-			if err != nil {
-				reject.Invoke(fmt.Sprintf("groupFileDownload failed : %s", err.Error()))
-				return
+			chunkSize := 64 * 1024 // 64 KB chunks
+			buf := make([]byte, chunkSize)
+			for {
+				n, err := r.Read(buf)
+				if err != nil {
+					if err.Error() == "EOF" {
+						break
+					}
+					reject.Invoke(fmt.Sprintf("public pod file download failed: %s", err.Error()))
+					return
+				}
+
+				if n > 0 {
+					chunk := buf[:n]
+					a := js.Global().Get("Uint8Array").New(len(chunk))
+					js.CopyBytesToJS(a, chunk)
+					resolve.Invoke(a, false)
+				}
 			}
-			a := js.Global().Get("Uint8Array").New(buf.Len())
-			js.CopyBytesToJS(a, buf.Bytes())
-			resolve.Invoke(a)
+
+			// Signal the end of the download
+			resolve.Invoke(js.Null(), true)
 		}()
 		return nil
 	})
