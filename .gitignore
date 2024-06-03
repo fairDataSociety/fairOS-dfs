@@ -36,5 +36,5 @@ cover.out
 
 fairos.aar
 fairos-sources.jar
-fairos.wasm
+fairos.wasm*
 fairos.wasm.gz
