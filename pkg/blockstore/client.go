@@ -35,4 +35,6 @@ type Client interface {
 	DeleteReference(address []byte) error
 	CreateTag(address []byte) (uint32, error)
 	GetTag(tag uint32) (int64, int64, int64, error)
+	CreateFeedManifest(owner, topic string) (address swarm.Address, err error)
+	GetLatestFeedManifest(owner, topic string) (address []byte, index, nextIndex string, err error)
 }
