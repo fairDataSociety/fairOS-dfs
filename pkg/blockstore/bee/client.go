@@ -49,6 +49,7 @@ const (
 	bzzUrl                    = "/bzz"
 	tagsUrl                   = "/tags"
 	pinsUrl                   = "/pins/"
+	feedsUrl                  = "/feeds/"
 	swarmPinHeader            = "Swarm-Pin"
 	swarmEncryptHeader        = "Swarm-Encrypt"
 	swarmPostageBatchId       = "Swarm-Postage-Batch-Id"
@@ -114,6 +115,7 @@ func NewBeeClient(apiUrl, postageBlockId string, shouldPin bool, redundancyLevel
 		postageBlockId:     postageBlockId,
 		logger:             logger,
 		shouldPin:          shouldPin,
+		redundancyLevel:    redundancyLevel,
 	}
 }
 
@@ -659,6 +661,102 @@ func (s *Client) CreateTag(address []byte) (uint32, error) {
 	s.logger.WithFields(fields).Log(logrus.DebugLevel, "create tag: ")
 
 	return resp.UID, nil
+}
+
+func (s *Client) CreateFeedManifest(owner, topic string) (swarm.Address, error) {
+	to := time.Now()
+
+	fullUrl := s.url + feedsUrl + owner + "/" + topic
+	fmt.Println("fullUrl: ", fullUrl)
+	req, err := http.NewRequest(http.MethodPost, fullUrl, nil)
+	if err != nil {
+		return swarm.ZeroAddress, err
+	}
+	req.Close = true
+
+	req.Header.Set(swarmPostageBatchId, s.postageBlockId)
+
+	response, err := s.Do(req)
+	if err != nil {
+		return swarm.ZeroAddress, err
+	}
+	// skipcq: GO-S2307
+	defer response.Body.Close()
+
+	respData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return swarm.ZeroAddress, errors.New("error create feed manifest")
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return swarm.ZeroAddress, errors.New(string(respData))
+		}
+		return swarm.ZeroAddress, errors.New(beeErr.Message)
+	}
+
+	var resp bytesPostResponse
+	err = json.Unmarshal(respData, &resp)
+	if err != nil {
+		return swarm.ZeroAddress, fmt.Errorf("error unmarshalling response")
+	}
+	fields := logrus.Fields{
+		"owner":    owner,
+		"topic":    topic,
+		"duration": time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "create feed manifest: ")
+	return resp.Reference, nil
+}
+
+func (s *Client) GetLatestFeedManifest(owner, topic string) ([]byte, string, string, error) {
+	to := time.Now()
+
+	fullUrl := s.url + feedsUrl + owner + "/" + topic
+	fmt.Println("get ullUrl: ", fullUrl)
+
+	req, err := http.NewRequest(http.MethodGet, fullUrl, nil)
+	if err != nil {
+		return nil, "", "", err
+	}
+	req.Close = true
+
+	response, err := s.Do(req)
+	if err != nil {
+		return nil, "", "", err
+	}
+	// skipcq: GO-S2307
+	defer response.Body.Close()
+
+	respData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, "", "", errors.New("error getting latest feed manifest")
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		var beeErr *beeError
+		err = json.Unmarshal(respData, &beeErr)
+		if err != nil {
+			return nil, "", "", errors.New(string(respData))
+		}
+		return nil, "", "", errors.New(beeErr.Message)
+	}
+
+	var resp bytesPostResponse
+	err = json.Unmarshal(respData, &resp)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("error unmarshalling response")
+	}
+	fields := logrus.Fields{
+		"owner":    owner,
+		"topic":    topic,
+		"duration": time.Since(to).String(),
+	}
+	s.logger.WithFields(fields).Log(logrus.DebugLevel, "get latest feed manifest: ")
+
+	return resp.Reference.Bytes(), response.Header.Get("swarm-feed-index"), response.Header.Get("swarm-feed-index-next"), nil
 }
 
 // GetTag gets sync status of a given tag

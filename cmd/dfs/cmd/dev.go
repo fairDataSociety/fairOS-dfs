@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"os/signal"
@@ -72,6 +74,8 @@ func startDevServer() {
 	}()
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
-
+	batchOk := make([]byte, 32)
+	_, _ = rand.Read(batchOk)
+	fmt.Println(hex.EncodeToString(batchOk))
 	<-done
 }

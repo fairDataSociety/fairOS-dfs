@@ -884,7 +884,7 @@ func publicPodFile(_ js.Value, funcArgs []js.Value) interface{} {
 		}
 
 		if len(funcArgs) != 2 {
-			reject.Invoke("not enough arguments. \"publicPodFile(podSharingReference, filepath)\"")
+			reject.Invoke("not enough arguments. \"publicPod(podSharingReference, filepath)\"")
 			return nil
 		}
 		podSharingReference := funcArgs[0].String()
@@ -908,28 +908,15 @@ func publicPodFile(_ js.Value, funcArgs []js.Value) interface{} {
 			}
 			defer r.Close()
 
-			chunkSize := 64 * 1024 // 64 KB chunks
-			buf := make([]byte, chunkSize)
-			for {
-				n, err := r.Read(buf)
-				if err != nil {
-					if err.Error() == "EOF" {
-						break
-					}
-					reject.Invoke(fmt.Sprintf("public pod file download failed: %s", err.Error()))
-					return
-				}
-
-				if n > 0 {
-					chunk := buf[:n]
-					a := js.Global().Get("Uint8Array").New(len(chunk))
-					js.CopyBytesToJS(a, chunk)
-					resolve.Invoke(a, false)
-				}
+			buf := new(bytes.Buffer)
+			_, err = buf.ReadFrom(r)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
+				return
 			}
-
-			// Signal the end of the download
-			resolve.Invoke(js.Null(), true)
+			a := js.Global().Get("Uint8Array").New(buf.Len())
+			js.CopyBytesToJS(a, buf.Bytes())
+			resolve.Invoke(a)
 		}()
 		return nil
 	})
@@ -966,29 +953,15 @@ func publicPodFileMeta(_ js.Value, funcArgs []js.Value) interface{} {
 				return
 			}
 			defer r.Close()
-
-			chunkSize := 64 * 1024 // 64 KB chunks
-			buf := make([]byte, chunkSize)
-			for {
-				n, err := r.Read(buf)
-				if err != nil {
-					if err.Error() == "EOF" {
-						break
-					}
-					reject.Invoke(fmt.Sprintf("public pod file download failed: %s", err.Error()))
-					return
-				}
-
-				if n > 0 {
-					chunk := buf[:n]
-					a := js.Global().Get("Uint8Array").New(len(chunk))
-					js.CopyBytesToJS(a, chunk)
-					resolve.Invoke(a, false)
-				}
+			buf := new(bytes.Buffer)
+			_, err = buf.ReadFrom(r)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
+				return
 			}
-
-			// Signal the end of the download
-			resolve.Invoke(js.Null(), true)
+			a := js.Global().Get("Uint8Array").New(buf.Len())
+			js.CopyBytesToJS(a, buf.Bytes())
+			resolve.Invoke(a)
 		}()
 		return nil
 	})
@@ -1786,28 +1759,15 @@ func fileDownload(_ js.Value, funcArgs []js.Value) interface{} {
 			}
 			defer r.Close()
 
-			chunkSize := 64 * 1024 // 64 KB chunks
-			buf := make([]byte, chunkSize)
-			for {
-				n, err := r.Read(buf)
-				if err != nil {
-					if err.Error() == "EOF" {
-						break
-					}
-					reject.Invoke(fmt.Sprintf("public pod file download failed: %s", err.Error()))
-					return
-				}
-
-				if n > 0 {
-					chunk := buf[:n]
-					a := js.Global().Get("Uint8Array").New(len(chunk))
-					js.CopyBytesToJS(a, chunk)
-					resolve.Invoke(a, false)
-				}
+			buf := new(bytes.Buffer)
+			_, err = buf.ReadFrom(r)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("fileDownload failed : %s", err.Error()))
+				return
 			}
-
-			// Signal the end of the download
-			resolve.Invoke(js.Null(), true)
+			a := js.Global().Get("Uint8Array").New(buf.Len())
+			js.CopyBytesToJS(a, buf.Bytes())
+			resolve.Invoke(a)
 		}()
 		return nil
 	})
@@ -2286,28 +2246,15 @@ func groupFileDownload(_ js.Value, funcArgs []js.Value) interface{} {
 			}
 			defer r.Close()
 
-			chunkSize := 64 * 1024 // 64 KB chunks
-			buf := make([]byte, chunkSize)
-			for {
-				n, err := r.Read(buf)
-				if err != nil {
-					if err.Error() == "EOF" {
-						break
-					}
-					reject.Invoke(fmt.Sprintf("public pod file download failed: %s", err.Error()))
-					return
-				}
-
-				if n > 0 {
-					chunk := buf[:n]
-					a := js.Global().Get("Uint8Array").New(len(chunk))
-					js.CopyBytesToJS(a, chunk)
-					resolve.Invoke(a, false)
-				}
+			buf := new(bytes.Buffer)
+			_, err = buf.ReadFrom(r)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("fileDownload failed : %s", err.Error()))
+				return
 			}
-
-			// Signal the end of the download
-			resolve.Invoke(js.Null(), true)
+			a := js.Global().Get("Uint8Array").New(buf.Len())
+			js.CopyBytesToJS(a, buf.Bytes())
+			resolve.Invoke(a)
 		}()
 		return nil
 	})
