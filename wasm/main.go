@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall/js"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/sirupsen/logrus"
@@ -135,7 +137,10 @@ func registerWasmFunctions() {
 	js.Global().Set("docLoadJson", js.FuncOf(docLoadJson))
 	js.Global().Set("docIndexJson", js.FuncOf(docIndexJson))
 
-	js.Global().Set("publicPod", js.FuncOf(publicPod))
+	js.Global().Set("publicPodFile", js.FuncOf(publicPodFile))
+	js.Global().Set("publicPodFileMeta", js.FuncOf(publicPodFileMeta))
+	js.Global().Set("publicPodDir", js.FuncOf(publicPodDir))
+	js.Global().Set("publicPodReceiveInfo", js.FuncOf(publicPodReceiveInfo))
 }
 
 func connect(_ js.Value, funcArgs []js.Value) interface{} {
@@ -173,7 +178,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 		if subContractAddress != "" {
 			subConfig.DataHubAddress = subContractAddress
 		}
-		logger := logging.New(os.Stdout, logrus.DebugLevel)
+		logger := logging.New(os.Stdout, logrus.ErrorLevel)
 
 		go func() {
 			var err error
@@ -191,6 +196,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("failed to connect to fairOS: %s", err.Error()))
 			}
+			fmt.Println("******** FairOS connected ********")
 			resolve.Invoke("connected")
 		}()
 
@@ -210,7 +216,10 @@ func publicKvEntryGet(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
-
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"publicKvEntryGet(sharingRef, tableName, key)\"")
 			return nil
@@ -257,6 +266,10 @@ func login(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"login(username, password)\"")
@@ -293,6 +306,10 @@ func walletLogin(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"walletLogin(addressHex, signature)\"")
@@ -328,6 +345,10 @@ func signatureLogin(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"signatureLogin(signature, password)\"")
@@ -361,6 +382,10 @@ func connectWallet(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"connectWallet(username, password, walletAddress, signature)\"")
@@ -391,6 +416,10 @@ func userPresent(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 1 {
 			reject.Invoke("not enough arguments. \"userPresent(username)\"")
@@ -416,6 +445,10 @@ func userIsLoggedIn(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 1 {
 			reject.Invoke("not enough arguments. \"userIsLoggedIn(username)\"")
@@ -442,6 +475,10 @@ func userLogout(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 1 {
 			reject.Invoke("not enough arguments. \"userLogout(sessionId)\"")
@@ -468,6 +505,10 @@ func userDelete(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"userDelete(sessionId, password)\"")
@@ -495,6 +536,10 @@ func userStat(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 1 {
 			reject.Invoke("not enough arguments. \"userStat(sessionId)\"")
@@ -526,6 +571,10 @@ func podNew(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"podNew(sessionId, podName)\"")
@@ -553,6 +602,10 @@ func podOpen(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"podOpen(sessionId, podName)\"")
@@ -580,6 +633,10 @@ func podClose(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"podClose(sessionId, podName)\"")
@@ -607,6 +664,10 @@ func podSync(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"podSync(sessionId, podName)\"")
@@ -634,6 +695,10 @@ func podDelete(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"podDelete(sessionId, podName)\"")
@@ -661,6 +726,10 @@ func podList(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 1 {
 			reject.Invoke("not enough arguments. \"podList(sessionId)\"")
@@ -702,6 +771,10 @@ func podStat(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"podStat(sessionId, podName)\"")
@@ -733,6 +806,10 @@ func podShare(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"podShare(sessionId, podName, shareAs)\"")
@@ -764,6 +841,10 @@ func podReceive(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"podReceive(sessionId, newPodName, podSharingReference)\"")
@@ -793,17 +874,21 @@ func podReceive(_ js.Value, funcArgs []js.Value) interface{} {
 	return promiseConstructor.New(handler)
 }
 
-func publicPod(_ js.Value, funcArgs []js.Value) interface{} {
+func publicPodFile(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"publicPod(podSharingReference, filepath)\"")
 			return nil
 		}
 		podSharingReference := funcArgs[0].String()
-		filepath := funcArgs[1].String()
+		fp := funcArgs[1].String()
 
 		go func() {
 			ref, err := utils.ParseHexReference(podSharingReference)
@@ -816,13 +901,7 @@ func publicPod(_ js.Value, funcArgs []js.Value) interface{} {
 				reject.Invoke(fmt.Sprintf("public pod downlod failed : %s", err.Error()))
 				return
 			}
-			filePath := filepath
-			if filePath == "" {
-				filePath = "/index.html"
-			} else {
-				filePath = "/" + filePath
-			}
-			r, _, err := api.PublicPodFileDownload(shareInfo, filePath)
+			r, _, err := api.PublicPodFileDownload(shareInfo, fp)
 			if err != nil {
 				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
 				return
@@ -846,10 +925,131 @@ func publicPod(_ js.Value, funcArgs []js.Value) interface{} {
 	return promiseConstructor.New(handler)
 }
 
+func publicPodFileMeta(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 1 {
+			reject.Invoke("not enough arguments. \"publicPodFileMeta(metadata)\"")
+			return nil
+		}
+		metadata := funcArgs[0].String()
+		meta := &file.MetaData{}
+		err := json.Unmarshal([]byte(metadata), meta)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("public pod file meta failed : %s", err.Error()))
+			return nil
+		}
+		go func() {
+
+			r, _, err := api.PublicPodFileDownloadFromMetadata(meta)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
+				return
+			}
+			defer r.Close()
+			buf := new(bytes.Buffer)
+			_, err = buf.ReadFrom(r)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
+				return
+			}
+			a := js.Global().Get("Uint8Array").New(buf.Len())
+			js.CopyBytesToJS(a, buf.Bytes())
+			resolve.Invoke(a)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func publicPodDir(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"publicPodDir(podSharingReference, filepath)\"")
+			return nil
+		}
+		podSharingReference := funcArgs[0].String()
+		fp := funcArgs[1].String()
+
+		go func() {
+			ref, err := utils.ParseHexReference(podSharingReference)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod downlod failed : %s", err.Error()))
+				return
+			}
+			shareInfo, err := api.PublicPodReceiveInfo(ref)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod downlod failed : %s", err.Error()))
+				return
+			}
+			filePath := filepath.ToSlash(fp)
+			dirs, files, err := api.PublicPodDisLs(shareInfo, filePath)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("public pod fileDownload failed : %s", err.Error()))
+				return
+			}
+			filesList := js.Global().Get("Array").New(len(files))
+			for i, v := range files {
+				file := js.Global().Get("Object").New()
+				file.Set("name", v.Name)
+				file.Set("contentType", v.ContentType)
+				file.Set("size", v.Size)
+				file.Set("blockSize", v.BlockSize)
+				file.Set("creationTime", v.CreationTime)
+				file.Set("modificationTime", v.ModificationTime)
+				file.Set("accessTime", v.AccessTime)
+				file.Set("mode", v.Mode)
+				filesList.SetIndex(i, file)
+			}
+			dirsList := js.Global().Get("Array").New(len(dirs))
+			for i, v := range dirs {
+				dir := js.Global().Get("Object").New()
+				dir.Set("name", v.Name)
+				dir.Set("contentType", v.ContentType)
+				dir.Set("size", v.Size)
+				dir.Set("mode", v.Mode)
+				dir.Set("blockSize", v.BlockSize)
+				dir.Set("creationTime", v.CreationTime)
+				dir.Set("modificationTime", v.ModificationTime)
+				dir.Set("accessTime", v.AccessTime)
+				dirsList.SetIndex(i, dir)
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("files", filesList)
+			object.Set("dirs", dirsList)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
 func podReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"podReceiveInfo(sessionId, pod_sharing_reference)\"")
@@ -885,10 +1085,56 @@ func podReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 	return promiseConstructor.New(handler)
 }
 
+func publicPodReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 1 {
+			reject.Invoke("not enough arguments. \"publicPodReceiveInfo(pod_sharing_reference)\"")
+			return nil
+		}
+		podSharingReference := funcArgs[0].String()
+
+		go func() {
+			ref, err := utils.ParseHexReference(podSharingReference)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("publicPodReceiveInfo failed : %s", err.Error()))
+				return
+			}
+			shareInfo, err := api.PublicPodReceiveInfo(ref)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("publicPodReceiveInfo failed : %s", err.Error()))
+				return
+			}
+
+			object := js.Global().Get("Object").New()
+			object.Set("podName", shareInfo.PodName)
+			object.Set("podAddress", shareInfo.Address)
+			object.Set("password", shareInfo.Password)
+			object.Set("userAddress", shareInfo.UserAddress)
+
+			resolve.Invoke(object)
+		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
 func groupNew(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"groupNew(sessionId, groupName)\"")
@@ -916,6 +1162,10 @@ func groupOpen(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"groupOpen(sessionId, groupName)\"")
@@ -943,6 +1193,10 @@ func groupClose(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"groupClose(sessionId, groupName)\"")
@@ -970,6 +1224,10 @@ func groupDelete(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"groupDelete(sessionId, groupName)\"")
@@ -997,6 +1255,10 @@ func groupDeleteShared(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"groupDeleteShared(sessionId, groupName)\"")
@@ -1024,6 +1286,10 @@ func groupList(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 1 {
 			reject.Invoke("not enough arguments. \"groupList(sessionId)\"")
@@ -1065,6 +1331,10 @@ func groupInvite(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"groupInvite(sessionId, groupName, member, permission)\"")
@@ -1097,6 +1367,10 @@ func groupAccept(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"groupInvite(sessionId, groupInviteReference)\"")
@@ -1124,6 +1398,10 @@ func groupRemoveMember(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"groupRemoveMember(sessionId, groupName, member)\"")
@@ -1152,6 +1430,10 @@ func groupUpdatePermission(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"groupUpdatePermission(sessionId, groupName, member, permission)\"")
@@ -1182,6 +1464,10 @@ func groupMembers(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"groupMembers(sessionId, groupName)\"")
@@ -1214,6 +1500,10 @@ func groupPermission(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"groupPermission(sessionId, groupName)\"")
@@ -1244,6 +1534,10 @@ func dirPresent(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"dirPresent(sessionId, podName, dirPath)\"")
@@ -1276,6 +1570,10 @@ func dirMake(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"dirMake(sessionId, podName, dirPath)\"")
@@ -1304,6 +1602,10 @@ func dirRemove(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"dirRemove(sessionId, podName, dirPath)\"")
@@ -1332,6 +1634,10 @@ func dirList(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"dirList(sessionId, podName, dirPath)\"")
@@ -1390,6 +1696,10 @@ func dirStat(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"dirStat(sessionId, podName, dirPath)\"")
@@ -1429,6 +1739,10 @@ func fileDownload(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"fileDownload(sessionId, podName, filePath)\"")
 			return nil
@@ -1465,6 +1779,10 @@ func fileUpload(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 		if len(funcArgs) != 8 {
 			reject.Invoke("not enough arguments. \"fileUpload(sessionId, podName, dirPath, file, name, size, blockSize, compression)\"")
 			return nil
@@ -1511,6 +1829,10 @@ func fileShare(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"fileShare(sessionId, podName, dirPath, destinationUser)\"")
@@ -1544,6 +1866,10 @@ func fileReceive(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"fileReceive(sessionId, podName, directory, file_sharing_reference)\"")
@@ -1576,6 +1902,10 @@ func fileReceiveInfo(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"fileReceiveInfo(sessionId, fileSharingReference)\"")
@@ -1614,6 +1944,10 @@ func fileDelete(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"fileDelete(sessionId, podName, podFileWithPath)\"")
@@ -1642,6 +1976,10 @@ func fileStat(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"fileStat(sessionId, podName, podFileWithPath)\"")
@@ -1683,6 +2021,10 @@ func groupDirPresent(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"groupDirPresent(sessionId, groupName, dirPath)\"")
@@ -1715,6 +2057,10 @@ func groupDirMake(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"groupDirMake(sessionId, groupName, dirPath)\"")
@@ -1743,6 +2089,10 @@ func groupDirRemove(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"groupDirRemove(sessionId, groupName, dirPath)\"")
@@ -1771,6 +2121,10 @@ func groupDirList(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"groupDirList(sessionId, groupName, dirPath)\"")
@@ -1829,6 +2183,10 @@ func groupDirStat(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"groupDirStat(sessionId, groupName, dirPath)\"")
@@ -1868,6 +2226,10 @@ func groupFileDownload(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"groupFileDownload(sessionId, groupName, filePath)\"")
 			return nil
@@ -1887,7 +2249,7 @@ func groupFileDownload(_ js.Value, funcArgs []js.Value) interface{} {
 			buf := new(bytes.Buffer)
 			_, err = buf.ReadFrom(r)
 			if err != nil {
-				reject.Invoke(fmt.Sprintf("groupFileDownload failed : %s", err.Error()))
+				reject.Invoke(fmt.Sprintf("fileDownload failed : %s", err.Error()))
 				return
 			}
 			a := js.Global().Get("Uint8Array").New(buf.Len())
@@ -1904,6 +2266,10 @@ func groupFileUpload(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 		if len(funcArgs) != 8 {
 			reject.Invoke("not enough arguments. \"groupFileUpload(sessionId, groupName, dirPath, file, name, size, blockSize, compression)\"")
 			return nil
@@ -1950,6 +2316,10 @@ func groupFileShare(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"groupFileShare(sessionId, groupName, dirPath, destinationUser)\"")
@@ -1983,6 +2353,10 @@ func groupFileDelete(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"groupFileDelete(sessionId, groupName, podFileWithPath)\"")
@@ -2011,6 +2385,10 @@ func groupFileStat(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"groupFileStat(sessionId, groupName, podFileWithPath)\"")
@@ -2052,6 +2430,10 @@ func kvNewStore(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"kvNewStore(sessionId, podName, tableName, indexType)\"")
@@ -2096,6 +2478,10 @@ func kvList(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"kvList(sessionId, podName)\"")
@@ -2132,6 +2518,10 @@ func kvOpen(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"kvOpen(sessionId, podName, tableName)\"")
@@ -2160,6 +2550,10 @@ func kvDelete(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"kvDelete(sessionId, podName, tableName)\"")
@@ -2188,6 +2582,10 @@ func kvCount(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"kvCount(sessionId, podName, tableName)\"")
@@ -2219,6 +2617,10 @@ func kvEntryPut(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 5 {
 			reject.Invoke("not enough arguments. \"kvEntryPut(sessionId, podName, tableName, key, value)\"")
@@ -2254,6 +2656,10 @@ func kvEntryGet(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"kvEntryGet(sessionId, podName, tableName, key)\"")
@@ -2287,6 +2693,10 @@ func kvEntryDelete(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"kvEntryDelete(sessionId, podName, tableName, key)\"")
@@ -2316,6 +2726,10 @@ func kvLoadCSV(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"kvLoadCSV(sessionId, podName, tableName, file)\"")
 			return nil
@@ -2393,6 +2807,10 @@ func kvSeek(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 6 {
 			reject.Invoke("not enough arguments. \"kvSeek(sessionId, podName, tableName, start, end, limit)\"")
@@ -2427,6 +2845,10 @@ func kvSeekNext(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"kvSeekNext(sessionId, podName, tableName)\"")
@@ -2460,6 +2882,10 @@ func docNewStore(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 5 {
 			reject.Invoke("not enough arguments. \"docNewStore(sessionId, podName, tableName, simpleIndexes, mutable)\"")
@@ -2515,6 +2941,10 @@ func docList(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"docList(sessionId, podName)\"")
@@ -2543,6 +2973,10 @@ func docOpen(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"docOpen(sessionId, podName, tableName)\"")
@@ -2571,6 +3005,10 @@ func docCount(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"docCount(sessionId, podName, tableName, expression)\"")
@@ -2601,6 +3039,10 @@ func docDelete(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"docDelete(sessionId, podName, tableName)\"")
@@ -2629,6 +3071,10 @@ func docFind(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 5 {
 			reject.Invoke("not enough arguments. \"docFind(sessionId, podName, tableName, expression, limit)\"")
@@ -2660,6 +3106,10 @@ func docEntryPut(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"docEntryPut(sessionId, podName, tableName, value)\"")
@@ -2693,6 +3143,10 @@ func docEntryGet(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"docEntryGet(sessionId, podName, tableName, id)\"")
@@ -2726,6 +3180,10 @@ func docEntryDelete(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"docEntryDelete(sessionId, podName, tableName, id)\"")
@@ -2755,6 +3213,10 @@ func docLoadJson(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"docLoadJson(sessionId, podName, tableName, file)\"")
 			return nil
@@ -2813,6 +3275,10 @@ func docIndexJson(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 4 {
 			reject.Invoke("not enough arguments. \"docIndexJson(sessionId, podName, tableName, filePath)\"")
@@ -2842,6 +3308,10 @@ func encryptSubscription(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"encryptSubscription(sessionId, podName, subscriberNameHash)\"")
@@ -2881,6 +3351,10 @@ func getSubscriptions(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"getSubscriptions(sessionId)\"")
@@ -2920,6 +3394,10 @@ func openSubscribedPod(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"openSubscribedPod(sessionId, subHash, keyLocation)\"")
@@ -2958,6 +3436,10 @@ func openSubscribedPodFromReference(_ js.Value, funcArgs []js.Value) interface{}
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 3 {
 			reject.Invoke("not enough arguments. \"openSubscribedPodFromReference(sessionId, reference, sellerNameHash)\"")
@@ -2996,6 +3478,10 @@ func getSubscribablePods(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 1 {
 			reject.Invoke("not enough arguments. \"getSubscribablePods(sessionId)\"")
@@ -3039,6 +3525,10 @@ func getSubRequests(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 1 {
 			reject.Invoke("not enough arguments. \"getSubRequests(sessionId)\"")
@@ -3076,6 +3566,10 @@ func getSubscribablePodInfo(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"getSubscribablePodInfo(sessionId, subHash)\"")
@@ -3122,6 +3616,10 @@ func getNameHash(_ js.Value, funcArgs []js.Value) interface{} {
 	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
 
 		if len(funcArgs) != 2 {
 			reject.Invoke("not enough arguments. \"getNameHash(sessionId, username)\"")

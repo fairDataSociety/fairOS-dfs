@@ -27,6 +27,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -305,6 +307,24 @@ func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.Rea
 	return reader, meta.Size, nil
 }
 
+// PublicPodFileDownloadFromMetadata downloads a file from a public pod
+func (a *API) PublicPodFileDownloadFromMetadata(meta *file.MetaData) (io.ReadCloser, uint64, error) {
+
+	fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+
+	var fileInode file.INode
+	err = json.Unmarshal(fileInodeBytes, &fileInode)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+
+	reader := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+	return reader, meta.Size, nil
+}
+
 // PublicPodKVEntryGet gets a kv entry from a public pod
 func (a *API) PublicPodKVEntryGet(pod *pod.ShareInfo, name, key string) ([]string, []byte, error) {
 
@@ -335,7 +355,6 @@ func (a *API) PublicPodKVGetter(pod *pod.ShareInfo) KVGetter {
 
 // PublicPodDisLs lists a directory from a public pod
 func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entry, []file.Entry, error) {
-
 	accountInfo := &account.Info{}
 	address := utils.HexToAddress(pod.Address)
 	accountInfo.SetAddress(address)
@@ -343,85 +362,440 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 
 	dirNameWithPath := filepath.ToSlash(dirPathToLs)
-	topic := utils.HashString(dirNameWithPath)
-	_, data, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+	var (
+		inode dir.Inode
+		data  []byte
+	)
+
+	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, dir.IndexFileName))
+	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
 	if err != nil { // skipcq: TCV-001
-		if dirNameWithPath == utils.PathSeparator {
-			return nil, nil, nil
+		topic = utils.HashString(dirNameWithPath)
+		_, data, err = fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+		if err != nil {
+			return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
 		}
-		return nil, nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+	} else {
+		if string(metaBytes) == utils.DeletedFeedMagicWord {
+			a.logger.Errorf("found deleted feed for %s\n", dirNameWithPath)
+			return nil, nil, file.ErrDeletedFeed
+		}
+
+		var meta *file.MetaData
+		err = json.Unmarshal(metaBytes, &meta)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+		fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+
+		var fileInode file.INode
+		err = json.Unmarshal(fileInodeBytes, &fileInode)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+		r := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+		data, err = io.ReadAll(r)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
 	}
 
-	dirInode := &dir.Inode{}
-	err = dirInode.Unmarshal(data)
-	if err != nil {
-		return nil, nil, fmt.Errorf("list dir : %v", err)
+	var wg sync.WaitGroup
+	dirChan := make(chan dir.Entry, len(inode.FileOrDirNames))
+	fileChan := make(chan file.Entry, len(inode.FileOrDirNames))
+	errChan := make(chan error, len(inode.FileOrDirNames))
+	semaphore := make(chan struct{}, 4)
+	missingCount := 0
+	for _, fileOrDirName := range inode.FileOrDirNames {
+		wg.Add(1)
+		semaphore <- struct{}{} // Acquire a semaphore slot
+
+		go func(fileOrDirName string) {
+			defer wg.Done()
+			defer func() { <-semaphore }() // Release the semaphore slot
+			if strings.HasPrefix(fileOrDirName, "_D_") {
+
+				dirName := strings.TrimPrefix(fileOrDirName, "_D_")
+				dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
+				var (
+					inode dir.Inode
+					data  []byte
+				)
+
+				dirTopic := utils.HashString(utils.CombinePathAndFile(dirPath, dir.IndexFileName))
+				_, indexBytes, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
+				if err != nil { // skipcq: TCV-001
+					topic = utils.HashString(dirName)
+					_, data, err = fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+					if err != nil {
+						errChan <- fmt.Errorf("list dir : %v", err)
+						return
+					}
+					err = inode.Unmarshal(data)
+					if err != nil {
+						errChan <- err
+						return
+					}
+				} else {
+					if string(indexBytes) == utils.DeletedFeedMagicWord {
+						a.logger.Errorf("found deleted feed for %s\n", dirNameWithPath)
+						errChan <- file.ErrDeletedFeed
+						return
+					}
+
+					var meta *file.MetaData
+					err = json.Unmarshal(indexBytes, &meta)
+					if err != nil {
+						errChan <- err
+						return
+					}
+					fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+					if err != nil {
+						errChan <- err
+						return
+					}
+
+					var fileInode file.INode
+					err = json.Unmarshal(fileInodeBytes, &fileInode)
+					if err != nil {
+						errChan <- err
+						return
+					}
+					r := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+					data, err = io.ReadAll(r)
+					if err != nil {
+						errChan <- err
+						return
+					}
+					err = inode.Unmarshal(data)
+					if err != nil {
+						errChan <- err
+						return
+					}
+				}
+				entry := dir.Entry{
+					Name:             inode.Meta.Name,
+					ContentType:      dir.MimeTypeDirectory, // per RFC2425
+					CreationTime:     strconv.FormatInt(inode.Meta.CreationTime, 10),
+					AccessTime:       strconv.FormatInt(inode.Meta.AccessTime, 10),
+					ModificationTime: strconv.FormatInt(inode.Meta.ModificationTime, 10),
+					Mode:             inode.Meta.Mode,
+				}
+				dirChan <- entry
+			} else if strings.HasPrefix(fileOrDirName, "_F_") {
+				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
+				filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
+
+				fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
+
+				_, data, err := fd.GetFeedData(fileTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
+				if err != nil { // skipcq: TCV-001
+					errChan <- fmt.Errorf("file mtdt : %s : %v", filePath, err)
+					return
+				}
+				if string(data) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
+					return
+				}
+				var meta *file.MetaData
+				err = json.Unmarshal(data, &meta)
+				if err != nil { // skipcq: TCV-001
+					errChan <- fmt.Errorf("file mtdt : %v", err)
+					return
+				}
+				entry := file.Entry{
+					Name:             meta.Name,
+					ContentType:      meta.ContentType,
+					Size:             strconv.FormatUint(meta.Size, 10),
+					BlockSize:        strconv.FormatInt(int64(meta.BlockSize), 10),
+					CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
+					AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
+					ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
+					Mode:             meta.Mode,
+				}
+
+				fileChan <- entry
+			}
+		}(fileOrDirName)
 	}
+
+	// Close channels in a goroutine after all goroutines are done
+	go func() {
+		wg.Wait()
+		close(dirChan)
+		close(fileChan)
+		close(errChan)
+	}()
 
 	var listEntries []dir.Entry
-	var files []string
-	for _, fileOrDirName := range dirInode.FileOrDirNames {
-		if strings.HasPrefix(fileOrDirName, "_D_") {
-			dirName := strings.TrimPrefix(fileOrDirName, "_D_")
-			dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
-			dirTopic := utils.HashString(dirPath)
-
-			_, data, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
-			if err != nil { // skipcq: TCV-001
-				return nil, nil, fmt.Errorf("list dir : %v", err)
-			}
-			var dirInode *dir.Inode
-			err = json.Unmarshal(data, &dirInode)
-			if err != nil { // skipcq: TCV-001
-				return nil, nil, fmt.Errorf("list dir : %v", err)
-			}
-			entry := dir.Entry{
-				Name:             dirInode.Meta.Name,
-				ContentType:      dir.MimeTypeDirectory, // per RFC2425
-				CreationTime:     strconv.FormatInt(dirInode.Meta.CreationTime, 10),
-				AccessTime:       strconv.FormatInt(dirInode.Meta.AccessTime, 10),
-				ModificationTime: strconv.FormatInt(dirInode.Meta.ModificationTime, 10),
-				Mode:             dirInode.Meta.Mode,
-			}
-			listEntries = append(listEntries, entry)
-		} else if strings.HasPrefix(fileOrDirName, "_F_") {
-			fileName := strings.TrimPrefix(fileOrDirName, "_F_")
-			filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
-			files = append(files, filePath)
-		}
-	}
-
 	var fileEntries []file.Entry
-	for _, filePath := range files {
-		fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
 
-		_, data, err := fd.GetFeedData(fileTopic, accountInfo.GetAddress(), []byte(pod.Password), false)
-		if err != nil { // skipcq: TCV-001
-			return nil, nil, fmt.Errorf("file mtdt : %v", err)
+	for {
+		select {
+		case dirEntry, ok := <-dirChan:
+			if ok {
+				listEntries = append(listEntries, dirEntry)
+			}
+		case fileEntry, ok := <-fileChan:
+			if ok {
+				fileEntries = append(fileEntries, fileEntry)
+			}
+		case err := <-errChan:
+			if err != nil {
+				return nil, nil, err
+			}
+		case <-time.After(time.Hour):
+			return nil, nil, fmt.Errorf("timeout while listing directory")
 		}
-		if string(data) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
-			continue
+		if len(listEntries)+len(fileEntries)+missingCount == len(inode.FileOrDirNames) {
+			break
 		}
-		var meta *file.MetaData
-		err = json.Unmarshal(data, &meta)
-		if err != nil { // skipcq: TCV-001
-			return nil, nil, fmt.Errorf("file mtdt : %v", err)
-		}
-		entry := file.Entry{
-			Name:             meta.Name,
-			ContentType:      meta.ContentType,
-			Size:             strconv.FormatUint(meta.Size, 10),
-			BlockSize:        strconv.FormatInt(int64(meta.BlockSize), 10),
-			CreationTime:     strconv.FormatInt(meta.CreationTime, 10),
-			AccessTime:       strconv.FormatInt(meta.AccessTime, 10),
-			ModificationTime: strconv.FormatInt(meta.ModificationTime, 10),
-			Mode:             meta.Mode,
-		}
-
-		fileEntries = append(fileEntries, entry)
 	}
 
 	return listEntries, fileEntries, nil
+}
+
+type DirSnapShot struct {
+	Name             string          `json:"name"`
+	ContentType      string          `json:"contentType"`
+	Size             string          `json:"size,omitempty"`
+	Mode             uint32          `json:"mode"`
+	BlockSize        string          `json:"blockSize,omitempty"`
+	CreationTime     string          `json:"creationTime"`
+	ModificationTime string          `json:"modificationTime"`
+	AccessTime       string          `json:"accessTime"`
+	FileList         []file.MetaData `json:"fileList"`
+	DirList          []*DirSnapShot  `json:"dirList"`
+}
+
+// PublicPodSnapshot Gets the current snapshot from a public pod
+func (a *API) PublicPodSnapshot(pod *pod.ShareInfo, dirPathToLs string) (*DirSnapShot, error) {
+	accountInfo := &account.Info{}
+	address := utils.HexToAddress(pod.Address)
+	accountInfo.SetAddress(address)
+	dirSnapShot := &DirSnapShot{
+		FileList: make([]file.MetaData, 0),
+		DirList:  make([]*DirSnapShot, 0),
+	}
+	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
+
+	dirNameWithPath := filepath.ToSlash(dirPathToLs)
+	var (
+		inode dir.Inode
+		data  []byte
+	)
+
+	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, dir.IndexFileName))
+	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+	if err != nil { // skipcq: TCV-001
+		topic = utils.HashString(dirNameWithPath)
+		_, data, err = fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+		if err != nil {
+			return nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
+		}
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+	} else {
+		if string(metaBytes) == utils.DeletedFeedMagicWord {
+			a.logger.Errorf("found deleted feed for %s\n", dirNameWithPath)
+			return nil, file.ErrDeletedFeed
+		}
+
+		var meta *file.MetaData
+		err = json.Unmarshal(metaBytes, &meta)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+		fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+
+		var fileInode file.INode
+		err = json.Unmarshal(fileInodeBytes, &fileInode)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+		r := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+		data, err = io.ReadAll(r)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+		err = inode.Unmarshal(data)
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+	}
+	dirSnapShot.Name = inode.Meta.Name
+	dirSnapShot.ContentType = dir.MimeTypeDirectory
+	dirSnapShot.CreationTime = strconv.FormatInt(inode.Meta.CreationTime, 10)
+	dirSnapShot.AccessTime = strconv.FormatInt(inode.Meta.AccessTime, 10)
+	dirSnapShot.ModificationTime = strconv.FormatInt(inode.Meta.ModificationTime, 10)
+	dirSnapShot.Mode = inode.Meta.Mode
+	err = a.getSnapShotForDir(dirSnapShot, fd, accountInfo, inode.FileOrDirNames, dirNameWithPath, pod.Password)
+	if err != nil {
+		return nil, err
+	}
+	return dirSnapShot, nil
+}
+
+func (a *API) getSnapShotForDir(dirL *DirSnapShot, fd *feed.API, accountInfo *account.Info, fileOrDirNames []string, dirNameWithPath, password string) error {
+	var wg sync.WaitGroup
+	dirChan := make(chan dir.Inode, len(fileOrDirNames))
+	fileChan := make(chan file.MetaData, len(fileOrDirNames))
+	errChan := make(chan error, len(fileOrDirNames))
+	semaphore := make(chan struct{}, 4)
+	missingCount := 0
+	for _, fileOrDirName := range fileOrDirNames {
+		wg.Add(1)
+		semaphore <- struct{}{} // Acquire a semaphore slot
+
+		go func(fileOrDirName string) {
+			defer wg.Done()
+			defer func() { <-semaphore }() // Release the semaphore slot
+			if strings.HasPrefix(fileOrDirName, "_D_") {
+
+				dirName := strings.TrimPrefix(fileOrDirName, "_D_")
+				dirPath := utils.CombinePathAndFile(dirNameWithPath, dirName)
+				var (
+					inode dir.Inode
+					data  []byte
+				)
+
+				dirTopic := utils.HashString(utils.CombinePathAndFile(dirPath, dir.IndexFileName))
+				_, indexBytes, err := fd.GetFeedData(dirTopic, accountInfo.GetAddress(), []byte(password), false)
+				if err != nil { // skipcq: TCV-001
+					topic := utils.HashString(dirName)
+					_, data, err = fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(password), false)
+					if err != nil {
+						errChan <- fmt.Errorf("list dir : %v", err)
+						return
+					}
+					err = inode.Unmarshal(data)
+					if err != nil {
+						errChan <- err
+						return
+					}
+				} else {
+					if string(indexBytes) == utils.DeletedFeedMagicWord {
+						errChan <- file.ErrDeletedFeed
+						return
+					}
+
+					var meta *file.MetaData
+					err = json.Unmarshal(indexBytes, &meta)
+					if err != nil {
+						errChan <- err
+						return
+					}
+					fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+					if err != nil {
+						errChan <- err
+						return
+					}
+
+					var fileInode file.INode
+					err = json.Unmarshal(fileInodeBytes, &fileInode)
+					if err != nil {
+						errChan <- err
+						return
+					}
+					r := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+					data, err = io.ReadAll(r)
+					if err != nil {
+						errChan <- err
+						return
+					}
+					err = inode.Unmarshal(data)
+					if err != nil {
+						errChan <- err
+						return
+					}
+				}
+				dirChan <- inode
+			} else if strings.HasPrefix(fileOrDirName, "_F_") {
+				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
+				filePath := utils.CombinePathAndFile(dirNameWithPath, fileName)
+
+				fileTopic := utils.HashString(utils.CombinePathAndFile(filePath, ""))
+
+				_, data, err := fd.GetFeedData(fileTopic, accountInfo.GetAddress(), []byte(password), false)
+				if err != nil { // skipcq: TCV-001
+					errChan <- fmt.Errorf("file mtdt : %s : %v", filePath, err)
+					return
+				}
+				if string(data) == utils.DeletedFeedMagicWord { // skipcq: TCV-001
+					return
+				}
+				var meta *file.MetaData
+				err = json.Unmarshal(data, &meta)
+				if err != nil { // skipcq: TCV-001
+					errChan <- fmt.Errorf("file mtdt : %v", err)
+					return
+				}
+
+				fileChan <- *meta
+			}
+		}(fileOrDirName)
+	}
+
+	// Close channels in a goroutine after all goroutines are done
+	go func() {
+		wg.Wait()
+		close(dirChan)
+		close(fileChan)
+		close(errChan)
+	}()
+
+	for {
+		select {
+		case inode, ok := <-dirChan:
+			if ok {
+
+				dirItem := &DirSnapShot{
+					Name:             inode.Meta.Name,
+					ContentType:      dir.MimeTypeDirectory,
+					CreationTime:     strconv.FormatInt(inode.Meta.CreationTime, 10),
+					AccessTime:       strconv.FormatInt(inode.Meta.AccessTime, 10),
+					ModificationTime: strconv.FormatInt(inode.Meta.ModificationTime, 10),
+					Mode:             inode.Meta.Mode,
+					DirList:          make([]*DirSnapShot, 0),
+					FileList:         make([]file.MetaData, 0),
+				}
+				dirL.DirList = append(dirL.DirList, dirItem)
+				err := a.getSnapShotForDir(dirItem, fd, accountInfo, inode.FileOrDirNames, utils.CombinePathAndFile(dirNameWithPath, inode.Meta.Name), password)
+				if err != nil {
+					return err
+				}
+			}
+		case fileEntry, ok := <-fileChan:
+			if ok {
+				dirL.FileList = append(dirL.FileList, fileEntry)
+			}
+		case err := <-errChan:
+			if err != nil {
+				return err
+			}
+		case <-time.After(time.Hour):
+			return fmt.Errorf("timeout while listing directory")
+		}
+		if len(dirL.FileList)+len(dirL.DirList)+missingCount == len(fileOrDirNames) {
+			break
+		}
+	}
+	return nil
 }
 
 // PodReceive - receive a pod from a sharingReference
