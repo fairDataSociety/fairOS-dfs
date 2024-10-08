@@ -21,14 +21,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
-
+	blockstore "github.com/asabya/swarm-blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 )
 

@@ -1,15 +1,14 @@
 module github.com/fairdatasociety/fairOS-dfs
 
-go 1.22
-
-toolchain go1.22.0
+go 1.22.0
 
 require (
+	github.com/asabya/swarm-blockstore v0.0.0-20241007072942-fef6cc83ff36
 	github.com/btcsuite/btcd/btcec/v2 v2.3.3
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ethereum/go-ethereum v1.14.7
-	github.com/ethersphere/bee/v2 v2.1.1-0.20240611213428-4b04c086d8db
+	github.com/ethersphere/bee/v2 v2.2.0
 	github.com/ethersphere/bmt v0.1.4
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb
@@ -57,7 +56,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/ethereum/c-kzg-4844 v1.0.0 // indirect
 	github.com/ethersphere/go-price-oracle-abi v0.2.0 // indirect
-	github.com/ethersphere/go-storage-incentives-abi v0.8.6 // indirect
+	github.com/ethersphere/go-storage-incentives-abi v0.9.1 // indirect
 	github.com/ethersphere/go-sw3-abi v0.6.5 // indirect
 	github.com/ethersphere/langos v1.0.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
@@ -158,6 +157,8 @@ require (
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
 
-//replace github.com/ethersphere/bee/v2 => ../../ethersphere/bee
+replace github.com/ethersphere/bee/v2 => ../../ethersphere/bee
+
+replace github.com/asabya/swarm-blockstore => ../../asabya/swarm-blockstore
 
 replace github.com/codahale/hdrhistogram => github.com/HdrHistogram/hdrhistogram-go v0.0.0-20200919145931-8dac23c8dac1

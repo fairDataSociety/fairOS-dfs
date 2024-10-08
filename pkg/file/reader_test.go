@@ -17,19 +17,19 @@ limitations under the License.
 package file_test
 
 import (
+	"bytes"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"io"
 	"math/big"
 	"testing"
 
+	"github.com/asabya/swarm-blockstore/bee"
+	"github.com/asabya/swarm-blockstore/bee/mock"
+	"github.com/ethersphere/bee/v2/pkg/file/redundancy"
 	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
-	"github.com/sirupsen/logrus"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/stretchr/testify/assert"
@@ -44,8 +44,7 @@ func TestFileReader(t *testing.T) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 
-	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
+	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
 
 	t.Run("read-entire-file-shorter-than-block", func(t *testing.T) {
 		fileSize := uint64(15)
@@ -343,14 +342,14 @@ func createFile(t *testing.T, fileSize uint64, blockSize uint32, compression str
 			buf = compressedData
 		}
 
-		addr, err := mockClient.UploadBlob(buf, 0, true)
+		addr, err := mockClient.UploadBlob(0, "", "0", false, true, bytes.NewReader(buf))
 		if err != nil {
 			t.Fatal(err)
 		}
 		fileBlock := &file.BlockInfo{
 			Size:           bytesToWrite,
 			CompressedSize: uint32(len(buf)),
-			Reference:      utils.NewReference(addr),
+			Reference:      utils.NewReference(addr.Bytes()),
 		}
 		fileBlocks = append(fileBlocks, fileBlock)
 		bytesRemaining -= uint64(bytesToWrite)
@@ -467,14 +466,14 @@ func createFileWithNewlines(t *testing.T, fileSize uint64, blockSize uint32, com
 			buf = compressedData
 		}
 
-		addr, err := mockClient.UploadBlob(buf, 0, true)
+		addr, err := mockClient.UploadBlob(0, "", "0", false, true, bytes.NewReader(buf))
 		if err != nil {
 			t.Fatal(err)
 		}
 		fileBlock := &file.BlockInfo{
 			Size:           bytesToWrite,
 			CompressedSize: uint32(len(buf)),
-			Reference:      utils.NewReference(addr),
+			Reference:      utils.NewReference(addr.Bytes()),
 		}
 		fileBlocks = append(fileBlocks, fileBlock)
 		bytesRemaining -= uint64(bytesToWrite)

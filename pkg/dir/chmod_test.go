@@ -7,14 +7,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethersphere/bee/v2/pkg/file/redundancy"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+	"github.com/asabya/swarm-blockstore/bee/mock"
 
+	"github.com/asabya/swarm-blockstore/bee"
 	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -33,7 +35,8 @@ func TestChmod(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
+	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
+
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {
@@ -54,7 +57,6 @@ func TestChmod(t *testing.T) {
 	t.Run("chmod-dir", func(t *testing.T) {
 		podPassword, _ := utils.GetRandString(pod.PasswordLength)
 		dirObject := dir.NewDirectory("pod1", mockClient, fd, user, mockFile, tm, logger)
-
 		// make root dir so that other directories can be added
 		err = dirObject.MkRootDir("pod1", podPassword, user, fd)
 		if err != nil {
@@ -83,6 +85,7 @@ func TestChmod(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Println(3)
 
 		// stat the directory
 		dirStats, err := dirObject.DirStat("pod1", podPassword, "/dirToChmod")
@@ -93,16 +96,19 @@ func TestChmod(t *testing.T) {
 		if fmt.Sprintf("%o", dir.S_IFDIR|0700) != fmt.Sprintf("%o", dirStats.Mode) {
 			t.Fatal("default mode mismatch")
 		}
+		fmt.Println(4)
 
 		err = dirObject.Chmod("/dirToChmod", podPassword, 0664)
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Println(5)
 
 		dirStats, err = dirObject.DirStat("pod1", podPassword, "/dirToChmod")
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Println(6)
 
 		if fmt.Sprintf("%o", dir.S_IFDIR|0664) != fmt.Sprintf("%o", dirStats.Mode) {
 			t.Fatal("updated mode mismatch")

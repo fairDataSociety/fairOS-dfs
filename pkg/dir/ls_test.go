@@ -19,6 +19,7 @@ package dir_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"sort"
 	"testing"
@@ -26,10 +27,11 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
+	"github.com/asabya/swarm-blockstore/bee"
+	"github.com/asabya/swarm-blockstore/bee/mock"
+	"github.com/ethersphere/bee/v2/pkg/file/redundancy"
 	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/sirupsen/logrus"
 
@@ -52,7 +54,8 @@ func TestListDirectory(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
+	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
+
 	acc := account.New(logger)
 	_, _, err := acc.CreateUserAccount("")
 	if err != nil {

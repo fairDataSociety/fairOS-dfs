@@ -17,23 +17,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
-
-	"github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
-	"github.com/stretchr/testify/assert"
-
+	"github.com/asabya/swarm-blockstore/bee"
+	"github.com/asabya/swarm-blockstore/bee/mock"
+	"github.com/ethersphere/bee/v2/pkg/file/redundancy"
 	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/user"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
@@ -58,8 +57,8 @@ func TestApis(t *testing.T) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 
-	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
+	logger := logging.New(os.Stdout, logrus.DebugLevel)
+	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
 	ens := mock2.NewMockNamespaceManager()
 
 	users := user.NewUsers(mockClient, ens, -1, 0, logger)

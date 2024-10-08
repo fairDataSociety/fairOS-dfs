@@ -11,12 +11,12 @@ import (
 	"strings"
 	"sync"
 
+	blockstore "github.com/asabya/swarm-blockstore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/acl"
 	aclController "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
