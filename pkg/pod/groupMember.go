@@ -1,11 +1,15 @@
 package pod
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"io"
 	"strings"
+
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 
 	aclController "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 
@@ -71,7 +75,7 @@ func (g *Group) AddMember(groupName string, memberAddress common.Address, member
 		return nil, err
 	}
 
-	ref, err := g.client.UploadBlob(data, 0, false)
+	ref, err := g.client.UploadBlob(0, "", "0", false, false, bytes.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +85,7 @@ func (g *Group) AddMember(groupName string, memberAddress common.Address, member
 		return nil, err
 	}
 
-	return ref, nil
+	return ref.Bytes(), nil
 }
 
 func (g *Group) AcceptGroupInvite(ref []byte) error {
@@ -91,10 +95,18 @@ func (g *Group) AcceptGroupInvite(ref []byte) error {
 	}
 
 	// download blob
-	data, _, err := g.client.DownloadBlob(ref)
+	r, _, err := g.client.DownloadBlob(swarm.NewAddress(ref))
 	if err != nil {
 		return err
 	}
+
+	defer r.Close()
+
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+
 	// unmarshall into GroupItem
 	group := &GroupItem{}
 	err = json.Unmarshal(data, group)

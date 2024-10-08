@@ -1,16 +1,19 @@
 package feed
 
 import (
+	"fmt"
 	"io"
 	"testing"
 
+	"github.com/ethersphere/bee/v2/pkg/file/redundancy"
+
+	"github.com/asabya/swarm-blockstore/bee"
+	"github.com/asabya/swarm-blockstore/bee/mock"
 	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/ethersphere/bee/v2/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
 
@@ -22,7 +25,7 @@ func TestHandler(t *testing.T) {
 		Storer: storer,
 		Post:   mockpost.New(mockpost.WithAcceptAll()),
 	})
-	client := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
+	client := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
 
 	t.Run("new-handler", func(t *testing.T) {
 		acc := account.New(logger)

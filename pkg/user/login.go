@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"sync"
 
+	blockstore "github.com/asabya/swarm-blockstore"
 	acl2 "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -27,7 +28,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"

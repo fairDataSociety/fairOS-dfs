@@ -18,13 +18,15 @@ package test_test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"testing"
 	"time"
 
+	"github.com/asabya/swarm-blockstore/bee"
+	"github.com/ethersphere/bee/v2/pkg/file/redundancy"
 	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
 	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
 	"github.com/sirupsen/logrus"
 
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager/rpc/mock"
@@ -35,8 +37,8 @@ import (
 
 	"github.com/plexsysio/taskmanager"
 
+	"github.com/asabya/swarm-blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )
@@ -50,7 +52,8 @@ func TestPod_ListPods(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, 0, logger)
+	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
+
 	acc := account.New(logger)
 	accountInfo := acc.GetUserAccountInfo()
 	fd := feed.New(accountInfo, mockClient, -1, 0, logger)

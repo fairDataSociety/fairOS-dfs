@@ -112,7 +112,6 @@ func (d *Directory) SetInode(podPassword string, iNode *Inode) error {
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
 	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(data)), IndexFileName, int64(len(data)), file.MinBlockSize, 0, totalPath, "gzip", podPassword)
 	if err != nil {
 		return err

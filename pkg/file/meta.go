@@ -73,7 +73,8 @@ func (f *File) handleMeta(meta *MetaData, podPassword string) error {
 	if err == nil || errors.Is(err, ErrDeletedFeed) {
 		return f.updateMeta(meta, podPassword)
 	}
-	return f.uploadMeta(meta, podPassword)
+	err = f.uploadMeta(meta, podPassword)
+	return err
 }
 
 func (f *File) uploadMeta(meta *MetaData, podPassword string) error {

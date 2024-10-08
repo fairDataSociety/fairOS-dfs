@@ -17,6 +17,7 @@ limitations under the License.
 package collection
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -76,11 +77,11 @@ func (b *Batch) Put(key string, value []byte, apnd, memory bool) error {
 		}
 		stringKey = fmt.Sprintf("%020d", i)
 	} else if b.idx.indexType == BytesIndex {
-		ref, err := b.idx.client.UploadBlob(value, 0, true)
+		ref, err := b.idx.client.UploadBlob(0, "", "0", false, true, bytes.NewReader(value))
 		if err != nil { // skipcq: TCV-001
 			return err
 		}
-		value = ref
+		value = ref.Bytes()
 	}
 	return b.idx.addOrUpdateStringEntry(ctx, b.memDb, stringKey, b.idx.indexType, value, memory, apnd)
 }

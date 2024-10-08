@@ -28,6 +28,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethersphere/bee/v2/pkg/swarm"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/golang/snappy"
 	"github.com/klauspost/pgzip"
@@ -58,8 +60,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	}
 	reader := bufio.NewReader(fd)
 	now := time.Now().Unix()
-
-	tag, err := f.client.CreateTag(nil)
+	tag, err := f.client.CreateTag(swarm.ZeroAddress)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -146,8 +147,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 						return
 					}
 				}
-
-				addr, uploadErr := f.client.UploadBlob(uploadData, tag, true)
+				addr, uploadErr := f.client.UploadBlob(tag, "", "0", false, true, bytes.NewReader(uploadData))
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
@@ -156,7 +156,7 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 				fileBlock := &BlockInfo{
 					Size:           uint32(size),
 					CompressedSize: uint32(len(uploadData)),
-					Reference:      utils.NewReference(addr),
+					Reference:      utils.NewReference(addr.Bytes()),
 				}
 
 				refMapMu.Lock()
@@ -186,23 +186,19 @@ func (f *File) Upload(fd io.Reader, podFileName string, fileSize int64, blockSiz
 	for i := 0; i < len(refMap); i++ {
 		fileINode.Blocks = append(fileINode.Blocks, refMap[i])
 	}
-
 	fileInodeData, err := json.Marshal(fileINode)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
-	addr, err := f.client.UploadBlob(fileInodeData, 0, true)
+	addr, err := f.client.UploadBlob(tag, "", "0", false, true, bytes.NewReader(fileInodeData))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
-	meta.InodeAddress = addr
+	meta.InodeAddress = addr.Bytes()
 	err = f.handleMeta(&meta, podPassword)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
 	totalPath := utils.CombinePathAndFile(meta.Path, meta.Name)
 	f.AddToFileMap(totalPath, &meta)
 	if tag > 0 {
