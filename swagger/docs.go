@@ -4136,6 +4136,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/pod/snapshot": {
+            "get": {
+                "description": "PodReceiveSnapshotHandler is the api handler to receive shared pod snapshot from shared reference",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pod"
+                ],
+                "summary": "Receive shared pod snapshot",
+                "operationId": "pod-receive-snapshot-handler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod sharing reference",
+                        "name": "sharingRef",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pod.DirSnapShot"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/pod/stat": {
             "get": {
                 "description": "PodStatHandler is the api handler get information about a pod",
@@ -5479,6 +5531,50 @@ const docTemplate = `{
                 }
             }
         },
+        "file.MetaData": {
+            "type": "object",
+            "properties": {
+                "accessTime": {
+                    "type": "integer"
+                },
+                "blockSize": {
+                    "type": "integer"
+                },
+                "compression": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                },
+                "creationTime": {
+                    "type": "integer"
+                },
+                "fileInodeReference": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "fileName": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "mode": {
+                    "type": "integer"
+                },
+                "modificationTime": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
         "file.Stats": {
             "type": "object",
             "properties": {
@@ -5513,6 +5609,47 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "podName": {
+                    "type": "string"
+                }
+            }
+        },
+        "pod.DirSnapShot": {
+            "type": "object",
+            "properties": {
+                "accessTime": {
+                    "type": "string"
+                },
+                "blockSize": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                },
+                "creationTime": {
+                    "type": "string"
+                },
+                "dirList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pod.DirSnapShot"
+                    }
+                },
+                "fileList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/file.MetaData"
+                    }
+                },
+                "mode": {
+                    "type": "integer"
+                },
+                "modificationTime": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
                     "type": "string"
                 }
             }

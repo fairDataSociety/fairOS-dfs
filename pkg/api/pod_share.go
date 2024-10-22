@@ -21,10 +21,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
-
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -170,6 +168,58 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.OK(w, shareInfo)
+}
+
+// PodReceiveSnapshotHandler godoc
+//
+//	@Summary      Receive shared pod snapshot
+//	@Description  PodReceiveSnapshotHandler is the api handler to receive shared pod snapshot from shared reference
+//	@ID           pod-receive-snapshot-handler
+//	@Tags         pod
+//	@Accept       json
+//	@Produce      json
+//	@Param	      sharingRef query string true "pod sharing reference"
+//	@Param	      Cookie header string true "cookie parameter"
+//	@Success      200  {object}  pod.DirSnapShot
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Router       /v1/pod/snapshot [get]
+func (h *Handler) PodReceiveSnapshotHandler(w http.ResponseWriter, r *http.Request) {
+
+	sharingRefString := r.URL.Query().Get("sharingRef")
+	if sharingRefString == "" {
+		h.logger.Errorf("pod receive snapshot: \"sharingRef\" argument missing")
+		jsonhttp.BadRequest(w, "pod receive snapshot: \"sharingRef\" argument missing")
+		return
+	}
+
+	path := r.URL.Query().Get("path")
+	if path == "" {
+		path = "/"
+	}
+
+	ref, err := utils.ParseHexReference(sharingRefString)
+	if err != nil {
+		h.logger.Errorf("pod receive snapshot: invalid reference: %s", err)
+		jsonhttp.BadRequest(w, "pod receive snapshot: invalid reference:"+err.Error())
+		return
+	}
+
+	shareInfo, err := h.dfsAPI.PublicPodReceiveInfo(ref)
+	if err != nil {
+		h.logger.Errorf("pod receive snapshot: %v", err)
+		jsonhttp.InternalServerError(w, "pod receive snapshot: "+err.Error())
+		return
+	}
+	snapshot, err := h.dfsAPI.PublicPodSnapshot(shareInfo, path)
+	if err != nil {
+		h.logger.Errorf("pod receive snapshot: %v", err)
+		jsonhttp.InternalServerError(w, "pod receive snapshot: "+err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", " application/json")
+	jsonhttp.OK(w, snapshot)
 }
 
 // PodReceiveHandler godoc
