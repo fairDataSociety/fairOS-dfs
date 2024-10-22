@@ -88,9 +88,9 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 			jsonhttp.NotFound(w, &response{Message: "user login: " + err.Error()})
 			return
 		}
-		if err == u.ErrUserAlreadyLoggedIn ||
-			err == u.ErrInvalidUserName ||
-			err == u.ErrInvalidPassword {
+		if errors.Is(err, u.ErrUserAlreadyLoggedIn) ||
+			errors.Is(err, u.ErrInvalidUserName) ||
+			errors.Is(err, u.ErrInvalidPassword) {
 			h.logger.Errorf("user login: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "user login: " + err.Error()})
 			return
@@ -109,6 +109,79 @@ func (h *Handler) UserLoginV2Handler(w http.ResponseWriter, r *http.Request) {
 	jsonhttp.OK(w, &UserSignupResponse{
 		Address:     addr.Hex(),
 		NameHash:    "0x" + loginResp.NameHash,
+		PublicKey:   loginResp.PublicKey,
+		Message:     "user logged-in successfully",
+		AccessToken: loginResp.AccessToken,
+	})
+}
+
+// UserLoginWithSignature godoc
+//
+//	@Summary      Login User with signature
+//	@Description  login user with signature described in https://github.com/fairDataSociety/FIPs/blob/master/text/0063-external-account-generator.md
+//	@ID  	   	  user-login-signature
+//	@Tags         user
+//	@Accept       json
+//	@Produce      json
+//	@Param	      user_request body common.UserSignatureLoginRequest true "signature and password"
+//	@Success      200  {object}  UserLoginResponse
+//	@Failure      400  {object}  response
+//	@Failure      500  {object}  response
+//	@Header	      200  {string}  Set-Cookie "fairos-dfs session"
+//	@Router       /v2/user/login-with-signature [post]
+func (h *Handler) UserLoginWithSignature(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	if contentType != jsonContentType {
+		h.logger.Errorf("user login: invalid request body type")
+		jsonhttp.BadRequest(w, &response{Message: "user login: invalid request body type"})
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var userReq common.UserSignatureLoginRequest
+	err := decoder.Decode(&userReq)
+	if err != nil {
+		h.logger.Errorf("user login: could not decode arguments")
+		jsonhttp.BadRequest(w, &response{Message: "user login: could not decode arguments"})
+		return
+	}
+
+	signature := userReq.Signature
+	password := userReq.Password
+	if signature == "" {
+		h.logger.Errorf("user login: \"signature\" argument missing")
+		jsonhttp.BadRequest(w, &response{Message: "user login: \"signature\" argument missing"})
+		return
+	}
+
+	// login user
+	loginResp, err := h.dfsAPI.LoginUserWithSignature(signature, password, "")
+	if err != nil {
+		if errors.Is(err, u.ErrUserNameNotFound) {
+			h.logger.Errorf("user login: %v", err)
+			jsonhttp.NotFound(w, &response{Message: "user login: " + err.Error()})
+			return
+		}
+		if errors.Is(err, u.ErrUserAlreadyLoggedIn) ||
+			errors.Is(err, u.ErrInvalidUserName) ||
+			errors.Is(err, u.ErrInvalidPassword) {
+			h.logger.Errorf("user login: %v", err)
+			jsonhttp.BadRequest(w, &response{Message: "user login: " + err.Error()})
+			return
+		}
+		h.logger.Errorf("user login: %v", err)
+		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
+		return
+	}
+	err = cookie.SetSession(loginResp.UserInfo.GetSessionId(), w, h.cookieDomain)
+	if err != nil {
+		h.logger.Errorf("user login: %v", err)
+		jsonhttp.InternalServerError(w, &response{Message: "user login: " + err.Error()})
+		return
+	}
+	addr := loginResp.UserInfo.GetAccount().GetUserAccountInfo().GetAddress()
+	jsonhttp.OK(w, &UserSignupResponse{
+		Address:     addr.Hex(),
 		PublicKey:   loginResp.PublicKey,
 		Message:     "user logged-in successfully",
 		AccessToken: loginResp.AccessToken,

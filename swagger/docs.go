@@ -1818,6 +1818,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "group name",
+                        "name": "groupName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "file path",
                         "name": "filePath",
                         "in": "query",
@@ -4129,6 +4136,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/pod/snapshot": {
+            "get": {
+                "description": "PodReceiveSnapshotHandler is the api handler to receive shared pod snapshot from shared reference",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pod"
+                ],
+                "summary": "Receive shared pod snapshot",
+                "operationId": "pod-receive-snapshot-handler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod sharing reference",
+                        "name": "sharingRef",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pod.DirSnapShot"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/pod/stat": {
             "get": {
                 "description": "PodStatHandler is the api handler get information about a pod",
@@ -4567,6 +4626,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/v2/user/login-with-signature": {
+            "post": {
+                "description": "login user with signature described in https://github.com/fairDataSociety/FIPs/blob/master/text/0063-external-account-generator.md",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Login User with signature",
+                "operationId": "user-login-signature",
+                "parameters": [
+                    {
+                        "description": "signature and password",
+                        "name": "user_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/common.UserSignatureLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.UserLoginResponse"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "fairos-dfs session"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v2/user/present": {
             "get": {
                 "description": "checks if the new user is present in the new ENS based authentication",
@@ -4692,6 +4804,9 @@ const docTemplate = `{
                 "dirPath": {
                     "type": "string"
                 },
+                "groupName": {
+                    "type": "string"
+                },
                 "mode": {
                     "type": "string"
                 },
@@ -4715,6 +4830,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "dirPath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "podName": {
@@ -4809,6 +4927,9 @@ const docTemplate = `{
                 "filePath": {
                     "type": "string"
                 },
+                "groupName": {
+                    "type": "string"
+                },
                 "podName": {
                     "type": "string"
                 }
@@ -4818,6 +4939,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "filePath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "mode": {
@@ -4835,6 +4959,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "filePath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "podName": {
@@ -5264,6 +5391,9 @@ const docTemplate = `{
         "common.RenameRequest": {
             "type": "object",
             "properties": {
+                "groupName": {
+                    "type": "string"
+                },
                 "newPath": {
                     "type": "string"
                 },
@@ -5282,6 +5412,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "common.UserSignatureLoginRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "signature": {
                     "type": "string"
                 }
             }
@@ -5390,6 +5531,50 @@ const docTemplate = `{
                 }
             }
         },
+        "file.MetaData": {
+            "type": "object",
+            "properties": {
+                "accessTime": {
+                    "type": "integer"
+                },
+                "blockSize": {
+                    "type": "integer"
+                },
+                "compression": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                },
+                "creationTime": {
+                    "type": "integer"
+                },
+                "fileInodeReference": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "fileName": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "mode": {
+                    "type": "integer"
+                },
+                "modificationTime": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
         "file.Stats": {
             "type": "object",
             "properties": {
@@ -5424,6 +5609,47 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "podName": {
+                    "type": "string"
+                }
+            }
+        },
+        "pod.DirSnapShot": {
+            "type": "object",
+            "properties": {
+                "accessTime": {
+                    "type": "string"
+                },
+                "blockSize": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                },
+                "creationTime": {
+                    "type": "string"
+                },
+                "dirList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pod.DirSnapShot"
+                    }
+                },
+                "fileList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/file.MetaData"
+                    }
+                },
+                "mode": {
+                    "type": "integer"
+                },
+                "modificationTime": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
                     "type": "string"
                 }
             }

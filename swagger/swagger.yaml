@@ -21,6 +21,8 @@ definitions:
     properties:
       dirPath:
         type: string
+      groupName:
+        type: string
       mode:
         type: string
       podName:
@@ -36,6 +38,8 @@ definitions:
   api.DirRequest:
     properties:
       dirPath:
+        type: string
+      groupName:
         type: string
       podName:
         type: string
@@ -96,12 +100,16 @@ definitions:
     properties:
       filePath:
         type: string
+      groupName:
+        type: string
       podName:
         type: string
     type: object
   api.FileModeRequest:
     properties:
       filePath:
+        type: string
+      groupName:
         type: string
       mode:
         type: string
@@ -113,6 +121,8 @@ definitions:
       destUser:
         type: string
       filePath:
+        type: string
+      groupName:
         type: string
       podName:
         type: string
@@ -387,6 +397,8 @@ definitions:
     type: object
   common.RenameRequest:
     properties:
+      groupName:
+        type: string
       newPath:
         type: string
       oldPath:
@@ -399,6 +411,13 @@ definitions:
       password:
         type: string
       userName:
+        type: string
+    type: object
+  common.UserSignatureLoginRequest:
+    properties:
+      password:
+        type: string
+      signature:
         type: string
     type: object
   common.UserSignupRequest:
@@ -469,6 +488,35 @@ definitions:
       size:
         type: string
     type: object
+  file.MetaData:
+    properties:
+      accessTime:
+        type: integer
+      blockSize:
+        type: integer
+      compression:
+        type: string
+      contentType:
+        type: string
+      creationTime:
+        type: integer
+      fileInodeReference:
+        items:
+          type: integer
+        type: array
+      fileName:
+        type: string
+      filePath:
+        type: string
+      fileSize:
+        type: integer
+      mode:
+        type: integer
+      modificationTime:
+        type: integer
+      version:
+        type: integer
+    type: object
   file.Stats:
     properties:
       accessTime:
@@ -492,6 +540,33 @@ definitions:
       modificationTime:
         type: string
       podName:
+        type: string
+    type: object
+  pod.DirSnapShot:
+    properties:
+      accessTime:
+        type: string
+      blockSize:
+        type: string
+      contentType:
+        type: string
+      creationTime:
+        type: string
+      dirList:
+        items:
+          $ref: '#/definitions/pod.DirSnapShot'
+        type: array
+      fileList:
+        items:
+          $ref: '#/definitions/file.MetaData'
+        type: array
+      mode:
+        type: integer
+      modificationTime:
+        type: string
+      name:
+        type: string
+      size:
         type: string
     type: object
   pod.GroupItem:
@@ -1792,6 +1867,11 @@ paths:
       - description: pod name
         in: query
         name: podName
+        required: true
+        type: string
+      - description: group name
+        in: query
+        name: groupName
         required: true
         type: string
       - description: file path
@@ -3367,6 +3447,42 @@ paths:
       summary: Share pod
       tags:
       - pod
+  /v1/pod/snapshot:
+    get:
+      consumes:
+      - application/json
+      description: PodReceiveSnapshotHandler is the api handler to receive shared
+        pod snapshot from shared reference
+      operationId: pod-receive-snapshot-handler
+      parameters:
+      - description: pod sharing reference
+        in: query
+        name: sharingRef
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pod.DirSnapShot'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Receive shared pod snapshot
+      tags:
+      - pod
   /v1/pod/stat:
     get:
       consumes:
@@ -3657,6 +3773,41 @@ paths:
           schema:
             $ref: '#/definitions/api.response'
       summary: Login User
+      tags:
+      - user
+  /v2/user/login-with-signature:
+    post:
+      consumes:
+      - application/json
+      description: login user with signature described in https://github.com/fairDataSociety/FIPs/blob/master/text/0063-external-account-generator.md
+      operationId: user-login-signature
+      parameters:
+      - description: signature and password
+        in: body
+        name: user_request
+        required: true
+        schema:
+          $ref: '#/definitions/common.UserSignatureLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            Set-Cookie:
+              description: fairos-dfs session
+              type: string
+          schema:
+            $ref: '#/definitions/api.UserLoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Login User with signature
       tags:
       - user
   /v2/user/present:

@@ -21,6 +21,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
@@ -69,6 +71,19 @@ type SharedListItem struct {
 type List struct {
 	Pods       []ListItem       `json:"pods"`
 	SharedPods []SharedListItem `json:"sharedPods"`
+}
+
+type DirSnapShot struct {
+	Name             string          `json:"name"`
+	ContentType      string          `json:"contentType"`
+	Size             string          `json:"size,omitempty"`
+	Mode             uint32          `json:"mode"`
+	BlockSize        string          `json:"blockSize,omitempty"`
+	CreationTime     string          `json:"creationTime"`
+	ModificationTime string          `json:"modificationTime"`
+	AccessTime       string          `json:"accessTime"`
+	FileList         []file.MetaData `json:"fileList"`
+	DirList          []*DirSnapShot  `json:"dirList"`
 }
 
 // NewPod creates the main pod object which has all the methods related to the pods.

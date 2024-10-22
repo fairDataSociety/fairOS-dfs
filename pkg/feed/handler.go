@@ -24,7 +24,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"hash"
 	"strings"
 	"sync"
@@ -35,10 +34,10 @@ import (
 	"github.com/ethersphere/bee/v2/pkg/soc"
 	"github.com/ethersphere/bee/v2/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
-	utilsSigner "github.com/fairdatasociety/fairOS-dfs-utils/signer"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/hashicorp/golang-lru/v2/expirable"
 	"golang.org/x/crypto/sha3"
@@ -615,7 +614,7 @@ func (h *Handler) getSignature(id, payloadId []byte) ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	signer := utilsSigner.NewDefaultSigner(h.accountInfo.GetPrivateKey())
+	signer := bCrypto.NewDefaultSigner(h.accountInfo.GetPrivateKey())
 	signature, err := signer.Sign(toSignBytes)
 	if err != nil {
 		return nil, nil, err
