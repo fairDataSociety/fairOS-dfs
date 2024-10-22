@@ -17,8 +17,11 @@ limitations under the License.
 package user
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 	"sync"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
 
 	blockstore "github.com/asabya/swarm-blockstore"
 	acl2 "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
@@ -75,7 +78,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 
 	// load public key from public resolver
-	publicKey, nameHash, err := u.ens.GetInfo(userName)
+	publicKey, nameHash, err := u.GetUserInfo(userName)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -95,11 +98,15 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 
 	// Instantiate pod, dir & file objects
-	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
-	acl := acl2.NewACL(u.client, fd, u.logger)
-	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
-	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
+	var (
+		file    = f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
+		pod     = p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
+		acl     = acl2.NewACL(u.client, fd, u.logger)
+		group   = p.NewGroup(u.client, fd, acc, acl, u.logger)
+		dir     = d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
+		actList = act.NewACT(client, fd, acc, tm, u.logger)
+	)
+
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
@@ -115,6 +122,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
+		actList:    actList,
 	}
 	// set cookie and add user to map
 	if err = u.addUserAndSessionToMap(ui); err != nil { // skipcq: TCV-001
@@ -337,4 +345,8 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 	}
 	// set cookie and add user to map
 	return ui, utils.Encode(nameHash[:]), u.addUserAndSessionToMap(ui)
+}
+
+func (u *Users) GetUserInfo(userName string) (*ecdsa.PublicKey, string, error) {
+	return u.ens.GetInfo(userName)
 }

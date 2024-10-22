@@ -456,6 +456,21 @@ func startHttpService(logger logging.Logger) *http.Server {
 	gitRouter.HandleFunc("/{user}/{repo}.git/git-upload-pack", handler.GitUploadPack).Methods("POST")
 	gitRouter.HandleFunc("/{user}/{repo}.git/git-receive-pack", handler.GitReceivePack).Methods("POST")
 
+	actRouter := baseRouter.PathPrefix("/act/").Subrouter()
+	actRouter.Use(handler.GitAuthMiddleware)
+
+	// list acts
+	// owner
+	actRouter.HandleFunc("/grantee/{actName}", handler.CreateGranteeHandler).Methods("POST")
+	actRouter.HandleFunc("/grantee/{actName}", handler.GrantRevokeHandler).Methods("PATCH")
+	actRouter.HandleFunc("/grantee/{actName}", handler.ListGranteesHandler).Methods("GET")
+	actRouter.HandleFunc("/share-pod", handler.ACTPodShareHandler).Methods("PATCH")
+	actRouter.HandleFunc("/list", handler.ACTListHandler).Methods("GET")
+	actRouter.HandleFunc("/act-shared-pods", handler.ACTSharedPods).Methods("GET")
+	// grantee
+	actRouter.HandleFunc("/save-act-pod", handler.ACTSavePod).Methods("POST")
+	actRouter.HandleFunc("/open-act-pod", handler.ACTOpenPod).Methods("POST")
+
 	var origins []string
 	for _, c := range corsOrigins {
 		c = strings.TrimSpace(c)
