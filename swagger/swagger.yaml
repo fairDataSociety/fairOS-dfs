@@ -488,6 +488,35 @@ definitions:
       size:
         type: string
     type: object
+  file.MetaData:
+    properties:
+      accessTime:
+        type: integer
+      blockSize:
+        type: integer
+      compression:
+        type: string
+      contentType:
+        type: string
+      creationTime:
+        type: integer
+      fileInodeReference:
+        items:
+          type: integer
+        type: array
+      fileName:
+        type: string
+      filePath:
+        type: string
+      fileSize:
+        type: integer
+      mode:
+        type: integer
+      modificationTime:
+        type: integer
+      version:
+        type: integer
+    type: object
   file.Stats:
     properties:
       accessTime:
@@ -511,6 +540,33 @@ definitions:
       modificationTime:
         type: string
       podName:
+        type: string
+    type: object
+  pod.DirSnapShot:
+    properties:
+      accessTime:
+        type: string
+      blockSize:
+        type: string
+      contentType:
+        type: string
+      creationTime:
+        type: string
+      dirList:
+        items:
+          $ref: '#/definitions/pod.DirSnapShot'
+        type: array
+      fileList:
+        items:
+          $ref: '#/definitions/file.MetaData'
+        type: array
+      mode:
+        type: integer
+      modificationTime:
+        type: string
+      name:
+        type: string
+      size:
         type: string
     type: object
   pod.GroupItem:
@@ -3389,6 +3445,42 @@ paths:
           schema:
             $ref: '#/definitions/api.response'
       summary: Share pod
+      tags:
+      - pod
+  /v1/pod/snapshot:
+    get:
+      consumes:
+      - application/json
+      description: PodReceiveSnapshotHandler is the api handler to receive shared
+        pod snapshot from shared reference
+      operationId: pod-receive-snapshot-handler
+      parameters:
+      - description: pod sharing reference
+        in: query
+        name: sharingRef
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pod.DirSnapShot'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Receive shared pod snapshot
       tags:
       - pod
   /v1/pod/stat:
