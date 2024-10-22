@@ -183,6 +183,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/public-pod-snapshot": {
+            "get": {
+                "description": "PodReceiveSnapshotHandler is the api handler to receive shared pod snapshot from shared reference",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pod"
+                ],
+                "summary": "Receive shared pod snapshot",
+                "operationId": "pod-receive-snapshot-handler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod sharing reference",
+                        "name": "sharingRef",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pod.DirSnapShot"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/public/{ref}/{file}": {
             "get": {
                 "description": "PublicPodFilePathHandler is the api handler to download file from a shared pod",
@@ -4119,58 +4171,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.PodSharingReference"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.response"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/pod/snapshot": {
-            "get": {
-                "description": "PodReceiveSnapshotHandler is the api handler to receive shared pod snapshot from shared reference",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "pod"
-                ],
-                "summary": "Receive shared pod snapshot",
-                "operationId": "pod-receive-snapshot-handler",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pod sharing reference",
-                        "name": "sharingRef",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "cookie parameter",
-                        "name": "Cookie",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/pod.DirSnapShot"
                         }
                     },
                     "400": {
