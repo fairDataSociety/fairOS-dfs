@@ -183,7 +183,7 @@ func (h *Handler) PodReceiveInfoHandler(w http.ResponseWriter, r *http.Request) 
 //	@Success      200  {object}  pod.DirSnapShot
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
-//	@Router       /v1/pod/snapshot [get]
+//	@Router       /public-pod-snapshot [get]
 func (h *Handler) PodReceiveSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 
 	sharingRefString := r.URL.Query().Get("sharingRef")

@@ -748,6 +748,42 @@ paths:
       summary: get key from public pod
       tags:
       - public
+  /public-pod-snapshot:
+    get:
+      consumes:
+      - application/json
+      description: PodReceiveSnapshotHandler is the api handler to receive shared
+        pod snapshot from shared reference
+      operationId: pod-receive-snapshot-handler
+      parameters:
+      - description: pod sharing reference
+        in: query
+        name: sharingRef
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pod.DirSnapShot'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Receive shared pod snapshot
+      tags:
+      - pod
   /public/{ref}/{file}:
     get:
       consumes:
@@ -3445,42 +3481,6 @@ paths:
           schema:
             $ref: '#/definitions/api.response'
       summary: Share pod
-      tags:
-      - pod
-  /v1/pod/snapshot:
-    get:
-      consumes:
-      - application/json
-      description: PodReceiveSnapshotHandler is the api handler to receive shared
-        pod snapshot from shared reference
-      operationId: pod-receive-snapshot-handler
-      parameters:
-      - description: pod sharing reference
-        in: query
-        name: sharingRef
-        required: true
-        type: string
-      - description: cookie parameter
-        in: header
-        name: Cookie
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/pod.DirSnapShot'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.response'
-      summary: Receive shared pod snapshot
       tags:
       - pod
   /v1/pod/stat:
