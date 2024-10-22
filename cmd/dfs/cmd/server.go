@@ -297,6 +297,7 @@ func startHttpService(logger logging.Logger) *http.Server {
 	router.HandleFunc("/public-file", handler.PublicPodGetFileHandler)
 	router.HandleFunc("/public-dir", handler.PublicPodGetDirHandler)
 	router.HandleFunc("/public-kv", handler.PublicPodKVEntryGetHandler)
+	router.HandleFunc("/public-pod-snapshot", handler.PodReceiveSnapshotHandler).Methods("GET")
 
 	redirectHandler := func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)

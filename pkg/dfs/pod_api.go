@@ -565,27 +565,14 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 	return listEntries, fileEntries, nil
 }
 
-type DirSnapShot struct {
-	Name             string          `json:"name"`
-	ContentType      string          `json:"contentType"`
-	Size             string          `json:"size,omitempty"`
-	Mode             uint32          `json:"mode"`
-	BlockSize        string          `json:"blockSize,omitempty"`
-	CreationTime     string          `json:"creationTime"`
-	ModificationTime string          `json:"modificationTime"`
-	AccessTime       string          `json:"accessTime"`
-	FileList         []file.MetaData `json:"fileList"`
-	DirList          []*DirSnapShot  `json:"dirList"`
-}
-
 // PublicPodSnapshot Gets the current snapshot from a public pod
-func (a *API) PublicPodSnapshot(pod *pod.ShareInfo, dirPathToLs string) (*DirSnapShot, error) {
+func (a *API) PublicPodSnapshot(p *pod.ShareInfo, dirPathToLs string) (*pod.DirSnapShot, error) {
 	accountInfo := &account.Info{}
-	address := utils.HexToAddress(pod.Address)
+	address := utils.HexToAddress(p.Address)
 	accountInfo.SetAddress(address)
-	dirSnapShot := &DirSnapShot{
+	dirSnapShot := &pod.DirSnapShot{
 		FileList: make([]file.MetaData, 0),
-		DirList:  make([]*DirSnapShot, 0),
+		DirList:  make([]*pod.DirSnapShot, 0),
 	}
 	fd := feed.New(accountInfo, a.client, a.feedCacheSize, a.feedCacheTTL, a.logger)
 
@@ -594,14 +581,16 @@ func (a *API) PublicPodSnapshot(pod *pod.ShareInfo, dirPathToLs string) (*DirSna
 		inode dir.Inode
 		data  []byte
 	)
+	fmt.Println("dirNameWithPath", dirNameWithPath)
 
 	topic := utils.HashString(utils.CombinePathAndFile(dirNameWithPath, dir.IndexFileName))
-	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+	_, metaBytes, err := fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(p.Password), false)
 	if err != nil { // skipcq: TCV-001
+		fmt.Println("err", err)
 		topic = utils.HashString(dirNameWithPath)
-		_, data, err = fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(pod.Password), false)
+		_, data, err = fd.GetFeedData(topic, accountInfo.GetAddress(), []byte(p.Password), false)
 		if err != nil {
-			return nil, fmt.Errorf("list dir : %v", err) // skipcq: TCV-001
+			return nil, fmt.Errorf("list dir : %v for %s", err, dirNameWithPath) // skipcq: TCV-001
 		}
 		err = inode.Unmarshal(data)
 		if err != nil { // skipcq: TCV-001
@@ -644,14 +633,14 @@ func (a *API) PublicPodSnapshot(pod *pod.ShareInfo, dirPathToLs string) (*DirSna
 	dirSnapShot.AccessTime = strconv.FormatInt(inode.Meta.AccessTime, 10)
 	dirSnapShot.ModificationTime = strconv.FormatInt(inode.Meta.ModificationTime, 10)
 	dirSnapShot.Mode = inode.Meta.Mode
-	err = a.getSnapShotForDir(dirSnapShot, fd, accountInfo, inode.FileOrDirNames, dirNameWithPath, pod.Password)
+	err = a.getSnapShotForDir(dirSnapShot, fd, accountInfo, inode.FileOrDirNames, dirNameWithPath, p.Password)
 	if err != nil {
 		return nil, err
 	}
 	return dirSnapShot, nil
 }
 
-func (a *API) getSnapShotForDir(dirL *DirSnapShot, fd *feed.API, accountInfo *account.Info, fileOrDirNames []string, dirNameWithPath, password string) error {
+func (a *API) getSnapShotForDir(dirL *pod.DirSnapShot, fd *feed.API, accountInfo *account.Info, fileOrDirNames []string, dirNameWithPath, password string) error {
 	var wg sync.WaitGroup
 	dirChan := make(chan dir.Inode, len(fileOrDirNames))
 	fileChan := make(chan file.MetaData, len(fileOrDirNames))
@@ -764,14 +753,14 @@ func (a *API) getSnapShotForDir(dirL *DirSnapShot, fd *feed.API, accountInfo *ac
 		case inode, ok := <-dirChan:
 			if ok {
 
-				dirItem := &DirSnapShot{
+				dirItem := &pod.DirSnapShot{
 					Name:             inode.Meta.Name,
 					ContentType:      dir.MimeTypeDirectory,
 					CreationTime:     strconv.FormatInt(inode.Meta.CreationTime, 10),
 					AccessTime:       strconv.FormatInt(inode.Meta.AccessTime, 10),
 					ModificationTime: strconv.FormatInt(inode.Meta.ModificationTime, 10),
 					Mode:             inode.Meta.Mode,
-					DirList:          make([]*DirSnapShot, 0),
+					DirList:          make([]*pod.DirSnapShot, 0),
 					FileList:         make([]file.MetaData, 0),
 				}
 				dirL.DirList = append(dirL.DirList, dirItem)
