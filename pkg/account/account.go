@@ -88,7 +88,6 @@ func (a *Account) CreateUserAccount(mnemonic string) (string, []byte, error) {
 	if err != nil {
 		return "", nil, err
 	}
-
 	hdw, err := hdwallet.NewFromMnemonic(mnemonic)
 	if err != nil { // skipcq: TCV-001
 		return "", nil, err
