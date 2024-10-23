@@ -85,7 +85,6 @@ func TestChmod(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(3)
 
 		// stat the directory
 		dirStats, err := dirObject.DirStat("pod1", podPassword, "/dirToChmod")
@@ -96,19 +95,16 @@ func TestChmod(t *testing.T) {
 		if fmt.Sprintf("%o", dir.S_IFDIR|0700) != fmt.Sprintf("%o", dirStats.Mode) {
 			t.Fatal("default mode mismatch")
 		}
-		fmt.Println(4)
 
 		err = dirObject.Chmod("/dirToChmod", podPassword, 0664)
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(5)
 
 		dirStats, err = dirObject.DirStat("pod1", podPassword, "/dirToChmod")
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(6)
 
 		if fmt.Sprintf("%o", dir.S_IFDIR|0664) != fmt.Sprintf("%o", dirStats.Mode) {
 			t.Fatal("updated mode mismatch")

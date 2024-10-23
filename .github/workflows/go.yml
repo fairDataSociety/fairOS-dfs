@@ -41,6 +41,14 @@ jobs:
     - name: Lint
       if: matrix.os == 'ubuntu-latest'
       run: make lint
+    - name: Set up port range and TIME_WAIT
+      if: matrix.os == 'windows-latest'
+      run: |
+        # Increase the dynamic port range
+        New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name MaxUserPort -Value 65534 -PropertyType DWord -Force
+        # Decrease the TIME_WAIT duration
+        New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name TcpTimedWaitDelay -Value 30 -PropertyType DWord -Force
+      shell: pwsh
     - name: Vet
       if: matrix.os == 'ubuntu-latest'
       run: make vet
