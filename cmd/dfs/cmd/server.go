@@ -464,12 +464,12 @@ func startHttpService(logger logging.Logger) *http.Server {
 	actRouter.HandleFunc("/grantee/{actName}", handler.CreateGranteeHandler).Methods("POST")
 	actRouter.HandleFunc("/grantee/{actName}", handler.GrantRevokeHandler).Methods("PATCH")
 	actRouter.HandleFunc("/grantee/{actName}", handler.ListGranteesHandler).Methods("GET")
-	actRouter.HandleFunc("/share-pod", handler.ACTPodShareHandler).Methods("PATCH")
+	actRouter.HandleFunc("/share-pod/{actName}/{podname}", handler.ACTPodShareHandler).Methods("POST")
 	actRouter.HandleFunc("/list", handler.ACTListHandler).Methods("GET")
 	actRouter.HandleFunc("/act-shared-pods", handler.ACTSharedPods).Methods("GET")
 	// grantee
-	actRouter.HandleFunc("/save-act-pod", handler.ACTSavePod).Methods("POST")
-	actRouter.HandleFunc("/open-act-pod", handler.ACTOpenPod).Methods("POST")
+	actRouter.HandleFunc("/save-act-pod/{actName}", handler.ACTSavePod).Methods("POST")
+	actRouter.HandleFunc("/open-act-pod/{actName}", handler.ACTOpenPod).Methods("POST")
 
 	var origins []string
 	for _, c := range corsOrigins {

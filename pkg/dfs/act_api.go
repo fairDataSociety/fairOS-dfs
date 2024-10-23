@@ -3,6 +3,8 @@ package dfs
 import (
 	"crypto/ecdsa"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
+
 	"github.com/ethersphere/bee/v2/pkg/swarm"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
 )
@@ -59,6 +61,31 @@ func (a *API) ACTPodShare(sessionId, podName, actName string) error {
 	}
 
 	_, err = actList.GrantAccess(actName, addr)
+	return err
+}
+
+func (a *API) OpenACTPod(sessionId, actName string) error {
+	ui := a.users.GetLoggedInUserInfo(sessionId)
+	if ui == nil {
+		return ErrUserNotLoggedIn
+	}
+
+	actList := ui.GetACTList()
+	addr, err := actList.GetPodAccess(actName)
+	if err != nil {
+		return err
+	}
+
+	info, err := ui.GetPod().ReceivePodInfo(utils.NewReference(addr.Bytes()))
+	if err != nil {
+		return err
+	}
+
+	_, err = ui.GetPod().OpenFromShareInfo(info)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
