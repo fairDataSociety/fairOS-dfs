@@ -180,7 +180,7 @@ func (s *Client) Do(req *http.Request) (*http.Response, error) {
 func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []byte, err error) {
 	to := time.Now()
 	socResStr := socResource(owner, id, signature)
-	fullUrl := fmt.Sprintf(s.url + socResStr)
+	fullUrl := fmt.Sprintf("%s%s", s.url, socResStr)
 
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(data))
 	if err != nil {
@@ -238,7 +238,7 @@ func (s *Client) UploadSOC(owner, id, signature string, data []byte) (address []
 // UploadChunk uploads a chunk to Swarm network.
 func (s *Client) UploadChunk(ch swarm.Chunk) (address []byte, err error) {
 	to := time.Now()
-	fullUrl := fmt.Sprintf(s.url + chunkUploadDownloadUrl)
+	fullUrl := fmt.Sprintf("%s%s", s.url, chunkUploadDownloadUrl)
 	req, err := http.NewRequest(http.MethodPost, fullUrl, bytes.NewBuffer(ch.Data()))
 	if err != nil {
 		return nil, err
@@ -298,7 +298,7 @@ func (s *Client) DownloadChunk(ctx context.Context, address []byte) (data []byte
 	addrString := swarm.NewAddress(address).String()
 
 	path := chunkUploadDownloadUrl + "/" + addrString
-	fullUrl := fmt.Sprintf(s.url + path)
+	fullUrl := fmt.Sprintf("%s%s", s.url, path)
 	req, err := http.NewRequest(http.MethodGet, fullUrl, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
