@@ -52,7 +52,7 @@ func (d *Directory) RmDir(directoryNameWithPath, podPassword string) error {
 		return ErrDirectoryNotPresent
 	}
 
-	if dirInode.FileOrDirNames != nil && len(dirInode.FileOrDirNames) > 0 {
+	if len(dirInode.FileOrDirNames) > 0 {
 		for _, fileOrDirName := range dirInode.FileOrDirNames {
 			if strings.HasPrefix(fileOrDirName, "_F_") {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")
@@ -93,7 +93,7 @@ func (d *Directory) RmRootDir(podPassword string) error {
 	}
 	// recursive delete
 	dirInode := d.GetDirFromDirectoryMap(totalPath)
-	if dirInode.FileOrDirNames != nil && len(dirInode.FileOrDirNames) > 0 {
+	if len(dirInode.FileOrDirNames) > 0 {
 		for _, fileOrDirName := range dirInode.FileOrDirNames {
 			if strings.HasPrefix(fileOrDirName, "_F_") {
 				fileName := strings.TrimPrefix(fileOrDirName, "_F_")

@@ -107,7 +107,7 @@ func (s *fdfsClient) getAccessToken() string {
 
 func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, error) {
 	// prepare the  request
-	fullUrl := fmt.Sprintf(s.url + urlPath)
+	fullUrl := fmt.Sprintf("%s%s", s.url, urlPath)
 	var req *http.Request
 	var err error
 	if jsonBytes != nil {
@@ -178,7 +178,7 @@ func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 }
 
 func (s *fdfsClient) getReq(urlPath, argsString string) ([]byte, error) {
-	fullUrl := fmt.Sprintf(s.url + urlPath)
+	fullUrl := fmt.Sprintf("%s%s", s.url, urlPath)
 	var req *http.Request
 	var err error
 	if argsString != "" {
@@ -270,7 +270,7 @@ func (s *fdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 		return nil, err
 	}
 
-	fullUrl := fmt.Sprintf(s.url + urlPath)
+	fullUrl := fmt.Sprintf("%s%s", s.url, urlPath)
 	req, err := http.NewRequest(http.MethodPost, fullUrl, body)
 	if err != nil {
 		return nil, err
@@ -312,7 +312,7 @@ func (s *fdfsClient) uploadMultipartFile(urlPath, fileName string, fileSize int6
 
 func (s *fdfsClient) downloadMultipartFile(method, urlPath string, arguments map[string]string, out *os.File) (int64, error) {
 	// prepare the  request
-	fullUrl := fmt.Sprintf(s.url + urlPath)
+	fullUrl := fmt.Sprintf("%s%s", s.url, urlPath)
 	var req *http.Request
 	var err error
 
