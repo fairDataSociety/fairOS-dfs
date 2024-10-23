@@ -101,7 +101,7 @@ func (t *ACT) SaveGrantedPod(actName string, c *Content) error {
 		return err
 	}
 	// check if act with name already exists
-	act, ok := list[actName]
+	_, ok := list[actName]
 	if ok {
 		return ErrACTAlreadyExists
 	}
@@ -109,14 +109,14 @@ func (t *ACT) SaveGrantedPod(actName string, c *Content) error {
 	if err != nil {
 		return err
 	}
-	act = &Act{
+	a := &Act{
 		Name:        actName,
 		CreatedAt:   c.AddedAt,
 		HistoryRef:  swarm.ZeroAddress,
 		GranteesRef: reference,
 		Content:     []*Content{c},
 	}
-	list[actName] = act
+	list[actName] = a
 	return t.storeUserACTs(list)
 }
 
@@ -171,19 +171,6 @@ func encodeKey(key *ecdsa.PublicKey) (string, error) {
 		return "", fmt.Errorf("nil key found")
 	}
 	return hex.EncodeToString(crypto.EncodeSecp256k1PublicKey(key)), nil
-}
-
-func parseKeys(list []string) ([]*ecdsa.PublicKey, error) {
-	parsedList := make([]*ecdsa.PublicKey, 0, len(list))
-	for _, g := range list {
-		h, err := parseKey(g)
-		if err != nil {
-			return []*ecdsa.PublicKey{}, err
-		}
-		parsedList = append(parsedList, h)
-	}
-
-	return parsedList, nil
 }
 
 func parseKey(g string) (*ecdsa.PublicKey, error) {

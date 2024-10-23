@@ -147,6 +147,7 @@ func TestACT(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
+				<-time.After(1 * time.Second)
 			}
 		}
 		list, err := ownerACT.GetList()
@@ -253,7 +254,7 @@ func TestACT(t *testing.T) {
 		pod1 := pod.NewPod(mockClient, fd, ownerAcc, tm, sm, -1, 0, logger)
 		ownerACT := NewACT(mockClient, fd, ownerAcc, tm, logger)
 		granteeAcc := accounts[1]
-		_, err := ownerACT.CreateUpdateACT(acts[0], granteeAcc.GetUserAccountInfo().GetPublicKey(), nil)
+		_, err := ownerACT.CreateUpdateACT(acts[1], granteeAcc.GetUserAccountInfo().GetPublicKey(), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -273,18 +274,18 @@ func TestACT(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			_, err = ownerACT.GrantAccess(acts[0], reference)
+			_, err = ownerACT.GrantAccess(acts[1], reference)
 			if err != nil {
 				t.Fatal(err)
 			}
 			<-time.After(1 * time.Second)
 		}
-		contents, err := ownerACT.GetContentList(acts[0])
+		contents, err := ownerACT.GetContentList(acts[1])
 		if err != nil {
 			t.Fatal(err)
 		}
 		if len(contents) != 9 {
-			t.Fatal("contents not matching")
+			t.Fatal("contents not matching", len(contents))
 		}
 
 	})

@@ -67,8 +67,8 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 
 	var (
 		resp       = &api.GranteesPostResponse{}
-		grantList  = []*ecdsa.PublicKey{}
-		revokeList = []*ecdsa.PublicKey{}
+		grantList  []*ecdsa.PublicKey
+		revokeList []*ecdsa.PublicKey
 		owner      = t.acc.GetUserAccountInfo().GetAddress()
 		topic      = fmt.Sprintf("%s-%s", actName, owner.String())
 		topicBytes = utils.HashString(topic)
@@ -88,7 +88,6 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 		if err != nil {
 			return nil, err
 		}
-
 		err = t.fd.CreateFeed(owner, topicBytes, resp.HistoryReference.Bytes(), nil)
 		if err != nil {
 			return nil, err
@@ -107,6 +106,7 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 		} else {
 			revokeList = nil
 		}
+
 		resp, err = t.act.RevokeGrant(context.Background(), act.GranteesRef, act.HistoryRef, grantList, revokeList)
 		if err != nil {
 			return nil, err
