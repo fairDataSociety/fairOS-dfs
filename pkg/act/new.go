@@ -6,14 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
-
 	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/ethersphere/bee/v2/pkg/crypto"
-
 	"github.com/ethersphere/bee/v2/pkg/api"
-
+	"github.com/ethersphere/bee/v2/pkg/crypto"
 	"github.com/ethersphere/bee/v2/pkg/swarm"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 const (
@@ -24,11 +21,11 @@ type List map[string]*Act
 
 // Act represents an Access Control Trie (ACT) with its metadata, grantees, and associated content.
 type Act struct {
-	Name        string        `json:"name"`
-	HistoryRef  swarm.Address `json:"historyRef"`
-	GranteesRef swarm.Address `json:"granteesRef"`
-	CreatedAt   time.Time     `json:"createdAt"`
-	Content     []*Content    `json:"content"`
+	Name        string     `json:"name"`
+	HistoryRef  []byte     `json:"historyRef"`
+	GranteesRef []byte     `json:"granteesRef"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	Content     []*Content `json:"content"`
 }
 
 // Content represents a pod or data reference associated with the ACT.
@@ -79,12 +76,12 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 		act = &Act{
 			Name:        actName,
 			CreatedAt:   time.Now(),
-			HistoryRef:  swarm.ZeroAddress,
-			GranteesRef: swarm.ZeroAddress,
+			HistoryRef:  swarm.ZeroAddress.Bytes(),
+			GranteesRef: swarm.ZeroAddress.Bytes(),
 			Content:     []*Content{},
 		}
 		grantList = []*ecdsa.PublicKey{publicKeyGrant}
-		resp, err = t.act.CreateGrantee(context.Background(), act.HistoryRef, grantList)
+		resp, err = t.act.CreateGrantee(context.Background(), swarm.NewAddress(act.HistoryRef), grantList)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +104,7 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 			revokeList = nil
 		}
 
-		resp, err = t.act.RevokeGrant(context.Background(), act.GranteesRef, act.HistoryRef, grantList, revokeList)
+		resp, err = t.act.RevokeGrant(context.Background(), swarm.NewAddress(act.GranteesRef), swarm.NewAddress(act.HistoryRef), grantList, revokeList)
 		if err != nil {
 			return nil, err
 		}
@@ -117,8 +114,8 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 		}
 	}
 
-	act.GranteesRef = resp.Reference
-	act.HistoryRef = resp.HistoryReference
+	act.GranteesRef = resp.Reference.Bytes()
+	act.HistoryRef = resp.HistoryReference.Bytes()
 
 	list[actName] = act
 	err = t.storeUserACTs(list)

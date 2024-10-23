@@ -150,7 +150,10 @@ func TestSubscription(t *testing.T) {
 
 	dirObject := pi.GetDirectory()
 
-	dirInode1 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir1")
+	dirInode1, err := dirObject.GetInode(pi.GetPodPassword(), "/parentDir/subDir1")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if dirInode1 == nil {
 		t.Fatalf("invalid dir entry")
 	}
@@ -161,10 +164,11 @@ func TestSubscription(t *testing.T) {
 	if dirInode1.Meta.Name != "subDir1" {
 		t.Fatalf("invalid dir entry")
 	}
-	dirInode2 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir2")
-	if dirInode2 == nil {
-		t.Fatalf("invalid dir entry")
+	dirInode2, err := dirObject.GetInode(pi.GetPodPassword(), "/parentDir/subDir2")
+	if err != nil {
+		t.Fatal(err)
 	}
+
 	if dirInode2.Meta.Path != "/parentDir" {
 		t.Fatalf("invalid path entry")
 	}

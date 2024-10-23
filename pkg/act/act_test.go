@@ -78,7 +78,7 @@ func TestACT(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), a.GranteesRef)
+		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(a.GranteesRef))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -106,7 +106,7 @@ func TestACT(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), a.GranteesRef)
+		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(a.GranteesRef))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -127,7 +127,7 @@ func TestACT(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		pubKeys, err = ownerACT.act.GetGrantees(context.Background(), a.GranteesRef)
+		pubKeys, err = ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(a.GranteesRef))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -238,7 +238,7 @@ func TestACT(t *testing.T) {
 		}
 		<-time.After(time.Second)
 
-		_, err = ownerACT.act.GetGrantees(context.Background(), actAfterRevoke.GranteesRef)
+		_, err = ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(actAfterRevoke.GranteesRef))
 		if err != nil {
 			t.Fatal(err)
 		}
