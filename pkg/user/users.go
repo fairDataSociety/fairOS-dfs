@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
+	blockstore "github.com/asabya/swarm-blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/ensm"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 )

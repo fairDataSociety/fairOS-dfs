@@ -30,6 +30,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethersphere/bee/v2/pkg/swarm"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	c "github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/datahub"
@@ -249,7 +251,7 @@ func (a *API) PodReceiveInfo(sessionId string, ref utils.Reference) (*pod.ShareI
 
 // PublicPodReceiveInfo receives the pod information for a public pod
 func (a *API) PublicPodReceiveInfo(ref utils.Reference) (*pod.ShareInfo, error) {
-	data, resp, err := a.client.DownloadBlob(ref.Bytes())
+	r, resp, err := a.client.DownloadBlob(swarm.NewAddress(ref.Bytes()))
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -257,7 +259,12 @@ func (a *API) PublicPodReceiveInfo(ref utils.Reference) (*pod.ShareInfo, error) 
 	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
 	}
+	defer r.Close()
 
+	data, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
 	var shareInfo *pod.ShareInfo
 	err = json.Unmarshal(data, &shareInfo)
 	if err != nil {
@@ -292,11 +299,17 @@ func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.Rea
 		return nil, 0, err
 	}
 
-	fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+	r, _, err := a.client.DownloadBlob(swarm.NewAddress(meta.InodeAddress))
 	if err != nil { // skipcq: TCV-001
 		return nil, 0, err
 	}
 
+	defer r.Close()
+
+	fileInodeBytes, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
 	var fileInode file.INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001
@@ -310,11 +323,17 @@ func (a *API) PublicPodFileDownload(pod *pod.ShareInfo, filePath string) (io.Rea
 // PublicPodFileDownloadFromMetadata downloads a file from a public pod
 func (a *API) PublicPodFileDownloadFromMetadata(meta *file.MetaData) (io.ReadCloser, uint64, error) {
 
-	fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+	r, _, err := a.client.DownloadBlob(swarm.NewAddress(meta.InodeAddress))
 	if err != nil { // skipcq: TCV-001
 		return nil, 0, err
 	}
 
+	defer r.Close()
+
+	fileInodeBytes, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
 	var fileInode file.INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001
@@ -390,17 +409,23 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 		if err != nil { // skipcq: TCV-001
 			return nil, nil, err
 		}
-		fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+		r, _, err := a.client.DownloadBlob(swarm.NewAddress(meta.InodeAddress))
 		if err != nil { // skipcq: TCV-001
 			return nil, nil, err
 		}
 
+		defer r.Close()
+
+		fileInodeBytes, err := io.ReadAll(r)
+		if err != nil { // skipcq: TCV-001
+			return nil, nil, err
+		}
 		var fileInode file.INode
 		err = json.Unmarshal(fileInodeBytes, &fileInode)
 		if err != nil { // skipcq: TCV-001
 			return nil, nil, err
 		}
-		r := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+		r = file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
 		data, err = io.ReadAll(r)
 		if err != nil { // skipcq: TCV-001
 			return nil, nil, err
@@ -460,20 +485,26 @@ func (a *API) PublicPodDisLs(pod *pod.ShareInfo, dirPathToLs string) ([]dir.Entr
 						errChan <- err
 						return
 					}
-					fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+					rOne, _, err := a.client.DownloadBlob(swarm.NewAddress(meta.InodeAddress))
 					if err != nil {
 						errChan <- err
 						return
 					}
-
+					defer rOne.Close()
+					fileInodeBytes, err := io.ReadAll(rOne)
+					if err != nil {
+						errChan <- err
+						return
+					}
 					var fileInode file.INode
 					err = json.Unmarshal(fileInodeBytes, &fileInode)
 					if err != nil {
 						errChan <- err
 						return
 					}
-					r := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
-					data, err = io.ReadAll(r)
+					rTwo := file.NewReader(fileInode, a.client, meta.Size, meta.BlockSize, meta.Compression, false)
+					defer rTwo.Close()
+					data, err = io.ReadAll(rTwo)
 					if err != nil {
 						errChan <- err
 						return
@@ -607,7 +638,14 @@ func (a *API) PublicPodSnapshot(p *pod.ShareInfo, dirPathToLs string) (*pod.DirS
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-		fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+		blobReader, _, err := a.client.DownloadBlob(swarm.NewAddress(meta.InodeAddress))
+		if err != nil { // skipcq: TCV-001
+			return nil, err
+		}
+
+		defer blobReader.Close()
+
+		fileInodeBytes, err := io.ReadAll(blobReader)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
@@ -689,12 +727,19 @@ func (a *API) getSnapShotForDir(dirL *pod.DirSnapShot, fd *feed.API, accountInfo
 						errChan <- err
 						return
 					}
-					fileInodeBytes, _, err := a.client.DownloadBlob(meta.InodeAddress)
+					blobReader, _, err := a.client.DownloadBlob(swarm.NewAddress(meta.InodeAddress))
 					if err != nil {
 						errChan <- err
 						return
 					}
 
+					defer blobReader.Close()
+
+					fileInodeBytes, err := io.ReadAll(blobReader)
+					if err != nil {
+						errChan <- err
+						return
+					}
 					var fileInode file.INode
 					err = json.Unmarshal(fileInodeBytes, &fileInode)
 					if err != nil {

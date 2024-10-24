@@ -147,12 +147,6 @@ func (p *Pod) OpenFromShareInfo(si *ShareInfo) (*Info, error) {
 	}
 	p.addPodToPodMap(si.PodName, podInfo)
 
-	// sync the pod's files and directories
-	err := p.SyncPod(si.PodName)
-	if err != nil && err != d.ErrResourceDeleted { // skipcq: TCV-001
-		return nil, err
-	}
-
 	return podInfo, nil
 }
 

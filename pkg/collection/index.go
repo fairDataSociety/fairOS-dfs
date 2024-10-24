@@ -17,17 +17,21 @@ limitations under the License.
 package collection
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"runtime"
 	"sync/atomic"
 	"time"
 
+	"github.com/ethersphere/bee/v2/pkg/swarm"
+
+	blockstore "github.com/asabya/swarm-blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -134,19 +138,19 @@ func CreateIndex(podName, collectionName, indexName, encryptionPassword string, 
 		return ErrManifestUnmarshall
 	}
 
-	ref, err := client.UploadBlob(data, 0, true)
+	ref, err := client.UploadBlob(0, "", "0", false, true, bytes.NewReader(data))
 	if err != nil { //  skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
 
 	if string(oldData) == utils.DeletedFeedMagicWord { //  skipcq: TCV-001
-		err = fd.UpdateFeed(user, topic, ref, []byte(encryptionPassword), false)
+		err = fd.UpdateFeed(user, topic, ref.Bytes(), []byte(encryptionPassword), false)
 		if err != nil {
 			return ErrManifestCreate
 		}
 		return nil
 	}
-	err = fd.CreateFeed(user, topic, ref, []byte(encryptionPassword))
+	err = fd.CreateFeed(user, topic, ref.Bytes(), []byte(encryptionPassword))
 	if err != nil { //  skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -275,12 +279,19 @@ func (idx *Index) loadManifest(manifestPath, encryptionPassword string) (*Manife
 	if err != nil { //  skipcq: TCV-001
 		return nil, ErrNoManifestFound
 	}
-	data, respCode, err := idx.client.DownloadBlob(refData)
+	r, respCode, err := idx.client.DownloadBlob(swarm.NewAddress(refData))
 	if err != nil { //  skipcq: TCV-001
 		return nil, ErrNoManifestFound
 	}
 	if respCode != http.StatusOK { //  skipcq: TCV-001
 		return nil, ErrNoManifestFound
+	}
+
+	defer r.Close()
+
+	data, err := io.ReadAll(r)
+	if err != nil { //  skipcq: TCV-001
+		return nil, ErrManifestUnmarshall
 	}
 
 	var manifest Manifest
@@ -300,13 +311,13 @@ func (idx *Index) updateManifest(manifest *Manifest, encryptionPassword string) 
 		return ErrManifestUnmarshall
 	}
 
-	ref, err := idx.client.UploadBlob(data, 0, true)
+	ref, err := idx.client.UploadBlob(0, "", "0", false, true, bytes.NewReader(data))
 	if err != nil { //  skipcq: TCV-001
 		return ErrManifestUnmarshall
 	}
 
 	topic := utils.HashString(manifest.Name)
-	err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
+	err = idx.feed.UpdateFeed(idx.user, topic, ref.Bytes(), []byte(encryptionPassword), false)
 	if err != nil { //  skipcq: TCV-001
 		return ErrManifestCreate
 	}
@@ -322,7 +333,7 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 	logStr := fmt.Sprintf("storing Manifest: %s, data len = %d", manifest.Name, len(data))
 	idx.logger.Debug(logStr)
 
-	ref, err := idx.client.UploadBlob(data, 0, true)
+	ref, err := idx.client.UploadBlob(0, "", "0", false, true, bytes.NewReader(data))
 	// TODO: once the tags issue is fixed i bytes.
 	//  remove the error string check
 	if err != nil { //  skipcq: TCV-001
@@ -332,14 +343,14 @@ func (idx *Index) storeManifest(manifest *Manifest, encryptionPassword string) e
 	topic := utils.HashString(manifest.Name)
 	_, _, err = idx.feed.GetFeedData(topic, idx.user, []byte(encryptionPassword), false)
 	if err == nil || errors.Is(err, file.ErrDeletedFeed) {
-		err = idx.feed.UpdateFeed(idx.user, topic, ref, []byte(encryptionPassword), false)
+		err = idx.feed.UpdateFeed(idx.user, topic, ref.Bytes(), []byte(encryptionPassword), false)
 		if err != nil { //  skipcq: TCV-001
 			idx.logger.Errorf("updateFeed failed in storeManifest : %s", err.Error())
 			return ErrManifestCreate
 		}
 		return nil
 	}
-	err = idx.feed.CreateFeed(idx.user, topic, ref, []byte(encryptionPassword))
+	err = idx.feed.CreateFeed(idx.user, topic, ref.Bytes(), []byte(encryptionPassword))
 	if err != nil { //  skipcq: TCV-001
 		idx.logger.Errorf("createFeed failed in storeManifest : %s", err.Error())
 		return ErrManifestCreate
@@ -380,7 +391,13 @@ func getRootManifestOfIndex(actualIndexName, encryptionPassword string, fd *feed
 	if err != nil {
 		return nil
 	}
-	data, _, err := client.DownloadBlob(addr)
+	r, _, err := client.DownloadBlob(swarm.NewAddress(addr))
+	if err != nil {
+		return nil
+	}
+	defer r.Close()
+
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil
 	}

@@ -25,8 +25,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ethersphere/bee/v2/pkg/swarm"
+
+	blockstore "github.com/asabya/swarm-blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -265,11 +267,11 @@ func (kv *KeyValue) KVPut(name, key string, value []byte) error {
 			}
 			return table.index.PutNumber(fkey, value, NumberIndex, false)
 		case BytesIndex:
-			ref, err := kv.client.UploadBlob(value, 0, true)
+			ref, err := kv.client.UploadBlob(0, "", "0", false, true, bytes.NewReader(value))
 			if err != nil { // skipcq: TCV-001
 				return err
 			}
-			return table.index.Put(key, ref, StringIndex, false)
+			return table.index.Put(key, ref.Bytes(), StringIndex, false)
 		default: // skipcq: TCV-001
 			return ErrKVInvalidIndexType
 		}
@@ -288,10 +290,17 @@ func (kv *KeyValue) KVGet(name, key string) ([]string, []byte, error) {
 			return nil, nil, err
 		}
 		if table.indexType == BytesIndex {
-			data, _, err := kv.client.DownloadBlob(value[0])
+			r, _, err := kv.client.DownloadBlob(swarm.NewAddress(value[0]))
 			if err != nil { // skipcq: TCV-001
 				return nil, nil, err
 			}
+
+			defer r.Close()
+			data, err := io.ReadAll(r)
+			if err != nil { // skipcq: TCV-001
+				return nil, nil, err
+			}
+
 			value[0] = data
 		}
 		return table.columns, value[0], nil

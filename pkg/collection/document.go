@@ -33,10 +33,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ethersphere/bee/v2/pkg/swarm"
+
+	blockstore "github.com/asabya/swarm-blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -675,7 +677,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 	}
 
 	// upload the document
-	ref, err := d.client.UploadBlob(doc, 0, true)
+	ref, err := d.client.UploadBlob(0, "", "0", false, true, bytes.NewReader(doc))
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("inserting in to document db: ", err.Error())
 		return err
@@ -711,7 +713,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 				return err
 			}
 			embeddingHex := hex.EncodeToString(buf.Bytes())
-			err := index.Put(embeddingHex, ref, StringIndex, true)
+			err := index.Put(embeddingHex, ref.Bytes(), StringIndex, true)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("inserting in to document db: ", err.Error())
 				return err
@@ -721,7 +723,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 			if field == DefaultIndexFieldName {
 				apnd = false
 			}
-			err := index.Put(v.(string), ref, StringIndex, apnd)
+			err := index.Put(v.(string), ref.Bytes(), StringIndex, apnd)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("inserting in to document db: ", err.Error())
 				return err
@@ -732,7 +734,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 			for keyField, vf := range valMap {
 				valueField := vf.(string)
 				mapField := keyField + valueField
-				err := index.Put(mapField, ref, StringIndex, true)
+				err := index.Put(mapField, ref.Bytes(), StringIndex, true)
 				if err != nil { // skipcq: TCV-001
 					d.logger.Errorf("inserting in to document db: ", err.Error())
 					return err
@@ -742,7 +744,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 		case ListIndex:
 			valList := v.([]interface{})
 			for _, listVal := range valList {
-				err := index.Put(listVal.(string), ref, StringIndex, true)
+				err := index.Put(listVal.(string), ref.Bytes(), StringIndex, true)
 				if err != nil {
 					d.logger.Errorf("inserting in to document db: ", err.Error())
 					return err
@@ -752,7 +754,7 @@ func (d *Document) Put(dbName string, doc []byte) error {
 		case NumberIndex:
 			val := v.(float64)
 			// valStr := strconv.FormatFloat(val, 'f', 6, 64)
-			err := index.PutNumber(val, ref, NumberIndex, true)
+			err := index.PutNumber(val, ref.Bytes(), NumberIndex, true)
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("inserting in to document db: ", err.Error())
 				return err
@@ -791,7 +793,13 @@ func (d *Document) Get(dbName, id, podPassword string) ([]byte, error) {
 	}
 
 	if idIndex.mutable {
-		data, _, err := d.client.DownloadBlob(reference[0])
+		r, _, err := d.client.DownloadBlob(swarm.NewAddress(reference[0]))
+		if err != nil { // skipcq: TCV-001
+			d.logger.Errorf("getting from document db: ", err.Error())
+			return nil, err
+		}
+		defer r.Close()
+		data, err := io.ReadAll(r)
 		if err != nil { // skipcq: TCV-001
 			d.logger.Errorf("getting from document db: ", err.Error())
 			return nil, err
@@ -849,12 +857,18 @@ func (d *Document) Del(dbName, id string) error {
 		return nil
 	}
 
-	data, _, err := d.client.DownloadBlob(refs[0])
+	r, _, err := d.client.DownloadBlob(swarm.NewAddress(refs[0]))
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("deleting from document db: ", err.Error())
 		return err
 	}
+	defer r.Close()
 
+	data, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		d.logger.Errorf("deleting from document db: ", err.Error())
+		return err
+	}
 	var t interface{}
 	err = json.Unmarshal(data, &t)
 	if err != nil { // skipcq: TCV-001
@@ -915,7 +929,7 @@ func (d *Document) Del(dbName, id string) error {
 	}
 
 	// delete the original data (unpin)
-	err = d.client.DeleteReference(refs[0])
+	err = d.client.DeleteReference(swarm.NewAddress(refs[0]))
 	if err != nil { // skipcq: TCV-001
 		d.logger.Errorf("deleting from document db: ", err.Error())
 		return err
@@ -1504,12 +1518,18 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 				if err == nil { // skipcq: TCV-001
 					// found a doc with the same id, so remove it and all the indexes
 					if len(refs) > 0 {
-						data, _, err := d.client.DownloadBlob(refs[0])
+						r, _, err := d.client.DownloadBlob(swarm.NewAddress(refs[0]))
 						if err != nil {
 							d.logger.Errorf("inserting in batch: ", err.Error())
 							return err
 						}
+						defer r.Close()
 
+						data, err := io.ReadAll(r)
+						if err != nil {
+							d.logger.Errorf("inserting in batch: ", err.Error())
+							return err
+						}
 						var t interface{}
 						err = json.Unmarshal(data, &t)
 						if err != nil {
@@ -1564,7 +1584,7 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 							}
 						}
 
-						err = d.client.DeleteReference(refs[0])
+						err = d.client.DeleteReference(swarm.NewAddress(refs[0]))
 						if err != nil {
 							d.logger.Errorf("inserting in batch: ", err.Error())
 							return err
@@ -1575,11 +1595,12 @@ func (d *Document) DocBatchPut(docBatch *DocBatch, doc []byte, index int64) erro
 			}
 
 			// upload the document
-			ref, err = d.client.UploadBlob(doc, 0, true)
+			addr, err := d.client.UploadBlob(0, "", "0", false, true, bytes.NewReader(doc))
 			if err != nil { // skipcq: TCV-001
 				d.logger.Errorf("inserting in batch: ", err.Error())
 				return err
 			}
+			ref = addr.Bytes()
 		} else { // skipcq: TCV-001
 			// store the seek index of the document instead of its reference
 			b := make([]byte, binary.MaxVarintLen64)
@@ -1785,7 +1806,13 @@ func newEntryTask(c blockstore.Client, allData *[][]byte, ref []byte, mtx sync.L
 
 // Execute
 func (et *entryTask) Execute(context.Context) error {
-	data, _, err := et.c.DownloadBlob(et.ref)
+	r, _, err := et.c.DownloadBlob(swarm.NewAddress(et.ref))
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return err
 	}

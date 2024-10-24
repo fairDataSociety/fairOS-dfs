@@ -30,12 +30,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	blockstore "github.com/asabya/swarm-blockstore"
 	bCrypto "github.com/ethersphere/bee/v2/pkg/crypto"
 	"github.com/ethersphere/bee/v2/pkg/soc"
 	"github.com/ethersphere/bee/v2/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -303,15 +303,15 @@ retry:
 
 func (h *Handler) update(id, owner, signature, data []byte) ([]byte, error) {
 	// send the SOC chunk
-	addr, err := h.client.UploadSOC(utils.Encode(owner), utils.Encode(id), utils.Encode(signature), data)
+	addr, err := h.client.UploadSOC(utils.Encode(owner), utils.Encode(id), utils.Encode(signature), "", "0", false, data)
 	if err != nil {
 		return nil, err
 	}
-	return addr, nil
+	return addr.Bytes(), nil
 }
 
 func (h *Handler) deleteChunk(ref []byte) error {
-	return h.client.DeleteReference(ref)
+	return h.client.DeleteReference(swarm.NewAddress(ref))
 }
 
 // GetContent retrieves the data payload of the last synced update of the feed
@@ -372,14 +372,13 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-		data, err := h.client.DownloadChunk(ctx, addr.Bytes())
+		ch, err := h.client.DownloadChunk(ctx, addr)
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) || err.Error() == "error downloading data" { // chunk not found
 				return nil, nil
 			}
 			return nil, err
 		}
-		ch := swarm.NewChunk(addr, data)
 		var request request
 
 		if err := h.fromChunk(ch, &request, query, &id); err != nil {
@@ -422,11 +421,10 @@ func (h *Handler) LookupEpoch(ctx context.Context, query *Query) (*CacheEntry, e
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	data, err := h.client.DownloadChunk(ctx, addr.Bytes())
+	ch, err := h.client.DownloadChunk(ctx, addr)
 	if err != nil {
 		return nil, err
 	}
-	ch := swarm.NewChunk(addr, data)
 	var request request
 	if err := h.fromChunk(ch, &request, query, &id); err != nil {
 		return nil, err

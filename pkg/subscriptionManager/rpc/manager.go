@@ -1,14 +1,18 @@
 package rpc
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 	"time"
+
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -30,13 +34,13 @@ const (
 )
 
 type SubscriptionInfoPutter interface {
-	UploadBlob(data []byte, tag uint32, encrypt bool) (address []byte, err error)
-	UploadBzz(data []byte, fileName string) (address []byte, err error)
+	UploadBlob(tag uint32, stamp, redundancyLevel string, pin, encrypt bool, data io.Reader) (address swarm.Address, err error)
+	UploadFileBzz(data []byte, fileName, stamp, redundancyLevel string, pin bool) (address swarm.Address, err error)
 }
 
 type SubscriptionInfoGetter interface {
-	DownloadBlob(address []byte) (data []byte, respCode int, err error)
-	DownloadBzz(address []byte) (data []byte, respCode int, err error)
+	DownloadBlob(address swarm.Address) (reader io.ReadCloser, respCode int, err error)
+	DownloadBzz(address swarm.Address) (data []byte, respCode int, err error)
 }
 
 type SubscriptionItemInfo struct {
@@ -87,12 +91,12 @@ func (c *Client) AddPodToMarketplace(podAddress, owner common.Address, pod, titl
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-	ref, err := c.putter.UploadBzz(data, fmt.Sprintf("%d.sub.json", time.Now().Unix()))
+	ref, err := c.putter.UploadFileBzz(data, fmt.Sprintf("%d.sub.json", time.Now().Unix()), "", "0", false)
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	var a [32]byte
-	copy(a[:], ref)
+	copy(a[:], ref.Bytes())
 
 	tx, err := c.datahub.ListSub(opts, nameHash, a, new(big.Int).SetUint64(price), category, podAddress, new(big.Int).SetUint64(uint64(daysValid)))
 	if err != nil {
@@ -166,13 +170,13 @@ func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, request
 		return err
 	}
 
-	ref, err := c.putter.UploadBlob(encData, 0, false)
+	ref, err := c.putter.UploadBlob(0, "", "0", false, false, bytes.NewReader(encData))
 	if err != nil {
 		return err
 	}
 
 	var fixedRef [32]byte
-	copy(fixedRef[:], ref)
+	copy(fixedRef[:], ref.Bytes())
 
 	tx, err := c.datahub.SellSub(opts, requestHash, fixedRef)
 	if err != nil {
@@ -188,12 +192,18 @@ func (c *Client) AllowAccess(owner common.Address, shareInfo *ShareInfo, request
 }
 
 func (c *Client) GetSubscription(infoLocation []byte, secret [32]byte) (*ShareInfo, error) {
-	encData, respCode, err := c.getter.DownloadBlob(infoLocation)
+	r, respCode, err := c.getter.DownloadBlob(swarm.NewAddress(infoLocation))
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	if respCode != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
+	}
+	defer r.Close()
+
+	encData, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
 	}
 
 	data, err := utils.DecryptBytes(secret[:], encData)
@@ -215,7 +225,7 @@ func (c *Client) GetSubscribablePodInfo(subHash [32]byte) (*SubscriptionItemInfo
 	if err != nil {
 		return nil, err
 	}
-	data, respCode, err := c.getter.DownloadBzz(item.SwarmLocation[:])
+	data, respCode, err := c.getter.DownloadBzz(swarm.NewAddress(item.SwarmLocation[:]))
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}

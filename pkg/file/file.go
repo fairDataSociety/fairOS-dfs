@@ -25,7 +25,7 @@ import (
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
+	blockstore "github.com/asabya/swarm-blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"

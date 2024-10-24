@@ -3,8 +3,11 @@ package pod
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
+
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -48,13 +51,19 @@ func (p *Pod) PodForkFromRef(forkName, refString string) error {
 	if err != nil {
 		return nil
 	}
-	data, resp, err := p.client.DownloadBlob(ref.Bytes())
+	r, resp, err := p.client.DownloadBlob(swarm.NewAddress(ref.Bytes()))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
 	if resp != http.StatusOK { // skipcq: TCV-001
 		return fmt.Errorf("ReceivePod: could not download blob")
 	}
+	defer r.Close()
+	data, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		return err
+	}
+
 	var shareInfo ShareInfo
 	err = json.Unmarshal(data, &shareInfo)
 	if err != nil { // skipcq: TCV-001

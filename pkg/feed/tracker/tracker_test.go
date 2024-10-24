@@ -10,7 +10,7 @@ package tracker
 //	"github.com/stretchr/testify/require"
 //
 //	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-//	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
+//	"github.com/asabya/swarm-blockstore/bee/mock"
 //	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 //	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
 //	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"

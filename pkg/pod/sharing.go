@@ -17,9 +17,13 @@ limitations under the License.
 package pod
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
@@ -72,13 +76,12 @@ func (p *Pod) PodShare(podName, sharedPodName string) (string, error) {
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
-	ref, err := p.client.UploadBlob(data, 0, false)
+	ref, err := p.client.UploadBlob(0, "", "0", false, false, bytes.NewReader(data))
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
-	shareInfoRef := utils.NewReference(ref)
-	return shareInfoRef.String(), nil
+	return ref.String(), nil
 }
 
 // GetPodSharingInfo returns the raw shareInfo
@@ -116,7 +119,7 @@ func (p *Pod) GetPodSharingInfo(podName string) (*ShareInfo, error) {
 
 // ReceivePodInfo returns the shareInfo from the reference
 func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
-	data, resp, err := p.client.DownloadBlob(ref.Bytes())
+	r, resp, err := p.client.DownloadBlob(swarm.NewAddress(ref.Bytes()))
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -124,7 +127,12 @@ func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("ReceivePodInfo: could not download blob")
 	}
+	defer r.Close()
 
+	data, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
 	var shareInfo ShareInfo
 	err = json.Unmarshal(data, &shareInfo)
 	if err != nil {
@@ -136,12 +144,18 @@ func (p *Pod) ReceivePodInfo(ref utils.Reference) (*ShareInfo, error) {
 
 // ReceivePod imports a pod by creating a new pod with the same name and password
 func (p *Pod) ReceivePod(sharedPodName string, ref utils.Reference) (*Info, error) {
-	data, resp, err := p.client.DownloadBlob(ref.Bytes())
+	r, resp, err := p.client.DownloadBlob(swarm.NewAddress(ref.Bytes()))
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
 	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("receivePod: could not download blob")
+	}
+	defer r.Close()
+
+	data, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
 	}
 	var shareInfo ShareInfo
 	err = json.Unmarshal(data, &shareInfo)
