@@ -38,6 +38,10 @@ type Content struct {
 }
 
 func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *ecdsa.PublicKey) (*Act, error) {
+	if actName == "" {
+		return nil, fmt.Errorf("act name is required")
+	}
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -126,6 +130,10 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 }
 
 func (t *ACT) GetACT(actName string) (*Act, error) {
+	if actName == "" {
+		return nil, fmt.Errorf("act name is required")
+	}
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 

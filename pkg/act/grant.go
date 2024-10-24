@@ -14,6 +14,10 @@ import (
 )
 
 func (t *ACT) GrantAccess(actName string, address swarm.Address) (*Content, error) {
+	if actName == "" {
+		return nil, fmt.Errorf("act name is required")
+	}
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -60,6 +64,10 @@ func (t *ACT) GrantAccess(actName string, address swarm.Address) (*Content, erro
 }
 
 func (t *ACT) GetPodAccess(actName string) (swarm.Address, error) {
+	if actName == "" {
+		return swarm.ZeroAddress, fmt.Errorf("act name is required")
+	}
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -93,6 +101,10 @@ func (t *ACT) GetPodAccess(actName string) (swarm.Address, error) {
 }
 
 func (t *ACT) SaveGrantedPod(actName string, c *Content) error {
+	if actName == "" {
+		return fmt.Errorf("act name is required")
+	}
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -121,6 +133,10 @@ func (t *ACT) SaveGrantedPod(actName string, c *Content) error {
 }
 
 func (t *ACT) GetGrantees(actName string) ([]string, error) {
+	if actName == "" {
+		return nil, fmt.Errorf("act name is required")
+	}
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -140,6 +156,10 @@ func (t *ACT) GetGrantees(actName string) ([]string, error) {
 }
 
 func (t *ACT) GetContentList(actName string) ([]*Content, error) {
+	if actName == "" {
+		return nil, fmt.Errorf("act name is required")
+	}
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
