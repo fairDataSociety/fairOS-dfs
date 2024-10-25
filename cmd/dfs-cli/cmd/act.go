@@ -119,7 +119,7 @@ func actOpenSharedPod(actName string) {
 		fmt.Println("could not open act: ", err)
 		return
 	}
-	currentPod = "podone"
+	currentPod = actName
 	currentDirectory = utils.PathSeparator
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fmt.Println(message)
