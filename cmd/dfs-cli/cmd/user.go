@@ -66,7 +66,12 @@ func userNew(userName, mnemonic string) {
 	fmt.Println("Please store the 12 words mnemonic safely")
 	fmt.Println("if you loose that, you cannot recover the data in-case of an emergency.")
 	fmt.Println("you can also use that mnemonic to access the data in-case this device is lost")
-
+	fmt.Println("=============== Mnemonic Start ==========================")
+	fmt.Println(resp.Mnemonic)
+	fmt.Println("=============== Mnemonic End ==========================")
+	fmt.Println("=============== PublicKey Start ==========================")
+	fmt.Println(resp.PublicKey)
+	fmt.Println("=============== PublicKey End ==========================")
 	fdfsAPI.setAccessToken(resp.AccessToken)
 
 	currentUser = userName
@@ -94,7 +99,9 @@ func userLogin(userName, apiEndpoint string) {
 		fmt.Println("create user: ", err)
 		return
 	}
-
+	fmt.Println("=============== PublicKey Start ==========================")
+	fmt.Println(resp.PublicKey)
+	fmt.Println("=============== PublicKey End ==========================")
 	currentUser = userName
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fdfsAPI.setAccessToken(resp.AccessToken)

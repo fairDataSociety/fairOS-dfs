@@ -57,7 +57,7 @@ func TestApis(t *testing.T) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 
-	logger := logging.New(os.Stdout, logrus.PanicLevel)
+	logger := logging.New(os.Stdout, logrus.DebugLevel)
 	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
 	ens := mock2.NewMockNamespaceManager()
 
@@ -1647,6 +1647,258 @@ func TestApis(t *testing.T) {
 				}
 			}
 		}
+	})
+
+	t.Run("act-publisher", func(t *testing.T) {
+		c := http.Client{Timeout: time.Duration(1) * time.Minute}
+		userRequest := &common.UserSignupRequest{
+			UserName: randStringRunes(16),
+			Password: randStringRunes(12),
+		}
+
+		userTwoRequest := &common.UserSignupRequest{
+			UserName: randStringRunes(16),
+			Password: randStringRunes(12),
+		}
+
+		userBytes, err := json.Marshal(userRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		userTwoBytes, err := json.Marshal(userTwoRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		userResps := []*api.UserSignupResponse{}
+		cookies := [][]string{}
+
+		for _, user := range [][]byte{userBytes, userTwoBytes} {
+			signupRequestDataHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev2, string(common.UserSignup)), bytes.NewBuffer(user))
+			if err != nil {
+				t.Fatal(err)
+			}
+			signupRequestDataHttpReq.Header.Add("Content-Type", "application/json")
+			signupRequestDataHttpReq.Header.Add("Content-Length", strconv.Itoa(len(user)))
+			signupRequestResp, err := c.Do(signupRequestDataHttpReq)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = signupRequestResp.Body.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if signupRequestResp.StatusCode != http.StatusCreated {
+				t.Fatal("Signup failed", signupRequestResp.StatusCode)
+			}
+
+			userLoginHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev2, string(common.UserLogin)), bytes.NewBuffer(user))
+			if err != nil {
+				t.Fatal(err)
+
+			}
+			userLoginHttpReq.Header.Add("Content-Type", "application/json")
+			userLoginHttpReq.Header.Add("Content-Length", strconv.Itoa(len(user)))
+			userLoginResp, err := c.Do(userLoginHttpReq)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var resp api.UserSignupResponse
+			data, err := io.ReadAll(userLoginResp.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				t.Fatal(err)
+			}
+			userResps = append(userResps, &resp)
+			err = userLoginResp.Body.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if userLoginResp.StatusCode != http.StatusOK {
+				t.Fatal("user should be able to login")
+			}
+			cookie := userLoginResp.Header["Set-Cookie"]
+			cookies = append(cookies, cookie)
+		}
+
+		// pod new
+		podRequest := &common.PodRequest{
+			PodName: randStringRunes(16),
+		}
+		podBytes, err := json.Marshal(podRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		podNewHttpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(common.PodNew)), bytes.NewBuffer(podBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		podNewHttpReq.Header.Set("Cookie", cookies[0][0])
+		podNewHttpReq.Header.Add("Content-Type", "application/json")
+		podNewHttpReq.Header.Add("Content-Length", strconv.Itoa(len(podBytes)))
+		podNewResp, err := c.Do(podNewHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = podNewResp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if podNewResp.StatusCode != 201 {
+			t.Fatal("pod creation failed")
+		}
+
+		entries := []struct {
+			path    string
+			isDir   bool
+			size    int64
+			content []byte
+		}{
+			{
+				path: "/file1",
+				size: 1024 * 1024,
+			},
+		}
+
+		for _, v := range entries {
+
+			body := new(bytes.Buffer)
+			writer := multipart.NewWriter(body)
+			contentLength := fmt.Sprintf("%d", v.size)
+
+			err = writer.WriteField("podName", podRequest.PodName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = writer.WriteField("contentLength", contentLength)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = writer.WriteField("dirPath", filepath.Dir(v.path))
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = writer.WriteField("blockSize", "1Mb")
+			if err != nil {
+				t.Fatal(err)
+			}
+			part, err := writer.CreateFormFile("files", filepath.Base(v.path))
+			if err != nil {
+				t.Fatal(err)
+			}
+			reader := &io.LimitedReader{R: rand.Reader, N: v.size}
+			_, err = io.Copy(part, reader)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = writer.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			uploadReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", basev1, string(common.FileUpload)), body)
+			if err != nil {
+				t.Fatal(err)
+
+			}
+			uploadReq.Header.Set("Cookie", cookies[0][0])
+			contentType := fmt.Sprintf("multipart/form-data;boundary=%v", writer.Boundary())
+			uploadReq.Header.Add("Content-Type", contentType)
+			uploadResp, err := c.Do(uploadReq)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = uploadResp.Body.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if uploadResp.StatusCode != 200 {
+				t.Fatal("upload failed")
+			}
+		}
+		<-time.After(time.Second * 2)
+		url := fmt.Sprintf("%s%s/%s?grantee=%s", basev1, "/act/grantee", "actone", userResps[1].PublicKey)
+		actCreateHttpReq, err := http.NewRequest(http.MethodPost, url, http.NoBody)
+		if err != nil {
+			t.Fatal(err)
+		}
+		actCreateHttpReq.Header.Set("Cookie", cookies[0][0])
+		actCreateResp, err := c.Do(actCreateHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = io.ReadAll(actCreateResp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		url = fmt.Sprintf("%s%s/%s/%s", basev1, "/act/share-pod", "actone", podRequest.PodName)
+		actSharePodHttpReq, err := http.NewRequest(http.MethodPost, url, http.NoBody)
+		if err != nil {
+			t.Fatal(err)
+		}
+		actSharePodHttpReq.Header.Set("Cookie", cookies[0][0])
+		actSharePodResp, err := c.Do(actSharePodHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		actSharePodRespBytes, err := io.ReadAll(actSharePodResp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		content := &api.Content{}
+
+		err = json.Unmarshal(actSharePodRespBytes, content)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(content)
+
+		url = fmt.Sprintf("%s%s/%s", basev1, "/act/save-act-pod", "actone")
+		actSavePodHttpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(actSharePodRespBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+		actSavePodHttpReq.Header.Set("Cookie", cookies[1][0])
+		actSavePodHttpReq.Header.Add("Content-Type", "application/json")
+		actSavePodHttpReq.Header.Add("Content-Length", strconv.Itoa(len(actSharePodRespBytes)))
+
+		actSavePodResp, err := c.Do(actSavePodHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		actSavePodRespBytes, err := io.ReadAll(actSavePodResp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(string(actSavePodRespBytes))
+
+		url = fmt.Sprintf("%s%s/%s", basev1, "/act/open-act-pod", "actone")
+		actOpenPodHttpReq, err := http.NewRequest(http.MethodPost, url, http.NoBody)
+		if err != nil {
+			t.Fatal(err)
+		}
+		actOpenPodHttpReq.Header.Set("Cookie", cookies[1][0])
+
+		actOpenPodResp, err := c.Do(actOpenPodHttpReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		actOpenPodRespBytes, err := io.ReadAll(actOpenPodResp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(string(actOpenPodRespBytes))
 	})
 
 	t.Run("ws test", func(t *testing.T) {

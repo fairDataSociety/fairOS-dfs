@@ -289,7 +289,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/act/act-shared-pods": {
+        "/v1/act/act-shared-pods/{actName}": {
             "get": {
                 "description": "ACTSharedPods is the api handler for listing pods shared in act.",
                 "produces": [
@@ -686,7 +686,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.response"
+                            "$ref": "#/definitions/api.Content"
                         }
                     },
                     "400": {
@@ -5270,6 +5270,26 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.Collection"
+                    }
+                }
+            }
+        },
+        "api.Content": {
+            "type": "object",
+            "properties": {
+                "owner": {
+                    "type": "string"
+                },
+                "ownerPublicKey": {
+                    "type": "string"
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "topic": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
                     }
                 }
             }
