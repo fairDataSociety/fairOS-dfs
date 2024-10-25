@@ -75,6 +75,9 @@ func userNew(userName, mnemonic string) {
 	fdfsAPI.setAccessToken(resp.AccessToken)
 
 	currentUser = userName
+	message := strings.ReplaceAll(string(data), "\n", "")
+	fmt.Println(message)
+
 }
 
 func userLogin(userName, apiEndpoint string) {

@@ -168,6 +168,7 @@ func (u *Users) LoginUserWithSignature(signature, password string, client blocks
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	acl := acl2.NewACL(u.client, fd, u.logger)
 	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
+	actList := act.NewACT(client, fd, acc, tm, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
@@ -183,6 +184,7 @@ func (u *Users) LoginUserWithSignature(signature, password string, client blocks
 		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
+		actList:    actList,
 	}
 
 	// set cookie and add user to map
@@ -329,6 +331,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 	acl := acl2.NewACL(u.client, fd, u.logger)
 	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
 	dir := d.NewDirectory(addressHex, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
+	actList := act.NewACT(client, fd, acc, tm, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
@@ -343,6 +346,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
+		actList:    actList,
 	}
 	// set cookie and add user to map
 	return ui, utils.Encode(nameHash[:]), u.addUserAndSessionToMap(ui)
