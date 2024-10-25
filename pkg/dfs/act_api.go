@@ -43,25 +43,24 @@ func (a *API) ListGrantees(sessionId, actName string) ([]string, error) {
 	return actList.GetGrantees(actName)
 }
 
-func (a *API) ACTPodShare(sessionId, podName, actName string) error {
+func (a *API) ACTPodShare(sessionId, podName, actName string) (*act.Content, error) {
 	ui := a.users.GetLoggedInUserInfo(sessionId)
 	if ui == nil {
-		return ErrUserNotLoggedIn
+		return nil, ErrUserNotLoggedIn
 	}
 
 	actList := ui.GetACTList()
 	address, err := ui.GetPod().PodShare(podName, "")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	addr, err := swarm.ParseHexAddress(address)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = actList.GrantAccess(actName, addr)
-	return err
+	return actList.GrantAccess(actName, addr)
 }
 
 func (a *API) OpenACTPod(sessionId, actName string) error {
@@ -81,7 +80,7 @@ func (a *API) OpenACTPod(sessionId, actName string) error {
 		return err
 	}
 
-	_, err = ui.GetPod().OpenFromShareInfo(info)
+	_, err = ui.GetPod().OpenActPod(info, actName)
 	if err != nil {
 		return err
 	}

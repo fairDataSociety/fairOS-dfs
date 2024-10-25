@@ -18,6 +18,7 @@ package user
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
 	"sync"
 
@@ -137,7 +138,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	return &LoginResponse{
 		Address:     address.Hex(),
 		NameHash:    nameHash,
-		PublicKey:   utils.Encode(crypto.FromECDSAPub(publicKey)),
+		PublicKey:   hex.EncodeToString(crypto.FromECDSAPub(publicKey)),
 		UserInfo:    ui,
 		AccessToken: token,
 	}, nil
@@ -197,7 +198,7 @@ func (u *Users) LoginUserWithSignature(signature, password string, client blocks
 
 	return &LoginResponse{
 		Address:     addr.Hex(),
-		PublicKey:   utils.Encode(crypto.FromECDSAPub(accountInfo.GetPublicKey())),
+		PublicKey:   hex.EncodeToString(crypto.FromECDSAPub(accountInfo.GetPublicKey())),
 		UserInfo:    ui,
 		AccessToken: token,
 	}, nil

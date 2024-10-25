@@ -6,14 +6,21 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
-
 	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 	"github.com/gorilla/mux"
 	"resenje.org/jsonhttp"
 )
+
+type Content struct {
+	Reference      string `json:"reference"`
+	Topic          []byte `json:"topic"`
+	Owner          string `json:"owner"`
+	OwnerPublicKey string `json:"ownerPublicKey"`
+}
 
 // CreateGranteeHandler godoc
 //
@@ -29,7 +36,7 @@ import (
 //	@Failure      500  {object}  response
 //	@Router       /v1/act/grantee/{actName} [post]
 func (h *Handler) CreateGranteeHandler(w http.ResponseWriter, r *http.Request) {
-	sessionId, err := auth.GetSessionIdFromGitRequest(r)
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
 		h.logger.Errorf("sessionId parse failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
@@ -82,7 +89,7 @@ func (h *Handler) CreateGranteeHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure      500  {object}  response
 //	@Router       /v1/act/grantee/{actName} [patch]
 func (h *Handler) GrantRevokeHandler(w http.ResponseWriter, r *http.Request) {
-	sessionId, err := auth.GetSessionIdFromGitRequest(r)
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
 		h.logger.Errorf("sessionId parse failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
@@ -166,7 +173,7 @@ func (h *Handler) GrantRevokeHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure      500  {object}  response
 //	@Router       /v1/act/grantee/{actName} [get]
 func (h *Handler) ListGranteesHandler(w http.ResponseWriter, r *http.Request) {
-	sessionId, err := auth.GetSessionIdFromGitRequest(r)
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
 		h.logger.Errorf("sessionId parse failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
@@ -201,12 +208,12 @@ func (h *Handler) ListGranteesHandler(w http.ResponseWriter, r *http.Request) {
 //	@Param	      actName path string true "unique act identifier"
 //	@Param	      podname path string true "pod to share in act"
 //	@Param	      Cookie header string true "cookie parameter"
-//	@Success      200  {object}  response
+//	@Success      200  {object}  Content
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
 //	@Router       /v1/act/share-pod/{actName}/{podname} [post]
 func (h *Handler) ACTPodShareHandler(w http.ResponseWriter, r *http.Request) {
-	sessionId, err := auth.GetSessionIdFromGitRequest(r)
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
 		h.logger.Errorf("sessionId parse failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
@@ -222,13 +229,18 @@ func (h *Handler) ACTPodShareHandler(w http.ResponseWriter, r *http.Request) {
 	actName := vars["actName"]
 	podName := vars["podName"]
 
-	err = h.dfsAPI.ACTPodShare(sessionId, podName, actName)
+	content, err := h.dfsAPI.ACTPodShare(sessionId, podName, actName)
 	if err != nil {
 		h.logger.Error("create grantee failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: err.Error()})
 		return
 	}
-	jsonhttp.OK(w, &response{Message: "pod shared"})
+	jsonhttp.OK(w, &Content{
+		Reference:      content.Reference,
+		Topic:          content.Topic,
+		Owner:          content.Owner.String(),
+		OwnerPublicKey: content.OwnerPublicKey,
+	})
 }
 
 // ACTListHandler godoc
@@ -244,7 +256,7 @@ func (h *Handler) ACTPodShareHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure      500  {object}  response
 //	@Router       /v1/act/list [get]
 func (h *Handler) ACTListHandler(w http.ResponseWriter, r *http.Request) {
-	sessionId, err := auth.GetSessionIdFromGitRequest(r)
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
 		h.logger.Errorf("sessionId parse failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
@@ -278,9 +290,9 @@ func (h *Handler) ACTListHandler(w http.ResponseWriter, r *http.Request) {
 //	@Success      200  {object}  []act.Content
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response
-//	@Router       /v1/act/act-shared-pods [get]
+//	@Router       /v1/act/act-shared-pods/{actName} [get]
 func (h *Handler) ACTSharedPods(w http.ResponseWriter, r *http.Request) {
-	sessionId, err := auth.GetSessionIdFromGitRequest(r)
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
 		h.logger.Errorf("sessionId parse failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
@@ -318,7 +330,7 @@ func (h *Handler) ACTSharedPods(w http.ResponseWriter, r *http.Request) {
 //	@Failure      500  {object}  response
 //	@Router       /v1/act/open-act-pod/{actName} [post]
 func (h *Handler) ACTOpenPod(w http.ResponseWriter, r *http.Request) {
-	sessionId, err := auth.GetSessionIdFromGitRequest(r)
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
 		h.logger.Errorf("sessionId parse failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
@@ -356,7 +368,7 @@ func (h *Handler) ACTOpenPod(w http.ResponseWriter, r *http.Request) {
 //	@Failure      500  {object}  response
 //	@Router       /v1/act/save-act-pod/{actName} [post]
 func (h *Handler) ACTSavePod(w http.ResponseWriter, r *http.Request) {
-	sessionId, err := auth.GetSessionIdFromGitRequest(r)
+	sessionId, err := auth.GetSessionIdFromRequest(r)
 	if err != nil {
 		h.logger.Errorf("sessionId parse failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: ErrUnauthorized.Error()})
@@ -378,15 +390,21 @@ func (h *Handler) ACTSavePod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var saveReq act.Content
+	var saveReq Content
 	err = decoder.Decode(&saveReq)
 	if err != nil {
 		h.logger.Errorf("save act pod: could not decode arguments")
 		jsonhttp.BadRequest(w, &response{Message: "save act pod: could not decode arguments"})
 		return
 	}
+	contentReq := act.Content{
+		Reference:      saveReq.Reference,
+		Topic:          saveReq.Topic,
+		Owner:          utils.HexToAddress(saveReq.Owner),
+		OwnerPublicKey: saveReq.OwnerPublicKey,
+	}
 
-	err = h.dfsAPI.SaveACTPod(sessionId, actName, &saveReq)
+	err = h.dfsAPI.SaveACTPod(sessionId, actName, &contentReq)
 	if err != nil {
 		h.logger.Error("save act pod failed: ", err)
 		jsonhttp.BadRequest(w, &response{Message: err.Error()})

@@ -17,6 +17,7 @@ limitations under the License.
 package user
 
 import (
+	"encoding/hex"
 	"errors"
 	"regexp"
 	"sync"
@@ -34,7 +35,6 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 const (
@@ -152,7 +152,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		return nil, err
 	}
 	signUp.UserInfo = ui
-	signUp.PublicKey = utils.Encode(crypto.FromECDSAPub(accountInfo.GetPublicKey()))
+	signUp.PublicKey = hex.EncodeToString(crypto.FromECDSAPub(accountInfo.GetPublicKey()))
 	return signUp, nil
 }
 

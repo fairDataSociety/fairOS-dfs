@@ -236,10 +236,7 @@ func downloadFile(podName, localFileName, podFileName string) {
 		fmt.Println("download failed: ", err)
 		return
 	}
-	if err = out.Close(); err != nil {
-		fmt.Println("download failed: ", err)
-		return
-	}
+	defer out.Close()
 
 	args := make(map[string]string)
 	args["podName"] = podName

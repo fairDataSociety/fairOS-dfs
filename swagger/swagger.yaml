@@ -57,6 +57,19 @@ definitions:
           $ref: '#/definitions/api.Collection'
         type: array
     type: object
+  api.Content:
+    properties:
+      owner:
+        type: string
+      ownerPublicKey:
+        type: string
+      reference:
+        type: string
+      topic:
+        items:
+          type: integer
+        type: array
+    type: object
   api.DirModeRequest:
     properties:
       dirPath:
@@ -861,7 +874,7 @@ paths:
       summary: download file from a shared pod
       tags:
       - public
-  /v1/act/act-shared-pods:
+  /v1/act/act-shared-pods/{actName}:
     get:
       description: ACTSharedPods is the api handler for listing pods shared in act.
       operationId: list-shared-pod-act
@@ -1132,7 +1145,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.response'
+            $ref: '#/definitions/api.Content'
         "400":
           description: Bad Request
           schema:
