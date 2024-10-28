@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        go: ['1.21.4']
+        go: ['1.22.0']
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
     - name: Setup Go
@@ -47,7 +47,7 @@ jobs:
         # Increase the dynamic port range
         New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name MaxUserPort -Value 65534 -PropertyType DWord -Force
         # Decrease the TIME_WAIT duration
-        New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name TcpTimedWaitDelay -Value 3 -PropertyType DWord -Force
+        New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name TcpTimedWaitDelay -Value 1 -PropertyType DWord -Force
       shell: pwsh
     - name: Vet
       if: matrix.os == 'ubuntu-latest'
