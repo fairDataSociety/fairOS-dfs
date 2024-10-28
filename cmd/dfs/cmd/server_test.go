@@ -57,7 +57,7 @@ func TestApis(t *testing.T) {
 		Post:            mockpost.New(mockpost.WithAcceptAll()),
 	})
 
-	logger := logging.New(os.Stdout, logrus.DebugLevel)
+	logger := logging.New(os.Stdout, logrus.PanicLevel)
 	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
 	ens := mock2.NewMockNamespaceManager()
 
