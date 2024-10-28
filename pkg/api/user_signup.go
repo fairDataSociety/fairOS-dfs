@@ -18,6 +18,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
@@ -90,12 +91,12 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	// create user
 	signUp, err := h.dfsAPI.CreateUserV2(user, password, mnemonic, "")
 	if err != nil {
-		if err == u.ErrUserAlreadyPresent {
+		if errors.Is(err, u.ErrUserAlreadyPresent) {
 			h.logger.Errorf("user signup: %v", err)
 			jsonhttp.BadRequest(w, &response{Message: "user signup: " + err.Error()})
 			return
 		}
-		if err == eth.ErrInsufficientBalance {
+		if errors.Is(err, eth.ErrInsufficientBalance) {
 			h.logger.Errorf("user signup: %v", err)
 			if signUp != nil {
 				jsonhttp.PaymentRequired(w, &UserSignupResponse{
@@ -130,10 +131,11 @@ func (h *Handler) UserSignupV2Handler(w http.ResponseWriter, r *http.Request) {
 	// send the response
 	w.Header().Set("Content-Type", " application/json")
 	jsonhttp.Created(w, &UserSignupResponse{
-		Address:   signUp.Address,
-		Mnemonic:  mnemonic,
-		NameHash:  "0x" + signUp.NameHash,
-		PublicKey: signUp.PublicKey,
-		Message:   "user signed-up successfully",
+		Address:     signUp.Address,
+		Mnemonic:    mnemonic,
+		NameHash:    "0x" + signUp.NameHash,
+		PublicKey:   signUp.PublicKey,
+		Message:     "user signed-up successfully",
+		AccessToken: signUp.AccessToken,
 	})
 }

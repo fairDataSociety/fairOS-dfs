@@ -19,6 +19,7 @@ package file
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/ethersphere/bee/v2/pkg/swarm"
@@ -32,7 +33,7 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 	if meta == nil {
 		return ErrFileNotFound
 	}
-	fileInodeBytes, respCode, err := f.client.DownloadBlob(meta.InodeAddress)
+	r, respCode, err := f.client.DownloadBlob(swarm.NewAddress(meta.InodeAddress))
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
@@ -40,7 +41,13 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 		f.logger.Warningf("could not remove blocks in %s", swarm.NewAddress(meta.InodeAddress).String())
 		return fmt.Errorf("could not remove blocks in %v", swarm.NewAddress(meta.InodeAddress).String())
 	}
+	defer r.Close()
 
+	fileInodeBytes, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		f.logger.Warningf("could not read data in address %s", swarm.NewAddress(meta.InodeAddress).String())
+		return fmt.Errorf("could not read data in address %v", swarm.NewAddress(meta.InodeAddress).String())
+	}
 	// find the inode and remove the blocks present in the inode one by one
 	var fInode *INode
 	err = json.Unmarshal(fileInodeBytes, &fInode)
@@ -49,13 +56,13 @@ func (f *File) RmFile(podFileWithPath, podPassword string) error {
 		return fmt.Errorf("could not unmarshall data in address %v", swarm.NewAddress(meta.InodeAddress).String())
 	}
 
-	err = f.client.DeleteReference(meta.InodeAddress)
+	err = f.client.DeleteReference(swarm.NewAddress(meta.InodeAddress))
 	if err != nil {
 		f.logger.Errorf("could not delete file inode %s", swarm.NewAddress(meta.InodeAddress).String())
 		return fmt.Errorf("could not delete file inode %s: %s", swarm.NewAddress(meta.InodeAddress).String(), err.Error())
 	}
 	for _, fblocks := range fInode.Blocks {
-		err = f.client.DeleteReference(fblocks.Reference.Bytes())
+		err = f.client.DeleteReference(swarm.NewAddress(fblocks.Reference.Bytes()))
 		if err != nil { // skipcq: TCV-001
 			f.logger.Errorf("could not delete file block %s", swarm.NewAddress(fblocks.Reference.Bytes()).String())
 			return fmt.Errorf("could not delete file inode %v", swarm.NewAddress(fblocks.Reference.Bytes()).String())

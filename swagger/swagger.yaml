@@ -1,4 +1,44 @@
 definitions:
+  act.Act:
+    properties:
+      content:
+        items:
+          $ref: '#/definitions/act.Content'
+        type: array
+      createdAt:
+        type: string
+      granteesRef:
+        items:
+          type: integer
+        type: array
+      historyRef:
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+    type: object
+  act.Content:
+    properties:
+      addedAt:
+        type: string
+      owner:
+        items:
+          type: integer
+        type: array
+      ownerPublicKey:
+        type: string
+      reference:
+        type: string
+      topic:
+        items:
+          type: integer
+        type: array
+    type: object
+  act.List:
+    additionalProperties:
+      $ref: '#/definitions/act.Act'
+    type: object
   api.Collection:
     properties:
       indexes:
@@ -15,6 +55,19 @@ definitions:
       tables:
         items:
           $ref: '#/definitions/api.Collection'
+        type: array
+    type: object
+  api.Content:
+    properties:
+      owner:
+        type: string
+      ownerPublicKey:
+        type: string
+      reference:
+        type: string
+      topic:
+        items:
+          type: integer
         type: array
     type: object
   api.DirModeRequest:
@@ -821,6 +874,289 @@ paths:
       summary: download file from a shared pod
       tags:
       - public
+  /v1/act/act-shared-pods/{actName}:
+    get:
+      description: ACTSharedPods is the api handler for listing pods shared in act.
+      operationId: list-shared-pod-act
+      parameters:
+      - description: unique act identifier
+        in: path
+        name: actName
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/act.Content'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: List pods in act
+      tags:
+      - act
+  /v1/act/grantee/{actName}:
+    get:
+      description: ListGranteesHandler is the api handler for listing grantees in
+        an existing act.
+      operationId: list-grantee-act
+      parameters:
+      - description: unique act identifier
+        in: path
+        name: actName
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: List grantees in ACT
+      tags:
+      - act
+    patch:
+      description: GrantRevokeHandler is the api handler for granting and revoking
+        access in an existing act.
+      operationId: grant-revoke-act
+      parameters:
+      - description: unique act identifier
+        in: path
+        name: actName
+        required: true
+        type: string
+      - description: grantee public key
+        in: query
+        name: grant
+        type: string
+      - description: revoke public key
+        in: query
+        name: revoke
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Grant ACT with grantee public key
+      tags:
+      - act
+    post:
+      description: CreateGranteeHandler is the api handler for creating act with grantee
+        public key.
+      operationId: create-act
+      parameters:
+      - description: unique act identifier
+        in: path
+        name: actName
+        required: true
+        type: string
+      - description: grantee public key
+        in: query
+        name: grantee
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Create ACT with grantee public key
+      tags:
+      - act
+  /v1/act/list:
+    get:
+      description: ACTListHandler is the api handler for listing acts.
+      operationId: list-act
+      parameters:
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/act.List'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: List acts
+      tags:
+      - act
+  /v1/act/open-act-pod/{actName}:
+    post:
+      description: ACTOpenPod is the api handler for opening pod in act.
+      operationId: open-pod-act
+      parameters:
+      - description: unique act identifier
+        in: path
+        name: actName
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Open Act pod
+      tags:
+      - act
+  /v1/act/save-act-pod/{actName}:
+    post:
+      description: ACTSavePod is the api handler for saving shared act pod.
+      operationId: save-pod-act
+      parameters:
+      - description: unique act identifier
+        in: path
+        name: actName
+        required: true
+        type: string
+      - description: acted pod info
+        in: body
+        name: content
+        required: true
+        schema:
+          $ref: '#/definitions/act.Content'
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: Save shared acted pod in act list
+      tags:
+      - act
+  /v1/act/share-pod/{actName}/{podname}:
+    post:
+      description: ACTPodShareHandler is the api handler for adding a pod in act.
+      operationId: share-pod-act
+      parameters:
+      - description: unique act identifier
+        in: path
+        name: actName
+        required: true
+        type: string
+      - description: pod to share in act
+        in: path
+        name: podname
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Content'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.response'
+      summary: share a pod in act
+      tags:
+      - act
   /v1/dir/chmod:
     post:
       consumes:

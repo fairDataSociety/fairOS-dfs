@@ -1,12 +1,15 @@
 package pod
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts/datahub"
@@ -91,12 +94,12 @@ func (p *Pod) EncryptUploadSubscriptionInfo(podName string, subscriberPublicKey 
 		return "", err
 	}
 
-	ref, err := p.client.UploadBlob(encData, 0, false)
+	ref, err := p.client.UploadBlob(0, "", "0", false, false, bytes.NewReader(encData))
 	if err != nil {
 		return "", err
 	}
 
-	return hex.EncodeToString(ref), nil
+	return ref.String(), nil
 }
 
 // RequestSubscription will send a subscriptionManager request to the owner of the pod
@@ -145,11 +148,11 @@ func (p *Pod) OpenSubscribedPodFromReference(reference string, ownerPublicKey *e
 	a, _ := ownerPublicKey.Curve.ScalarMult(ownerPublicKey.X, ownerPublicKey.Y, p.acc.GetUserAccountInfo().GetPrivateKey().D.Bytes())
 	secret := sha256.Sum256(a.Bytes())
 
-	ref, err := hex.DecodeString(reference)
+	ref, err := swarm.ParseHexAddress(reference)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	encData, resp, err := p.client.DownloadBlob(ref)
+	r, resp, err := p.client.DownloadBlob(ref)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -157,7 +160,12 @@ func (p *Pod) OpenSubscribedPodFromReference(reference string, ownerPublicKey *e
 	if resp != http.StatusOK { // skipcq: TCV-001
 		return nil, fmt.Errorf("OpenSubscribedPodFromReference: could not get subscription info")
 	}
+	defer r.Close()
 
+	encData, err := io.ReadAll(r)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
 	data, err := utils.DecryptBytes(secret[:], encData)
 	if err != nil {
 		return nil, err

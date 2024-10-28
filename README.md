@@ -38,6 +38,20 @@ The user can share files in his pod with any other user just like in other centr
 
 Pod creation is cheap. A user can create multiple pods and use it to organise his data. for ex: Personal-Pod, Applications-Pod etc.
 
+## (NEW) Access Control Trie (ACT) Integration
+### Overview
+We have introduced a new feature that integrates Swarm's Access Control Trie (ACT) into fairOS-dfs to enable user-based access control. This enhancement allows for more granular permissions and secure data sharing among users.
+
+### What is ACT?
+The Access Control Trie (ACT) is a mechanism provided by Swarm for managing access permissions to resources stored on the Swarm network. It allows publishers to grant or revoke access to specific grantees.
+
+### How is ACT Integrated into fairOS-dfs?
+In the native Swarm implementation, ACT is node-based and lacks the concept of users, which is not suitable for user-centric applications like fairOS-dfs. We have integrated ACT in such a way that:
+
+- User-Based Initialization: Access control is initialized with a user's key, tying permissions directly to user identities.
+- Grantee Management: Users can be added as grantees by their public keys, allowing specific users to access shared resources.
+- Secure Sharing: Instead of sharing the pod sharing reference directly, we wrap that reference using ACT and share the wrapped actRef. This ensures that only authorized users can access the shared content, even if the actRef is obtained by others.
+
 ## (NEW) What is a group? 
 A group is a shared drive created by a user. It is basically a pod, but on steroids. Group Owner can add members and update permissions. Members with "write" permission can create and store any number of files or directories in a group.
 

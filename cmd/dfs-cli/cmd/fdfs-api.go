@@ -125,7 +125,6 @@ func (s *fdfsClient) postReq(method, urlPath string, jsonBytes []byte) ([]byte, 
 			return nil, err
 		}
 	}
-
 	if s.getAccessToken() != "" {
 		req.Header.Add("Authorization", "Bearer "+s.getAccessToken())
 	}
