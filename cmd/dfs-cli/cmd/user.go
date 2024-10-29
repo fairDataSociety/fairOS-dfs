@@ -66,10 +66,18 @@ func userNew(userName, mnemonic string) {
 	fmt.Println("Please store the 12 words mnemonic safely")
 	fmt.Println("if you loose that, you cannot recover the data in-case of an emergency.")
 	fmt.Println("you can also use that mnemonic to access the data in-case this device is lost")
-
+	fmt.Println("=============== Mnemonic Start ==========================")
+	fmt.Println(resp.Mnemonic)
+	fmt.Println("=============== Mnemonic End ==========================")
+	fmt.Println("=============== PublicKey Start ==========================")
+	fmt.Println(resp.PublicKey)
+	fmt.Println("=============== PublicKey End ==========================")
 	fdfsAPI.setAccessToken(resp.AccessToken)
 
 	currentUser = userName
+	message := strings.ReplaceAll(string(data), "\n", "")
+	fmt.Println(message)
+
 }
 
 func userLogin(userName, apiEndpoint string) {
@@ -94,8 +102,40 @@ func userLogin(userName, apiEndpoint string) {
 		fmt.Println("create user: ", err)
 		return
 	}
-
+	fmt.Println("=============== PublicKey Start ==========================")
+	fmt.Println(resp.PublicKey)
+	fmt.Println("=============== PublicKey End ==========================")
 	currentUser = userName
+	message := strings.ReplaceAll(string(data), "\n", "")
+	fdfsAPI.setAccessToken(resp.AccessToken)
+
+	fmt.Println(message)
+}
+
+func signatureLogin(signature, apiEndpoint string) {
+	password := getPassword()
+	loginUser := common.UserSignatureLoginRequest{
+		Signature: signature,
+		Password:  password,
+	}
+	jsonData, err := json.Marshal(loginUser)
+	if err != nil {
+		fmt.Println("login user: error marshalling request")
+		return
+	}
+	data, err := fdfsAPI.postReq(http.MethodPost, apiEndpoint, jsonData)
+	if err != nil {
+		fmt.Println("login user: ", err)
+		return
+	}
+	var resp api.UserSignupResponse
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		fmt.Println("create user: ", err)
+		return
+	}
+
+	currentUser = resp.Address
 	message := strings.ReplaceAll(string(data), "\n", "")
 	fdfsAPI.setAccessToken(resp.AccessToken)
 

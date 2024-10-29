@@ -8,6 +8,8 @@ import (
 	"io"
 	"sync"
 
+	"github.com/ethersphere/bee/v2/pkg/swarm"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -26,7 +28,14 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 	}
 
 	// download file inode (blocks info)
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	r, _, err := f.getClient().DownloadBlob(swarm.NewAddress(meta.InodeAddress))
+	if err != nil { // skipcq: TCV-001
+		return 0, err
+	}
+
+	defer r.Close()
+
+	fileInodeBytes, err := io.ReadAll(r)
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
@@ -204,7 +213,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 					}
 				}
 
-				addr, uploadErr := f.client.UploadBlob(uploadData, tag, true)
+				addr, uploadErr := f.client.UploadBlob(tag, "", "0", false, true, bytes.NewReader(uploadData))
 				if uploadErr != nil {
 					mainErr = uploadErr
 					return
@@ -213,7 +222,7 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 				fileBlock := &BlockInfo{
 					Size:           uint32(size),
 					CompressedSize: uint32(len(uploadData)),
-					Reference:      utils.NewReference(addr),
+					Reference:      utils.NewReference(addr.Bytes()),
 				}
 
 				refMapMu.Lock()
@@ -249,11 +258,11 @@ func (f *File) WriteAt(podFileWithPath, podPassword string, update io.Reader, of
 		return 0, err
 	}
 
-	addr, err := f.client.UploadBlob(fileInodeData, 0, true)
+	addr, err := f.client.UploadBlob(tag, "", "0", false, true, bytes.NewReader(fileInodeData))
 	if err != nil { // skipcq: TCV-001
 		return 0, err
 	}
-	meta.InodeAddress = addr
+	meta.InodeAddress = addr.Bytes()
 	meta.Size = newDataSize
 
 	err = f.handleMeta(meta, podPassword)

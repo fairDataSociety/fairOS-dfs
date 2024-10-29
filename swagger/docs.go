@@ -183,6 +183,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/public-pod-snapshot": {
+            "get": {
+                "description": "PodReceiveSnapshotHandler is the api handler to receive shared pod snapshot from shared reference",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pod"
+                ],
+                "summary": "Receive shared pod snapshot",
+                "operationId": "pod-receive-snapshot-handler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pod sharing reference",
+                        "name": "sharingRef",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pod.DirSnapShot"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/public/{ref}/{file}": {
             "get": {
                 "description": "PublicPodFilePathHandler is the api handler to download file from a shared pod",
@@ -220,6 +272,421 @@ const docTemplate = `{
                             "items": {
                                 "type": "integer"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/act/act-shared-pods/{actName}": {
+            "get": {
+                "description": "ACTSharedPods is the api handler for listing pods shared in act.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "act"
+                ],
+                "summary": "List pods in act",
+                "operationId": "list-shared-pod-act",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "unique act identifier",
+                        "name": "actName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/act.Content"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/act/grantee/{actName}": {
+            "get": {
+                "description": "ListGranteesHandler is the api handler for listing grantees in an existing act.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "act"
+                ],
+                "summary": "List grantees in ACT",
+                "operationId": "list-grantee-act",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "unique act identifier",
+                        "name": "actName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "CreateGranteeHandler is the api handler for creating act with grantee public key.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "act"
+                ],
+                "summary": "Create ACT with grantee public key",
+                "operationId": "create-act",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "unique act identifier",
+                        "name": "actName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "grantee public key",
+                        "name": "grantee",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "GrantRevokeHandler is the api handler for granting and revoking access in an existing act.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "act"
+                ],
+                "summary": "Grant ACT with grantee public key",
+                "operationId": "grant-revoke-act",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "unique act identifier",
+                        "name": "actName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "grantee public key",
+                        "name": "grant",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "revoke public key",
+                        "name": "revoke",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/act/list": {
+            "get": {
+                "description": "ACTListHandler is the api handler for listing acts.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "act"
+                ],
+                "summary": "List acts",
+                "operationId": "list-act",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/act.List"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/act/open-act-pod/{actName}": {
+            "post": {
+                "description": "ACTOpenPod is the api handler for opening pod in act.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "act"
+                ],
+                "summary": "Open Act pod",
+                "operationId": "open-pod-act",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "unique act identifier",
+                        "name": "actName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/act/save-act-pod/{actName}": {
+            "post": {
+                "description": "ACTSavePod is the api handler for saving shared act pod.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "act"
+                ],
+                "summary": "Save shared acted pod in act list",
+                "operationId": "save-pod-act",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "unique act identifier",
+                        "name": "actName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "acted pod info",
+                        "name": "content",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/act.Content"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/act/share-pod/{actName}/{podname}": {
+            "post": {
+                "description": "ACTPodShareHandler is the api handler for adding a pod in act.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "act"
+                ],
+                "summary": "share a pod in act",
+                "operationId": "share-pod-act",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "unique act identifier",
+                        "name": "actName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "pod to share in act",
+                        "name": "podname",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Content"
                         }
                     },
                     "400": {
@@ -1813,6 +2280,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "pod name",
                         "name": "podName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "group name",
+                        "name": "groupName",
                         "in": "query",
                         "required": true
                     },
@@ -4567,6 +5041,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/v2/user/login-with-signature": {
+            "post": {
+                "description": "login user with signature described in https://github.com/fairDataSociety/FIPs/blob/master/text/0063-external-account-generator.md",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Login User with signature",
+                "operationId": "user-login-signature",
+                "parameters": [
+                    {
+                        "description": "signature and password",
+                        "name": "user_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/common.UserSignatureLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.UserLoginResponse"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "fairos-dfs session"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/v2/user/present": {
             "get": {
                 "description": "checks if the new user is present in the new ENS based authentication",
@@ -4658,6 +5185,67 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "act.Act": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/act.Content"
+                    }
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "granteesRef": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "historyRef": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "act.Content": {
+            "type": "object",
+            "properties": {
+                "addedAt": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "ownerPublicKey": {
+                    "type": "string"
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "topic": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "act.List": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/act.Act"
+            }
+        },
         "api.Collection": {
             "type": "object",
             "properties": {
@@ -4686,10 +5274,33 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Content": {
+            "type": "object",
+            "properties": {
+                "owner": {
+                    "type": "string"
+                },
+                "ownerPublicKey": {
+                    "type": "string"
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "topic": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "api.DirModeRequest": {
             "type": "object",
             "properties": {
                 "dirPath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "mode": {
@@ -4715,6 +5326,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "dirPath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "podName": {
@@ -4809,6 +5423,9 @@ const docTemplate = `{
                 "filePath": {
                     "type": "string"
                 },
+                "groupName": {
+                    "type": "string"
+                },
                 "podName": {
                     "type": "string"
                 }
@@ -4818,6 +5435,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "filePath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "mode": {
@@ -4835,6 +5455,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "filePath": {
+                    "type": "string"
+                },
+                "groupName": {
                     "type": "string"
                 },
                 "podName": {
@@ -5264,6 +5887,9 @@ const docTemplate = `{
         "common.RenameRequest": {
             "type": "object",
             "properties": {
+                "groupName": {
+                    "type": "string"
+                },
                 "newPath": {
                     "type": "string"
                 },
@@ -5282,6 +5908,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "common.UserSignatureLoginRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "signature": {
                     "type": "string"
                 }
             }
@@ -5390,6 +6027,50 @@ const docTemplate = `{
                 }
             }
         },
+        "file.MetaData": {
+            "type": "object",
+            "properties": {
+                "accessTime": {
+                    "type": "integer"
+                },
+                "blockSize": {
+                    "type": "integer"
+                },
+                "compression": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                },
+                "creationTime": {
+                    "type": "integer"
+                },
+                "fileInodeReference": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "fileName": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "mode": {
+                    "type": "integer"
+                },
+                "modificationTime": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
         "file.Stats": {
             "type": "object",
             "properties": {
@@ -5424,6 +6105,47 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "podName": {
+                    "type": "string"
+                }
+            }
+        },
+        "pod.DirSnapShot": {
+            "type": "object",
+            "properties": {
+                "accessTime": {
+                    "type": "string"
+                },
+                "blockSize": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                },
+                "creationTime": {
+                    "type": "string"
+                },
+                "dirList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pod.DirSnapShot"
+                    }
+                },
+                "fileList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/file.MetaData"
+                    }
+                },
+                "mode": {
+                    "type": "integer"
+                },
+                "modificationTime": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
                     "type": "string"
                 }
             }

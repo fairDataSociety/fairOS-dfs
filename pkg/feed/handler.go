@@ -24,21 +24,20 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"hash"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	bCrypto "github.com/ethersphere/bee/pkg/crypto"
-	"github.com/ethersphere/bee/pkg/soc"
-	"github.com/ethersphere/bee/pkg/swarm"
+	blockstore "github.com/asabya/swarm-blockstore"
+	bCrypto "github.com/ethersphere/bee/v2/pkg/crypto"
+	"github.com/ethersphere/bee/v2/pkg/soc"
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
-	utilsSigner "github.com/fairdatasociety/fairOS-dfs-utils/signer"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/hashicorp/golang-lru/v2/expirable"
 	"golang.org/x/crypto/sha3"
@@ -304,15 +303,15 @@ retry:
 
 func (h *Handler) update(id, owner, signature, data []byte) ([]byte, error) {
 	// send the SOC chunk
-	addr, err := h.client.UploadSOC(utils.Encode(owner), utils.Encode(id), utils.Encode(signature), data)
+	addr, err := h.client.UploadSOC(utils.Encode(owner), utils.Encode(id), utils.Encode(signature), "", "0", false, data)
 	if err != nil {
 		return nil, err
 	}
-	return addr, nil
+	return addr.Bytes(), nil
 }
 
 func (h *Handler) deleteChunk(ref []byte) error {
-	return h.client.DeleteReference(ref)
+	return h.client.DeleteReference(swarm.NewAddress(ref))
 }
 
 // GetContent retrieves the data payload of the last synced update of the feed
@@ -373,14 +372,13 @@ func (h *Handler) Lookup(ctx context.Context, query *Query) (*CacheEntry, error)
 		if err != nil { // skipcq: TCV-001
 			return nil, err
 		}
-		data, err := h.client.DownloadChunk(ctx, addr.Bytes())
+		ch, err := h.client.DownloadChunk(ctx, addr)
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) || err.Error() == "error downloading data" { // chunk not found
 				return nil, nil
 			}
 			return nil, err
 		}
-		ch := swarm.NewChunk(addr, data)
 		var request request
 
 		if err := h.fromChunk(ch, &request, query, &id); err != nil {
@@ -423,11 +421,10 @@ func (h *Handler) LookupEpoch(ctx context.Context, query *Query) (*CacheEntry, e
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	data, err := h.client.DownloadChunk(ctx, addr.Bytes())
+	ch, err := h.client.DownloadChunk(ctx, addr)
 	if err != nil {
 		return nil, err
 	}
-	ch := swarm.NewChunk(addr, data)
 	var request request
 	if err := h.fromChunk(ch, &request, query, &id); err != nil {
 		return nil, err
@@ -615,7 +612,7 @@ func (h *Handler) getSignature(id, payloadId []byte) ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	signer := utilsSigner.NewDefaultSigner(h.accountInfo.GetPrivateKey())
+	signer := bCrypto.NewDefaultSigner(h.accountInfo.GetPrivateKey())
 	signature, err := signer.Sign(toSignBytes)
 	if err != nil {
 		return nil, nil, err

@@ -17,9 +17,14 @@ limitations under the License.
 package user
 
 import (
+	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
+
+	blockstore "github.com/asabya/swarm-blockstore"
 	acl2 "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -27,7 +32,6 @@ import (
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
@@ -75,7 +79,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 
 	// load public key from public resolver
-	publicKey, nameHash, err := u.ens.GetInfo(userName)
+	publicKey, nameHash, err := u.GetUserInfo(userName)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
@@ -95,11 +99,15 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	}
 
 	// Instantiate pod, dir & file objects
-	file := f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
-	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
-	acl := acl2.NewACL(u.client, fd, u.logger)
-	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
-	dir := d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
+	var (
+		file    = f.NewFile(userName, client, fd, accountInfo.GetAddress(), tm, u.logger)
+		pod     = p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
+		acl     = acl2.NewACL(u.client, fd, u.logger)
+		group   = p.NewGroup(u.client, fd, acc, acl, u.logger)
+		dir     = d.NewDirectory(userName, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
+		actList = act.NewACT(client, fd, acc, tm, u.logger)
+	)
+
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
@@ -115,6 +123,7 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
+		actList:    actList,
 	}
 	// set cookie and add user to map
 	if err = u.addUserAndSessionToMap(ui); err != nil { // skipcq: TCV-001
@@ -129,7 +138,69 @@ func (u *Users) LoginUserV2(userName, passPhrase string, client blockstore.Clien
 	return &LoginResponse{
 		Address:     address.Hex(),
 		NameHash:    nameHash,
-		PublicKey:   utils.Encode(crypto.FromECDSAPub(publicKey)),
+		PublicKey:   hex.EncodeToString(crypto.FromECDSAPub(publicKey)),
+		UserInfo:    ui,
+		AccessToken: token,
+	}, nil
+}
+
+// LoginUserWithSignature logs an user with  a provided signature
+func (u *Users) LoginUserWithSignature(signature, password string, client blockstore.Client, tm taskmanager.TaskManagerGO, sm subscriptionManager.SubscriptionManager, sessionId string) (*LoginResponse, error) {
+	// check if sessionId is still active
+	if u.IsUserLoggedIn(sessionId) { // skipcq: TCV-001
+		return nil, ErrUserAlreadyLoggedIn
+	}
+
+	// create account
+	acc := account.New(u.logger)
+	accountInfo := acc.GetUserAccountInfo()
+	// load encrypted private key
+	fd := feed.New(accountInfo, client, u.feedCacheSize, u.feedCacheTTL, u.logger)
+
+	_, _, err := acc.GenerateUserAccountFromSignature(signature, password)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
+	addr := accountInfo.GetAddress()
+	// Instantiate pod, dir & file objects
+	file := f.NewFile(addr.String(), u.client, fd, addr, tm, u.logger)
+	dir := d.NewDirectory(addr.String(), u.client, fd, addr, file, tm, u.logger)
+	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
+	acl := acl2.NewACL(u.client, fd, u.logger)
+	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
+	actList := act.NewACT(client, fd, acc, tm, u.logger)
+	if sessionId == "" {
+		sessionId = auth.GetUniqueSessionId()
+	}
+
+	ui := &Info{
+		name:       addr.String(),
+		sessionId:  sessionId,
+		feedApi:    fd,
+		account:    acc,
+		file:       file,
+		dir:        dir,
+		pod:        pod,
+		group:      group,
+		openPods:   make(map[string]*p.Info),
+		openPodsMu: &sync.RWMutex{},
+		actList:    actList,
+	}
+
+	// set cookie and add user to map
+	err = u.addUserAndSessionToMap(ui)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := jwt.GenerateToken(sessionId)
+	if err != nil {
+		u.logger.Errorf("error generating token: %v\n", err)
+	}
+
+	return &LoginResponse{
+		Address:     addr.Hex(),
+		PublicKey:   hex.EncodeToString(crypto.FromECDSAPub(accountInfo.GetPublicKey())),
 		UserInfo:    ui,
 		AccessToken: token,
 	}, nil
@@ -260,6 +331,7 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 	acl := acl2.NewACL(u.client, fd, u.logger)
 	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
 	dir := d.NewDirectory(addressHex, client, fd, accountInfo.GetAddress(), file, tm, u.logger)
+	actList := act.NewACT(client, fd, acc, tm, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
@@ -274,7 +346,12 @@ func (u *Users) LoginWithWallet(addressHex, signature string, client blockstore.
 		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
+		actList:    actList,
 	}
 	// set cookie and add user to map
 	return ui, utils.Encode(nameHash[:]), u.addUserAndSessionToMap(ui)
+}
+
+func (u *Users) GetUserInfo(userName string) (*ecdsa.PublicKey, string, error) {
+	return u.ens.GetInfo(userName)
 }

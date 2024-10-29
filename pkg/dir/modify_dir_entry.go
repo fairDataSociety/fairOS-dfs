@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	indexFileName = "index.dfs"
+	IndexFileName = "index.dfs"
 )
 
 // AddEntryToDir adds a new entry (directory/file) to a given directory.
@@ -43,7 +43,6 @@ func (d *Directory) AddEntryToDir(parentDir, podPassword, itemToAdd string, isFi
 	if err != nil {
 		return ErrDirectoryNotPresent
 	}
-
 	// add file or directory entry
 	if isFile {
 		itemToAdd = "_F_" + itemToAdd

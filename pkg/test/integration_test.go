@@ -2,20 +2,22 @@ package test_test
 
 import (
 	"crypto/rand"
+	"fmt"
 	"io"
 	"math/big"
 	"path/filepath"
 	"testing"
 	"time"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/asabya/swarm-blockstore/bee"
+	"github.com/ethersphere/bee/v2/pkg/file/redundancy"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
+	"github.com/asabya/swarm-blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/cmd/common"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -47,7 +49,7 @@ func TestLiteUser(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
 
 	users := user.NewUsers(mockClient, ens, -1, 0, logger)
 	dfsApi := dfs.NewMockDfsAPI(mockClient, users, logger)

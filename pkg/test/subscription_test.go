@@ -11,16 +11,17 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/asabya/swarm-blockstore/bee"
+	"github.com/ethersphere/bee/v2/pkg/file/redundancy"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/sirupsen/logrus"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/file"
 
+	"github.com/asabya/swarm-blockstore/bee/mock"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -40,7 +41,8 @@ func TestSubscription(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
+
 	acc1 := account.New(logger)
 	_, _, err := acc1.CreateUserAccount("")
 	if err != nil {
@@ -148,7 +150,10 @@ func TestSubscription(t *testing.T) {
 
 	dirObject := pi.GetDirectory()
 
-	dirInode1 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir1")
+	dirInode1, err := dirObject.GetInode(pi.GetPodPassword(), "/parentDir/subDir1")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if dirInode1 == nil {
 		t.Fatalf("invalid dir entry")
 	}
@@ -159,10 +164,11 @@ func TestSubscription(t *testing.T) {
 	if dirInode1.Meta.Name != "subDir1" {
 		t.Fatalf("invalid dir entry")
 	}
-	dirInode2 := dirObject.GetDirFromDirectoryMap("/parentDir/subDir2")
-	if dirInode2 == nil {
-		t.Fatalf("invalid dir entry")
+	dirInode2, err := dirObject.GetInode(pi.GetPodPassword(), "/parentDir/subDir2")
+	if err != nil {
+		t.Fatal(err)
 	}
+
 	if dirInode2.Meta.Path != "/parentDir" {
 		t.Fatalf("invalid path entry")
 	}

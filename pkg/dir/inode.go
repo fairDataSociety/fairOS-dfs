@@ -73,7 +73,7 @@ func (d *Directory) GetInode(podPassword, dirNameWithPath string) (*Inode, error
 	}
 	var inode Inode
 	var data []byte
-	r, _, err := d.file.Download(utils.CombinePathAndFile(dirNameWithPath, indexFileName), podPassword)
+	r, _, err := d.file.Download(utils.CombinePathAndFile(dirNameWithPath, IndexFileName), podPassword)
 	if err != nil { // skipcq: TCV-001
 		topic := utils.HashString(dirNameWithPath)
 		_, data, err = d.fd.GetFeedData(topic, d.getAddress(), []byte(podPassword), false)
@@ -112,8 +112,7 @@ func (d *Directory) SetInode(podPassword string, iNode *Inode) error {
 	if err != nil { // skipcq: TCV-001
 		return err
 	}
-
-	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(data)), indexFileName, int64(len(data)), file.MinBlockSize, 0, totalPath, "gzip", podPassword)
+	err = d.file.Upload(bufio.NewReader(bytes.NewBuffer(data)), IndexFileName, int64(len(data)), file.MinBlockSize, 0, totalPath, "gzip", podPassword)
 	if err != nil {
 		return err
 	}
@@ -131,7 +130,7 @@ func (d *Directory) RemoveInode(podPassword, dirNameWithPath string) error {
 	} else {
 		totalPath = utils.CombinePathAndFile(parentPath, dirToDelete)
 	}
-	err := d.file.RmFile(utils.CombinePathAndFile(totalPath, indexFileName), podPassword)
+	err := d.file.RmFile(utils.CombinePathAndFile(totalPath, IndexFileName), podPassword)
 	if err != nil {
 		return err
 	}

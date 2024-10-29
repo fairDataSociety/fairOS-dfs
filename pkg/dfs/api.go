@@ -19,11 +19,12 @@ package dfs
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"time"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	blockstore "github.com/asabya/swarm-blockstore"
+	"github.com/asabya/swarm-blockstore/bee"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	ethClient "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -59,6 +60,7 @@ type Options struct {
 	Logger             logging.Logger
 	FeedCacheSize      int
 	FeedCacheTTL       time.Duration
+	RedundancyLevel    uint8
 }
 
 // NewDfsAPI is the main entry point for the df controller.
@@ -72,7 +74,7 @@ func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
 		}
 		return nil, errEthClient
 	}
-	c := bee.NewBeeClient(opts.BeeApiEndpoint, opts.Stamp, true, logger)
+	c := bee.NewBeeClient(opts.BeeApiEndpoint, bee.WithStamp(opts.Stamp), bee.WithRedundancy(fmt.Sprintf("%d", opts.RedundancyLevel)))
 	if !c.CheckConnection() {
 		logger.Errorf("dfs: bee client initialisation failed")
 		return nil, errBeeClient

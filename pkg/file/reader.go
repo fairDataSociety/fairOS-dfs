@@ -20,9 +20,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 	"io"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
+	blockstore "github.com/asabya/swarm-blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	"github.com/golang/snappy"
 	lru "github.com/hashicorp/golang-lru/v2/expirable"
@@ -66,11 +67,17 @@ func (f *File) OpenFileForIndex(podFile, podPassword string) (*Reader, error) {
 		return nil, ErrFileNotFound
 	}
 
-	encryptedFileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	r, _, err := f.getClient().DownloadBlob(swarm.NewAddress(meta.InodeAddress))
 	if err != nil {
 		return nil, err
 	}
 
+	defer r.Close()
+
+	encryptedFileInodeBytes, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
 	temp := make([]byte, len(encryptedFileInodeBytes))
 	copy(temp, encryptedFileInodeBytes)
 	fileInodeBytes, err := utils.DecryptBytes([]byte(podPassword), temp)
@@ -313,11 +320,16 @@ func (r *Reader) getBlock(ref []byte, compression string, blockSize uint32) ([]b
 			return data, nil
 		}
 	}
-	stdoutBytes, _, err := r.client.DownloadBlob(ref)
+	rd, _, err := r.client.DownloadBlob(swarm.NewAddress(ref))
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
+	defer rd.Close()
 
+	stdoutBytes, err := io.ReadAll(rd)
+	if err != nil { // skipcq: TCV-001
+		return nil, err
+	}
 	decompressedData, err := Decompress(stdoutBytes, compression, blockSize)
 	if err != nil { // skipcq: TCV-001
 		return nil, err

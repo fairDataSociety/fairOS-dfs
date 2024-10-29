@@ -96,10 +96,17 @@ const (
 	apiDocLoadJson     = apiVersion + "/doc/loadjson"
 	apiDocIndexJson    = apiVersion + "/doc/indexjson"
 
-	apiUserSignupV2  = apiVersionV2 + "/user/signup"
-	apiUserLoginV2   = apiVersionV2 + "/user/login"
-	apiUserPresentV2 = apiVersionV2 + "/user/present"
-	apiUserDeleteV2  = apiVersionV2 + "/user/delete"
+	apiUserSignupV2       = apiVersionV2 + "/user/signup"
+	apiUserLoginV2        = apiVersionV2 + "/user/login"
+	apiUserSignatureLogin = apiVersionV2 + "/user/login-with-signature"
+	apiUserPresentV2      = apiVersionV2 + "/user/present"
+	apiUserDeleteV2       = apiVersionV2 + "/user/delete"
+	actGrantee            = apiVersion + "/act/grantee"
+	actSharePod           = apiVersion + "/act/share-pod"
+	actList               = apiVersion + "/act/list"
+	actSharedPods         = apiVersion + "/act/act-shared-pods"
+	actSavePod            = apiVersion + "/act/save-act-pod"
+	actOpenPod            = apiVersion + "/act/open-act-pod"
 )
 
 func newPrompt() {
@@ -144,6 +151,7 @@ var userSuggestions = []prompt.Suggest{
 	{Text: "new", Description: "create a new user (v2)"},
 	{Text: "del", Description: "delete a existing user (v2)"},
 	{Text: "login", Description: "login to a existing user (v2)"},
+	{Text: "signatureLogin", Description: "login with signature"},
 	{Text: "logout", Description: "logout from a logged-in user"},
 	{Text: "present", Description: "is user present (v2)"},
 	{Text: "stat", Description: "shows information about a user"},
@@ -183,6 +191,17 @@ var docSuggestions = []prompt.Suggest{
 	{Text: "get", Description: "get the document having the id from the store"},
 	{Text: "del", Description: "delete the document having the id from the store"},
 	{Text: "loadjson", Description: "load the json file in to the newly created document db"},
+}
+
+var actSuggestions = []prompt.Suggest{
+	{Text: "new", Description: "creates a new act"},
+	{Text: "grantRevoke", Description: "grant nad revoke users in act"},
+	{Text: "lsGrantees", Description: "list all grantees in act"},
+	{Text: "share", Description: "share a pod in act"},
+	{Text: "ls", Description: "list all acts"},
+	{Text: "lsContent", Description: "list all pods shared in act"},
+	{Text: "save", Description: "save shared act"},
+	{Text: "open", Description: "open act pod"},
 }
 
 var suggestions = []prompt.Suggest{
@@ -236,6 +255,14 @@ var suggestions = []prompt.Suggest{
 	{Text: "rmdir", Description: "remove a existing directory"},
 	{Text: "pwd", Description: "show the current working directory"},
 	{Text: "rm", Description: "remove a file"},
+	{Text: "act new", Description: "creates a new act"},
+	{Text: "act grantRevoke", Description: "grant nad revoke users in act"},
+	{Text: "act lsGrantees", Description: "list all grantees in act"},
+	{Text: "act share", Description: "share a pod in act"},
+	{Text: "act ls", Description: "list all acts"},
+	{Text: "act lsContent", Description: "list all pods shared in act"},
+	{Text: "act save", Description: "save shared act"},
+	{Text: "act open", Description: "open act pod"},
 }
 
 func completer(in prompt.Document) []prompt.Suggest {
@@ -252,6 +279,8 @@ func completer(in prompt.Document) []prompt.Suggest {
 		return prompt.FilterHasPrefix(kvSuggestions, in.GetWordBeforeCursor(), true)
 	} else if strings.HasPrefix(in.TextBeforeCursor(), "doc") {
 		return prompt.FilterHasPrefix(docSuggestions, in.GetWordBeforeCursor(), true)
+	} else if strings.HasPrefix(in.TextBeforeCursor(), "act") {
+		return prompt.FilterHasPrefix(actSuggestions, in.GetWordBeforeCursor(), true)
 	}
 	return prompt.FilterHasPrefix(suggestions, w, true)
 }
@@ -280,6 +309,7 @@ func executor(in string) {
 		case "new":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"userName\" argument")
+				fmt.Println("\nuser new <userName> <mnemonic>")
 				return
 			}
 			userName := blocks[2]
@@ -301,6 +331,7 @@ func executor(in string) {
 		case "login":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"userName\" argument")
+				fmt.Println("\nuser login <userName>")
 				return
 			}
 			userName := blocks[2]
@@ -308,9 +339,22 @@ func executor(in string) {
 			currentPod = ""
 			currentDirectory = ""
 			currentPrompt = getCurrentPrompt()
+		case "signatureLogin":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"signature\" argument")
+				fmt.Println("\nuser signatureLogin <signature>")
+				return
+			}
+			signature := blocks[2]
+			fmt.Println("signatureLogin", signature)
+			signatureLogin(signature, apiUserSignatureLogin)
+			currentPod = ""
+			currentDirectory = ""
+			currentPrompt = getCurrentPrompt()
 		case "present":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"userName\" argument")
+				fmt.Println("\nuser present <userName>")
 				return
 			}
 			userName := blocks[2]
@@ -319,6 +363,7 @@ func executor(in string) {
 		case "del":
 			if currentUser == "" {
 				fmt.Println("please login as  user to do the operation")
+				fmt.Println("\nuser del")
 				return
 			}
 			deleteUser(apiUserDeleteV2)
@@ -329,6 +374,7 @@ func executor(in string) {
 		case "logout":
 			if currentUser == "" {
 				fmt.Println("please login as  user to do the operation")
+				fmt.Println("\nuser logout")
 				return
 			}
 			logoutUser()
@@ -339,6 +385,7 @@ func executor(in string) {
 		case "loggedin":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"userName\" argument")
+				fmt.Println("\nuser loggedin <userName>")
 				return
 			}
 			userName := blocks[2]
@@ -347,6 +394,7 @@ func executor(in string) {
 		case "stat":
 			if currentUser == "" {
 				fmt.Println("please login as user to do the operation")
+				fmt.Println("\nuser stat")
 				return
 			}
 			statUser()
@@ -368,6 +416,7 @@ func executor(in string) {
 		case "new":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"podName\" argument")
+				fmt.Println("\npod new <podName>")
 				return
 			}
 			podName := blocks[2]
@@ -376,6 +425,7 @@ func executor(in string) {
 		case "del":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"podName\" argument")
+				fmt.Println("\npod del <podName>")
 				return
 			}
 			podName := blocks[2]
@@ -386,6 +436,7 @@ func executor(in string) {
 		case "open":
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"podName\" argument")
+				fmt.Println("\npod open <podName>")
 				return
 			}
 			podName := blocks[2]
@@ -405,6 +456,7 @@ func executor(in string) {
 			}
 			if len(blocks) < 3 {
 				fmt.Println("invalid command. Missing \"podName\" argument")
+				fmt.Println("\npod stat <podName>")
 				return
 			}
 			podName := blocks[2]
@@ -878,6 +930,7 @@ func executor(in string) {
 		}
 		if len(blocks) < 4 {
 			fmt.Println("invalid command. Missing one or more arguments")
+			fmt.Println("\nupload <source file in local fs> <destination directory in pod> <block size (ex: 1Mb, 64Mb)> <compression (snappy/gzip)>")
 			return
 		}
 		fileName := filepath.Base(blocks[1])
@@ -902,6 +955,7 @@ func executor(in string) {
 		}
 		if len(blocks) < 3 {
 			fmt.Println("invalid command. Missing one or more arguments")
+			fmt.Println("\ndownload <destination directory in local fs> <relative path of source file in pod>")
 			return
 		}
 		localDir := blocks[1]
@@ -1012,6 +1066,80 @@ func executor(in string) {
 		sharingRefString := blocks[1]
 		fileReceiveInfo(currentPod, sharingRefString)
 		currentPrompt = getCurrentPrompt()
+	case "act":
+		if currentUser == "" {
+			fmt.Println("login as a user to execute these commands")
+			return
+		}
+		if len(blocks) < 2 {
+			log.Println("invalid command.")
+			help()
+			return
+		}
+		switch blocks[1] {
+		case "new":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"actName\" argument")
+				return
+			}
+			actName := blocks[2]
+			grantee := blocks[3]
+			actNew(actName, grantee)
+
+		case "grantRevoke":
+			if len(blocks) < 5 {
+				fmt.Println("invalid command. Missing \"actName\", \"public-key\", \"action\" argument")
+				return
+			}
+			actName := blocks[2]
+			key := blocks[3]
+			action := blocks[4]
+			actGrantRevoke(actName, key, action)
+		case "lsGrantees":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"actName\" argument")
+				return
+			}
+			actName := blocks[2]
+			actListGrantees(actName)
+		case "share":
+			if len(blocks) < 4 {
+				fmt.Println("invalid command. Missing \"actName\" argument")
+				return
+			}
+			actName := blocks[2]
+			podName := blocks[3]
+			actPodShare(actName, podName)
+		case "ls":
+			actListAll()
+		case "lsContent":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"actName\" argument")
+				return
+			}
+			actName := blocks[2]
+			actPodsShared(actName)
+		case "save":
+			if len(blocks) < 7 {
+				fmt.Println("invalid command. Missing arguments")
+				fmt.Println("act <save> (act-name) (reference) (topic) (owner-address) (owner-public-key)")
+				return
+			}
+			actName := blocks[2]
+			reference := blocks[3]
+			topic := blocks[4]
+			ownerAddress := blocks[5]
+			ownerPublicKey := blocks[6]
+			actSaveSharedPod(actName, reference, topic, ownerAddress, ownerPublicKey)
+		case "open":
+			if len(blocks) < 3 {
+				fmt.Println("invalid command. Missing \"actName\" argument")
+				return
+			}
+			actName := blocks[2]
+			actOpenSharedPod(actName)
+			currentPrompt = getCurrentPrompt()
+		}
 	default:
 		fmt.Println("invalid command")
 	}
@@ -1023,6 +1151,7 @@ func help() {
 	fmt.Println(" - user <new> (user-name) (mnemonic) - create a new user and login as that user")
 	fmt.Println(" - user <del> - deletes a logged-in user")
 	fmt.Println(" - user <login> (user-name) - login as a given user")
+	fmt.Println(" - user <signatureLogin> (signature) - login with signature")
 	fmt.Println(" - user <logout> - logout a logged-in user")
 	fmt.Println(" - user <present> (user-name) - returns true if the user is present, false otherwise")
 	fmt.Println(" - user <stat> - shows information about a user")
@@ -1078,6 +1207,15 @@ func help() {
 	fmt.Println(" - stat <file name or directory name> - shows the information about a file or directory")
 	fmt.Println(" - help - display this help")
 	fmt.Println(" - exit - exits from the prompt")
+
+	fmt.Println(" - act <new> (act-name) (grantee-public-key) - creates a new act")
+	fmt.Println(" - act <grantRevoke> (act-name) (public-key) (action) - grant or revoke user in act")
+	fmt.Println(" - act <lsGrantees> - list all grantees")
+	fmt.Println(" - act <share> (act-name) (pod-name)- share a pod in act")
+	fmt.Println(" - act <ls> - list all acts")
+	fmt.Println(" - act <lsContent> (act-name) - list all pods shared in act")
+	fmt.Println(" - act <save> (act-name) (reference) (topic) (owner-address) (owner-public-key) - save shared act")
+	fmt.Println(" - act <open> (act-name) - open act pod")
 
 }
 

@@ -17,9 +17,14 @@ limitations under the License.
 package user
 
 import (
+	"encoding/hex"
 	"errors"
 	"regexp"
 	"sync"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/auth/jwt"
 
 	acl2 "github.com/fairdatasociety/fairOS-dfs/pkg/acl/acl"
 
@@ -34,7 +39,6 @@ import (
 	p "github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/subscriptionManager"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/taskmanager"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
 const (
@@ -44,11 +48,12 @@ const (
 
 // SignupResponse is the response of a successful signup
 type SignupResponse struct {
-	Address   string `json:"address"`
-	Mnemonic  string `json:"mnemonic"`
-	NameHash  string `json:"nameHash"`
-	PublicKey string `json:"publicKey"`
-	UserInfo  *Info  `json:"userInfo"`
+	Address     string `json:"address"`
+	Mnemonic    string `json:"mnemonic"`
+	NameHash    string `json:"nameHash"`
+	PublicKey   string `json:"publicKey"`
+	UserInfo    *Info  `json:"userInfo"`
+	AccessToken string `json:"accessToken"`
 }
 
 // CreateNewUserV2 creates a new user with the given username and password. if a mnemonic is passed
@@ -130,6 +135,7 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 	pod := p.NewPod(u.client, fd, acc, tm, sm, u.feedCacheSize, u.feedCacheTTL, u.logger)
 	acl := acl2.NewACL(u.client, fd, u.logger)
 	group := p.NewGroup(u.client, fd, acc, acl, u.logger)
+	actList := act.NewACT(u.client, fd, acc, tm, u.logger)
 	if sessionId == "" {
 		sessionId = auth.GetUniqueSessionId()
 	}
@@ -145,14 +151,22 @@ func (u *Users) CreateNewUserV2(userName, passPhrase, mnemonic, sessionId string
 		group:      group,
 		openPods:   make(map[string]*p.Info),
 		openPodsMu: &sync.RWMutex{},
+		actList:    actList,
 	}
 
 	// set cookie and add user to map
 	if err = u.addUserAndSessionToMap(ui); err != nil { // skipcq: TCV-001
 		return nil, err
 	}
+
+	token, err := jwt.GenerateToken(sessionId)
+	if err != nil {
+		u.logger.Errorf("error generating token: %v\n", err)
+	}
+
 	signUp.UserInfo = ui
-	signUp.PublicKey = utils.Encode(crypto.FromECDSAPub(accountInfo.GetPublicKey()))
+	signUp.PublicKey = hex.EncodeToString(crypto.FromECDSAPub(accountInfo.GetPublicKey()))
+	signUp.AccessToken = token
 	return signUp, nil
 }
 

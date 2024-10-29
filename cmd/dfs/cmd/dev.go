@@ -2,17 +2,19 @@ package cmd
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"testing"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
+	"github.com/asabya/swarm-blockstore/bee"
+	"github.com/asabya/swarm-blockstore/bee/mock"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/api"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
 	mock2 "github.com/fairdatasociety/fairOS-dfs/pkg/ensm/eth/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -53,7 +55,7 @@ func startDevServer() {
 	})
 	fmt.Println("Bee running at: ", beeUrl)
 	logger := logging.New(os.Stdout, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy("0"), bee.WithPinning(true))
 	ens := mock2.NewMockNamespaceManager()
 
 	users := user.NewUsers(mockClient, ens, -1, 0, logger)
@@ -72,6 +74,8 @@ func startDevServer() {
 	}()
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
-
+	batchOk := make([]byte, 32)
+	_, _ = rand.Read(batchOk)
+	fmt.Println(hex.EncodeToString(batchOk))
 	<-done
 }

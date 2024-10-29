@@ -38,6 +38,20 @@ The user can share files in his pod with any other user just like in other centr
 
 Pod creation is cheap. A user can create multiple pods and use it to organise his data. for ex: Personal-Pod, Applications-Pod etc.
 
+## (NEW) Access Control Trie (ACT) Integration
+### Overview
+We have introduced a new feature that integrates Swarm's Access Control Trie (ACT) into fairOS-dfs to enable user-based access control. This enhancement allows for more granular permissions and secure data sharing among users.
+
+### What is ACT?
+The Access Control Trie (ACT) is a mechanism provided by Swarm for managing access permissions to resources stored on the Swarm network. It allows publishers to grant or revoke access to specific grantees.
+
+### How is ACT Integrated into fairOS-dfs?
+In the native Swarm implementation, ACT is node-based and lacks the concept of users, which is not suitable for user-centric applications like fairOS-dfs. We have integrated ACT in such a way that:
+
+- User-Based Initialization: Access control is initialized with a user's key, tying permissions directly to user identities.
+- Grantee Management: Users can be added as grantees by their public keys, allowing specific users to access shared resources.
+- Secure Sharing: Instead of sharing the pod sharing reference directly, we wrap that reference using ACT and share the wrapped actRef. This ensures that only authorized users can access the shared content, even if the actRef is obtained by others.
+
 ## (NEW) What is a group? 
 A group is a shared drive created by a user. It is basically a pod, but on steroids. Group Owner can add members and update permissions. Members with "write" permission can create and store any number of files or directories in a group.
 
@@ -201,3 +215,90 @@ bee:
   bee-api-endpoint: http://localhost:1633 # bee running on mainnet  
   postage-batch-id: <BATCH>
 ```
+
+### Integrating git with dfs
+
+To integrate git with dfs, we need to set the `git` configuration in the config file. We only need to set the credential helper for local git repositories.
+
+We create a file `.dfs-credentials` with the following content at any given location
+```
+#!/bin/bash
+token_file="<ABSOLUTE PATH FOR STRING ACCESS TOKEN>" # this needs to be absolute path
+
+username="<USERNAME>"
+password="<PASSWORD>"
+
+dfs="<FAIROS-DFS SERVER URL>" # http://localhost:9090 for local running fairOS-dfs server
+
+# Function to get the access token using the username and password
+get_access_token() {
+    local response=$(curl -s -X POST "$dfs/v2/user/login" -H "Content-Type: application/json" -d "{\"userName\": \"$username\", \"password\": \"$password\"}")
+    access_token=$(echo "$response" | jq -r '.accessToken')
+    # check if response has access token
+    if [ "$access_token" == "null"  ]; then
+        exit 1
+    fi
+    echo "$access_token" > "$token_file"
+    echo "$access_token"
+}
+
+get_saved_access_token() {
+    if [[ -f "$token_file" ]]; then
+        local saved_token=$(sed -n '1p' "$token_file")
+        if [ "$saved_token" == "null" ] || [ "$saved_token" == "" ]; then
+            return 1
+        fi
+        local response=$(curl --write-out '%{http_code}' --silent --output /dev/null  -s -X POST "$dfs/v1/user/stat" -H "Content-Type: application/json" -H "Authorisation: Bearer $saved_token" )
+        # check if response had success http code
+        if [[ response -eq 200 ]]; then
+            echo "$saved_token"
+            return 0
+        else
+            rm "$token_file"
+            return 1
+        fi
+    fi
+    return 1
+}
+
+access_token=$(get_saved_access_token)
+if [[ $? -ne 0 ]]; then
+    access_token=$(get_access_token)
+fi
+echo "username=$username"
+echo "password=$access_token"
+
+exit 0
+```
+
+After creating this file, we need to set the `credential.helper` in the git configuration
+
+```
+git config --local credential.helper "<Absolute path to .dfs-credentials file>"
+```
+
+#### How to push to dfs
+
+Currently, we only support pushing once, so its sort of archive. We can push the git repository to dfs using the following command
+
+```
+git init # initialize the git repository, run this inside the directory that you want to push to dfs
+git add . # add all the files to the git repository
+git commit -m "Initial commit" # commit the changes
+git remote add origin <DFS SERVER>/v1/git/<USERNAME>/<PODNAME>.git # add the remote origin
+git config --local credential.helper "<Absolute path to .dfs-credentials file>" # set the credential helper
+git push -u origin master # push the changes to the remote origin
+```
+
+### How to clone from dfs
+
+```
+git config --local credential.helper "<Absolute path to .dfs-credentials file>"
+git clone <DFS SERVER>/v1/git/<USERNAME>/<PODNAME>.git
+```
+
+NOTE: Before pushing into a pod, we have to first create a pod if it does not exist. A pod can not be used as two different repos. 
+Dfs stores the files of the repo as a git pack file. So, we cannot access each file of the repo individually. although we can access other files from dfs api as expected.
+
+
+

@@ -19,6 +19,8 @@ package user
 import (
 	"sync"
 
+	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
 	d "github.com/fairdatasociety/fairOS-dfs/pkg/dir"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
@@ -38,6 +40,7 @@ type Info struct {
 	group      *pod.Group
 	openPods   map[string]*pod.Info
 	openPodsMu *sync.RWMutex
+	actList    *act.ACT
 }
 
 // GetUserName return username
@@ -53,6 +56,10 @@ func (i *Info) GetSessionId() string {
 // GetPod returns user pod handler
 func (i *Info) GetPod() *pod.Pod {
 	return i.pod
+}
+
+func (i *Info) GetACTList() *act.ACT {
+	return i.actList
 }
 
 // GetGroup returns user group handler

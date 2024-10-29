@@ -44,14 +44,15 @@ import (
 )
 
 var (
-	pprof          bool
-	swag           bool
-	httpPort       string
-	pprofPort      string
-	cookieDomain   string
-	postageBlockId string
-	corsOrigins    []string
-	handler        *api.Handler
+	pprof           bool
+	swag            bool
+	httpPort        string
+	pprofPort       string
+	cookieDomain    string
+	postageBlockId  string
+	redundancyLevel uint8
+	corsOrigins     []string
+	handler         *api.Handler
 
 	//go:embed .well-known
 	staticFiles embed.FS
@@ -101,6 +102,9 @@ can consume it.`,
 		if err := config.BindPFlag(optionRPC, cmd.Flags().Lookup("rpc")); err != nil {
 			return err
 		}
+		if err := config.BindPFlag(optionBeeRedundancyLevel, cmd.Flags().Lookup("redundancyLevel")); err != nil {
+			fmt.Println("setting redundancy level to 0")
+		}
 		return config.BindPFlag(optionBeePostageBatchId, cmd.Flags().Lookup("postageBlockId"))
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -113,8 +117,14 @@ can consume it.`,
 		pprofPort = config.GetString(optionDFSPprofPort)
 		cookieDomain = config.GetString(optionCookieDomain)
 		postageBlockId = config.GetString(optionBeePostageBatchId)
+		redundancyLevel = uint8(config.GetUint(optionBeeRedundancyLevel))
 		corsOrigins = config.GetStringSlice(optionCORSAllowedOrigins)
 		verbosity = config.GetString(optionVerbosity)
+
+		if redundancyLevel > 4 {
+			fmt.Println("\nredundancyLevel should be between 0 and 4")
+			return fmt.Errorf("redundancyLevel should be between 0 and 4")
+		}
 
 		if postageBlockId == "" {
 			_ = cmd.Help()
@@ -184,8 +194,7 @@ can consume it.`,
 		logger.Info("verbosity      : ", verbosity)
 		logger.Info("httpPort       : ", httpPort)
 		logger.Info("pprofPort      : ", pprofPort)
-		logger.Info("pprofPort      : ", pprofPort)
-		logger.Info("pprofPort      : ", pprofPort)
+		logger.Info("redundancyLevel: ", redundancyLevel)
 		logger.Info("cookieDomain   : ", cookieDomain)
 		logger.Info("feedCacheSize  : ", config.GetInt(optionFeedCacheSize))
 		logger.Info("feedCacheTTL   : ", config.GetString(optionFeedCacheTTL))
@@ -203,6 +212,7 @@ can consume it.`,
 			Logger:             logger,
 			FeedCacheSize:      config.GetInt(optionFeedCacheSize),
 			FeedCacheTTL:       config.GetString(optionFeedCacheTTL),
+			RedundancyLevel:    redundancyLevel,
 		}
 
 		hdlr, err := api.New(ctx, opts)
@@ -246,6 +256,7 @@ func init() {
 	serverCmd.Flags().String("feedCacheTTL", "0s", "How long to keep feed updates in lru cache. 0s to disable")
 	serverCmd.Flags().String("cookieDomain", defaultCookieDomain, "the domain to use in the cookie")
 	serverCmd.Flags().String("postageBlockId", "", "the postage block used to store the data in bee")
+	serverCmd.Flags().Uint8("redundancyLevel", 0, "redundancy level for swarm erasure coding")
 	serverCmd.Flags().StringSlice("cors-origins", defaultCORSAllowedOrigins, "allow CORS headers for the given origins")
 	serverCmd.Flags().String("ens-network", "testnet", "network to use for authentication [not related to swarm network] (mainnet/testnet/play)")
 	serverCmd.Flags().String("rpc", "", "rpc endpoint for ens network. xDai for mainnet | Sepolia for testnet | local fdp-play rpc endpoint for play")
@@ -286,6 +297,7 @@ func startHttpService(logger logging.Logger) *http.Server {
 	router.HandleFunc("/public-file", handler.PublicPodGetFileHandler)
 	router.HandleFunc("/public-dir", handler.PublicPodGetDirHandler)
 	router.HandleFunc("/public-kv", handler.PublicPodKVEntryGetHandler)
+	router.HandleFunc("/public-pod-snapshot", handler.PodReceiveSnapshotHandler).Methods("GET")
 
 	redirectHandler := func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
@@ -322,6 +334,7 @@ func startHttpService(logger logging.Logger) *http.Server {
 	baseRouterV2.Use(handler.LogMiddleware)
 	baseRouterV2.HandleFunc("/user/signup", handler.UserSignupV2Handler).Methods("POST")
 	baseRouterV2.HandleFunc("/user/login", handler.UserLoginV2Handler).Methods("POST")
+	baseRouterV2.HandleFunc("/user/login-with-signature", handler.UserLoginWithSignature).Methods("POST")
 	baseRouterV2.HandleFunc("/user/present", handler.UserPresentV2Handler).Methods("GET")
 	userRouterV2 := baseRouterV2.PathPrefix("/user/").Subrouter()
 	userRouterV2.Use(handler.LoginMiddleware)
@@ -435,6 +448,28 @@ func startHttpService(logger logging.Logger) *http.Server {
 	docRouter.HandleFunc("/entry/put", handler.DocEntryPutHandler).Methods("POST")
 	docRouter.HandleFunc("/entry/get", handler.DocEntryGetHandler).Methods("GET")
 	docRouter.HandleFunc("/entry/del", handler.DocEntryDelHandler).Methods("DELETE")
+
+	gitRouter := baseRouter.PathPrefix("/git/").Subrouter()
+	gitRouter.Use(handler.GitAuthMiddleware)
+	gitRouter.HandleFunc("/{user}/{repo}.git/HEAD", handler.GitInfoRef).Methods("GET")
+	gitRouter.HandleFunc("/{user}/{repo}.git/info/refs", handler.GitInfoRef).Methods("GET")
+	gitRouter.HandleFunc("/{user}/{repo}.git/git-upload-pack", handler.GitUploadPack).Methods("POST")
+	gitRouter.HandleFunc("/{user}/{repo}.git/git-receive-pack", handler.GitReceivePack).Methods("POST")
+
+	actRouter := baseRouter.PathPrefix("/act/").Subrouter()
+	actRouter.Use(handler.LoginMiddleware)
+
+	// list acts
+	// owner
+	actRouter.HandleFunc("/grantee/{actName}", handler.CreateGranteeHandler).Methods("POST")
+	actRouter.HandleFunc("/grantee/{actName}", handler.GrantRevokeHandler).Methods("PATCH")
+	actRouter.HandleFunc("/grantee/{actName}", handler.ListGranteesHandler).Methods("GET")
+	actRouter.HandleFunc("/share-pod/{actName}/{podName}", handler.ACTPodShareHandler).Methods("POST")
+	actRouter.HandleFunc("/list", handler.ACTListHandler).Methods("GET")
+	actRouter.HandleFunc("/act-shared-pods/{actName}", handler.ACTSharedPods).Methods("GET")
+	// grantee
+	actRouter.HandleFunc("/save-act-pod/{actName}", handler.ACTSavePod).Methods("POST")
+	actRouter.HandleFunc("/open-act-pod/{actName}", handler.ACTOpenPod).Methods("POST")
 
 	var origins []string
 	for _, c := range corsOrigins {

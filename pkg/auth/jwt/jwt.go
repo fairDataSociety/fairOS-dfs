@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -34,7 +35,7 @@ func GenerateToken(sessionId string) (string, error) {
 	claims := Claims{
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-			Issuer:    "test",
+			Issuer:    "dfs",
 		},
 		sessionId,
 	}
@@ -62,8 +63,8 @@ func parse(tokenStr string) (string, error) {
 	}
 }
 
-// GetSessionIdFromToken extracts sessionId from http.Request Auth header
-func GetSessionIdFromToken(request *http.Request) (sessionId string, err error) {
+// GetSessionIdFromRequest extracts sessionId from http.Request Auth header
+func GetSessionIdFromRequest(request *http.Request) (sessionId string, err error) {
 	authHeader := request.Header.Get("Authorization")
 	parts := strings.Split(authHeader, "Bearer")
 	if len(parts) != 2 {
@@ -71,6 +72,48 @@ func GetSessionIdFromToken(request *http.Request) (sessionId string, err error) 
 	}
 
 	tokenStr := strings.TrimSpace(parts[1])
+	if len(tokenStr) < 1 {
+		return "", ErrNoTokenInRequest
+	}
+	if tokenStr == "" {
+		return "", ErrNoTokenInRequest
+	}
+	return parse(tokenStr)
+}
+
+// GetSessionIdFromGitRequest extracts sessionId from http.Request Auth header for git apis
+func GetSessionIdFromGitRequest(request *http.Request) (sessionId string, err error) {
+	authHeader := request.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", ErrNoTokenInRequest
+	}
+	parts := strings.Split(authHeader, "Basic")
+	if len(parts) != 2 {
+		return "", ErrNoTokenInRequest
+	}
+
+	payload, err := base64.StdEncoding.DecodeString(strings.TrimSpace(parts[1]))
+	if err != nil {
+		return "", err
+	}
+	pair := strings.SplitN(string(payload), ":", 2)
+	tokenStr := strings.TrimSpace(pair[1])
+	if len(tokenStr) < 1 {
+		return "", ErrNoTokenInRequest
+	}
+	if tokenStr == "" {
+		return "", ErrNoTokenInRequest
+	}
+	return parse(tokenStr)
+}
+
+// GetSessionIdFromToken extracts sessionId from an actual token
+func GetSessionIdFromToken(token string) (sessionId string, err error) {
+	if len(token) == 0 {
+		return "", ErrNoTokenInRequest
+	}
+
+	tokenStr := strings.TrimSpace(token)
 	if len(tokenStr) < 1 {
 		return "", ErrNoTokenInRequest
 	}

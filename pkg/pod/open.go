@@ -122,6 +122,34 @@ func (p *Pod) OpenPod(podName string) (*Info, error) {
 	return podInfo, nil
 }
 
+func (p *Pod) OpenActPod(si *ShareInfo, actName string) (*Info, error) {
+	accountInfo := p.acc.GetEmptyAccountInfo()
+	address := utils.HexToAddress(si.Address)
+	accountInfo.SetAddress(address)
+
+	fd := feed.New(accountInfo, p.client, p.feedCacheSize, p.feedCacheTTL, p.logger)
+	file := f.NewFile(si.PodName, p.client, fd, accountInfo.GetAddress(), p.tm, p.logger)
+	dir := d.NewDirectory(si.PodName, p.client, fd, accountInfo.GetAddress(), file, p.tm, p.logger)
+
+	kvStore := c.NewKeyValueStore(si.PodName, fd, accountInfo, address, p.client, p.logger)
+	docStore := c.NewDocumentStore(si.PodName, fd, accountInfo, address, file, p.tm, p.client, p.logger)
+
+	podInfo := &Info{
+		podName:     si.PodName,
+		podPassword: si.Password,
+		userAddress: address,
+		accountInfo: accountInfo,
+		feed:        fd,
+		dir:         dir,
+		file:        file,
+		kvStore:     kvStore,
+		docStore:    docStore,
+	}
+	p.addPodToPodMap(actName, podInfo)
+
+	return podInfo, nil
+}
+
 func (p *Pod) OpenFromShareInfo(si *ShareInfo) (*Info, error) {
 	accountInfo := p.acc.GetEmptyAccountInfo()
 	address := utils.HexToAddress(si.Address)
@@ -146,12 +174,6 @@ func (p *Pod) OpenFromShareInfo(si *ShareInfo) (*Info, error) {
 		docStore:    docStore,
 	}
 	p.addPodToPodMap(si.PodName, podInfo)
-
-	// sync the pod's files and directories
-	err := p.SyncPod(si.PodName)
-	if err != nil && err != d.ErrResourceDeleted { // skipcq: TCV-001
-		return nil, err
-	}
 
 	return podInfo, nil
 }

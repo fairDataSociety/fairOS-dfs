@@ -24,9 +24,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/fairdatasociety/fairOS-dfs-utils/crypto"
+	"github.com/ethersphere/bee/v2/pkg/crypto"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
@@ -85,6 +85,42 @@ func (a *Account) CreateUserAccount(mnemonic string) (string, []byte, error) {
 	wal := newWallet(nil)
 	a.wallet = wal
 	acc, mnemonic, err := wal.LoadMnemonicAndCreateRootAccount(mnemonic)
+	if err != nil {
+		return "", nil, err
+	}
+	hdw, err := hdwallet.NewFromMnemonic(mnemonic)
+	if err != nil { // skipcq: TCV-001
+		return "", nil, err
+	}
+
+	// store publicKey, private key and user
+	a.userAccount.privateKey, err = hdw.PrivateKey(acc)
+	if err != nil { // skipcq: TCV-001
+		return "", nil, err
+	}
+	a.userAccount.publicKey, err = hdw.PublicKey(acc)
+	if err != nil { // skipcq: TCV-001
+		return "", nil, err
+	}
+	addrBytes, err := crypto.NewEthereumAddress(a.userAccount.privateKey.PublicKey)
+	if err != nil { // skipcq: TCV-001
+		return "", nil, err
+	}
+	a.userAccount.address.SetBytes(addrBytes)
+
+	seed, err := hdwallet.NewSeedFromMnemonic(mnemonic)
+	if err != nil { // skipcq: TCV-001
+		return "", nil, err
+	}
+
+	return mnemonic, seed, nil
+}
+
+// GenerateUserAccountFromSignature create a new master account for a user.
+func (a *Account) GenerateUserAccountFromSignature(signature, password string) (string, []byte, error) {
+	wal := newWallet(nil)
+	a.wallet = wal
+	acc, mnemonic, err := wal.GenerateWalletFromSignature(signature, password)
 	if err != nil {
 		return "", nil, err
 	}

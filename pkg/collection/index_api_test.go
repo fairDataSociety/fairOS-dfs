@@ -19,20 +19,24 @@ package collection_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
 
-	mockpost "github.com/ethersphere/bee/pkg/postage/mock"
-	mockstorer "github.com/ethersphere/bee/pkg/storer/mock"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee"
+	"github.com/ethersphere/bee/v2/pkg/file/redundancy"
+	"github.com/ethersphere/bee/v2/pkg/swarm"
+
+	"github.com/asabya/swarm-blockstore/bee"
+	mockpost "github.com/ethersphere/bee/v2/pkg/postage/mock"
+	mockstorer "github.com/ethersphere/bee/v2/pkg/storer/mock"
 	"github.com/sirupsen/logrus"
 
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 
+	"github.com/asabya/swarm-blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore/bee/mock"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
@@ -47,7 +51,7 @@ func TestIndexAPI(t *testing.T) {
 	})
 
 	logger := logging.New(io.Discard, logrus.DebugLevel)
-	mockClient := bee.NewBeeClient(beeUrl, mock.BatchOkStr, true, logger)
+	mockClient := bee.NewBeeClient(beeUrl, bee.WithStamp(mock.BatchOkStr), bee.WithRedundancy(fmt.Sprintf("%d", redundancy.NONE)), bee.WithPinning(true))
 	acc := account.New(logger)
 	ai := acc.GetUserAccountInfo()
 	_, _, err := acc.CreateUserAccount("")
@@ -153,11 +157,11 @@ func TestIndexAPI(t *testing.T) {
 }
 
 func addDoc(t *testing.T, key string, value []byte, index *collection.Index, client *bee.Client, apnd bool) {
-	ref, err := client.UploadBlob(value, 0, false)
+	ref, err := client.UploadBlob(0, "", "0", false, false, bytes.NewReader(value))
 	if err != nil {
 		t.Fatalf("could not add doc %s:%s, %v", key, value, err)
 	}
-	err = index.Put(key, ref, collection.StringIndex, apnd)
+	err = index.Put(key, ref.Bytes(), collection.StringIndex, apnd)
 	if err != nil {
 		t.Fatalf("could not add doc in index: %s:%s, %v", key, ref, err)
 	}
@@ -171,12 +175,17 @@ func getDoc(t *testing.T, key string, index *collection.Index, client *bee.Clien
 		}
 		t.Fatal(err)
 	}
-	data, respCode, err := client.DownloadBlob(ref[0])
+	r, respCode, err := client.DownloadBlob(swarm.NewAddress(ref[0]))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if respCode != http.StatusOK {
 		t.Fatalf("invalid response code")
+	}
+	defer r.Close()
+	data, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
 	}
 	return data
 }
@@ -191,25 +200,35 @@ func getAllDocs(t *testing.T, key string, index *collection.Index, client *bee.C
 
 	var data [][]byte
 	for _, ref := range refs {
-		buf, respCode, err := client.DownloadBlob(ref)
+		r, respCode, err := client.DownloadBlob(swarm.NewAddress(ref))
 		if err != nil {
 			t.Fatal(err)
 		}
 		if respCode != http.StatusOK {
 			t.Fatalf("invalid response code")
 		}
+		buf, err := io.ReadAll(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		r.Close()
 		data = append(data, buf)
 	}
 	return data
 }
 
 func getValue(t *testing.T, ref []byte, client *bee.Client) []byte {
-	data, respCode, err := client.DownloadBlob(ref)
+	r, respCode, err := client.DownloadBlob(swarm.NewAddress(ref))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if respCode != http.StatusOK {
 		t.Fatalf("invalid response code")
+	}
+	defer r.Close()
+	data, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
 	}
 	return data
 }
@@ -219,12 +238,17 @@ func delDoc(t *testing.T, key string, index *collection.Index, client *bee.Clien
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, respCode, err := client.DownloadBlob(ref[0])
+	r, respCode, err := client.DownloadBlob(swarm.NewAddress(ref[0]))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if respCode != http.StatusOK {
 		t.Fatalf("invalid response code")
+	}
+	defer r.Close()
+	data, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
 	}
 	return data
 
@@ -289,11 +313,11 @@ func addBatchDocs(t *testing.T, batch *collection.Batch, client *bee.Client) map
 
 	// add the documents
 	for k, v := range kvMap {
-		ref, err := client.UploadBlob(v, 0, false)
+		ref, err := client.UploadBlob(0, "", "0", false, false, bytes.NewReader(v))
 		if err != nil {
 			t.Fatalf("could not add doc %s:%s, %v", k, ref, err)
 		}
-		err = batch.Put(k, ref, false, false)
+		err = batch.Put(k, ref.Bytes(), false, false)
 		if err != nil {
 			t.Fatal(err)
 		}

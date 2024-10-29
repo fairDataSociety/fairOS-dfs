@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ethersphere/bee/pkg/crypto"
-	"github.com/ethersphere/bee/pkg/swarm"
+	blockstore "github.com/asabya/swarm-blockstore"
+	"github.com/ethersphere/bee/v2/pkg/crypto"
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 	bmtlegacy "github.com/ethersphere/bmt/legacy"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/account"
-	"github.com/fairdatasociety/fairOS-dfs/pkg/blockstore"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/feed/lookup"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/logging"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -174,11 +174,11 @@ func (a *API) CreateFeedFromTopic(topic []byte, user utils.Address, data []byte)
 func (a *API) GetSOCFromAddress(address []byte) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	data, err := a.handler.client.DownloadChunk(ctx, address)
+	ch, err := a.handler.client.DownloadChunk(ctx, swarm.NewAddress(address))
 	if err != nil {
 		return nil, err
 	}
-	ch := swarm.NewChunk(swarm.NewAddress(address), data)
+
 	return a.handler.rawSignedChunkData(ch)
 }
 

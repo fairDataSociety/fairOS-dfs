@@ -17,11 +17,14 @@ limitations under the License.
 package user
 
 import (
-	"encoding/hex"
+	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 
 	f "github.com/fairdatasociety/fairOS-dfs/pkg/file"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/pod"
@@ -89,26 +92,31 @@ func (u *Users) ShareFileWithUser(podName, podPassword, podFileWithPath, destina
 	}
 
 	// upload the encrypted data and get the reference
-	ref, err := u.client.UploadBlob(data, 0, true)
+	ref, err := u.client.UploadBlob(0, "", "0", false, true, bytes.NewReader(data))
 	if err != nil { // skipcq: TCV-001
 		return "", err
 	}
 
-	return hex.EncodeToString(ref), nil
+	return ref.String(), nil
 }
 
 // ReceiveFileFromUser imports an exported file in to the current user and pod by reading the sharing file entry.
 func (u *Users) ReceiveFileFromUser(_ *Info, pd *pod.Pod, podName, ref, podDir string) (string, error) {
-	refBytes, err := hex.DecodeString(ref)
+	refBytes, err := swarm.ParseHexAddress(ref)
 	if err != nil {
 		return "", err
 	}
 	// get the encrypted meta
-	data, respCode, err := u.client.DownloadBlob(refBytes)
+	r, respCode, err := u.client.DownloadBlob(refBytes)
 	if err != nil || respCode != http.StatusOK {
 		return "", err
 	} // skipcq: TCV-001
+	defer r.Close()
 
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return "", err
+	}
 	// unmarshall the entry
 	sharingEntry := SharingEntry{}
 	err = json.Unmarshal(data, &sharingEntry)
@@ -163,28 +171,39 @@ func (u *Users) ReceiveFileFromUser(_ *Info, pd *pod.Pod, podName, ref, podDir s
 // ReceiveFileInfo displays the information of the exported file. This is used to decide whether
 // to import the file or not.
 func (u *Users) ReceiveFileInfo(ref string) (*ReceiveFileInfo, error) {
-	refBytes, err := hex.DecodeString(ref)
+	refBytes, err := swarm.ParseHexAddress(ref)
 	if err != nil {
 		return nil, err
 	}
 
 	// get the encrypted meta
-	data, respCode, err := u.client.DownloadBlob(refBytes)
+	r, respCode, err := u.client.DownloadBlob(refBytes)
 	if err != nil || respCode != http.StatusOK { // skipcq: TCV-001
 		return nil, err
 	}
+	defer r.Close()
 
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
 	// unmarshall the entry
 	sharingEntry := SharingEntry{}
 	err = json.Unmarshal(data, &sharingEntry)
 	if err != nil { // skipcq: TCV-001
 		return nil, err
 	}
-	fileInodeBytes, respCode, err := u.client.DownloadBlob(sharingEntry.Meta.InodeAddress)
+	inodeReader, respCode, err := u.client.DownloadBlob(swarm.NewAddress(sharingEntry.Meta.InodeAddress))
 	if err != nil || respCode != http.StatusOK { // skipcq: TCV-001
 		return nil, err
 	}
 
+	defer inodeReader.Close()
+
+	fileInodeBytes, err := io.ReadAll(inodeReader)
+	if err != nil {
+		return nil, err
+	}
 	var fileInode f.INode
 	err = json.Unmarshal(fileInodeBytes, &fileInode)
 	if err != nil { // skipcq: TCV-001

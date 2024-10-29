@@ -21,6 +21,8 @@ import (
 	"errors"
 	"io"
 
+	"github.com/ethersphere/bee/v2/pkg/swarm"
+
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
 )
 
@@ -55,7 +57,14 @@ func (f *File) ReadSeeker(podFileWithPath, podPassword string) (io.ReadSeekClose
 	if meta == nil { // skipcq: TCV-001
 		return nil, 0, ErrFileNotFound
 	}
-	fileInodeBytes, _, err := f.getClient().DownloadBlob(meta.InodeAddress)
+	r, _, err := f.getClient().DownloadBlob(swarm.NewAddress(meta.InodeAddress))
+	if err != nil { // skipcq: TCV-001
+		return nil, 0, err
+	}
+
+	defer r.Close()
+
+	fileInodeBytes, err := io.ReadAll(r)
 	if err != nil { // skipcq: TCV-001
 		return nil, 0, err
 	}

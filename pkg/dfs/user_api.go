@@ -30,6 +30,11 @@ func (a *API) LoginUserV2(userName, passPhrase, sessionId string) (*user.LoginRe
 	return a.users.LoginUserV2(userName, passPhrase, a.client, a.tm, a.sm, sessionId)
 }
 
+// LoginUserWithSignature is a controller function which calls the users login with signature function.
+func (a *API) LoginUserWithSignature(signature, passPhrase, sessionId string) (*user.LoginResponse, error) {
+	return a.users.LoginUserWithSignature(signature, passPhrase, a.client, a.tm, a.sm, sessionId)
+}
+
 // LoadLiteUser is a controller function which loads user from mnemonic and doesn't store any user info on chain
 func (a *API) LoadLiteUser(userName, passPhrase, mnemonic, sessionId string) (string, string, *user.Info, error) {
 	return a.users.LoadLiteUser(userName, passPhrase, mnemonic, sessionId, a.tm, a.sm)
