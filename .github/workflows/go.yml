@@ -44,10 +44,9 @@ jobs:
     - name: Set up port range and TIME_WAIT
       if: matrix.os == 'windows-latest'
       run: |
-        # Increase the dynamic port range
-        New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name MaxUserPort -Value 65534 -PropertyType DWord -Force
-        # Decrease the TIME_WAIT duration
-        New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name TcpTimedWaitDelay -Value 1 -PropertyType DWord -Force
+        Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -Name 'TcpTimedWaitDelay' -Type DWord -Value 3 -Force
+        Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -Name 'MaxUserPort' -Type DWord -Value 65534 -Force
+        Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -Name 'MaxFreeTcbs' -Type DWord -Value 65536 -Force
       shell: pwsh
     - name: Vet
       if: matrix.os == 'ubuntu-latest'
