@@ -78,7 +78,11 @@ func TestACT(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(a.GranteesRef))
+		addr, err := swarm.ParseHexAddress(a.GranteesRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), addr)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -106,7 +110,11 @@ func TestACT(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(a.GranteesRef))
+		addr, err := swarm.ParseHexAddress(a.GranteesRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), addr)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -126,8 +134,11 @@ func TestACT(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		pubKeys, err = ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(a.GranteesRef))
+		addr, err = swarm.ParseHexAddress(a.GranteesRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pubKeys, err = ownerACT.act.GetGrantees(context.Background(), addr)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -237,8 +248,11 @@ func TestACT(t *testing.T) {
 			t.Fatal(err)
 		}
 		<-time.After(time.Second)
-
-		_, err = ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(actAfterRevoke.GranteesRef))
+		addr, err = swarm.ParseHexAddress(actAfterRevoke.GranteesRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = ownerACT.act.GetGrantees(context.Background(), addr)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -31,6 +31,7 @@ type Content struct {
 //	@Produce      json
 //	@Param	      actName path string true "unique act identifier"
 //	@Param	      grantee query string true "grantee public key"
+//	@Param	      Cookie header string true "cookie parameter"
 //	@Success      201  {object}  response
 //	@Failure      400  {object}  response
 //	@Failure      500  {object}  response

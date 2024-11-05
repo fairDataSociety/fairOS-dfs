@@ -6,7 +6,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/ecdsa"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,6 +16,10 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall/js"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
+
+	"github.com/btcsuite/btcd/btcec/v2"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
@@ -141,6 +147,15 @@ func registerWasmFunctions() {
 	js.Global().Set("publicPodFileMeta", js.FuncOf(publicPodFileMeta))
 	js.Global().Set("publicPodDir", js.FuncOf(publicPodDir))
 	js.Global().Set("publicPodReceiveInfo", js.FuncOf(publicPodReceiveInfo))
+
+	js.Global().Set("actCreate", js.FuncOf(actCreate))
+	js.Global().Set("actUpdate", js.FuncOf(actUpdate))
+	js.Global().Set("actListGrantees", js.FuncOf(actListGrantees))
+	js.Global().Set("actSharePod", js.FuncOf(actSharePod))
+	js.Global().Set("actList", js.FuncOf(actList))
+	js.Global().Set("actListPods", js.FuncOf(actListPods))
+	js.Global().Set("actSavePod", js.FuncOf(actSavePod))
+	js.Global().Set("actOpenPod", js.FuncOf(actOpenPod))
 }
 
 func connect(_ js.Value, funcArgs []js.Value) interface{} {
@@ -3377,7 +3392,7 @@ func getSubscriptions(_ js.Value, funcArgs []js.Value) interface{} {
 				subscription.Set("podAddress", v.PodAddress)
 				subscription.Set("validTill", v.ValidTill)
 				subscription.Set("infoLocation", utils.Encode(v.InfoLocation))
-				subscriptions.SetIndex(i, js.ValueOf(v))
+				subscriptions.SetIndex(i, js.ValueOf(subscription))
 			}
 			object.Set("subscriptions", subscriptions)
 
@@ -3509,7 +3524,7 @@ func getSubscribablePods(_ js.Value, funcArgs []js.Value) interface{} {
 				subscription.Set("bid", v.Bids)
 				subscription.Set("sells", v.Sells)
 				subscription.Set("reports", v.Reports)
-				subscriptions.SetIndex(i, js.ValueOf(v))
+				subscriptions.SetIndex(i, js.ValueOf(subscription))
 			}
 			object.Set("subscribablePods", subscriptions)
 			resolve.Invoke(object)
@@ -3550,7 +3565,7 @@ func getSubRequests(_ js.Value, funcArgs []js.Value) interface{} {
 				request.Set("buyerNameHash", utils.Encode(v.FdpBuyerNameHash[:]))
 				request.Set("requestHash", utils.Encode(v.RequestHash[:]))
 				request.Set("buyer", v.Buyer.Hex())
-				subRequests.SetIndex(i, js.ValueOf(v))
+				subRequests.SetIndex(i, js.ValueOf(request))
 			}
 			object.Set("requests", subRequests)
 			resolve.Invoke(object)
@@ -3639,6 +3654,363 @@ func getNameHash(_ js.Value, funcArgs []js.Value) interface{} {
 
 			resolve.Invoke(object)
 		}()
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func actCreate(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"actCreate(sessionId, actName, grantee)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		actName := funcArgs[1].String()
+		grantee := funcArgs[2].String()
+		pubk, err := hex.DecodeString(grantee)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("failed to create act : %s", err.Error()))
+			return nil
+		}
+		pub, err := btcec.ParsePubKey(pubk)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("failed to create act : %s", err.Error()))
+			return nil
+		}
+		go func() {
+			err := api.CreateGranteePublicKey(sessionId, actName, pub.ToECDSA())
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to create act : %s", err.Error()))
+				return
+			}
+
+			resolve.Invoke("act created")
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func actUpdate(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 4 {
+			reject.Invoke("not enough arguments. \"actUpdate(sessionId, actName, grant, revoke)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		actName := funcArgs[1].String()
+
+		grantUser := funcArgs[2].String()
+		revokeUser := funcArgs[3].String()
+		if grantUser == "" && revokeUser == "" {
+			reject.Invoke("grant and revoke user public key cannot be empty")
+			return nil
+		}
+		if grantUser == revokeUser {
+			reject.Invoke("grant and revoke user public key cannot be same")
+			return nil
+		}
+		var (
+			granteePubKey *ecdsa.PublicKey
+			removePubKey  *ecdsa.PublicKey
+		)
+		if grantUser != "" {
+			pubkg, err := hex.DecodeString(grantUser)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to update act : %s", err.Error()))
+				return nil
+			}
+			pubg, err := btcec.ParsePubKey(pubkg)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to update act : %s", err.Error()))
+				return nil
+			}
+			granteePubKey = pubg.ToECDSA()
+		}
+		if revokeUser != "" {
+			pubkr, err := hex.DecodeString(revokeUser)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to update act : %s", err.Error()))
+				return nil
+			}
+			pubr, err := btcec.ParsePubKey(pubkr)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to update act : %s", err.Error()))
+				return nil
+			}
+			removePubKey = pubr.ToECDSA()
+		}
+
+		go func() {
+			err := api.GrantRevokeGranteePublicKey(sessionId, actName, granteePubKey, removePubKey)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to update act : %s", err.Error()))
+				return
+			}
+
+			resolve.Invoke("act updated")
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func actListGrantees(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"actListGrantees(sessionId, actName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		actName := funcArgs[1].String()
+
+		go func() {
+			grantees, err := api.ListGrantees(sessionId, actName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to list grantees act : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			granteeList := js.Global().Get("Array").New(len(grantees))
+			object.Set("grantees", granteeList)
+
+			resolve.Invoke(object)
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func actSharePod(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 3 {
+			reject.Invoke("not enough arguments. \"actSharePod(sessionId, actName, podName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		actName := funcArgs[1].String()
+		podName := funcArgs[2].String()
+
+		go func() {
+			content, err := api.ACTPodShare(sessionId, podName, actName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to share pod to act : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			object.Set("reference", content.Reference)
+			object.Set("topic", base64.StdEncoding.EncodeToString(content.Topic))
+			object.Set("owner", content.Owner.String())
+			object.Set("publicKey", content.OwnerPublicKey)
+
+			resolve.Invoke(object)
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func actList(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 1 {
+			reject.Invoke("not enough arguments. \"actList(sessionId)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+
+		go func() {
+			list, err := api.GetACTs(sessionId)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to share pod to act : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			acts := js.Global().Get("Array").New(len(list))
+			counter := 0
+			for _, v := range list {
+				act := js.Global().Get("Object").New()
+				act.Set("name", v.Name)
+				act.Set("historyRef", v.HistoryRef)
+				act.Set("granteeRef", v.GranteesRef)
+				acts.SetIndex(counter, js.ValueOf(act))
+				counter++
+			}
+			object.Set("acts", acts)
+			resolve.Invoke(object)
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func actListPods(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"actList(sessionId, actName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		actName := funcArgs[1].String()
+
+		go func() {
+			contents, err := api.GetACTContents(sessionId, actName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to share pod to act : %s", err.Error()))
+				return
+			}
+			object := js.Global().Get("Object").New()
+			cntnts := js.Global().Get("Array").New(len(contents))
+			for i, v := range contents {
+				content := js.Global().Get("Object").New()
+				content.Set("reference", v.Reference)
+				content.Set("topic", base64.StdEncoding.EncodeToString(v.Topic))
+				content.Set("owner", v.Owner.String())
+				content.Set("publicKey", v.OwnerPublicKey)
+				cntnts.SetIndex(i, js.ValueOf(content))
+			}
+			object.Set("contents", cntnts)
+			resolve.Invoke(object)
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func actSavePod(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 6 {
+			reject.Invoke("not enough arguments. \"actList(sessionId, actName, reference, topic, owner, ownerPublicKey)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		actName := funcArgs[1].String()
+		reference := funcArgs[2].String()
+		topic := funcArgs[3].String()
+		t, err := base64.StdEncoding.DecodeString(topic)
+		if err != nil {
+			reject.Invoke(fmt.Sprintf("failed to save pod to act : %s", err.Error()))
+			return nil
+		}
+		owner := funcArgs[4].String()
+		ownerPublicKey := funcArgs[5].String()
+		contentReq := &act.Content{
+			Reference:      reference,
+			Topic:          t,
+			Owner:          utils.HexToAddress(owner),
+			OwnerPublicKey: ownerPublicKey,
+		}
+		go func() {
+			err := api.SaveACTPod(sessionId, actName, contentReq)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to save pod to act : %s", err.Error()))
+				return
+			}
+
+			resolve.Invoke("pod saved")
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func actOpenPod(_ js.Value, funcArgs []js.Value) interface{} {
+	handler := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		if api == nil {
+			reject.Invoke("not connected to fairOS")
+			return nil
+		}
+
+		if len(funcArgs) != 2 {
+			reject.Invoke("not enough arguments. \"actOpenPod(sessionId, actName)\"")
+			return nil
+		}
+		sessionId := funcArgs[0].String()
+		actName := funcArgs[1].String()
+		go func() {
+			err := api.OpenACTPod(sessionId, actName)
+			if err != nil {
+				reject.Invoke(fmt.Sprintf("failed to open pod to act : %s", err.Error()))
+				return
+			}
+
+			resolve.Invoke("pod opened")
+		}()
+
 		return nil
 	})
 

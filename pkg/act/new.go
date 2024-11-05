@@ -22,8 +22,8 @@ type List map[string]*Act
 // Act represents an Access Control Trie (ACT) with its metadata, grantees, and associated content.
 type Act struct {
 	Name        string     `json:"name"`
-	HistoryRef  []byte     `json:"historyRef"`
-	GranteesRef []byte     `json:"granteesRef"`
+	HistoryRef  string     `json:"historyRef"`
+	GranteesRef string     `json:"granteesRef"`
 	CreatedAt   time.Time  `json:"createdAt"`
 	Content     []*Content `json:"content"`
 }
@@ -80,12 +80,16 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 		act = &Act{
 			Name:        actName,
 			CreatedAt:   time.Now(),
-			HistoryRef:  swarm.ZeroAddress.Bytes(),
-			GranteesRef: swarm.ZeroAddress.Bytes(),
+			HistoryRef:  swarm.ZeroAddress.String(),
+			GranteesRef: swarm.ZeroAddress.String(),
 			Content:     []*Content{},
 		}
 		grantList = []*ecdsa.PublicKey{publicKeyGrant}
-		resp, err = t.act.CreateGrantee(context.Background(), swarm.NewAddress(act.HistoryRef), grantList)
+		addr, err := swarm.ParseHexAddress(act.HistoryRef)
+		if err != nil {
+			return nil, err
+		}
+		resp, err = t.act.CreateGrantee(context.Background(), addr, grantList)
 		if err != nil {
 			return nil, err
 		}
@@ -107,8 +111,15 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 		} else {
 			revokeList = nil
 		}
-
-		resp, err = t.act.RevokeGrant(context.Background(), swarm.NewAddress(act.GranteesRef), swarm.NewAddress(act.HistoryRef), grantList, revokeList)
+		haddr, err := swarm.ParseHexAddress(act.HistoryRef)
+		if err != nil {
+			return nil, err
+		}
+		gaddr, err := swarm.ParseHexAddress(act.GranteesRef)
+		if err != nil {
+			return nil, err
+		}
+		resp, err = t.act.RevokeGrant(context.Background(), gaddr, haddr, grantList, revokeList)
 		if err != nil {
 			return nil, err
 		}
@@ -118,8 +129,8 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 		}
 	}
 
-	act.GranteesRef = resp.Reference.Bytes()
-	act.HistoryRef = resp.HistoryReference.Bytes()
+	act.GranteesRef = resp.Reference.String()
+	act.HistoryRef = resp.HistoryReference.String()
 
 	list[actName] = act
 	err = t.storeUserACTs(list)

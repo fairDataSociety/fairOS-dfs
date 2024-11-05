@@ -416,6 +416,13 @@ const docTemplate = `{
                         "name": "grantee",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cookie parameter",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -5198,16 +5205,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "granteesRef": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "string"
                 },
                 "historyRef": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
