@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	swarm_act "github.com/asabya/swarm-act"
 	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/ethersphere/bee/v2/pkg/api"
 	"github.com/ethersphere/bee/v2/pkg/crypto"
 	"github.com/ethersphere/bee/v2/pkg/swarm"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/utils"
@@ -67,7 +67,7 @@ func (t *ACT) CreateUpdateACT(actName string, publicKeyGrant, publicKeyRevoke *e
 	}
 
 	var (
-		resp       = &api.GranteesPostResponse{}
+		resp       = &swarm_act.GranteesPostResponse{}
 		grantList  []*ecdsa.PublicKey
 		revokeList []*ecdsa.PublicKey
 		owner      = t.acc.GetUserAccountInfo().GetAddress()

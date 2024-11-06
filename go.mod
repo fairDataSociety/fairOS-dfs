@@ -3,8 +3,8 @@ module github.com/fairdatasociety/fairOS-dfs
 go 1.22.0
 
 require (
-	github.com/asabya/swarm-act v0.0.0-20241022090815-9b494c0051de
-	github.com/asabya/swarm-blockstore v0.0.0-20241022084926-8d6753f32697
+	github.com/asabya/swarm-act v0.0.0-20241106102524-234e35a79f95
+	github.com/asabya/swarm-blockstore v0.0.0-20241106102400-00f682459f25
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dustin/go-humanize v1.0.1

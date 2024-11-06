@@ -17,11 +17,9 @@ import (
 	"strings"
 	"syscall/js"
 
-	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
-
 	"github.com/btcsuite/btcd/btcec/v2"
-
 	"github.com/dustin/go-humanize"
+	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/collection"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/contracts"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/dfs"
