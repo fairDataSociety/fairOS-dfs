@@ -74,7 +74,6 @@ func (a *API) OpenACTPod(sessionId, actName string) error {
 	if err != nil {
 		return err
 	}
-
 	info, err := ui.GetPod().ReceivePodInfo(utils.NewReference(addr.Bytes()))
 	if err != nil {
 		return err

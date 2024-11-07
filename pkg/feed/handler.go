@@ -297,7 +297,6 @@ retry:
 		}
 		return epoch, nil, err
 	}
-
 	return req.Epoch, address, nil
 }
 

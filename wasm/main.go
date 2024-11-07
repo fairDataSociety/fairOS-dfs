@@ -17,6 +17,8 @@ import (
 	"strings"
 	"syscall/js"
 
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/dustin/go-humanize"
 	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
@@ -201,6 +203,7 @@ func connect(_ js.Value, funcArgs []js.Value) interface{} {
 				EnsConfig:          config,
 				SubscriptionConfig: subConfig,
 				Logger:             logger,
+				FeedCacheSize:      0,
 			}
 			api, err = dfs.NewDfsAPI(
 				ctx,
@@ -294,7 +297,7 @@ func login(_ js.Value, funcArgs []js.Value) interface{} {
 		go func() {
 			loginResp, err := api.LoginUserV2(username, password, "")
 			if err != nil {
-				reject.Invoke(fmt.Sprintf("Failed to create user : %s", err.Error()))
+				reject.Invoke(fmt.Sprintf("Failed to login : %s", err.Error()))
 				return
 			}
 			ui, nameHash := loginResp.UserInfo, loginResp.NameHash
@@ -303,6 +306,7 @@ func login(_ js.Value, funcArgs []js.Value) interface{} {
 			addr := ui.GetAccount().GetUserAccountInfo().GetAddress()
 			object.Set("address", addr.Hex())
 			object.Set("nameHash", nameHash)
+			object.Set("publicKey", hex.EncodeToString(crypto.FromECDSAPub(ui.GetAccount().GetUserAccountInfo().GetPublicKey())))
 			object.Set("sessionId", ui.GetSessionId())
 
 			resolve.Invoke(object)
@@ -343,6 +347,7 @@ func walletLogin(_ js.Value, funcArgs []js.Value) interface{} {
 			addr := ui.GetAccount().GetUserAccountInfo().GetAddress()
 			object.Set("address", addr.Hex())
 			object.Set("nameHash", nameHash)
+			object.Set("publicKey", hex.EncodeToString(crypto.FromECDSAPub(ui.GetAccount().GetUserAccountInfo().GetPublicKey())))
 			object.Set("sessionId", ui.GetSessionId())
 			resolve.Invoke(object)
 		}()
@@ -380,6 +385,7 @@ func signatureLogin(_ js.Value, funcArgs []js.Value) interface{} {
 			object := js.Global().Get("Object").New()
 			object.Set("user", ui.GetUserName())
 			object.Set("address", lr.Address)
+			object.Set("publicKey", lr.PublicKey)
 			object.Set("sessionId", ui.GetSessionId())
 			resolve.Invoke(object)
 		}()
