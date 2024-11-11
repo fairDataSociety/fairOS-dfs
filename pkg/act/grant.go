@@ -31,8 +31,11 @@ func (t *ACT) GrantAccess(actName string, address swarm.Address) (*Content, erro
 		return nil, ErrACTDoesNowExist
 	}
 	owner := t.acc.GetUserAccountInfo().GetAddress()
-
-	uploadResp, err := t.act.HandleUpload(context.Background(), address, swarm.NewAddress(act.HistoryRef))
+	addr, err := swarm.ParseHexAddress(act.HistoryRef)
+	if err != nil {
+		return nil, err
+	}
+	uploadResp, err := t.act.HandleUpload(context.Background(), address, addr)
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +127,8 @@ func (t *ACT) SaveGrantedPod(actName string, c *Content) error {
 	a := &Act{
 		Name:        actName,
 		CreatedAt:   c.AddedAt,
-		HistoryRef:  swarm.ZeroAddress.Bytes(),
-		GranteesRef: reference.Bytes(),
+		HistoryRef:  swarm.ZeroAddress.String(),
+		GranteesRef: reference.String(),
 		Content:     []*Content{c},
 	}
 	list[actName] = a
@@ -148,7 +151,11 @@ func (t *ACT) GetGrantees(actName string) ([]string, error) {
 	if !ok {
 		return nil, ErrACTDoesNowExist
 	}
-	grantees, err := t.act.GetGrantees(context.Background(), swarm.NewAddress(act.GranteesRef))
+	addr, err := swarm.ParseHexAddress(act.GranteesRef)
+	if err != nil {
+		return nil, err
+	}
+	grantees, err := t.act.GetGrantees(context.Background(), addr)
 	if err != nil {
 		return nil, err
 	}

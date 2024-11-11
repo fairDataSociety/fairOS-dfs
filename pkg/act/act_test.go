@@ -1,4 +1,4 @@
-package act
+package act_test
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/fairdatasociety/fairOS-dfs/pkg/act"
 
 	"github.com/asabya/swarm-blockstore/bee"
 	"github.com/asabya/swarm-blockstore/bee/mock"
@@ -64,7 +66,7 @@ func TestACT(t *testing.T) {
 		acc := accounts[0]
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 
-		ownerACT := NewACT(mockClient, fd, acc, tm, logger)
+		ownerACT := act.NewACT(mockClient, fd, acc, tm, logger)
 		actName := acts[0]
 		for i := 1; i < 10; i++ {
 			acc := accounts[i]
@@ -74,11 +76,12 @@ func TestACT(t *testing.T) {
 			}
 			<-time.After(1 * time.Second)
 		}
-		a, err := ownerACT.GetACT(actName)
+		_, err := ownerACT.GetACT(actName)
 		if err != nil {
 			t.Fatal(err)
 		}
-		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(a.GranteesRef))
+
+		pubKeys, err := ownerACT.GetGrantees(actName)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -90,7 +93,7 @@ func TestACT(t *testing.T) {
 		acc := accounts[0]
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 
-		ownerACT := NewACT(mockClient, fd, acc, tm, logger)
+		ownerACT := act.NewACT(mockClient, fd, acc, tm, logger)
 		actName := acts[1]
 		for i := 1; i < 2; i++ {
 			acc := accounts[i]
@@ -106,7 +109,11 @@ func TestACT(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pubKeys, err := ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(a.GranteesRef))
+		_, err = swarm.ParseHexAddress(a.GranteesRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pubKeys, err := ownerACT.GetGrantees(actName)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -126,8 +133,11 @@ func TestACT(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		pubKeys, err = ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(a.GranteesRef))
+		_, err = swarm.ParseHexAddress(a.GranteesRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pubKeys, err = ownerACT.GetGrantees(actName)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -139,7 +149,7 @@ func TestACT(t *testing.T) {
 		acc := accounts[0]
 		fd := feed.New(acc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 
-		ownerACT := NewACT(mockClient, fd, acc, tm, logger)
+		ownerACT := act.NewACT(mockClient, fd, acc, tm, logger)
 		for _, actName := range acts {
 			for i := 1; i < 10; i++ {
 				acc := accounts[i]
@@ -200,7 +210,7 @@ func TestACT(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		ownerACT := NewACT(mockClient, fd, ownerAcc, tm, logger)
+		ownerACT := act.NewACT(mockClient, fd, ownerAcc, tm, logger)
 		granteeAcc := accounts[1]
 		_, err = ownerACT.CreateUpdateACT(acts[0], granteeAcc.GetUserAccountInfo().GetPublicKey(), nil)
 		if err != nil {
@@ -215,7 +225,7 @@ func TestACT(t *testing.T) {
 		<-time.After(1 * time.Second)
 
 		granteeFeed := feed.New(granteeAcc.GetUserAccountInfo(), mockClient, -1, 0, logger)
-		granteeACT := NewACT(mockClient, granteeFeed, granteeAcc, tm, logger)
+		granteeACT := act.NewACT(mockClient, granteeFeed, granteeAcc, tm, logger)
 		err = granteeACT.SaveGrantedPod(acts[0], respOne)
 		if err != nil {
 			t.Fatal(err)
@@ -237,8 +247,11 @@ func TestACT(t *testing.T) {
 			t.Fatal(err)
 		}
 		<-time.After(time.Second)
-
-		_, err = ownerACT.act.GetGrantees(context.Background(), swarm.NewAddress(actAfterRevoke.GranteesRef))
+		addr, err = swarm.ParseHexAddress(actAfterRevoke.GranteesRef)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = ownerACT.GetGrantees(acts[0])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -252,7 +265,7 @@ func TestACT(t *testing.T) {
 		ownerAcc := accounts[0]
 		fd := feed.New(ownerAcc.GetUserAccountInfo(), mockClient, -1, 0, logger)
 		pod1 := pod.NewPod(mockClient, fd, ownerAcc, tm, sm, -1, 0, logger)
-		ownerACT := NewACT(mockClient, fd, ownerAcc, tm, logger)
+		ownerACT := act.NewACT(mockClient, fd, ownerAcc, tm, logger)
 		granteeAcc := accounts[1]
 		_, err := ownerACT.CreateUpdateACT(acts[1], granteeAcc.GetUserAccountInfo().GetPublicKey(), nil)
 		if err != nil {

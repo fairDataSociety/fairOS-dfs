@@ -941,12 +941,18 @@ func TestApis(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		if podForkResp.StatusCode != 200 {
+			forkRespErr, err := io.ReadAll(podForkResp.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log(string(forkRespErr))
+			podForkResp.Body.Close()
+			t.Fatal("pod fork failed with status code:", podForkResp.StatusCode)
+		}
 		err = podForkResp.Body.Close()
 		if err != nil {
 			t.Fatal(err)
-		}
-		if podForkResp.StatusCode != 200 {
-			t.Fatal("pod fork failed")
 		}
 		podOpenRequest := &common.PodRequest{
 			PodName: podForkRequest.ForkName,

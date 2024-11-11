@@ -51,7 +51,6 @@ func (a *API) CreatePod(podName, sessionId string) (*pod.Info, error) {
 	if ui == nil {
 		return nil, ErrUserNotLoggedIn
 	}
-
 	// open the pod
 	pi, err := a.prepareOwnPod(ui, podName)
 	if err != nil {

@@ -8,13 +8,9 @@ definitions:
       createdAt:
         type: string
       granteesRef:
-        items:
-          type: integer
-        type: array
+        type: string
       historyRef:
-        items:
-          type: integer
-        type: array
+        type: string
       name:
         type: string
     type: object
@@ -999,6 +995,11 @@ paths:
       - description: grantee public key
         in: query
         name: grantee
+        required: true
+        type: string
+      - description: cookie parameter
+        in: header
+        name: Cookie
         required: true
         type: string
       produces:

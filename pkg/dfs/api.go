@@ -79,6 +79,11 @@ func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
 		logger.Errorf("dfs: bee client initialisation failed")
 		return nil, errBeeClient
 	}
+	// Setting cache size 0 will disable the cache. This is to change the default behaviour of lru itself.
+	// We have this -1 check hard coded in the feed package. -1 will disable the feed pool off. and write directly to swarm.
+	if opts.FeedCacheSize == 0 {
+		opts.FeedCacheSize = -1
+	}
 	users := user.NewUsers(c, ens, opts.FeedCacheSize, opts.FeedCacheTTL, logger)
 
 	var sm subscriptionManager.SubscriptionManager
@@ -89,12 +94,6 @@ func NewDfsAPI(ctx context.Context, opts *Options) (*API, error) {
 			logger.Errorf("dfs: subscriptionManager initialisation failed %s", err.Error())
 			return nil, errSubManager
 		}
-	}
-
-	// Setting cache size 0 will disable the cache. This is to change the default behaviour of lru itself.
-	// We have this -1 check hard coded in the feed package. -1 will disable the feed pool off. and write directly to swarm.
-	if opts.FeedCacheSize == 0 {
-		opts.FeedCacheSize = -1
 	}
 
 	// discard tm logs as it creates too much noise

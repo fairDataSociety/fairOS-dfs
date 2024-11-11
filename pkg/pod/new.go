@@ -42,7 +42,6 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 	if err != nil {
 		return nil, err
 	}
-
 	// check if pods is present and get free index
 	podList, err := p.PodList()
 	if err != nil { // skipcq: TCV-001
@@ -56,7 +55,6 @@ func (p *Pod) CreatePod(podName, addressString, podPassword string) (*Info, erro
 	for _, pod := range podList.SharedPods {
 		sharedPods[pod.Address] = pod.Name
 	}
-
 	var accountInfo *account.Info
 	var fd *feed.API
 	var file *f.File
